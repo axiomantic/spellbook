@@ -45,6 +45,62 @@ if __name__ not in sys.modules:  # pragma: no branch - hit under exec_module loa
 SCHEMA_VERSION = "1"
 JOURNAL_VERSION = "1"
 
+# ---------------------------------------------------------------------------
+# Apply-journal schema (design §5.3.1)
+#
+# The apply journal is the durable record of a human-approved consolidation. The
+# COMMAND layer (the skill, via the Task tool) WRITES it; the `verify` subcommand
+# READS it. This script NEVER edits source `.md` files -- it only reads/writes
+# journals and emits JSON (Success Criterion #3 / design §9.4). The schema below
+# documents the contract both sides share:
+#
+#   {
+#     "version": "1",                       # JOURNAL_VERSION
+#     "created_at": "<ISO-8601 timestamp>",
+#     "findings": [
+#       {
+#         "finding_id": "<stable cluster id>",
+#         "status": "pending" | "refs_created" | "sources_edited"
+#                   | "verified" | "rolled_back",
+#         "reference_files": ["<repo-relative path>", ...],
+#         "edits": [
+#           {
+#             "file": "<repo-relative path of the edited source>",
+#             "original_text": "<the duplicate block text that was replaced>",
+#             "replacement_text": "<the pointer text that replaced it>",
+#             "start_line": <1-based>,
+#             "end_line": <1-based>,
+#             "content_hash": "sha256:<hexdigest of original_text>"
+#           }, ...
+#         ]
+#       }, ...
+#     ]
+#   }
+#
+# `content_hash` is the sha256 of `original_text` (see :func:`_content_hash`) so a
+# journal entry can be tied back to the exact source text it consolidated.
+# ---------------------------------------------------------------------------
+
+# Journal status enum (design §5.3.1). Documented as the allowed `status` values;
+# `verify` reads journals at any status and does not gate on it.
+JOURNAL_STATUSES: tuple[str, ...] = (
+    "pending",
+    "refs_created",
+    "sources_edited",
+    "verified",
+    "rolled_back",
+)
+
+
+def _content_hash(text: str) -> str:
+    """The journal ``content_hash`` of a block: ``sha256:<hexdigest of text>``.
+
+    Ties a journal edit to the exact ``original_text`` it consolidated (design
+    §5.3.1). The command layer writes this; ``verify`` may use it to reconcile an
+    edit with its source. Must match the test helper byte-for-byte.
+    """
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
 DEFAULT_MAX_DEPTH = 3
 DEFAULT_JACCARD_THRESHOLD = 0.7
 DEFAULT_CONFIRM_THRESHOLD = 0.85
@@ -1493,8 +1549,173 @@ def cmd_external_callers(args: argparse.Namespace) -> int:
     return 0
 
 
+def _block_matches_text(blocks: list[Block], target_norm: str, threshold: float) -> bool:
+    """True if any block's normalized text matches ``target_norm`` at/above
+    ``threshold`` (SequenceMatcher confirm signal). ``target_norm`` is already
+    normalized; each block carries its own ``normalized_text``."""
+    return any(
+        seqmatch_ratio(block.normalized_text, target_norm) >= threshold
+        for block in blocks
+    )
+
+
+def _verify_finding(
+    finding: dict, *, corpus_root: Path, threshold: float
+) -> dict:
+    """Verify a single journal finding against the on-disk corpus (design §5.3.1).
+
+    A finding PASSES only when BOTH clauses hold for EVERY edit in it:
+
+    - **Clause 1 (original duplicate absent):** re-segment the edited source file
+      and confirm NO block matches the edit's ``original_text`` at/above the
+      confirm threshold. Matching ``original_text`` (not requiring it to be a
+      standalone block) avoids depending on the post-edit text re-segmenting the
+      duplicate as one block.
+    - **Clause 2 (pointer present + reference exists):** the edited source file's
+      text contains the edit's ``replacement_text`` (the pointer), AND each of the
+      finding's ``reference_files`` exists, is readable, and contains the
+      consolidated block (a block matching ``original_text`` at/above the confirm
+      threshold).
+
+    Returns ``{finding_id, pass, reasons}``; ``reasons`` names which clause failed
+    (empty when the finding passes).
+    """
+    finding_id = finding.get("finding_id")
+    reference_files = finding.get("reference_files") or []
+    edits = finding.get("edits") or []
+    reasons: list[str] = []
+
+    # A finding with no edits checks nothing; it must not vacuously pass (a green
+    # mirage reporting a consolidation "landed" while verifying nothing).
+    if not edits:
+        reasons.append("no edits recorded for finding")
+
+    # Reference-file resolution is shared across every edit in the finding: each
+    # reference file must exist, be readable, and carry the consolidated block.
+    def _reference_ok(original_norm: str) -> tuple[bool, list[str]]:
+        problems: list[str] = []
+        if not reference_files:
+            problems.append("clause2: finding lists no reference_files")
+            return False, problems
+        all_ok = True
+        for ref_rel in reference_files:
+            ref_path = (corpus_root / ref_rel).resolve()
+            try:
+                ref_text = ref_path.read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                problems.append(
+                    f"clause2: reference file missing/unreadable: {ref_rel}"
+                )
+                all_ok = False
+                continue
+            # Design §5.3.1 clause 2 requires the reference to CONTAIN the
+            # consolidated block: a re-segmented block matching original_text at
+            # or above the confirm threshold. A whole-file seqmatch fallback can
+            # false-PASS a reference where the canonical content is fragmented
+            # across non-contiguous blocks, so we rely on per-block matching only.
+            ref_blocks = segment(str(ref_path), ref_text)
+            if not _block_matches_text(ref_blocks, original_norm, threshold):
+                problems.append(
+                    f"clause2: reference file does not contain the consolidated "
+                    f"block: {ref_rel}"
+                )
+                all_ok = False
+        return all_ok, problems
+
+    for edit in edits:
+        original_text = edit.get("original_text", "")
+        replacement_text = edit.get("replacement_text", "")
+        source_rel = edit.get("file", "")
+        original_norm = normalize(original_text)
+
+        source_path = (corpus_root / source_rel).resolve()
+        try:
+            source_text = source_path.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            reasons.append(f"clause1/2: source file missing/unreadable: {source_rel}")
+            continue
+
+        # Clause 1: the original duplicate must be ABSENT from the edited source.
+        source_blocks = segment(str(source_path), source_text)
+        if _block_matches_text(source_blocks, original_norm, threshold):
+            reasons.append(
+                f"clause1: original duplicate still present in {source_rel}"
+            )
+
+        # Clause 2a: the pointer (replacement_text) must be PRESENT in the source.
+        if replacement_text and replacement_text not in source_text:
+            reasons.append(
+                f"clause2: pointer (replacement_text) absent from {source_rel}"
+            )
+
+        # Clause 2b: each reference file exists and holds the consolidated block.
+        ref_ok, ref_problems = _reference_ok(original_norm)
+        if not ref_ok:
+            reasons.extend(ref_problems)
+
+    return {"finding_id": finding_id, "pass": not reasons, "reasons": reasons}
+
+
+def _verify_corpus_root(corpus_arg: str | None) -> Path:
+    """Derive the single root that repo-relative journal paths resolve against.
+
+    Honors the comma-separated --corpus contract: a lone directory is the root;
+    multiple entries use their common ancestor; a lone file uses its parent;
+    omitted falls back to the spellbook dir.
+    """
+    if not corpus_arg:
+        return _spellbook_dir()
+    entries = [Path(e.strip()).resolve() for e in corpus_arg.split(",") if e.strip()]
+    if not entries:
+        return _spellbook_dir()
+    if len(entries) == 1:
+        return entries[0] if entries[0].is_dir() else entries[0].parent
+    return Path(os.path.commonpath([str(e) for e in entries]))
+
+
 def cmd_verify(args: argparse.Namespace) -> int:
-    return _emit_shell()
+    """Post-apply verification of an apply journal (design §5.3.1, §3.8, §9.4).
+
+    Reads ``--journal`` (the apply journal written by the command layer) and, for
+    each finding, asserts the consolidation actually landed: the original
+    duplicate is gone from each edited source (Clause 1) and the pointer plus its
+    canonical reference file are present (Clause 2). The corpus root from
+    ``--corpus`` resolves the journal's repo-relative ``file`` / ``reference_files``
+    paths.
+
+    The confirm gate is the module ``DEFAULT_CONFIRM_THRESHOLD`` (0.85), NOT a CLI
+    flag. This subcommand reads journals and emits JSON ONLY -- it NEVER edits any
+    source ``.md`` file (Success Criterion #3). Emits
+    ``{version, results: [{finding_id, pass, reasons}]}``.
+    """
+    if not args.journal:
+        print("--journal is required for verify", file=sys.stderr)
+        return 2
+    try:
+        raw = Path(args.journal).read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"cannot read --journal: {exc}", file=sys.stderr)
+        return 2
+    try:
+        journal = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"invalid --journal: {exc}", file=sys.stderr)
+        return 2
+    if not isinstance(journal, dict) or not isinstance(journal.get("findings"), list):
+        print("--journal must be an object with a 'findings' array", file=sys.stderr)
+        return 2
+
+    corpus_root = _verify_corpus_root(args.corpus)
+
+    results = [
+        _verify_finding(
+            finding, corpus_root=corpus_root, threshold=DEFAULT_CONFIRM_THRESHOLD
+        )
+        for finding in journal["findings"]
+    ]
+    payload = {"version": SCHEMA_VERSION, "results": results}
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    return 0
 
 
 # ---------------------------------------------------------------------------

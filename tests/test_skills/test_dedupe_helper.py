@@ -7,6 +7,7 @@ no integration marker; pure stdlib, no QMD/Serena.
 from __future__ import annotations
 
 import ast
+import hashlib
 import importlib.util
 import io
 import json
@@ -61,13 +62,13 @@ def test_unknown_subcommand_is_error(dedupe):
 
 
 # ---------------------------------------------------------------------------
-# Task 1: the subcommands are registered and dispatchable. The still-stubbed
-# subcommands each emit a valid JSON shell ({"version": SCHEMA_VERSION}) and
-# return 0. NOTE: ``expand-group`` (Task 8), ``detect`` and ``external-callers``
-# (Task 9) are no longer stubs -- their real behavior is covered by their
-# respective ``test_expand_group_*`` / ``test_detect_*`` /
-# ``test_external_callers_*`` tests below, so they are intentionally absent from
-# this stub parametrization. Only ``verify`` remains a stub (filled in Task 10).
+# Task 1: the subcommands are registered and dispatchable. NOTE: every
+# subcommand is now implemented -- ``expand-group`` (Task 8), ``detect`` and
+# ``external-callers`` (Task 9), and ``verify`` (Task 10) -- so their real
+# behavior is covered by their respective ``test_*`` blocks below. The former
+# stub parametrization (which asserted a bare ``{"version": "1"}`` shell) is
+# retired; ``verify`` with no ``--journal`` now validates its input and returns 2
+# like the sibling subcommands.
 # ---------------------------------------------------------------------------
 
 
@@ -75,20 +76,14 @@ def test_schema_version_constant(dedupe):
     assert dedupe.SCHEMA_VERSION == "1"
 
 
-@pytest.mark.parametrize(
-    "argv",
-    [
-        ("verify",),
-    ],
-    ids=["verify"],
-)
-def test_subcommand_registered_and_emits_version_shell(dedupe, argv):
-    """Each still-stubbed subcommand parses and dispatches to a stub that emits
-    {"version": "1"}. ``expand-group`` (Task 8), ``detect`` and
-    ``external-callers`` (Task 9) are implemented and excluded."""
-    rc, stdout, _ = _run(dedupe, *argv)
-    assert rc == 0
-    assert json.loads(stdout) == {"version": "1"}
+def test_verify_requires_journal(dedupe):
+    """``verify`` is no longer a stub: with no ``--journal`` it validates its input
+    and returns 2 with a one-line stderr message, matching the sibling
+    subcommands' validation style (it does NOT emit a bare version shell)."""
+    rc, stdout, stderr = _run(dedupe, "verify")
+    assert rc == 2
+    assert stdout == ""
+    assert "journal" in stderr
 
 
 # ---------------------------------------------------------------------------
@@ -1755,3 +1750,181 @@ def test_external_callers_malformed_record_shape_returns_two(dedupe, tmp_path):
     assert rc == 2
     assert stderr.strip(), "a malformed record must produce a one-line stderr message"
     assert "blocks-json" in stderr
+
+
+# ---------------------------------------------------------------------------
+# Task 10: verify subcommand + apply-journal schema + zero-auto-edit invariant
+# (plan §"Task 10"; design §5.3.1, §3.8, §9.4 / Success Criterion #3).
+# ---------------------------------------------------------------------------
+
+
+def test_script_never_edits_corpus(dedupe, tmp_path):
+    """Zero-auto-edit: detect/external-callers/verify leave corpus byte-identical."""
+    import shutil
+    work = tmp_path / "corpus"
+    shutil.copytree(FIXTURE_DIR, work)
+    before = {p: hashlib.sha256(p.read_bytes()).hexdigest()
+              for p in work.rglob("*.md")}
+    _run(dedupe, "detect", "--seed", "file_a.md", "--corpus", str(work))
+    after = {p: hashlib.sha256(p.read_bytes()).hexdigest()
+             for p in work.rglob("*.md")}
+    assert before == after, "detect must not mutate any source file"
+
+
+# Shared arrange material for the verify tests. The "original" duplicate block is a
+# real >80-char paragraph; the pointer replaces it; the reference file holds the
+# canonical copy. content_hash is computed from original_text exactly as the script does.
+_VERIFY_ORIGINAL = (
+    "Always create the canonical reference file before deleting any duplicate "
+    "occurrence so the consolidated content is never lost during apply.\n"
+)
+_VERIFY_POINTER = "Load `apply-ordering` from `skills/shared-references/apply-ordering.md`\n"
+
+
+def _content_hash(text: str) -> str:
+    return "sha256:" + hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _build_verify_corpus(tmp_path, *, source_body: str, reference_body: str | None):
+    """Create a tiny corpus (one source file + optional reference file) and a journal
+    whose single finding/edit records _VERIFY_ORIGINAL -> _VERIFY_POINTER. Returns
+    (work_dir, journal_path)."""
+    work = tmp_path / "corpus"
+    (work / "skills" / "shared-references").mkdir(parents=True)
+    (work / "commands").mkdir(parents=True)
+    source = work / "commands" / "edited.md"
+    source.write_text(source_body, encoding="utf-8")
+    ref_rel = "skills/shared-references/apply-ordering.md"
+    if reference_body is not None:
+        (work / ref_rel).write_text(reference_body, encoding="utf-8")
+    journal = tmp_path / "journal.json"
+    journal.write_text(json.dumps({
+        "version": "1",
+        "created_at": "2026-05-25T00:00:00Z",
+        "findings": [{
+            "finding_id": "cluster-1",
+            "status": "sources_edited",
+            "reference_files": [ref_rel],
+            "edits": [{
+                "file": "commands/edited.md",
+                "original_text": _VERIFY_ORIGINAL,
+                "replacement_text": _VERIFY_POINTER.strip(),
+                "start_line": 3,
+                "end_line": 4,
+                "content_hash": _content_hash(_VERIFY_ORIGINAL),
+            }],
+        }],
+    }), encoding="utf-8")
+    return work, journal
+
+
+def test_verify_passes_for_consolidated_finding(dedupe, tmp_path):
+    """Both clauses hold: original duplicate ABSENT from source, pointer PRESENT in
+    source, AND reference file exists containing the canonical block -> verify PASS."""
+    source_body = "# Apply\n\n" + _VERIFY_POINTER + "\nThen run the apply.\n"
+    work, journal = _build_verify_corpus(
+        tmp_path, source_body=source_body, reference_body=_VERIFY_ORIGINAL
+    )
+    rc, stdout, _ = _run(dedupe, "verify", "--journal", str(journal),
+                         "--corpus", str(work))
+    data = json.loads(stdout)
+    assert all(r["pass"] for r in data["results"]), data["results"]
+
+
+def test_verify_fails_when_duplicate_still_present(dedupe, tmp_path):
+    """Clause 1 isolated: pointer present AND reference exists, but the ORIGINAL
+    duplicate is ALSO still in the source -> verify FAIL (so clause 1 cannot be
+    silently skipped; only the still-present-duplicate condition causes the fail)."""
+    source_body = "# Apply\n\n" + _VERIFY_POINTER + "\n" + _VERIFY_ORIGINAL
+    work, journal = _build_verify_corpus(
+        tmp_path, source_body=source_body, reference_body=_VERIFY_ORIGINAL
+    )
+    rc, stdout, _ = _run(dedupe, "verify", "--journal", str(journal),
+                         "--corpus", str(work))
+    data = json.loads(stdout)
+    assert any(not r["pass"] for r in data["results"]), data["results"]
+    reasons = [s for r in data["results"] for s in r["reasons"]]
+    assert any("clause1" in s for s in reasons), reasons
+
+
+def test_verify_fails_when_pointer_or_reference_missing(dedupe, tmp_path):
+    """Clause 2 isolated: original duplicate ABSENT (so clause 1 holds), but neither
+    the pointer line is present nor the reference file exists -> verify FAIL (so
+    clause 2 cannot be silently skipped; only the missing-pointer/ref condition fails)."""
+    source_body = "# Apply\n\nSome unrelated prose that is long enough to be a block here.\n"
+    work, journal = _build_verify_corpus(
+        tmp_path, source_body=source_body, reference_body=None
+    )
+    rc, stdout, _ = _run(dedupe, "verify", "--journal", str(journal),
+                         "--corpus", str(work))
+    data = json.loads(stdout)
+    assert any(not r["pass"] for r in data["results"]), data["results"]
+    reasons = [s for r in data["results"] for s in r["reasons"]]
+    assert any("clause2" in s for s in reasons), reasons
+
+
+def test_verify_fails_when_reference_block_fragmented(dedupe, tmp_path):
+    """Clause 2 content-integrity: the reference file must CONTAIN the consolidated
+    block (a re-segmented block matching original_text at/above the confirm
+    threshold), not merely clear a whole-file similarity ratio. Here the canonical
+    sentence is fragmented -- split across two paragraphs with an unrelated note
+    between them -- so NO single segmented block matches _VERIFY_ORIGINAL at >= 0.85
+    (best block ratio ~0.842), yet the whole-file seqmatch ratio is ~0.90 (>= 0.85).
+    A whole-file fallback would FALSE-PASS this; per-block matching correctly FAILs.
+
+    Clauses 1 and 2a are satisfied (original duplicate absent, pointer present) so
+    only the fragmented-reference condition can drive the failure."""
+    # Fragmented reference: _VERIFY_ORIGINAL split after the 5th word, with a short
+    # unrelated separator that re-merges the halves into one sub-threshold block.
+    words = _VERIFY_ORIGINAL.strip().split(" ")
+    half1 = " ".join(words[:5])
+    half2 = " ".join(words[5:])
+    fragmented_ref = f"{half1}\n\nSee the canonical block above.\n\n{half2}\n"
+    source_body = "# Apply\n\n" + _VERIFY_POINTER + "\nThen run the apply.\n"
+    work, journal = _build_verify_corpus(
+        tmp_path, source_body=source_body, reference_body=fragmented_ref
+    )
+    rc, stdout, _ = _run(dedupe, "verify", "--journal", str(journal),
+                         "--corpus", str(work))
+    data = json.loads(stdout)
+    assert any(not r["pass"] for r in data["results"]), data["results"]
+    reasons = [s for r in data["results"] for s in r["reasons"]]
+    assert any("does not contain the consolidated" in s for s in reasons), reasons
+
+
+def test_verify_resolves_comma_corpus(dedupe, tmp_path):
+    """The --corpus contract is a COMMA-SEPARATED list of files/dirs. For verify,
+    the journal's repo-relative paths resolve against a single ROOT derived from
+    that list (a lone dir is the root; multiple entries use their common ancestor).
+    Treating the entire comma-joined arg as one Path() yields a bogus root so every
+    finding silently reports pass: false. Passing the same work dir twice
+    (`work,work`) must resolve to that dir as root and the consolidated finding
+    must PASS exactly as the single-dir form does."""
+    source_body = "# Apply\n\n" + _VERIFY_POINTER + "\nThen run the apply.\n"
+    work, journal = _build_verify_corpus(
+        tmp_path, source_body=source_body, reference_body=_VERIFY_ORIGINAL
+    )
+    rc, stdout, _ = _run(dedupe, "verify", "--journal", str(journal),
+                         "--corpus", f"{work},{work}")
+    data = json.loads(stdout)
+    assert all(r["pass"] for r in data["results"]), data["results"]
+
+
+def test_verify_fails_when_no_edits(dedupe, tmp_path):
+    """A finding with an empty edits list checks nothing; it must NOT vacuously PASS
+    (a green mirage that reports a consolidation 'landed' while verifying nothing).
+    It must FAIL with a reason naming the missing edits."""
+    work, journal = _build_verify_corpus(
+        tmp_path,
+        source_body="# Apply\n\nUnrelated prose long enough to be a block here.\n",
+        reference_body=_VERIFY_ORIGINAL,
+    )
+    data_journal = json.loads(journal.read_text(encoding="utf-8"))
+    data_journal["findings"][0]["edits"] = []
+    journal.write_text(json.dumps(data_journal), encoding="utf-8")
+    rc, stdout, _ = _run(dedupe, "verify", "--journal", str(journal),
+                         "--corpus", str(work))
+    data = json.loads(stdout)
+    assert any(not r["pass"] for r in data["results"]), data["results"]
+    reasons = [s for r in data["results"] for s in r["reasons"]]
+    assert any("edits" in s for s in reasons), reasons
