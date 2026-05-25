@@ -332,8 +332,8 @@ def test_normalize_strips_backticks(dedupe):
 #     - is_drift_candidate = (j >= jaccard_threshold) and (seqmatch_ratio < 1.0)
 #     - NO boilerplate check in score_pair (boilerplate is excluded once, at
 #       segmentation time -- Task 5; the SOLE boilerplate guard).
-#     - contains_safety_marker is the Task 4 PLACEHOLDER (always False here);
-#       the real INLINE-MANDATORY/danger detection lands in Task 7.
+#     - contains_safety_marker reflects REAL detection (wired in Task 7): a pair
+#       is True iff either block's raw_text matches a _SAFETY_MARKERS token.
 # ---------------------------------------------------------------------------
 
 
@@ -412,8 +412,10 @@ def test_score_pair_identical_not_drift_candidate(dedupe):
     assert pair.drift_delta == 0.0
     # Identical text: seqmatch_ratio == 1.0 -> NOT a drift candidate.
     assert pair.is_drift_candidate is False
-    # Task 4 placeholder: contains_safety_marker is always False (wired in Task 7).
-    assert pair.contains_safety_marker is False
+    # Task 7 wired real detection: this block's text contains the imperative
+    # safety marker "always" ("ALWAYS" in _SAFETY_MARKERS), so the pair carries
+    # contains_safety_marker == True. (Was an always-False Task 4 placeholder.)
+    assert pair.contains_safety_marker is True
 
 
 def test_score_pair_high_jaccard_not_identical_is_drift_candidate(dedupe):
@@ -429,6 +431,9 @@ def test_score_pair_high_jaccard_not_identical_is_drift_candidate(dedupe):
     assert pair.seqmatch_ratio < 1.0
     assert pair.drift_delta == 1.0 - pair.seqmatch_ratio
     assert pair.is_drift_candidate is True
+    # Task 7 wired real detection: neither block carries a safety marker
+    # ("do not"/"push" are not in _SAFETY_MARKERS), so this ordinary drift pair
+    # stays contains_safety_marker == False. (Was an always-False Task 4 placeholder.)
     assert pair.contains_safety_marker is False
 
 
@@ -954,3 +959,246 @@ def test_child_in_parent_suppression_keeps_non_contained(dedupe):
     p2 = pair(a2, b2)
     survivors = dedupe.child_in_parent_suppression([p1, p2])
     assert survivors == [p1, p2], "non-overlapping pairs are both retained"
+
+
+# ---------------------------------------------------------------------------
+# Task 7: INLINE-MANDATORY predicate + safety-marker + dangerous-action denylist
+# (plan §"Task 7" Step 1, design §4.4 -- C6).
+#   contains_safety_marker(text)         -> True iff any _SAFETY_MARKERS token
+#                                           matches (case-insensitive).
+#   danger_lines(file, text)             -> {1-based-line: line_text} for every
+#                                           line matching _DANGER_DENYLIST.
+#   is_inline_mandatory(block, all_lines)-> True if the block carries a safety
+#                                           marker OR positionally encloses a
+#                                           dangerous action (Clause 3).
+#   score_pair wires contains_safety_marker = marker(a.raw_text) or
+#                                             marker(b.raw_text) (real, not the
+#                                             Task 4 always-False placeholder).
+# _DANGER_DENYLIST is a MODULE CONSTANT in the MVP; the --danger-denylist CLI
+# flag is DEFERRED (post-review fix MINOR 9).
+# ---------------------------------------------------------------------------
+
+
+def test_safety_marker_detected(dedupe):
+    # Exact True/False per marker class: CRITICAL token, imperative "MUST",
+    # <RULE> tag -> True; calm prose with no marker -> False.
+    assert dedupe.contains_safety_marker("This is CRITICAL: never push to main") is True
+    assert dedupe.contains_safety_marker("You MUST validate input") is True
+    assert dedupe.contains_safety_marker("<RULE>do not delete</RULE>") is True
+    assert dedupe.contains_safety_marker(
+        "a calm descriptive paragraph about colors"
+    ) is False
+
+
+def test_safety_marker_full_token_set(dedupe):
+    # Construct the complete expected boolean map over a representative input per
+    # marker class plus negatives; assert the whole dict at once (Full Assertion).
+    cases = {
+        "this rule is CRITICAL to obey": True,
+        "this action is FORBIDDEN": True,
+        "<CRITICAL>guard</CRITICAL>": True,
+        "you must NEVER force push": True,
+        "ALWAYS check the operator first": True,
+        "this MUST NOT be skipped": True,
+        "Inviolable Rules apply here": True,
+        "see the Git Safety section": True,
+        "you MUST validate the payload": True,
+        # negatives: ordinary descriptive prose with no marker token.
+        "the sky is a pleasant shade of blue today": False,
+        "engineers record the rationale for each tradeoff": False,
+    }
+    result = {text: dedupe.contains_safety_marker(text) for text in cases}
+    assert result == cases
+
+
+def test_danger_lines_exact_map(dedupe):
+    # danger_lines returns {1-based whole-file line: line_text} for EVERY line
+    # matching _DANGER_DENYLIST. Construct the complete expected dict.
+    text = (
+        "## Steps\n"           # line 1 - no danger token
+        "\n"                   # line 2
+        "First confirm with the operator.\n"   # line 3 - no token
+        "Then run git push to publish.\n"      # line 4 - "git push"
+        "Optionally rm -rf the scratch dir.\n" # line 5 - "rm -rf" / "rm"
+        "A calm sentence with no danger.\n"    # line 6 - none
+    )
+    expected = {
+        4: "Then run git push to publish.",
+        5: "Optionally rm -rf the scratch dir.",
+    }
+    assert dedupe.danger_lines("x.md", text) == expected
+
+
+def test_danger_lines_whole_token_not_substring(dedupe):
+    # "force" must match as a whole word, NOT inside "reinforcements" / "enforce".
+    # "rm" must not match inside "harm" / "form". The denylist is whole-token.
+    text = (
+        "Send reinforcements to enforce the policy.\n"  # line 1 - no whole token
+        "This will not harm the form at all.\n"          # line 2 - no whole token
+        "Use --force only when instructed.\n"            # line 3 - "--force" / "force"
+    )
+    expected = {3: "Use --force only when instructed."}
+    assert dedupe.danger_lines("x.md", text) == expected
+
+
+def test_inline_mandatory_on_safety_block(dedupe):
+    # A segmented block whose body carries safety markers (MUST/NEVER/CRITICAL)
+    # is INLINE-MANDATORY by Clause 1, independent of any danger line. The body
+    # is long enough to clear the default min-block-chars floor so segment()
+    # yields the heading-section block.
+    block = dedupe.segment(
+        "x.md",
+        "## Guard\n\nYou MUST NEVER force push to the protected main branch under "
+        "any circumstance, this is CRITICAL and non-negotiable for every "
+        "contributor.\n",
+    )[0]
+    assert dedupe.is_inline_mandatory(block, all_lines={}) is True
+
+
+def test_inline_mandatory_ordinary_block_is_false(dedupe):
+    # An ordinary descriptive block with neither a safety marker nor an enclosed
+    # danger line is NOT inline-mandatory.
+    block = dedupe.segment(
+        "x.md",
+        "## Notes\n\nThis paragraph calmly describes the release calendar cadence "
+        "and the soak window for candidate builds before promotion to production.\n",
+    )[0]
+    assert dedupe.is_inline_mandatory(block, all_lines={}) is False
+
+
+def test_inline_mandatory_clause3_positional(dedupe):
+    """Block enclosing a dangerous-action line in the same heading-section is in-flow."""
+    text = (
+        "## Apply\n\n"
+        "Always confirm with the operator before proceeding with the operation.\n\n"
+        "Then run git push to publish.\n"
+    )
+    blocks = dedupe.segment("x.md", text)
+    guard = next(b for b in blocks if "confirm with the operator" in b.raw_text)
+    assert dedupe.is_inline_mandatory(
+        guard, all_lines=dedupe.danger_lines("x.md", text)
+    ) is True
+
+
+def test_inline_mandatory_clause3_no_danger_line_is_false(dedupe):
+    # The same guard block, but with NO danger lines in scope, is NOT in-flow by
+    # Clause 3 (it has no safety marker either: "always" IS a marker, so use a
+    # marker-free guard to isolate Clause 3). End-to-end: an enclosing section
+    # with no danger action and no marker is not inline-mandatory.
+    text = (
+        "## Review\n\n"
+        "First confirm with the operator before proceeding with the operation.\n\n"
+        "Then read the published summary document.\n"
+    )
+    blocks = dedupe.segment("x.md", text)
+    guard = next(b for b in blocks if "confirm with the operator" in b.raw_text)
+    assert dedupe.danger_lines("x.md", text) == {}
+    assert dedupe.is_inline_mandatory(
+        guard, all_lines=dedupe.danger_lines("x.md", text)
+    ) is False
+
+
+def test_pair_carries_safety_marker(dedupe):
+    blocks = _load_fixture_blocks(dedupe, ["file_a.md", "file_c.md"])
+    pairs = dedupe.pair_corpus(blocks, jaccard_threshold=0.7, confirm_threshold=0.85)
+    # The load-bearing CRITICAL/NEVER repeat (file_a/file_c "Load Bearing Safety
+    # Section") must set contains_safety_marker on its surviving pair(s); the
+    # ordinary TRIPLE_BLOCK release-cadence pair must NOT.
+    safety = [p for p in pairs if "credential vault" in p.a.raw_text]
+    ordinary = [p for p in pairs if "TRIPLE_BLOCK" in p.a.raw_text]
+    assert safety, "the load-bearing CRITICAL repeat must produce a surviving pair"
+    assert ordinary, "the TRIPLE_BLOCK release-cadence repeat must produce a pair"
+    assert all(p.contains_safety_marker is True for p in safety), \
+        "every safety pair must set contains_safety_marker True"
+    assert all(p.contains_safety_marker is False for p in ordinary), \
+        "the ordinary (non-safety) pair must leave contains_safety_marker False"
+
+
+# ---------------------------------------------------------------------------
+# Safety regression locks (review findings C1, I1, I2, Clause 3 boundary).
+#
+# C1: a multi-word marker / danger token must match across ANY internal
+# whitespace -- a double space, a tab, OR a line-wrapped newline -- not only the
+# single literal space in the source token. A naive ``re.escape(token)`` matches
+# only one ASCII space, silently escaping detection of ``git  push`` /
+# ``git\tpush`` / a wrapped ``you\nMUST`` -- a SAFETY false-negative. The
+# _token_pattern fix widens internal whitespace to ``\s+``.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "sep",
+    ["  ", "\t", "\n", " \t "],
+    ids=["double-space", "tab", "newline", "mixed"],
+)
+def test_multiword_safety_marker_matches_any_whitespace(dedupe, sep):
+    # "you MUST" and "MUST NOT" are multi-word _SAFETY_MARKERS. A run of any
+    # whitespace between the words (incl. a wrapped newline) MUST still detect.
+    assert dedupe.contains_safety_marker(f"you{sep}MUST validate input") is True
+    assert dedupe.contains_safety_marker(f"this MUST{sep}NOT be skipped") is True
+
+
+@pytest.mark.parametrize(
+    "sep",
+    ["  ", "\t", " \t "],
+    ids=["double-space", "tab", "mixed"],
+)
+def test_multiword_danger_token_matches_any_whitespace(dedupe, sep):
+    # "git push" and "rm -rf" are multi-word _DANGER_DENYLIST tokens. On a single
+    # line, a run of any whitespace between the words MUST still flag the line.
+    # (danger_lines is a per-line map, so the newline separator is exercised by
+    # the marker test above, not here -- a danger token split across two lines is
+    # legitimately two separate lines.)
+    assert dedupe.danger_lines("x.md", f"then run git{sep}push to publish") == {
+        1: f"then run git{sep}push to publish"
+    }
+    assert dedupe.danger_lines("x.md", f"optionally rm{sep}-rf the dir") == {
+        1: f"optionally rm{sep}-rf the dir"
+    }
+
+
+def test_multiword_marker_single_space_still_matches(dedupe):
+    # Regression guard: the \s+ widening must not REGRESS the ordinary single-space
+    # form that already worked before the fix.
+    assert dedupe.contains_safety_marker("you MUST validate input") is True
+    assert dedupe.danger_lines("x.md", "run git push now") == {1: "run git push now"}
+
+
+def test_safety_marker_closing_and_forbidden_tags(dedupe):
+    # I1/I2: closing tag forms (</RULE>, </CRITICAL>) and both FORBIDDEN tag forms
+    # (<FORBIDDEN>, </FORBIDDEN>) are safety markers. A closing tag is just as
+    # load-bearing as its opener -- a block ending a <CRITICAL> section is still
+    # safety content.
+    assert dedupe.contains_safety_marker("</RULE>") is True
+    assert dedupe.contains_safety_marker("</CRITICAL>") is True
+    assert dedupe.contains_safety_marker("<FORBIDDEN>") is True
+    assert dedupe.contains_safety_marker("</FORBIDDEN>") is True
+
+
+def test_destroy_is_whole_word_danger_token(dedupe):
+    # I2: "destroy" is a danger token (terraform destroy / kubectl ... destroy),
+    # matched as a WHOLE WORD -- "destroyer" and "indestructible" must NOT match.
+    assert dedupe.danger_lines("x.md", "terraform destroy the stack") == {
+        1: "terraform destroy the stack"
+    }
+    assert dedupe.danger_lines("x.md", "the destroyer arrives at dawn") == {}
+    assert dedupe.danger_lines("x.md", "this material is indestructible") == {}
+
+
+def test_inline_mandatory_clause3_span_boundary_inclusive(dedupe):
+    # Lock Clause 3's inclusive ``start_line <= L <= end_line`` bounds. A danger
+    # line AT the block's end_line taints it; a danger line at end_line+1 (one row
+    # outside the span) does NOT. Build the block by hand for an exact span.
+    block = dedupe._make_block(
+        "x.md", "heading-section", start_line=10, end_line=20,
+        raw_text="## Guard\n\nA calm marker-free paragraph describing the steps.",
+        parent_key=None,
+    )
+    # Danger line exactly at end_line (inside, inclusive) -> inline-mandatory.
+    assert dedupe.is_inline_mandatory(block, all_lines={20: "git push"}) is True
+    # Danger line exactly at start_line (inside, inclusive) -> inline-mandatory.
+    assert dedupe.is_inline_mandatory(block, all_lines={10: "git push"}) is True
+    # Danger line at end_line + 1 (just outside the span) -> NOT tainted.
+    assert dedupe.is_inline_mandatory(block, all_lines={21: "git push"}) is False
+    # Danger line at start_line - 1 (just outside the span) -> NOT tainted.
+    assert dedupe.is_inline_mandatory(block, all_lines={9: "git push"}) is False

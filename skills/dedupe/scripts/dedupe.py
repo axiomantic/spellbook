@@ -73,6 +73,124 @@ _STOP_WORDS: frozenset[str] = frozenset(
 _EMPHASIS_RE = re.compile(r"[*_`]+")
 _WHITESPACE_RE = re.compile(r"\s+")
 
+# ---------------------------------------------------------------------------
+# INLINE-MANDATORY predicate inputs (design §4.4, C6)
+#
+# These two denylists are the mechanical (non-LLM) basis for the
+# INLINE-MANDATORY screen that bars safety content from Read-on-demand routing.
+#
+# _SAFETY_MARKERS: safety/criticality tokens (design §4.4). A block carrying any
+# of these is INLINE-MANDATORY by Clause 1. Matched case-insensitively as
+# whole-word tokens so "always"/"never" inside ordinary prose are still caught
+# (these words ARE the imperative-safety signal) while substrings inside
+# unrelated words are not (e.g. "always" matches, but "ne" inside "one" does
+# not, because each marker is bounded by \b on both sides).
+#
+# _DANGER_DENYLIST: dangerous-action command/verb tokens (design §4.4). A line
+# matching any of these is a "dangerous action" for Clause 3 (positional
+# in-flow guard detection). Matched case-insensitively as whole-word/command
+# tokens, NOT as substrings inside unrelated prose (so "force" matches but
+# "reinforcements" does not; "rm" matches but "harm" does not).
+#
+# MVP override mechanism (post-review fix MINOR 9): _DANGER_DENYLIST is a
+# MODULE-LEVEL CONSTANT and is the single point of customization for now. The
+# `--danger-denylist` CLI flag described in design §4.4 is DEFERRED -- it is
+# intentionally NOT added in this MVP. Operators who need a different denylist
+# edit this constant. (Same applies to _SAFETY_MARKERS.)
+# ---------------------------------------------------------------------------
+
+_SAFETY_MARKERS: tuple[str, ...] = (
+    "CRITICAL",
+    "FORBIDDEN",
+    "<RULE>",
+    "</RULE>",
+    "<CRITICAL>",
+    "</CRITICAL>",
+    "<FORBIDDEN>",
+    "</FORBIDDEN>",
+    "NEVER",
+    "ALWAYS",
+    "MUST NOT",
+    "Inviolable",
+    "Git Safety",
+    "you MUST",
+    "NEVER do",
+    "ALWAYS check",
+)
+
+# Note: ``apply`` and ``drop`` are whole-word matches and may OVER-fire on benign
+# prose ("apply the discount", "drop a note"). This conservative over-retention is
+# intentional and accepted for the MVP: it errs toward keeping a block INLINE-
+# MANDATORY (the SAFE direction -- never demotes safety content to Read-on-demand).
+# Narrowing these to a command context (e.g. ``git apply`` / ``DROP TABLE``) is a
+# DEFERRED follow-up, not done here.
+_DANGER_DENYLIST: tuple[str, ...] = (
+    "git push",
+    "rm",
+    "rm -rf",
+    "apply",
+    "delete",
+    "--delete",
+    "force",
+    "--force",
+    "-f",
+    "reset --hard",
+    "git commit",
+    "git checkout",
+    "git rebase",
+    "git merge",
+    "git stash",
+    "drop",
+    "destroy",
+    "truncate",
+    "chmod",
+    "chown",
+)
+
+
+def _token_pattern(token: str) -> str:
+    """Whole-token regex for one denylist/marker token, with adaptive boundaries.
+
+    A token never matches a substring inside an unrelated word ("force" must not
+    match "reinforcements"; "rm" must not match "harm"). Boundaries adapt to the
+    token's own edges: a ``\\w``-lookaround is applied ONLY on an edge that is a
+    word character. Tokens whose edge is non-word (``<RULE>`` ends in ``>``,
+    ``--force`` / ``-f`` start with ``-``) get NO lookaround on that edge, so
+    they still anchor correctly even when butted against word characters
+    (``<RULE>do`` must match ``<RULE>``). The token body is escaped because the
+    members contain ``-``, ``<``, ``>``, and spaces.
+
+    Internal whitespace in a multi-word token (``git push``, ``you MUST``,
+    ``reset --hard``) is widened to ``\\s+`` so the words match across ANY run of
+    whitespace -- a double space, a tab, or a wrapped newline between them. A
+    naive ``re.escape(token)`` only matches the single literal space in the
+    source token, which silently escapes detection of ``git  push`` (two spaces),
+    ``git\\tpush`` (tab), or a line-wrapped ``you\\nMUST`` -- a SAFETY
+    false-negative for the danger/marker denylists. ``re.escape`` renders a space
+    as ``\\ `` on some Python versions and as a bare space on others, so both
+    forms (and runs of them) are folded to ``\\s+`` here.
+    """
+    body = re.sub(r"(?:\\ |\s)+", r"\\s+", re.escape(token))
+    left = r"(?<!\w)" if token[:1].isalnum() or token[:1] == "_" else ""
+    right = r"(?!\w)" if token[-1:].isalnum() or token[-1:] == "_" else ""
+    return f"{left}{body}{right}"
+
+
+def _compile_token_alternation(tokens: tuple[str, ...]) -> re.Pattern[str]:
+    """Compile a case-insensitive whole-token alternation over ``tokens``.
+
+    Tokens are sorted longest-first so a longer token (``rm -rf``) is preferred
+    over a contained shorter one (``rm``) at the same position, and each is
+    wrapped with :func:`_token_pattern`'s adaptive whole-token boundaries.
+    """
+    ordered = sorted(set(tokens), key=len, reverse=True)
+    alternation = "|".join(_token_pattern(tok) for tok in ordered)
+    return re.compile(f"(?:{alternation})", re.IGNORECASE)
+
+
+_SAFETY_MARKER_RE = _compile_token_alternation(_SAFETY_MARKERS)
+_DANGER_DENYLIST_RE = _compile_token_alternation(_DANGER_DENYLIST)
+
 
 # ---------------------------------------------------------------------------
 # Signal 1: inline Jaccard + normalization (design §3.5)
@@ -211,6 +329,80 @@ def drift_delta(a: str, b: str) -> float:
     return 1.0 - seqmatch_ratio(a, b)
 
 
+# ---------------------------------------------------------------------------
+# INLINE-MANDATORY predicate (design §4.4, C6)
+#
+# Three pure functions implement the mechanical (non-LLM) safety screen:
+#   contains_safety_marker(text) -- Clause 1/2 marker test.
+#   danger_lines(file, text)     -- the dangerous-action line map for Clause 3.
+#   is_inline_mandatory(block, *, all_lines) -- the predicate itself.
+# ---------------------------------------------------------------------------
+
+
+def contains_safety_marker(text: str) -> bool:
+    """True if ``text`` contains any ``_SAFETY_MARKERS`` token (design §4.4).
+
+    Matched case-insensitively as whole-word/command tokens (see
+    :func:`_compile_token_alternation`). Covers both the explicit criticality
+    markers (``CRITICAL``, ``FORBIDDEN``, ``<RULE>``, ...) and the imperative
+    safety phrasings (``you MUST``, ``NEVER``, ``ALWAYS``) of Clauses 1 and 2.
+    """
+    return _SAFETY_MARKER_RE.search(text) is not None
+
+
+def danger_lines(file: str, text: str) -> dict[int, str]:
+    """Map ``{1-based line number: line text}`` for every dangerous-action line.
+
+    A line is dangerous when it contains any ``_DANGER_DENYLIST`` token (whole
+    word/command token, case-insensitive). Numbering is 1-based over the WHOLE
+    file (frontmatter included), matching :func:`segment`'s absolute line
+    numbers so a Block's ``start_line``/``end_line`` can be compared directly
+    against these keys in Clause 3. ``file`` is accepted for call-site symmetry
+    with the rest of the pipeline (and future per-file reporting); the mapping
+    is computed from ``text`` alone.
+    """
+    found: dict[int, str] = {}
+    for lineno, line in enumerate(text.splitlines(), start=1):
+        if _DANGER_DENYLIST_RE.search(line):
+            found[lineno] = line
+    return found
+
+
+def is_inline_mandatory(block: Block, *, all_lines: dict[int, str]) -> bool:
+    """Mechanical INLINE-MANDATORY predicate (design §4.4, C6).
+
+    A block is INLINE-MANDATORY -- and therefore NEVER eligible for
+    Read-on-demand routing -- if ANY of:
+
+    1/2. **Clauses 1 and 2 (markers):** ``contains_safety_marker(block.raw_text)``
+       -- the block carries a safety/criticality marker (Clause 1) or
+       imperative-safety phrasing directed at the agent (Clause 2). Both clauses
+       are folded into the single ``contains_safety_marker`` marker test, which is
+       why there is no separate "2." below.
+    3. **Clause 3 (positional in-flow guard):** the block *encloses* a dangerous
+       action -- a danger line ``L`` from :func:`danger_lines` (``all_lines`` is
+       its ``{line: text}`` output) falls within the block's own span
+       (``start_line <= L <= end_line``). A heading-section block that contains a
+       dangerous-action line is an in-flow guard for that action and must stay
+       inline.
+
+    NOTE (scope, plan §"Task 7" / design §4.4): design §4.4 also describes a
+    strict child-level Clause 3 variant -- a child block whose ``parent_key``
+    equals the *danger line's* enclosing-section block_id and whose ``end_line``
+    strictly precedes the danger line. That cross-section disambiguation needs
+    per-line parent membership, which the chosen ``all_lines={line: text}``
+    boundary does not carry, so it is DEFERRED. The enclosing-section test above
+    is the MVP behavior and is what the default segmenter exercises: a sub-floor
+    guard paragraph is folded into its enclosing heading-section block, which
+    then *encloses* the danger line (``start_line <= L <= end_line``).
+    """
+    if contains_safety_marker(block.raw_text):
+        return True
+    return any(
+        block.start_line <= lineno <= block.end_line for lineno in all_lines
+    )
+
+
 def score_pair(
     block_a: Block,
     block_b: Block,
@@ -237,8 +429,11 @@ def score_pair(
     at segmentation time (the SOLE boilerplate guard), so every block reaching
     ``score_pair`` is already de-boilerplated.
 
-    ``contains_safety_marker`` is a Task 4 placeholder (always ``False``); the real
-    INLINE-MANDATORY / danger detection is wired in later (design §4.4).
+    ``contains_safety_marker`` is the real INLINE-MANDATORY hint (design §4.4,
+    wired here): ``True`` when EITHER block's ``raw_text`` carries a safety marker
+    (``contains_safety_marker(a.raw_text) or contains_safety_marker(b.raw_text)``).
+    A safety marker on either endpoint taints the pair so downstream routing
+    cannot demote it to Read-on-demand (C6).
     """
     j = jaccard(block_a.normalized_text, block_b.normalized_text)
     if j < jaccard_threshold:
@@ -251,7 +446,10 @@ def score_pair(
         seqmatch_ratio=s,
         drift_delta=1.0 - s,
         is_drift_candidate=j >= jaccard_threshold and s < 1.0,
-        contains_safety_marker=False,
+        contains_safety_marker=(
+            contains_safety_marker(block_a.raw_text)
+            or contains_safety_marker(block_b.raw_text)
+        ),
     )
 
 
