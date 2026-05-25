@@ -2,72 +2,220 @@
 
 ## Workflow Diagram
 
+Now I'll generate the diagrams based on the command's workflow.
+
+## Overview Diagram
+
 ```mermaid
 flowchart TD
-    Start([User Choice Received]) --> OptionSwitch{"Which Option?"}
-    OptionSwitch -->|Option 1: Merge| CheckoutBase["Checkout Base Branch"]
-    OptionSwitch -->|Option 2: PR| PushBranch["Push Branch\nto Origin"]
-    OptionSwitch -->|Option 3: PR+Dance| PushBranch2["Push Branch\nto Origin"]
-    OptionSwitch -->|Option 4: Keep| ReportKeep([Report: Keeping\nBranch As-Is])
-    OptionSwitch -->|Option 5: Discard| ShowWarning["Show Discard\nWarning"]
-    CheckoutBase --> PullLatest["Pull Latest\nBase Branch"]
-    PullLatest --> MergeBranch["Merge Feature\nBranch"]
-    MergeBranch --> PostMergeTest["Run Post-Merge\nTests"]
-    PostMergeTest --> MergeTestGate{"Tests Pass?"}
-    MergeTestGate -->|No| MergeFail([Report Failure\nKeep Branch])
-    MergeTestGate -->|Yes| DeleteBranch["Delete Feature\nBranch"]
-    DeleteBranch --> ToCleanup1["Invoke\nfinish-branch-cleanup"]
-    PushBranch --> CreatePR["Create PR\nvia gh"]
-    CreatePR --> ReportURL["Report PR URL"]
-    ReportURL --> ToCleanup2["Invoke\nfinish-branch-cleanup"]
-    PushBranch2 --> CreatePR2["Create PR\nvia gh"]
-    CreatePR2 --> ReportURL2["Report PR URL"]
-    ReportURL2 --> ExecutePRDance["Dispatch Subagent\nto Execute pr-dance"]
-    ExecutePRDance --> ToCleanup4["Invoke\nfinish-branch-cleanup"]
-    ShowWarning --> TypeConfirm{"User Types\n'discard'?"}
-    TypeConfirm -->|No / Partial| RejectDiscard([Discard Cancelled])
-    TypeConfirm -->|Yes| CheckoutDiscard["Checkout Base\nBranch"]
-    CheckoutDiscard --> ForceDelete["Force Delete\nFeature Branch"]
-    ForceDelete --> ToCleanup3["Invoke\nfinish-branch-cleanup"]
-    ToCleanup1 --> Done([Integration Complete])
-    ToCleanup2 --> Done
-    ToCleanup3 --> Done
-    ToCleanup4 --> Done
+    START(["Entry\nOption 1–5 chosen\nfeature branch, base branch\nworktree path"])
 
-    style Start fill:#4CAF50,color:#fff
-    style Done fill:#4CAF50,color:#fff
-    style ReportKeep fill:#4CAF50,color:#fff
-    style MergeFail fill:#f44336,color:#fff
-    style RejectDiscard fill:#f44336,color:#fff
-    style CheckoutBase fill:#2196F3,color:#fff
-    style PullLatest fill:#2196F3,color:#fff
-    style MergeBranch fill:#2196F3,color:#fff
-    style PostMergeTest fill:#2196F3,color:#fff
-    style DeleteBranch fill:#2196F3,color:#fff
-    style PushBranch fill:#2196F3,color:#fff
-    style CreatePR fill:#2196F3,color:#fff
-    style ReportURL fill:#2196F3,color:#fff
-    style PushBranch2 fill:#2196F3,color:#fff
-    style CreatePR2 fill:#2196F3,color:#fff
-    style ReportURL2 fill:#2196F3,color:#fff
-    style ExecutePRDance fill:#4CAF50,color:#fff
-    style ShowWarning fill:#2196F3,color:#fff
-    style CheckoutDiscard fill:#2196F3,color:#fff
-    style ForceDelete fill:#2196F3,color:#fff
-    style ToCleanup1 fill:#4CAF50,color:#fff
-    style ToCleanup2 fill:#4CAF50,color:#fff
-    style ToCleanup3 fill:#4CAF50,color:#fff
-    style ToCleanup4 fill:#4CAF50,color:#fff
-    style OptionSwitch fill:#FF9800,color:#fff
-    style TypeConfirm fill:#FF9800,color:#fff
-    style MergeTestGate fill:#f44336,color:#fff
+    DECIDE{Which option?}
+
+    OPT1["Option 1\nMerge Locally"]
+    OPT2["Option 2\nPush & Create PR"]
+    OPT3["Option 3\nPush + PR + PR Dance"]
+    OPT4["Option 4\nKeep As-Is"]
+    OPT5["Option 5\nDiscard"]
+
+    POST_PR["Post-PR:\nSurface Deferred\nFollow-up Tasks"]
+
+    CLEANUP["finish-branch-cleanup"]
+
+    KEEP_END(["Branch preserved\nNo cleanup"])
+
+    START --> DECIDE
+    DECIDE -->|"1"| OPT1
+    DECIDE -->|"2"| OPT2
+    DECIDE -->|"3"| OPT3
+    DECIDE -->|"4"| OPT4
+    DECIDE -->|"5"| OPT5
+
+    OPT1 --> CLEANUP
+    OPT2 --> POST_PR
+    OPT3 --> POST_PR
+    POST_PR --> CLEANUP
+    OPT4 --> KEEP_END
+    OPT5 --> CLEANUP
+
+    subgraph LEGEND["Legend"]
+        L_PROC["Process"]
+        L_GATE["Quality Gate / STOP"]:::gate
+        L_SUB["Subagent Dispatch"]:::subagent
+        L_OK(["Success Terminal"]):::success
+    end
+
+    classDef gate fill:#ff6b6b,color:#000
+    classDef subagent fill:#4a9eff,color:#000
+    classDef success fill:#51cf66,color:#000
 ```
 
-**Changes made:**
-- Added Option 3 branch (PR+Dance): `OptionSwitch -->|Option 3: PR+Dance| PushBranch2`
-- Created separate PR+Dance path: PushBranch2 → CreatePR2 → ReportURL2 → ExecutePRDance → ToCleanup4
-- Renumbered Option 3 (Keep) → Option 4, Option 4 (Discard) → Option 5
-- Styled ExecutePRDance as green (skill invocation) with ToCleanup4 convergence to Done
+---
+
+## Detail: Option 1 — Merge Locally
+
+```mermaid
+flowchart TD
+    A["checkout &lt;base-branch&gt;"]
+    B["git pull"]
+    C["git merge &lt;feature-branch&gt;"]
+    D["Run test command"]
+    FAIL_GATE["STOP — Report failure\nDo NOT delete branch\nUser decides next steps"]:::gate
+    DEL["git branch -d &lt;feature-branch&gt;"]
+    CLEANUP["invoke finish-branch-cleanup"]:::subagent
+    DONE(["Merge complete"]):::success
+
+    A --> B --> C --> D
+    D -->|"tests fail"| FAIL_GATE
+    D -->|"tests pass"| DEL --> CLEANUP --> DONE
+
+    subgraph LEGEND["Legend"]
+        L_GATE["Quality Gate / STOP"]:::gate
+        L_SUB["Subagent / Skill Invocation"]:::subagent
+        L_OK(["Success Terminal"]):::success
+    end
+
+    classDef gate fill:#ff6b6b,color:#000
+    classDef subagent fill:#4a9eff,color:#000
+    classDef success fill:#51cf66,color:#000
+```
+
+---
+
+## Detail: Option 2 — Push & Create PR
+
+```mermaid
+flowchart TD
+    PUSH["git push -u origin &lt;feature-branch&gt;"]
+    PR["gh pr create\n--title / --body"]
+    FAIL_GATE["STOP — Report error\nDo NOT proceed to cleanup"]:::gate
+    REPORT["Report PR URL to user"]
+    POST["Post-PR: Surface Follow-up Tasks"]
+    CLEANUP["invoke finish-branch-cleanup"]:::subagent
+    DONE(["PR created"]):::success
+
+    PUSH -->|"push fails"| FAIL_GATE
+    PUSH -->|"push succeeds"| PR
+    PR -->|"PR creation fails"| FAIL_GATE
+    PR -->|"PR created"| REPORT --> POST --> CLEANUP --> DONE
+
+    subgraph LEGEND["Legend"]
+        L_GATE["Quality Gate / STOP"]:::gate
+        L_SUB["Subagent / Skill Invocation"]:::subagent
+        L_OK(["Success Terminal"]):::success
+    end
+
+    classDef gate fill:#ff6b6b,color:#000
+    classDef subagent fill:#4a9eff,color:#000
+    classDef success fill:#51cf66,color:#000
+```
+
+---
+
+## Detail: Option 3 — Push + PR + PR Dance
+
+```mermaid
+flowchart TD
+    PUSH["git push -u origin &lt;feature-branch&gt;"]
+    PR["gh pr create"]
+    FAIL_GATE["STOP — Report error\nDo NOT proceed"]:::gate
+    REPORT["Report PR URL to user"]
+    DANCE["Dispatch subagent\ncommand: pr-dance\n(PR number, repo owner, branch)"]:::subagent
+    POST["Post-PR: Surface Follow-up Tasks"]
+    CLEANUP["invoke finish-branch-cleanup"]:::subagent
+    DONE(["PR merge-ready"]):::success
+
+    PUSH -->|"push fails"| FAIL_GATE
+    PUSH -->|"succeeds"| PR
+    PR -->|"PR creation fails"| FAIL_GATE
+    PR -->|"PR created"| REPORT --> DANCE --> POST --> CLEANUP --> DONE
+
+    subgraph LEGEND["Legend"]
+        L_GATE["Quality Gate / STOP"]:::gate
+        L_SUB["Subagent / Skill Invocation"]:::subagent
+        L_OK(["Success Terminal"]):::success
+    end
+
+    classDef gate fill:#ff6b6b,color:#000
+    classDef subagent fill:#4a9eff,color:#000
+    classDef success fill:#51cf66,color:#000
+```
+
+---
+
+## Detail: Post-PR — Surface Deferred Follow-up Tasks
+
+```mermaid
+flowchart TD
+    QUERY["memory_recall(tags='follow-up-task')\nscoped to current project"]
+    EMPTY{Results?}
+    SKIP["Skip — proceed directly\nto finish-branch-cleanup"]
+    PRESENT["Present open Follow-up Tasks\nAskUserQuestion (verbatim options)"]
+    CHOICE{Operator choice?}
+    WORK["Hand tasks to develop skill\nthis session"]:::subagent
+    PROMPT["Emit standalone prompt\n(embeds actionable steps +\nmemory_recall rehydration query)"]
+    LATER["No action —\nentries persist in memory\nsurfaced at next session_init"]
+    CLEANUP["invoke finish-branch-cleanup"]:::subagent
+    DONE(["Follow-up handled"]):::success
+
+    QUERY --> EMPTY
+    EMPTY -->|"empty"| SKIP --> CLEANUP
+    EMPTY -->|"one or more tasks"| PRESENT --> CHOICE
+    CHOICE -->|"Work them now"| WORK --> CLEANUP
+    CHOICE -->|"Give me a standalone prompt"| PROMPT --> CLEANUP
+    CHOICE -->|"Leave them for later"| LATER --> CLEANUP
+    CLEANUP --> DONE
+
+    subgraph LEGEND["Legend"]
+        L_SUB["Subagent / Skill Invocation"]:::subagent
+        L_OK(["Success Terminal"]):::success
+    end
+
+    classDef subagent fill:#4a9eff,color:#000
+    classDef success fill:#51cf66,color:#000
+```
+
+---
+
+## Detail: Option 5 — Discard
+
+```mermaid
+flowchart TD
+    CONFIRM_GATE["Show confirmation prompt:\nBranch name, all commits,\nworktree path at risk\nType exact string 'discard'"]:::gate
+    WAIT{Exact 'discard'\nreceived?}
+    ABORT(["Abort — do NOT delete\nask again if unclear"]):::gate
+    CHECKOUT["git checkout &lt;base-branch&gt;"]
+    DELETE["git branch -D &lt;feature-branch&gt;"]
+    CLEANUP["invoke finish-branch-cleanup"]:::subagent
+    DONE(["Branch discarded"]):::success
+
+    CONFIRM_GATE --> WAIT
+    WAIT -->|"partial match /\nno match / autonomous mode"| ABORT
+    WAIT -->|"exact 'discard'"| CHECKOUT --> DELETE --> CLEANUP --> DONE
+
+    subgraph LEGEND["Legend"]
+        L_GATE["Quality Gate / Circuit Breaker"]:::gate
+        L_SUB["Subagent / Skill Invocation"]:::subagent
+        L_OK(["Success Terminal"]):::success
+    end
+
+    classDef gate fill:#ff6b6b,color:#000
+    classDef subagent fill:#4a9eff,color:#000
+    classDef success fill:#51cf66,color:#000
+```
+
+---
+
+## Cross-Reference Table
+
+| Overview Node | Detail Diagram |
+|---|---|
+| Option 1: Merge Locally | Detail: Option 1 — Merge Locally |
+| Option 2: Push & Create PR | Detail: Option 2 — Push & Create PR |
+| Option 3: Push + PR + PR Dance | Detail: Option 3 — Push + PR + PR Dance |
+| Post-PR: Surface Deferred Follow-up Tasks | Detail: Post-PR — Surface Deferred Follow-up Tasks |
+| Option 5: Discard | Detail: Option 5 — Discard |
+| Option 4: Keep As-Is | Trivial — report and stop; no cleanup invoked |
 
 ## Command Content
 
@@ -127,7 +275,7 @@ EOF
 
 **If push or PR creation fails:** STOP. Report the error. Do NOT proceed to cleanup.
 
-Report the PR URL to the user. After PR creation: invoke `finish-branch-cleanup`.
+Report the PR URL to the user. After PR creation: run **Post-PR: Surface Deferred Follow-up Tasks** (below), then invoke `finish-branch-cleanup`.
 
 ---
 
@@ -139,7 +287,44 @@ Provide context: PR number/URL from the PR just created, repo owner, feature bra
 
 The subagent drives the PR through iterative CI + bot review cycles until merge-ready. See `pr-dance` command for the full protocol.
 
-After the subagent completes: invoke `finish-branch-cleanup`.
+After the subagent completes: run **Post-PR: Surface Deferred Follow-up Tasks** (below), then invoke `finish-branch-cleanup`.
+
+---
+
+## Post-PR: Surface Deferred Follow-up Tasks
+
+<CRITICAL>
+This step is **additive** and runs after the PR URL is reported (Option 2 and Option 3). It does NOT gate cleanup — if the operator declines or no Follow-up Tasks exist, proceed directly to `finish-branch-cleanup`.
+</CRITICAL>
+
+Follow-up Tasks are concrete, durable deferrals recorded during develop via `memory_store` (type `project`, kind `decision`, tags `follow-up-task, develop-deferred`). The memory entries — not the branch-local plan — are the source of truth, so they survive branch deletion and are queryable from a fresh session.
+
+**Steps:**
+
+1. Query `memory_recall(tags="follow-up-task")` scoped to the current project.
+2. If the result is empty, skip this section entirely and proceed to `finish-branch-cleanup`. Do NOT prompt.
+3. If one or more open Follow-up Tasks are returned, present them and ask the operator using AskUserQuestion with these options VERBATIM:
+
+   > **Follow-up Tasks deferred during this work (N):**
+   > [list each item's short title]
+   > Do you want to (a) work them now in this session, or (b) get a standalone prompt you can paste into a fresh session to tackle them later?
+
+   Options (VERBATIM):
+   - `Work them now`
+   - `Give me a standalone prompt`
+   - `Leave them for later`
+
+4. Act on the choice:
+   - **`Work them now`** — Hand the open Follow-up Tasks to the develop skill in this session (each item's *Actionable next step* is the entry point). This is independent of cleanup; still proceed to `finish-branch-cleanup` per step 5.
+   - **`Give me a standalone prompt`** — Emit a self-contained prompt the operator can paste into a cold session. It MUST embed, for each open item, the item's *Actionable next step*, AND the rehydration query `memory_recall(tags="follow-up-task")` so a fresh session can re-fetch the full entries. Example shape:
+
+     > Resume deferred Follow-up Tasks for `<project>`. First run `memory_recall(tags="follow-up-task")` to load the durable entries, then work these:
+     > 1. `<title>` — `<actionable next step>`
+     > 2. ...
+
+   - **`Leave them for later`** — Do nothing further; the entries remain in memory and will be surfaced again at the next `session_init` (open Follow-up Tasks count).
+
+5. Proceed to `finish-branch-cleanup` regardless of the choice.
 
 ---
 

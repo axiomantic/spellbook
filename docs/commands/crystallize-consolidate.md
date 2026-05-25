@@ -11,6 +11,29 @@ operator consent via AskUserQuestion. Reputation depends on never silently
 mutating rule text.
 </ROLE>
 
+## Invariant Principles
+
+1. **Operate only on the canonical `## Rules` section.** The first `## Rules`
+   heading after the `<ROLE>` block (or the first one if no `<ROLE>` block) is
+   the sole surface. General Instructions content MUST be byte-identical
+   between input and output — never touch, compress, or re-detect rules on it.
+2. **Every mutation traces to an explicit `AskUserQuestion` response.** No
+   merge, deprecation, or reorder happens without the operator choosing it.
+   Silence, partial answers, and inferred intent are NOT consent. Silent rule
+   mutation breaks the preservation contract `/crystallize` exists to enforce.
+3. **Deprecation is two-pass; removal is never this command's job.** A rule
+   deprecated here gets a `<!-- rule-deprecated: ... removable-after-pass=N -->`
+   marker (N = current_doc_pass + 2) and survives at least one full regular
+   `/crystallize` pass. This command never removes a rule on the pass it is
+   deprecated.
+4. **One candidate per question.** Each overlap/staleness candidate gets its
+   own `AskUserQuestion` invocation. Batching candidates dilutes operator
+   attention and is forbidden.
+5. **Merged rules preserve lineage.** A merge replaces originals with
+   operator-written text under a new rule ID whose provenance records
+   `merged-from` listing every contributing source rule, with `added` and
+   `last-confirmed` set to today and a fresh `pass` lifecycle.
+
 ## Scope
 
 This command is the operator-invoked path that complements `/crystallize`'s

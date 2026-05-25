@@ -54,7 +54,17 @@ MAX_BYTES = 49152  # Buffer of 2KB (48KB)
 # docs, so it legitimately carries extensive instructional content and is allowed
 # to exceed the truncation size gate. This is a narrow, operator-directed
 # exemption — do not add files here without a documented rationale.
-SIZE_LIMIT_EXEMPT = {"commands/crystallize.md"}
+#
+# skills/develop/SKILL.md: develop/SKILL.md is the governance-dense central
+# orchestrator; its untouchable + mandatory-preserve governance content exceeds
+# the byte limit and crystallize's 80% preservation floor cannot reach it without
+# dropping protected rules. Operator-approved exemption (2026-05-24).
+# DEFERRED: split reference material into a sibling file so this exemption
+# can be removed (tracked Follow-up Task).
+SIZE_LIMIT_EXEMPT = {
+    "commands/crystallize.md",
+    "skills/develop/SKILL.md",
+}
 
 
 class ValidationResult(NamedTuple):

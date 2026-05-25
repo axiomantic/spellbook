@@ -16,9 +16,11 @@ Before ANY Phase 1.5 work begins, verify:
 ```
 # VERIFICATION TEMPLATE — not executable; substitute actual session values
 
-Required: complexity_tier in (standard, complex)
-  Current: [SESSION_PREFERENCES.complexity_tier]
-  → If TRIVIAL or SIMPLE: STOP. This phase must not run.
+Required: needs_research is true
+  Current: [SESSION_PREFERENCES.need_flags.needs_research]
+  → If not needs_research: STOP. This phase does not run.
+     (needs_research gates BOTH Research (Phase 1) and Discovery (Phase 1.5);
+      a single inclusive-OR flag — unfamiliar code OR fuzzy requirements.)
 
 Required: Phase 1 research complete
   Verify: SESSION_CONTEXT.research_findings populated
@@ -60,69 +62,70 @@ Apply to ALL discovery questions in Phase 1.5.
 ### Scope Drift Check
 
 <CRITICAL>
-This mechanic detects when discovery answers have expanded scope beyond the classified tier.
+This mechanic detects when discovery answers reveal new design or infrastructure
+needs that were not flagged in Phase 0. The response is **re-flag-and-continue**:
+set the corresponding need-flag and keep going. There is no scope "upgrade" and no
+work-item decomposition — the need-flags drive which phases and gates run.
 Referenced from: Phase 1.5.2.5, Post-1.6, and inline via ARH during wizard.
 </CRITICAL>
 
 **Drift Signals:**
 
-| Signal | Detection | Example |
-|--------|-----------|---------|
-| Scope expansion answer | User adds new functionality not in original request | "We should also handle X" |
-| New workstream implied | Answer implies a parallel track of work | "And while we're at it, let's refactor Y" |
-| Structural change escalation | Answers reveal new modules/schemas needed | "We'll need a new database table for this" |
-| File count escalation | Integration points exceed STANDARD threshold | Discovery reveals 10+ files affected |
+| Signal | Detection | Flag it implies |
+|--------|-----------|-----------------|
+| Design decision surfaced | Answer reveals a real architectural choice (new structure, a choice between approaches, a contract other code depends on) not in the original framing | `needs_design` |
+| New workstream implied | Answer implies a parallel track of work whose shape is non-obvious | `needs_design` |
+| New dependency / infra / schema | Answers reveal a new third-party dependency, new infra/service, or a data-schema/migration change | `needs_infrastructure` (which implies `needs_design`) |
+| Structural change escalation | Answers reveal new modules/schemas needed | `needs_design` (or `needs_infrastructure` if it is a schema/migration) |
 
 **Evaluation:**
 
 ```typescript
-function evaluate_scope_drift(): boolean {
-  const tier = SESSION_PREFERENCES.complexity_tier;
+// Returns the set of need-flags that discovery implies but that were not
+// already set in Phase 0. An empty set means no drift — proceed unchanged.
+function detect_missing_flags(): string[] {
+  const flags = SESSION_PREFERENCES.need_flags;
   const signals = detect_drift_signals(discovery_answers);
+  const missing: string[] = [];
 
-  if (signals.length === 0) return true;
-
-  // Check if drift was already handled (upgrade or override)
-  if (SESSION_PREFERENCES.scope_drift_handled) return true;
-
-  // Check if signals push beyond current tier
-  if (tier === "STANDARD") {
-    const complex_indicators = signals.filter(s =>
-      s.type === "new_workstream" ||
-      s.type === "structural_escalation" ||
-      (s.type === "file_count_escalation" && s.estimated_files > 15)
-    );
-    if (complex_indicators.length >= 2) return false;
+  for (const s of signals) {
+    if (s.implies === "needs_infrastructure" && !flags.needs_infrastructure) {
+      missing.push("needs_infrastructure"); // implies needs_design below
+    }
+    if (
+      (s.implies === "needs_design" || s.implies === "needs_infrastructure") &&
+      !flags.needs_design
+    ) {
+      missing.push("needs_design");
+    }
   }
 
-  return true;
+  return Array.from(new Set(missing));
 }
 ```
 
-**When drift detected:**
+**When drift detected (re-flag-and-continue):**
 
-1. STOP discovery wizard
-2. Present drift analysis to user:
+1. Do NOT stop the workflow or "upgrade" scope. Briefly note the new need to the user:
    ```
-   Scope Drift Detected
+   Scope Drift Detected — re-flagging
 
-   Original tier: STANDARD
-   Drift signals:
-   - [signal 1 description]
-   - [signal 2 description]
+   Discovery surfaced needs not flagged in Phase 0:
+   - [signal 1 description] → setting needs_design
+   - [signal 2 description] → setting needs_infrastructure (implies needs_design)
 
-   OPTIONS:
-   A) Upgrade to COMPLEX (triggers work item decomposition)
-   B) Trim scope to stay within STANDARD
-   C) Override: proceed as STANDARD (accept risk)
-
-   Your choice: ___
+   These flags turn on the corresponding phases/gates (Design, and for
+   infrastructure the heavier planning emphasis). Continuing discovery.
    ```
-3. If upgrade to COMPLEX:
-   - Run `forge_project_init` to initialize work item tracking
-   - Rewrite understanding document to reflect expanded scope
-   - Continue discovery with COMPLEX tier constraints
-4. If user overrides: document override in understanding doc, proceed with risk notation
+2. Set the implied flags in `SESSION_PREFERENCES.need_flags`:
+   - `needs_design = true` for a design/structural/workstream signal.
+   - `needs_infrastructure = true` for a new dependency/infra/schema signal;
+     this AUTO-IMPLIES `needs_design = true` (do not leave infra set without design).
+3. Update the understanding document to reflect the expanded scope and the
+   newly-set flags.
+4. Continue the discovery wizard. The newly-set flags route the later phases
+   (Design in Phase 2, heavier planning emphasis in Phase 3) — no work-item
+   decomposition, no separate project initialization.
 
 ### 1.5.0 Disambiguation Session
 
@@ -290,7 +293,7 @@ After completing the discovery wizard, run the Scope Drift Check with all accumu
 This catches scope expansion that occurred gradually across multiple questions.
 </CRITICAL>
 
-Run `evaluate_scope_drift()`. If it returns false, follow the "When drift detected" protocol from the Scope Drift Check section above.
+Run `detect_missing_flags()`. If it returns a non-empty set, follow the "When drift detected (re-flag-and-continue)" protocol from the Scope Drift Check section above: set the implied need-flags, update the understanding document, and continue.
 
 ### 1.5.3 Build Glossary
 
@@ -448,19 +451,12 @@ function no_tbd_items(): boolean {
   return !forbiddenTerms.some((regex) => regex.test(filtered));
 }
 
-// FUNCTION 12: Scope consistent with tier
-function scope_consistent_with_tier(): boolean {
-  const tier = SESSION_PREFERENCES.complexity_tier;
-  const drift_signals = detect_drift_signals(discovery_answers);
-
-  // No signals = consistent
-  if (drift_signals.length === 0) return true;
-
-  // Check if drift was already handled (upgrade or override)
-  if (SESSION_PREFERENCES.scope_drift_handled) return true;
-
-  // Unhandled drift = inconsistent
-  return false;
+// FUNCTION 12: Need-flags consistent with discovered scope
+function flags_consistent_with_scope(): boolean {
+  // No newly-implied flags = the set is consistent with what discovery found.
+  // If discovery surfaced a design/infra need, it must already be reflected in
+  // SESSION_PREFERENCES.need_flags (re-flag-and-continue sets it immediately).
+  return detect_missing_flags().length === 0;
 }
 ```
 
@@ -489,7 +485,7 @@ Completeness Checklist:
 [✓/✗] Glossary complete for all domain terms
 [✓/✗] All assumptions validated with user
 [✓/✗] No "we'll figure it out later" items remain
-[✓/✗] Scope consistent with classified tier
+[✓/✗] Need-flags consistent with discovered scope (any new design/infra need re-flagged)
 
 Completeness Score: [X]% ([N]/12 items complete)
 ```
@@ -678,7 +674,7 @@ Your choice: ___
 
 After devil's advocate review, re-run the Scope Drift Check. The devil's advocate may have surfaced scope expansions not visible during initial discovery.
 
-Run `evaluate_scope_drift()`. If it returns false, follow the "When drift detected" protocol.
+Run `detect_missing_flags()`. If it returns a non-empty set, follow the "When drift detected (re-flag-and-continue)" protocol: set the implied need-flags, update the understanding document, and continue.
 
 <FORBIDDEN>
 - Asking questions that Phase 1 research already answered

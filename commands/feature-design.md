@@ -21,9 +21,11 @@ PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 
 echo "=== Phase 2 Prerequisites ==="
 
-# CHECK 1: Complexity tier must be STANDARD or COMPLEX
-echo "Required: complexity_tier in (standard, complex)"
-echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
+# CHECK 1: needs_design must be set (this phase does not run otherwise)
+echo "Required: needs_design == true"
+echo "Current need-flags: [SESSION_PREFERENCES.need_flags]"
+# needs_infrastructure IMPLIES needs_design (auto-set in Phase 0; see design §2.2).
+# If needs_design is not set, this phase does not run — return to the orchestrator.
 
 # CHECK 2: Understanding document must exist (Phase 1.5 artifact)
 echo "Required: Understanding document exists"
