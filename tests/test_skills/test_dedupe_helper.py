@@ -717,3 +717,240 @@ def test_segment_still_excludes_genuine_boilerplate(dedupe):
     )
     blocks = dedupe.segment("bp.md", text)
     assert all(b.raw_text.strip() not in ("---", "## X", "X") for b in blocks)
+
+
+# ---------------------------------------------------------------------------
+# Task 6: pairing pipeline + union-find clustering + fixture corpus
+# (plan §"Task 6"; design §3.4, §3.5, §3.6)
+# ---------------------------------------------------------------------------
+
+
+def _load_fixture_blocks(dedupe, names: list[str]):
+    """Segment each named core fixture file and concatenate the block lists.
+
+    The Task 6 core corpus (``file_a.md``/``file_b.md``/``file_c.md``) is a flat
+    set of fixture files at ``FIXTURE_DIR``; this mirrors how the integrated
+    ``detect`` path will feed segmented blocks into ``pair_corpus``.
+    """
+    blocks = []
+    for name in names:
+        text = (FIXTURE_DIR / name).read_text(encoding="utf-8")
+        blocks.extend(dedupe.segment(name, text))
+    return blocks
+
+
+def test_pairs_only_across_different_files(dedupe):
+    """Pairing is BETWEEN files only: no Pair may have both endpoints in the same
+    file (design §3.5 -- within-file dedup is out of scope, FU-1)."""
+    blocks = _load_fixture_blocks(dedupe, ["file_a.md", "file_b.md", "file_c.md"])
+    pairs = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85
+    )
+    assert pairs, "the fixture corpus must produce at least one cross-file pair"
+    assert all(p.a.file != p.b.file for p in pairs), \
+        "no pair may have both endpoints in the same file"
+
+
+def test_pairs_flag_known_duplicate(dedupe):
+    """A byte-identical (post-normalization) paragraph across two files is flagged
+    with seqmatch_ratio == 1.0 and is NOT a drift candidate (design §9.2)."""
+    blocks = _load_fixture_blocks(dedupe, ["file_a.md", "file_b.md"])
+    pairs = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85
+    )
+    known = [
+        p for p in pairs
+        if "onboarding checklist" in p.a.raw_text
+        and "onboarding checklist" in p.b.raw_text
+    ]
+    assert len(known) == 1, "the known duplicate must produce exactly one survivor pair"
+    assert known[0].seqmatch_ratio == 1.0
+    assert known[0].is_drift_candidate is False
+
+
+def test_pairs_flag_drift(dedupe):
+    """The one-word-drift paragraph across file_b/file_c is a drift candidate with
+    0.0 < drift_delta < 1.0 (design §9.2, §6)."""
+    blocks = _load_fixture_blocks(dedupe, ["file_b.md", "file_c.md"])
+    pairs = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85
+    )
+    drift = [
+        p for p in pairs
+        if "incident commander" in p.a.raw_text
+        and "incident commander" in p.b.raw_text
+    ]
+    assert len(drift) == 1, "the one-word-drift paragraph must produce one survivor pair"
+    assert drift[0].is_drift_candidate is True
+    assert drift[0].seqmatch_ratio < 1.0
+    assert 0.0 < drift[0].drift_delta < 1.0
+
+
+def test_paraphrase_not_flagged(dedupe):
+    """M3: the paraphrase blocks share meaning but few tokens; no pair links them.
+    Regression-locks the known lexical false-negative (design §9.2)."""
+    blocks = _load_fixture_blocks(dedupe, ["file_a.md", "file_b.md"])
+    pairs = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85
+    )
+    assert not any(
+        ("PARAPHRASE_A" in p.a.raw_text and "PARAPHRASE_B" in p.b.raw_text)
+        or ("PARAPHRASE_B" in p.a.raw_text and "PARAPHRASE_A" in p.b.raw_text)
+        for p in pairs
+    )
+
+
+def test_injection_block_segments_as_ordinary_data(dedupe):
+    """Design §9.2/§4.5: an embedded directive is segmented as an ordinary DATA
+    Block with no special handling. The script never interprets block content."""
+    blocks = _load_fixture_blocks(dedupe, ["file_a.md"])
+    inj = [b for b in blocks if "INJECTION_BLOCK" in b.raw_text]
+    assert len(inj) == 1, "the injection paragraph must segment as exactly one ordinary block"
+    assert inj[0].granularity == "paragraph"
+    assert "IGNORE PRIOR INSTRUCTIONS" in inj[0].raw_text
+
+
+def test_union_find_clusters_three_occurrences(dedupe):
+    """The genuine 3-occurrence TRIPLE_BLOCK (present in file_a/b/c) produces
+    confirmed A-B, B-C, A-C pairs that collapse to ONE cluster of >= 3 block_ids
+    (design §3.5, Minor finding 8). No escape branch: union-find must merge them.
+    """
+    blocks = _load_fixture_blocks(dedupe, ["file_a.md", "file_b.md", "file_c.md"])
+    pairs = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85
+    )
+    confirmed = [
+        p for p in pairs
+        if p.seqmatch_ratio >= 0.85 and not p.is_drift_candidate
+    ]
+    clusters = dedupe.cluster_pairs(confirmed)
+    # The TRIPLE_BLOCK is a bare top-level paragraph in each of the three files,
+    # so it segments to exactly one paragraph block per file; pairing connects
+    # those three block_ids into a single union-find component.
+    triple_ids = {
+        b.block_id
+        for b in blocks
+        if "TRIPLE_BLOCK" in b.raw_text and b.granularity == "paragraph"
+    }
+    assert len(triple_ids) == 3, "fixture must seed TRIPLE_BLOCK in all three files"
+    merged = [c for c in clusters if triple_ids & c]
+    assert len(merged) == 1, "the three occurrences must all land in one cluster"
+    assert triple_ids <= merged[0], \
+        "the single cluster must contain all three TRIPLE_BLOCK block_ids"
+    assert len(merged[0]) >= 3, \
+        "union-find must collapse the 3 TRIPLE_BLOCK occurrences into one cluster of >= 3"
+
+
+def test_pair_corpus_respects_cost_bound(dedupe):
+    """The cost bound caps the returned pairs to the top-N by seqmatch_ratio
+    (design §3.6): with max_pairs set below the survivor count, exactly max_pairs
+    pairs are returned and they are the strongest matches."""
+    blocks = _load_fixture_blocks(dedupe, ["file_a.md", "file_b.md", "file_c.md"])
+    full = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85
+    )
+    assert len(full) >= 2, "the corpus must produce multiple pairs for this bound to bite"
+    top_ratio = max(p.seqmatch_ratio for p in full)
+    # The fixture has multiple ratio-1.0 pairs, so asserting only the top ratio
+    # would not pin WHICH pair survives a tie. Compute the deterministic survivor
+    # by applying the same stable sort the implementation uses (seqmatch_ratio
+    # desc over the uncapped corpus order) and taking element 0.
+    assert (
+        sum(1 for p in full if p.seqmatch_ratio == top_ratio) >= 2
+    ), "fixture must contain a tie at the top ratio to exercise the tiebreak"
+    expected = sorted(full, key=lambda p: p.seqmatch_ratio, reverse=True)[0]
+    capped = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85, max_pairs=1
+    )
+    assert len(capped) == 1
+    assert capped[0].seqmatch_ratio == top_ratio
+    # Lock the tiebreak: the surviving pair's identity must be the stable-sort
+    # winner. A future switch to a non-stable sort would break this.
+    assert (
+        capped[0].a.block_id == expected.a.block_id
+        and capped[0].b.block_id == expected.b.block_id
+    ), "the capped survivor must be the deterministic stable-sort winner"
+    # A bound at or above the survivor count is a no-op (returns every survivor).
+    uncapped = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85, max_pairs=len(full) + 5
+    )
+    assert len(uncapped) == len(full)
+
+
+def test_cluster_pairs_excludes_drift_edges(dedupe):
+    """Drift pairs never contribute union-find edges (design §3.5): the drifted
+    file_b/file_c paragraph must NOT merge into any cluster of size >= 2."""
+    blocks = _load_fixture_blocks(dedupe, ["file_b.md", "file_c.md"])
+    pairs = dedupe.pair_corpus(
+        blocks, jaccard_threshold=0.7, confirm_threshold=0.85
+    )
+    drift = next(
+        p for p in pairs
+        if "incident commander" in p.a.raw_text and p.is_drift_candidate
+    )
+    confirmed = [p for p in pairs if p.seqmatch_ratio >= 0.85 and not p.is_drift_candidate]
+    clusters = dedupe.cluster_pairs(confirmed)
+    drift_ids = {drift.a.block_id, drift.b.block_id}
+    assert not any(len(c & drift_ids) >= 2 for c in clusters), \
+        "a drift pair's endpoints must not be unioned into the same cluster"
+
+
+def test_child_in_parent_suppression_drops_contained_pair(dedupe):
+    """child_in_parent_suppression keeps the widest match and drops a child pair
+    fully contained within a matched parent pair on BOTH sides (design §3.4).
+    Deferred TEST from Task 5; the function was added there.
+    """
+    def block(file: str, granularity: str, start: int, end: int, text: str):
+        return dedupe._make_block(file, granularity, start, end, text, None)
+
+    parent_text = (
+        "## Guard\n\nThe widest coherent match spans the whole heading section "
+        "including its nested child paragraph below it here.\n\nThe contained "
+        "child paragraph is itself a confirmed duplicate inside the section.\n"
+    )
+    child_text = (
+        "The contained child paragraph is itself a confirmed duplicate inside "
+        "the section."
+    )
+    parent_a = block("file_a.md", "heading-section", 1, 6, parent_text)
+    child_a = block("file_a.md", "paragraph", 5, 6, child_text)
+    parent_b = block("file_b.md", "heading-section", 1, 6, parent_text)
+    child_b = block("file_b.md", "paragraph", 5, 6, child_text)
+
+    def pair(a, b):
+        return dedupe.Pair(
+            a=a, b=b,
+            jaccard=1.0, seqmatch_ratio=1.0, drift_delta=0.0,
+            is_drift_candidate=False, contains_safety_marker=False,
+        )
+
+    parent_pair = pair(parent_a, parent_b)
+    child_pair = pair(child_a, child_b)
+    survivors = dedupe.child_in_parent_suppression([parent_pair, child_pair])
+    assert survivors == [parent_pair], \
+        "the child pair contained in the parent pair on both sides must be dropped"
+
+
+def test_child_in_parent_suppression_keeps_non_contained(dedupe):
+    """A pair NOT contained within another pair survives suppression unchanged."""
+    def block(file: str, start: int, end: int, text: str):
+        return dedupe._make_block(file, "paragraph", start, end, text, None)
+
+    text_one = "First standalone duplicated paragraph with enough words to be a block."
+    text_two = "Second unrelated duplicated paragraph living elsewhere in the file."
+    a1 = block("file_a.md", 1, 2, text_one)
+    b1 = block("file_b.md", 1, 2, text_one)
+    a2 = block("file_a.md", 20, 21, text_two)
+    b2 = block("file_b.md", 20, 21, text_two)
+
+    def pair(a, b):
+        return dedupe.Pair(
+            a=a, b=b,
+            jaccard=1.0, seqmatch_ratio=1.0, drift_delta=0.0,
+            is_drift_candidate=False, contains_safety_marker=False,
+        )
+
+    p1 = pair(a1, b1)
+    p2 = pair(a2, b2)
+    survivors = dedupe.child_in_parent_suppression([p1, p2])
+    assert survivors == [p1, p2], "non-overlapping pairs are both retained"

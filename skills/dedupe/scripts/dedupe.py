@@ -573,6 +573,113 @@ def child_in_parent_suppression(pairs: list[Pair]) -> list[Pair]:
 
 
 # ---------------------------------------------------------------------------
+# Pairing pipeline + union-find clustering (design §3.5, §3.6)
+#
+# pair_corpus generates every unordered block pair ACROSS DIFFERENT FILES
+# (within-file pairs are never produced -- within-file dedup is out of scope,
+# FU-1), scores each via score_pair (the cheap Jaccard gate precedes the
+# SequenceMatcher confirm), keeps the non-None survivors, and applies
+# child_in_parent_suppression so the widest coherent match wins. An optional
+# max_pairs cost bound (design §3.6) truncates to the top-N by seqmatch_ratio.
+#
+# cluster_pairs runs union-find over the confirmed EXTRACT-eligible pairs so an
+# instruction repeated N>2 times collapses into ONE cluster instead of a tangle
+# of pairwise edges (design §3.5 "From pairs to clusters").
+# ---------------------------------------------------------------------------
+
+
+def pair_corpus(
+    blocks: list[Block],
+    *,
+    jaccard_threshold: float,
+    confirm_threshold: float,
+    max_pairs: int | None = None,
+) -> list[Pair]:
+    """Score every cross-file block pair and return the surviving candidates.
+
+    For every unordered pair of blocks whose two endpoints live in DIFFERENT
+    files (within-file pairs are skipped -- design §3.5, FU-1), call
+    :func:`score_pair`; collect the non-``None`` results; then apply
+    :func:`child_in_parent_suppression` so a child-granularity match contained
+    within a matched parent (heading-section) match is dropped in favor of the
+    widest coherent match. Confirmed-duplicate filtering and drift filtering are
+    the caller's job; both confirmed and drift candidates are returned here.
+
+    ``max_pairs`` is the optional per-run cost ceiling (design §3.6). When set
+    and the survivor count exceeds it, the survivors are truncated to the top
+    ``max_pairs`` by ``seqmatch_ratio`` (descending) -- the strongest matches are
+    kept and the weakest dropped, bounding the number of downstream classifier
+    dispatches. ``None`` (the default) means no truncation. Ties at the
+    truncation boundary are broken by corpus order: the sort is Python's stable
+    ``sorted``, so when multiple pairs share the same ``seqmatch_ratio`` the
+    one(s) appearing earlier in corpus/block order are kept.
+    """
+    survivors: list[Pair] = []
+    n = len(blocks)
+    for i in range(n):
+        for k in range(i + 1, n):
+            block_a = blocks[i]
+            block_b = blocks[k]
+            if block_a.file == block_b.file:
+                continue
+            pair = score_pair(
+                block_a,
+                block_b,
+                jaccard_threshold=jaccard_threshold,
+                confirm_threshold=confirm_threshold,
+            )
+            if pair is not None:
+                survivors.append(pair)
+
+    survivors = child_in_parent_suppression(survivors)
+
+    if max_pairs is not None and len(survivors) > max_pairs:
+        survivors = sorted(
+            survivors, key=lambda p: p.seqmatch_ratio, reverse=True
+        )[:max_pairs]
+    return survivors
+
+
+def cluster_pairs(confirmed_pairs: list[Pair]) -> list[set[str]]:
+    """Union-find over confirmed pairs -> connected components of ``block_id``s.
+
+    Each ``block_id`` is a node; every confirmed pair unions its two endpoints
+    (design §3.5 "From pairs to clusters"). The returned connected components are
+    the clusters: an instruction repeated N>2 times (overlapping A-B, B-C, A-C
+    pairs) collapses into ONE cluster of N block_ids rather than a tangle of
+    pairwise edges.
+
+    Callers must pass only confirmed, EXTRACT-eligible pairs (non-drift,
+    non-KEEP): drift and KEEP pairs are never auto-consolidated and therefore
+    contribute no edges. This function unions every pair it is given, so
+    excluding those pairs is the caller's responsibility.
+    """
+    parent: dict[str, str] = {}
+
+    def find(node: str) -> str:
+        parent.setdefault(node, node)
+        root = node
+        while parent[root] != root:
+            root = parent[root]
+        # Path compression keeps repeated finds near-constant time.
+        while parent[node] != root:
+            parent[node], node = root, parent[node]
+        return root
+
+    def union(left: str, right: str) -> None:
+        parent[find(left)] = find(right)
+
+    for pair in confirmed_pairs:
+        union(pair.a.block_id, pair.b.block_id)
+
+    components: dict[str, set[str]] = {}
+    for node in parent:
+        root = find(node)
+        components.setdefault(root, set()).add(node)
+    return list(components.values())
+
+
+# ---------------------------------------------------------------------------
 # Corpus resolution (the single source of truth for the corpus file set --
 # design §3.2; depended on by Tasks 8, 9, 10, 12)
 # ---------------------------------------------------------------------------
