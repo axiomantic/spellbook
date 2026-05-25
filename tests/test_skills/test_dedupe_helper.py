@@ -6,9 +6,11 @@ no integration marker; pure stdlib, no QMD/Serena.
 """
 from __future__ import annotations
 
+import ast
 import importlib.util
 import io
 import json
+import sys
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
@@ -176,3 +178,54 @@ def test_resolve_corpus_default_glob_under_spellbook_dir(dedupe, tmp_path, monke
         [skill.resolve(), command.resolve(), claude.resolve(), shared.resolve()]
     )
     assert result == expected
+
+
+# ---------------------------------------------------------------------------
+# Task 2: stdlib-only import check (encodes the no-new-deps + M5 constraint:
+# no spellbook.*, no third-party). Parses dedupe.py's own import statements via
+# ast and verifies every imported top-level module is part of the standard
+# library (sys.stdlib_module_names is the source of truth, so os/types/dataclasses
+# and any future stdlib addition are accepted automatically) while a
+# spellbook.* or third-party import would FAIL the test.
+# ---------------------------------------------------------------------------
+
+
+def _imported_roots() -> tuple[set[str], bool]:
+    source = HELPER_PATH.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    roots: set[str] = set()
+    has_relative = False
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                roots.add(alias.name.split(".")[0])
+        elif isinstance(node, ast.ImportFrom):
+            # level == 0 means absolute import; relative imports (level > 0)
+            # have no module root to allowlist and are never stdlib.
+            if node.module and node.level == 0:
+                roots.add(node.module.split(".")[0])
+            elif node.level > 0:
+                has_relative = True
+    return roots, has_relative
+
+
+def test_dedupe_imports_stdlib_only():
+    """dedupe.py must import ONLY stdlib modules: no spellbook.*, no third-party."""
+    imported_roots, has_relative = _imported_roots()
+
+    assert "argparse" in imported_roots, (
+        "no imports parsed — HELPER_PATH or _imported_roots likely broken"
+    )
+
+    assert not has_relative, (
+        "dedupe.py must not use relative imports (must be importlib-loadable standalone)"
+    )
+
+    forbidden = {root for root in imported_roots if root.startswith("spellbook")}
+    assert not forbidden, f"dedupe.py must not import spellbook.*: {sorted(forbidden)}"
+
+    non_stdlib = {root for root in imported_roots if root not in sys.stdlib_module_names}
+    assert not non_stdlib, (
+        "dedupe.py imported non-stdlib modules "
+        f"(no new runtime deps allowed): {sorted(non_stdlib)}"
+    )
