@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.68.0] - 2026-05-25
+
+### Changed
+
+- `commands/pr-dance.md`: redefined the CI status check and bot review as two independent, concurrent gates rather than a CI-then-bot sequence. Step 3 now uses a single-shot, non-blocking `gh pr checks --json` poll the agent drives itself (interleaving with the Step 4 bot gate each round); `--watch` is demoted to a fallback for when the bot gate is already clean, since it blocks until CI is terminal. Raised the poll-interval floor to 60s and added a FORBIDDEN entry against blocking the bot gate in `--watch`.
+
 ## [0.67.0] - 2026-05-20
 
 ### Removed

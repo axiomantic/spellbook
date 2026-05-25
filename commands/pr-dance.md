@@ -99,17 +99,19 @@ if [ "$remaining" -lt 200 ]; then
 fi
 ```
 
-#### Poll for terminal state
+#### Poll without blocking the bot gate
 
-```bash
-gh pr checks "$PR_NUMBER" --watch --interval 60
-```
-
-If `--watch` is unavailable or times out, poll manually with the same cadence — never tighter than 60s (the interval must be >= 60s; longer is fine, shorter is not):
+Use a **single-shot, non-blocking** check each round so you can move between the CI gate and the bot gate (Step 4) within the same cycle. Each round: poll CI once, then poll the bot once, act on whichever is ready, then sleep before the next round — never tighter than 60s (the interval must be >= 60s; longer is fine, shorter is not):
 
 ```bash
 gh pr checks "$PR_NUMBER" --json name,state,conclusion
 sleep 60
+```
+
+`gh pr checks --watch` blocks until CI reaches a terminal state, so it stalls the bot gate while CI runs and contradicts the concurrent-gates mission. Only reach for `--watch` once the bot gate is already satisfied for the current commit — at that point blocking on CI alone is fine:
+
+```bash
+gh pr checks "$PR_NUMBER" --watch --interval 60   # only after the bot gate is already clean
 ```
 
 **CI passes:** The CI gate is satisfied for the current commit. Keep handling the bot gate (Step 4) if it is not already clean; once both gates are satisfied for the same commit, go to Step 5.
@@ -214,7 +216,8 @@ PR Dance complete.
 - Referencing GitHub issue numbers in commit messages
 - Invoking this command under `/loop` — it already polls internally; `/loop` creates a watcher around a watcher and re-fires the full cycle on the loop's timer even after merge-ready, exhausting the GitHub GraphQL quota
 - Running this command on more than one PR concurrently — serialize across PRs to keep GraphQL spend bounded
-- Polling CI checks at an interval shorter than 60s (use `--interval 60` with `--watch`, or `sleep 60` between manual polls) — the interval must be >= 60s; a longer interval is fine, a shorter one is not. Sub-minute polling burns GraphQL quota with no UX benefit, since CI runs are minutes-long
+- Polling CI checks at an interval shorter than 60s (`sleep 60` between non-blocking `gh pr checks --json` polls, or `--interval 60` if you fall back to `--watch` after the bot gate is clean) — the interval must be >= 60s; a longer interval is fine, a shorter one is not. Sub-minute polling burns GraphQL quota with no UX benefit, since CI runs are minutes-long
+- Blocking the bot gate by sitting in `gh pr checks --watch` while CI runs and the bot has not yet been handled for the current commit — use a non-blocking single-shot CI poll so Step 3 and Step 4 advance concurrently
 </FORBIDDEN>
 
 <analysis>
