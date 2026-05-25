@@ -1,7 +1,7 @@
 """Tests for MCP tool registration count.
 
 Verifies that register_all_tools() results in the expected number of
-registered tools (targeting 101 from the original monolith).
+registered tools (63 after the memory-system removal in 0.68.0).
 """
 
 
@@ -29,27 +29,30 @@ def _get_tool_names(mcp_instance):
 class TestToolRegistrationCount:
     """Verify all MCP tools are registered after decomposition."""
 
-    def test_tool_count_at_least_65(self):
-        """After register_all_tools(), at least 65 tools should be registered.
+    def test_tool_count_is_63(self):
+        """After register_all_tools(), exactly 63 tools should be registered.
 
-        Target lowered from 90 after three rounds of MCP tool pruning:
+        Target lowered from 90 after four rounds of MCP tool pruning:
           - 15 tools removed with the ``messaging`` and ``experiments`` module
             deletions (both had zero external callers).
           - 10 further dead tools removed (health/misc debug tools, telemetry
             triad, forge_roundtable_debate, forge_select_skill).
           - 2 more forge_* tools removed with zero skill/command/extension
             callers (forge_feature_update, forge_process_roundtable_response).
+          - 7 memory tools removed with the memory-system deletion
+            (memory_recall/store/forget/sync/verify/review_events and the
+            memory bridge tool).
 
-        65 tools remain. This floor guards against accidental further
-        regression.
+        Exactly 63 tools remain. Full-equality guards against both accidental
+        tool loss and accidental tool addition.
         """
         from spellbook.mcp.server import mcp, register_all_tools
 
         register_all_tools()
         tool_names = _get_tool_names(mcp)
-        assert len(tool_names) >= 65, (
-            f"Expected >= 65 tools, got {len(tool_names)}. "
-            f"Missing tools need to be added to the appropriate tool module."
+        assert len(tool_names) == 63, (
+            f"Expected exactly 63 tools, got {len(tool_names)}. "
+            f"If you added or removed a tool, update this count deliberately."
         )
 
     def test_key_tools_present(self):
@@ -64,7 +67,6 @@ class TestToolRegistrationCount:
             "find_session",          # sessions
             "spellbook_config_get",  # config
             "spellbook_health_check",  # health
-            "memory_recall",         # memory
             "security_check_tool_input",  # security
             "pr_fetch",              # pr
             "forge_iteration_start", # forged
