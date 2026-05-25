@@ -235,7 +235,6 @@ export default function Dashboard() {
         </h2>
         <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
           <StatCard label="SESSIONS" value={counts.active_sessions} accent={counts.active_sessions > 0} />
-          <StatCard label="MEMORIES" value={counts.total_memories} />
           <StatCard label="SECURITY 24H" value={counts.security_events_24h} accent={counts.security_events_24h > 0} />
           <StatCard label="SWARMS" value={counts.running_swarms} accent={counts.running_swarms > 0} />
           <StatCard label="EXPERIMENTS" value={counts.open_experiments} accent={counts.open_experiments > 0} />

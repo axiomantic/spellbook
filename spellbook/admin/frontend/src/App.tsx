@@ -6,7 +6,6 @@ import { WebSocketProvider } from './contexts/WebSocketContext'
 import { Login } from './pages/Login'
 import { ConfigEditor } from './pages/ConfigEditor'
 import Dashboard from './pages/Dashboard'
-import { MemoryBrowser } from './pages/MemoryBrowser'
 import { CanvasList } from './pages/CanvasList'
 import { CanvasDetail } from './pages/CanvasDetail'
 import { SecurityLog } from './pages/SecurityLog'
@@ -45,7 +44,6 @@ function AuthGate() {
         <AppShell>
           <Routes>
             <Route path="/" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
-            <Route path="/memory" element={<ErrorBoundary><MemoryBrowser /></ErrorBoundary>} />
             <Route path="/canvas" element={<ErrorBoundary><CanvasList /></ErrorBoundary>} />
             <Route path="/canvas/:name" element={<ErrorBoundary><CanvasDetail /></ErrorBoundary>} />
             <Route path="/security" element={<ErrorBoundary><SecurityLog /></ErrorBoundary>} />
