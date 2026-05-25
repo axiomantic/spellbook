@@ -7778,6 +7778,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#workflow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#agent-content" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8299,6 +8321,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#workflow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#agent-content" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8330,6 +8374,93 @@
 
 
 <h1 id="git-committer">git-committer<a class="headerlink" href="#git-committer" title="Permanent link">&para;</a></h1>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    START(["`**git-committer dispatched**`"]):::terminal
+
+    %% Entry verification
+    START --&gt; VERIFY["Verify working directory\n&amp; current branch\nmatch parent's dispatch"]
+    VERIFY --&gt; BRANCH_MATCH{Match?}
+    BRANCH_MATCH -- No --&gt; REJECT(["`**Reject dispatch**\nreport mismatch to parent`"]):::gate
+    BRANCH_MATCH -- Yes --&gt; INSPECT["git status / git diff\nInspect named files\nin scope"]
+
+    %% Analysis phase
+    INSPECT --&gt; FILES_CHANGED{Named files\nactually changed?}
+    FILES_CHANGED -- No --&gt; NO_COMMIT(["`**No commit made**\ncommit_sha = null\nreport in notes`"]):::success
+    FILES_CHANGED -- Yes --&gt; CONV_CHECK["Validate commit message\nconvention before staging"]
+
+    %% Convention check
+    CONV_CHECK --&gt; CONV_OK{Conventions\nclear?}
+    CONV_OK -- No:\nAI trailers / issue numbers\n/ --amend without auth --&gt; STOP_CONV(["`**Stop**\nSurface violation to parent`"]):::gate
+    CONV_OK -- Yes --&gt; STAGE["git add\n(only parent-named files)"]
+
+    %% Staging guardrail
+    STAGE --&gt; BLANKET{Blanket-add\nattempted?}
+    BLANKET -- Yes:\ngit add -A or git add . --&gt; FORBIDDEN(["`**Forbidden**\nNever use blanket-add`"]):::gate
+    BLANKET -- No --&gt; BASH_GATE["Bash invocation →\nspellbook PreToolUse\nbash gate"]
+
+    %% Gate decision
+    BASH_GATE --&gt; GATE_RESULT{Gate\nverdict}
+    GATE_RESULT -- Denied --&gt; SURFACE_DENIAL["Surface denial verbatim\nto operator\nAsk how to proceed"]
+    SURFACE_DENIAL --&gt; OPERATOR_RESP{Operator\nresponse}
+    OPERATOR_RESP -- Abort --&gt; ABORTED(["`**Aborted**\ncommit_sha = null\ndenial logged in notes`"]):::success
+    OPERATOR_RESP -- Restructured cmd --&gt; BASH_GATE
+    GATE_RESULT -- Allowed --&gt; COMMIT["git commit\n(no --no-verify,\nno AI trailers,\nno issue refs)"]
+
+    %% Destructive verb check
+    COMMIT --&gt; DEST_CHECK{Destructive or\nremote verb?}
+    DEST_CHECK -- Yes:\npush / reset --hard\n/ rebase / stash drop --&gt; FORBIDDEN2(["`**Forbidden**\nOut of scope for this agent`"]):::gate
+    DEST_CHECK -- No --&gt; HOOK_RUN["Pre-commit hook runs"]
+
+    HOOK_RUN --&gt; HOOK_RESULT{Hook\nresult}
+    HOOK_RESULT -- Fails --&gt; HOOK_FAIL["Report hook failure\nFix underlying issue\n(never --no-verify)"]
+    HOOK_FAIL --&gt; STAGE
+    HOOK_RESULT -- Passes --&gt; SHA["Capture commit SHA\n&amp; branch name"]
+
+    SHA --&gt; REFLECTION["Reflection:\n- Staged only in-scope files?\n- Local-only op?\n- Gate denials surfaced?"]
+
+    REFLECTION --&gt; RETURN(["`**Return GitCommitterResult**\ncommit_sha, branch,\nfiles_committed, notes`"]):::success
+
+    %% Subgraphs
+    subgraph TOOLS["Tools (narrowed surface)"]
+        direction LR
+        T1[Bash\ngit operations]
+        T2[Read\nfiles / templates]
+    end
+
+    subgraph FORBIDDEN_OPS["Forbidden Operations"]
+        direction LR
+        F1["git push"]
+        F2["git reset --hard"]
+        F3["git checkout --"]
+        F4["git rebase"]
+        F5["git stash drop"]
+        F6["--amend\n(without auth)"]
+        F7["git add -A / ."]
+        F8["--no-verify"]
+    end
+
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]:::process
+        L2{Decision}
+        L3(["Terminal / Result"]):::success
+        L4["Quality Gate / Stop"]:::gate
+    end
+
+    classDef terminal fill:#2a2a3e,stroke:#888,color:#e8e8ea
+    classDef gate fill:#ff6b6b,stroke:#c0392b,color:#1a1a1d
+    classDef success fill:#51cf66,stroke:#2f9e44,color:#1a1a1d
+    classDef process fill:#2a2a3e,stroke:#555,color:#e8e8ea</code></pre>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The <code>git-committer</code> agent performs local-only git work dispatched by a parent. The flow has four stages:</p>
+<ol>
+<li><strong>Entry verification</strong> — confirms working directory and branch match the dispatch before any git operation.</li>
+<li><strong>Analysis</strong> — inspects changed files, validates commit message conventions.</li>
+<li><strong>Staging + Gate</strong> — stages only named files, passes each Bash invocation through the spellbook PreToolUse bash gate; denials are surfaced verbatim to the operator.</li>
+<li><strong>Commit + Reflection</strong> — commits (no <code>--no-verify</code>, no AI trailers, no issue refs), captures SHA, runs a structured reflection check, returns <code>GitCommitterResult</code>.</li>
+</ol>
+<p>Destructive verbs (<code>push</code>, <code>reset --hard</code>, <code>rebase</code>, <code>stash drop</code>, <code>--amend</code> without auth) and blanket-adds (<code>git add -A</code>/<code>.</code>) are unconditionally forbidden.</p>
 <h2 id="agent-content">Agent Content<a class="headerlink" href="#agent-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gu">## Purpose</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -8340,83 +8471,107 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>requests, and never expands the parent&#39;s capabilities. Push, PR, and
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>merge operations are the responsibility of separate, scoped agents.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gu">## Tools</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="sb">`Bash`</span> is the primary tool for git operations: <span class="sb">`git status`</span>, <span class="sb">`git diff`</span>,
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="sb">`git log`</span>, <span class="sb">`git show`</span>, <span class="sb">`git add`</span>, <span class="sb">`git commit`</span>, <span class="sb">`git branch`</span>,
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="sb">`git checkout`</span> (for branch switching, never <span class="sb">`--`</span>), <span class="sb">`git fetch`</span>,
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="sb">`git worktree`</span>. Every Bash invocation passes through the spellbook
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>PreToolUse bash gate, which blocks dangerous patterns (destructive
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>shell idioms, exfiltration shapes) and may deny commands that match.
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="sb">`Read`</span> opens files the parent points at — diffs, commit message
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>templates, lockfiles. Conspicuously absent:
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="sb">`Edit`</span>, <span class="sb">`Write`</span>, <span class="sb">`Grep`</span>, <span class="sb">`Glob`</span> — this agent does not modify source
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>files, only stages and commits changes already on disk. The <span class="sb">`tools:`</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>frontmatter is a narrowing list — the agent has access to these tools
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>and only these tools, never more.
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="gu">## Output Schema</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">1.</span> <span class="gs">**Local-only surface**</span>: The agent reads, stages, and commits but never pushes, opens, or merges PRs; remote-mutating verbs are out of scope by construction, not by convention.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">2.</span> <span class="gs">**Scope before stage**</span>: Only files the parent named (or that fall inside the parent-specified scope) are staged; <span class="sb">`git add -A`</span> and <span class="sb">`git add .`</span> are never used to blanket-stage the working tree.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">3.</span> <span class="gs">**No destructive history rewrites**</span>: <span class="sb">`git reset --hard`</span>, <span class="sb">`git checkout --`</span>, <span class="sb">`git rebase`</span>, <span class="sb">`git stash drop`</span>, and <span class="sb">`--amend`</span> without explicit operator authorization are forbidden.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">4.</span> <span class="gs">**Convention-clean commits**</span>: Commit messages carry no AI-attribution trailers and no GitHub issue numbers, and <span class="sb">`--no-verify`</span> is never used to bypass hooks.
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">5.</span> <span class="gs">**Surface gate denials verbatim**</span>: A spellbook bash-gate denial is reported to the operator exactly as received and the operator is asked how to proceed; the agent never reshapes a command to evade a denial.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="sb">```</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="sb">&lt;analysis&gt;</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sb">[Verify working directory and current branch match the parent&#39;s dispatch.]</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="sb">[Inspect `git status`/`git diff` to confirm which named files are actually changed and in scope.]</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sb">[Confirm the intended commit message obeys conventions before staging.]</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">&lt;/analysis&gt;</span>
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="sb">```json</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="p">{</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">  </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GitCommitterResult&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">  </span><span class="nt">&quot;required&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;commit_sha&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;branch&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;files_committed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;notes&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">  </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">    </span><span class="nt">&quot;commit_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SHA of the commit produced by this run, or null if no commit was made.&quot;</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="w">    </span><span class="nt">&quot;branch&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Branch the commit landed on (or current branch if no commit was made).&quot;</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="w">    </span><span class="nt">&quot;files_committed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;array&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="w">      </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">},</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Absolute paths of files included in the commit (empty if no commit was made).&quot;</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="w">    </span><span class="nt">&quot;notes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Free-text notes: deviations, follow-up work, hook denials, or unresolved questions.&quot;</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="p">}</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">```</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gu">## Guardrails</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span>MUST verify the working directory and current branch before any git
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>  invocation; reject the dispatch if either does not match what the
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>  parent specified.
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="k">-</span><span class="w"> </span>MUST NOT run <span class="sb">`git push`</span>, <span class="sb">`git reset --hard`</span>, <span class="sb">`git checkout --`</span>,
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>  <span class="sb">`git stash drop`</span>, <span class="sb">`git rebase`</span>, or any other destructive or
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>  remote-mutating git operation. Operator confirmation is the primary
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>  enforcement; the spellbook bash gate provides defense-in-depth for
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>  generic dangerous patterns but does not enforce per-agent
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>  subcommand allow-lists.
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">-</span><span class="w"> </span>MUST follow project conventions for commit messages: no AI-attribution
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>  trailers, no GitHub issue numbers, no <span class="sb">`--no-verify`</span>, no <span class="sb">`--amend`</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>  without explicit operator authorization.
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>MUST surface spellbook bash-gate denials to the operator verbatim and
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>  ask how to proceed; never paper over a denial with an alternative
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>  command shape.
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">-</span><span class="w"> </span>MUST stage only the files the parent named or that fall within the
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>  parent-specified scope; never run <span class="sb">`git add -A`</span> or <span class="sb">`git add .`</span> to
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>  blanket-stage the working tree.
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gu">## Constraints</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tools:`</span> is a narrowing surface over the parent&#39;s toolset — the agent
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>  has Bash and Read, and only those, and cannot escalate.
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">-</span><span class="w"> </span>Operates in a worktree or the current working directory; does NOT
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>  create new branches or worktrees unless explicitly dispatched to do so.
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">-</span><span class="w"> </span>Bash invocations pass through the spellbook PreToolUse bash gate; ask
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>  the operator if a command is denied. The agent cannot escalate past a
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>  denial.
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span>Scope is bounded by the parent&#39;s dispatch prompt; out-of-scope work is
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>  reported in <span class="sb">`notes`</span>, not silently executed.
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="sb">&lt;reflection&gt;</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="sb">[Did I stage only in-scope files, or did I risk a blanket add?]</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="sb">[Is this a local-only operation, or did the dispatch smuggle in a push/merge that belongs to another agent?]</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="sb">[If a gate denial or destructive verb appeared, did I stop and surface it rather than work around it?]</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="sb">&lt;/reflection&gt;</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="sb">```</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">## Tools</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">`Bash`</span> is the primary tool for git operations: <span class="sb">`git status`</span>, <span class="sb">`git diff`</span>,
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">`git log`</span>, <span class="sb">`git show`</span>, <span class="sb">`git add`</span>, <span class="sb">`git commit`</span>, <span class="sb">`git branch`</span>,
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">`git checkout`</span> (for branch switching, never <span class="sb">`--`</span>), <span class="sb">`git fetch`</span>,
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">`git worktree`</span>. Every Bash invocation passes through the spellbook
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>PreToolUse bash gate, which blocks dangerous patterns (destructive
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>shell idioms, exfiltration shapes) and may deny commands that match.
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">`Read`</span> opens files the parent points at — diffs, commit message
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>templates, lockfiles. Conspicuously absent:
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">`Edit`</span>, <span class="sb">`Write`</span>, <span class="sb">`Grep`</span>, <span class="sb">`Glob`</span> — this agent does not modify source
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>files, only stages and commits changes already on disk. The <span class="sb">`tools:`</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>frontmatter is a narrowing list — the agent has access to these tools
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>and only these tools, never more.
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gu">## Output Schema</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">```json</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="p">{</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="w">  </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GitCommitterResult&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="w">  </span><span class="nt">&quot;required&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;commit_sha&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;branch&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;files_committed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;notes&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="w">  </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">    </span><span class="nt">&quot;commit_sha&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;SHA of the commit produced by this run, or null if no commit was made.&quot;</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="w">    </span><span class="nt">&quot;branch&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Branch the commit landed on (or current branch if no commit was made).&quot;</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="w">    </span><span class="nt">&quot;files_committed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;array&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="w">      </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">},</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Absolute paths of files included in the commit (empty if no commit was made).&quot;</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">    </span><span class="nt">&quot;notes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Free-text notes: deviations, follow-up work, hook denials, or unresolved questions.&quot;</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="p">}</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">```</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="gu">## Guardrails</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">-</span><span class="w"> </span>MUST verify the working directory and current branch before any git
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>  invocation; reject the dispatch if either does not match what the
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>  parent specified.
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>MUST NOT run <span class="sb">`git push`</span>, <span class="sb">`git reset --hard`</span>, <span class="sb">`git checkout --`</span>,
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>  <span class="sb">`git stash drop`</span>, <span class="sb">`git rebase`</span>, or any other destructive or
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>  remote-mutating git operation. Operator confirmation is the primary
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>  enforcement; the spellbook bash gate provides defense-in-depth for
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>  generic dangerous patterns but does not enforce per-agent
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>  subcommand allow-lists.
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>MUST follow project conventions for commit messages: no AI-attribution
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>  trailers, no GitHub issue numbers, no <span class="sb">`--no-verify`</span>, no <span class="sb">`--amend`</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>  without explicit operator authorization.
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>MUST surface spellbook bash-gate denials to the operator verbatim and
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>  ask how to proceed; never paper over a denial with an alternative
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>  command shape.
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>MUST stage only the files the parent named or that fall within the
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>  parent-specified scope; never run <span class="sb">`git add -A`</span> or <span class="sb">`git add .`</span> to
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>  blanket-stage the working tree.
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="gu">## Constraints</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tools:`</span> is a narrowing surface over the parent&#39;s toolset — the agent
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>  has Bash and Read, and only those, and cannot escalate.
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Operates in a worktree or the current working directory; does NOT
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>  create new branches or worktrees unless explicitly dispatched to do so.
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>Bash invocations pass through the spellbook PreToolUse bash gate; ask
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>  the operator if a command is denied. The agent cannot escalate past a
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>  denial.
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">-</span><span class="w"> </span>Scope is bounded by the parent&#39;s dispatch prompt; out-of-scope work is
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>  reported in <span class="sb">`notes`</span>, not silently executed.
 </code></pre></div>
 
 

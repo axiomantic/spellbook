@@ -1096,10 +1096,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#tdd-skill-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        TDD Skill — Overview
       
     </span>
   </a>
@@ -1107,10 +1107,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+  <a href="#tdd-skill-assertion-quality-detail" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        TDD Skill — Assertion Quality Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference Table
       
     </span>
   </a>
@@ -4292,10 +4303,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#tdd-skill-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        TDD Skill — Overview
       
     </span>
   </a>
@@ -4303,10 +4314,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+  <a href="#tdd-skill-assertion-quality-detail" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        TDD Skill — Assertion Quality Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference Table
       
     </span>
   </a>
@@ -8434,10 +8456,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#legend" class="md-nav__link">
+  <a href="#tdd-skill-overview" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Legend
+        TDD Skill — Overview
       
     </span>
   </a>
@@ -8445,10 +8467,21 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference" class="md-nav__link">
+  <a href="#tdd-skill-assertion-quality-detail" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference
+        TDD Skill — Assertion Quality Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference-table" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference Table
       
     </span>
   </a>
@@ -8497,190 +8530,272 @@
 <p>This skill originated from <a href="https://github.com/obra/superpowers">obra/superpowers</a>.</p>
 </div>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Red-Green-Refactor cycle enforcing strict test-first discipline. Tests must fail before implementation, implementation must be minimal, and refactoring must preserve green state. All assertions must be Level 4+ on the Assertion Strength Ladder with named mutations.</p>
+<h2 id="tdd-skill-overview">TDD Skill — Overview<a class="headerlink" href="#tdd-skill-overview" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart TD
-    Start([Start]) --&gt; Analyze[Analyze: What Behavior?]
-    Analyze --&gt; IronLawCheck{Code Exists Already?}
-    IronLawCheck --&gt;|Yes| Delete[Delete Code, Start Over]
-    Delete --&gt; RED
-    IronLawCheck --&gt;|No| RED
+    START([Start: Feature/Bug Description]) --&gt; ANALYSIS
 
-    RED[RED: Write Failing Test]
-    RED --&gt; RedDesc[One Behavior, Clear Name]
-    RedDesc --&gt; RunRed[Run Test Suite]
-    RunRed --&gt; RedGate{Test Failed?}
-    RedGate --&gt;|Passes Immediately| RedFail[Fix Test: Wrong Behavior]
-    RedFail --&gt; RED
-    RedGate --&gt;|Error, Not Failure| RedError[Fix Error, Re-Run]
-    RedError --&gt; RunRed
-    RedGate --&gt;|Failed as Expected| GREEN
+    subgraph ANALYSIS["🔍 Analysis Phase"]
+        A1["What behavior needs verification?
+        What assertion proves it?
+        What's the simplest API shape?"]
+    end
 
-    GREEN[GREEN: Write Minimal Code]
-    GREEN --&gt; GreenDesc[Simplest Code to Pass]
-    GreenDesc --&gt; RunGreen[Run Test Suite]
-    RunGreen --&gt; GreenGate{All Tests Pass?}
-    GreenGate --&gt;|No, New Test Fails| FixCode[Fix Code, Not Test]
-    FixCode --&gt; RunGreen
-    GreenGate --&gt;|No, Other Tests Fail| FixOther[Fix Regressions Now]
-    FixOther --&gt; RunGreen
-    GreenGate --&gt;|Yes, All Pass| REFACTOR
+    ANALYSIS --&gt; RED_WRITE
 
-    REFACTOR[REFACTOR: Clean Up]
-    REFACTOR --&gt; RefactorDesc[Remove Duplication, Improve Names]
-    RefactorDesc --&gt; RunRefactor[Run Test Suite]
-    RunRefactor --&gt; RefactorGate{Still All Green?}
-    RefactorGate --&gt;|No| UndoRefactor[Undo Refactoring]
-    UndoRefactor --&gt; REFACTOR
-    RefactorGate --&gt;|Yes| MoreBehavior{More Behavior Needed?}
+    subgraph RED["🔴 RED: Write Failing Test"]
+        RED_WRITE["Write test for ONE behavior
+        Clear name · Real code
+        Mocks only for external I/O"]
+    end
 
-    MoreBehavior --&gt;|Yes| RED
-    MoreBehavior --&gt;|No| SelfCheck[Self-Check Checklist]
-    SelfCheck --&gt; SelfGate{All Items Checked?}
-    SelfGate --&gt;|No| StartOver[Skipped TDD: Start Over]
-    StartOver --&gt; RED
-    SelfGate --&gt;|Yes| End([End])
+    RED_WRITE --&gt; VERIFY_RED
 
-    style Start fill:#4CAF50,color:#fff
-    style End fill:#4CAF50,color:#fff
-    style RED fill:#2196F3,color:#fff
-    style RedDesc fill:#2196F3,color:#fff
-    style RunRed fill:#2196F3,color:#fff
-    style RedFail fill:#2196F3,color:#fff
-    style RedError fill:#2196F3,color:#fff
-    style GREEN fill:#2196F3,color:#fff
-    style GreenDesc fill:#2196F3,color:#fff
-    style RunGreen fill:#2196F3,color:#fff
-    style FixCode fill:#2196F3,color:#fff
-    style FixOther fill:#2196F3,color:#fff
-    style REFACTOR fill:#2196F3,color:#fff
-    style RefactorDesc fill:#2196F3,color:#fff
-    style RunRefactor fill:#2196F3,color:#fff
-    style UndoRefactor fill:#2196F3,color:#fff
-    style Analyze fill:#2196F3,color:#fff
-    style Delete fill:#2196F3,color:#fff
-    style SelfCheck fill:#2196F3,color:#fff
-    style StartOver fill:#2196F3,color:#fff
-    style IronLawCheck fill:#FF9800,color:#fff
-    style MoreBehavior fill:#FF9800,color:#fff
-    style RedGate fill:#f44336,color:#fff
-    style GreenGate fill:#f44336,color:#fff
-    style RefactorGate fill:#f44336,color:#fff
-    style SelfGate fill:#f44336,color:#fff</code></pre>
-<h2 id="legend">Legend<a class="headerlink" href="#legend" title="Permanent link">&para;</a></h2>
+    subgraph VERIFY_RED_BLOCK["⛔ Verify RED (MANDATORY — never skip)"]
+        VERIFY_RED["Run targeted test command
+        npm test path/to/test.ts"]
+        VERIFY_RED --&gt; RED_RESULT{Test result?}
+    end
+
+    RED_RESULT --&gt;|"Passes immediately"| FIX_TEST["Fix test — testing existing behavior"]
+    FIX_TEST --&gt; RED_WRITE
+    RED_RESULT --&gt;|"Errors (not failure)"| FIX_ERROR["Fix error, re-run"]
+    FIX_ERROR --&gt; VERIFY_RED
+    RED_RESULT --&gt;|"Fails for expected reason"| GREEN_IMPL
+
+    subgraph GREEN["🟢 GREEN: Minimal Implementation"]
+        GREEN_IMPL["Write simplest code to pass
+        No extra features · No refactoring
+        No 'improvements'"]
+    end
+
+    GREEN_IMPL --&gt; VERIFY_GREEN
+
+    subgraph VERIFY_GREEN_BLOCK["⛔ Verify GREEN (MANDATORY)"]
+        VERIFY_GREEN["Run targeted test command"]
+        VERIFY_GREEN --&gt; GREEN_RESULT{Test result?}
+    end
+
+    GREEN_RESULT --&gt;|"Test fails"| FIX_IMPL["Fix implementation — not the test"]
+    FIX_IMPL --&gt; VERIFY_GREEN
+    GREEN_RESULT --&gt;|"Other tests fail"| FIX_REGRESSION["Fix regressions now"]
+    FIX_REGRESSION --&gt; VERIFY_GREEN
+    GREEN_RESULT --&gt;|"All pass · output pristine"| ESCAPE_GATE
+
+    subgraph ESCAPE_GATE_BLOCK["🔴 Quality Gate: ESCAPE Analysis"]
+        ESCAPE_GATE["Per test function:
+        CLAIM / PATH / CHECK
+        MUTATION / ESCAPE / IMPACT"]
+        ESCAPE_GATE --&gt; STRENGTH_CHECK["Mechanical grep checks:
+        banned substring assertions · tautological
+        mock calls without arg verification
+        existence-only checks"]
+        STRENGTH_CHECK --&gt; ESCAPE_OK{All assertions
+        Level 4+?}
+    end
+
+    ESCAPE_OK --&gt;|"Weak assertions found"| STRENGTHEN["Strengthen assertions
+    before proceeding"]
+    STRENGTHEN --&gt; ESCAPE_GATE
+    ESCAPE_OK --&gt;|"Pass"| REFACTOR
+
+    subgraph REFACTOR_BLOCK["♻️ REFACTOR: Clean Up"]
+        REFACTOR["Remove duplication
+        Improve names · Extract helpers
+        Add NO new behavior"]
+        REFACTOR --&gt; REFACTOR_CHECK{Tests still green?}
+    end
+
+    REFACTOR_CHECK --&gt;|"Red"| UNDO["Undo refactor change
+    try smaller step"]
+    UNDO --&gt; REFACTOR
+    REFACTOR_CHECK --&gt;|"Green"| SELF_CHECK
+
+    subgraph SELF_CHECK_BLOCK["🔴 Self-Check Before Complete"]
+        SELF_CHECK["✓ Watched each test fail first
+        ✓ Minimal implementation
+        ✓ All tests pass · output pristine
+        ✓ Real code (mocks only if unavoidable)
+        ✓ ESCAPE analysis complete every test
+        ✓ All assertions Level 4+
+        ✓ No mock.ANY — pychoir with justification only
+        ✓ Every mock call asserted with ALL args"]
+        SELF_CHECK --&gt; CHECKLIST_OK{Any unchecked?}
+    end
+
+    CHECKLIST_OK --&gt;|"Yes — skipped TDD"| DELETE["Delete code. Start over."]
+    DELETE --&gt; ANALYSIS
+    CHECKLIST_OK --&gt;|"All checked"| MORE_BEHAVIOR{More behaviors
+    to implement?}
+
+    MORE_BEHAVIOR --&gt;|"Yes"| RED_WRITE
+    MORE_BEHAVIOR --&gt;|"No"| DONE([✅ Complete])
+
+    subgraph IRON_LAW["⚠️ The Iron Law"]
+        IL["Code before test → Delete. Start over.
+        No 'reference' · No 'adapting' · No looking at it"]
+    end
+
+    subgraph LEGEND["Legend"]
+        L1["Process step"]
+        L2{Decision}
+        L3([Terminal])
+        L4["⛔ Quality gate (mandatory)"]:::gate
+        L5["🔴 Quality gate (mandatory)"]:::gate
+    end
+
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc0000
+    classDef dispatch fill:#4a9eff,color:#fff,stroke:#0055cc
+    classDef success fill:#51cf66,color:#000,stroke:#2b9e44
+    classDef warning fill:#ffd43b,color:#000,stroke:#e67700
+
+    class VERIFY_RED_BLOCK,VERIFY_GREEN_BLOCK,ESCAPE_GATE_BLOCK,SELF_CHECK_BLOCK gate
+    class DONE success
+    class DELETE warning
+    class START success</code></pre>
+<hr />
+<h2 id="tdd-skill-assertion-quality-detail">TDD Skill — Assertion Quality Detail<a class="headerlink" href="#tdd-skill-assertion-quality-detail" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    WRITE_ASSERTION["Write assertion for test"] --&gt; LEVEL_CHECK{Assertion level?}
+
+    LEVEL_CHECK --&gt;|"Level 1: existence only
+    len &gt; 0 · is not None
+    file.exists()"| BANNED1["❌ BANNED
+    Strengthening required"]
+
+    LEVEL_CHECK --&gt;|"Level 2: count or substring
+    len == N · 'key' in result
+    stringContaining"| BANNED2["❌ BANNED
+    Strengthening required"]
+
+    LEVEL_CHECK --&gt;|"Level 3: single field
+    result.status == 'ok'
+    (without other fields)"| WEAK["⚠️ Weak — justify or strengthen"]
+
+    LEVEL_CHECK --&gt;|"Level 4+: exact equality
+    complete object · all fields
+    full string output"| DYNAMIC_CHECK{Contains dynamic
+    values?}
+
+    BANNED1 --&gt; REWRITE["Rewrite: assert result == [expected_1, expected_2]"]
+    BANNED2 --&gt; REWRITE
+    REWRITE --&gt; LEVEL_CHECK
+
+    DYNAMIC_CHECK --&gt;|"Yes: timestamps · UUIDs
+    derived strings"| CONSTRUCT["Construct complete expected value
+    using same logic as production
+    assert message == f'Today is {date.today()}'"]
+    CONSTRUCT --&gt; TRULY_UNKNOWABLE{Truly unknowable?
+    UUIDs · server PIDs
+    OS-assigned values}
+
+    TRULY_UNKNOWABLE --&gt;|"Yes"| PYCHOIR["Use pychoir matcher
+    + justification comment
+    assert result == \{'id': IsInstance(str), 'name': 'expected'\}"]
+    TRULY_UNKNOWABLE --&gt;|"No — just dynamic"| CONSTRUCT
+
+    DYNAMIC_CHECK --&gt;|"No: static output"| EXACT["assert result == expected_complete_output"]
+
+    PYCHOIR --&gt; MOCK_CHECK
+    EXACT --&gt; MOCK_CHECK
+    CONSTRUCT --&gt; MOCK_CHECK
+
+    MOCK_CHECK{Uses mocks?} --&gt;|"Yes"| MOCK_RULES["Assert EVERY call
+    with ALL args
+    verify call_count
+    mock.ANY → BANNED"]
+    MOCK_CHECK --&gt;|"No"| ESCAPE_ANALYSIS
+
+    MOCK_RULES --&gt; MOCK_FIDELITY{Mock matches real
+    system contract?}
+    MOCK_FIDELITY --&gt;|"No"| ADD_INTEGRATION["Add integration test
+    exercising real system
+    (when infra available)"]
+    MOCK_FIDELITY --&gt;|"Yes"| ESCAPE_ANALYSIS
+
+    ADD_INTEGRATION --&gt; ESCAPE_ANALYSIS
+
+    subgraph ESCAPE_BLOCK["ESCAPE Analysis (mandatory per test function)"]
+        ESCAPE_ANALYSIS["Fill in template:
+        CLAIM: what does test claim to verify?
+        PATH: what code actually executes?
+        CHECK: what do assertions verify?"]
+        ESCAPE_ANALYSIS --&gt; MUTATION["MUTATION: for each assertion, name
+        specific production code change that
+        would cause that assertion to fail"]
+        MUTATION --&gt; MUTATION_OK{Can name a mutation
+        for each assertion?}
+        MUTATION_OK --&gt;|"No — assertion too weak"| REWRITE
+        MUTATION_OK --&gt;|"Yes"| ESCAPE_FIELD["ESCAPE: name specific broken
+        implementation that still passes
+        ('nothing' requires explicit justification)"]
+        ESCAPE_FIELD --&gt; IMPACT["IMPACT: what breaks in production
+        if broken implementation ships?"]
+    end
+
+    IMPACT --&gt; GREP_CHECKS
+
+    subgraph GREP_BLOCK["Mechanical Grep Checks (pre-commit)"]
+        GREP_CHECKS["1. Banned substring on serialized output
+        expect.*stringContaining.*JSON"]
+        GREP_CHECKS --&gt; G2["2. Tautological assertions
+        expect(true).toBe(true) · assert True"]
+        G2 --&gt; G3["3. Mock call without arg verification
+        toHaveBeenCalled() · assert_called()"]
+        G3 --&gt; G4["4. Existence-only checks
+        typeof === 'function' · callable("]
+        G4 --&gt; G5["5. Stateful operations: at least one assertion
+        MUST inspect post-state, not just return value"]
+        G5 --&gt; GREP_RESULT{Any grep hits?}
+    end
+
+    GREP_RESULT --&gt;|"Yes"| STRENGTHEN_ASSERTION["Strengthen assertion
+    BEFORE next gate"]
+    STRENGTHEN_ASSERTION --&gt; GREP_CHECKS
+    GREP_RESULT --&gt;|"No"| ASSERTION_APPROVED(["✅ Assertion approved — Level 4+"])
+
+    subgraph LEGEND["Legend"]
+        direction LR
+        LA["Process step"]
+        LB{Decision}
+        LC(["Terminal"])
+        LD["❌ Banned pattern"]:::banned
+        LE["⚠️ Weak pattern"]:::weak
+    end
+
+    classDef banned fill:#ff6b6b,color:#fff,stroke:#cc0000
+    classDef weak fill:#ffd43b,color:#000,stroke:#e67700
+    classDef approved fill:#51cf66,color:#000,stroke:#2b9e44
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc0000
+
+    class BANNED1,BANNED2 banned
+    class WEAK weak
+    class ASSERTION_APPROVED approved
+    class GREP_BLOCK,ESCAPE_BLOCK gate</code></pre>
+<hr />
+<h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Color</th>
-<th>Meaning</th>
+<th>Overview node</th>
+<th>Detail diagram</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Green (#4CAF50)</td>
-<td>Skill invocation</td>
+<td><code>ESCAPE_GATE_BLOCK</code> — ESCAPE Analysis quality gate</td>
+<td>Assertion Quality Detail: full ESCAPE + MUTATION template</td>
 </tr>
 <tr>
-<td>Blue (#2196F3)</td>
-<td>Command/action</td>
+<td><code>STRENGTH_CHECK</code> — mechanical grep checks</td>
+<td>Assertion Quality Detail: <code>GREP_BLOCK</code></td>
 </tr>
 <tr>
-<td>Orange (#FF9800)</td>
-<td>Decision point</td>
+<td><code>RED_WRITE</code> — write failing test</td>
+<td>Assertion Quality Detail: entry point for each assertion written</td>
 </tr>
 <tr>
-<td>Red (#f44336)</td>
-<td>Quality gate</td>
-</tr>
-</tbody>
-</table>
-<h2 id="cross-reference">Cross-Reference<a class="headerlink" href="#cross-reference" title="Permanent link">&para;</a></h2>
-<table>
-<thead>
-<tr>
-<th>Node</th>
-<th>Source Reference</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Analyze: What Behavior?</td>
-<td>Reasoning Schema (lines 62-67)</td>
-</tr>
-<tr>
-<td>Code Exists Already?</td>
-<td>The Iron Law (lines 52-58): "Code before test? Delete. Start over."</td>
-</tr>
-<tr>
-<td>Delete Code, Start Over</td>
-<td>The Iron Law (line 58)</td>
-</tr>
-<tr>
-<td>RED: Write Failing Test</td>
-<td>RED phase (lines 78-80)</td>
-</tr>
-<tr>
-<td>One Behavior, Clear Name</td>
-<td>RED guidance (line 80)</td>
-</tr>
-<tr>
-<td>Run Test Suite</td>
-<td>Verify RED (lines 116-129)</td>
-</tr>
-<tr>
-<td>Test Failed?</td>
-<td>Gate at lines 123-129: confirm failure, not error</td>
-</tr>
-<tr>
-<td>Fix Test: Wrong Behavior</td>
-<td>Line 128: "Test passes? Testing existing behavior. Fix test."</td>
-</tr>
-<tr>
-<td>Fix Error, Re-Run</td>
-<td>Line 129: "Test errors? Fix error, re-run until it fails correctly."</td>
-</tr>
-<tr>
-<td>GREEN: Write Minimal Code</td>
-<td>GREEN phase (lines 131-133)</td>
-</tr>
-<tr>
-<td>Simplest Code to Pass</td>
-<td>Line 133: "Simplest code to pass. No features, no refactoring."</td>
-</tr>
-<tr>
-<td>All Tests Pass?</td>
-<td>Verify GREEN (lines 167-181)</td>
-</tr>
-<tr>
-<td>Fix Code, Not Test</td>
-<td>Line 180: "Test fails? Fix code, not test."</td>
-</tr>
-<tr>
-<td>Fix Regressions Now</td>
-<td>Line 181: "Other tests fail? Fix now."</td>
-</tr>
-<tr>
-<td>REFACTOR: Clean Up</td>
-<td>REFACTOR phase (lines 183-185)</td>
-</tr>
-<tr>
-<td>Remove Duplication, Improve Names</td>
-<td>Line 185: "Remove duplication, improve names, extract helpers."</td>
-</tr>
-<tr>
-<td>Still All Green?</td>
-<td>REFACTOR gate (line 185): "Keep tests green."</td>
-</tr>
-<tr>
-<td>More Behavior Needed?</td>
-<td>Repeat section (lines 187-189)</td>
-</tr>
-<tr>
-<td>Self-Check Checklist</td>
-<td>Self-Check (lines 371-385)</td>
-</tr>
-<tr>
-<td>All Items Checked?</td>
-<td>Line 385: "If ANY unchecked: Skipped TDD. Start over."</td>
+<td><code>IRON_LAW</code> — delete and start over</td>
+<td>Applies when any anti-pattern from <code>&lt;FORBIDDEN&gt;</code> block is detected</td>
 </tr>
 </tbody>
 </table>

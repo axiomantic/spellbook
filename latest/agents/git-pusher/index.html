@@ -7806,6 +7806,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#workflow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#agent-content" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8299,6 +8310,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#workflow-diagram" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Workflow Diagram
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#agent-content" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8330,6 +8352,112 @@
 
 
 <h1 id="git-pusher">git-pusher<a class="headerlink" href="#git-pusher" title="Permanent link">&para;</a></h1>
+<h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    START(["`**git-pusher invoked**
+    with push target`"]):::terminal
+
+    INSPECT["Inspect local state
+    git status / git log / git rev-parse / git remote"]:::process
+
+    CHECK_FF{Is push
+    fast-forward or
+    first push?}:::decision
+
+    WOULD_OVERWRITE["Report: push would
+    overwrite remote work
+    surface to operator"]:::gate
+
+    OPERATOR_ABORT(["`**Abort**
+    pushed: false
+    notes: overwrite risk`"]):::fail
+
+    COMPOSE["Compose exact git push command
+    + commit range to transmit"]:::process
+
+    FORCE_REQUESTED{Force flag
+    requested?}:::decision
+
+    NO_AUTH_FORCE["Refuse —
+    no authorization for force"]:::gate
+
+    PRESENT["Present to operator:
+    exact command + commit range
+    → wait for confirmation"]:::gate
+
+    OPERATOR_DECISION{Operator
+    confirms?}:::decision
+
+    DECLINED(["`**Abort**
+    pushed: false
+    notes: operator declined`"]):::fail
+
+    RUN_PUSH["Execute: git push"]:::process
+
+    HOOK_FAIL{Pre-push hook
+    failed?}:::decision
+
+    SURFACE_HOOK["Surface hook failure
+    verbatim to operator
+    ask how to proceed"]:::gate
+
+    HOOK_ABORT(["`**Abort**
+    pushed: false
+    notes: hook failure`"]):::fail
+
+    GATE_DENIED{Bash gate
+    denied?}:::decision
+
+    SURFACE_GATE["Report gate denial
+    verbatim to operator
+    ask how to proceed"]:::gate
+
+    GATE_ABORT(["`**Abort**
+    pushed: false
+    notes: gate denial`"]):::fail
+
+    SUCCESS(["`**Push complete**
+    pushed: true
+    branch / remote_refspec / commit_range`"]):::success
+
+    START --&gt; INSPECT
+    INSPECT --&gt; CHECK_FF
+    CHECK_FF -- "Yes (fast-forward or first push)" --&gt; COMPOSE
+    CHECK_FF -- "No (would overwrite)" --&gt; WOULD_OVERWRITE
+    WOULD_OVERWRITE --&gt; OPERATOR_ABORT
+
+    COMPOSE --&gt; FORCE_REQUESTED
+    FORCE_REQUESTED -- "Yes, but no explicit auth" --&gt; NO_AUTH_FORCE
+    FORCE_REQUESTED -- "No / authorized" --&gt; PRESENT
+    NO_AUTH_FORCE --&gt; PRESENT
+
+    PRESENT --&gt; OPERATOR_DECISION
+    OPERATOR_DECISION -- "Declined / no response" --&gt; DECLINED
+    OPERATOR_DECISION -- "Confirmed" --&gt; RUN_PUSH
+
+    RUN_PUSH --&gt; GATE_DENIED
+    GATE_DENIED -- "Yes" --&gt; SURFACE_GATE
+    SURFACE_GATE --&gt; GATE_ABORT
+    GATE_DENIED -- "No" --&gt; HOOK_FAIL
+    HOOK_FAIL -- "Yes" --&gt; SURFACE_HOOK
+    SURFACE_HOOK --&gt; HOOK_ABORT
+    HOOK_FAIL -- "No" --&gt; SUCCESS
+
+    subgraph LEGEND["Legend"]
+        L_PROC["Process"]:::process
+        L_GATE["Quality gate / guardrail"]:::gate
+        L_DEC{Decision}:::decision
+        L_SUCC([Success terminal]):::success
+        L_FAIL([Fail / abort terminal]):::fail
+    end
+
+    classDef process fill:#2d2d2d,stroke:#888,color:#e8e8ea
+    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
+    classDef decision fill:#2d2d2d,stroke:#f0a500,color:#f0c040
+    classDef success fill:#51cf66,stroke:#2f9e44,color:#fff
+    classDef fail fill:#555,stroke:#888,color:#ccc
+    classDef terminal fill:#4a9eff,stroke:#1a6fcc,color:#fff</code></pre>
+<p><strong>git-pusher agent flow</strong> — single-phase agent with no subagent dispatches. All decision logic runs inline. Every push is gated by (1) fast-forward safety check, (2) force-flag authorization check, (3) explicit operator confirmation, (4) bash gate denial check, and (5) pre-push hook success. Any gate failure halts with <code>pushed: false</code> and a populated <code>notes</code> field.</p>
 <h2 id="agent-content">Agent Content<a class="headerlink" href="#agent-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gu">## Purpose</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -8340,84 +8468,108 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>creates commits, never edits files, and never opens or merges pull
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>requests. Every push requires explicit operator confirmation.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gu">## Tools</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="sb">`Bash`</span> is used for <span class="sb">`git push`</span> and the read-only git commands that
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>verify push safety (<span class="sb">`git status`</span>, <span class="sb">`git log`</span>, <span class="sb">`git rev-parse`</span>,
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="sb">`git remote`</span>, <span class="sb">`git diff`</span>). Every Bash invocation passes through the
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>spellbook PreToolUse bash gate, which blocks dangerous patterns
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>(destructive shell idioms, exfiltration shapes) and may deny commands
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>that match. <span class="sb">`Read`</span> opens files the parent points at — push
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>manifests, branch context. Conspicuously absent: <span class="sb">`Edit`</span>, <span class="sb">`Write`</span>,
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="sb">`Grep`</span>, <span class="sb">`Glob`</span> — this agent does not modify or search the working
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>tree. The <span class="sb">`tools:`</span> frontmatter is a narrowing list — the agent has
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>access to these tools and only these tools, never more.
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">## Output Schema</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">```json</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="p">{</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="w">  </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GitPusherResult&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="w">  </span><span class="nt">&quot;required&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;pushed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;branch&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;remote_refspec&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;commit_range&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;notes&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="w">  </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="w">    </span><span class="nt">&quot;pushed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;True if a push completed successfully; false if it was declined, denied, or aborted.&quot;</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="w">    </span><span class="nt">&quot;branch&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Local branch name that was the source of the push.&quot;</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="w">    </span><span class="nt">&quot;remote_refspec&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Refspec pushed to in `&lt;remote&gt;/&lt;ref&gt;` form, where `&lt;ref&gt;` may itself contain slashes (e.g. &#39;origin/feature-x&#39;, &#39;origin/release/v2&#39;, &#39;upstream/users/alice/topic&#39;).&quot;</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="w">    </span><span class="nt">&quot;commit_range&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Range of commits pushed in `&lt;old-sha&gt;..&lt;new-sha&gt;` form, or null if no push happened.&quot;</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="w">    </span><span class="nt">&quot;notes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Free-text notes: operator decisions, hook denials, abort reasons, or unresolved questions.&quot;</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="p">}</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">```</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gu">## Guardrails</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">-</span><span class="w"> </span>MUST require explicit operator confirmation for every push; the
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>  agent prints the exact <span class="sb">`git push`</span> command it intends to run and
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>  the commit range that will be transmitted, then waits for an
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>  affirmative operator response before invoking it.
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">-</span><span class="w"> </span>MUST NOT run <span class="sb">`git push --force`</span> or <span class="sb">`git push --force-with-lease`</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>  without explicit operator authorization that names the target
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>  branch. Operator confirmation is the primary enforcement; the
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>  spellbook bash gate provides defense-in-depth for generic dangerous
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>  patterns but does not enforce per-agent subcommand allow-lists.
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">-</span><span class="w"> </span>MUST NOT use <span class="sb">`--no-verify`</span> to bypass pre-push hooks; if a hook
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>  fails, surface the failure to the operator and ask how to proceed.
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>MUST verify the local branch is either (a) ahead of its upstream
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>  by only the commits the operator authorized, or (b) has no upstream
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>  yet (first-push case); in neither case may the push silently
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>  overwrite remote work.
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>MUST surface spellbook bash-gate denials to the operator verbatim
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>  and ask how to proceed; never paper over a denial with an
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>  alternative command shape.
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="gu">## Constraints</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tools:`</span> is a narrowing surface over the parent&#39;s toolset — the
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>  agent has Bash and Read, and only those, and cannot escalate.
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">-</span><span class="w"> </span>Operates in a worktree or the current working directory; does NOT
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>  switch branches, create commits, or modify the working tree.
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">-</span><span class="w"> </span>Bash invocations pass through the spellbook PreToolUse bash gate;
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>  ask the operator if a command is denied. The agent cannot escalate
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>  past a denial.
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span>Scope is bounded by the parent&#39;s dispatch prompt; out-of-scope work
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>  is reported in <span class="sb">`notes`</span>, not silently executed.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">1.</span> <span class="gs">**Confirmation gates every push**</span>: The agent prints the exact <span class="sb">`git push`</span> command and the commit range it will transmit, then waits for an affirmative operator response before invoking it — no silent pushes, ever.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">2.</span> <span class="gs">**No silent overwrite of remote work**</span>: A push proceeds only when the local branch is fast-forward ahead of its upstream or has no upstream yet; force pushes (<span class="sb">`--force`</span>, <span class="sb">`--force-with-lease`</span>) require explicit operator authorization that names the target branch.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">3.</span> <span class="gs">**No hook bypass**</span>: <span class="sb">`--no-verify`</span> is never used to skip pre-push hooks; a failing hook is surfaced to the operator instead of being suppressed.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">4.</span> <span class="gs">**Single verb, read-only otherwise**</span>: The agent&#39;s only mutating action is <span class="sb">`git push`</span>; it creates no commits, switches no branches, and edits no files — everything else is read-only inspection used to confirm push safety.
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">5.</span> <span class="gs">**Surface gate denials verbatim**</span>: A spellbook bash-gate denial is reported exactly as received and the operator is asked how to proceed; the agent never reshapes a command to evade a denial.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gu">## Reasoning Schema</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="sb">```</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="sb">&lt;analysis&gt;</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sb">[Confirm the local branch, its upstream, and the commit range that the push would transmit.]</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="sb">[Check whether the push is a fast-forward, a first push, or would overwrite remote work.]</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sb">[Compose the exact `git push` command to present for operator confirmation.]</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">&lt;/analysis&gt;</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="sb">&lt;reflection&gt;</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="sb">[Did I obtain explicit operator confirmation for THIS specific push?]</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="sb">[Could this push clobber remote commits I have not accounted for?]</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="sb">[If a force flag or `--no-verify` was implied, did I refuse to add it without authorization?]</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="sb">&lt;/reflection&gt;</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="sb">```</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">## Tools</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">`Bash`</span> is used for <span class="sb">`git push`</span> and the read-only git commands that
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>verify push safety (<span class="sb">`git status`</span>, <span class="sb">`git log`</span>, <span class="sb">`git rev-parse`</span>,
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">`git remote`</span>, <span class="sb">`git diff`</span>). Every Bash invocation passes through the
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>spellbook PreToolUse bash gate, which blocks dangerous patterns
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>(destructive shell idioms, exfiltration shapes) and may deny commands
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>that match. <span class="sb">`Read`</span> opens files the parent points at — push
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>manifests, branch context. Conspicuously absent: <span class="sb">`Edit`</span>, <span class="sb">`Write`</span>,
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">`Grep`</span>, <span class="sb">`Glob`</span> — this agent does not modify or search the working
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>tree. The <span class="sb">`tools:`</span> frontmatter is a narrowing list — the agent has
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>access to these tools and only these tools, never more.
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="gu">## Output Schema</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">```json</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="p">{</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="w">  </span><span class="nt">&quot;$schema&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;http://json-schema.org/draft-07/schema#&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">  </span><span class="nt">&quot;title&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;GitPusherResult&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="w">  </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;object&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="w">  </span><span class="nt">&quot;required&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;pushed&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;branch&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;remote_refspec&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;commit_range&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;notes&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="w">  </span><span class="nt">&quot;properties&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="w">    </span><span class="nt">&quot;pushed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;boolean&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;True if a push completed successfully; false if it was declined, denied, or aborted.&quot;</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="w">    </span><span class="nt">&quot;branch&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Local branch name that was the source of the push.&quot;</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="w">    </span><span class="nt">&quot;remote_refspec&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Refspec pushed to in `&lt;remote&gt;/&lt;ref&gt;` form, where `&lt;ref&gt;` may itself contain slashes (e.g. &#39;origin/feature-x&#39;, &#39;origin/release/v2&#39;, &#39;upstream/users/alice/topic&#39;).&quot;</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="w">    </span><span class="nt">&quot;commit_range&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;string&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;null&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Range of commits pushed in `&lt;old-sha&gt;..&lt;new-sha&gt;` form, or null if no push happened.&quot;</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="w">    </span><span class="nt">&quot;notes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;string&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Free-text notes: operator decisions, hook denials, abort reasons, or unresolved questions.&quot;</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="p">}</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">```</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gu">## Guardrails</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">-</span><span class="w"> </span>MUST require explicit operator confirmation for every push; the
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>  agent prints the exact <span class="sb">`git push`</span> command it intends to run and
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>  the commit range that will be transmitted, then waits for an
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>  affirmative operator response before invoking it.
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span>MUST NOT run <span class="sb">`git push --force`</span> or <span class="sb">`git push --force-with-lease`</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>  without explicit operator authorization that names the target
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>  branch. Operator confirmation is the primary enforcement; the
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>  spellbook bash gate provides defense-in-depth for generic dangerous
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>  patterns but does not enforce per-agent subcommand allow-lists.
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span>MUST NOT use <span class="sb">`--no-verify`</span> to bypass pre-push hooks; if a hook
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>  fails, surface the failure to the operator and ask how to proceed.
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>MUST verify the local branch is either (a) ahead of its upstream
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>  by only the commits the operator authorized, or (b) has no upstream
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>  yet (first-push case); in neither case may the push silently
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>  overwrite remote work.
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>MUST surface spellbook bash-gate denials to the operator verbatim
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>  and ask how to proceed; never paper over a denial with an
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>  alternative command shape.
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="gu">## Constraints</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tools:`</span> is a narrowing surface over the parent&#39;s toolset — the
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>  agent has Bash and Read, and only those, and cannot escalate.
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Operates in a worktree or the current working directory; does NOT
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>  switch branches, create commits, or modify the working tree.
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">-</span><span class="w"> </span>Bash invocations pass through the spellbook PreToolUse bash gate;
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>  ask the operator if a command is denied. The agent cannot escalate
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>  past a denial.
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>Scope is bounded by the parent&#39;s dispatch prompt; out-of-scope work
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>  is reported in <span class="sb">`notes`</span>, not silently executed.
 </code></pre></div>
 
 
