@@ -272,7 +272,7 @@ def extract_stored_hash(meta: dict) -> str:
     The field value is expected as "sha256:<hex>". Returns just the hex portion,
     or empty string if missing/malformed.
     """
-    raw = meta.get("source_hash", "")
+    raw = meta.get("source_hash") or ""
     if raw.startswith("sha256:"):
         return raw[len("sha256:"):]
     return raw

@@ -31,6 +31,17 @@ class TestSessionInitMemoryRegeneration:
         mock_repairs = tripwire.mock("spellbook.core.config:_get_repairs")
         mock_repairs.returns([])
 
+        # _get_open_followup_count derives the namespace via encode_cwd (which
+        # shells out to git) and then calls do_memory_recall. Mock both at the
+        # consuming module: encode_cwd to avoid the subprocess, do_memory_recall
+        # to return an empty result set so the count-extraction logic runs and
+        # yields 0 (follow-up surfacing stays off).
+        mock_encode_cwd = tripwire.mock("spellbook.core.config:encode_cwd")
+        mock_encode_cwd.returns("Users-alice-project")
+
+        mock_recall = tripwire.mock("spellbook.core.config:do_memory_recall")
+        mock_recall.returns({"count": 0})
+
         with tripwire:
             from spellbook.core.config import session_init
             session_init(project_path="/Users/alice/project")
@@ -45,6 +56,17 @@ class TestSessionInitMemoryRegeneration:
         mock_admin_url.assert_call(args=(), kwargs={})
         mock_config_get.assert_call(args=("profile.default",), kwargs={})
         mock_repairs.assert_call(args=(), kwargs={})
+        mock_encode_cwd.assert_call(args=("/Users/alice/project",), kwargs={})
+        mock_recall.assert_call(
+            args=(),
+            kwargs={
+                "query": "",
+                "namespace": "Users-alice-project",
+                "tags": ["follow-up-task"],
+                "scope": "project",
+                "limit": 1000,
+            },
+        )
 
     def test_skips_when_project_path_none(self):
         """_regenerate_memory_md returns early when project_path is None."""

@@ -834,7 +834,7 @@ def _build_recovery_directive(state: dict) -> str:
     # stored list -- split locally for rendering. Absent ledger renders
     # nothing (backward compatible with non-develop work).
     ledger = state.get("develop_gate_ledger") or {}
-    remaining_raw = ledger.get("remaining_gates", "")
+    remaining_raw = ledger.get("remaining_gates") or ""
     remaining = [g for g in remaining_raw.split("\n") if g.strip()]
     current_phase = ledger.get("current_phase", "")
     plan_pointer = ledger.get("plan_pointer", "")
