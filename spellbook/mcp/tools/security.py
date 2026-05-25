@@ -13,11 +13,9 @@ __all__ = [
 ]
 
 from spellbook.mcp.server import mcp
-from spellbook.sessions.injection import inject_recovery_context
 
 
 @mcp.tool()
-@inject_recovery_context
 def security_check_tool_input(
     tool_name: str,
     tool_input: dict,

@@ -23,7 +23,6 @@ from spellbook.admin.events import Event, Subsystem, event_bus
 from spellbook.canvas import store as canvas_store
 from spellbook.core.config import get_env
 from spellbook.mcp.server import mcp
-from spellbook.sessions.injection import inject_recovery_context
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +56,6 @@ async def _publish_canvas_event(event_type: str, data: dict) -> None:
 
 
 @mcp.tool()
-@inject_recovery_context
 async def canvas_open(ctx: Context, name: str, title: str = "") -> dict:
     """Open (create or re-attach to) a named canvas.
 
@@ -103,7 +101,6 @@ async def canvas_open(ctx: Context, name: str, title: str = "") -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 async def canvas_write(
     ctx: Context,
     canvas: str,
@@ -185,7 +182,6 @@ async def canvas_write(
 
 
 @mcp.tool()
-@inject_recovery_context
 async def canvas_close(ctx: Context, name: str) -> dict:
     """Mark a canvas closed. Does NOT delete files; the directory remains
     on disk and can be removed manually if desired.
@@ -211,7 +207,6 @@ async def canvas_close(ctx: Context, name: str) -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 async def canvas_list(ctx: Context) -> dict:
     """List all canvases on disk with their metadata.
 

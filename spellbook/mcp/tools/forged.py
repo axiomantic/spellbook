@@ -29,7 +29,6 @@ from spellbook.forged.roundtable import (
     process_roundtable_response as do_process_roundtable_response,
     roundtable_convene as do_roundtable_convene,
 )
-from spellbook.sessions.injection import inject_recovery_context
 
 
 def _extract_section(content: str, section_name: str) -> str | None:
@@ -61,7 +60,6 @@ def _extract_section(content: str, section_name: str) -> str | None:
 
 
 @mcp.tool()
-@inject_recovery_context
 async def forge_iteration_start(
     feature_name: str,
     starting_stage: str = "DISCOVER",
@@ -97,7 +95,6 @@ async def forge_iteration_start(
 
 
 @mcp.tool()
-@inject_recovery_context
 async def forge_iteration_advance(
     feature_name: str,
     current_token: str,
@@ -132,7 +129,6 @@ async def forge_iteration_advance(
 
 
 @mcp.tool()
-@inject_recovery_context
 async def forge_iteration_return(
     feature_name: str,
     current_token: str,
@@ -177,7 +173,6 @@ async def forge_iteration_return(
 
 
 @mcp.tool()
-@inject_recovery_context
 def forge_project_init(
     project_path: str,
     project_name: str,
@@ -213,7 +208,6 @@ def forge_project_init(
 
 
 @mcp.tool()
-@inject_recovery_context
 def forge_project_status(project_path: str) -> dict:
     """
     Get current project status and progress.
@@ -236,7 +230,6 @@ def forge_project_status(project_path: str) -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 def forge_roundtable_convene(
     feature_name: str,
     stage: str,
@@ -288,7 +281,6 @@ def forge_roundtable_convene(
 
 
 @mcp.tool()
-@inject_recovery_context
 async def forge_roundtable_convene_local(
     feature_name: str,
     stage: str,
@@ -385,7 +377,6 @@ async def forge_roundtable_convene_local(
 
 
 @mcp.tool()
-@inject_recovery_context
 async def forge_record_gate_completion(
     feature_name: str,
     gate: str,
@@ -427,7 +418,6 @@ async def forge_record_gate_completion(
 
 
 @mcp.tool()
-@inject_recovery_context
 def skill_instructions_get(
     skill_name: str,
     sections: list = None,

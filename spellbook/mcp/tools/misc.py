@@ -13,7 +13,6 @@ import json
 from datetime import datetime, timezone
 
 from spellbook.mcp.server import mcp
-from spellbook.sessions.injection import inject_recovery_context
 
 
 def _deep_merge(base: dict, updates: dict) -> dict:
@@ -36,7 +35,6 @@ def _deep_merge(base: dict, updates: dict) -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 def workflow_state_save(
     project_path: str,
     state: dict,
@@ -102,7 +100,6 @@ def workflow_state_save(
 
 
 @mcp.tool()
-@inject_recovery_context
 def workflow_state_load(
     project_path: str,
     max_age_hours: float = 24.0,
@@ -220,7 +217,6 @@ def workflow_state_load(
 
 
 @mcp.tool()
-@inject_recovery_context
 def workflow_state_update(
     project_path: str,
     updates: dict,

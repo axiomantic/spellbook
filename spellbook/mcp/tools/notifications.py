@@ -16,14 +16,12 @@ from spellbook.core.config import (
     config_set_many,
     notify_session_set as do_notify_session_set,
 )
-from spellbook.sessions.injection import inject_recovery_context
 
 
 # --- Notification Tools ---
 
 
 @mcp.tool()
-@inject_recovery_context
 async def notify_send(body: str, title: str = None) -> str:
     """Send a system notification.
 
@@ -39,7 +37,6 @@ async def notify_send(body: str, title: str = None) -> str:
 
 
 @mcp.tool()
-@inject_recovery_context
 async def notify_status() -> str:
     """Check notification system availability and current settings.
 
@@ -51,7 +48,6 @@ async def notify_status() -> str:
 
 
 @mcp.tool()
-@inject_recovery_context
 async def notify_session_set(enabled: bool = None, title: str = None) -> str:
     """Override notification settings for this session only (in-memory).
 
@@ -66,7 +62,6 @@ async def notify_session_set(enabled: bool = None, title: str = None) -> str:
 
 
 @mcp.tool()
-@inject_recovery_context
 async def notify_config_set(enabled: bool = None, title: str = None) -> str:
     """Change persistent notification settings (saved to spellbook.json).
 

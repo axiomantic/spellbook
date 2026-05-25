@@ -44,11 +44,9 @@ from spellbook.fractal.query_ops import (
     query_contradictions as do_fractal_query_contradictions,
     query_convergence as do_fractal_query_convergence,
 )
-from spellbook.sessions.injection import inject_recovery_context
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_create_graph(seed: str, intensity: str, checkpoint_mode: str, metadata: str = None):
     """Create a new fractal thinking graph with a seed question."""
     result = await do_fractal_create_graph(seed=seed, intensity=intensity, checkpoint_mode=checkpoint_mode, metadata_json=metadata)
@@ -72,14 +70,12 @@ async def fractal_create_graph(seed: str, intensity: str, checkpoint_mode: str, 
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_resume_graph(graph_id: str):
     """Resume a paused fractal graph or retrieve snapshot of an active one."""
     return await do_fractal_resume_graph(graph_id=graph_id)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_delete_graph(graph_id: str):
     """Delete a fractal thinking graph and all its nodes/edges."""
     result = await do_fractal_delete_graph(graph_id=graph_id)
@@ -99,14 +95,12 @@ async def fractal_delete_graph(graph_id: str):
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_update_graph_status(graph_id: str, status: str, reason: str = None):
     """Update the status of a fractal thinking graph."""
     return await do_fractal_update_graph_status(graph_id=graph_id, status=status, reason=reason)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_add_node(graph_id: str, parent_id: str, node_type: str, text: str, owner: str = None, metadata: str = None):
     """Add a new node to a fractal thinking graph."""
     try:
@@ -134,7 +128,6 @@ async def fractal_add_node(graph_id: str, parent_id: str, node_type: str, text: 
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_update_node(graph_id: str, node_id: str, metadata: str):
     """Update a node's metadata in a fractal thinking graph."""
     try:
@@ -144,7 +137,6 @@ async def fractal_update_node(graph_id: str, node_id: str, metadata: str):
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_mark_saturated(graph_id: str, node_id: str, reason: str):
     """Mark a node as saturated in a fractal thinking graph."""
     try:
@@ -171,49 +163,42 @@ async def fractal_mark_saturated(graph_id: str, node_id: str, reason: str):
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_get_snapshot(graph_id: str):
     """Get a full snapshot of a fractal thinking graph."""
     return await do_fractal_get_snapshot(graph_id=graph_id)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_get_branch(graph_id: str, node_id: str):
     """Get a subtree rooted at a specific node in a fractal thinking graph."""
     return await do_fractal_get_branch(graph_id=graph_id, node_id=node_id)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_get_open_questions(graph_id: str):
     """Get all open questions in a fractal thinking graph."""
     return await do_fractal_get_open_questions(graph_id=graph_id)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_query_convergence(graph_id: str):
     """Find convergence points in a fractal thinking graph."""
     return await do_fractal_query_convergence(graph_id=graph_id)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_query_contradictions(graph_id: str):
     """Find contradictions in a fractal thinking graph."""
     return await do_fractal_query_contradictions(graph_id=graph_id)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_get_saturation_status(graph_id: str):
     """Get saturation status of branches in a fractal thinking graph."""
     return await do_fractal_get_saturation_status(graph_id=graph_id)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_claim_work(graph_id: str, worker_id: str, session_id: str = ""):
     """Atomically claim the next available question node for a worker. Returns node data with branch affinity preference, or graph_done status. Pass session_id (Claude Code session UUID) for chat log linking in the admin UI."""
     try:
@@ -226,7 +211,6 @@ async def fractal_claim_work(graph_id: str, worker_id: str, session_id: str = ""
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_synthesize_node(graph_id: str, node_id: str, synthesis_text: str):
     """Mark a node as synthesized with synthesis text. Validates all child questions are complete."""
     try:
@@ -252,14 +236,12 @@ async def fractal_synthesize_node(graph_id: str, node_id: str, synthesis_text: s
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_get_claimable_work(graph_id: str, worker_id: str = None):
     """Preview available work in a fractal graph with optional branch affinity ordering."""
     return await do_fractal_get_claimable_work(graph_id=graph_id, worker_id=worker_id)
 
 
 @mcp.tool()
-@inject_recovery_context
 async def fractal_get_ready_to_synthesize(graph_id: str):
     """Find nodes ready for bottom-up synthesis (all child questions complete)."""
     return await do_fractal_get_ready_to_synthesize(graph_id=graph_id)

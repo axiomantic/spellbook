@@ -6,11 +6,9 @@ from fastmcp import Context
 
 from spellbook.core.path_utils import get_project_path_from_context
 from spellbook.mcp.server import mcp
-from spellbook.sessions.injection import inject_recovery_context
 
 
 @mcp.tool()
-@inject_recovery_context
 async def tooling_discover(
     ctx: Context,
     domain_keywords: str,
