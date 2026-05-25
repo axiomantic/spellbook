@@ -13,6 +13,15 @@ Covered:
   section; the dead `binding_decisions` key renders nothing.
 - The dead `next_action` block is gone: a state carrying `next_action`
   produces no "Next Action" section.
+
+`_build_recovery_directive` calls `_mcp_call("skill_instructions_get", ...)`
+ONLY when the state carries a truthy `active_skill`. Without a daemon that
+would attempt a network call, so every test exercising an active-skill state
+registers a tripwire mock for `_mcp_call` returning a falsy result (no Skill
+Constraints section appended, making the produced directive fully
+predictable) and asserts that interaction. Tests whose state has no
+`active_skill` never reach `_mcp_call`, so they register NO mock — a mock
+that went unexercised would raise tripwire's `UnusedMocksError` at teardown.
 """
 
 from __future__ import annotations
@@ -20,7 +29,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-import pytest
+import tripwire
 
 # Ensure hooks/ is on sys.path so we can import spellbook_hook directly.
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
@@ -29,17 +38,16 @@ if str(HOOKS_DIR) not in sys.path:
 
 import spellbook_hook  # noqa: E402
 
+# The exact arguments `_build_recovery_directive` passes to `_mcp_call` when an
+# active_skill is present (FORBIDDEN/REQUIRED sections only -- NOT full SKILL.md).
+_SKILL_INSTR_ARGS = ("skill_instructions_get",)
 
-@pytest.fixture(autouse=True)
-def _no_skill_constraints(monkeypatch):
-    """Stub `_mcp_call` so skill-constraint fetching is deterministic.
 
-    `_build_recovery_directive` calls `_mcp_call("skill_instructions_get", ...)`
-    when an active_skill is present. Without a daemon this would attempt a
-    network call. Return a falsy result so no Skill Constraints section is
-    appended, making the produced directive fully predictable.
-    """
-    monkeypatch.setattr(spellbook_hook, "_mcp_call", lambda *args, **kwargs: None)
+def _skill_instr_kwargs(active_skill: str) -> dict:
+    return {
+        "skill_name": active_skill,
+        "sections": ["FORBIDDEN", "REQUIRED"],
+    }
 
 
 def test_recovery_directive_renders_remaining_gates():
@@ -54,7 +62,19 @@ def test_recovery_directive_renders_remaining_gates():
         },
     }
 
-    result = spellbook_hook._build_recovery_directive(state)
+    # active_skill present -> _build_recovery_directive fetches skill
+    # constraints once. Return None so no Skill Constraints section is appended.
+    mock_mcp = tripwire.mock("spellbook_hook:_mcp_call")
+    mock_mcp.returns(None)
+
+    with tripwire:
+        result = spellbook_hook._build_recovery_directive(state)
+
+    mock_mcp.assert_call(
+        args=("skill_instructions_get", _skill_instr_kwargs("develop")),
+        kwargs={},
+        returned=None,
+    )
 
     expected = (
         "### Active Skill: develop\n"
@@ -84,7 +104,10 @@ def test_recovery_directive_remaining_gates_precedes_pending_todos():
         ],
     }
 
-    result = spellbook_hook._build_recovery_directive(state)
+    # No active_skill -> _mcp_call is never reached, so no mock is registered
+    # (an unused mock would raise UnusedMocksError at teardown).
+    with tripwire:
+        result = spellbook_hook._build_recovery_directive(state)
 
     expected = (
         "\n### Develop: Remaining Work (DO NOT declare done)\n"
@@ -109,7 +132,9 @@ def test_recovery_directive_ledger_with_no_remaining_gates():
         },
     }
 
-    result = spellbook_hook._build_recovery_directive(state)
+    # No active_skill -> _mcp_call never reached, no mock registered.
+    with tripwire:
+        result = spellbook_hook._build_recovery_directive(state)
 
     expected = (
         "\n### Develop: Remaining Work (DO NOT declare done)\n"
@@ -127,7 +152,18 @@ def test_recovery_directive_no_section_when_ledger_absent():
         "skill_phase": "1",
     }
 
-    result = spellbook_hook._build_recovery_directive(state)
+    # active_skill present -> _mcp_call fetches constraints once; return None.
+    mock_mcp = tripwire.mock("spellbook_hook:_mcp_call")
+    mock_mcp.returns(None)
+
+    with tripwire:
+        result = spellbook_hook._build_recovery_directive(state)
+
+    mock_mcp.assert_call(
+        args=("skill_instructions_get", _skill_instr_kwargs("debugging")),
+        kwargs={},
+        returned=None,
+    )
 
     expected = (
         "### Active Skill: debugging\nPhase: 1\nResume with: `Skill(skill='debugging', --resume 1)`"
@@ -137,7 +173,9 @@ def test_recovery_directive_no_section_when_ledger_absent():
 
 def test_recovery_directive_empty_state_is_fallback():
     """An empty state produces the no-state fallback (no ledger crash on {})."""
-    result = spellbook_hook._build_recovery_directive({})
+    # No active_skill -> _mcp_call never reached, no mock registered.
+    with tripwire:
+        result = spellbook_hook._build_recovery_directive({})
 
     assert result == "No active workflow state found."
 
@@ -146,7 +184,9 @@ def test_recovery_directive_reads_decisions_binding():
     """The live `decisions_binding` key renders a Binding Decisions section."""
     state = {"decisions_binding": ["X"]}
 
-    result = spellbook_hook._build_recovery_directive(state)
+    # No active_skill -> _mcp_call never reached, no mock registered.
+    with tripwire:
+        result = spellbook_hook._build_recovery_directive(state)
 
     expected = "\n### Binding Decisions\n- X"
     assert result == expected
@@ -156,7 +196,9 @@ def test_recovery_directive_old_binding_decisions_key_is_dead():
     """The old `binding_decisions` key renders nothing (proves old path dead)."""
     state = {"binding_decisions": ["X"]}
 
-    result = spellbook_hook._build_recovery_directive(state)
+    # No active_skill -> _mcp_call never reached, no mock registered.
+    with tripwire:
+        result = spellbook_hook._build_recovery_directive(state)
 
     assert result == "No active workflow state found."
 
@@ -165,6 +207,8 @@ def test_recovery_directive_drops_dead_next_action():
     """A state carrying `next_action` produces no Next Action section."""
     state = {"next_action": "do the next thing"}
 
-    result = spellbook_hook._build_recovery_directive(state)
+    # No active_skill -> _mcp_call never reached, no mock registered.
+    with tripwire:
+        result = spellbook_hook._build_recovery_directive(state)
 
     assert result == "No active workflow state found."
