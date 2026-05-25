@@ -107,13 +107,13 @@ Use a **single-shot, non-blocking** check so you can move between the CI gate an
 gh pr checks "$PR_NUMBER" --json name,state,conclusion
 ```
 
-Only if BOTH gates are still pending for the current commit, sleep before the next round — never tighter than 60s (the interval must be >= 60s; longer is fine, shorter is not):
+After polling both gates, if the PR is not yet merge-ready and you are not about to push a fix this round (i.e., at least one gate is still pending for the current commit), sleep before the next round — never tighter than 60s (the interval must be >= 60s; longer is fine, shorter is not):
 
 ```bash
-sleep 60   # round delimiter — runs only after both the CI and bot gates have been polled
+sleep 60   # round delimiter — runs once per round, after both gates have been polled
 ```
 
-Do NOT sleep between the CI poll and the bot poll; that re-introduces the blocking the concurrent-gates mission exists to avoid.
+Skip the sleep only when the round ends early: both gates are satisfied (go to Step 5) or you are pushing a fix (go to Step 2, since the new commit supersedes the in-flight CI run). A satisfied CI gate while the bot is still pending is NOT a reason to skip the sleep — poll the bot again next round, after sleeping. Do NOT sleep between the CI poll and the bot poll; that re-introduces the blocking that the concurrent-gates mission exists to avoid.
 
 `gh pr checks --watch` blocks until CI reaches a terminal state, so it stalls the bot gate while CI runs and contradicts the concurrent-gates mission. Only reach for `--watch` once the bot gate is already satisfied for the current commit — at that point blocking on CI alone is fine:
 
