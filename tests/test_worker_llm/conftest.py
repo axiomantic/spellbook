@@ -281,7 +281,6 @@ def worker_llm_config(monkeypatch):
         "worker_llm_max_tokens": 64,
         "worker_llm_tool_safety_timeout_s": 0.5,
         "worker_llm_allow_prompt_overrides": True,
-        "worker_llm_read_claude_memory": False,
         "worker_llm_feature_roundtable": True,
         "worker_llm_feature_tool_safety": True,
         "worker_llm_safety_cache_ttl_s": 300,

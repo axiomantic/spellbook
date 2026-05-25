@@ -188,7 +188,6 @@ def _feature_flags_state() -> dict:
     return {
         "tool_safety": bool(cfg.feature_tool_safety),
         "roundtable": bool(cfg.feature_roundtable),
-        "read_claude_memory": bool(cfg.read_claude_memory),
     }
 
 

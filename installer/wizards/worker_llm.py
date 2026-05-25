@@ -237,11 +237,6 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
             "Enable worker-LLM PreToolUse safety sniff (OK/WARN/BLOCK)? "
             "(Fails OPEN on 1.5s timeout; BLOCK verdicts bypassable within 30s) [y/N]: ",
         ),
-        (
-            "read_claude_memory",
-            "Also include Claude Code's MEMORY.md files in worker context? "
-            "(Independent of worker LLM; safe to enable without an endpoint) [y/N]: ",
-        ),
     ]
     for name, prompt in feature_prompts:
         ans = input(prompt).strip().lower()
@@ -262,10 +257,6 @@ def run_worker_llm_wizard(args: Optional[Any] = None) -> None:
             config_set("worker_llm_api_key", chosen_key)
         config_set(
             "worker_llm_feature_tool_safety", bool(features["tool_safety"])
-        )
-        config_set(
-            "worker_llm_read_claude_memory",
-            bool(features["read_claude_memory"]),
         )
     except Exception as e:  # noqa: BLE001
         print(f"  Error writing config: {type(e).__name__}: {e}")

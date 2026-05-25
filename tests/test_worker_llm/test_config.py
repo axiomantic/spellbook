@@ -8,13 +8,12 @@ from spellbook.worker_llm import config as wl_config
 
 
 # ``get_worker_config()`` issues one ``config_get`` per key, plus one extra
-# read for each of the two conditional keys (``allow_prompt_overrides`` and
-# ``read_claude_memory``) when they are set to a concrete value. An empty
-# config therefore produces 11 reads; a fully populated config produces 13.
-# Tests below pass the appropriate count so tripwire's strict interaction
-# tracking stays in balance.
-_CALLS_EMPTY = 11
-_CALLS_FULL = 13
+# read for the single conditional key (``allow_prompt_overrides``) when it is
+# set to a concrete value. An empty config therefore produces 10 reads; a
+# fully populated config produces 11. Tests below pass the appropriate count
+# so tripwire's strict interaction tracking stays in balance.
+_CALLS_EMPTY = 10
+_CALLS_FULL = 11
 
 
 def _mock_config_get(values: dict, expected_calls: int):
@@ -63,7 +62,6 @@ def test_configured_reads_all_keys():
         "worker_llm_max_tokens": 256,
         "worker_llm_tool_safety_timeout_s": 0.8,
         "worker_llm_allow_prompt_overrides": False,
-        "worker_llm_read_claude_memory": True,
         "worker_llm_feature_tool_safety": True,
         "worker_llm_feature_roundtable": False,
         "worker_llm_safety_cache_ttl_s": 600,
@@ -78,7 +76,6 @@ def test_configured_reads_all_keys():
         assert cfg.max_tokens == 256
         assert cfg.tool_safety_timeout_s == 0.8
         assert cfg.allow_prompt_overrides is False
-        assert cfg.read_claude_memory is True
         assert cfg.feature_tool_safety is True
         assert cfg.feature_roundtable is False
         assert cfg.safety_cache_ttl_s == 600
@@ -94,7 +91,6 @@ def test_defaults_when_keys_absent():
         assert cfg.max_tokens == 1024
         assert cfg.tool_safety_timeout_s == 1.5
         assert cfg.allow_prompt_overrides is True
-        assert cfg.read_claude_memory is False
         assert cfg.feature_roundtable is False
         assert cfg.feature_tool_safety is False
         assert cfg.safety_cache_ttl_s == 300
@@ -102,8 +98,8 @@ def test_defaults_when_keys_absent():
 
 
 def test_feature_enabled_requires_endpoint():
-    # Only feature_roundtable set; the two conditional keys fall through
-    # to their else branches, so the empty-path count applies.
+    # Only feature_roundtable set; the conditional key falls through
+    # to its else branch, so the empty-path count applies.
     vals = {"worker_llm_feature_roundtable": True}
     mock = _mock_config_get(vals, _CALLS_EMPTY)
     with tripwire:

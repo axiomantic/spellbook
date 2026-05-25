@@ -230,10 +230,9 @@ class TestWizardWithProbeHits:
         # 3. Pick model -> 1
         # 4. API key (blank) -> ""
         # 5. Enable tool_safety? -> y
-        # 6. Enable read_claude_memory? -> n
-        # 7. Advanced settings? -> n
-        # 8. Run doctor now? -> n
-        scripted_input(["y", "1", "1", "", "y", "n", "n", "n"])
+        # 6. Advanced settings? -> n
+        # 7. Run doctor now? -> n
+        scripted_input(["y", "1", "1", "", "y", "n", "n"])
         monkeypatch.setattr("sys.stdin.isatty", lambda: True)
 
         from spellbook.cli.commands.install import _run_worker_llm_wizard
@@ -251,9 +250,6 @@ class TestWizardWithProbeHits:
         assert by_key["worker_llm_base_url"] == "http://localhost:11434/v1"
         assert by_key["worker_llm_model"] == "qwen2.5-coder:7b"
         assert by_key["worker_llm_feature_tool_safety"] is True
-        # Declined features are still explicitly set to False so there is no
-        # ambiguity between "user said no" and "user was never asked".
-        assert by_key["worker_llm_read_claude_memory"] is False
 
         # Now verify doctor would be green against that config.
         from spellbook.core import config as _core_cfg
@@ -310,16 +306,15 @@ class TestWizardNoProbeHits:
         # 2. Manual URL prompt -> http://remote.host:9999/v1
         # 3. Model prompt -> mistral:latest
         # 4. API key -> secret-key
-        # 5..6. All features -> n
-        # 7. Advanced settings? -> n
-        # 8. Run doctor now? -> n
+        # 5. tool_safety -> n
+        # 6. Advanced settings? -> n
+        # 7. Run doctor now? -> n
         scripted_input(
             [
                 "y",
                 "http://remote.host:9999/v1",
                 "mistral:latest",
                 "secret-key",
-                "n",
                 "n",
                 "n",
                 "n",
@@ -337,7 +332,6 @@ class TestWizardNoProbeHits:
         assert by_key["worker_llm_api_key"] == "secret-key"
         # All features default off.
         assert by_key["worker_llm_feature_tool_safety"] is False
-        assert by_key["worker_llm_read_claude_memory"] is False
 
 
 # ---------------------------------------------------------------------------

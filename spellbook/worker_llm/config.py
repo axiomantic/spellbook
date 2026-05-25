@@ -22,7 +22,6 @@ class WorkerConfig:
     max_tokens: int
     tool_safety_timeout_s: float
     allow_prompt_overrides: bool
-    read_claude_memory: bool
     feature_roundtable: bool
     feature_tool_safety: bool
     safety_cache_ttl_s: int
@@ -43,13 +42,6 @@ def get_worker_config() -> WorkerConfig:
             config_get("worker_llm_allow_prompt_overrides")
             if config_get("worker_llm_allow_prompt_overrides") is not None
             else True
-        ),
-        # Default False: opt-in even when worker LLM is unconfigured; preserves
-        # zero behavior change for existing users.
-        read_claude_memory=bool(
-            config_get("worker_llm_read_claude_memory")
-            if config_get("worker_llm_read_claude_memory") is not None
-            else False
         ),
         feature_roundtable=bool(
             config_get("worker_llm_feature_roundtable") or False

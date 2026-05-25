@@ -339,7 +339,7 @@ class TestWorkerLLMAdvancedTier:
         """Build a full wizard script that accepts the advanced tier.
 
         The happy path: enable -> pick endpoint 1 -> pick model 1 ->
-        blank key -> two feature flags n -> advanced y -> [advanced
+        blank key -> one feature flag n -> advanced y -> [advanced
         answers] -> doctor n.
         """
         return [
@@ -347,7 +347,7 @@ class TestWorkerLLMAdvancedTier:
             "1",  # Endpoint
             "1",  # Model
             "",   # API key
-            "n", "n",  # Two feature flags (tool_safety, read_claude_memory)
+            "n",  # One feature flag (tool_safety)
             "y",  # Advanced? yes
             *advanced_answers,
             "n",  # Doctor
