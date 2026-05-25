@@ -1003,9 +1003,12 @@ def resolve_corpus(corpus_arg: str | None) -> list[Path]:
 # Group expansion: empirical dependency grammar, seed resolution, transitive
 # dependents (design §3.1). The index maps artifact NAME -> resolved file path;
 # seed entries are resolved as PATHs (end in .md OR exist as a corpus file) or
-# NAMEs (via the index); expansion follows the four reference shapes bounded by
-# --max-depth with a visited-set cycle guard. Unresolved reference-shaped
-# strings are surfaced, never dropped (C1).
+# NAMEs (via the index); expansion follows the five reference shapes -- the four
+# name/link/load/adjacency shapes from `_extract_references` plus the backticked
+# `.md`-path shape from `_extract_path_references` (Shape 5, path-bypass
+# resolution against the corpus root) -- bounded by --max-depth with a
+# visited-set cycle guard. Unresolved reference-shaped strings are surfaced,
+# never dropped (C1).
 # ---------------------------------------------------------------------------
 
 
@@ -1291,8 +1294,11 @@ def expand_group(
     Each seed entry is resolved via ``resolve_seed_entry``: path-seeds enter
     ``expanded_group`` directly (bypassing name resolution), name-seeds resolve
     through ``corpus_index``. From the resolved seeds, a breadth-first traversal
-    with a visited-set (cycle guard) follows the four reference shapes, bounded
-    by ``max_depth`` and the corpus. Returns ``(expanded_group_paths,
+    with a visited-set (cycle guard) follows the five reference shapes -- the
+    four name/link/load/adjacency shapes from ``_extract_references`` plus the
+    backticked ``.md``-path shape from ``_extract_path_references`` (Shape 5,
+    resolved via the path-bypass against the corpus root) -- bounded by
+    ``max_depth`` and the corpus. Returns ``(expanded_group_paths,
     unresolved_references)`` -- both sorted/de-duplicated. A seed that resolves
     to neither a path nor a known name raises ``ValueError`` (design §8).
 
