@@ -1104,6 +1104,21 @@ _LOAD_SKILL_RE = re.compile(
 _BACKTICK_TOKEN_RE = re.compile(r"`([a-z0-9][a-z0-9._-]*)`")
 _SENTENCE_SPLIT_RE = re.compile(r"[.!?\n]")
 
+# Shape 5 (Task 13): a backticked inline-code span whose content is a PATH
+# ending in ``.md`` -- e.g. the nested form (a backticked ``commands/...md``) or
+# the bare form (a backticked ``foo.md``). This is a HIGH-precision reference: it
+# names a real file, so there is zero prose-stopword risk and no adjacency
+# heuristic is needed. The captured group is the raw path string, kept VERBATIM
+# (including any ``..`` or leading ``/`` components) so the resolver can decide
+# SAFELY whether it maps to a corpus file. Allowed path chars are alphanumerics
+# plus ``/ . - _ ~``; the span must end in ``.md`` immediately before the closing
+# backtick. A bare backticked WORD with no ``.md`` suffix is NOT matched here --
+# it stays a name-ref handled by Shape 4's adjacency rule (no regression). The
+# ``~`` is matched literally and never expanduser()-expanded -- a captured
+# ``~/foo.md`` is resolved as a literal path and (landing outside the corpus)
+# surfaces as unresolved rather than escaping to the home directory.
+_BACKTICK_PATH_RE = re.compile(r"`([A-Za-z0-9_./~-]+\.md)`")
+
 # Common English stopwords that prose phrasings ("invoked by the system",
 # "invokes a callback") would otherwise leak into unresolved_references. Belt
 # and suspenders alongside the artifact-name-shape guard in ``_is_artifact_name``.
@@ -1195,6 +1210,75 @@ def _extract_references(
     return resolved, unresolved
 
 
+def _extract_path_references(text: str) -> set[str]:
+    """Extract Shape-5 backticked ``.md``-PATH references from one file's text.
+
+    A backticked inline-code span whose content is a path ending in ``.md`` (the
+    nested form, a backticked ``commands/...md``, or the bare form, a backticked
+    ``foo.md``) is a HIGH-precision PATH reference (design §3.1, Shape 5). Returns
+    the set of raw path strings VERBATIM (caller resolves them via the path-bypass
+    resolver, NOT
+    the name index). Kept SEPARATE from :func:`_extract_references` so the
+    existing ``(resolved, unresolved)`` 2-tuple contract -- and the tests that
+    assert on it -- are unchanged: name-refs and path-refs are distinct shapes.
+    """
+    return {m.group(1) for m in _BACKTICK_PATH_RE.finditer(text)}
+
+
+def resolve_path_reference(
+    ref: str,
+    *,
+    from_file: str,
+    corpus_by_resolved: dict[str, str],
+) -> str | None:
+    """Resolve a Shape-5 backticked ``.md``-PATH reference to a corpus file.
+
+    A path-reference is resolved by PATH (mirroring :func:`resolve_seed_entry`'s
+    path-bypass), NOT via the name index. Resolution tries, in order:
+
+    1. **Repo-relative / common-prefix suffix match:** a corpus file whose
+       resolved path ENDS WITH ``/<ref>`` (or equals ``<ref>``). This is the
+       primary case -- well-authored skills reference family members by
+       repo-relative path (``commands/dedupe-setup.md``), and the corpus files'
+       resolved paths share that repo prefix.
+    2. **Relative to the referencing file's directory:** resolve ``ref`` against
+       ``dirname(from_file)`` and look up the result in the corpus.
+
+    Absolute paths and ``..`` traversal are resolved SAFELY: the candidate is
+    only accepted when it lands on a file that is actually IN the corpus
+    (``corpus_by_resolved``). A path that resolves outside the corpus -- including
+    ``/etc/shadow.md`` or ``../../../etc/passwd.md`` -- returns ``None`` so the
+    caller records it as unresolved rather than following it. Returns the resolved
+    corpus path string, or ``None`` when ``ref`` does not map to a corpus file.
+    """
+    # 1. Suffix match against resolved corpus paths (repo-relative refs).
+    #    Corpus keys are ABSOLUTE, so the ``"/" + ref`` anchored ``endswith``
+    #    already subsumes an exact ``resolved == ref`` comparison (a bare ref is
+    #    never absolute); the anchoring also keeps component-boundary precision
+    #    so ``evil/passwd.md`` cannot match a ``sswd.md`` ref. When a ref
+    #    suffix-matches MULTIPLE corpus members (e.g. ``a/config.md`` and
+    #    ``b/config.md`` both match a bare ``config.md``), pick a STABLE winner
+    #    deterministically: shortest resolved path wins, ties broken
+    #    lexicographically. ``corpus_by_resolved`` keys come from a set
+    #    (hash-randomized iteration), so returning "first seen" would be
+    #    nondeterministic across processes -- the rest of the module is sorted,
+    #    so this keeps resolution consistent too.
+    suffix = "/" + ref.lstrip("/")
+    matches = [r for r in corpus_by_resolved if r.endswith(suffix)]
+    if matches:
+        return min(matches, key=lambda p: (len(p), p))
+    # 2. Relative to the referencing file's directory (only for non-absolute
+    #    refs; an absolute ref is anchored, not relative to from_file).
+    if not ref.startswith("/"):
+        try:
+            candidate = str((Path(from_file).parent / ref).resolve())
+        except (OSError, ValueError):
+            candidate = None
+        if candidate is not None and candidate in corpus_by_resolved:
+            return candidate
+    return None
+
+
 def expand_group(
     seed: list[str],
     *,
@@ -1216,6 +1300,9 @@ def expand_group(
     traversed -- only files that are part of the corpus are read and followed.
     """
     path_by_resolved = {str(p.resolve()) for p in corpus_files}
+    # Same resolved-path set as a dict for the Shape-5 path-bypass resolver,
+    # which membership-tests resolved candidates against the corpus.
+    corpus_by_resolved = {p: p for p in path_by_resolved}
 
     expanded: set[str] = set()
     unresolved: set[str] = set()
@@ -1259,6 +1346,23 @@ def expand_group(
                 expanded.add(ref_path)
             if ref_path not in visited:
                 frontier.append((ref_path, depth + 1))
+
+        # Shape 5: backticked `.md`-PATH references resolve via the path-bypass
+        # (against the corpus root), NOT the name index. A path that maps to a
+        # corpus file is followed (cycle-guard + max_depth still apply); one that
+        # does not map to any corpus file -- including unsafe absolute / `..`
+        # paths -- is surfaced as unresolved (C1), never followed or crashed on.
+        for path_ref in _extract_path_references(text):
+            resolved_path = resolve_path_reference(
+                path_ref, from_file=path, corpus_by_resolved=corpus_by_resolved
+            )
+            if resolved_path is None:
+                unresolved.add(path_ref)
+                continue
+            if resolved_path not in expanded:
+                expanded.add(resolved_path)
+            if resolved_path not in visited:
+                frontier.append((resolved_path, depth + 1))
 
     return sorted(expanded), sorted(unresolved)
 

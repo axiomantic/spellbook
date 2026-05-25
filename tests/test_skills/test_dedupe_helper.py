@@ -1439,6 +1439,231 @@ def test_extract_references_hyphenated_bare_name_is_recorded(dedupe):
 
 
 # ---------------------------------------------------------------------------
+# Task 13: backticked `.md`-path reference shape (Shape 5). A backticked
+# inline-code span whose content is a path ending in `.md` is a HIGH-precision
+# PATH reference -- it names a real file (zero stopword risk) -- and must be
+# followed during expansion via the path-bypass resolver, NOT the name index.
+# Distinguishing a path-ref from a name-ref: a bare backticked WORD that is not
+# a path (`finding-dead-code`) still resolves through the name index as before.
+# ---------------------------------------------------------------------------
+
+
+def test_expand_group_follows_backticked_md_paths(dedupe, tmp_path):
+    """A SKILL.md that references siblings via backticked `.md` paths (nested and
+    bare forms) pulls those siblings into expanded_group; a backticked `.md` path
+    NOT in the corpus is surfaced in unresolved_references; a control sibling
+    referenced by an existing shape (markdown link) is also pulled in."""
+    root = tmp_path
+    (root / "skills" / "lead").mkdir(parents=True)
+    (root / "skills" / "sib").mkdir(parents=True)
+    (root / "refs").mkdir(parents=True)
+    # Nested-path backtick form, bare-path backtick form, an existing-shape
+    # control (markdown link), and a backticked `.md` path with no corpus file.
+    (root / "skills" / "lead" / "SKILL.md").write_text(
+        "---\nname: lead\n---\n\n"
+        "# Lead\n\n"
+        "The family lives in several files described below.\n\n"
+        "See `refs/nested-ref.md` for the nested-path reference shape.\n\n"
+        "Also consult `bare-ref.md` for the bare-path reference shape.\n\n"
+        "For the control, see [the sibling](skills/sib/SKILL.md) via a link.\n\n"
+        "A dangling pointer to `refs/does-not-exist.md` resolves to nothing.\n",
+        encoding="utf-8",
+    )
+    (root / "refs" / "nested-ref.md").write_text(
+        "# Nested ref\n\nNested reference target body content here for size.\n",
+        encoding="utf-8",
+    )
+    (root / "bare-ref.md").write_text(
+        "# Bare ref\n\nBare reference target body content here for size.\n",
+        encoding="utf-8",
+    )
+    (root / "skills" / "sib" / "SKILL.md").write_text(
+        "---\nname: sib\n---\n\n# Sib\n\nControl sibling reached via link shape.\n",
+        encoding="utf-8",
+    )
+    rc, stdout, _ = _run(
+        dedupe, "expand-group", "--seed", "lead",
+        "--corpus", str(root), "--max-depth", "3",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    group = data["expanded_group"]
+    assert any(p.endswith("refs/nested-ref.md") for p in group), \
+        "nested-path backticked `.md` ref must be followed into the group"
+    assert any(p.endswith("bare-ref.md") for p in group), \
+        "bare-path backticked `.md` ref must be followed into the group"
+    assert any(p.endswith("sib/SKILL.md") for p in group), \
+        "control markdown-link sibling must still be followed"
+    assert any("does-not-exist.md" in u for u in data["unresolved_references"]), \
+        "a backticked `.md` path with no corpus file is unresolved, not dropped"
+
+
+def test_extract_references_nonpath_backtick_word_uses_name_index(dedupe):
+    """REGRESSION: a backticked bare WORD that is NOT a path (no `/`, no `.md`)
+    must still resolve via the name index when adjacent to skill/command -- it is
+    NOT treated as a path. `finding-dead-code` is a name-ref, never a path-ref."""
+    text = "When pruning, reach for the `finding-dead-code` skill to scan."
+    # In corpus: resolves through the name index (Shape 4), no path involvement.
+    resolved, unresolved = dedupe._extract_references(
+        text, {"finding-dead-code": "/some/path.md"}
+    )
+    assert resolved == {"finding-dead-code"}
+    assert unresolved == set()
+
+
+def test_expand_group_backticked_path_does_not_crash_on_traversal(dedupe, tmp_path):
+    """A backticked `.md` path containing `..`/absolute components must resolve
+    SAFELY (recorded unresolved when it does not map to a corpus file), never
+    crash or escape the corpus."""
+    root = tmp_path
+    (root / "skills" / "lead").mkdir(parents=True)
+    (root / "skills" / "lead" / "SKILL.md").write_text(
+        "---\nname: lead\n---\n\n# Lead\n\n"
+        "A traversal pointer `../../../../etc/passwd.md` must resolve safely.\n"
+        "An absolute pointer `/etc/shadow.md` must resolve safely too.\n",
+        encoding="utf-8",
+    )
+    rc, stdout, _ = _run(
+        dedupe, "expand-group", "--seed", "lead", "--corpus", str(root)
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    # Neither escapes into the group; both are surfaced as unresolved.
+    assert all("passwd" not in p for p in data["expanded_group"])
+    assert all("shadow" not in p for p in data["expanded_group"])
+    assert any("passwd.md" in u for u in data["unresolved_references"])
+    assert any("shadow.md" in u for u in data["unresolved_references"])
+
+
+def test_expand_group_backticked_md_path_e2e_real_dedupe(dedupe):
+    """END-TO-END on the REAL dedupe artifacts: expanding `--seed dedupe` over the
+    dedupe family corpus must now pull in the command + reference files that
+    SKILL.md names by backticked `.md` path, not just SKILL.md alone (pre-fix
+    behavior was group_size == 1, so this is a non-vacuous regression lock)."""
+    repo_root = Path(__file__).resolve().parent.parent.parent
+    corpus = ",".join(
+        str(repo_root / rel)
+        for rel in (
+            "skills/dedupe/SKILL.md",
+            "commands/dedupe-setup.md",
+            "commands/dedupe-analyze.md",
+            "commands/dedupe-report.md",
+            "commands/dedupe-apply.md",
+            "skills/dedupe/references/verdict-taxonomy.md",
+            "skills/dedupe/references/counterfactual-prompt.md",
+        )
+    )
+    rc, stdout, _ = _run(
+        dedupe, "expand-group", "--seed", "dedupe",
+        "--corpus", corpus, "--max-depth", "3",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    group = data["expanded_group"]
+    # Pre-fix this was exactly [SKILL.md]; the fix must reach further.
+    assert data["group_size"] > 1, "backticked `.md` paths must expand the group"
+    basenames = {Path(p).name for p in group}
+    assert "dedupe-setup.md" in basenames
+    assert "verdict-taxonomy.md" in basenames
+    assert "counterfactual-prompt.md" in basenames
+
+
+def test_resolve_path_reference_ambiguous_is_deterministic(dedupe):
+    """A bare path-ref that suffix-matches MULTIPLE corpus members must resolve to
+    a STABLE, deterministic winner under the (len, lexicographic) tie-break --
+    shortest resolved path wins, ties broken lexicographically. ``corpus_by_resolved``
+    keys come from a set (hash-randomized iteration), so the pre-fix
+    "first-in-iteration-order" logic could return either member nondeterministically
+    across processes; this asserts the specific (len, lex)-min winner, which the old
+    code could not guarantee."""
+    # Two corpus members share the basename ``config.md``. Under (len, lex), the
+    # shorter path wins; on equal length, the lexicographically smaller path wins.
+    short_winner = "/repo/a/config.md"      # len 17
+    long_loser = "/repo/zzz/b/config.md"    # len 21
+    corpus_by_resolved = {long_loser: long_loser, short_winner: short_winner}
+    result = dedupe.resolve_path_reference(
+        "config.md", from_file="/repo/lead/SKILL.md",
+        corpus_by_resolved=corpus_by_resolved,
+    )
+    assert result == short_winner, "shortest path must win the ambiguous suffix match"
+
+    # Stability across many iteration orders: shuffle the dict insertion order and
+    # confirm the SAME winner every time (the old set-iteration logic could flip).
+    import random
+    items = [(short_winner, short_winner), (long_loser, long_loser),
+             ("/repo/m/n/config.md", "/repo/m/n/config.md")]
+    for _ in range(50):
+        random.shuffle(items)
+        shuffled = dict(items)
+        again = dedupe.resolve_path_reference(
+            "config.md", from_file="/repo/lead/SKILL.md",
+            corpus_by_resolved=shuffled,
+        )
+        assert again == short_winner
+
+    # Lexicographic tie-break on EQUAL-length paths.
+    tie_a = "/repo/aaa/config.md"
+    tie_b = "/repo/bbb/config.md"
+    assert len(tie_a) == len(tie_b)
+    tied = dedupe.resolve_path_reference(
+        "config.md", from_file="/repo/x.md",
+        corpus_by_resolved={tie_b: tie_b, tie_a: tie_a},
+    )
+    assert tied == tie_a, "equal-length paths must break ties lexicographically"
+
+
+def test_resolve_path_reference_ambiguous_e2e_deterministic_across_hashseed(dedupe):
+    """E2E proof of non-vacuity: run the full ``expand-group`` path under several
+    PYTHONHASHSEED values via subprocess; the chosen ambiguous member must be
+    identical across all seeds. The pre-fix set-iteration resolver would return
+    different members under different seeds."""
+    import os
+    import subprocess
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as td:
+        root = Path(td)
+        (root / "a").mkdir()
+        (root / "zzz" / "b").mkdir(parents=True)
+        # Lead references a bare ``config.md`` that suffix-matches BOTH members.
+        (root / "lead.md").write_text(
+            "---\nname: lead\n---\n\n# Lead\n\n"
+            "See `config.md` for shared configuration details here.\n",
+            encoding="utf-8",
+        )
+        (root / "a" / "config.md").write_text(
+            "# Config A\n\nShort-path config target body content here.\n",
+            encoding="utf-8",
+        )
+        (root / "zzz" / "b" / "config.md").write_text(
+            "# Config B\n\nLong-path config target body content here.\n",
+            encoding="utf-8",
+        )
+        winner_basename_path = str((root / "a" / "config.md").resolve())
+
+        chosen: set[str] = set()
+        for seed in ("0", "1", "42", "1000"):
+            env = dict(os.environ)
+            env["PYTHONHASHSEED"] = seed
+            env["PYTEST_ADDOPTS"] = ""
+            proc = subprocess.run(
+                [sys.executable, str(HELPER_PATH), "expand-group",
+                 "--seed", "lead", "--corpus", str(root), "--max-depth", "3"],
+                capture_output=True, text=True, env=env, check=True,
+            )
+            data = json.loads(proc.stdout)
+            config_members = [p for p in data["expanded_group"]
+                              if p.endswith("config.md")]
+            assert config_members == [winner_basename_path], (
+                f"seed={seed}: ambiguous ref must resolve to the (len,lex) winner; "
+                f"got {config_members}"
+            )
+            chosen.add(tuple(config_members) and config_members[0])
+        assert chosen == {winner_basename_path}, \
+            "ambiguous resolution must be identical across all PYTHONHASHSEED values"
+
+
+# ---------------------------------------------------------------------------
 # Task 9: detect + external-callers subcommands + cost ceiling (C5, §3.6, §3.9,
 # §5.4). The standalone external scan and the INTEGRATED detect -> external scan
 # path are both exercised; the integrated path is the IMPORTANT-3 regression
