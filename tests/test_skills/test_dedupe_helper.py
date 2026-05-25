@@ -63,9 +63,11 @@ def test_unknown_subcommand_is_error(dedupe):
 # ---------------------------------------------------------------------------
 # Task 1: the subcommands are registered and dispatchable. The still-stubbed
 # subcommands each emit a valid JSON shell ({"version": SCHEMA_VERSION}) and
-# return 0. NOTE: ``expand-group`` is no longer a stub as of Task 8 -- its real
-# behavior is covered by the Task 8 ``test_expand_group_*`` tests below, so it
-# is intentionally absent from this stub parametrization.
+# return 0. NOTE: ``expand-group`` (Task 8), ``detect`` and ``external-callers``
+# (Task 9) are no longer stubs -- their real behavior is covered by their
+# respective ``test_expand_group_*`` / ``test_detect_*`` /
+# ``test_external_callers_*`` tests below, so they are intentionally absent from
+# this stub parametrization. Only ``verify`` remains a stub (filled in Task 10).
 # ---------------------------------------------------------------------------
 
 
@@ -76,15 +78,14 @@ def test_schema_version_constant(dedupe):
 @pytest.mark.parametrize(
     "argv",
     [
-        ("detect", "--seed", "alpha"),
-        ("external-callers",),
         ("verify",),
     ],
-    ids=["detect", "external-callers", "verify"],
+    ids=["verify"],
 )
 def test_subcommand_registered_and_emits_version_shell(dedupe, argv):
     """Each still-stubbed subcommand parses and dispatches to a stub that emits
-    {"version": "1"}. ``expand-group`` is implemented (Task 8) and excluded."""
+    {"version": "1"}. ``expand-group`` (Task 8), ``detect`` and
+    ``external-callers`` (Task 9) are implemented and excluded."""
     rc, stdout, _ = _run(dedupe, *argv)
     assert rc == 0
     assert json.loads(stdout) == {"version": "1"}
@@ -1440,3 +1441,317 @@ def test_extract_references_hyphenated_bare_name_is_recorded(dedupe):
     resolved, unresolved = dedupe._extract_references(text, {})
     assert resolved == set()
     assert unresolved == {"sharpening-promts"}
+
+
+# ---------------------------------------------------------------------------
+# Task 9: detect + external-callers subcommands + cost ceiling (C5, §3.6, §3.9,
+# §5.4). The standalone external scan and the INTEGRATED detect -> external scan
+# path are both exercised; the integrated path is the IMPORTANT-3 regression
+# (external_callers populated NON-EMPTY end-to-end, not just by the standalone
+# subcommand).
+# ---------------------------------------------------------------------------
+
+
+def test_external_callers_multishape_recall(dedupe, tmp_path):
+    """§5.4/§9.5: the standalone external-callers scan reports an out-of-group
+    caller for each of the three shapes (identical, whitespace-variant,
+    one-word-drift). match_signal is pinned to "jaccard" and every match_ratio is
+    at or above the 0.7 external threshold; the outsider file is among callers."""
+    root = FIXTURE_DIR / "external"
+    # Build a blocks-json for the in-group EXTRACT candidate by segmenting
+    # ingroup_a.md and serializing its blocks (dataclasses.asdict on each Block).
+    import dataclasses
+    ingroup = root / "ingroup_a.md"
+    blocks = dedupe.segment("ingroup_a.md", ingroup.read_text(encoding="utf-8"))
+    blocks_json = tmp_path / "candidate_blocks.json"
+    blocks_json.write_text(
+        json.dumps([dataclasses.asdict(b) for b in blocks]), encoding="utf-8"
+    )
+    rc, stdout, _ = _run(
+        dedupe, "external-callers",
+        "--blocks-json", str(blocks_json), "--corpus", str(root),
+        "--external-threshold", "0.7",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert data["version"] == "1"
+    assert data["external_callers"], "out-of-group caller must be reported"
+    assert all(c["match_signal"] == "jaccard" for c in data["external_callers"])
+    assert all(c["match_ratio"] >= 0.7 for c in data["external_callers"])
+    # Each caller dict carries the full §3.8 external-callers shape.
+    for caller in data["external_callers"]:
+        assert set(caller) == {
+            "block_id", "caller_file", "caller_start_line",
+            "match_ratio", "match_signal",
+        }
+    # outsider.md must be among the callers (the standalone scan has no group
+    # context, so it may also report ingroup_b.md, which legitimately shares the
+    # block; the integrated detect path, which knows the group, excludes
+    # ingroup_b.md).
+    assert any("outsider.md" in c["caller_file"] for c in data["external_callers"])
+
+
+def test_detect_emits_group_result_schema(dedupe):
+    """§3.9: detect emits the full GroupResult schema. The core fixture files are
+    a flat corpus with no cross-references, so seed all three as path-seeds to
+    form a multi-file group with real cross-file pairs."""
+    root = FIXTURE_DIR  # the core fixture corpus from Task 6
+    rc, stdout, _ = _run(
+        dedupe, "detect", "--seed", "file_a.md", "file_b.md", "file_c.md",
+        "--corpus", str(root), "--max-pairs", "200",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert set(data) == {
+        "version", "seed", "corpus", "expanded_group",
+        "unresolved_references", "cost_ceiling_exceeded",
+        "candidate_count", "pairs", "external_callers",
+    }
+    assert data["version"] == "1"
+    assert data["seed"] == ["file_a.md", "file_b.md", "file_c.md"]
+    assert data["cost_ceiling_exceeded"] is False
+    assert data["pairs"], "the core fixture has known duplicates; pairs must be non-empty"
+    for pair in data["pairs"]:
+        assert set(pair) == {
+            "a", "b", "jaccard", "seqmatch_ratio", "drift_delta",
+            "is_drift_candidate", "contains_safety_marker", "a_text", "b_text",
+        }
+        for endpoint in (pair["a"], pair["b"]):
+            assert set(endpoint) == {
+                "file", "granularity", "start_line", "end_line", "block_id",
+            }
+
+
+def test_detect_cost_ceiling(dedupe):
+    """§3.6: a --max-pairs below the confirmed-candidate count sets
+    cost_ceiling_exceeded True and truncates pairs to the ceiling. Seeding all
+    three files makes candidate_count > 1 so the assertion is non-vacuous."""
+    root = FIXTURE_DIR
+    rc, stdout, _ = _run(
+        dedupe, "detect", "--seed", "file_a.md", "file_b.md", "file_c.md",
+        "--corpus", str(root), "--max-pairs", "1",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert data["candidate_count"] > 1, \
+        "fixture must yield >1 confirmed candidate to test the ceiling"
+    assert data["cost_ceiling_exceeded"] is True
+    assert len(data["pairs"]) == 1
+
+
+def test_detect_pairs_only_within_group(dedupe):
+    """The corpus partition: detect pairs are scored ONLY over the expanded group
+    (group_files), never over out-of-group corpus files. Seeding the two ingroup
+    files with outsider.md in the corpus must keep every pair endpoint inside the
+    group; outsider.md never appears as a pair endpoint (it is the out-of-group
+    external-scan set, not part of pairing)."""
+    root = FIXTURE_DIR / "external"
+    rc, stdout, _ = _run(
+        dedupe, "detect", "--seed", "ingroup_a.md", "ingroup_b.md",
+        "--corpus", str(root),
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    group = set(data["expanded_group"])
+    assert any(p.endswith("ingroup_a.md") for p in group)
+    assert any(p.endswith("ingroup_b.md") for p in group)
+    assert not any(p.endswith("outsider.md") for p in group), \
+        "outsider.md is in the corpus but NOT the group"
+    assert data["pairs"], "the two in-group files share an identical candidate block"
+    for pair in data["pairs"]:
+        assert pair["a"]["file"] in group
+        assert pair["b"]["file"] in group
+        assert "outsider.md" not in pair["a"]["file"]
+        assert "outsider.md" not in pair["b"]["file"]
+
+
+def test_detect_populates_external_callers_end_to_end(dedupe):
+    """IMPORTANT 3: the integrated detect -> external_caller_scan path must
+    populate external_callers NON-EMPTY, not just the standalone external-callers
+    subcommand. Uses the external/ fixture: ingroup_a.md + ingroup_b.md form the
+    (path-)seed group with a confirmed in-group EXTRACT-eligible duplicate;
+    outsider.md is in the corpus but out of the group and carries matching shapes
+    of the candidate. The group-aware path excludes ingroup_b.md, so every caller
+    lives in outsider.md."""
+    root = FIXTURE_DIR / "external"
+    rc, stdout, _ = _run(
+        dedupe, "detect", "--seed", "ingroup_a.md", "ingroup_b.md",
+        "--corpus", str(root), "--external-threshold", "0.7",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert data["external_callers"], \
+        "detect must surface the out-of-group caller via the integrated external scan"
+    assert all(c["match_signal"] == "jaccard" for c in data["external_callers"])
+    assert all(c["match_ratio"] >= 0.7 for c in data["external_callers"])
+    # The caller lives outside the edited group; ingroup_b.md (in the group) is
+    # excluded by the group_files partition even though it shares the block.
+    assert all("outsider.md" in c["caller_file"] for c in data["external_callers"])
+    assert not any("ingroup_" in c["caller_file"] for c in data["external_callers"])
+
+
+def test_detect_no_external_callers_without_confirmed_duplicate(dedupe):
+    """When the group has no confirmed in-group duplicate there are no
+    EXTRACT-eligible candidates, so external_callers is correctly EMPTY. Seeding a
+    single file means no cross-file in-group pair can form -> no candidates ->
+    empty external scan (proves external_callers is candidate-driven, not a blind
+    whole-corpus dump)."""
+    root = FIXTURE_DIR / "external"
+    rc, stdout, _ = _run(
+        dedupe, "detect", "--seed", "ingroup_a.md",
+        "--corpus", str(root), "--external-threshold", "0.7",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert data["pairs"] == [], "a single-file group cannot form a cross-file pair"
+    assert data["external_callers"] == [], \
+        "no confirmed in-group duplicate -> no EXTRACT candidate -> no external callers"
+
+
+def test_detect_deterministic_ordering(dedupe):
+    """Task 6 suggestion #3 (applied here): detect serializes pairs and
+    external_callers in a DETERMINISTIC order so output diffs/journals are stable.
+    Two runs over the same corpus produce byte-identical JSON, and the pair order
+    is the documented sort key (by a.block_id, then b.block_id)."""
+    root = FIXTURE_DIR
+    argv = (
+        "detect", "--seed", "file_a.md", "file_b.md", "file_c.md",
+        "--corpus", str(root), "--max-pairs", "200",
+    )
+    rc1, out1, _ = _run(dedupe, *argv)
+    rc2, out2, _ = _run(dedupe, *argv)
+    assert rc1 == 0 and rc2 == 0
+    assert out1 == out2, "detect output must be byte-stable across runs"
+    data = json.loads(out1)
+    pair_keys = [(p["a"]["block_id"], p["b"]["block_id"]) for p in data["pairs"]]
+    assert pair_keys == sorted(pair_keys), \
+        "pairs must be sorted by (a.block_id, b.block_id)"
+    caller_keys = [
+        (c["block_id"], c["caller_file"], c["caller_start_line"])
+        for c in data["external_callers"]
+    ]
+    assert caller_keys == sorted(caller_keys), \
+        "external_callers must be sorted by (block_id, caller_file, caller_start_line)"
+
+
+# ---------------------------------------------------------------------------
+# Task 9 review (IMPORTANT 1): cost-ceiling branches must emit a CONSISTENT
+# pair population. `pairs` is CONFIRMED-ONLY (seqmatch_ratio >= confirm_threshold)
+# in BOTH branches -- whether or not the cost ceiling trips. A non-confirmed
+# jaccard-survivor (high Jaccard but seqmatch_ratio < confirm_threshold, e.g. a
+# heavily reordered near-duplicate) must NEVER appear in `pairs`. (design §3.6,
+# §3.9, §4)
+# ---------------------------------------------------------------------------
+
+
+def _confirm_ceiling_corpus(tmp_path):
+    """Seed a 3-file corpus with TWO confirmed cross-file duplicates plus ONE
+    non-confirmed jaccard-survivor (a reordered near-duplicate: identical token
+    set -> Jaccard 1.0, scrambled order -> seqmatch_ratio well below the 0.85
+    confirm threshold). Returns (root, reorder_marker)."""
+    root = tmp_path / "corpus"
+    root.mkdir()
+    confirmed = (
+        "The deployment runbook says operators must verify the staging smoke "
+        "suite is fully green before promoting any build to the production trunk."
+    )
+    confirmed2 = (
+        "Every contributor should record the rationale behind each architectural "
+        "decision so future maintainers understand the tradeoffs that were chosen."
+    )
+    # Reordered near-duplicate: same words, scrambled order. The "alpha"/"omega"
+    # token is the stable marker we assert on.
+    reorder_a = (
+        "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda omicron "
+        "sigma tau"
+    )
+    reorder_b = (
+        "tau sigma omicron lambda kappa iota theta eta zeta epsilon delta gamma "
+        "beta alpha"
+    )
+    (root / "file_a.md").write_text(
+        f"---\nname: a\n---\n\n{confirmed}\n\n{confirmed2}\n\n{reorder_a}\n",
+        encoding="utf-8",
+    )
+    (root / "file_b.md").write_text(
+        f"---\nname: b\n---\n\n{confirmed}\n\n{reorder_b}\n", encoding="utf-8"
+    )
+    (root / "file_c.md").write_text(
+        f"---\nname: c\n---\n\n{confirmed2}\n", encoding="utf-8"
+    )
+    return root, "alpha"
+
+
+def _reorder_in_pairs(data, marker):
+    return any(
+        marker in pair["a_text"] or marker in pair["b_text"]
+        for pair in data["pairs"]
+    )
+
+
+def test_detect_pairs_confirmed_only_no_ceiling(dedupe, tmp_path):
+    """IMPORTANT 1: with a high --max-pairs (ceiling NOT exceeded), `pairs` is
+    confirmed-only -- the non-confirmed reordered near-duplicate is absent and
+    candidate_count equals len(pairs)."""
+    root, marker = _confirm_ceiling_corpus(tmp_path)
+    rc, stdout, _ = _run(
+        dedupe, "detect", "--seed", "file_a.md", "file_b.md", "file_c.md",
+        "--corpus", str(root), "--max-pairs", "200",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert data["cost_ceiling_exceeded"] is False
+    assert data["pairs"], "the two confirmed duplicates must populate pairs"
+    # (a) the non-confirmed reordered pair never appears in pairs.
+    assert not _reorder_in_pairs(data, marker), \
+        "non-confirmed reordered near-duplicate must be excluded from pairs"
+    # (b) candidate_count == len(pairs) when the ceiling is not exceeded.
+    assert data["candidate_count"] == len(data["pairs"]), \
+        "candidate_count must equal len(pairs) when no ceiling truncation occurs"
+
+
+def test_detect_pairs_confirmed_only_ceiling_tripped(dedupe, tmp_path):
+    """IMPORTANT 1: with --max-pairs 1 (ceiling exceeded), pair membership is
+    still drawn ONLY from the confirmed set -- the non-confirmed reordered
+    near-duplicate stays absent, and pairs is truncated to <= 1."""
+    root, marker = _confirm_ceiling_corpus(tmp_path)
+    rc, stdout, _ = _run(
+        dedupe, "detect", "--seed", "file_a.md", "file_b.md", "file_c.md",
+        "--corpus", str(root), "--max-pairs", "1",
+    )
+    assert rc == 0
+    data = json.loads(stdout)
+    assert data["candidate_count"] > 1, \
+        "fixture must yield >1 confirmed candidate so the ceiling is non-vacuous"
+    assert data["cost_ceiling_exceeded"] is True
+    assert len(data["pairs"]) <= 1
+    # (c) membership is confirmed-only even under truncation.
+    assert not _reorder_in_pairs(data, marker), \
+        "non-confirmed reordered near-duplicate must stay absent under the ceiling"
+
+
+# ---------------------------------------------------------------------------
+# Task 9 review (IMPORTANT 2): standalone external-callers must fail gracefully
+# on a malformed --blocks-json record (extra/unexpected key) -- a one-line
+# stderr message and rc 2, matching the sibling validation branches, not an
+# uncaught TypeError traceback.
+# ---------------------------------------------------------------------------
+
+
+def test_external_callers_malformed_record_shape_returns_two(dedupe, tmp_path):
+    """A --blocks-json record with an unexpected key must yield rc 2 and a
+    one-line stderr message (not a TypeError traceback)."""
+    blocks_json = tmp_path / "bad_blocks.json"
+    blocks_json.write_text(
+        json.dumps([{"file": "x.md", "not_a_real_field": 1}]), encoding="utf-8"
+    )
+    corpus = tmp_path / "corpus"
+    corpus.mkdir()
+    (corpus / "any.md").write_text("# h\n\nbody\n", encoding="utf-8")
+    rc, _, stderr = _run(
+        dedupe, "external-callers",
+        "--blocks-json", str(blocks_json), "--corpus", str(corpus),
+    )
+    assert rc == 2
+    assert stderr.strip(), "a malformed record must produce a one-line stderr message"
+    assert "blocks-json" in stderr

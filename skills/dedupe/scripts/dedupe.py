@@ -1243,12 +1243,254 @@ def cmd_expand_group(args: argparse.Namespace) -> int:
     return 0
 
 
+# ---------------------------------------------------------------------------
+# External-caller scan (design §5.4, C5) + detect pipeline (design §3.6, §3.9)
+#
+# external_caller_scan answers the safety question for EXTRACT: before a block is
+# recommended for replace-with-reference, scan the WHOLE corpus for blocks that
+# live OUTSIDE the group and resemble the candidate. Any out-of-group match is a
+# "load-bearing-for-externals" warning (design §5.4): the operator must see the
+# blast radius. The match signal is INLINE Jaccard (Signal 1) -- robust to
+# reorder/copy-paste-with-edits -- NOT the order-sensitive SequenceMatcher ratio,
+# and the threshold is the dedicated, looser --external-threshold (default 0.7).
+#
+# group_files lets the SAME function serve two callers:
+#   - the standalone `external-callers` subcommand passes no group_files, so it
+#     scans the whole corpus minus each candidate's own file (group context is
+#     unknown there);
+#   - the integrated `detect` path passes the full expanded-group set, so the
+#     scan only matches against the out-of-group files (corpus - group).
+# ---------------------------------------------------------------------------
+
+
+def external_caller_scan(
+    candidate_blocks: list[Block],
+    *,
+    corpus_roots: list[Path],
+    group_files: frozenset[str] = frozenset(),
+    external_threshold: float = DEFAULT_EXTERNAL_THRESHOLD,
+) -> list[dict]:
+    """Scan out-of-group corpus files for blocks resembling the candidates.
+
+    For each candidate block, segment every corpus file that is NOT in
+    ``group_files`` AND is not the candidate's own ``file`` (so a block never
+    reports itself), compute the INLINE **Jaccard** ``match_ratio`` against each
+    such out-of-group block, and record a caller dict when
+    ``match_ratio >= external_threshold`` (design §5.4: Jaccard is robust to
+    reorder; the looser threshold widens the safety net).
+
+    ``group_files`` is a set of resolved file-path strings; it defaults to empty
+    so the standalone subcommand (no group context) scans the whole corpus minus
+    self-file, while the integrated ``detect`` caller passes the full group set so
+    only out-of-group files are scanned.
+
+    Each caller dict is ``{block_id, caller_file, caller_start_line, match_ratio,
+    match_signal: "jaccard"}`` (design §3.8/§3.9 external-callers shape). The
+    returned list is sorted by ``(block_id, caller_file, caller_start_line)`` so
+    output is deterministic and stable across runs.
+    """
+    callers: list[dict] = []
+    resolved_corpus = [str(p.resolve()) for p in corpus_roots]
+    # Cache per-file segmentation so each out-of-group file is parsed once even
+    # when several candidates are compared against it.
+    segmented: dict[str, list[Block]] = {}
+
+    def _blocks_for(path_str: str) -> list[Block]:
+        if path_str not in segmented:
+            try:
+                text = Path(path_str).read_text(encoding="utf-8")
+            except (OSError, UnicodeDecodeError):
+                segmented[path_str] = []
+            else:
+                segmented[path_str] = segment(path_str, text)
+        return segmented[path_str]
+
+    for candidate in candidate_blocks:
+        candidate_file = str(Path(candidate.file).resolve())
+        for path_str in resolved_corpus:
+            if path_str in group_files:
+                continue
+            if path_str == candidate_file:
+                continue
+            for block in _blocks_for(path_str):
+                ratio = jaccard(candidate.normalized_text, block.normalized_text)
+                if ratio >= external_threshold:
+                    callers.append(
+                        {
+                            "block_id": candidate.block_id,
+                            "caller_file": path_str,
+                            "caller_start_line": block.start_line,
+                            "match_ratio": ratio,
+                            "match_signal": "jaccard",
+                        }
+                    )
+
+    callers.sort(
+        key=lambda c: (c["block_id"], c["caller_file"], c["caller_start_line"])
+    )
+    return callers
+
+
+def _block_endpoint(block: Block) -> dict:
+    """The compact §3.9 endpoint view of a Block (a/b in a pair JSON entry)."""
+    return {
+        "file": block.file,
+        "granularity": block.granularity,
+        "start_line": block.start_line,
+        "end_line": block.end_line,
+        "block_id": block.block_id,
+    }
+
+
+def _pair_to_json(pair: Pair) -> dict:
+    """Serialize a Pair to the §3.9 detect-schema entry (a_text/b_text carry the
+    normalized block text so the skill builds classifier prompts without
+    re-reading files)."""
+    return {
+        "a": _block_endpoint(pair.a),
+        "b": _block_endpoint(pair.b),
+        "jaccard": pair.jaccard,
+        "seqmatch_ratio": pair.seqmatch_ratio,
+        "drift_delta": pair.drift_delta,
+        "is_drift_candidate": pair.is_drift_candidate,
+        "contains_safety_marker": pair.contains_safety_marker,
+        "a_text": pair.a.normalized_text,
+        "b_text": pair.b.normalized_text,
+    }
+
+
 def cmd_detect(args: argparse.Namespace) -> int:
-    return _emit_shell()
+    """Full detect pipeline -> §3.9 GroupResult JSON (design §3.6, §3.9, §5.4).
+
+    expand-group -> segment the group -> pair within the group -> partition the
+    corpus into group vs out-of-group -> external-caller scan over the
+    out-of-group files for EXTRACT-eligible candidates -> apply the --max-pairs
+    cost ceiling -> emit the §3.9 schema with deterministic ordering.
+    """
+    corpus_files = resolve_corpus(args.corpus)
+    corpus_index = build_corpus_index(corpus_files)
+    try:
+        expanded_group, unresolved_references = expand_group(
+            args.seed,
+            corpus_files=corpus_files,
+            corpus_index=corpus_index,
+            max_depth=args.max_depth,
+        )
+    except ValueError as exc:
+        print(str(exc), file=sys.stderr)
+        return 2
+
+    # group_files = the expanded group (what we may edit); the out-of-group set
+    # (corpus - group) is everything the external scan must protect (§3.2/§5.4).
+    group_files = frozenset(expanded_group)
+
+    # Segment every file in the group, then pair within the group only.
+    group_blocks: list[Block] = []
+    for path_str in expanded_group:
+        try:
+            text = Path(path_str).read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError):
+            continue
+        group_blocks.extend(
+            segment(path_str, text, min_block_chars=args.min_block_chars)
+        )
+
+    all_pairs = pair_corpus(
+        group_blocks,
+        jaccard_threshold=args.jaccard_threshold,
+        confirm_threshold=args.confirm_threshold,
+    )
+
+    confirmed = [
+        p for p in all_pairs if p.seqmatch_ratio >= args.confirm_threshold
+    ]
+    candidate_count = len(confirmed)
+
+    # EXTRACT-eligible candidates: distinct endpoints of confirmed, non-drift,
+    # non-safety in-group pairs (design §5.4). Safety-marked pairs are never
+    # EXTRACT-eligible, so they seed no external scan.
+    extract_blocks: dict[str, Block] = {}
+    for pair in confirmed:
+        if pair.is_drift_candidate or pair.contains_safety_marker:
+            continue
+        extract_blocks.setdefault(pair.a.block_id, pair.a)
+        extract_blocks.setdefault(pair.b.block_id, pair.b)
+
+    external_callers = external_caller_scan(
+        list(extract_blocks.values()),
+        corpus_roots=corpus_files,
+        group_files=group_files,
+        external_threshold=args.external_threshold,
+    )
+
+    # Cost ceiling (§3.6): `pairs` is CONFIRMED-ONLY in BOTH branches -- the
+    # membership criterion does not change with the ceiling. When the confirmed
+    # count exceeds --max-pairs, truncate to the top-N confirmed pairs by
+    # seqmatch_ratio (descending); never silently drop -- flag it. Non-confirmed
+    # jaccard-survivors (seqmatch_ratio < confirm_threshold) are never emitted.
+    cost_ceiling_exceeded = candidate_count > args.max_pairs
+    if cost_ceiling_exceeded:
+        emitted_pairs = sorted(
+            confirmed, key=lambda p: p.seqmatch_ratio, reverse=True
+        )[: args.max_pairs]
+    else:
+        emitted_pairs = list(confirmed)
+
+    # Deterministic ordering (Task 6 suggestion #3): sort the emitted pairs by
+    # (a.block_id, b.block_id) so output diffs/journals are stable across runs.
+    emitted_pairs.sort(key=lambda p: (p.a.block_id, p.b.block_id))
+
+    payload = {
+        "version": SCHEMA_VERSION,
+        "seed": list(args.seed),
+        "corpus": [str(p) for p in corpus_files],
+        "expanded_group": expanded_group,
+        "unresolved_references": unresolved_references,
+        "cost_ceiling_exceeded": cost_ceiling_exceeded,
+        "candidate_count": candidate_count,
+        "pairs": [_pair_to_json(p) for p in emitted_pairs],
+        "external_callers": external_callers,
+    }
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    return 0
 
 
 def cmd_external_callers(args: argparse.Namespace) -> int:
-    return _emit_shell()
+    """Standalone external-reference scan over a supplied block list (design §5.4,
+    §3.8). Loads --blocks-json (a JSON array of Block-shaped dicts), rehydrates
+    Blocks, and scans the whole --corpus minus each candidate's own file (no group
+    context). Emits {version, external_callers: [...]}."""
+    corpus_files = resolve_corpus(args.corpus)
+    if not args.blocks_json:
+        print("--blocks-json is required for external-callers", file=sys.stderr)
+        return 2
+    try:
+        raw = Path(args.blocks_json).read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"cannot read --blocks-json: {exc}", file=sys.stderr)
+        return 2
+    try:
+        records = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"invalid --blocks-json: {exc}", file=sys.stderr)
+        return 2
+    if not isinstance(records, list):
+        print("--blocks-json must be a JSON array of Block objects", file=sys.stderr)
+        return 2
+
+    try:
+        blocks = [Block(**record) for record in records]
+    except TypeError as exc:
+        print(f"invalid --blocks-json record shape: {exc}", file=sys.stderr)
+        return 2
+    external_callers = external_caller_scan(
+        blocks,
+        corpus_roots=corpus_files,
+        external_threshold=args.external_threshold,
+    )
+    payload = {"version": SCHEMA_VERSION, "external_callers": external_callers}
+    print(json.dumps(payload, indent=2, ensure_ascii=False))
+    return 0
 
 
 def cmd_verify(args: argparse.Namespace) -> int:
