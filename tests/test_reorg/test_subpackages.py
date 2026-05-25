@@ -11,7 +11,6 @@ SUBPACKAGES = [
     "spellbook.coordination",
     "spellbook.code_review",
     "spellbook.pr_distill",
-    "spellbook.extractors",
 ]
 
 
@@ -57,20 +56,6 @@ def test_subpackage_importable(package: str) -> None:
         (
             "spellbook.pr_distill",
             ["bless", "config", "errors", "fetch", "matcher", "parse", "patterns", "types"],
-        ),
-        (
-            "spellbook.extractors",
-            [
-                "files",
-                "message_utils",
-                "persona",
-                "position",
-                "skill_phase",
-                "skill",
-                "todos",
-                "types",
-                "workflow",
-            ],
         ),
     ],
 )
