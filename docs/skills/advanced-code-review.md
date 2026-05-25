@@ -8,497 +8,452 @@ Multi-phase deep code review with historical context analysis, fact-checked find
 
 ## Workflow Diagram
 
-Multi-phase code review with strategic planning, historical context analysis, deep multi-pass review, verification of findings, and final report generation. Each phase produces artifacts and must pass a self-check before proceeding.
+# Advanced Code Review — Skill Flow Diagrams
 
-## Overview
+Multi-phase deep code review with historical context tracking, fact-checked findings, and tiered severity reporting. Decomposed into an overview plus six detail diagrams (mode routing + five phases).
 
-High-level flow across all 5 phases with circuit breakers and quality gates.
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[Subagent Dispatch]:::subagent
-        L5[Quality Gate]:::gate
-        L6([Success]):::success
-    end
-
-    Start([User invokes<br>advanced-code-review]) --> InputParse[Parse target, --base,<br>--scope, --offline, --continue]
-    InputParse --> ModeRouter{Target type?}
-
-    ModeRouter -->|Branch name| LocalMode[Local Mode<br>source = local files]
-    ModeRouter -->|PR number / URL| PRMode[PR Mode<br>source = diff only]
-    ModeRouter -->|Any + --offline| OfflineMode[Offline Mode<br>source = local files]
-
-    LocalMode --> ContinueCheck
-    PRMode --> ContinueCheck
-    OfflineMode --> ContinueCheck
-
-    ContinueCheck{--continue<br>flag?}
-    ContinueCheck -->|Yes| ResumeSession[Load previous<br>review session]
-    ContinueCheck -->|No| Phase1
-
-    ResumeSession --> Phase1
-
-    Phase1[Phase 1: Strategic Planning<br>/advanced-code-review-plan]
-    Phase1 --> P1Gate[Phase 1 Self-Check:<br>Target resolved, manifest written,<br>files categorized]:::gate
-    P1Gate -->|Pass| Phase2
-    P1Gate -->|Fail: E_TARGET_NOT_FOUND| CB1([Circuit Breaker:<br>Target unresolvable])
-    P1Gate -->|Fail: E_NO_DIFF| CB2([Circuit Breaker:<br>No changes found])
-
-    Phase2[Phase 2: Context Analysis<br>/advanced-code-review-context]
-    Phase2 --> P2Gate[Phase 2 Self-Check:<br>Context loaded, previous items parsed]:::gate
-    P2Gate -->|Pass| Phase3
-    P2Gate -->|Fail: non-blocking| Phase3
-
-    Phase3[Phase 3: Deep Review<br>/advanced-code-review-review]
-    Phase3 --> P3Gate[Phase 3 Self-Check:<br>All passes complete, findings generated,<br>declined items respected]:::gate
-    P3Gate -->|Pass| Phase4
-    P3Gate -->|Fail| P3Fix[Fix incomplete findings<br>before proceeding]
-    P3Fix --> P3Gate
-
-    Phase4[Phase 4: Verification<br>/advanced-code-review-verify]
-    Phase4 --> P4Gate[Phase 4 Self-Check:<br>All verified, REFUTED removed,<br>SNR calculated]:::gate
-    P4Gate -->|Pass| Phase5
-    P4Gate -->|Fail: 3+ consecutive<br>verification failures| CB3([Circuit Breaker:<br>Verification failures])
-    P4Gate -->|Fail: timeout| CB4([Circuit Breaker:<br>Verification timeout])
-
-    Phase5[Phase 5: Report Generation<br>/advanced-code-review-report]
-    Phase5 --> P5Gate[Phase 5 Self-Check:<br>Report rendered, artifacts written]:::gate
-    P5Gate -->|Pass| MemStore[Store review summary<br>in memory]
-    MemStore --> FinalCheck[Final Self-Check:<br>All phases complete,<br>all quality gates passed]:::gate
-    FinalCheck -->|Pass| Done([Review Complete]):::success
-    FinalCheck -->|Fail| FixAndRecheck[Fix failing items]
-    FixAndRecheck --> FinalCheck
-
-    classDef subagent fill:#4a9eff,stroke:#2d7ad4,color:#fff
-    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
-```
-
-### Cross-Reference Table
-
-| Overview Node | Detail Diagram |
-|---|---|
-| Phase 1: Strategic Planning | [Phase 1 Detail](#phase-1-strategic-planning) |
-| Phase 2: Context Analysis | [Phase 2 Detail](#phase-2-context-analysis) |
-| Phase 3: Deep Review | [Phase 3 Detail](#phase-3-deep-review) |
-| Phase 4: Verification | [Phase 4 Detail](#phase-4-verification) |
-| Phase 5: Report Generation | [Phase 5 Detail](#phase-5-report-generation) |
-
----
-
-## Phase 1: Strategic Planning
-
-Target resolution, diff acquisition, risk categorization, complexity estimation, and priority ordering.
+## Overview: Five-Phase Pipeline
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[Quality Gate]:::gate
-        L5([Success]):::success
+    start([Invoke: advanced-code-review target]):::terminal
+    disambig{Could request<br/>match >1 review skill?}:::decision
+    ask[/AskUserQuestion:<br/>disambiguate review skill/]:::gate
+    router{Mode Router:<br/>target pattern?}:::decision
+    local[Local Mode<br/>source = local files]:::process
+    prmode[PR Mode<br/>source = DIFF ONLY]:::process
+    shaguard{{PR Mode SHA guard:<br/>local HEAD = PR HEAD?}}:::gate
+
+    p1[Phase 1: Strategic Planning<br/>/advanced-code-review-plan]:::process
+    sc1{Phase 1<br/>self-check pass?}:::decision
+    p2[Phase 2: Context Analysis<br/>/advanced-code-review-context]:::process
+    sc2{Phase 2<br/>self-check pass?}:::decision
+    p3[Phase 3: Deep Review<br/>/advanced-code-review-review]:::process
+    sc3{Phase 3<br/>self-check pass?}:::decision
+    p4[Phase 4: Verification<br/>/advanced-code-review-verify]:::process
+    sc4{Phase 4<br/>self-check pass?}:::decision
+    p5[Phase 5: Report Generation<br/>/advanced-code-review-report]:::process
+    finalsc{{Final self-check:<br/>all gates pass?}}:::gate
+
+    cb([Circuit Breaker:<br/>STOP execution]):::failterm
+    done([Review complete:<br/>8 artifacts written]):::success
+
+    start --> disambig
+    disambig -->|Yes| ask --> router
+    disambig -->|No| router
+    router -->|"feature/xyz branch"| local
+    router -->|"#123 / URL"| prmode
+    router -->|"any + --offline"| local
+    prmode --> shaguard
+    shaguard -->|"match"| p1
+    shaguard -->|"differ → local unavailable"| p1
+    local --> p1
+
+    p1 --> sc1
+    sc1 -->|fail / target unresolved / no diff| cb
+    sc1 -->|pass| p2
+    p2 --> sc2
+    sc2 -->|"fail (non-blocking)<br/>proceed empty context"| p3
+    sc2 -->|pass| p3
+    p3 --> sc3
+    sc3 -->|fail| cb
+    sc3 -->|pass| p4
+    p4 --> sc4
+    sc4 -->|"fail / >3 verify failures /<br/>timeout exceeded"| cb
+    sc4 -->|pass| p5
+    p5 --> finalsc
+    finalsc -->|"any item fails → STOP & fix"| p5
+    finalsc -->|all pass| done
+
+    subgraph legend [Legend]
+        direction LR
+        l1[Process]:::process
+        l2{Decision}:::decision
+        l3{{Quality Gate}}:::gate
+        l4([Success]):::success
+        l5([Stop/Fail]):::failterm
     end
 
-    Start([Phase 1 Entry]) --> Resolve[1.1 Target Resolution:<br>resolve branch/SHA]
-    Resolve --> ResolveCheck{Target<br>resolved?}
-
-    ResolveCheck -->|E_TARGET_NOT_FOUND| SuggestBranches[List similar branches]
-    SuggestBranches --> Exit1([Exit: target not found])
-
-    ResolveCheck -->|Success| MergeBase[Compute merge base:<br>git merge-base base target]
-    MergeBase --> MBCheck{Merge base<br>found?}
-
-    MBCheck -->|E_MERGE_BASE_FAILED| Fallback[Fallback to HEAD~10<br>+ warn user]
-    MBCheck -->|Success| DiffAcq
-
-    Fallback --> DiffAcq
-
-    DiffAcq{Source mode?}
-    DiffAcq -->|Local| LocalDiff[1.2 git diff --name-only<br>MERGE_BASE...HEAD_SHA]
-    DiffAcq -->|PR| PRFiles[1.2 MCP pr_files<br>extract file list]
-
-    LocalDiff --> DiffCheck
-    PRFiles --> DiffCheck
-
-    DiffCheck{Files<br>changed?}
-    DiffCheck -->|E_NO_DIFF| Exit2([Exit: no changes found])
-    DiffCheck -->|Yes| MemRecall[Memory-Informed Planning:<br>memory_recall for prior findings<br>and false positive patterns]
-
-    MemRecall --> Categorize[1.3 Risk Categorization:<br>HIGH / MEDIUM / LOW]
-    Categorize --> Complexity[1.4 Complexity Estimation:<br>lines/15 + files*2 min]
-    Complexity --> ScopeWeight[1.5 Risk-Weighted Scope:<br>HIGH*3 + MEDIUM*2 + LOW*1]
-    ScopeWeight --> PriorityOrder[1.6 Priority Ordering:<br>HIGH -> MEDIUM -> LOW]
-
-    PriorityOrder --> WriteManifest[1.7 Write review-manifest.json]
-    WriteManifest --> WritePlan[1.8 Write review-plan.md]
-    WritePlan --> SelfCheck[Phase 1 Self-Check:<br>target resolved, merge base computed,<br>files categorized, complexity estimated,<br>manifest + plan written]:::gate
-
-    SelfCheck -->|All pass| Done([Phase 1 Complete]):::success
-    SelfCheck -->|Any fail| Stop([STOP: report issue,<br>do not proceed])
-
-    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
+    classDef process fill:#2a2a30,stroke:#888,color:#e8e8ea
+    classDef decision fill:#3a3320,stroke:#d4a72c,color:#e8e8ea
+    classDef gate fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef subagent fill:#1f2d3a,stroke:#4a9eff,color:#e8e8ea
+    classDef success fill:#1f3a26,stroke:#51cf66,color:#e8e8ea
+    classDef failterm fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef terminal fill:#2a2a30,stroke:#aaa,color:#e8e8ea
 ```
+
+**Cross-reference: overview node → detail diagram**
+
+| Overview node | Detail diagram |
+|---------------|----------------|
+| Mode Router / PR Mode SHA guard | [Mode Routing & PR Safety](#mode-routing--pr-safety) |
+| Phase 1: Strategic Planning | [Phase 1 — Strategic Planning](#phase-1--strategic-planning) |
+| Phase 2: Context Analysis | [Phase 2 — Context Analysis](#phase-2--context-analysis) |
+| Phase 3: Deep Review | [Phase 3 — Deep Review](#phase-3--deep-review) |
+| Phase 4: Verification | [Phase 4 — Verification](#phase-4--verification) |
+| Phase 5: Report Generation | [Phase 5 — Report Generation](#phase-5--report-generation) |
 
 ---
 
-## Phase 2: Context Analysis
-
-Load previous reviews, fetch PR history, detect re-check requests, build context object.
+## Mode Routing & PR Safety
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[Quality Gate]:::gate
-        L5([Success]):::success
+    target([target input]):::terminal
+    pat{Target pattern}:::decision
+    offlineflag{"--offline flag<br/>or no --pr?"}:::decision
+
+    local[Local Mode<br/>Network: No<br/>Truth: local files]:::process
+    pr[PR Mode<br/>Network: Yes<br/>Truth: diff only]:::process
+
+    fetch[Fallback chain:<br/>pr_fetch → gh pr view → git diff]:::subagent
+    needlocal{Need local file?<br/>conventions only}:::decision
+    sha{{git rev-parse HEAD<br/>= PR headRefOid?}}:::gate
+    readok[Read non-changed file<br/>for style/conventions]:::process
+    unavail[Treat local file as<br/>UNAVAILABLE for finding]:::process
+    diffonly[Use diff as sole<br/>authoritative source]:::process
+
+    target --> pat
+    pat -->|"feature/xyz"| offlineflag
+    pat -->|"#123 number"| pr
+    pat -->|"github URL"| pr
+    offlineflag -->|"offline / no --pr"| local
+    offlineflag -->|"online + --pr"| pr
+
+    pr --> fetch --> diffonly
+    diffonly --> needlocal
+    needlocal -->|"no"| diffonly
+    needlocal -->|"yes (CLAUDE.md, lint cfg)"| sha
+    sha -->|"match"| readok
+    sha -->|"differ"| unavail
+
+    subgraph legend [Legend]
+        direction LR
+        l1[Process]:::process
+        l2{Decision}:::decision
+        l3{{Quality Gate}}:::gate
+        l4[Network op]:::subagent
     end
 
-    Start([Phase 2 Entry]) --> Discover[2.1 Previous Review Discovery:<br>find review dir by<br>branch-mergebase key]
-    Discover --> DiscoverCheck{Previous review<br>found and fresh<br>and less than 30 days?}
-
-    DiscoverCheck -->|Not found / stale / incomplete| MemFallback[Cross-Session Context:<br>memory_recall for review<br>decisions on this component]
-    DiscoverCheck -->|Found| LoadItems[2.2 Load Previous Items]
-
-    MemFallback --> EmptyContext[Initialize empty<br>previous context]
-    EmptyContext --> OnlineCheck
-
-    LoadItems --> ClassifyItems[Classify items by status:<br>PENDING / FIXED / DECLINED /<br>PARTIAL / ALTERNATIVE]
-    ClassifyItems --> OnlineCheck
-
-    OnlineCheck{Online mode<br>and PR target?}
-    OnlineCheck -->|Yes| FetchPR[2.3 Fetch PR History:<br>MCP pr_fetch + gh API]
-    OnlineCheck -->|Offline or local| SkipPR[Skip PR context<br>log OFFLINE]
-
-    FetchPR --> FetchCheck{Fetch<br>succeeded?}
-    FetchCheck -->|Yes| DetectRecheck[2.4 Re-check Request Detection:<br>scan comments for<br>re-check / PTAL patterns]
-    FetchCheck -->|Fail| WarnPR[Log warning,<br>proceed with empty PR context]
-    WarnPR --> BuildContext
-
-    SkipPR --> BuildContext
-    DetectRecheck --> BuildContext
-
-    BuildContext[2.5 Build Context Object:<br>manifest + previous items +<br>PR context + declined +<br>partial + alternative +<br>recheck requests]
-
-    BuildContext --> WriteContext[2.6 Write context-analysis.md]
-    WriteContext --> WritePrevItems[2.7 Write previous-items.json]
-    WritePrevItems --> SelfCheck[Phase 2 Self-Check:<br>previous review discovered/confirmed,<br>items loaded, PR context fetched,<br>recheck requests extracted,<br>artifacts written]:::gate
-
-    SelfCheck -->|All pass| Done([Phase 2 Complete]):::success
-    SelfCheck -->|Fail: non-blocking| DoneWarn([Phase 2 Complete<br>with warnings]):::success
-
-    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
+    classDef process fill:#2a2a30,stroke:#888,color:#e8e8ea
+    classDef decision fill:#3a3320,stroke:#d4a72c,color:#e8e8ea
+    classDef gate fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef subagent fill:#1f2d3a,stroke:#4a9eff,color:#e8e8ea
+    classDef terminal fill:#2a2a30,stroke:#aaa,color:#e8e8ea
 ```
+
+> The SHA guard is the skill's most-emphasized safeguard: in PR mode, reading local files when `local HEAD ≠ PR HEAD` produces confidently wrong REFUTED verdicts on real bugs (`<CRITICAL>` block, lines 87–100; `<FORBIDDEN>` lines 211–212).
 
 ---
 
-## Phase 3: Deep Review
+## Phase 1 — Strategic Planning
 
-Multi-pass code analysis (Security, Correctness, Quality, Polish) with previous-item integration.
+`/advanced-code-review-plan` → outputs `review-manifest.json`, `review-plan.md`
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[Subagent Dispatch]:::subagent
-        L5[Quality Gate]:::gate
-        L6([Success]):::success
+    start([Phase 1 start]):::terminal
+    resolve[1.1 Target Resolution<br/>git rev-parse + merge-base]:::process
+    rerr{Resolution error?}:::decision
+    e1[E_TARGET_NOT_FOUND<br/>list similar branches, exit]:::failterm
+    e2[E_MERGE_BASE_FAILED<br/>fallback HEAD~10, warn]:::process
+    e3[E_NO_DIFF<br/>info msg, exit clean]:::failterm
+
+    diff[1.2 Diff Acquisition<br/>git diff --name-only / pr_files]:::process
+    cat[1.3 Risk Categorization<br/>HIGH / MEDIUM / LOW patterns]:::process
+    complex[1.4 Complexity Estimation<br/>ceil lines/15 + files*2]:::process
+    weight[1.5 Risk-Weighted Scope<br/>H*3 + M*2 + L*1]:::process
+    order[1.6 Priority Ordering<br/>HIGH → MEDIUM → LOW]:::process
+    out[1.7-1.8 Write manifest.json<br/>+ review-plan.md]:::process
+
+    sc{{Phase 1 Self-Check:<br/>target resolved, merge-base,<br/>files categorized, estimate,<br/>both artifacts written}}:::gate
+    stop([STOP & report]):::failterm
+    next([→ Phase 2]):::success
+
+    start --> resolve --> rerr
+    rerr -->|E_TARGET_NOT_FOUND| e1
+    rerr -->|E_MERGE_BASE_FAILED| e2 --> diff
+    rerr -->|E_NO_DIFF| e3
+    rerr -->|none| diff
+    diff --> cat --> complex --> weight --> order --> out --> sc
+    sc -->|any fail| stop
+    sc -->|all pass| next
+
+    subgraph legend [Legend]
+        direction LR
+        l1[Process]:::process
+        l2{Decision}:::decision
+        l3{{Quality Gate}}:::gate
+        l4([Success]):::success
+        l5([Stop/Exit]):::failterm
     end
 
-    Start([Phase 3 Entry]) --> LoadContext[Load manifest +<br>context from Phase 1-2]
-    LoadContext --> FileLoop[For each file in<br>priority order]
-
-    FileLoop --> FileNext{More files<br>remaining?}
-    FileNext -->|No| Noteworthy[3.7 Scan for PRAISE findings]
-    FileNext -->|Yes| LargeDiff{Total diff ><br>10000 lines?}
-
-    LargeDiff -->|Yes| ChunkedProcess[Chunked processing]
-    LargeDiff -->|No| SubagentCheck{Files ><br>20?}
-
-    SubagentCheck -->|Yes| ParallelDispatch[Dispatch parallel<br>review subagents]:::subagent
-    SubagentCheck -->|No| Pass1
-
-    ChunkedProcess --> Pass1
-    ParallelDispatch --> CollectResults[Collect subagent<br>results]
-    CollectResults --> Noteworthy
-
-    Pass1[Pass 1: Security<br>CRITICAL / HIGH<br>injection, auth bypass,<br>data exposure, secrets]
-    Pass1 --> Pass2[Pass 2: Correctness<br>HIGH / MEDIUM<br>logic errors, edge cases,<br>null handling, races]
-    Pass2 --> Pass3[Pass 3: Quality<br>MEDIUM / LOW<br>maintainability, complexity,<br>patterns, readability]
-    Pass3 --> Pass4[Pass 4: Polish<br>LOW / NIT<br>style, naming,<br>minor optimizations]
-
-    Pass4 --> PrevCheck[3.4 Previous Items Integration:<br>check each finding against<br>declined / alternative / partial]
-    PrevCheck --> ShouldRaise{Finding matches<br>declined or accepted<br>alternative?}
-    ShouldRaise -->|Yes: declined| Skip[Skip finding<br>increment skipped count]
-    ShouldRaise -->|Yes: alt accepted| Skip
-    ShouldRaise -->|Partial pending| Annotate[Annotate as<br>partial_pending]
-    ShouldRaise -->|No match| Keep[Keep finding]
-
-    Annotate --> SeverityTree
-    Keep --> SeverityTree
-
-    SeverityTree[Apply Severity Decision Tree:<br>Security/data loss? -> CRITICAL<br>Breaks contracts? -> HIGH<br>Quality concern? -> MEDIUM<br>Minor improvement? -> LOW<br>Purely stylistic? -> NIT<br>Needs input? -> QUESTION]
-
-    SeverityTree --> AddFinding[Add to findings list<br>with required fields]
-    Skip --> FileLoop
-    AddFinding --> FileLoop
-
-    Noteworthy --> WriteJSON[3.8 Write findings.json]
-    WriteJSON --> WriteMD[3.9 Write findings.md]
-    WriteMD --> SelfCheck[Phase 3 Self-Check:<br>all files reviewed, all 4 passes per file,<br>declined not re-raised, required fields present,<br>findings.json + findings.md written]:::gate
-
-    SelfCheck -->|All pass| Done([Phase 3 Complete]):::success
-    SelfCheck -->|Any fail| FixFindings[Fix incomplete<br>findings]
-    FixFindings --> SelfCheck
-
-    classDef subagent fill:#4a9eff,stroke:#2d7ad4,color:#fff
-    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
+    classDef process fill:#2a2a30,stroke:#888,color:#e8e8ea
+    classDef decision fill:#3a3320,stroke:#d4a72c,color:#e8e8ea
+    classDef gate fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef success fill:#1f3a26,stroke:#51cf66,color:#e8e8ea
+    classDef failterm fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef terminal fill:#2a2a30,stroke:#aaa,color:#e8e8ea
 ```
 
 ---
 
-## Phase 4: Verification
+## Phase 2 — Context Analysis
 
-Fact-check every finding against actual code, remove false positives, calculate signal-to-noise.
+`/advanced-code-review-context` → outputs `context-analysis.md`, `previous-items.json` (non-blocking phase)
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[Quality Gate]:::gate
-        L5([Success]):::success
+    start([Phase 2 start]):::terminal
+    discover[2.1 Previous Review Discovery<br/>key = branch-mergebaseSHA:8]:::process
+    exists{review_dir +<br/>manifest exist?}:::decision
+    stale{Age > STALENESS_DAYS<br/>= 30?}:::decision
+    incomplete{previous-items.json +<br/>findings.json present?}:::decision
+    fresh[Start fresh<br/>empty context]:::process
+
+    items[2.2 Load Previous Items<br/>states: PENDING/FIXED/DECLINED/<br/>PARTIAL/ALTERNATIVE]:::process
+    online{Online + PR mode?}:::decision
+    pr[2.3 Fetch PR history<br/>pr_fetch + gh_api comments]:::subagent
+    skip["[OFFLINE] skip PR history"]:::process
+    toolfail{Tool failure?}:::decision
+    warn[Log warning,<br/>empty PR context]:::process
+    recheck[2.4 Detect re-check requests<br/>PTAL / please re-check /<br/>addressed in sha]:::process
+    build[2.5 Build context object<br/>declined/partial/alternative/recheck]:::process
+    out[2.6-2.7 Write context-analysis.md<br/>+ previous-items.json]:::process
+
+    sc{{Phase 2 Self-Check<br/>(non-blocking)}}:::gate
+    next([→ Phase 3]):::success
+
+    start --> discover --> exists
+    exists -->|no| fresh
+    exists -->|yes| stale
+    stale -->|yes| fresh
+    stale -->|no| incomplete
+    incomplete -->|no| fresh
+    incomplete -->|yes| items
+    fresh --> online
+    items --> online
+    online -->|yes| pr --> toolfail
+    online -->|no| skip --> recheck
+    toolfail -->|yes| warn --> recheck
+    toolfail -->|no| recheck
+    recheck --> build --> out --> sc
+    sc -->|"pass OR fail<br/>(proceed either way)"| next
+
+    subgraph legend [Legend]
+        direction LR
+        l1[Process]:::process
+        l2{Decision}:::decision
+        l3{{Quality Gate}}:::gate
+        l4([Success]):::success
+        l5[Network op]:::subagent
     end
 
-    Start([Phase 4 Entry]) --> BranchSafety[4.0 Pre-Flight:<br>Branch Safety Check]
-    BranchSafety --> SafetyCheck{PR head SHA<br>matches local HEAD?}
-
-    SafetyCheck -->|No PR SHA<br>local branch review| LocalFiles[review_source =<br>LOCAL_FILES]
-    SafetyCheck -->|SHA match| LocalFiles
-    SafetyCheck -->|SHA mismatch<br>PR review| DiffOnly[review_source =<br>DIFF_ONLY]
-
-    LocalFiles --> DupDetect
-    DiffOnly --> DupDetect
-
-    DupDetect[4.6 Duplicate Detection:<br>find duplicate findings<br>by file + line + category]
-    DupDetect --> MergeDups[Merge duplicate<br>findings]
-    MergeDups --> FindingLoop[For each finding]
-
-    FindingLoop --> MoreFindings{More findings<br>remaining?}
-    MoreFindings -->|No| CalcSNR[4.8 Calculate Signal-to-Noise:<br>signal = CRIT+HIGH+MED verified<br>noise = LOW+NIT or INCONCLUSIVE]
-    MoreFindings -->|Yes| SourceCheck{review_source?}
-
-    SourceCheck -->|DIFF_ONLY| MarkInconclusive[Mark INCONCLUSIVE<br>add NEEDS VERIFICATION]
-    SourceCheck -->|LOCAL_FILES| ExtractClaims[4.3 Extract Claims:<br>line_content, function_behavior,<br>call_pattern, pattern_violation]
-
-    MarkInconclusive --> UpdateFinding
-    ExtractClaims --> ClaimsFound{Claims<br>extracted?}
-    ClaimsFound -->|No claims| MarkInconclusive2[Mark INCONCLUSIVE]
-    ClaimsFound -->|Yes| VerifyClaims
-
-    VerifyClaims[4.4 Verify each claim:<br>verify_line_content<br>verify_function_behavior<br>verify_call_pattern<br>verify_pattern_violation]
-    VerifyClaims --> ValidateLines[4.7 Validate line numbers<br>exist in file]
-    ValidateLines --> Aggregate{Aggregate<br>claim results}
-
-    Aggregate -->|Any REFUTED| SetRefuted[Status = REFUTED]
-    Aggregate -->|No REFUTED,<br>any INCONCLUSIVE| SetInconclusive[Status = INCONCLUSIVE]
-    Aggregate -->|All VERIFIED| SetVerified[Status = VERIFIED]
-
-    SetRefuted --> UpdateFinding
-    SetInconclusive --> UpdateFinding
-    SetVerified --> UpdateFinding
-    MarkInconclusive2 --> UpdateFinding
-
-    UpdateFinding[Update finding with<br>verification_status]
-
-    UpdateFinding --> ConsecutiveCheck{3+ consecutive<br>verification failures?}
-    ConsecutiveCheck -->|Yes| CB([Circuit Breaker:<br>too many failures])
-    ConsecutiveCheck -->|No| FindingLoop
-
-    CalcSNR --> RemoveRefuted[4.9 Remove REFUTED findings<br>from output, log in audit]
-    RemoveRefuted --> FlagInconclusive[4.10 Flag INCONCLUSIVE<br>with NEEDS VERIFICATION]
-
-    FlagInconclusive --> MemPersist[Persist Verified Findings:<br>CONFIRMED -> antipattern memory<br>REFUTED -> false-positive memory]
-
-    MemPersist --> WriteAudit[4.11 Write verification-audit.md]
-    WriteAudit --> UpdateJSON[Update findings.json<br>with verification_status]
-    UpdateJSON --> SelfCheck[Phase 4 Self-Check:<br>all verified, REFUTED removed,<br>INCONCLUSIVE flagged, duplicates merged,<br>lines validated, SNR calculated,<br>audit + JSON written]:::gate
-
-    SelfCheck -->|All pass| Done([Phase 4 Complete]):::success
-    SelfCheck -->|Any fail| FixVerification[Fix failing items]
-    FixVerification --> SelfCheck
-
-    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
+    classDef process fill:#2a2a30,stroke:#888,color:#e8e8ea
+    classDef decision fill:#3a3320,stroke:#d4a72c,color:#e8e8ea
+    classDef gate fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef subagent fill:#1f2d3a,stroke:#4a9eff,color:#e8e8ea
+    classDef success fill:#1f3a26,stroke:#51cf66,color:#e8e8ea
+    classDef terminal fill:#2a2a30,stroke:#aaa,color:#e8e8ea
 ```
 
 ---
 
-## Phase 5: Report Generation
+## Phase 3 — Deep Review
 
-Filter findings, determine verdict, render report, write artifacts.
+`/advanced-code-review-review` → outputs `findings.json`, `findings.md`
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[Quality Gate]:::gate
-        L5([Success]):::success
+    start([Phase 3 start]):::terminal
+    loop{More files in<br/>priority order?}:::decision
+    p1[Pass 1: Security<br/>CRITICAL/HIGH<br/>injection, auth, secrets]:::process
+    p2[Pass 2: Correctness<br/>HIGH/MEDIUM<br/>logic, edge, race]:::process
+    p3[Pass 3: Quality<br/>MEDIUM/LOW<br/>maintainability]:::process
+    p4[Pass 4: Polish<br/>LOW/NIT<br/>style, naming, docs]:::process
+
+    sev[Severity Decision Tree<br/>→ CRITICAL/HIGH/MEDIUM/<br/>LOW/NIT/QUESTION/PRAISE]:::process
+    ctx{3.4 Check vs<br/>previous items}:::decision
+    declined[Skip: declined]:::process
+    altacc[Skip: alternative accepted]:::process
+    partial[Raise pending only<br/>mark partial_pending]:::process
+    raise[Build finding<br/>id/severity/category/<br/>file/line/evidence/tags]:::process
+
+    praise[3.7 Noteworthy collection<br/>PRAISE scan]:::process
+    out[3.8-3.9 Write findings.json<br/>+ findings.md]:::process
+    sc{{Phase 3 Self-Check:<br/>all files+passes done,<br/>declined not re-raised,<br/>required fields present}}:::gate
+    stop([STOP: incomplete findings]):::failterm
+    next([→ Phase 4]):::success
+
+    start --> loop
+    loop -->|yes| p1 --> p2 --> p3 --> p4 --> sev --> ctx
+    ctx -->|declined match| declined --> loop
+    ctx -->|accepted alternative| altacc --> loop
+    ctx -->|partial pending| partial --> raise
+    ctx -->|none| raise
+    raise --> loop
+    loop -->|no| praise --> out --> sc
+    sc -->|any fail| stop
+    sc -->|all pass| next
+
+    subgraph legend [Legend]
+        direction LR
+        l1[Process]:::process
+        l2{Decision}:::decision
+        l3{{Quality Gate}}:::gate
+        l4([Success]):::success
+        l5([Stop]):::failterm
     end
 
-    Start([Phase 5 Entry]) --> Filter[5.1 Filter Findings:<br>remove REFUTED]
-    Filter --> Sort[5.2 Sort by Severity:<br>CRITICAL -> HIGH -> MEDIUM<br>-> LOW -> NIT -> PRAISE]
-    Sort --> Verdict[5.3 Determine Verdict]
-
-    Verdict --> VerdictLogic{Highest severity<br>in findings?}
-    VerdictLogic -->|CRITICAL or HIGH| ReqChanges[Verdict =<br>REQUEST_CHANGES]
-    VerdictLogic -->|MEDIUM| Comment[Verdict =<br>COMMENT]
-    VerdictLogic -->|LOW / NIT / none| Approve[Verdict =<br>APPROVE]
-
-    ReqChanges --> Rationale[Generate verdict rationale]
-    Comment --> Rationale
-    Approve --> Rationale
-
-    Rationale --> RenderFindings[5.4 Render each finding<br>with template]
-    RenderFindings --> InconclusiveTag{Finding is<br>INCONCLUSIVE?}
-    InconclusiveTag -->|Yes| AddFlag[Append<br>NEEDS VERIFICATION tag]
-    InconclusiveTag -->|No| NoFlag[Render normally]
-
-    AddFlag --> ActionItems
-    NoFlag --> ActionItems
-
-    ActionItems[5.5 Generate Action Items:<br>CRITICAL/HIGH -> Fix<br>MEDIUM -> Consider]
-    ActionItems --> PrevContext[5.6 Render Previous Context:<br>declined count, partial fixes,<br>alternatives accepted]
-
-    PrevContext --> RenderReport[Assemble full report<br>from template]
-    RenderReport --> WriteReport[5.7 Write review-report.md]
-    WriteReport --> WriteSummary[5.8 Write review-summary.json]
-
-    WriteSummary --> MemSummary[Persist Review Summary:<br>store outcome, finding breakdown,<br>risk assessment in memory]
-
-    MemSummary --> SelfCheck[Phase 5 Self-Check:<br>REFUTED filtered, sorted by severity,<br>verdict determined, report rendered,<br>action items generated, previous context included,<br>review-report.md + review-summary.json written]:::gate
-
-    SelfCheck -->|All pass| Done([Review Complete]):::success
-    SelfCheck -->|Any fail| FixReport[Fix failing items]
-    FixReport --> SelfCheck
-
-    classDef gate fill:#ff6b6b,stroke:#d44b4b,color:#fff
-    classDef success fill:#51cf66,stroke:#37a34d,color:#fff
+    classDef process fill:#2a2a30,stroke:#888,color:#e8e8ea
+    classDef decision fill:#3a3320,stroke:#d4a72c,color:#e8e8ea
+    classDef gate fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef success fill:#1f3a26,stroke:#51cf66,color:#e8e8ea
+    classDef failterm fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef terminal fill:#2a2a30,stroke:#aaa,color:#e8e8ea
 ```
 
 ---
 
-## Artifact Flow
+## Phase 4 — Verification
 
-Data dependencies between phases and their output artifacts.
+`/advanced-code-review-verify` → outputs `verification-audit.md`, updated `findings.json`
 
 ```mermaid
-flowchart LR
-    subgraph Phase1[Phase 1: Strategic Planning]
-        M[review-manifest.json]
-        P[review-plan.md]
+flowchart TD
+    start([Phase 4 start]):::terminal
+    preflight{{4.0 Pre-flight:<br/>get_review_source<br/>local HEAD = pr_head_sha?}}:::gate
+    diffonly[review_source = DIFF_ONLY<br/>ALL verify_* → INCONCLUSIVE<br/>do NOT read local files]:::process
+    localok[review_source = LOCAL_FILES<br/>files authoritative]:::process
+
+    dup[4.6 Duplicate detection<br/>file+line+category match]:::process
+    lineval[4.7 Line number validation]:::process
+    loop{More findings<br/>to verify?}:::decision
+    extract[4.3 Extract claims<br/>line/function/call/pattern]:::process
+    noclaims{Claims found?}:::decision
+    inconc1[INCONCLUSIVE<br/>empty claims]:::process
+
+    vfuncs[4.4 verify_line_content /<br/>verify_function_behavior /<br/>verify_call_pattern /<br/>verify_pattern_violation]:::process
+    agg{4.5 Aggregate result}:::decision
+    refuted[REFUTED → remove<br/>+ log in audit]:::process
+    inconc[INCONCLUSIVE → keep<br/>+ flag NEEDS VERIFICATION]:::process
+    verified[VERIFIED → keep]:::process
+
+    cbcheck{>3 consecutive<br/>verify failures OR<br/>timeout 60s?}:::decision
+    cb([Circuit Breaker: STOP]):::failterm
+    snr[4.8 Calculate signal/noise]:::process
+    out[4.11 Write verification-audit.md<br/>+ update findings.json]:::process
+    sc{{Phase 4 Self-Check:<br/>all verified, REFUTED removed,<br/>INCONCLUSIVE flagged,<br/>every status set}}:::gate
+    stop([STOP]):::failterm
+    next([→ Phase 5]):::success
+
+    start --> preflight
+    preflight -->|"pr_head set & differs"| diffonly
+    preflight -->|"match / local branch"| localok
+    diffonly --> dup
+    localok --> dup
+    dup --> lineval --> loop
+    loop -->|yes| extract --> noclaims
+    noclaims -->|no| inconc1 --> cbcheck
+    noclaims -->|yes| vfuncs --> agg
+    agg -->|REFUTED| refuted --> cbcheck
+    agg -->|INCONCLUSIVE| inconc --> cbcheck
+    agg -->|VERIFIED| verified --> cbcheck
+    cbcheck -->|yes| cb
+    cbcheck -->|no| loop
+    loop -->|no| snr --> out --> sc
+    sc -->|any fail| stop
+    sc -->|all pass| next
+
+    subgraph legend [Legend]
+        direction LR
+        l1[Process]:::process
+        l2{Decision}:::decision
+        l3{{Quality Gate}}:::gate
+        l4([Success]):::success
+        l5([Stop]):::failterm
     end
 
-    subgraph Phase2[Phase 2: Context Analysis]
-        CA[context-analysis.md]
-        PI[previous-items.json]
-    end
-
-    subgraph Phase3[Phase 3: Deep Review]
-        FJ[findings.json]
-        FM[findings.md]
-    end
-
-    subgraph Phase4[Phase 4: Verification]
-        VA[verification-audit.md]
-        FJ2[findings.json<br>updated]
-    end
-
-    subgraph Phase5[Phase 5: Report Generation]
-        RR[review-report.md]
-        RS[review-summary.json]
-    end
-
-    M --> CA
-    M --> FJ
-    PI --> FJ
-    FJ --> VA
-    FJ --> FJ2
-    FJ2 --> RR
-    FJ2 --> RS
-    M --> RR
-    CA --> RR
-    VA --> RR
+    classDef process fill:#2a2a30,stroke:#888,color:#e8e8ea
+    classDef decision fill:#3a3320,stroke:#d4a72c,color:#e8e8ea
+    classDef gate fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef success fill:#1f3a26,stroke:#51cf66,color:#e8e8ea
+    classDef failterm fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef terminal fill:#2a2a30,stroke:#aaa,color:#e8e8ea
 ```
 
 ---
 
-## Legend
+## Phase 5 — Report Generation
 
-| Color | Meaning |
-|---|---|
-| Blue (`#4a9eff`) | Subagent dispatch |
-| Red (`#ff6b6b`) | Quality gate / self-check |
-| Green (`#51cf66`) | Success terminal |
-| Default | Process / decision / I-O |
+`/advanced-code-review-report` → outputs `review-report.md`, `review-summary.json`
 
-## MCP Tool and Git Command Usage
+```mermaid
+flowchart TD
+    start([Phase 5 start]):::terminal
+    filter[5.1 Filter findings<br/>drop REFUTED]:::process
+    sort[5.2 Sort by SEVERITY_ORDER<br/>CRITICAL→...→PRAISE]:::process
+    verdict{5.3 Determine verdict}:::decision
+    rc[REQUEST_CHANGES<br/>CRITICAL or HIGH present]:::process
+    comment[COMMENT<br/>MEDIUM present]:::process
+    approve[APPROVE<br/>no blocking issues]:::process
 
-| Tool / Command | Phase(s) | Purpose |
-|---|---|---|
-| `pr_fetch` | 1, 2 | Fetch PR metadata |
-| `pr_files` | 1 | Extract changed file list |
-| `pr_diff` | 3 | Parse unified diff |
-| `pr_match_patterns` | 1 | Categorize files by risk |
-| `memory_recall` | 1, 2 | Load prior findings, false positives, review decisions |
-| `memory_store_memories` | 4, 5 | Persist verified findings and review summaries |
-| `git merge-base` | 1 | Find common ancestor |
-| `git diff --name-only` | 1 | List changed files |
-| `git diff` | 3 | Get full diff content |
-| `git show` | 4 | Verify file contents at SHA |
-| `git rev-parse HEAD` | 4 | Branch safety check for PR mode |
+    render[5.4 Render report<br/>string.Template + lang map<br/>+ INCONCLUSIVE flag]:::process
+    actions[5.5 Action items checklist<br/>Fix CRITICAL/HIGH,<br/>Consider MEDIUM]:::process
+    prevctx[5.6 Previous context section<br/>declined/partial/alternative]:::process
+    out[5.7-5.9 Write review-report.md<br/>+ review-summary.json]:::process
 
-## Source Cross-Reference
+    sc{{Phase 5 Self-Check:<br/>filtered, sorted, verdict,<br/>rendered, both artifacts}}:::gate
+    finalsc{{Final Self-Check:<br/>all 8 artifacts exist,<br/>quality gates pass}}:::gate
+    stop([STOP & fix]):::failterm
+    done([Review complete]):::success
 
-| Diagram Node | Source Location |
-|---|---|
-| Mode Router | `SKILL.md` lines 76-98 (Mode Router table + PR Mode critical section) |
-| Phase 1 / `/advanced-code-review-plan` | `SKILL.md` lines 114-127, `advanced-code-review-plan.md` full |
-| Target Resolution errors | `advanced-code-review-plan.md` lines 44-50 (Error Handling table) |
-| Risk Categorization (HIGH/MEDIUM/LOW) | `advanced-code-review-plan.md` lines 66-92 |
-| Complexity Estimation | `advanced-code-review-plan.md` lines 98-126 |
-| Phase 2 / `/advanced-code-review-context` | `SKILL.md` lines 130-143, `advanced-code-review-context.md` full |
-| Previous Items States | `advanced-code-review-context.md` lines 72-100 |
-| Re-check Detection patterns | `advanced-code-review-context.md` lines 118-147 |
-| Phase 3 / `/advanced-code-review-review` | `SKILL.md` lines 148-155, `advanced-code-review-review.md` full |
-| Multi-pass order (Security/Correctness/Quality/Polish) | `advanced-code-review-review.md` lines 19-27 |
-| Severity Decision Tree | `advanced-code-review-review.md` lines 40-66 |
-| Previous Items Integration | `advanced-code-review-review.md` lines 106-133 |
-| Phase 4 / `/advanced-code-review-verify` | `SKILL.md` lines 159-172, `advanced-code-review-verify.md` full |
-| Branch Safety Check (4.0) | `advanced-code-review-verify.md` lines 20-52 |
-| Claim Types and Extraction | `advanced-code-review-verify.md` lines 60-156 |
-| Verification Functions | `advanced-code-review-verify.md` lines 158-261 |
-| Signal-to-Noise Calculation | `advanced-code-review-verify.md` lines 331-359 |
-| Duplicate Detection | `advanced-code-review-verify.md` lines 296-313 |
-| Circuit Breaker (3+ failures) | `SKILL.md` lines 240-243 |
-| Phase 5 / `/advanced-code-review-report` | `SKILL.md` lines 175-187, `advanced-code-review-report.md` full |
-| Verdict Determination | `advanced-code-review-report.md` lines 49-87 |
-| Action Items Generation | `advanced-code-review-report.md` lines 166-179 |
-| Final Self-Check | `SKILL.md` lines 250-273 |
+    start --> filter --> sort --> verdict
+    verdict -->|CRITICAL/HIGH| rc --> render
+    verdict -->|MEDIUM| comment --> render
+    verdict -->|none| approve --> render
+    render --> actions --> prevctx --> out --> sc
+    sc -->|any fail| stop
+    sc -->|pass| finalsc
+    finalsc -->|any item fails| stop
+    finalsc -->|all pass| done
+
+    subgraph legend [Legend]
+        direction LR
+        l1[Process]:::process
+        l2{Decision}:::decision
+        l3{{Quality Gate}}:::gate
+        l4([Success]):::success
+        l5([Stop]):::failterm
+    end
+
+    classDef process fill:#2a2a30,stroke:#888,color:#e8e8ea
+    classDef decision fill:#3a3320,stroke:#d4a72c,color:#e8e8ea
+    classDef gate fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef success fill:#1f3a26,stroke:#51cf66,color:#e8e8ea
+    classDef failterm fill:#3a1f1f,stroke:#ff6b6b,color:#e8e8ea
+    classDef terminal fill:#2a2a30,stroke:#aaa,color:#e8e8ea
+```
+
+---
+
+## Source Trace
+
+| Diagram element | Source (SKILL.md unless noted) |
+|-----------------|--------------------------------|
+| AskUserQuestion disambiguation | description field, lines 3 |
+| Mode Router table & implicit offline | lines 76–85 |
+| PR Mode diff-only `<CRITICAL>` + SHA guard | lines 87–100; verify §4.0 lines 20–45 |
+| Phase command invocations | Phase Overview table, lines 106–112 |
+| Per-phase outputs & self-checks | lines 116–166; per-command Self-Check sections |
+| Circuit breakers (target, no diff, >3 verify fails, timeout) | lines 219–224 |
+| Final self-check / 8 artifacts | lines 229–252 |
+| Phase 1 sub-steps 1.1–1.8 + error table | plan.md lines 15–235 |
+| Phase 2 discovery/states/recheck/non-blocking | context.md lines 26–270 |
+| Phase 3 four passes + severity tree + previous-items integration | review.md lines 19–166 |
+| Phase 4 pre-flight, claim extraction, verify funcs, SNR | verify.md lines 19–435 |
+| Phase 5 filter/sort/verdict/render | report.md lines 16–340 |
 
 ## Skill Content
 

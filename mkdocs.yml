@@ -5,7 +5,6 @@ exclude_docs: |
   /security.md
   /windows-support-report.md
   commands/toggle-fun.md
-  skills/code-review-diagram.md
 site_name: Spellbook
 site_description: Multi-platform AI assistant skills, commands, and configuration
 site_url: https://axiomantic.github.io/spellbook/
@@ -125,7 +124,6 @@ nav:
   - Admin Interface:
     - Overview: admin/index.md
     - Dashboard: admin/dashboard.md
-    - Memory: admin/memory.md
     - Security: admin/security.md
     - Sessions: admin/sessions.md
     - Analytics: admin/analytics.md
