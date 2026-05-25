@@ -2385,8 +2385,10 @@ def _develop_accountability_nudge(data: dict) -> str | None:
     if state.get("develop_gate_ledger"):
         return None
 
-    _prune_stale_nudge_markers()
-
+    # Stale-marker pruning is NOT done here: it would run on every qualifying
+    # prompt (this path executes before the already-nudged short-circuit below),
+    # which is pure waste. Global pruning happens once per SessionStart in
+    # _handle_session_start; markers are tiny with a 24h TTL, so that is enough.
     marker = _develop_nudge_marker_path(session_id)
     if marker.exists():
         return None  # already nudged this session
