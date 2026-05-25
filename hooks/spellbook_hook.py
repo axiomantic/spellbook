@@ -2369,7 +2369,7 @@ def _develop_accountability_nudge(data: dict) -> str | None:
     if not session_id or not _A2A_SESSION_ID_RE.match(session_id):
         return None
 
-    ws = _mcp_call("workflow_state_load", {"project_path": data.get("cwd", "")})
+    ws = _mcp_call("workflow_state_load", {"project_path": data.get("cwd") or ""})
     if not ws or not ws.get("found"):
         return None
     state = ws.get("state") or {}

@@ -99,7 +99,9 @@ def derive_remaining_gates(
             gates.append("assumption verification")  # Phase 2.5
 
         # Phase 3.2 — impl-plan review fires for needs_design OR needs_infrastructure.
-        if needs_design or needs_infrastructure:
+        # needs_infrastructure implies needs_design (established at line ~67), so
+        # checking needs_design alone covers both cases.
+        if needs_design:
             gates.append("impl-plan review")
 
         # Phase 4 — the full review floor (§3.2), in sub-phase order:
