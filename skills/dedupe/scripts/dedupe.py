@@ -16,7 +16,7 @@ See ``$SPELLBOOK_DIR/skills/dedupe/SKILL.md`` for the full protocol.
 from __future__ import annotations
 
 import argparse
-import difflib  # noqa: F401  -- used by later tasks (SequenceMatcher signal)
+import difflib
 import hashlib  # noqa: F401  -- used by later tasks (stable block_id hashing)
 import json
 import os
@@ -173,6 +173,86 @@ class GroupResult:
     external_callers: list[dict] = field(default_factory=list)   # C5 (design §5.4)
     cost_ceiling_exceeded: bool = False
     candidate_count: int = 0
+
+
+# ---------------------------------------------------------------------------
+# Signal 2: SequenceMatcher confirm signal + drift delta + pair scoring
+# (design §3.5, Signal 2)
+#
+# Signal 1 (Jaccard) is the cheap recall gate; Signal 2 (SequenceMatcher
+# character-level ratio over the NORMALIZED text) is the confirm/order-sensitive
+# signal. drift_delta = 1.0 - seqmatch_ratio. score_pair runs the cheap Jaccard
+# gate first and only computes the SequenceMatcher confirm signal for pairs that
+# clear it (cheap-then-confirm).
+# ---------------------------------------------------------------------------
+
+
+def seqmatch_ratio(a: str, b: str) -> float:
+    """Character-level similarity ratio over the NORMALIZED forms of a and b.
+
+    Wraps ``difflib.SequenceMatcher`` on ``normalize(a)`` / ``normalize(b)`` so
+    case, emphasis markers, and whitespace differences do not depress the score.
+    Identical normalized text -> 1.0.
+    """
+    # autojunk=False: with autojunk on, characters appearing in >1% of
+    # positions in strings >=200 chars are treated as "popular junk", which can
+    # subtly depress the ratio on long instruction blocks; disabling it keeps
+    # the confirm/drift signal faithful to true similarity. (None is isjunk.)
+    return difflib.SequenceMatcher(
+        None, normalize(a), normalize(b), autojunk=False
+    ).ratio()
+
+
+def drift_delta(a: str, b: str) -> float:
+    """How far two blocks have drifted apart: ``1.0 - seqmatch_ratio(a, b)``.
+
+    0.0 means identical (post-normalization); larger means more divergence.
+    """
+    return 1.0 - seqmatch_ratio(a, b)
+
+
+def score_pair(
+    block_a: Block,
+    block_b: Block,
+    *,
+    jaccard_threshold: float,
+    confirm_threshold: float,
+) -> Pair | None:
+    """Score a candidate block pair with the two-signal similarity model.
+
+    Cheap-then-confirm (design §3.5): compute Signal 1 (Jaccard) over the blocks'
+    normalized text first; if it is below ``jaccard_threshold`` the pair cannot be
+    a duplicate or drift candidate and ``None`` is returned (the Jaccard gate).
+    Otherwise compute Signal 2 (SequenceMatcher confirm) and the drift delta, and
+    return a populated ``Pair``.
+
+    ``is_drift_candidate`` is ``(jaccard >= jaccard_threshold) and
+    (seqmatch_ratio < 1.0)``: it cleared the recall gate but is not a byte-for-byte
+    (post-normalization) match. A pair is a *confirmed* duplicate candidate when
+    ``seqmatch_ratio >= confirm_threshold``; callers filter on that. ``score_pair``
+    returns the ``Pair`` regardless so drift candidates with
+    ``seqmatch_ratio < confirm_threshold`` remain available for the drift section.
+
+    No boilerplate check is performed here: boilerplate is excluded exactly once,
+    at segmentation time (the SOLE boilerplate guard), so every block reaching
+    ``score_pair`` is already de-boilerplated.
+
+    ``contains_safety_marker`` is a Task 4 placeholder (always ``False``); the real
+    INLINE-MANDATORY / danger detection is wired in later (design §4.4).
+    """
+    j = jaccard(block_a.normalized_text, block_b.normalized_text)
+    if j < jaccard_threshold:
+        return None
+    s = seqmatch_ratio(block_a.normalized_text, block_b.normalized_text)
+    return Pair(
+        a=block_a,
+        b=block_b,
+        jaccard=j,
+        seqmatch_ratio=s,
+        drift_delta=1.0 - s,
+        is_drift_candidate=j >= jaccard_threshold and s < 1.0,
+        contains_safety_marker=False,
+    )
 
 
 # ---------------------------------------------------------------------------

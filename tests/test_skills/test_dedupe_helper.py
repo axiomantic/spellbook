@@ -319,3 +319,161 @@ def test_normalize_strips_emphasis(dedupe):
 
 def test_normalize_strips_backticks(dedupe):
     assert dedupe.normalize("run `git push` now") == "run git push now"
+
+
+# ---------------------------------------------------------------------------
+# Task 4: SequenceMatcher confirm signal + drift delta + pair scoring
+# (plan §"Task 4" Step 1, §3.5 Signal 2).
+#   seqmatch_ratio(a, b) = difflib.SequenceMatcher(None, normalize(a),
+#                                                   normalize(b)).ratio()
+#   drift_delta(a, b)    = 1.0 - seqmatch_ratio(a, b)
+#   score_pair gates on jaccard (returns None below the floor), then computes
+#   the SequenceMatcher confirm signal and drift delta. Contracts asserted:
+#     - is_drift_candidate = (j >= jaccard_threshold) and (seqmatch_ratio < 1.0)
+#     - NO boilerplate check in score_pair (boilerplate is excluded once, at
+#       segmentation time -- Task 5; the SOLE boilerplate guard).
+#     - contains_safety_marker is the Task 4 PLACEHOLDER (always False here);
+#       the real INLINE-MANDATORY/danger detection lands in Task 7.
+# ---------------------------------------------------------------------------
+
+
+def _block(dedupe, raw_text: str, *, file: str = "x.md", granularity: str = "paragraph",
+           start_line: int = 1, end_line: int = 1, parent_key=None, block_id=None):
+    """Construct a Block directly (segment() arrives in Task 5).
+
+    normalized_text is populated via the real normalize() so score_pair's
+    jaccard/seqmatch operate on the same normalized form the pipeline uses.
+    """
+    return dedupe.Block(
+        file=file,
+        granularity=granularity,
+        start_line=start_line,
+        end_line=end_line,
+        raw_text=raw_text,
+        normalized_text=dedupe.normalize(raw_text),
+        parent_key=parent_key,
+        block_id=block_id if block_id is not None else f"id-{start_line}-{end_line}",
+    )
+
+
+def test_seqmatch_identical_is_one(dedupe):
+    assert dedupe.seqmatch_ratio("identical text here", "identical text here") == 1.0
+
+
+def test_seqmatch_normalizes_before_compare(dedupe):
+    # Differs only by case + emphasis + whitespace, all removed by normalize() ->
+    # the normalized forms are byte-identical -> ratio is exactly 1.0. A
+    # raw (non-normalizing) SequenceMatcher would score < 1.0 here.
+    assert dedupe.seqmatch_ratio("**Hello**   World", "hello world") == 1.0
+
+
+def test_seqmatch_disjoint_is_zero(dedupe):
+    # No characters in common at all -> ratio 0.0.
+    assert dedupe.seqmatch_ratio("aaaa", "bbbb") == 0.0
+
+
+def test_seqmatch_both_empty_is_one(dedupe):
+    # Both inputs normalize to "" -> SequenceMatcher ratio is 1.0, converging
+    # with jaccard's both-empty -> 1.0 convention (the two signals agree on the
+    # empty-input edge case).
+    assert dedupe.seqmatch_ratio("   ", "") == 1.0
+
+
+def test_drift_delta_zero_for_identical(dedupe):
+    a = "the rule is do not push to main"
+    assert dedupe.drift_delta(a, a) == 0.0
+
+
+def test_drift_delta_is_one_minus_seqmatch(dedupe):
+    # drift_delta is defined EXACTLY as 1.0 - seqmatch_ratio; assert the identity
+    # holds for an arbitrary non-trivial pair (catches a sign flip / wrong base).
+    a = "the rule is do not push to main"
+    b = "the rule is do not push to master"
+    assert dedupe.drift_delta(a, b) == 1.0 - dedupe.seqmatch_ratio(a, b)
+
+
+def test_drift_delta_positive_for_one_word_change(dedupe):
+    a = "the rule is do not push to main"
+    b = "the rule is do not push to master"
+    delta = dedupe.drift_delta(a, b)
+    assert 0.0 < delta < 0.3
+
+
+def test_score_pair_identical_not_drift_candidate(dedupe):
+    text = "always confirm with the operator before running any destructive command here"
+    a = _block(dedupe, text, file="a.md", start_line=1, end_line=1)
+    b = _block(dedupe, text, file="b.md", start_line=1, end_line=1)
+    pair = dedupe.score_pair(a, b, jaccard_threshold=0.7, confirm_threshold=0.85)
+    assert pair is not None
+    assert pair.a is a
+    assert pair.b is b
+    assert pair.jaccard == 1.0
+    assert pair.seqmatch_ratio == 1.0
+    assert pair.drift_delta == 0.0
+    # Identical text: seqmatch_ratio == 1.0 -> NOT a drift candidate.
+    assert pair.is_drift_candidate is False
+    # Task 4 placeholder: contains_safety_marker is always False (wired in Task 7).
+    assert pair.contains_safety_marker is False
+
+
+def test_score_pair_high_jaccard_not_identical_is_drift_candidate(dedupe):
+    # One word changed: token Jaccard stays >= 0.7 (gate passes) but the
+    # SequenceMatcher ratio is < 1.0 -> is_drift_candidate is True.
+    a = _block(dedupe, "the rule is do not ever push to the protected main branch",
+               file="a.md")
+    b = _block(dedupe, "the rule is do not ever push to the protected master branch",
+               file="b.md")
+    pair = dedupe.score_pair(a, b, jaccard_threshold=0.7, confirm_threshold=0.85)
+    assert pair is not None
+    assert pair.jaccard >= 0.7
+    assert pair.seqmatch_ratio < 1.0
+    assert pair.drift_delta == 1.0 - pair.seqmatch_ratio
+    assert pair.is_drift_candidate is True
+    assert pair.contains_safety_marker is False
+
+
+def test_score_pair_low_jaccard_returns_none(dedupe):
+    # Disjoint vocabulary -> jaccard 0.0 < 0.7 gate -> score_pair returns None
+    # (the cheap Jaccard gate precedes the SequenceMatcher confirm, §3.5).
+    a = _block(dedupe, "alpha beta gamma delta epsilon zeta eta theta iota kappa",
+               file="a.md")
+    b = _block(dedupe, "lambda mu nu xi omicron pi rho sigma tau upsilon phi chi",
+               file="b.md")
+    pair = dedupe.score_pair(a, b, jaccard_threshold=0.7, confirm_threshold=0.85)
+    assert pair is None
+
+
+def test_score_pair_at_jaccard_floor_is_drift_candidate(dedupe):
+    # is_drift_candidate uses `j >= jaccard_threshold` (inclusive at the floor).
+    # Construct a pair whose token Jaccard is exactly 0.5, gate at 0.5: the pair
+    # passes the gate (returned, not None) and -- being non-identical -- is a
+    # drift candidate. With a gate of 0.7 the SAME pair would be dropped (None),
+    # proving the gate is inclusive at its own threshold.
+    a = _block(dedupe, "alpha beta gamma delta", file="a.md")  # tokens {alpha,beta,gamma,delta}
+    b = _block(dedupe, "alpha beta omega psi", file="b.md")    # tokens {alpha,beta,omega,psi}
+    # intersection {alpha,beta}=2, union 6 -> jaccard 1/3 ... recompute below.
+    j = dedupe.jaccard(a.normalized_text, b.normalized_text)
+    assert j == 1 / 3  # {alpha,beta} / {alpha,beta,gamma,delta,omega,psi}
+    # Gate at exactly j: inclusive -> returned and is a drift candidate.
+    at_floor = dedupe.score_pair(a, b, jaccard_threshold=j, confirm_threshold=0.85)
+    assert at_floor is not None
+    assert at_floor.is_drift_candidate is True
+    # Gate just above j: dropped.
+    above = dedupe.score_pair(a, b, jaccard_threshold=j + 0.01, confirm_threshold=0.85)
+    assert above is None
+
+
+def test_score_pair_no_boilerplate_check(dedupe):
+    # score_pair must NOT contain a boilerplate guard. A boilerplate-shaped block
+    # (a bare horizontal rule "---" repeated) still tokenizes to a non-empty
+    # identical set here; if score_pair silently dropped boilerplate it would
+    # return None. The SOLE boilerplate guard is segmentation (Task 5), so
+    # score_pair returns a normal Pair for these inputs.
+    a = _block(dedupe, "step one then step two then step three then step four done",
+               file="a.md")
+    b = _block(dedupe, "step one then step two then step three then step four done",
+               file="b.md")
+    pair = dedupe.score_pair(a, b, jaccard_threshold=0.7, confirm_threshold=0.85)
+    assert pair is not None
+    assert pair.seqmatch_ratio == 1.0
+    assert pair.is_drift_candidate is False
