@@ -1928,3 +1928,23 @@ def test_verify_fails_when_no_edits(dedupe, tmp_path):
     assert any(not r["pass"] for r in data["results"]), data["results"]
     reasons = [s for r in data["results"] for s in r["reasons"]]
     assert any("edits" in s for s in reasons), reasons
+
+
+def test_skill_frontmatter_parses_and_is_dedupe():
+    """Task 11 contract: SKILL.md has a parseable YAML frontmatter block whose
+    name is 'dedupe' and whose description is non-empty. Parsed with a minimal
+    frontmatter splitter (no third-party yaml dependency)."""
+    skill = (
+        Path(__file__).resolve().parent.parent.parent
+        / "skills" / "dedupe" / "SKILL.md"
+    )
+    text = skill.read_text(encoding="utf-8")
+    assert text.startswith("---\n"), "SKILL.md must open with a YAML frontmatter fence"
+    _, fm, _ = text.split("---\n", 2)  # frontmatter between first two fences; relies on no bare '---' HR in body
+    fields = {}
+    for line in fm.splitlines():
+        if ":" in line:
+            key, _, val = line.partition(":")
+            fields[key.strip()] = val.strip().strip('"').strip()
+    assert fields.get("name") == "dedupe", f"expected name: dedupe, got {fields.get('name')!r}"
+    assert fields.get("description"), "SKILL.md description must be non-empty"
