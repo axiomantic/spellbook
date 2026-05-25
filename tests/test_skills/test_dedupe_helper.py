@@ -1983,17 +1983,65 @@ def test_external_callers_malformed_record_shape_returns_two(dedupe, tmp_path):
 # ---------------------------------------------------------------------------
 
 
+def _corpus_hashes(root: Path) -> dict[Path, str]:
+    """sha256 of every *.md file under root, keyed by path (relative to root so
+    two corpora rooted at different tmp dirs are comparable in spirit, though
+    here each map is only ever compared to a before/after snapshot of itself)."""
+    return {
+        p.relative_to(root): hashlib.sha256(p.read_bytes()).hexdigest()
+        for p in sorted(root.rglob("*.md"))
+    }
+
+
 def test_script_never_edits_corpus(dedupe, tmp_path):
-    """Zero-auto-edit: detect/external-callers/verify leave corpus byte-identical."""
+    """Zero-auto-edit (Success Criterion #3): ALL THREE read-only subcommands --
+    detect, external-callers, AND verify -- leave their corpus byte-identical.
+
+    detect and external-callers share one copied snapshot of the core fixture
+    corpus (the external scan segments a corpus file into a --blocks-json exactly
+    as test_external_callers_multishape_recall does, then runs against the same
+    corpus). verify needs the journal-shaped corpus produced by
+    _build_verify_corpus, so it gets its own before/after snapshot. The point is
+    that external-callers and verify are each PROVEN non-mutating, not just detect.
+    """
+    import dataclasses
     import shutil
+
+    # --- detect + external-callers over a shared copy of the core fixture corpus.
     work = tmp_path / "corpus"
     shutil.copytree(FIXTURE_DIR, work)
-    before = {p: hashlib.sha256(p.read_bytes()).hexdigest()
-              for p in work.rglob("*.md")}
-    _run(dedupe, "detect", "--seed", "file_a.md", "--corpus", str(work))
-    after = {p: hashlib.sha256(p.read_bytes()).hexdigest()
-             for p in work.rglob("*.md")}
-    assert before == after, "detect must not mutate any source file"
+    before = _corpus_hashes(work)
+
+    rc, _, _ = _run(dedupe, "detect", "--seed", "file_a.md", "--corpus", str(work))
+    assert rc == 0
+    assert _corpus_hashes(work) == before, "detect must not mutate any source file"
+
+    blocks = dedupe.segment("file_a.md", (work / "file_a.md").read_text(encoding="utf-8"))
+    blocks_json = tmp_path / "candidate_blocks.json"
+    blocks_json.write_text(
+        json.dumps([dataclasses.asdict(b) for b in blocks]), encoding="utf-8"
+    )
+    rc, _, _ = _run(
+        dedupe, "external-callers",
+        "--blocks-json", str(blocks_json), "--corpus", str(work),
+        "--external-threshold", "0.7",
+    )
+    assert rc == 0
+    assert _corpus_hashes(work) == before, \
+        "external-callers must not mutate any source file"
+
+    # --- verify over its own journal-shaped corpus (distinct structure/root).
+    verify_tmp = tmp_path / "verify"
+    verify_tmp.mkdir()
+    vwork, journal = _build_verify_corpus(
+        verify_tmp,
+        source_body="# Apply\n\n" + _VERIFY_POINTER + "\nThen run the apply.\n",
+        reference_body=_VERIFY_ORIGINAL,
+    )
+    vbefore = _corpus_hashes(vwork)
+    rc, _, _ = _run(dedupe, "verify", "--journal", str(journal), "--corpus", str(vwork))
+    assert rc == 0
+    assert _corpus_hashes(vwork) == vbefore, "verify must not mutate any source file"
 
 
 # Shared arrange material for the verify tests. The "original" duplicate block is a
