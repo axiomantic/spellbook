@@ -30,13 +30,11 @@ SESSION_MODES: tuple[str, ...] = ("fun", "tarot", "none")
 
 
 CONFIG_DEFAULTS: dict[str, Any] = {
-    "memory.auto_recall": True,
-    "memory.auto_store": True,
     # Default session profile slug (empty string = no profile). Kept in
     # CONFIG_DEFAULTS so session_init's ``config_get("profile.default")``
     # never raises KeyError on fresh installs.
     "profile.default": "",
-    # worker_llm: 14 flat keys. All feature flags default False (opt-in).
+    # worker_llm flat keys. All feature flags default False (opt-in).
     # Matches CONFIG_SCHEMA in spellbook/admin/routes/config.py.
     "worker_llm_base_url": "",
     "worker_llm_model": "",
@@ -44,12 +42,8 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     "worker_llm_timeout_s": 10.0,
     "worker_llm_max_tokens": 1024,
     "worker_llm_tool_safety_timeout_s": 1.5,
-    "worker_llm_transcript_harvest_mode": "replace",
     "worker_llm_allow_prompt_overrides": True,
-    "worker_llm_read_claude_memory": False,
-    "worker_llm_feature_transcript_harvest": False,
     "worker_llm_feature_roundtable": False,
-    "worker_llm_feature_memory_rerank": False,
     "worker_llm_feature_tool_safety": False,
     "worker_llm_safety_cache_ttl_s": 300,
     # worker_llm observability (design §7). Consumed by the purge loop and
@@ -726,17 +720,6 @@ def _get_repairs() -> list[dict]:
     return []
 
 
-def _regenerate_memory_md(project_path: Optional[str]) -> None:
-    """Regenerate MEMORY.md for the project. Fail-open."""
-    if not project_path:
-        return
-    try:
-        from spellbook.memory.bootstrap import regenerate_memory_md_for_project
-        regenerate_memory_md_for_project(project_path)
-    except Exception:
-        pass  # Fail-open: never block session init
-
-
 VALID_PLATFORMS = ("claude_code", "opencode", "codex", "gemini", "forgecode")
 
 
@@ -875,9 +858,6 @@ def session_init(
 
     # Add update notification (if any)
     _add_update_notification(result)
-
-    # Regenerate MEMORY.md from structured memory
-    _regenerate_memory_md(project_path)
 
     # Add resume fields
     result.update(_get_resume_context(continuation_message, project_path))
