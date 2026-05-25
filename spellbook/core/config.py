@@ -893,55 +893,22 @@ def _get_resume_context(
     continuation_message: Optional[str],
     project_path: Optional[str] = None
 ) -> dict:
-    """Get resume context based on continuation message.
+    """Get resume context for session_init.
+
+    The recovery-context resume path was removed in 0.68.0. No replacement
+    continuation path exists yet, so this always reports no resume available.
+    Re-wiring continuation-intent into a new resume path is intentionally
+    out of scope (see the removal design doc, section 5.6).
 
     Args:
-        continuation_message: User's first message (optional)
-        project_path: Project path (defaults to os.getcwd() if not provided)
+        continuation_message: User's first message (unused; retained for the
+            session_init call signature and future re-wiring).
+        project_path: Project path (unused; see above).
 
     Returns:
-        Dict with resume_available and optional resume_* fields
+        Dict with resume_available always False.
     """
-    from spellbook.core.db import get_db_path
-    from spellbook.sessions.resume import (
-        detect_continuation_intent,
-        get_resume_fields,
-    )
-
-    # Get project path - use provided path or fall back to cwd
-    if project_path is None:
-        project_path = os.getcwd()
-
-    # Get database path
-    try:
-        db_path = str(get_db_path())
-    except Exception:
-        # If no database, no resume available
-        return {"resume_available": False}
-
-    # Query for recent session
-    resume_fields = get_resume_fields(project_path, db_path)
-
-    # If no recent session available, return early
-    if not resume_fields.get("resume_available"):
-        return {"resume_available": False}
-
-    # If no continuation message provided, return resume fields unchanged
-    if not continuation_message:
-        return dict(resume_fields)
-
-    # Detect user intent
-    intent = detect_continuation_intent(
-        continuation_message,
-        has_recent_session=True  # We know there's a recent session
-    )
-
-    # Fresh start overrides resume
-    if intent["intent"] == "fresh_start":
-        return {"resume_available": False}
-
-    # Return resume fields for continue or neutral intent
-    return dict(resume_fields)
+    return {"resume_available": False}
 
 
 def telemetry_enable(endpoint_url: str = None, db_path: str = None) -> dict:
