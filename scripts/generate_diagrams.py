@@ -665,12 +665,14 @@ def _normalize_classification(raw: str | None) -> str:
 
     The classifier expects the LLM to respond with one of STAMP, PATCH, or
     REGENERATE. The parsed response can be ``None`` (no result text), empty,
-    or unrecognized. Any of those degrades to the REGENERATE fail-safe
-    rather than raising. Guarding here makes the None case explicit and
-    prevents a spurious ``TypeError`` from string/iteration operations on a
-    ``None`` response (the original code called ``.strip()`` on a value that
-    could be ``None``).
+    unrecognized, or (defensively) a non-str type. Any of those degrades to
+    the REGENERATE fail-safe rather than raising. Guarding here makes the
+    None and non-str cases explicit and prevents a spurious ``AttributeError``
+    from calling string operations (``.strip()``) on a value that is not a
+    ``str``.
     """
+    if not isinstance(raw, str):
+        return "REGENERATE"
     if not raw:
         return "REGENERATE"
     normalized = raw.strip().upper()

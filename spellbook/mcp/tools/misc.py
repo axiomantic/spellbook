@@ -257,6 +257,13 @@ def workflow_state_update(
         # autocommit state between calls (every entry point ends in commit/rollback).
         # Defensively roll back any stray in-flight transaction so BEGIN IMMEDIATE
         # cannot raise "cannot start a transaction within a transaction".
+        #
+        # Invariant: this tool OWNS its transaction boundary (BEGIN IMMEDIATE ...
+        # COMMIT/ROLLBACK). It is a top-level MCP entry point and must NOT be nested
+        # inside a caller-managed transaction; this defensive rollback would discard
+        # such an outer transaction's uncommitted work. All known callers invoke each
+        # workflow_state_* tool as an independent MCP call (see hooks/spellbook_hook.py
+        # _mcp_call sites); none wrap multiple calls in one transaction.
         if conn.in_transaction:
             conn.rollback()
         cursor.execute("BEGIN IMMEDIATE")

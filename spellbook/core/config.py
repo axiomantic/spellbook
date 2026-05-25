@@ -728,6 +728,14 @@ def _get_repairs() -> list[dict]:
     return []
 
 
+# Upper bound on the Follow-up-Task recall at session start. ``do_memory_recall``
+# returns ``count == len(memories)`` capped at this limit (it does not expose a
+# true unbounded total), so a count equal to the limit means "at least this many"
+# and is rendered as a soft cap ("1000+") by the consumer rather than an exact
+# value.
+_FOLLOWUP_COUNT_LIMIT = 1000
+
+
 def _get_open_followup_count(project_path: Optional[str]) -> int:
     """Return the count of open Follow-up-Task memories for the project.
 
@@ -737,6 +745,13 @@ def _get_open_followup_count(project_path: Optional[str]) -> int:
     discarded here, so no Follow-up Task bodies are surfaced into the
     session_init output or the assistant's context.
 
+    The returned value is capped at ``_FOLLOWUP_COUNT_LIMIT``:
+    ``do_memory_recall`` returns ``count == len(memories)`` after slicing the
+    result set to ``limit`` (see ``spellbook/memory/tools.py`` ``do_memory_recall``
+    and ``recall_memories``), and exposes no true unbounded total. A return value
+    equal to ``_FOLLOWUP_COUNT_LIMIT`` therefore means "at least that many"; the
+    consumer renders that case as a soft cap rather than an exact count.
+
     Fail-open: any error (no project path, memory system unavailable, backend
     exception) returns 0 so session_init never blocks on this surfacing.
 
@@ -744,7 +759,8 @@ def _get_open_followup_count(project_path: Optional[str]) -> int:
         project_path: Project path used to derive the memory namespace.
 
     Returns:
-        Number of memories tagged ``follow-up-task`` for the project, or 0.
+        Number of memories tagged ``follow-up-task`` for the project (capped at
+        ``_FOLLOWUP_COUNT_LIMIT``), or 0.
     """
     if not project_path:
         return 0
@@ -754,7 +770,7 @@ def _get_open_followup_count(project_path: Optional[str]) -> int:
             namespace=encode_cwd(project_path),
             tags=["follow-up-task"],
             scope="project",
-            limit=1000,
+            limit=_FOLLOWUP_COUNT_LIMIT,
         )
         count = result.get("count")
         return count if isinstance(count, int) and count > 0 else 0
@@ -953,8 +969,16 @@ def session_init(
     follow_up_tasks_open = _get_open_followup_count(project_path)
     if follow_up_tasks_open > 0:
         result["follow_up_tasks_open"] = follow_up_tasks_open
+        # The count is capped at _FOLLOWUP_COUNT_LIMIT (do_memory_recall exposes
+        # no true unbounded total), so a saturated count is rendered as a soft
+        # cap ("1000+") to avoid under-reporting when there are more.
+        if follow_up_tasks_open >= _FOLLOWUP_COUNT_LIMIT:
+            result["follow_up_tasks_open_capped"] = True
+            count_label = f"{_FOLLOWUP_COUNT_LIMIT}+"
+        else:
+            count_label = str(follow_up_tasks_open)
         result["follow_up_tasks_note"] = (
-            f"{follow_up_tasks_open} open Follow-up Task(s) from prior develop "
+            f"{count_label} open Follow-up Task(s) from prior develop "
             "work — say 'show follow-ups' to review."
         )
 

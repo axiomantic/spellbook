@@ -168,6 +168,13 @@ def test_normalize_classification_unrecognized_returns_regenerate(gd):
     assert gd._normalize_classification("maybe later") == "REGENERATE"
 
 
+def test_normalize_classification_non_str_returns_regenerate(gd):
+    # A truthy non-str (e.g. a dict or list) must not AttributeError on
+    # .strip(); it degrades to the REGENERATE fail-safe.
+    assert gd._normalize_classification({"unexpected": "shape"}) == "REGENERATE"
+    assert gd._normalize_classification(["REGENERATE"]) == "REGENERATE"
+
+
 def test_normalize_classification_preserves_stamp(gd):
     assert gd._normalize_classification("stamp") == "STAMP"
 
