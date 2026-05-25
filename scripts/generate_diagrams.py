@@ -205,7 +205,7 @@ def item_label_for_path(source_path: Path) -> str:
     not under the repo root (so the helper never raises on display).
     """
     try:
-        return str(source_path.relative_to(REPO_ROOT))
+        return source_path.relative_to(REPO_ROOT).as_posix()
     except ValueError:
         parent = source_path.parent.name
         return f"{parent}/{source_path.name}" if parent else source_path.name
