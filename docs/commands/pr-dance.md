@@ -101,12 +101,19 @@ fi
 
 #### Poll without blocking the bot gate
 
-Use a **single-shot, non-blocking** check each round so you can move between the CI gate and the bot gate (Step 4) within the same cycle. Each round: poll CI once, then poll the bot once, act on whichever is ready, then sleep before the next round — never tighter than 60s (the interval must be >= 60s; longer is fine, shorter is not):
+Use a **single-shot, non-blocking** check so you can move between the CI gate and the bot gate (Step 4) within the same cycle. Each round: poll CI once, then poll the bot once, act on whichever is ready:
 
 ```bash
 gh pr checks "$PR_NUMBER" --json name,state,conclusion
-sleep 60
 ```
+
+Only if BOTH gates are still pending for the current commit, sleep before the next round — never tighter than 60s (the interval must be >= 60s; longer is fine, shorter is not):
+
+```bash
+sleep 60   # round delimiter — runs only after both the CI and bot gates have been polled
+```
+
+Do NOT sleep between the CI poll and the bot poll; that re-introduces the blocking the concurrent-gates mission exists to avoid.
 
 `gh pr checks --watch` blocks until CI reaches a terminal state, so it stalls the bot gate while CI runs and contradicts the concurrent-gates mission. Only reach for `--watch` once the bot gate is already satisfied for the current commit — at that point blocking on CI alone is fine:
 
