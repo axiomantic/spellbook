@@ -17,7 +17,6 @@ _COMMAND_MODULES = (
     "update",
     "admin",
     "config",
-    "memory",
     "session",
     "events",
     "worker_llm",

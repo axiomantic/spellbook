@@ -224,7 +224,6 @@ _WORKER_ADVANCED_KEYS = [
     "worker_llm_timeout_s",
     "worker_llm_max_tokens",
     "worker_llm_tool_safety_timeout_s",
-    "worker_llm_transcript_harvest_mode",
     "worker_llm_allow_prompt_overrides",
     "worker_llm_feature_roundtable",
     "worker_llm_safety_cache_ttl_s",
@@ -340,7 +339,7 @@ class TestWorkerLLMAdvancedTier:
         """Build a full wizard script that accepts the advanced tier.
 
         The happy path: enable -> pick endpoint 1 -> pick model 1 ->
-        blank key -> four feature flags n -> advanced y -> [advanced
+        blank key -> two feature flags n -> advanced y -> [advanced
         answers] -> doctor n.
         """
         return [
@@ -348,7 +347,7 @@ class TestWorkerLLMAdvancedTier:
             "1",  # Endpoint
             "1",  # Model
             "",   # API key
-            "n", "n", "n", "n",  # Four feature flags
+            "n", "n",  # Two feature flags (tool_safety, read_claude_memory)
             "y",  # Advanced? yes
             *advanced_answers,
             "n",  # Doctor
@@ -373,13 +372,12 @@ class TestWorkerLLMAdvancedTier:
             _probe_mod, "probe_all", lambda timeout_total_s=2.0: _one_endpoint()
         )
 
-        # Seven advanced prompts: accept the default for each.
+        # Six advanced prompts: accept the default for each.
         # number prompts take bare Enter -> default.
         # bool prompt for allow_prompt_overrides takes Enter -> default True.
         # bool prompt for feature_roundtable takes Enter -> default False.
-        # harvest_mode takes Enter -> "replace" default.
         scripted_input(self._script_happy_path_with_advanced(
-            ["", "", "", "", "", "", ""]
+            ["", "", "", "", "", ""]
         ))
 
         from installer.wizards import run_worker_llm_wizard
