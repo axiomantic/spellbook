@@ -760,7 +760,12 @@ def _get_open_followup_count(project_path: Optional[str]) -> int:
         count = result.get("count")
         return count if isinstance(count, int) and count > 0 else 0
     except Exception:
-        return 0  # Fail-open: never block session init
+        # Fail-open: never block session init, but log so the failure is
+        # diagnosable instead of silently swallowed.
+        logger.warning(
+            "Open Follow-up-Task count failed; returning 0", exc_info=True
+        )
+        return 0
 
 
 def _regenerate_memory_md(project_path: Optional[str]) -> None:

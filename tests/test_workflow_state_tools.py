@@ -15,6 +15,7 @@ import json
 import tripwire
 import pytest
 from datetime import datetime, timedelta, timezone
+from dirty_equals import IsInstance
 
 from spellbook.core.db import init_db, get_connection, close_all_connections
 
@@ -1607,16 +1608,30 @@ class TestAtomicReadMergeWriteUnderContention:
         """
         import threading
         import time
-        import spellbook.core.db as dbmod
         import spellbook.mcp.tools.misc as misc
         from spellbook.server import workflow_state_update, workflow_state_load
 
         project_path = "/test/project"
 
-        thread_conns = {}
         a_in_merge = threading.Event()
+        # Capture the real _deep_merge BEFORE registering the tripwire mock so
+        # slow_deep_merge can delegate to it (tripwire swaps the attribute only
+        # for the duration of the `with tripwire:` sandbox).
         original_deep_merge = misc._deep_merge
         merge_delay_armed = {"value": True}
+
+        # Each writer gets its OWN sqlite3 connection (the production cache returns
+        # one connection per path, but two processes hold two connections — that is
+        # the real topology). These are created OUTSIDE the `with tripwire:`
+        # sandbox: tripwire's database_plugin patches ``sqlite3.connect`` inside
+        # the sandbox and rejects unmocked real connections, but this test
+        # REQUIRES two genuine concurrent connections to a real DB to exercise the
+        # BEGIN IMMEDIATE lock. Pre-creating them keeps the connections real while
+        # the FUNCTION-LEVEL collaborators (_deep_merge, get_connection) are still
+        # mocked via tripwire, the only sanctioned mock framework (§27).
+        conn_a = self._make_distinct_connection()
+        conn_b = self._make_distinct_connection()
+        thread_conns = {}
 
         def get_connection_threadlocal(db_path=None):
             # Each thread reuses the distinct connection assigned to it. Models the
@@ -1635,7 +1650,7 @@ class TestAtomicReadMergeWriteUnderContention:
             return original_deep_merge(base, updates)
 
         def writer_a():
-            thread_conns[threading.get_ident()] = self._make_distinct_connection()
+            thread_conns[threading.get_ident()] = conn_a
             workflow_state_update.fn(
                 project_path=project_path,
                 updates={
@@ -1650,7 +1665,7 @@ class TestAtomicReadMergeWriteUnderContention:
             )
 
         def writer_b():
-            thread_conns[threading.get_ident()] = self._make_distinct_connection()
+            thread_conns[threading.get_ident()] = conn_b
             # Wait until A is mid-merge (has read the base) before B starts its own
             # read-merge-write, so the interleaving is the lost-update ordering.
             a_in_merge.wait(timeout=5.0)
@@ -1662,28 +1677,52 @@ class TestAtomicReadMergeWriteUnderContention:
                 },
             )
 
-        orig_get_connection = dbmod.get_connection
-        misc._deep_merge = slow_deep_merge
-        dbmod.get_connection = get_connection_threadlocal
+        # tripwire is the only sanctioned mocking mechanism (§27): patch the
+        # delay injection point (_deep_merge) and the connection factory
+        # (get_connection, imported locally inside workflow_state_update from
+        # spellbook.core.db -> patch the SOURCE module). The tripwire sandbox
+        # patch and call recording apply inside the worker threads spawned within
+        # the `with tripwire:` block (verified empirically).
+        #
+        # ONE sandbox spans both the concurrent writers AND the verifying load:
+        # a single test cannot open two separate `with tripwire:` blocks that
+        # both mock get_connection (the second registration conflicts with the
+        # first, still-active patch). get_connection fires once per writer (2)
+        # plus once for the load (3); _deep_merge fires once per writer (2). The
+        # load is read-only, so it can reuse conn_a (a real connection to the
+        # same test DB) — register that as the third get_connection result.
+        mock_merge = tripwire.mock("spellbook.mcp.tools.misc:_deep_merge")
+        mock_merge.calls(slow_deep_merge)
+        mock_merge.calls(slow_deep_merge)
+        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
+        mock_gc.calls(get_connection_threadlocal)
+        mock_gc.calls(get_connection_threadlocal)
+        mock_gc.returns(conn_a)  # third call: the verifying load (read-only)
         try:
-            ta = threading.Thread(target=writer_a)
-            tb = threading.Thread(target=writer_b)
-            ta.start()
-            tb.start()
-            ta.join(timeout=10.0)
-            tb.join(timeout=10.0)
-        finally:
-            misc._deep_merge = original_deep_merge
-            dbmod.get_connection = orig_get_connection
-            for conn in thread_conns.values():
-                conn.close()
+            with tripwire:
+                ta = threading.Thread(target=writer_a)
+                tb = threading.Thread(target=writer_b)
+                ta.start()
+                tb.start()
+                ta.join(timeout=10.0)
+                tb.join(timeout=10.0)
+                # Read the merged result back through the same sandbox.
+                load_result = workflow_state_load.fn(project_path=project_path)
 
-        # Load through the test DB (get_connection has been restored to the real
-        # default-path version, so route the load explicitly to self.db_path).
-        load_mock, _ = _setup_get_connection_mock(self.db_path, 1)
-        with tripwire:
-            load_result = workflow_state_load.fn(project_path=project_path)
-        _assert_get_connection_calls(load_mock, 1)
+            # Both writers' merges fired (mandatory tripwire assertion). The
+            # (base, updates) shapes are dicts; the genuine lock discriminator
+            # is the FINAL persisted state asserted below, not these call args.
+            with tripwire.in_any_order():
+                mock_merge.assert_call(args=(IsInstance(dict), IsInstance(dict)), kwargs={})
+                mock_merge.assert_call(args=(IsInstance(dict), IsInstance(dict)), kwargs={})
+            with tripwire.in_any_order():
+                mock_gc.assert_call(args=(), kwargs={})
+                mock_gc.assert_call(args=(), kwargs={})
+                mock_gc.assert_call(args=(), kwargs={})
+        finally:
+            conn_a.close()
+            conn_b.close()
+
         assert load_result["found"] is True
         assert load_result["state"] == {
             "active_skill": "develop",

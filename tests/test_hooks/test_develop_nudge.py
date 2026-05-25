@@ -34,6 +34,8 @@ import sys
 import time
 from pathlib import Path
 
+import tripwire
+
 # Ensure hooks/ is on sys.path so we can import spellbook_hook directly.
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
 if str(HOOKS_DIR) not in sys.path:
@@ -52,12 +54,22 @@ EXPECTED_NUDGE = (
 CWD = "/some/project"
 
 
-def _stub_workflow_state(monkeypatch, state: dict | None) -> None:
-    """Stub `_mcp_call` so workflow_state_load returns the given state.
+def _stub_workflow_state(state: dict | None, *, expected_calls: int = 1):
+    """Register a tripwire mock for `_mcp_call` returning the given state.
 
     Mirrors the real MCP return shape: a `workflow_state_load` call returns
     `{"found": bool, "state": {...}}`. Any other tool call (e.g. memory
     recall/autostore the handler also makes) returns None so it is inert.
+
+    The nudge handler reaches `_mcp_call` exactly once per invocation (the
+    `workflow_state_load`), so callers register one `.calls(...)` per expected
+    invocation (tripwire pops from a FIFO queue) and assert that many times
+    after the sandbox. Tests whose predicate short-circuits before any
+    `_mcp_call` (empty/malformed session_id) pass `expected_calls=0` and must
+    NOT register a mock at all — registering an unused mock raises
+    `UnusedMocksError` at teardown.
+
+    Returns the registered mock, or None when `expected_calls == 0`.
     """
 
     def fake_mcp_call(tool_name, arguments=None):
@@ -67,7 +79,13 @@ def _stub_workflow_state(monkeypatch, state: dict | None) -> None:
             return {"found": True, "state": state}
         return None
 
-    monkeypatch.setattr(spellbook_hook, "_mcp_call", fake_mcp_call)
+    if expected_calls == 0:
+        return None
+
+    mock = tripwire.mock("spellbook_hook:_mcp_call")
+    for _ in range(expected_calls):
+        mock.calls(fake_mcp_call)
+    return mock
 
 
 def _isolate_marker_dir(monkeypatch, tmp_path: Path) -> None:
@@ -86,28 +104,35 @@ def _event(session_id: str = "sess-abc") -> dict:
 def test_nudge_fires_when_develop_active_past_phase0_no_ledger(monkeypatch, tmp_path):
     """develop active, past Phase 0, no ledger -> exact nudge message present."""
     _isolate_marker_dir(monkeypatch, tmp_path)
-    _stub_workflow_state(monkeypatch, {"active_skill": "develop", "skill_phase": "1"})
+    mock = _stub_workflow_state({"active_skill": "develop", "skill_phase": "1"})
 
-    outputs = spellbook_hook._handle_user_prompt_submit(_event())
+    with tripwire:
+        outputs = spellbook_hook._handle_user_prompt_submit(_event())
 
+    mock.assert_call(
+        args=("workflow_state_load", {"project_path": CWD}), kwargs={}
+    )
     assert outputs == [EXPECTED_NUDGE]
 
 
 def test_no_nudge_during_phase0_wizard(monkeypatch, tmp_path):
     """IMP-1: skill_phase == "0" (wizard) with no ledger -> predicate FALSE -> no nudge."""
     _isolate_marker_dir(monkeypatch, tmp_path)
-    _stub_workflow_state(monkeypatch, {"active_skill": "develop", "skill_phase": "0"})
+    mock = _stub_workflow_state({"active_skill": "develop", "skill_phase": "0"})
 
-    outputs = spellbook_hook._handle_user_prompt_submit(_event())
+    with tripwire:
+        outputs = spellbook_hook._handle_user_prompt_submit(_event())
 
+    mock.assert_call(
+        args=("workflow_state_load", {"project_path": CWD}), kwargs={}
+    )
     assert outputs == []
 
 
 def test_no_nudge_during_legitimate_long_phase(monkeypatch, tmp_path):
     """A populated ledger (condition 3 false) -> no nudge, regardless of phase age."""
     _isolate_marker_dir(monkeypatch, tmp_path)
-    _stub_workflow_state(
-        monkeypatch,
+    mock = _stub_workflow_state(
         {
             "active_skill": "develop",
             "skill_phase": "4",
@@ -118,35 +143,50 @@ def test_no_nudge_during_legitimate_long_phase(monkeypatch, tmp_path):
         },
     )
 
-    outputs = spellbook_hook._handle_user_prompt_submit(_event())
+    with tripwire:
+        outputs = spellbook_hook._handle_user_prompt_submit(_event())
 
+    mock.assert_call(
+        args=("workflow_state_load", {"project_path": CWD}), kwargs={}
+    )
     assert outputs == []
 
 
 def test_no_nudge_when_develop_not_active(monkeypatch, tmp_path):
     """active_skill != "develop" (condition 1 false) -> no nudge."""
     _isolate_marker_dir(monkeypatch, tmp_path)
-    _stub_workflow_state(monkeypatch, {"active_skill": "debugging", "skill_phase": "1"})
+    mock = _stub_workflow_state({"active_skill": "debugging", "skill_phase": "1"})
 
-    outputs = spellbook_hook._handle_user_prompt_submit(_event())
+    with tripwire:
+        outputs = spellbook_hook._handle_user_prompt_submit(_event())
 
+    mock.assert_call(
+        args=("workflow_state_load", {"project_path": CWD}), kwargs={}
+    )
     assert outputs == []
 
 
 def test_no_nudge_when_no_workflow_state(monkeypatch, tmp_path):
     """No workflow_state at all (fail-open) -> no nudge, no crash."""
     _isolate_marker_dir(monkeypatch, tmp_path)
-    _stub_workflow_state(monkeypatch, None)
+    mock = _stub_workflow_state(None)
 
-    outputs = spellbook_hook._handle_user_prompt_submit(_event())
+    with tripwire:
+        outputs = spellbook_hook._handle_user_prompt_submit(_event())
 
+    mock.assert_call(
+        args=("workflow_state_load", {"project_path": CWD}), kwargs={}
+    )
     assert outputs == []
 
 
 def test_no_nudge_when_session_id_missing(monkeypatch, tmp_path):
     """Empty session_id cannot be debounced safely -> skip nudge entirely."""
     _isolate_marker_dir(monkeypatch, tmp_path)
-    _stub_workflow_state(monkeypatch, {"active_skill": "develop", "skill_phase": "2"})
+    # The nudge predicate short-circuits on the empty session_id BEFORE any
+    # `_mcp_call`, so no mock is registered (an unused mock would raise
+    # `UnusedMocksError`).
+    _stub_workflow_state({"active_skill": "develop", "skill_phase": "2"}, expected_calls=0)
 
     event = {"prompt": "x", "cwd": CWD, "session_id": ""}
     outputs = spellbook_hook._handle_user_prompt_submit(event)
@@ -164,7 +204,9 @@ def test_no_nudge_when_session_id_malformed(monkeypatch, tmp_path):
     skips the nudge for anything that does not match.
     """
     _isolate_marker_dir(monkeypatch, tmp_path)
-    _stub_workflow_state(monkeypatch, {"active_skill": "develop", "skill_phase": "2"})
+    # The nudge predicate rejects the malformed session_id BEFORE any
+    # `_mcp_call`, so no mock is registered.
+    _stub_workflow_state({"active_skill": "develop", "skill_phase": "2"}, expected_calls=0)
 
     event = {"prompt": "x", "cwd": CWD, "session_id": "../../evil"}
     outputs = spellbook_hook._handle_user_prompt_submit(event)
@@ -186,18 +228,30 @@ def test_nudge_debounced_via_marker_file(monkeypatch, tmp_path):
     reset per process) and this test would fail.
     """
     _isolate_marker_dir(monkeypatch, tmp_path)
-    _stub_workflow_state(monkeypatch, {"active_skill": "develop", "skill_phase": "1"})
+    # Two handler invocations -> `_mcp_call` (workflow_state_load) fires twice.
+    mock = _stub_workflow_state(
+        {"active_skill": "develop", "skill_phase": "1"}, expected_calls=2
+    )
 
     session_id = "sess-debounce"
     marker = _marker_path(tmp_path, session_id)
     assert not marker.exists()
 
-    first = spellbook_hook._handle_user_prompt_submit(_event(session_id))
-    assert first == [EXPECTED_NUDGE]
-    assert marker.exists()
+    with tripwire:
+        first = spellbook_hook._handle_user_prompt_submit(_event(session_id))
+        assert first == [EXPECTED_NUDGE]
+        assert marker.exists()
 
-    second = spellbook_hook._handle_user_prompt_submit(_event(session_id))
-    assert second == []
+        second = spellbook_hook._handle_user_prompt_submit(_event(session_id))
+        assert second == []
+
+    with tripwire.in_any_order():
+        mock.assert_call(
+            args=("workflow_state_load", {"project_path": CWD}), kwargs={}
+        )
+        mock.assert_call(
+            args=("workflow_state_load", {"project_path": CWD}), kwargs={}
+        )
 
 
 def test_nudge_marker_cleanup_on_session_start(monkeypatch, tmp_path):
@@ -210,7 +264,8 @@ def test_nudge_marker_cleanup_on_session_start(monkeypatch, tmp_path):
     """
     _isolate_marker_dir(monkeypatch, tmp_path)
     # SessionStart's orphan backstop calls into agent2agent; stub it inert.
-    monkeypatch.setattr(spellbook_hook, "_agent2agent_check_orphaned_chain", lambda data: None)
+    mock_orphan = tripwire.mock("spellbook_hook:_agent2agent_check_orphaned_chain")
+    mock_orphan.returns(None)
 
     session_id = "sess-cleanup"
     marker = _marker_path(tmp_path, session_id)
@@ -218,10 +273,15 @@ def test_nudge_marker_cleanup_on_session_start(monkeypatch, tmp_path):
     marker.touch()
     assert marker.exists()
 
-    result = spellbook_hook._handle_session_start(
-        {"source": "startup", "cwd": CWD, "session_id": session_id}
-    )
+    with tripwire:
+        result = spellbook_hook._handle_session_start(
+            {"source": "startup", "cwd": CWD, "session_id": session_id}
+        )
 
+    mock_orphan.assert_call(
+        args=({"source": "startup", "cwd": CWD, "session_id": session_id},),
+        kwargs={},
+    )
     assert result is None
     assert not marker.exists()
 
@@ -232,7 +292,8 @@ def test_nudge_marker_cleanup_prunes_stale_markers(monkeypatch, tmp_path):
     Guards against unbounded accumulation in the marker dir across sessions.
     """
     _isolate_marker_dir(monkeypatch, tmp_path)
-    monkeypatch.setattr(spellbook_hook, "_agent2agent_check_orphaned_chain", lambda data: None)
+    mock_orphan = tripwire.mock("spellbook_hook:_agent2agent_check_orphaned_chain")
+    mock_orphan.returns(None)
 
     marker_dir = tmp_path / "runtime" / "develop-nudge"
     marker_dir.mkdir(parents=True, exist_ok=True)
@@ -245,9 +306,14 @@ def test_nudge_marker_cleanup_prunes_stale_markers(monkeypatch, tmp_path):
     two_days_ago = time.time() - (2 * 86400)
     os.utime(stale, (two_days_ago, two_days_ago))
 
-    spellbook_hook._handle_session_start(
-        {"source": "startup", "cwd": CWD, "session_id": "current-session"}
-    )
+    with tripwire:
+        spellbook_hook._handle_session_start(
+            {"source": "startup", "cwd": CWD, "session_id": "current-session"}
+        )
 
+    mock_orphan.assert_call(
+        args=({"source": "startup", "cwd": CWD, "session_id": "current-session"},),
+        kwargs={},
+    )
     assert not stale.exists()
     assert fresh.exists()

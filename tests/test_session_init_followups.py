@@ -52,15 +52,15 @@ def _write_memory_file(path: str, type_: str, content: str, **extra_fm):
 class TestGetOpenFollowupCount:
     """_get_open_followup_count returns the exact count of follow-up-task memories."""
 
-    def test_counts_two_seeded_followups(self, tmp_path, monkeypatch):
+    def test_counts_two_seeded_followups(self, tmp_path):
         """Two follow-up-task memories -> count is exactly 2."""
         from spellbook.core.config import _get_open_followup_count
 
         memory_dir = str(tmp_path / "memories")
-        monkeypatch.setattr(
-            "spellbook.memory.tools._get_memory_dir",
-            lambda ns, scope="project": memory_dir,
-        )
+        # _get_open_followup_count -> do_memory_recall(scope="project") calls
+        # _get_memory_dir exactly once; redirect it at the seeded tmp dir.
+        mock_dir = tripwire.mock("spellbook.memory.tools:_get_memory_dir")
+        mock_dir.calls(lambda namespace, scope="project": memory_dir)
 
         _write_memory_file(
             os.path.join(memory_dir, "project", "fut-tdd-criteria.md"),
@@ -85,17 +85,20 @@ class TestGetOpenFollowupCount:
             tags=["config"],
         )
 
-        assert _get_open_followup_count("/Users/test/proj") == 2
+        with tripwire:
+            result = _get_open_followup_count("/Users/test/proj")
 
-    def test_zero_when_none_seeded(self, tmp_path, monkeypatch):
+        mock_dir.assert_call(args=("Users-test-proj", "project"), kwargs={})
+        assert result == 2
+
+    def test_zero_when_none_seeded(self, tmp_path):
         """No follow-up-task memories -> count is exactly 0."""
         from spellbook.core.config import _get_open_followup_count
 
         memory_dir = str(tmp_path / "memories")
-        monkeypatch.setattr(
-            "spellbook.memory.tools._get_memory_dir",
-            lambda ns, scope="project": memory_dir,
-        )
+        # do_memory_recall(scope="project") calls _get_memory_dir exactly once.
+        mock_dir = tripwire.mock("spellbook.memory.tools:_get_memory_dir")
+        mock_dir.calls(lambda namespace, scope="project": memory_dir)
 
         _write_memory_file(
             os.path.join(memory_dir, "project", "unrelated-fact.md"),
@@ -105,7 +108,11 @@ class TestGetOpenFollowupCount:
             tags=["scoring"],
         )
 
-        assert _get_open_followup_count("/Users/test/proj") == 0
+        with tripwire:
+            result = _get_open_followup_count("/Users/test/proj")
+
+        mock_dir.assert_call(args=("Users-test-proj", "project"), kwargs={})
+        assert result == 0
 
 
 class TestGetOpenFollowupCountFailOpen:
@@ -117,50 +124,92 @@ class TestGetOpenFollowupCountFailOpen:
 
         assert _get_open_followup_count(None) == 0
 
-    def test_returns_zero_on_recall_exception(self, monkeypatch):
-        """do_memory_recall raising -> fail-open 0."""
+    def test_returns_zero_on_recall_exception(self):
+        """do_memory_recall raising -> fail-open 0.
+
+        ``encode_cwd`` shells out to git via ``resolve_repo_root``; tripwire's
+        subprocess interceptor would treat that as an unmocked interaction, so
+        stub the repo-root resolution to the identity transform. This keeps the
+        encoded-namespace string genuine while routing execution all the way to
+        the recall call whose raise we are exercising. If the helper stopped
+        catching the exception, ``do_memory_recall`` would propagate and this
+        test would error instead of asserting ``result == 0``.
+        """
         from spellbook.core.config import _get_open_followup_count
 
-        def _boom(**kwargs):
-            raise RuntimeError("memory backend down")
+        boom = RuntimeError("memory backend down")
+        mock_resolve = tripwire.mock("spellbook.core.path_utils:resolve_repo_root")
+        mock_resolve.calls(lambda path: path)
+        mock_recall = tripwire.mock("spellbook.memory.tools:do_memory_recall")
+        mock_recall.raises(boom)
 
-        monkeypatch.setattr("spellbook.memory.tools.do_memory_recall", _boom)
+        with tripwire:
+            result = _get_open_followup_count("/Users/test/proj")
 
-        assert _get_open_followup_count("/Users/test/proj") == 0
+        mock_resolve.assert_call(args=("/Users/test/proj",), kwargs={})
+        mock_recall.assert_call(
+            kwargs={
+                "query": "",
+                "namespace": "Users-test-proj",
+                "tags": ["follow-up-task"],
+                "scope": "project",
+                "limit": 1000,
+            },
+            raised=boom,
+        )
+        tripwire.log.assert_warning(
+            "Open Follow-up-Task count failed; returning 0",
+            "spellbook.core.config",
+        )
+        assert result == 0
 
-    def test_returns_zero_when_recall_reports_unavailable(self, monkeypatch):
+    def test_returns_zero_when_recall_reports_unavailable(self):
         """do_memory_recall returning an error/unavailable dict -> 0 (no count key)."""
         from spellbook.core.config import _get_open_followup_count
 
-        monkeypatch.setattr(
-            "spellbook.memory.tools.do_memory_recall",
-            lambda **kwargs: {"error": "memory system unavailable", "status": "unavailable"},
+        mock_resolve = tripwire.mock("spellbook.core.path_utils:resolve_repo_root")
+        mock_resolve.calls(lambda path: path)
+        mock_recall = tripwire.mock("spellbook.memory.tools:do_memory_recall")
+        mock_recall.returns({"error": "memory system unavailable", "status": "unavailable"})
+
+        with tripwire:
+            result = _get_open_followup_count("/Users/test/proj")
+
+        mock_resolve.assert_call(args=("/Users/test/proj",), kwargs={})
+        mock_recall.assert_call(
+            kwargs={
+                "query": "",
+                "namespace": "Users-test-proj",
+                "tags": ["follow-up-task"],
+                "scope": "project",
+                "limit": 1000,
+            }
         )
+        assert result == 0
 
-        assert _get_open_followup_count("/Users/test/proj") == 0
-
-    def test_passes_followup_tag_and_encoded_namespace(self, monkeypatch):
+    def test_passes_followup_tag_and_encoded_namespace(self):
         """Helper queries the follow-up-task tag with the encoded project namespace."""
         from spellbook.core.config import _get_open_followup_count
 
-        recorded: dict = {}
+        mock_resolve = tripwire.mock("spellbook.core.path_utils:resolve_repo_root")
+        mock_resolve.calls(lambda path: path)
+        mock_recall = tripwire.mock("spellbook.memory.tools:do_memory_recall")
+        mock_recall.returns({"memories": [], "count": 3, "query": "", "namespace": "x"})
 
-        def _spy(**kwargs):
-            recorded.update(kwargs)
-            return {"memories": [], "count": 3, "query": "", "namespace": "x"}
-
-        monkeypatch.setattr("spellbook.memory.tools.do_memory_recall", _spy)
-
-        result = _get_open_followup_count("/Users/alice/project")
+        with tripwire:
+            result = _get_open_followup_count("/Users/alice/project")
 
         assert result == 3
-        assert recorded == {
-            "query": "",
-            "namespace": "Users-alice-project",
-            "tags": ["follow-up-task"],
-            "scope": "project",
-            "limit": 1000,
-        }
+        mock_resolve.assert_call(args=("/Users/alice/project",), kwargs={})
+        mock_recall.assert_call(
+            kwargs={
+                "query": "",
+                "namespace": "Users-alice-project",
+                "tags": ["follow-up-task"],
+                "scope": "project",
+                "limit": 1000,
+            }
+        )
 
 
 # ---------------------------------------------------------------------------
