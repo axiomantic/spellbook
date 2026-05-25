@@ -61,13 +61,15 @@ def _stub_workflow_state(state: dict | None, *, expected_calls: int = 1):
     `{"found": bool, "state": {...}}`. Any other tool call (e.g. memory
     recall/autostore the handler also makes) returns None so it is inert.
 
-    The nudge handler reaches `_mcp_call` exactly once per invocation (the
+    The nudge handler reaches `_mcp_call` at most once per invocation (the
     `workflow_state_load`), so callers register one `.calls(...)` per expected
     invocation (tripwire pops from a FIFO queue) and assert that many times
     after the sandbox. Tests whose predicate short-circuits before any
-    `_mcp_call` (empty/malformed session_id) pass `expected_calls=0` and must
-    NOT register a mock at all — registering an unused mock raises
-    `UnusedMocksError` at teardown.
+    `_mcp_call` pass `expected_calls=0` and must NOT register a mock at all —
+    registering an unused mock raises `UnusedMocksError` at teardown. The
+    short-circuit paths are: empty/malformed session_id (rejected first) and
+    an already-nudged session (the existing marker is checked BEFORE the DB
+    read), so the debounced second prompt makes no `_mcp_call`.
 
     Returns the registered mock, or None when `expected_calls == 0`.
     """
@@ -226,11 +228,19 @@ def test_nudge_debounced_via_marker_file(monkeypatch, tmp_path):
     The only state surviving between them is the on-disk marker file: if the
     debounce were an in-process flag, BOTH calls would emit (the flag would
     reset per process) and this test would fail.
+
+    The already-nudged short-circuit is checked BEFORE the workflow_state_load
+    DB read, so the SECOND invocation returns without calling `_mcp_call` at
+    all. Only the FIRST invocation reaches `workflow_state_load`, so exactly
+    ONE `_mcp_call` is registered (registering a second, unused mock would
+    raise `UnusedMocksError` at teardown — which independently proves the
+    second call never hits the DB).
     """
     _isolate_marker_dir(monkeypatch, tmp_path)
-    # Two handler invocations -> `_mcp_call` (workflow_state_load) fires twice.
+    # Only the FIRST invocation reaches `_mcp_call` (workflow_state_load); the
+    # second short-circuits on the existing marker before the DB read.
     mock = _stub_workflow_state(
-        {"active_skill": "develop", "skill_phase": "1"}, expected_calls=2
+        {"active_skill": "develop", "skill_phase": "1"}, expected_calls=1
     )
 
     session_id = "sess-debounce"
@@ -245,13 +255,12 @@ def test_nudge_debounced_via_marker_file(monkeypatch, tmp_path):
         second = spellbook_hook._handle_user_prompt_submit(_event(session_id))
         assert second == []
 
-    with tripwire.in_any_order():
-        mock.assert_call(
-            args=("workflow_state_load", {"project_path": CWD}), kwargs={}
-        )
-        mock.assert_call(
-            args=("workflow_state_load", {"project_path": CWD}), kwargs={}
-        )
+    # Exactly one workflow_state_load (the first invocation). The single
+    # registered mock being fully consumed (no UnusedMocksError) confirms the
+    # second invocation never reached the DB read.
+    mock.assert_call(
+        args=("workflow_state_load", {"project_path": CWD}), kwargs={}
+    )
 
 
 def test_nudge_marker_cleanup_on_session_start(monkeypatch, tmp_path):

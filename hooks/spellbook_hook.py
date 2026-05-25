@@ -2369,6 +2369,16 @@ def _develop_accountability_nudge(data: dict) -> str | None:
     if not session_id or not _A2A_SESSION_ID_RE.match(session_id):
         return None
 
+    # Already-nudged short-circuit, checked BEFORE the workflow_state_load DB
+    # read. Once a session has been nudged the marker exists for the rest of
+    # the session, so every subsequent qualifying prompt would otherwise pay
+    # for a workflow_state_load only to early-return here. Checking the marker
+    # first skips that per-prompt DB read. `marker` is computed once and reused
+    # for the marker.touch() on the not-yet-nudged path below.
+    marker = _develop_nudge_marker_path(session_id)
+    if marker.exists():
+        return None  # already nudged this session
+
     ws = _mcp_call("workflow_state_load", {"project_path": data.get("cwd") or ""})
     if not ws or not ws.get("found"):
         return None
@@ -2385,14 +2395,10 @@ def _develop_accountability_nudge(data: dict) -> str | None:
     if state.get("develop_gate_ledger"):
         return None
 
-    # Stale-marker pruning is NOT done here: it would run on every qualifying
-    # prompt (this path executes before the already-nudged short-circuit below),
-    # which is pure waste. Global pruning happens once per SessionStart in
+    # Stale-marker pruning is NOT done here: pruning per qualifying prompt is
+    # pure waste. Global pruning happens once per SessionStart in
     # _handle_session_start; markers are tiny with a 24h TTL, so that is enough.
-    marker = _develop_nudge_marker_path(session_id)
-    if marker.exists():
-        return None  # already nudged this session
-
+    # (The already-nudged short-circuit happened earlier, before the DB read.)
     marker.parent.mkdir(parents=True, exist_ok=True)
     marker.touch()
     return _DEVELOP_NUDGE_MESSAGE
