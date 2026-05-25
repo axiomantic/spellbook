@@ -8,8 +8,9 @@ HOOK_DEFINITIONS for all four phases, replacing the old per-hook entries:
 - PreCompact: spellbook_hook.py (timeout 5, catch-all, no async)
 - SessionStart: spellbook_hook.py (timeout 10, catch-all, no async)
 
-Memory hooks (memory-capture, memory-inject) are now handled internally
-by the unified hook's PostToolUse dispatcher.
+The old per-feature memory hooks (memory-capture, memory-inject) were
+removed with the memory system; this suite asserts they are no longer
+registered.
 """
 
 from installer.components.hooks import HOOK_DEFINITIONS
