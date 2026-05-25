@@ -6,8 +6,7 @@ functions based on hook_event_name and tool_name from stdin JSON.
 
 Replaces all individual shell hooks (bash-gate.sh, spawn-guard.sh,
 state-sanitize.sh, notify-timer-start.sh, audit-log.sh, canary-check.sh,
-memory-inject.sh, notify-on-complete.sh, memory-capture.sh,
-pre-compact-save.sh, post-compact-recover.sh).
+notify-on-complete.sh, pre-compact-save.sh, post-compact-recover.sh).
 """
 
 import json
@@ -225,7 +224,7 @@ def _fallback_directive() -> dict:
 # ---------------------------------------------------------------------------
 
 def _http_post(path: str, payload: dict, timeout: float = 5) -> dict | None:
-    """Direct HTTP POST (not JSON-RPC). Used by memory, TTS, capture.
+    """Direct HTTP POST (not JSON-RPC) to a daemon REST endpoint.
 
     ``path`` is an absolute URL path (e.g. ``/api/hook-log``).  The daemon
     base URL is derived from MCP_HOST and MCP_PORT.
@@ -301,8 +300,8 @@ _EXCLUDED_TOOLS = frozenset({
     "file_history_snapshot", "get_file_contents",
 })
 
-# Interactive/UI tools excluded from stint depth checks, memory capture,
-# and other handlers where we still want file-related tools to fire
+# Interactive/UI tools excluded from stint depth checks and other
+# handlers where we still want file-related tools to fire
 _INTERACTIVE_EXCLUDED_TOOLS = frozenset({
     "AskUserQuestion", "TodoRead", "TodoWrite",
     "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
