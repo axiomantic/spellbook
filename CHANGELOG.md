@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **Memory system (complete removal, no deprecation window).** Deleted the entire
+  memory subsystem: the `memory_*` MCP tools (`memory_store`, `memory_recall`,
+  `memory_forget`, `memory_sync`, `memory_verify`, `memory_review_events`), the
+  admin memory routes and `MemoryBrowser` UI, the memory CLI commands, the
+  memory-related worker tasks (rerank/transcript-harvest), the memory hook
+  integrations and `<memory-candidate>` harvesting, and the installer's optional
+  QMD and Serena tooling for memory hybrid search. **DESTRUCTIVE:** the memory
+  database tables are dropped automatically on the next `init_db` (irreversible —
+  any stored memories are lost on upgrade with no migration path).
+- **Dead session-soul / recovery-injection chain.** Removed the unwired
+  session-soul persistence and recovery-injection code. The `souls` table is
+  dropped automatically on next `init_db` (irreversible). `detect_continuation_intent`
+  is retained but no longer wired into anything; session resume now always reports
+  `resume_available: False`.
+
 ## [0.67.0] - 2026-05-20
 
 ### Removed
