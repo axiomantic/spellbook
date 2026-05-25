@@ -181,6 +181,7 @@ def _drop_deleted_memory_tables(cursor):
         "memory_links",
         "memory_citations",
         "raw_events",
+        "memories_fts",
         "memories",
         "souls",
     ):
