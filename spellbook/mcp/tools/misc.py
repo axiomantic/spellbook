@@ -10,10 +10,13 @@ __all__ = [
 ]
 
 import json
+import logging
 from datetime import datetime, timezone
 
+from spellbook.core.db import get_connection
 from spellbook.mcp.server import mcp
 from spellbook.sessions.injection import inject_recovery_context
+from spellbook.sessions.resume import validate_workflow_state
 
 
 def _deep_merge(base: dict, updates: dict) -> dict:
@@ -56,9 +59,6 @@ def workflow_state_save(
     Returns:
         {"success": True/False, "project_path": str, "trigger": str, "error": str?}
     """
-    from spellbook.core.db import get_connection
-    from spellbook.sessions.resume import validate_workflow_state
-
     validation = validate_workflow_state(state)
     if not validation["valid"]:
         high_or_above = [
@@ -134,8 +134,6 @@ def workflow_state_load(
             "error": str?
         }
     """
-    from spellbook.core.db import get_connection
-
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -185,11 +183,7 @@ def workflow_state_load(
 
         state = json.loads(state_json)
 
-        import logging as _logging
-
-        _logger = _logging.getLogger(__name__)
-        from spellbook.sessions.resume import validate_workflow_state
-
+        _logger = logging.getLogger(__name__)
         validation = validate_workflow_state(state)
         if not validation["valid"]:
             _logger.warning(
@@ -247,9 +241,6 @@ def workflow_state_update(
     Returns:
         {"success": True/False, "project_path": str, "error": str?}
     """
-    from spellbook.core.db import get_connection
-    from spellbook.sessions.resume import validate_workflow_state
-
     try:
         conn = get_connection()
         cursor = conn.cursor()

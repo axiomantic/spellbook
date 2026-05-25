@@ -26,7 +26,7 @@ def _setup_get_connection_mock(db_path, call_count):
     Returns (mock, conn). After the `with tripwire:` block, caller must assert
     call_count times via _assert_get_connection_calls().
     """
-    mock = tripwire.mock("spellbook.core.db:get_connection")
+    mock = tripwire.mock("spellbook.mcp.tools.misc:get_connection")
     conn = get_connection(db_path)
     for _ in range(call_count):
         mock.returns(conn)
@@ -312,7 +312,7 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.mcp.tools.misc:get_connection")
         mock_gc.returns(conn)
 
         with tripwire:
@@ -346,7 +346,7 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.mcp.tools.misc:get_connection")
         mock_gc.returns(conn)
 
         with tripwire:
@@ -384,7 +384,7 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.mcp.tools.misc:get_connection")
         mock_gc.returns(conn)
 
         with tripwire:
@@ -415,7 +415,7 @@ class TestWorkflowStateLoad:
         )
         conn.commit()
 
-        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.mcp.tools.misc:get_connection")
         mock_gc.returns(conn)
         mock_gc.returns(conn)
 
@@ -1627,8 +1627,9 @@ class TestAtomicReadMergeWriteUnderContention:
         # the sandbox and rejects unmocked real connections, but this test
         # REQUIRES two genuine concurrent connections to a real DB to exercise the
         # BEGIN IMMEDIATE lock. Pre-creating them keeps the connections real while
-        # the FUNCTION-LEVEL collaborators (_deep_merge, get_connection) are still
-        # mocked via tripwire, the only sanctioned mock framework (§27).
+        # the module-level collaborators (_deep_merge, get_connection, both
+        # imported into spellbook.mcp.tools.misc) are still mocked via tripwire,
+        # the only sanctioned mock framework (§27).
         conn_a = self._make_distinct_connection()
         conn_b = self._make_distinct_connection()
         thread_conns = {}
@@ -1679,10 +1680,11 @@ class TestAtomicReadMergeWriteUnderContention:
 
         # tripwire is the only sanctioned mocking mechanism (§27): patch the
         # delay injection point (_deep_merge) and the connection factory
-        # (get_connection, imported locally inside workflow_state_update from
-        # spellbook.core.db -> patch the SOURCE module). The tripwire sandbox
-        # patch and call recording apply inside the worker threads spawned within
-        # the `with tripwire:` block (verified empirically).
+        # (get_connection). Both are imported at module top level into
+        # spellbook.mcp.tools.misc, so the consuming module's namespace is the
+        # patch target (NOT the source module spellbook.core.db). The tripwire
+        # sandbox patch and call recording apply inside the worker threads
+        # spawned within the `with tripwire:` block (verified empirically).
         #
         # ONE sandbox spans both the concurrent writers AND the verifying load:
         # a single test cannot open two separate `with tripwire:` blocks that
@@ -1694,7 +1696,7 @@ class TestAtomicReadMergeWriteUnderContention:
         mock_merge = tripwire.mock("spellbook.mcp.tools.misc:_deep_merge")
         mock_merge.calls(slow_deep_merge)
         mock_merge.calls(slow_deep_merge)
-        mock_gc = tripwire.mock("spellbook.core.db:get_connection")
+        mock_gc = tripwire.mock("spellbook.mcp.tools.misc:get_connection")
         mock_gc.calls(get_connection_threadlocal)
         mock_gc.calls(get_connection_threadlocal)
         mock_gc.returns(conn_a)  # third call: the verifying load (read-only)
