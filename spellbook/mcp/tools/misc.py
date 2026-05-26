@@ -10,9 +10,12 @@ __all__ = [
 ]
 
 import json
+import logging
 from datetime import datetime, timezone
 
+from spellbook.core.db import get_connection
 from spellbook.mcp.server import mcp
+from spellbook.sessions.resume import validate_workflow_state
 
 
 def _deep_merge(base: dict, updates: dict) -> dict:
@@ -54,15 +57,19 @@ def workflow_state_save(
     Returns:
         {"success": True/False, "project_path": str, "trigger": str, "error": str?}
     """
-    from spellbook.core.db import get_connection
-    from spellbook.sessions.resume import validate_workflow_state
-
     validation = validate_workflow_state(state)
     if not validation["valid"]:
-        high_or_above = [f for f in validation["findings"] if f.get("severity") in ("HIGH", "CRITICAL")]
+        high_or_above = [
+            f for f in validation["findings"] if f.get("severity") in ("HIGH", "CRITICAL")
+        ]
         if high_or_above:
             messages = [f.get("message", "unknown") for f in high_or_above]
-            return {"success": False, "project_path": project_path, "trigger": trigger, "error": f"Workflow state failed validation: {'; '.join(messages)}"}
+            return {
+                "success": False,
+                "project_path": project_path,
+                "trigger": trigger,
+                "error": f"Workflow state failed validation: {'; '.join(messages)}",
+            }
 
     try:
         conn = get_connection()
@@ -124,8 +131,6 @@ def workflow_state_load(
             "error": str?
         }
     """
-    from spellbook.core.db import get_connection
-
     try:
         conn = get_connection()
         cursor = conn.cursor()
@@ -157,9 +162,7 @@ def workflow_state_load(
             updated_at_str = updated_at_str[:-1] + "+00:00"
         if "+" not in updated_at_str and updated_at_str.count(":") < 3:
             # No timezone info, assume UTC
-            updated_at = datetime.fromisoformat(updated_at_str).replace(
-                tzinfo=timezone.utc
-            )
+            updated_at = datetime.fromisoformat(updated_at_str).replace(tzinfo=timezone.utc)
         else:
             updated_at = datetime.fromisoformat(updated_at_str)
 
@@ -177,9 +180,7 @@ def workflow_state_load(
 
         state = json.loads(state_json)
 
-        import logging as _logging
-        _logger = _logging.getLogger(__name__)
-        from spellbook.sessions.resume import validate_workflow_state
+        _logger = logging.getLogger(__name__)
         validation = validate_workflow_state(state)
         if not validation["valid"]:
             _logger.warning(
@@ -236,77 +237,99 @@ def workflow_state_update(
     Returns:
         {"success": True/False, "project_path": str, "error": str?}
     """
-    from spellbook.core.db import get_connection
-
     try:
         conn = get_connection()
         cursor = conn.cursor()
 
-        # Load existing state (if any)
-        cursor.execute(
-            """
-            SELECT state_json
-            FROM workflow_state
-            WHERE project_path = ?
-            """,
-            (project_path,),
-        )
-        row = cursor.fetchone()
-
-        if row is None:
-            # No existing state, create new with updates as base
-            base_state = {}
-        else:
-            base_state = json.loads(row[0])
-
-        # Validate incoming updates before merging
-        from spellbook.sessions.resume import validate_workflow_state
-
+        # Validate the raw incoming updates BEFORE opening any write transaction.
+        # Rejected/malicious input (e.g. a boot_prompt RCE payload) must never
+        # acquire the write lock or otherwise touch the row: the cheapest, safest
+        # response to invalid input is to refuse it without starting a transaction.
+        # This is a pure, side-effect-free check on the request body, so it does
+        # not depend on the persisted base state and can run first.
         pre_validation = validate_workflow_state(updates)
         if not pre_validation["valid"]:
             return {
                 "success": False,
                 "project_path": project_path,
                 "error": "Updates failed validation",
-                "findings": [
-                    f.get("message", "unknown")
-                    for f in pre_validation["findings"]
-                ],
+                "findings": [f.get("message", "unknown") for f in pre_validation["findings"]],
             }
 
-        # Deep merge updates into existing state
-        merged_state = _deep_merge(base_state, updates)
+        # CRIT-2: read-merge-write must be atomic so a concurrent writer (e.g. the
+        # PreCompact hook running in a separate process, writing compaction_flag /
+        # stint_stack into the SAME row) cannot interleave between our SELECT and
+        # our INSERT OR REPLACE and silently lose a write. BEGIN IMMEDIATE takes the
+        # write lock up front; a competing BEGIN IMMEDIATE on another connection
+        # blocks (up to the connection busy timeout) until this transaction commits,
+        # then reads our committed state and merges onto it. See design doc S5.5.
+        #
+        # The cached connection is shared within a process and is expected to be in
+        # autocommit state between calls (every entry point ends in commit/rollback).
+        # Defensively roll back any stray in-flight transaction so BEGIN IMMEDIATE
+        # cannot raise "cannot start a transaction within a transaction".
+        #
+        # Invariant: this tool OWNS its transaction boundary (BEGIN IMMEDIATE ...
+        # COMMIT/ROLLBACK). It is a top-level MCP entry point and must NOT be nested
+        # inside a caller-managed transaction; this defensive rollback would discard
+        # such an outer transaction's uncommitted work. All known callers invoke each
+        # workflow_state_* tool as an independent MCP call (see hooks/spellbook_hook.py
+        # _mcp_call sites); none wrap multiple calls in one transaction.
+        if conn.in_transaction:
+            conn.rollback()
+        cursor.execute("BEGIN IMMEDIATE")
+        try:
+            # Load existing state (if any) under the held write lock
+            cursor.execute(
+                """
+                SELECT state_json
+                FROM workflow_state
+                WHERE project_path = ?
+                """,
+                (project_path,),
+            )
+            row = cursor.fetchone()
 
-        # Validate merged result (catches payloads that become dangerous after merge)
-        post_validation = validate_workflow_state(merged_state)
-        if not post_validation["valid"]:
-            return {
-                "success": False,
-                "project_path": project_path,
-                "error": "Merged state failed validation",
-                "findings": [
-                    f.get("message", "unknown")
-                    for f in post_validation["findings"]
-                ],
-                "state": base_state,
-            }
+            if row is None:
+                # No existing state, create new with updates as base
+                base_state = {}
+            else:
+                base_state = json.loads(row[0])
 
-        state_json = json.dumps(merged_state)
-        now = datetime.now(timezone.utc).isoformat()
+            # Deep merge updates into existing state
+            merged_state = _deep_merge(base_state, updates)
 
-        cursor.execute(
-            """
-            INSERT OR REPLACE INTO workflow_state
-                (project_path, state_json, trigger, created_at, updated_at)
-            VALUES
-                (?, ?, 'auto', COALESCE(
-                    (SELECT created_at FROM workflow_state WHERE project_path = ?),
-                    ?
-                ), ?)
-            """,
-            (project_path, state_json, project_path, now, now),
-        )
-        conn.commit()
+            # Validate merged result (catches payloads that become dangerous after merge)
+            post_validation = validate_workflow_state(merged_state)
+            if not post_validation["valid"]:
+                conn.rollback()
+                return {
+                    "success": False,
+                    "project_path": project_path,
+                    "error": "Merged state failed validation",
+                    "findings": [f.get("message", "unknown") for f in post_validation["findings"]],
+                    "state": base_state,
+                }
+
+            state_json = json.dumps(merged_state)
+            now = datetime.now(timezone.utc).isoformat()
+
+            cursor.execute(
+                """
+                INSERT OR REPLACE INTO workflow_state
+                    (project_path, state_json, trigger, created_at, updated_at)
+                VALUES
+                    (?, ?, 'auto', COALESCE(
+                        (SELECT created_at FROM workflow_state WHERE project_path = ?),
+                        ?
+                    ), ?)
+                """,
+                (project_path, state_json, project_path, now, now),
+            )
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
 
         return {
             "success": True,
@@ -318,5 +341,3 @@ def workflow_state_update(
             "project_path": project_path,
             "error": str(e),
         }
-
-

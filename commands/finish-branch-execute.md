@@ -57,7 +57,7 @@ EOF
 
 **If push or PR creation fails:** STOP. Report the error. Do NOT proceed to cleanup.
 
-Report the PR URL to the user. After PR creation: invoke `finish-branch-cleanup`.
+Report the PR URL to the user. Then invoke `finish-branch-cleanup`.
 
 ---
 

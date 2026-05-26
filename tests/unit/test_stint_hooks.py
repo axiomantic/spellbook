@@ -923,74 +923,118 @@ class TestBuildRecoveryDirectiveBugFixes:
             spellbook_hook._mcp_call = original
 
     def test_skill_info_failure_still_produces_directive(self):
-        """MCP failure for skill_instructions_get still produces the directive without constraints."""
-        from spellbook_hook import _build_recovery_directive
+        """MCP failure for skill_instructions_get still produces the directive without constraints.
+
+        Distinct path: when ``skill_instructions_get`` returns a falsy result
+        the Skill Constraints section is omitted, but the rest of the directive
+        (active skill, phase, binding decisions) must still render. Binding
+        decisions use the live ``decisions_binding`` state key.
+        """
+        import tripwire
 
         import spellbook_hook
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: None
 
-        try:
-            result = _build_recovery_directive({
-                "active_skill": "debug",
-                "skill_phase": "INVESTIGATE",
-                "binding_decisions": ["Use pytest", "Target auth module"],
-                "next_action": "Run failing test",
-            })
-            expected = (
-                "### Active Skill: debug\n"
-                "Phase: INVESTIGATE\n"
-                "Resume with: `Skill(skill='debug', --resume INVESTIGATE)`\n"
-                "\n### Binding Decisions\n"
-                "- Use pytest\n"
-                "- Target auth module\n"
-                "\n### Next Action\n"
-                "Run failing test"
-            )
-            assert result == expected
-        finally:
-            spellbook_hook._mcp_call = original
+        state = {
+            "active_skill": "debug",
+            "skill_phase": "INVESTIGATE",
+            "decisions_binding": ["Use pytest", "Target auth module"],
+        }
 
-    def test_full_directive_output(self):
-        """Full directive with all sections produces correct output."""
-        from spellbook_hook import _build_recovery_directive
+        # active_skill present -> _mcp_call is invoked once to fetch skill
+        # constraints. Return None to simulate the skill-info lookup failing;
+        # no Skill Constraints section should be appended.
+        mock_mcp = tripwire.mock("spellbook_hook:_mcp_call")
+        mock_mcp.returns(None)
 
-        import spellbook_hook
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: (
-            {"success": True, "content": "FORBIDDEN content"} if tool == "skill_instructions_get" else None
+        with tripwire:
+            result = spellbook_hook._build_recovery_directive(state)
+
+        mock_mcp.assert_call(
+            args=(
+                "skill_instructions_get",
+                {"skill_name": "debug", "sections": ["FORBIDDEN", "REQUIRED"]},
+            ),
+            kwargs={},
+            returned=None,
         )
 
-        try:
-            result = _build_recovery_directive({
-                "active_skill": "develop",
-                "skill_phase": "PLANNING",
-                "binding_decisions": ["TDD approach"],
-                "next_action": "Write tests",
-                "workflow_pattern": "TDD",
-                "todos": [
-                    {"content": "Write test", "completed": False},
-                    {"content": "Done item", "completed": True},
-                ],
-                "recent_files": ["/src/main.py"],
-            })
-            expected = (
-                "### Active Skill: develop\n"
-                "Phase: PLANNING\n"
-                "Resume with: `Skill(skill='develop', --resume PLANNING)`\n"
-                "\n### Skill Constraints\nFORBIDDEN content\n"
-                "\n### Binding Decisions\n"
-                "- TDD approach\n"
-                "\n### Next Action\nWrite tests\n"
-                "\n### Workflow Pattern: TDD\n"
-                "\n### Pending Todos\n"
-                "- [ ] Write test\n"
-                "\n### Recent Files\n"
-                "- /src/main.py"
-            )
-            assert result == expected
-        finally:
-            spellbook_hook._mcp_call = original
+        expected = (
+            "### Active Skill: debug\n"
+            "Phase: INVESTIGATE\n"
+            "Resume with: `Skill(skill='debug', --resume INVESTIGATE)`\n"
+            "\n### Binding Decisions\n"
+            "- Use pytest\n"
+            "- Target auth module"
+        )
+        assert result == expected
+
+    def test_full_directive_output(self):
+        """Full directive with all sections produces correct output.
+
+        Exercises every section in its rendered order against the current
+        contract: Skill Constraints, Binding Decisions (live ``decisions_binding``
+        key), the Develop remaining-work ledger (which replaced the removed
+        ``### Next Action`` block), Workflow Pattern, Pending Todos, and Recent
+        Files.
+        """
+        import tripwire
+
+        import spellbook_hook
+
+        state = {
+            "active_skill": "develop",
+            "skill_phase": "PLANNING",
+            "decisions_binding": ["TDD approach"],
+            "develop_gate_ledger": {
+                "current_phase": "PLANNING",
+                "remaining_gates": "design review\ntest suite",
+                "plan_pointer": "/plan.md",
+            },
+            "workflow_pattern": "TDD",
+            "todos": [
+                {"content": "Write test", "completed": False},
+                {"content": "Done item", "completed": True},
+            ],
+            "recent_files": ["/src/main.py"],
+        }
+
+        # active_skill present -> _mcp_call is invoked once to fetch skill
+        # constraints. Return a successful payload so the Skill Constraints
+        # section renders from the "content" key.
+        mock_mcp = tripwire.mock("spellbook_hook:_mcp_call")
+        mock_mcp.returns({"success": True, "content": "FORBIDDEN content"})
+
+        with tripwire:
+            result = spellbook_hook._build_recovery_directive(state)
+
+        mock_mcp.assert_call(
+            args=(
+                "skill_instructions_get",
+                {"skill_name": "develop", "sections": ["FORBIDDEN", "REQUIRED"]},
+            ),
+            kwargs={},
+        )
+
+        expected = (
+            "### Active Skill: develop\n"
+            "Phase: PLANNING\n"
+            "Resume with: `Skill(skill='develop', --resume PLANNING)`\n"
+            "\n### Skill Constraints\nFORBIDDEN content\n"
+            "\n### Binding Decisions\n"
+            "- TDD approach\n"
+            "\n### Develop: Remaining Work (DO NOT declare done)\n"
+            "Current phase: PLANNING\n"
+            "Remaining quality gates — these MUST still run:\n"
+            "- [ ] design review\n"
+            "- [ ] test suite\n"
+            "Plan: /plan.md\n"
+            "\n### Workflow Pattern: TDD\n"
+            "\n### Pending Todos\n"
+            "- [ ] Write test\n"
+            "\n### Recent Files\n"
+            "- /src/main.py"
+        )
+        assert result == expected
 
 
 class TestSessionStartFocusStackBehavioralMode:

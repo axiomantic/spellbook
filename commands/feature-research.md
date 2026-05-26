@@ -20,10 +20,15 @@ Before ANY Phase 1 work begins, run this verification:
 
 echo "=== Phase 1 Prerequisites ==="
 
-# CHECK 1: Complexity tier must be STANDARD or COMPLEX
-echo "Required: complexity_tier in (standard, complex)"
-echo "Current tier: [SESSION_PREFERENCES.complexity_tier]"
-# TRIVIAL exits the skill; SIMPLE uses lightweight inline research — neither runs this phase.
+# CHECK 1: This phase runs only when the needs_research flag is set.
+# needs_research = "the work touches code/systems we don't yet understand,
+# OR the requirements themselves are still fuzzy." It is the single operator
+# flag (chosen in Phase 0) that switches on BOTH Research (Phase 1) and
+# Discovery (Phase 1.5). See SESSION_PREFERENCES.need_flags.
+echo "Required: need_flags.needs_research == true"
+echo "Current needs_research: [SESSION_PREFERENCES.need_flags.needs_research]"
+# If needs_research is false, this phase does not run — develop skips
+# Research and Discovery and proceeds with the phases its other flags select.
 
 # CHECK 2: Phase 0 must be complete
 echo "Required: Phase 0 checklist 100% complete"
@@ -36,7 +41,7 @@ echo "Verify: SESSION_PREFERENCES.escape_hatch.type != 'impl_plan'"
 
 **If ANY check fails:** STOP. Do not proceed. Return to the appropriate phase.
 
-**Anti-rationalization:** Tempted to skip because "you already know the tier" or "Phase 0 was obviously complete"? That is Pattern 2 (Expertise Override). Run the check. It takes 5 seconds.
+**Anti-rationalization:** Tempted to skip because "you already know `needs_research` is set" or "Phase 0 was obviously complete"? That is Pattern 2 (Expertise Override). Run the check. It takes 5 seconds.
 </CRITICAL>
 
 ## Invariant Principles
@@ -238,7 +243,7 @@ IF SCORE = 100%:
 <FORBIDDEN>
 - Doing research work in main context instead of dispatching a subagent
 - Proceeding when any prerequisite check fails
-- Running this phase when complexity_tier is TRIVIAL or SIMPLE
+- Running this phase when `needs_research` is false (the flag, not a phase, gates this work)
 - Proceeding past the quality gate without a 100% score or explicit user bypass
 - Blocking progress after two subagent failures (return UNKNOWN findings; do not halt)
 </FORBIDDEN>

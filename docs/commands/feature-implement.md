@@ -2,16 +2,337 @@
 
 ## Workflow Diagram
 
-The diagrams in the provided document are **already consistent with the diff changes**. They already reflect:
+Now I'll generate the diagrams based on the full content of the file.
 
-- ✓ `work_items` mode terminology (not `swarmed`)
-- ✓ The parallelization preference decision (maximize/conservative/ask) in Phase 3
-- ✓ Prompt file generation at `.claude/prompts/feature-chunk-N.md`
-- ✓ Work item presentation flow (not session handoff)
-- ✓ Token enforcement options in the Per-Task Quality Loop
-- ✓ Dialectic mode decision (4.3.1) in the Per-Task Quality Loop
+## Overview: `/feature-implement` (Phases 3–4)
 
-**No surgical patches needed.** The existing diagrams accurately represent the new structure defined by the diff. All sections (Overview, Phase 3 Detail, Phase 4 Detail, Per-Task Quality Loop, Final Quality Gates) correctly show the updated workflow with work items, parallelization preferences, and token enforcement.
+```mermaid
+flowchart TD
+    entry(["Entry: from /feature-design"])
+    prereq["Prerequisite Verification\nrun bash check script"]
+    nd{"needs_design?"}
+    zero["Zero-Flag Fast Path\nno external design required\ninline plan confirmed ≤5 steps\nenter Phase 4 directly"]
+    ph3["Phase 3\nImplementation Planning"]
+    trans["Phase 3→4\nTransition Verification\nchecklist of 7 items"]
+    transok{"Checklist\nall clear?"}
+    ph4["Phase 4\nImplementation"]
+    done(["Feature Complete"])
+
+    entry --> prereq
+    prereq --> nd
+    nd -->|true| ph3
+    nd -->|"false (zero-flag)"| zero
+    zero --> ph4
+    ph3 --> trans
+    trans --> transok
+    transok -->|"items unchecked"| ph3
+    transok -->|"all clear"| ph4
+    ph4 --> done
+
+    style done fill:#51cf66,color:#000
+
+    subgraph LEGEND[" Legend"]
+        la["Process / Subagent Work"]
+        lb["Subagent Dispatch"]
+        lc{"Quality Gate / Decision"}
+        ld(["Terminal"])
+    end
+    style lb fill:#4a9eff,color:#fff
+    style lc fill:#ff6b6b,color:#fff
+    style ld fill:#51cf66,color:#000
+```
+
+---
+
+## Phase 3: Implementation Planning (Detail)
+
+```mermaid
+flowchart TD
+    entry3["Phase 3 Entry"]
+    eh{"escape_hatch?"}
+
+    s31["3.1 Create Implementation Plan\nsubagent → writing-plans skill\nsave to plans/YYYY-MM-DD-slug-impl.md"]
+    s32["3.2 Review Implementation Plan\nsubagent → reviewing-impl-plans skill\nreturn findings report + remediation plan"]
+    s33{"3.3 Approval Gate"}
+    imode{"autonomous_mode?"}
+    ugate{"User Decision"}
+    autogate{"Findings\nseverity?"}
+    s34["3.4 Fix Implementation Plan\nsubagent → executing-plans skill\npass: plan path, findings, design doc"]
+    s345["3.4.5 Execution Mode Analysis\nparse track markers, task count\ndependency markers, file clusters"]
+    emode{"execution_mode?"}
+    small["direct\nor small delegated"]
+    large["large delegated"]
+    s347["3.4.7 Generate One-Pager\nsubagent → write to plans/slug-one-pager.md\n≤200 lines, plain English\n4 sections: what/tasks/out-of-scope/pushback"]
+    opgate{"Operator\nApproval?\nexplicit scoped only"}
+    retdesign["Return to Phase 2 (design)\nor Phase 3.1 (planning)"]
+    done3(["→ Phase 4: Implementation"])
+
+    entry3 --> eh
+    eh -->|"none"| s31
+    eh -->|"review first"| s32
+    eh -->|"treat as ready"| s345
+
+    s31 --> s32
+    s32 --> s33
+    s33 --> imode
+    imode -->|interactive| ugate
+    imode -->|autonomous| autogate
+
+    ugate -->|"APPROVE"| s345
+    ugate -->|"ITERATE"| s31
+    autogate -->|"critical / important"| s34
+    autogate -->|"minor"| s345
+    s34 --> s32
+
+    s345 --> emode
+    emode -->|"direct"| small
+    emode -->|"small delegated"| small
+    emode -->|"large delegated"| large
+    small --> done3
+    large --> s347
+
+    s347 --> opgate
+    opgate -->|"approved"| done3
+    opgate -->|"pushback"| retdesign
+    retdesign -->|"re-enter Phase 3"| entry3
+
+    style s31 fill:#4a9eff,color:#fff
+    style s32 fill:#4a9eff,color:#fff
+    style s34 fill:#4a9eff,color:#fff
+    style s347 fill:#4a9eff,color:#fff
+    style s33 fill:#ff6b6b,color:#fff
+    style opgate fill:#ff6b6b,color:#fff
+    style done3 fill:#51cf66,color:#000
+
+    subgraph LEGEND3[" Legend"]
+        la3["Process"]
+        lb3["Subagent Dispatch"]
+        lc3{"Quality Gate / Decision"}
+        ld3(["Terminal"])
+    end
+    style lb3 fill:#4a9eff,color:#fff
+    style lc3 fill:#ff6b6b,color:#fff
+    style ld3 fill:#51cf66,color:#000
+```
+
+---
+
+## Phase 4: Implementation — Worktree Setup & Task Execution (Detail)
+
+```mermaid
+flowchart TD
+    entry4["Phase 4 Entry\nORCHESTRATION ONLY in main context"]
+
+    wt{"worktree\nstrategy?"}
+    wt_single["4.1 Create Single Worktree\nsubagent → using-git-worktrees skill"]
+    wt_para["4.1 Parallel Worktree Setup\nsetup/skeleton tasks first\ncommit before creating worktrees\nsubagent → using-git-worktrees per track"]
+    wt_none["4.1 No Worktree\nwork in current directory"]
+
+    para{"parallelization\nstrategy?"}
+    exec_ppt["4.2 Parallel Track Execution\none background Task per worktree\nsubagent → executing-plans skill\nverify branch before any work"]
+    exec_max["4.2 Maximize Parallel Groups\nsubagent → dispatching-parallel-agents skill\ngroup tasks by Parallel Group field"]
+    exec_seq["4.2 Sequential Execution\nsubagent → executing-plans skill"]
+
+    smartmerge["4.2.5 Smart Merge\nsubagent → merging-worktrees skill\ndelete worktrees after merge\nverify all tests pass\nverify interface contracts"]
+
+    taskloop{"More tasks\nin plan?"}
+
+    tdd["4.3 Implement Task N\nsubagent → test-driven-development skill\nread assertion-quality-standard.md first\nFULL ASSERTION PRINCIPLE: assert == only\nno substring / len / mock.ANY assertions\ncommit when done"]
+
+    dialect{"dialectic_mode?"}
+    roundtable["4.3.1 Dialectic Overlay\nforge_roundtable_convene at IMPLEMENT stage\nplanning_and_gates: 3 archetypes\nfull: all 10 archetypes"]
+
+    verify["4.4 Completion Verification\nauditor subagent: acceptance criteria check\nexpected outputs, interface contracts\nbehavior verification, dead code paths\noutput: COMPLETE / INCOMPLETE / PARTIAL"]
+    vgate{"Blocking\nissues?"}
+
+    review["4.5 Code Review\nsubagent → requesting-code-review skill"]
+    rgate{"Issue\nseverity?"}
+
+    factcheck["4.5.1 Claim Validation\nsubagent → fact-checking skill\nscope: files for Task N only\ndocstrings, comments, test names, type hints"]
+    fcgate{"False\nclaims?"}
+
+    nexttask["Mark task complete\nadvance to next task"]
+
+    qgates["→ Phase 4 Quality Gates\n(all tasks complete)"]
+
+    entry4 --> wt
+    wt -->|"single"| wt_single
+    wt -->|"per_parallel_track"| wt_para
+    wt -->|"none"| wt_none
+
+    wt_single --> para
+    wt_para --> para
+    wt_none --> para
+
+    para -->|"per_parallel_track"| exec_ppt
+    para -->|"maximize"| exec_max
+    para -->|"conservative"| exec_seq
+
+    exec_ppt --> smartmerge
+    smartmerge --> taskloop
+    exec_max --> taskloop
+    exec_seq --> taskloop
+
+    taskloop -->|"yes"| tdd
+    tdd --> dialect
+    dialect -->|"roundtable or full"| roundtable
+    dialect -->|"planning_only or none"| verify
+    roundtable --> verify
+
+    verify --> vgate
+    vgate -->|"YES: fix and re-verify"| tdd
+    vgate -->|"NO: all complete"| review
+
+    review --> rgate
+    rgate -->|"critical: fix immediately"| tdd
+    rgate -->|"important / minor"| factcheck
+
+    factcheck --> fcgate
+    fcgate -->|"YES: fix immediately"| tdd
+    fcgate -->|"NO: clean"| nexttask
+    nexttask --> taskloop
+
+    taskloop -->|"no more tasks"| qgates
+
+    style wt_single fill:#4a9eff,color:#fff
+    style wt_para fill:#4a9eff,color:#fff
+    style exec_ppt fill:#4a9eff,color:#fff
+    style exec_max fill:#4a9eff,color:#fff
+    style exec_seq fill:#4a9eff,color:#fff
+    style smartmerge fill:#4a9eff,color:#fff
+    style tdd fill:#4a9eff,color:#fff
+    style roundtable fill:#4a9eff,color:#fff
+    style review fill:#4a9eff,color:#fff
+    style factcheck fill:#4a9eff,color:#fff
+    style vgate fill:#ff6b6b,color:#fff
+    style rgate fill:#ff6b6b,color:#fff
+    style fcgate fill:#ff6b6b,color:#fff
+    style qgates fill:#51cf66,color:#000
+
+    subgraph LEGEND4[" Legend"]
+        la4["Process"]
+        lb4["Subagent Dispatch"]
+        lc4{"Quality Gate / Decision"}
+        ld4(["Terminal"])
+    end
+    style lb4 fill:#4a9eff,color:#fff
+    style lc4 fill:#ff6b6b,color:#fff
+    style ld4 fill:#51cf66,color:#000
+```
+
+---
+
+## Phase 4: Quality Gates & Completion (Detail)
+
+```mermaid
+flowchart TD
+    qentry["Phase 4 Quality Gates Entry\n(all tasks complete)"]
+
+    audit["4.6.1 Comprehensive Implementation Audit\nauditor subagent: plan item sweep\ncross-task integration verification\ndesign doc traceability\nfeature completeness end-to-end"]
+    auditgate{"Blocking\nissues?"}
+
+    testsuite["4.6.2 Run Full Test Suite\npytest / npm test / cargo test"]
+    testgate{"Tests\npassing?"}
+    debug["subagent → systematic-debugging skill\nfix issues, then re-run"]
+
+    mirage["4.6.3 Green Mirage Audit\nsubagent → audit-green-mirage skill\nread assertion-quality-standard.md first\nfocus: new code from this feature\nFULL ASSERTION PRINCIPLE enforced"]
+    mirgate{"Issues\nfound?"}
+
+    compfact["4.6.4 Comprehensive Claim Validation\nsubagent → fact-checking skill\nscope: ALL files for this feature\ncross-reference design doc + impl plan"]
+    cfgate{"Issues\nfound?"}
+
+    prepr["4.6.5 Pre-PR Claim Validation\nsubagent → fact-checking skill\nscope: branch diff since merge-base\nlast line of defense before PR"]
+    ppgate{"Issues\nfound?"}
+
+    postmode{"post_impl?"}
+    finish_opts["4.7 Offer Options\nsubagent → finishing-a-development-branch skill\npresent: merge / create PR / cleanup"]
+    finish_pr["4.7 Auto PR\npush branch\ngh pr create\nreturn URL"]
+    finish_stop["4.7 Stop\nannounce complete\nsummarize work\nlist remaining TODOs"]
+    done4(["Feature Complete"])
+
+    qentry --> audit
+    audit --> auditgate
+    auditgate -->|"YES: fix and re-audit"| audit
+    auditgate -->|"NO: clean"| testsuite
+
+    testsuite --> testgate
+    testgate -->|"FAIL"| debug
+    debug --> testsuite
+    testgate -->|"PASS"| mirage
+
+    mirage --> mirgate
+    mirgate -->|"YES: fix and re-audit"| mirage
+    mirgate -->|"NO: clean"| compfact
+
+    compfact --> cfgate
+    cfgate -->|"YES: fix immediately"| compfact
+    cfgate -->|"NO: clean"| prepr
+
+    prepr --> ppgate
+    ppgate -->|"YES: fix immediately"| prepr
+    ppgate -->|"NO: clean"| postmode
+
+    postmode -->|"offer_options"| finish_opts
+    postmode -->|"auto_pr"| finish_pr
+    postmode -->|"stop"| finish_stop
+
+    finish_opts --> done4
+    finish_pr --> done4
+    finish_stop --> done4
+
+    style audit fill:#4a9eff,color:#fff
+    style debug fill:#4a9eff,color:#fff
+    style mirage fill:#4a9eff,color:#fff
+    style compfact fill:#4a9eff,color:#fff
+    style prepr fill:#4a9eff,color:#fff
+    style finish_opts fill:#4a9eff,color:#fff
+    style finish_pr fill:#4a9eff,color:#fff
+    style auditgate fill:#ff6b6b,color:#fff
+    style testgate fill:#ff6b6b,color:#fff
+    style mirgate fill:#ff6b6b,color:#fff
+    style cfgate fill:#ff6b6b,color:#fff
+    style ppgate fill:#ff6b6b,color:#fff
+    style done4 fill:#51cf66,color:#000
+
+    subgraph LEGEND5[" Legend"]
+        la5["Process"]
+        lb5["Subagent Dispatch"]
+        lc5{"Quality Gate / Decision"}
+        ld5(["Terminal"])
+    end
+    style lb5 fill:#4a9eff,color:#fff
+    style lc5 fill:#ff6b6b,color:#fff
+    style ld5 fill:#51cf66,color:#000
+```
+
+---
+
+## Cross-Reference: Overview Nodes → Detail Diagrams
+
+| Overview Node | Detail Diagram |
+|---|---|
+| Prerequisite Verification | Phase 3 Detail (entry condition) |
+| Zero-Flag Fast Path | Phase 3 Detail (`escape_hatch = treat as ready`) |
+| Phase 3: Implementation Planning | Phase 3 Detail diagram |
+| Phase 4: Implementation | Phase 4 Task Execution + Phase 4 Quality Gates diagrams |
+
+## Skills Invoked by Phase
+
+| Step | Skill | Trigger |
+|---|---|---|
+| 3.1 | `writing-plans` | Create impl plan |
+| 3.2 | `reviewing-impl-plans` | Review impl plan |
+| 3.4 | `executing-plans` | Fix plan findings |
+| 4.1 | `using-git-worktrees` | Create workspace(s) |
+| 4.2 | `dispatching-parallel-agents` | Maximize parallelization |
+| 4.2.5 | `merging-worktrees` | Merge parallel tracks |
+| 4.3 | `test-driven-development` | TDD per task |
+| 4.3.1 | `forge_roundtable_convene` (MCP) | Dialectic overlay (if enabled) |
+| 4.5 | `requesting-code-review` | Per-task code review |
+| 4.5.1, 4.6.4, 4.6.5 | `fact-checking` | Claim validation (3×) |
+| 4.6.2 | `systematic-debugging` | Debug test failures |
+| 4.6.3 | `audit-green-mirage` | Test quality audit |
+| 4.7 | `finishing-a-development-branch` | Branch completion |
 
 ## Command Content
 
@@ -35,26 +356,25 @@ PROJECT_ENCODED=$(echo "$PROJECT_ROOT" | sed 's|^/||' | tr '/' '-')
 
 echo "=== Phase 3-4 Prerequisites ==="
 
-# CHECK 1: Determine entry path by complexity tier
-TIER="[SESSION_PREFERENCES.complexity_tier]"
-echo "Complexity tier: $TIER"
+# CHECK 1: Determine entry path by need flags
+NEEDS_DESIGN="[SESSION_PREFERENCES.need_flags.needs_design]"
+echo "needs_design: $NEEDS_DESIGN"
 
-if [ "$TIER" = "simple" ]; then
-  echo "SIMPLE path: Skipping Phase 3 (no external plan needed)"
-  echo "Required: Lightweight research completed (inline)"
-  echo "Required: Inline plan confirmed by user (<=5 steps)"
-  echo "Navigate directly to the '## Phase 4: Implementation' section header."
-  echo "Skip all Phase 3 content. Entering at Phase 4 directly."
-else
-  # CHECK 2 (STANDARD/COMPLEX): Design document must exist
+if [ "$NEEDS_DESIGN" = "true" ]; then
+  # CHECK 2 (needs_design): Design document must exist
   echo "Required: Design document exists"
   ls ~/.local/spellbook/docs/$PROJECT_ENCODED/plans/*-design.md 2>/dev/null || echo "FAIL: No design document found"
 
-  # CHECK 3 (STANDARD/COMPLEX): Design review must be complete
+  # CHECK 3 (needs_design): Design review must be complete
   echo "Required: Design review completed"
+else
+  echo "Zero-flag fast path: no external design required"
+  echo "Required: Inline plan confirmed by user (<=5 steps)"
+  echo "Navigate directly to the '## Phase 4: Implementation' section header."
+  echo "Skip the Phase 3 design-derived steps. Entering at Phase 4 directly."
 fi
 
-# CHECK 4 (ALL tiers): No escape hatch conflict
+# CHECK 4 (all paths): No escape hatch conflict
 echo "Verify: escape_hatch routing is consistent with current entry point"
 ```
 
@@ -131,7 +451,8 @@ Dispatch subagent to invoke executing-plans skill. Pass: impl plan path, specifi
 ### 3.4.5 Execution Mode Analysis
 
 <CRITICAL>
-Determine execution strategy from plan structure and context budget.
+Determine execution strategy from plan structure and parallelization preference.
+spellbook runs a single orchestrator: the only modes are `direct` and `delegated`.
 </CRITICAL>
 
 <analysis>
@@ -145,51 +466,46 @@ Determine execution strategy from plan structure and context budget.
 **Execution Mode Decision (evaluated in order; first match wins):**
 
 ```
-if complexity_tier == "trivial": exit skill (already handled in Phase 0)
-if complexity_tier == "simple": direct (already handled via Simple Path)
-if user_explicitly_requested_separate_sessions: work_items
-if impl_plan has multiple tracks with dependencies AND num_tasks > 25:
-    work_items   (cross-session decomposition for very large features)
-if num_tasks >= 15 AND num_distinct_tracks >= 2:
-    sub_orchestrators
-elif num_tasks > 15:
-    work_items   (context budget concern, single track or no clear file ownership)
-else: delegated (single session, subagent execution)
+if size_estimate is very small AND no parallelization requested:
+    direct      (stay in session, minimal delegation)
+else:
+    delegated   (stay in session, one subagent per gate per task)
 ```
 
 **Modes:**
 
-- **direct**: Stay in session, minimal delegation. Only for very small STANDARD.
-- **delegated**: Stay in session, delegate to subagents (one subagent per gate per task). Default for STANDARD. Unchanged.
-- **sub_orchestrators**: Stay in session, but interpose Manager subagents (sub-orchestrators) between this CEO and the per-gate subagents. Each Manager owns a coherent file scope and 3-7 tasks; runs all per-task gates inside its own context; returns one compact summary to the CEO. Selected for COMPLEX features (15+ tasks across 2+ tracks) where the CEO context would bloat from per-gate dispatching. See `dispatching-sub-orchestrators` skill for the full pattern.
-- **work_items**: Generate prompt files for each work item, present to user for execution in separate sessions. For very large COMPLEX or when user explicitly requests cross-session decomposition.
+- **direct**: Stay in session, minimal delegation. Only for the smallest changes
+  where dispatching a subagent per gate would cost more than it saves.
+- **delegated**: Stay in session, delegate to subagents (one subagent per gate per
+  task). The default. For larger plans, gate dispatches are batched per the
+  parallelization preference, but the orchestrator stays resident the whole time.
 
-**Routing:**
-
-- If `work_items`: Proceed to 3.5 and 3.6
-- If `sub_orchestrators`: Skip to Phase 4 (Phase 4.0 dispatches to `dispatching-sub-orchestrators` skill, then 4.6.1 - 4.7 run at CEO level)
-- If `delegated` or `direct`: Skip to Phase 4 (existing flow)
+**Routing:** Both `direct` and `delegated` proceed to Phase 4 (the existing flow).
+There is no fan-out into separate sessions; a single orchestrator carries the whole
+plan. For efforts too large for one session, checkpoint the `develop_gate_ledger`
+and hand off to a fresh session (see `finishing-a-development-branch`).
 </analysis>
 
-### 3.4.7 One-Pager Approval Gate (mandatory for work_items and sub_orchestrators)
+### 3.4.7 One-Pager Approval Gate (large delegated runs)
 
 <CRITICAL>
-No chunk-prompt generation, no `forge_project_init`, no parallel
-session spawn, no sub-orchestrator dispatch UNTIL the operator has
-explicitly approved a one-pager describing the planned implementation.
-
-This gate applies in BOTH execution modes that fan out work
-(`work_items`, `sub_orchestrators`). It is NOT waived by autonomous
-mode. See `~/.claude/CLAUDE.md` "Autonomous Mode and Scope Discipline".
+For a large delegated run, no implementation dispatch begins UNTIL the operator has
+explicitly approved a one-pager describing the planned implementation. This gate is
+NOT waived by autonomous mode. See `~/.claude/CLAUDE.md` "Autonomous Mode and Scope
+Discipline".
 </CRITICAL>
+
+**When this gate applies:** delegated runs large enough that the operator should see
+the shape of the work before subagent dispatch begins. Small `direct` runs and small
+delegated runs proceed directly to Phase 4.
 
 **One-pager spec:**
 
 - ≤ 200 lines
 - Plain English, no architecture jargon
-- Sections: (1) what we are building in 1-2 sentences, (2) the work
-  items by name and one-line purpose, (3) what is explicitly NOT in
-  scope, (4) anything the operator should push back on before fan-out
+- Sections: (1) what we are building in 1-2 sentences, (2) the tasks (or task groups)
+  by name and one-line purpose, (3) what is explicitly NOT in scope, (4) anything the
+  operator should push back on before implementation begins
 - Saved to `~/.local/spellbook/docs/<project-encoded>/plans/YYYY-MM-DD-[feature-slug]-one-pager.md`
 
 **Approval mechanics:**
@@ -205,192 +521,14 @@ mode. See `~/.claude/CLAUDE.md` "Autonomous Mode and Scope Discipline".
    approval; it only waives trivial confirmations.
 
 If the operator pushes back, return to Phase 2 (design) or Phase 3.1
-(planning) as appropriate. Do NOT iterate the chunk prompts to address
-the pushback — fix the root design or plan first, then regenerate the
+(planning) as appropriate. Fix the root design or plan first, then regenerate the
 one-pager.
 
 <FORBIDDEN>
-- Generating chunk prompts before one-pager approval
-- Calling `forge_project_init` before one-pager approval
-- Spawning parallel sessions before one-pager approval
-- Dispatching sub-orchestrators before one-pager approval
+- Beginning implementation dispatch before one-pager approval (large delegated runs)
 - Treating autonomous mode as approval
 - Treating an unrelated `ok` from the operator as approval of the one-pager
 </FORBIDDEN>
-
-### 3.5 Generate Work Items (if work_items mode)
-
-<CRITICAL>Only runs when execution_mode is "work_items".</CRITICAL>
-
-**Work Item Generation:**
-
-1. Parse tracks from implementation plan (same extraction as current)
-2. Create work items in DB via `forge_project_init` (project graph)
-3. Generate prompt files at `.claude/prompts/<feature-slug>-chunk-<N>.md`
-
-**Prompt File Template:**
-
-Each work item prompt file follows this structure:
-
-````markdown
-# <Feature Name> - Chunk <N>/<Total>: <Chunk Title>
-
-## Working Directory
-
-**Path:** <WORKTREE_PATH>
-**Branch:** <BRANCH_NAME>
-
-BEFORE ANY WORK:
-1. `cd <WORKTREE_PATH> && pwd && git branch --show-current`
-2. Verify output shows `<BRANCH_NAME>`
-3. ALL file paths must be absolute, rooted at `<WORKTREE_PATH>`
-4. Do NOT create new branches or switch branches
-
-## Context
-
-<Brief description of what this chunk accomplishes>
-
-Previous chunks completed: <list or "none (this is the first chunk)">
-
-## Execution
-
-**MANDATORY: You MUST invoke the `develop` skill using the Skill tool before doing ANY work.**
-
-```
-Skill tool call:
-  skill: "develop"
-  args: "Escape hatch: impl plan at <path to impl plan>, treat as ready. Tasks <start>-<end>. Fully autonomous."
-```
-
-**Key documents:**
-- Implementation plan: `<path to impl plan>`
-- Design document: `<path to design doc>`
-
-## Subagent Dispatch Discipline
-
-<CRITICAL>
-The develop skill orchestrates via subagents. Every subagent that does
-substantive work MUST invoke the appropriate skill using the Skill tool.
-
-"Do TDD" is NOT the same as "invoke the test-driven-development skill."
-"Review the code" is NOT the same as "invoke the requesting-code-review skill."
-Doing the work without invoking the skill is a workflow violation.
-Skills contain specialized logic that ad-hoc execution cannot replicate.
-
-Every subagent prompt MUST begin with:
-  "First, invoke the [skill-name] skill using the Skill tool.
-   Then follow its complete workflow."
-
-After each subagent returns, verify its output contains
-"Launching skill: [name]". If not found, REJECT the result and re-dispatch
-using the dispatching-parallel-agents Subagent Dispatch Template. The
-subagent did not actually invoke the skill, so its findings are untrusted.
-A subagent that claims a skill "is not available" without showing an
-attempted Skill tool call is making an untested claim; reject and re-dispatch.
-If the agent type lacks the Skill tool (claude-code-guide, statusline-setup),
-the dispatch itself was the bug. Change agent type and try again.
-</CRITICAL>
-
-### Per-Task Gate Sequence (mandatory, sequential, not batched)
-
-After EACH task, run these gates in order:
-
-1. **TDD** (4.3): Dispatch subagent → must invoke `test-driven-development` skill using the Skill tool
-2. **Completion verification** (4.4): Dispatch subagent with inline audit prompt (no skill invocation needed)
-3. **Code review** (4.5): Dispatch subagent → must invoke `requesting-code-review` skill using the Skill tool
-4. **Fact-checking** (4.5.1): Dispatch subagent → must invoke `fact-checking` skill using the Skill tool
-
-Do NOT batch gates across tasks. Each task completes all 4 gates before
-the next task begins.
-
-### Post-All-Tasks Gates (mandatory)
-
-After all tasks pass per-task gates:
-
-1. Comprehensive implementation audit (4.6.1)
-2. Full test suite (4.6.2)
-3. Green mirage audit (4.6.3) → must invoke `audit-green-mirage` skill using the Skill tool
-4. Comprehensive fact-checking (4.6.4) → must invoke `fact-checking` skill using the Skill tool
-5. Finishing (4.7) → must invoke `finishing-a-development-branch` skill using the Skill tool
-
-## Pre-conditions
-
-<What must be true before starting this chunk>
-
-## Exit Criteria
-
-<What must be true when this chunk is complete>
-- All changes committed
-
-## Next
-
-When complete, run the next chunk:
-```
-Follow the prompt in .claude/prompts/<feature-slug>-chunk-<N+1>.md
-```
-````
-
-The final chunk replaces the "Next" section with instructions to run the full test suite, verify success criteria, and invoke `finishing-a-development-branch` using the Skill tool.
-
-**Quality gates are explicit in each chunk prompt.** The "Subagent Dispatch Discipline" section in each chunk enforces skill invocation, per-task sequential gating, and post-implementation gates. This redundancy is intentional: the develop skill has the full gate definitions, but chunks must also state the gate sequence explicitly to prevent orchestrator hand-waving.
-
-### 3.5.5 Chunk Prompt Quality Gate
-
-After generating chunk prompts, verify EVERY chunk contains these required elements:
-
-| Required Element | Check |
-|-----------------|-------|
-| `invoke the \`develop\` skill using the Skill tool` | Exact phrase in Execution section |
-| `Subagent Dispatch Discipline` section | Section header present |
-| Per-Task Gate Sequence | Numbered list with 4 gates |
-| Skill invocation verification | "Launching skill:" check pattern |
-| Pre-conditions section | Non-empty |
-| Exit criteria with "committed" | Present |
-| Next section (or Finishing for final chunk) | Present |
-
-If ANY chunk fails ANY check: fix before presenting to user.
-
-### 3.6 Work Item Presentation
-
-Present work items to user based on parallelization preference:
-
-**If parallelization == "maximize":**
-
-```markdown
-## Work Items Generated
-
-[count] work items created. Independent items will launch in parallel.
-
-| Chunk | Title | Tasks | Dependencies | Status |
-|-------|-------|-------|--------------|--------|
-| 1 | [title] | [range] | none | ready |
-| 2 | [title] | [range] | Chunk 1 | blocked |
-| ... | ... | ... | ... | ... |
-
-Launching [N] independent chunks now...
-```
-
-Auto-launch independent work items using the session spawning MCP tool, or provide manual prompt file paths.
-
-Note: The user's selection of `parallelization == 'maximize'` in Phase 0.4 constitutes explicit permission for session spawning. This satisfies the CLAUDE.md security requirement that session spawning only occur when explicitly requested by the user.
-
-**If parallelization == "conservative":**
-
-```markdown
-## Work Items Generated
-
-[count] work items created for sequential execution.
-
-Start with: `.claude/prompts/<feature-slug>-chunk-1.md`
-
-Each chunk links to the next. Complete them in order.
-```
-
-**If parallelization == "ask":**
-
-Present the work item graph and let user choose which to launch.
-
-**For single-session work (delegated/direct):** Skip 3.5/3.6, proceed to Phase 4.
 
 ---
 
@@ -410,9 +548,8 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 - [ ] Reviewing-impl-plans subagent DISPATCHED
 - [ ] Approval gate handled per autonomous_mode
 - [ ] All critical/important findings fixed (if any)
-- [ ] Execution mode analyzed (work_items / sub_orchestrators / delegated / direct)
-- [ ] If work_items: Work item prompt files generated, presentation complete
-- [ ] If sub_orchestrators: Manager assignments planned by file ownership, CEO ready to dispatch via dispatching-sub-orchestrators
+- [ ] Execution mode analyzed (delegated / direct)
+- [ ] If large delegated run: one-pager approved by operator (3.4.7)
 
 If ANY unchecked: Go back to Phase 3. Do NOT proceed.
 
@@ -421,7 +558,7 @@ If ANY unchecked: Go back to Phase 3. Do NOT proceed.
 ## Phase 4: Implementation
 
 <CRITICAL>
-This phase only executes if execution_mode is "delegated", "direct", or "sub_orchestrators".
+This phase executes for both execution modes ("delegated" and "direct").
 During Phase 4, delegate actual work to subagents. Main context is for ORCHESTRATION ONLY.
 </CRITICAL>
 
@@ -439,53 +576,11 @@ If you find yourself using Write, Edit, or Bash tools directly in main context d
 
 | execution_mode | Phase 4 Path |
 |----------------|---------------|
-| `direct` | Sections 4.1 - 4.7 below, minimal delegation, single CEO context |
-| `delegated` | Sections 4.1 - 4.7 below, one subagent per gate per task, CEO orchestrates |
-| `sub_orchestrators` | Section 4.1 (worktree setup), then dispatch to `dispatching-sub-orchestrators` skill (Phase 4.2 wrapper below). Sections 4.3 - 4.5.1 happen INSIDE Manager subagents. CEO resumes at 4.6.1 (end-of-Phase-4 gates) after all Managers complete. |
-| `work_items` | Already exited at 3.6 (this Phase 4 does not execute) |
+| `direct` | Sections 4.1 - 4.7 below, minimal delegation, single orchestrator context |
+| `delegated` | Sections 4.1 - 4.7 below, one subagent per gate per task, orchestrator coordinates |
 
-### 4.0 Sub-Orchestrator Dispatch (only if execution_mode == "sub_orchestrators")
-
-<CRITICAL>
-When `execution_mode == "sub_orchestrators"`, Phase 4.1 (worktree setup) runs as
-documented below. Then INSTEAD of executing 4.2 - 4.5.1 directly in this CEO
-context, dispatch a single subagent that invokes the `dispatching-sub-orchestrators`
-skill. That skill owns the Manager loop (decompose, dispatch Managers, read
-summaries, escalate).
-
-After the sub-orchestrator dispatch returns (all Managers complete), CEO resumes
-at 4.6.1 (comprehensive audit). End-of-Phase-4 gates 4.6.1 - 4.6.5 ALWAYS run at
-CEO level regardless of how Managers executed (Task-tool sub-subagents OR inline).
-They are the safety net for inline-execution context-isolation loss and the only
-gates that span Manager boundaries.
-</CRITICAL>
-
-```
-Task:
-  description: "CEO/Manager execution"
-  subagent_type: "[CURRENT_AGENT_TYPE or 'general']"
-  prompt: |
-    First, invoke the dispatching-sub-orchestrators skill using the Skill tool.
-    Then follow its complete CEO loop.
-
-    ## Context for the Skill
-
-    Implementation plan: [absolute path]
-    Design document: [absolute path]
-    Feature slug: [feature-slug]
-    Worktree strategy: [single | per_parallel_track]
-    Branch name: [branch]
-    Worktree path: [absolute path; for per-track this is the base, Managers get sub-worktrees]
-    Commit format: [from AGENTS.md, e.g., "PROM-47: <description>"]
-    AGENTS.md path: [absolute path]
-
-    Return the consolidated manager_summaries, commit_log, escalations, and
-    task_outcomes. CEO will run end-of-Phase-4 gates (4.6.1 - 4.6.5) and
-    finishing (4.7) after this dispatch returns.
-```
-
-After this dispatch returns, the CEO orchestrator skips sections 4.2 - 4.5.1
-(those ran inside Managers) and resumes at section 4.6.1 below.
+Both modes run the same sections; they differ only in how much per-gate work is
+delegated. The orchestrator stays resident for the entire phase.
 
 ### 4.1 Setup Worktree(s)
 
@@ -1164,7 +1259,6 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 | 3.1                 | writing-plans                  | Create impl plan                                                           |
 | 3.2                 | reviewing-impl-plans           | Review impl plan                                                           |
 | 4.1                 | using-git-worktrees            | Create workspace(s)                                                        |
-| 4.0                 | dispatching-sub-orchestrators  | **If execution_mode == sub_orchestrators**: CEO/Manager loop               |
 | 4.2                 | dispatching-parallel-agents    | Parallel execution                                                         |
 | 4.2                 | assembling-context             | Prepare context for parallel subagents                                     |
 | 4.2.5               | merging-worktrees              | Merge parallel worktrees                                                   |
@@ -1236,15 +1330,7 @@ No "I'll fix the tests later." Tests prove behavior preservation.
 - Skipping merging-worktrees
 - Not running tests after merge
 - Leaving worktrees after merge
-
-### Work Item Execution
-
-- **Generating work items without natural boundaries** - each chunk must be a coherent unit
-- **Work items that span migration cutovers** - keep cutovers atomic within a single chunk
-- **Skipping quality gates because "the next chunk will catch it"** - each chunk must pass all gates
-- **Work items without pre-conditions or exit criteria** - every prompt file needs both
-- **Missing the "Next" link between sequential items** - each chunk (except last) must link to the next
-- Dispatching subagents to isolated worktrees without specifying which branch to base them on. Isolated worktrees default to the current branch at dispatch time, which may not have prior chunks' work.
+- Dispatching subagents to isolated worktrees without specifying which branch to base them on. Isolated worktrees default to the current branch at dispatch time, which may not have prior tasks' work.
 </FORBIDDEN>
 
 ---
@@ -1325,17 +1411,10 @@ Answer honestly: Did I dispatch subagents for ALL of these?
 - [ ] Subagent invoked reviewing-impl-plans
 - [ ] Handled approval gate per autonomous_mode
 - [ ] Subagent invoked executing-plans to fix
-- [ ] Analyzed execution mode (work_items/delegated/direct)
-- [ ] If work_items: Generated work item prompts and presented
+- [ ] Analyzed execution mode (delegated/direct)
+- [ ] If large delegated run: one-pager approved by operator
 
-### Phase 3.5 (if work_items)
-
-- [ ] Work item prompt files generated at `.claude/prompts/<feature>-chunk-N.md`
-- [ ] Each prompt file includes: context, task range, pre-conditions, exit criteria
-- [ ] Final chunk includes finishing instructions
-- [ ] Work items presented per parallelization preference
-
-### Phase 4 (if not work_items)
+### Phase 4
 
 - [ ] Subagent invoked using-git-worktrees (if applicable)
 - [ ] Executed tasks with appropriate parallelization
