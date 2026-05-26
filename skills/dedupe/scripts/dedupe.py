@@ -1787,7 +1787,7 @@ def _verify_finding(
             # or above the confirm threshold. A whole-file seqmatch fallback can
             # false-PASS a reference where the canonical content is fragmented
             # across non-contiguous blocks, so we rely on per-block matching only.
-            ref_blocks = segment(str(ref_path), ref_text)
+            ref_blocks = segment(str(ref_path), ref_text, min_block_chars=0)
             if not _block_matches_text(ref_blocks, original_norm, threshold):
                 problems.append(
                     f"clause2: reference file does not contain the consolidated "
@@ -1810,7 +1810,7 @@ def _verify_finding(
             continue
 
         # Clause 1: the original duplicate must be ABSENT from the edited source.
-        source_blocks = segment(str(source_path), source_text)
+        source_blocks = segment(str(source_path), source_text, min_block_chars=0)
         if _block_matches_text(source_blocks, original_norm, threshold):
             reasons.append(
                 f"clause1: original duplicate still present in {source_rel}"

@@ -38,7 +38,7 @@ Before writing the report, confirm:
 Write the report to:
 
 ```
-~/.local/spellbook/docs/Users-eek-Development-spellbook/dedupe-report-YYYY-MM-DD-HHMM.md
+~/.local/spellbook/docs/<project-encoded>/dedupe-report-YYYY-MM-DD-HHMM.md
 ```
 
 <RULE>NEVER write the report into the project directory (design §5.1).</RULE>

@@ -58,7 +58,7 @@ Execute approved EXTRACTs in this exact order:
 Write the journal to:
 
 ```
-~/.local/spellbook/docs/Users-eek-Development-spellbook/dedupe-journal-YYYY-MM-DD-HHMM.json
+~/.local/spellbook/docs/<project-encoded>/dedupe-journal-YYYY-MM-DD-HHMM.json
 ```
 
 One entry per cluster/finding with a status enum (`pending`, `refs_created`,
