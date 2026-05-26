@@ -1078,19 +1078,31 @@ def resolve_seed_entry(
     resolved_by_path = {_resolved_str(p): _resolved_str(p) for p in corpus_files}
     by_basename = {p.name: _resolved_str(p) for p in corpus_files}
 
+    # ``resolved_by_path`` keys are absolute POSIX-normalized strings (via
+    # ``_resolved_str``). Seed entries supplied by the user are often relative
+    # (e.g., ``skills/dedupe/SKILL.md``). Normalize ``entry`` the same way for
+    # the exact-path lookup so relative seeds match the resolved-keyed index
+    # instead of silently falling through to basename matching or literal
+    # cwd-relative resolution.
+    resolved_entry = _resolved_str(entry)
+
     is_pathlike = entry.endswith(".md")
     candidate = Path(entry)
     if not is_pathlike:
         # exists-as-file: either the literal path is a real file, or the entry
         # matches a corpus file's resolved path / basename.
-        if candidate.is_file() or entry in resolved_by_path or entry in by_basename:
+        if (
+            candidate.is_file()
+            or resolved_entry in resolved_by_path
+            or entry in by_basename
+        ):
             is_pathlike = True
 
     if is_pathlike:
         # Resolve the path-seed against the corpus: prefer an exact resolved-path
         # match, then a basename match, then the literal resolved path.
-        if entry in resolved_by_path:
-            return resolved_by_path[entry], None
+        if resolved_entry in resolved_by_path:
+            return resolved_by_path[resolved_entry], None
         if entry in by_basename:
             return by_basename[entry], None
         if candidate.is_file():

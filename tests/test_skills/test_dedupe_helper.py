@@ -1296,6 +1296,49 @@ def test_resolve_seed_entry_unknown_name_returns_none_none(dedupe):
     assert name is None
 
 
+def test_resolve_seed_entry_relative_path_uses_resolved_index_not_basename_fallback(
+    dedupe, tmp_path, monkeypatch
+):
+    """A relative-path seed (e.g. ``skills/dedupe/SKILL.md``) must hit the
+    resolved-path index exactly, NOT silently fall through to basename matching.
+
+    Regression for: ``resolved_by_path`` keys are absolute POSIX strings (via
+    ``_resolved_str``), so the prior ``entry in resolved_by_path`` check missed
+    relative-path seeds. The corpus below contains two same-basename files in
+    different directories; if the lookup falls through to basename matching,
+    the WRONG file (the other directory's ``SKILL.md``) might be returned.
+    With the fix, the relative-path seed resolves against cwd and matches the
+    correct resolved-path index entry.
+    """
+    # Two same-basename files in different directories.
+    a = _md(tmp_path, "skills/dedupe/SKILL.md")
+    b = _md(tmp_path, "skills/other/SKILL.md")
+    corpus_files = dedupe.resolve_corpus(f"{a},{b}")
+    index = dedupe.build_corpus_index(corpus_files)
+
+    # Run from tmp_path so the relative seed resolves to ``a``.
+    monkeypatch.chdir(tmp_path)
+
+    rel_seed = "skills/dedupe/SKILL.md"
+    path, name = dedupe.resolve_seed_entry(
+        rel_seed, corpus_files=corpus_files, corpus_index=index
+    )
+
+    # Must match the exact resolved POSIX path of ``a``.
+    assert path == a.resolve().as_posix()
+    # Must NOT be the other same-basename file (which is what a basename-only
+    # fallback could plausibly return, depending on dict insertion order).
+    assert path != b.resolve().as_posix()
+    assert name is None
+
+    # Sanity: an equivalent absolute-path seed returns the same answer.
+    abs_path, abs_name = dedupe.resolve_seed_entry(
+        a.resolve().as_posix(), corpus_files=corpus_files, corpus_index=index
+    )
+    assert abs_path == path
+    assert abs_name is None
+
+
 def test_expand_group_resolves_four_shapes(dedupe):
     """All four reference shapes (description `invoked by`, markdown link, `Load
     the X skill`, bare backticked-name adjacency) reach their targets."""
