@@ -188,6 +188,39 @@ def discover_agents() -> list[SourceItem]:
 
 
 # ---------------------------------------------------------------------------
+# Labels
+# ---------------------------------------------------------------------------
+
+
+def item_label_for_path(source_path: Path) -> str:
+    """Return an unambiguous, repo-relative label for a source path.
+
+    Every skill's source file is ``SKILL.md`` and every command's is
+    ``<name>.md``, so printing the bare filename (``source_path.name``) is
+    ambiguous across items. The repo-relative path disambiguates them
+    (e.g. ``skills/develop/SKILL.md``, ``commands/feature-config.md``,
+    ``agents/implementer.md``).
+
+    Falls back to the parent-dir + filename if the source path is somehow
+    not under the repo root (so the helper never raises on display).
+    """
+    try:
+        return source_path.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        parent = source_path.parent.name
+        return f"{parent}/{source_path.name}" if parent else source_path.name
+
+
+def item_label(item: SourceItem) -> str:
+    """Return an unambiguous, repo-relative label for a discovered item.
+
+    Thin wrapper over :func:`item_label_for_path` for call sites that hold a
+    full :class:`SourceItem`.
+    """
+    return item_label_for_path(item.source_path)
+
+
+# ---------------------------------------------------------------------------
 # Hashing
 # ---------------------------------------------------------------------------
 
@@ -239,7 +272,7 @@ def extract_stored_hash(meta: dict) -> str:
     The field value is expected as "sha256:<hex>". Returns just the hex portion,
     or empty string if missing/malformed.
     """
-    raw = meta.get("source_hash", "")
+    raw = meta.get("source_hash") or ""
     if raw.startswith("sha256:"):
         return raw[len("sha256:"):]
     return raw
@@ -387,7 +420,7 @@ def generate_diagram(
     # an active session (e.g., when run via pre-commit hooks).
     env = {k: v for k, v in os.environ.items() if k not in ("CLAUDECODE", "GEMINI_CLI")}
 
-    print(f"  Generating diagram for {item.source_path.name} via {provider} ({model})...", end="", flush=True)
+    print(f"  Generating diagram for {item_label(item)} via {provider} ({model})...", end="", flush=True)
 
     try:
         result = subprocess.run(
@@ -624,6 +657,30 @@ def get_source_diff(source_path: Path) -> str:
     return ""
 
 
+_VALID_CLASSIFICATIONS = ("STAMP", "PATCH", "REGENERATE")
+
+
+def _normalize_classification(raw: str | None) -> str:
+    """Normalize a raw classifier response into a valid classification.
+
+    The classifier expects the LLM to respond with one of STAMP, PATCH, or
+    REGENERATE. The parsed response can be ``None`` (no result text), empty,
+    unrecognized, or (defensively) a non-str type. Any of those degrades to
+    the REGENERATE fail-safe rather than raising. Guarding here makes the
+    None and non-str cases explicit and prevents a spurious ``AttributeError``
+    from calling string operations (``.strip()``) on a value that is not a
+    ``str``.
+    """
+    if not isinstance(raw, str):
+        return "REGENERATE"
+    if not raw:
+        return "REGENERATE"
+    normalized = raw.strip().upper()
+    if normalized in _VALID_CLASSIFICATIONS:
+        return normalized
+    return "REGENERATE"
+
+
 async def classify_change(
     source_path: Path,
     diagram_path: Path,
@@ -646,21 +703,17 @@ async def classify_change(
     )
     client = get_agent_client(provider, options)
 
-    print(f"  Classifying change for {source_path.name} via {provider} ({model})...", end="", flush=True)
+    print(f"  Classifying change for {item_label_for_path(source_path)} via {provider} ({model})...", end="", flush=True)
 
     try:
-        classification = await client.run(prompt)
-        classification = classification.strip().upper()
+        raw = await client.run(prompt)
     except Exception as e:
         print(f"  -> REGENERATE ({type(e).__name__}: {e})")
         return "REGENERATE"
 
-    if classification in ("STAMP", "PATCH", "REGENERATE"):
-        print(f" {classification}")
-        return classification
-
-    print(" REGENERATE")
-    return "REGENERATE"
+    classification = _normalize_classification(raw)
+    print(f" {classification}")
+    return classification
 
 
 async def patch_diagram(
@@ -686,7 +739,7 @@ async def patch_diagram(
     )
     client = get_agent_client(provider, options)
 
-    print(f"  Patching diagram for {source_path.name} via {provider} ({model})...", end="", flush=True)
+    print(f"  Patching diagram for {item_label_for_path(source_path)} via {provider} ({model})...", end="", flush=True)
 
     try:
         output = await client.run(prompt)
@@ -892,7 +945,7 @@ def show_diff_and_prompt(item: SourceItem, new_content: str) -> bool:
 
     print()
     print("=" * min(term_width, 80))
-    print(f"  {item.kind}: {item.name}")
+    print(f"  {item.kind}: {item_label(item)}")
     print("=" * min(term_width, 80))
 
     if item.diagram_path.exists():
@@ -1076,7 +1129,7 @@ async def main_async(argv: list[str] | None = None) -> int:
         print(f"Stamping {len(work_items)} stale diagrams as fresh...")
         for item, current_hash in work_items:
             stamp_as_fresh(item, current_hash)
-            print(f"  Stamped: {item.name}")
+            print(f"  Stamped: {item_label(item)}")
         print(f"Done: {len(work_items)} stamped")
         return 0
 
@@ -1097,7 +1150,7 @@ async def main_async(argv: list[str] | None = None) -> int:
         for i, (item, _current_hash) in enumerate(work_items, 1):
             stale, _, reason = is_stale(item)
             tier_label = "mandatory" if item.mandatory else "optional"
-            print(f"[{i}/{len(work_items)}] Would generate: {item.name} ({item.kind}, {tier_label}, {reason})")
+            print(f"[{i}/{len(work_items)}] Would generate: {item_label(item)} ({item.kind}, {tier_label}, {reason})")
         print()
         print(f"Dry run complete. {len(work_items)} diagrams would be generated.")
         return 0
@@ -1114,7 +1167,7 @@ async def main_async(argv: list[str] | None = None) -> int:
 
         for i, (item, current_hash) in enumerate(work_items, 1):
             reason = is_stale(item)[2]
-            print(f"\n[{i}/{len(work_items)}] {item.name} ({item.kind}, {reason})")
+            print(f"\n[{i}/{len(work_items)}] {item_label(item)} ({item.kind}, {reason})")
             show_source_changes(item)
 
             # Smart classification for interactive mode
@@ -1228,10 +1281,10 @@ async def main_async(argv: list[str] | None = None) -> int:
                 item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                 item.diagram_path.write_text(output, encoding="utf-8")
                 patched_count += 1
-                print(f"  {item.name}: done (patched)")
+                print(f"  {item_label(item)}: done (patched)")
             else:
                 # Fall back to full generation
-                print(f"  {item.name}: patch failed, regenerating...", end="", flush=True)
+                print(f"  {item_label(item)}: patch failed, regenerating...", end="", flush=True)
                 result, output_content = await asyncio.to_thread(
                     generate_diagram,
                     item, current_hash,
@@ -1311,7 +1364,7 @@ async def main_async(argv: list[str] | None = None) -> int:
             if classification == "STAMP":
                 stamp_as_fresh(item, current_hash)
                 stamped_count += 1
-                print(f"[{i}/{len(work_items)}] Stamped as fresh: {item.name} (non-structural change)")
+                print(f"[{i}/{len(work_items)}] Stamped as fresh: {item_label(item)} (non-structural change)")
                 continue
 
             if classification == "PATCH":
@@ -1338,7 +1391,7 @@ async def main_async(argv: list[str] | None = None) -> int:
                     item.diagram_path.parent.mkdir(parents=True, exist_ok=True)
                     item.diagram_path.write_text(output, encoding="utf-8")
                     patched_count += 1
-                    print(f"[{i}/{len(work_items)}] Patched diagram: {item.name} (surgical update)")
+                    print(f"[{i}/{len(work_items)}] Patched diagram: {item_label(item)} (surgical update)")
                     continue
                 else:
                     # Fall through to full generation below

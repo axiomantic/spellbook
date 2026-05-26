@@ -42,11 +42,15 @@ import spellbook_hook  # noqa: E402
 
 @pytest.fixture
 def config_enabled(monkeypatch):
-    """Force memory.auto_recall True so the sibling path does not short-circuit."""
+    """Isolate the hook's config reads to defaults during the test.
+
+    The PreToolUse handler no longer consults any sibling config keys
+    before the tool_safety gate, so this simply patches
+    ``_get_config_value`` to a default-returning stub to keep the test
+    independent of the on-disk config file.
+    """
 
     def fake_config_value(key, default=None):
-        if key in ("memory.auto_recall", "memory.auto_store"):
-            return True
         return default
 
     monkeypatch.setattr(spellbook_hook, "_get_config_value", fake_config_value)
@@ -66,14 +70,6 @@ def isolated_safety_cache(tmp_path, monkeypatch):
     sc._BLOCK_CACHE.clear()
 
 
-@pytest.fixture
-def stub_memory_recall(monkeypatch):
-    """Stub out _memory_recall_for_tool so it doesn't try HTTP."""
-    monkeypatch.setattr(
-        spellbook_hook, "_memory_recall_for_tool", lambda *a, **kw: None
-    )
-
-
 # ---------------------------------------------------------------------------
 # Feature off (default / backwards-compat invariant)
 # ---------------------------------------------------------------------------
@@ -83,7 +79,6 @@ class TestFeatureOff:
     def test_feature_off_is_byte_identical(
         self,
         config_enabled,
-        stub_memory_recall,
         isolated_safety_cache,
         worker_llm_transport,
     ):
@@ -113,7 +108,6 @@ class TestVerdictRendering:
         worker_llm_transport,
         worker_llm_config,
         config_enabled,
-        stub_memory_recall,
         isolated_safety_cache,
     ):
         worker_llm_transport(
@@ -153,7 +147,6 @@ class TestVerdictRendering:
         worker_llm_transport,
         worker_llm_config,
         config_enabled,
-        stub_memory_recall,
         isolated_safety_cache,
     ):
         worker_llm_transport(
@@ -196,7 +189,6 @@ class TestVerdictRendering:
         worker_llm_transport,
         worker_llm_config,
         config_enabled,
-        stub_memory_recall,
         isolated_safety_cache,
         capsys,
     ):
@@ -255,7 +247,6 @@ class TestFailOpen:
         worker_llm_transport,
         worker_llm_config,
         config_enabled,
-        stub_memory_recall,
         isolated_safety_cache,
         capsys,
     ):
@@ -286,7 +277,6 @@ class TestFailOpen:
         worker_llm_transport,
         worker_llm_config,
         config_enabled,
-        stub_memory_recall,
         isolated_safety_cache,
     ):
         worker_llm_transport(
@@ -321,7 +311,6 @@ class TestCacheFirst:
         worker_llm_transport,
         worker_llm_config,
         config_enabled,
-        stub_memory_recall,
         isolated_safety_cache,
     ):
         """Pre-populate cache with a WARN; transport is empty so a second call
@@ -359,7 +348,6 @@ class TestBypassWindow:
         worker_llm_transport,
         worker_llm_config,
         config_enabled,
-        stub_memory_recall,
         isolated_safety_cache,
     ):
         """After a recorded BLOCK, the next matching call bypasses the worker

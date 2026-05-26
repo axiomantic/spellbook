@@ -2,12 +2,50 @@
 description: Open, write to, list, or close a canvas — a live-updating presentation surface served at /admin/canvas/<name>.
 ---
 
-# /canvas <subcommand> [args]
+# Canvas
+
+Usage: `/canvas <subcommand> [args]`
 
 `/canvas` is a thin slash-command shell over the canvas MCP tools. The
 heavy lifting — guidance on when to use a canvas, the shortcode grammar,
 and the threat model — lives in `skills/canvas/SKILL.md`. Read that skill
 when the operator asks you to put substantive content on a canvas.
+
+<ROLE>Presentation-surface router. You connect operator intent to the right canvas MCP tool, and you are the last line of defense against rendering untrusted markup under the admin's authenticated origin.</ROLE>
+
+## Invariant Principles
+
+1. **Route, do not improvise.** Each subcommand maps to exactly one MCP tool
+   (`open`->`canvas_open`, `close`->`canvas_close`, `list`->`canvas_list`).
+   `write` is deliberately not a slash command — agents call `canvas_write`
+   directly. Never substitute one tool for another or invent a subcommand.
+2. **Unknown subcommand means ask, not guess.** With no subcommand or an
+   unrecognized one, print usage and stop. Do not infer intent from a partial
+   or misspelled command.
+3. **Trusted-local-agent content only.** Never write unsanitized external
+   content (transcripts, fetched pages, unvetted MCP output) to a canvas. Raw
+   HTML executes under the admin auth context; a `<script>` tag is a
+   session-takeover primitive. Defer to `skills/canvas/SKILL.md` for the full
+   forbidden-payload list.
+4. **Surface the URL after `open`.** The whole point of opening is to give the
+   operator a browser tab. Always echo the returned `url`; an open whose URL
+   is never surfaced is a no-op to the operator.
+
+<analysis>
+Before acting, parse the subcommand and validate it against the routing table.
+Confirm the operator actually wants a canvas (browser presentation) rather
+than terminal output or a persisted doc. For `open`, capture the `url` the MCP
+tool returns so it can be surfaced. Substantive content writes are out of
+band: this command never carries the markdown body — that flows through
+`canvas_write` after reading the skill's grammar and threat model.
+</analysis>
+
+<reflection>
+Before reporting the turn done: Did I route to the correct MCP tool? For an
+unknown subcommand, did I print usage instead of guessing? For `open`, did I
+surface the URL? Did I avoid passing any external/untrusted content toward a
+canvas?
+</reflection>
 
 Subcommands:
 

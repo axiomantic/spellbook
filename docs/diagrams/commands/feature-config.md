@@ -1,284 +1,256 @@
-<!-- diagram-meta: {"source": "commands/feature-config.md","source_hash": "sha256:8f043ecc2122e81e9f6faf19fb59f73072d45ce4d357f0f0ae60070182246a3f","generator": "stamp"} -->
+<!-- diagram-meta: {"source": "commands/feature-config.md", "source_hash": "sha256:602c637b42da36a06e68e7df31eb1f58b839a52e41ddbe55dfd9b4160ba64433", "generated_at": "2026-05-25T01:35:25Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-config
 
-Phase 0 of develop: Configuration wizard that collects preferences, detects escape hatches, clarifies motivation, classifies complexity, and routes to the appropriate next phase.
+## Overview: Feature Configuration (Phase 0)
 
-## Overview
-
-High-level flow showing the two main tracks (continuation vs fresh start) and terminal routing by complexity tier.
+High-level flow through all seven sub-phases of the configuration wizard, showing decision branches and terminal routes.
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
+    START(["`**Phase 0: Feature Config**
+    _feature-config_`"]) --> CONT
+
+    CONT["0.5 Continuation Detection\n_(runs FIRST — always)_"]
+    CONT --> CONT_DEC{Continuation\nsignals present?}
+
+    CONT_DEC -- No --> ESC
+    CONT_DEC -- Yes --> RESUME["Resume Flow\n(parse → verify → preferences → synthesize → confirm)"]
+
+    RESUME --> PHASE_JUMP(["Phase Jump Mechanism\n→ Target Phase"])
+
+    ESC["0.1 Escape Hatch Detection\n_(parse initial message)_"]
+    ESC --> ESC_DEC{Escape hatch\ndetected?}
+
+    ESC_DEC -- "design doc / impl plan / no docs" --> ESC_ASK["AskUserQuestion:\nDocument handling"]
+    ESC_ASK --> ESC_ROUTE(["Jump to Phase 2, 3, or 4"])
+    ESC_DEC -- None --> MOT
+
+    MOT["0.2 Clarify Motivation\n(WHY)"]
+    MOT --> MOT_DEC{Motivation\nclear from request?}
+    MOT_DEC -- No --> MOT_ASK["AskUserQuestion:\nMotivation"]
+    MOT_DEC -- Yes --> WHAT
+    MOT_ASK --> WHAT
+
+    WHAT["0.3 Clarify Feature\n(WHAT — core essence + resources)"]
+    WHAT --> PREFS["0.4 Collect Workflow Preferences\n(7-question wizard via AskUserQuestion)"]
+
+    PREFS --> REFACT["0.6 Detect Refactoring Mode\n_(keyword scan)_"]
+    REFACT --> REFACT_DEC{Keywords match:\nrefactor / reorganize\nextract / migrate\nsplit / consolidate?}
+    REFACT_DEC -- Yes --> SET_REFACT["Set refactoring_mode = true"]
+    REFACT_DEC -- No --> NEEDFLAGS
+    SET_REFACT --> NEEDFLAGS
+
+    NEEDFLAGS["0.7 Need-Flag Classification\n(4 AskUserQuestion calls)"]
+    NEEDFLAGS --> INFRA_DEC{Q-INFRA = yes?}
+    INFRA_DEC -- Yes --> AUTO_DESIGN["Auto-set needs_design = true\n_(skip Q-DESIGN)_"]
+    INFRA_DEC -- No --> NEEDFLAGS2["Resolve Q-DESIGN independently"]
+    AUTO_DESIGN --> CHECKLIST
+    NEEDFLAGS2 --> CHECKLIST
+
+    CHECKLIST{"Phase 0\nVerification\nChecklist\n(all items checked?)"}
+    CHECKLIST -- Incomplete --> COMPLETE_P0["Complete missing steps"]
+    COMPLETE_P0 --> CHECKLIST
+
+    CHECKLIST -- "Zero flags" --> FASTPATH(["Fast Path:\nInline plan → implement\n(lighter review floor, develop resident)"])
+    CHECKLIST -- "needs_research = true" --> RESEARCH(["→ /feature-research"])
+    CHECKLIST -- "needs_design or needs_infrastructure\n(no research)" --> DESIGN(["→ /feature-design"])
+
+    subgraph legend["Legend"]
+        L1["Process"]
         L2{Decision}
-        L3([Terminal])
-        L4[/"User Input"/]
-        L5[Quality Gate]:::gate
+        L3(["Terminal / Jump"])
+        L4["AskUserQuestion"]:::askq
+        L5["Quality gate"]:::gate
     end
 
-    START([Phase 0 Entry]) --> CONT_CHECK{0.5 Continuation<br>Signals Detected?}
+    classDef askq fill:#4a9eff,color:#fff,stroke:#2266cc
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc3333
+    classDef success fill:#51cf66,color:#000,stroke:#2f9e44
+    classDef skip fill:#888,color:#fff,stroke:#555
 
-    CONT_CHECK -->|Yes| RESUME_TRACK[Resume Track<br>Steps 1-5]
-    CONT_CHECK -->|No| FRESH_TRACK[Fresh Start Track<br>Steps 0.1-0.7]
-
-    RESUME_TRACK --> PHASE_JUMP[Phase Jump<br>Mechanism]
-    PHASE_JUMP --> RESUME_TARGET([Resume at<br>Target Phase]):::success
-
-    FRESH_TRACK --> ESCAPE{0.1 Escape<br>Hatch Detected?}
-    ESCAPE -->|Yes| ESCAPE_HANDLE[Handle Escape Hatch<br>Skip Covered Phases]
-    ESCAPE -->|No| MOTIVATION[0.2 Clarify Motivation]
-
-    ESCAPE_HANDLE --> MOTIVATION
-    MOTIVATION --> FEATURE[0.3 Clarify Feature]
-    FEATURE --> WIZARD[0.4 Preferences Wizard]
-    WIZARD --> REFACTOR{0.6 Refactoring<br>Keywords?}
-    REFACTOR -->|Yes| SET_REFACTOR[Set refactoring_mode = true]
-    REFACTOR -->|No| COMPLEXITY
-    SET_REFACTOR --> COMPLEXITY
-
-    COMPLEXITY[0.7 Complexity<br>Classification] --> GATE_CHECK[Phase 0 Completion Gate]:::gate
-    GATE_CHECK --> TIER{Derived Tier?}
-
-    TIER -->|TRIVIAL| EXIT_TRIVIAL([Exit Skill]):::success
-    TIER -->|SIMPLE| EXIT_SIMPLE([Lightweight Research<br>then /feature-implement]):::success
-    TIER -->|STANDARD| EXIT_STANDARD([/feature-research<br>Phase 1]):::success
-    TIER -->|COMPLEX| EXIT_COMPLEX([/feature-research<br>Phase 1]):::success
-
-    classDef gate fill:#ff6b6b,stroke:#d63031,color:#fff
-    classDef success fill:#51cf66,stroke:#37b24d,color:#fff
+    class MOT_ASK,ESC_ASK askq
+    class CHECKLIST gate
+    class FASTPATH,RESEARCH,DESIGN,PHASE_JUMP,ESC_ROUTE success
+    class AUTO_DESIGN skip
 ```
 
-## Cross-Reference Table
+---
+
+## Detail: Continuation Detection (Phase 0.5)
+
+Five-step resume flow executed before any wizard interaction.
+
+```mermaid
+flowchart TD
+    START(["Enter 0.5\nContinuation Detection"]) --> SIG_CHECK
+
+    SIG_CHECK{"Any continuation signal?\n① prompt: continue/resume/pick up/\nwhere we left off/compacted\n② system-reminder: Skill Phase with develop phase\n③ system-reminder: Active Skill = develop\n④ artifacts exist on disk"}
+
+    SIG_CHECK -- None --> NO_CONT(["No signals → proceed to 0.1"])
+
+    SIG_CHECK -- "Signal detected" --> STEP1
+
+    STEP1["Step 1: Parse Recovery Context\n(from system-reminder)\n• active_skill\n• skill_phase\n• todos\n• exact_position"]
+    STEP1 --> STEP2
+
+    STEP2["Step 2: Verify Artifact Existence\n(bash: ls ~/.local/spellbook/docs/…\ngit worktree list)"]
+    STEP2 --> ART_CHECK{Artifacts match\nclaimed phase?}
+
+    ART_CHECK -- "Artifacts present & match" --> STEP3
+    ART_CHECK -- "Artifacts MISSING\n(but phase implies they should exist)" --> MISSING_REPORT["Report missing artifacts:\n① Regenerate from context\n② Start fresh from Phase 0"]:::gate
+    MISSING_REPORT --> USER_CHOICE{User chooses}
+    USER_CHOICE -- "Regenerate" --> STEP3
+    USER_CHOICE -- "Fresh start" --> FRESH(["Exit resume → Phase 0.1"])
+
+    STEP3["Step 3: Quick Preferences Check\n(AskUserQuestion — 4 prefs only)\n• Execution mode\n• Parallelization\n• Worktree\n• Post-implementation"]:::askq
+    STEP3 --> STEP4
+
+    STEP4["Step 4: Synthesize Resume Point\n(priority order)\n① In-progress todo from restored todos\n② skill_phase from system-reminder\n③ Artifact-pattern fallback table"]
+    STEP4 --> ART_TABLE{Artifact pattern\nfallback needed?}
+
+    ART_TABLE -- No --> STEP5
+    ART_TABLE -- Yes --> FALLBACK["Fallback table lookup:\n• No artifacts → Phase 0\n• Understanding doc only → Phase 2\n• Design doc, no impl → Phase 3\n• Design + impl, no worktree → Phase 4.1\n• Worktree uncommitted → Phase 4\n• Worktree + commits, no PR → Phase 4 late\n• PR exists → Phase 4.7"]
+    FALLBACK --> STEP5
+
+    STEP5["Step 5: Confirm and Resume\n(display prior progress + current task)"]
+    STEP5 --> JUMP["Phase Jump Mechanism:\n① determine target from skill_phase + artifacts\n② skip all prior phases\n③ execute from target forward\n(display SKIPPED / CURRENT summary)"]
+    JUMP --> TARGET(["Jump to Target Phase"])
+
+    subgraph legend["Legend"]
+        L1["Process"]
+        L2{Decision}
+        L3(["Terminal"])
+        L4["AskUserQuestion"]:::askq
+        L5["Gate / Error state"]:::gate
+    end
+
+    classDef askq fill:#4a9eff,color:#fff,stroke:#2266cc
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc3333
+    classDef success fill:#51cf66,color:#000,stroke:#2f9e44
+
+    class STEP3 askq
+    class MISSING_REPORT gate
+    class NO_CONT,FRESH,TARGET success
+```
+
+---
+
+## Detail: Workflow Preferences Wizard (Phase 0.4)
+
+Seven-question wizard with conditional Q6 and a coupling rule.
+
+```mermaid
+flowchart TD
+    START(["Enter 0.4\nWorkflow Preferences"]) --> Q1
+
+    Q1["Q1: Execution Mode\n• Fully autonomous ✓\n• Interactive\n• Mostly autonomous"]:::askq
+    Q1 --> Q2
+
+    Q2["Q2: Parallelization Strategy\n• Maximize parallel ✓\n• Conservative\n• Ask each time"]:::askq
+    Q2 --> Q3
+
+    Q3["Q3: Git Worktree Strategy\n• Single worktree ✓\n• Per parallel track\n• No worktree"]:::askq
+    Q3 --> Q3_CHECK{worktree ==\nper_parallel_track?}
+    Q3_CHECK -- Yes --> FORCE_PARALLEL["Auto-set parallelization = maximize\n_(coupling rule)_"]
+    Q3_CHECK -- No --> Q4
+    FORCE_PARALLEL --> Q4
+
+    Q4["Q4: Post-Implementation Handling\n• Offer options ✓\n• Create PR automatically\n• Just stop"]:::askq
+    Q4 --> Q5
+
+    Q5["Q5: Dialectic Mode\n• None ✓\n• Roundtable"]:::askq
+    Q5 --> Q5_CHECK{dialectic_mode\n≠ none?}
+    Q5_CHECK -- No --> Q7
+    Q5_CHECK -- Yes --> Q6
+
+    Q6["Q6: Dialectic Level\n• Planning only\n• Planning + gates ✓\n• Full"]:::askq
+    Q6 --> Q7
+
+    Q7["Q7: Token Enforcement\n• Work-item level\n• Gate level ✓\n• Every step"]:::askq
+    Q7 --> STORE["Store all in SESSION_PREFERENCES"]
+    STORE --> DONE(["0.4 Complete → 0.6"])
+
+    subgraph legend["Legend"]
+        L1["AskUserQuestion"]:::askq
+        L2{Decision}
+        L3["Auto-derived"]
+        L4(["Terminal"])
+    end
+
+    classDef askq fill:#4a9eff,color:#fff,stroke:#2266cc
+    classDef success fill:#51cf66,color:#000,stroke:#2f9e44
+
+    class Q1,Q2,Q3,Q4,Q5,Q6,Q7 askq
+    class DONE success
+```
+
+---
+
+## Detail: Need-Flag Classification (Phase 0.7)
+
+Four-question classification that routes the entire develop session into fast path or flag-gated phases.
+
+```mermaid
+flowchart TD
+    START(["Enter 0.7\nNeed-Flag Classification"]) --> QRESEARCH
+
+    QRESEARCH["Q-RESEARCH:\n'Do we need to investigate before building?'\n(unfamiliar code OR fuzzy requirements)\nYes → turns on Research + Discovery phases"]:::askq
+    QRESEARCH --> QINFRA
+
+    QINFRA["Q-INFRA:\n'New dependencies, infrastructure, or schema changes?'\n(new 3P dep / new service / table-column-field / migration)\nYes → auto-sets needs_design"]:::askq
+    QINFRA --> INFRA_CHECK{Q-INFRA = yes?}
+
+    INFRA_CHECK -- Yes --> AUTO_DESIGN["Auto-set needs_design = true\n_(skip Q-DESIGN — infra implies design)_"]
+    INFRA_CHECK -- No --> QDESIGN
+
+    QDESIGN["Q-DESIGN:\n'Is there a real design decision to make?'\n(new structure / choice between approaches /\ninterface other code will depend on)\nYes → turns on Design phase"]:::askq
+    QDESIGN --> QSIZE
+
+    AUTO_DESIGN --> QSIZE
+
+    QSIZE["Q-SIZE:\n'Roughly how big is this?'\nSmall / Medium / Large\n(signal only — tunes parallelization +\ncheckpoints; NEVER affects rigor or gates)"]:::askq
+    QSIZE --> RESOLVE
+
+    RESOLVE["Resolve booleans:\n• needs_research\n• needs_design\n• needs_infrastructure\n• size_estimate\n→ store in SESSION_PREFERENCES"]
+    RESOLVE --> FLAG_EVAL{Any flag\nset to true?}
+
+    FLAG_EVAL -- "Zero flags" --> FAST_ANNOUNCE["Announce fast path (verbatim):\n'This looks like a small, well-understood change…\nI'll take the fast path: skip research/discovery/\ndesign/planning, write a short inline plan for\nyou to confirm, then implement…'"]
+    FAST_ANNOUNCE --> LOG_FAST["Log: 'Fast path: zero-flag change.\nFewer phases, lighter floor, develop resident.'"]
+    LOG_FAST --> FASTPATH(["Fast Path:\nShort inline plan → operator confirm → implement\n(lighter review floor, develop STAYS resident)"])
+
+    FLAG_EVAL -- "needs_research = true" --> RESEARCH_FIRST(["→ /feature-research\n(then design/plan/implement per flags)"])
+
+    FLAG_EVAL -- "needs_design or needs_infrastructure\n(no research)" --> DESIGN_FIRST(["→ /feature-design"])
+
+    subgraph note["Orthogonality rules"]
+        N1["needs_research ⊥ needs_design ⊥ needs_infrastructure\nsize_estimate ⊥ all flags (never gates a phase)\nQ-INFRA=yes ⟹ needs_design=true (auto, no re-ask)"]
+    end
+
+    subgraph legend["Legend"]
+        L1["AskUserQuestion"]:::askq
+        L2{Decision}
+        L3(["Terminal / Route"]):::success
+        L4["Gate"]:::gate
+    end
+
+    classDef askq fill:#4a9eff,color:#fff,stroke:#2266cc
+    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc3333
+    classDef success fill:#51cf66,color:#000,stroke:#2f9e44
+
+    class QRESEARCH,QINFRA,QDESIGN,QSIZE askq
+    class FASTPATH,RESEARCH_FIRST,DESIGN_FIRST success
+    class FLAG_EVAL gate
+```
+
+---
+
+## Cross-Reference: Overview Nodes → Detail Diagrams
 
 | Overview Node | Detail Diagram |
 |---|---|
-| 0.5 Continuation Signals Detected? | [Continuation Detection Detail](#continuation-detection-detail-section-05) |
-| Resume Track Steps 1-5 | [Continuation Detection Detail](#continuation-detection-detail-section-05) |
-| 0.1 Escape Hatch Detected? | [Escape Hatch Detail](#escape-hatch-detail-section-01) |
-| 0.4 Preferences Wizard | [Preferences Wizard Detail](#preferences-wizard-detail-section-04) |
-| 0.7 Complexity Classification | [Complexity Classification Detail](#complexity-classification-detail-section-07) |
-
----
-
-## Continuation Detection Detail (Section 0.5)
-
-Executes FIRST before any wizard questions. Detects prior session state, verifies artifacts on disk, re-collects volatile preferences, and jumps to the appropriate resume point.
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[Quality Gate]:::gate
-    end
-
-    START([Enter 0.5]) --> SCAN{Scan for<br>Continuation Signals}
-
-    SCAN -->|"User prompt: continue,<br>resume, pick up, compacted"| SIG_YES[Signal Found]
-    SCAN -->|"system-reminder has<br>Skill Phase or Active Skill"| SIG_YES
-    SCAN -->|"Artifacts exist<br>on disk"| SIG_YES
-    SCAN -->|No signals| SIG_NO([Proceed to 0.1]):::success
-
-    SIG_YES --> STEP1[Step 1: Parse<br>Recovery Context]
-    STEP1 --> EXTRACT["Extract: active_skill,<br>skill_phase, todos,<br>exact_position"]
-
-    EXTRACT --> STEP2[Step 2: Verify<br>Artifact Existence]
-    STEP2 --> CHECK_ARTIFACTS["Check disk for:<br>- understanding/ dir<br>- *-design.md<br>- *-impl.md<br>- git worktree list"]
-
-    CHECK_ARTIFACTS --> ARTIFACT_MATCH{Artifacts Match<br>Claimed Phase?}
-    ARTIFACT_MATCH -->|Yes| REPORT_STATE[Report Verified State]
-    ARTIFACT_MATCH -->|No| MISSING[Report Missing Artifacts]
-
-    MISSING --> MISSING_CHOICE{User Choice}
-    MISSING_CHOICE -->|Regenerate| REPORT_STATE
-    MISSING_CHOICE -->|Start fresh| SIG_NO
-
-    REPORT_STATE --> STEP3[Step 3: Quick<br>Preferences Check]
-    STEP3 --> PREFS["Re-ask 4 prefs only:<br>- Execution mode<br>- Parallelization<br>- Worktree<br>- Post-implementation"]
-
-    PREFS --> STEP4[Step 4: Synthesize<br>Resume Point]
-    STEP4 --> SYNTH_SOURCE{Resume Source<br>Priority?}
-
-    SYNTH_SOURCE -->|"1st: In-progress todo"| USE_TODO[Use todo as resume point]
-    SYNTH_SOURCE -->|"2nd: skill_phase from<br>system-reminder"| USE_PHASE[Use claimed phase]
-    SYNTH_SOURCE -->|"3rd: Neither available"| USE_ARTIFACTS[Infer from<br>artifact pattern table]
-
-    USE_TODO --> STEP5[Step 5: Confirm and Resume]
-    USE_PHASE --> STEP5
-    USE_ARTIFACTS --> STEP5
-
-    STEP5 --> DISPLAY[Display skipped<br>and current phases]
-    DISPLAY --> JUMP([Phase Jump to<br>Target Phase]):::success
-
-    classDef gate fill:#ff6b6b,stroke:#d63031,color:#fff
-    classDef success fill:#51cf66,stroke:#37b24d,color:#fff
-```
-
-### Artifact-to-Phase Inference Table
-
-Used by Step 4 when no todo or skill_phase is available.
-
-| Artifact Pattern | Inferred Phase | Confidence |
-|---|---|---|
-| No artifacts | Phase 0 (fresh start) | HIGH |
-| Understanding doc only | Phase 1.5 complete, resume Phase 2 | HIGH |
-| Design doc, no impl plan | Phase 2 complete, resume Phase 3 | HIGH |
-| Design + impl plan, no worktree | Phase 3 complete, resume Phase 4.1 | HIGH |
-| Worktree with uncommitted changes | Phase 4 in progress | MEDIUM |
-| Worktree with commits, no PR | Phase 4 late stages | MEDIUM |
-| PR exists for feature branch | Phase 4.7 (finishing) | HIGH |
-
----
-
-## Escape Hatch Detail (Section 0.1)
-
-Parses user's initial message for patterns that skip phases by providing pre-existing documents.
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"User Input"/]
-    end
-
-    START([Enter 0.1]) --> PARSE[Parse User Message<br>for Escape Patterns]
-
-    PARSE --> PATTERN{Pattern Detected?}
-
-    PATTERN -->|"'using design doc path'"| DESIGN_ESC[Design Doc Escape]
-    PATTERN -->|"'using impl plan path'"| IMPL_ESC[Impl Plan Escape]
-    PATTERN -->|"'just implement, no docs'"| NODOCS_ESC[No-Docs Escape]
-    PATTERN -->|No pattern| NO_ESCAPE([No Escape Hatch<br>Proceed to 0.2]):::success
-
-    DESIGN_ESC --> ASK_HANDLE{/"How to handle<br>existing doc?"/}
-    IMPL_ESC --> ASK_HANDLE
-
-    ASK_HANDLE -->|Review first| REVIEW_CHOICE{Doc Type?}
-    ASK_HANDLE -->|Treat as ready| READY_CHOICE{Doc Type?}
-
-    REVIEW_CHOICE -->|Design doc| SKIP_21([Skip to Phase 2.2<br>Review Design]):::success
-    REVIEW_CHOICE -->|Impl plan| SKIP_32([Skip to Phase 3.2<br>Review Plan]):::success
-
-    READY_CHOICE -->|Design doc| SKIP_P2([Skip Phase 2<br>Start Phase 3]):::success
-    READY_CHOICE -->|Impl plan| SKIP_P23([Skip Phases 2-3<br>Start Phase 4]):::success
-
-    NODOCS_ESC --> SKIP_INLINE([Skip Phases 2-3<br>Minimal Inline Plan<br>Start Phase 4]):::success
-
-    classDef success fill:#51cf66,stroke:#37b24d,color:#fff
-```
-
----
-
-## Preferences Wizard Detail (Section 0.4)
-
-Collects all workflow preferences in a single wizard interaction. Questions 6-7 are conditional.
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[/"User Input"/]
-        L2{Decision}
-        L3([Terminal])
-    end
-
-    START([Enter 0.4]) --> Q1[/"Q1: Execution Mode<br>Autonomous / Interactive /<br>Mostly Autonomous"/]
-
-    Q1 --> Q2[/"Q2: Parallelization<br>Maximize / Conservative /<br>Ask Each Time"/]
-
-    Q2 --> Q3[/"Q3: Worktree Strategy<br>Single / Per Track / None"/]
-
-    Q3 --> Q4[/"Q4: Post-Implementation<br>Offer Options / Auto PR /<br>Just Stop"/]
-
-    Q4 --> Q5[/"Q5: Dialectic Mode<br>None / Roundtable"/]
-
-    Q5 --> DIALECTIC{Dialectic Mode<br>!= None?}
-
-    DIALECTIC -->|Yes| Q6[/"Q6: Dialectic Level<br>Planning Only /<br>Planning + Gates / Full"/]
-    DIALECTIC -->|No| Q7
-
-    Q6 --> Q7[/"Q7: Token Enforcement<br>Work-Item / Gate /<br>Every Step"/]
-
-    Q7 --> COUPLING{Worktree ==<br>per_parallel_track?}
-    COUPLING -->|Yes| FORCE_PARALLEL["Force parallelization<br>= maximize"]
-    COUPLING -->|No| STORE
-
-    FORCE_PARALLEL --> STORE[Store all in<br>SESSION_PREFERENCES]
-    STORE --> DONE([Preferences Complete]):::success
-
-    classDef success fill:#51cf66,stroke:#37b24d,color:#fff
-```
-
----
-
-## Complexity Classification Detail (Section 0.7)
-
-Derives complexity tier from mechanical heuristics. The executor cannot override the matrix; only the user can confirm or change the tier.
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"User Input"/]
-        L5[Quality Gate]:::gate
-    end
-
-    START([Enter 0.7]) --> HEURISTICS[Step 1: Run<br>Mechanical Heuristics]
-
-    HEURISTICS --> H1["H1: File Count<br>grep -rl pattern | wc -l"]
-    HEURISTICS --> H2["H2: Behavioral Change?<br>New endpoints, UI, API?"]
-    HEURISTICS --> H3["H3: Test Impact<br>grep -rl module tests/ | wc -l"]
-    HEURISTICS --> H4["H4: Structural Change?<br>New files, schemas, migrations?"]
-    HEURISTICS --> H5["H5: Integration Points<br>grep -rl import module | wc -l"]
-
-    H1 --> MATRIX[Step 2: Derive Tier<br>from Matrix]
-    H2 --> MATRIX
-    H3 --> MATRIX
-    H4 --> MATRIX
-    H5 --> MATRIX
-
-    MATRIX --> TRIVIAL_CHECK{All Trivial<br>Conditions Met?}:::gate
-
-    TRIVIAL_CHECK -->|"Only literal values AND<br>no structure change AND<br>zero behavior impact AND<br>zero test changes"| TIER_TRIVIAL[Tier: TRIVIAL]
-    TRIVIAL_CHECK -->|Any condition unmet| TIER_HIGHER{Classify by<br>Heuristic Ranges}
-
-    TIER_HIGHER -->|"1-5 files, minor behavior,<br>less than 3 tests, 0-2 integrations"| TIER_SIMPLE[Tier: SIMPLE]
-    TIER_HIGHER -->|"3-15 files, behavior change,<br>3+ tests, new interfaces"| TIER_STANDARD[Tier: STANDARD]
-    TIER_HIGHER -->|"10+ files, significant change,<br>new suites, 5+ integrations"| TIER_COMPLEX[Tier: COMPLEX]
-
-    TIER_TRIVIAL --> PRESENT[Step 3: Present<br>Heuristic Results Table]
-    TIER_SIMPLE --> PRESENT
-    TIER_STANDARD --> PRESENT
-    TIER_COMPLEX --> PRESENT
-
-    PRESENT --> CONFIRM{/"User: Confirm<br>or Override?"/}
-
-    CONFIRM -->|Confirm| STORE[Store in<br>SESSION_PREFERENCES]
-    CONFIRM -->|Override with reason| STORE
-
-    STORE --> ROUTE{Step 4: Route<br>by Tier}
-
-    ROUTE -->|TRIVIAL| EXIT(["Exit Skill<br>(direct change)"]):::success
-    ROUTE -->|SIMPLE| SIMPLE([Lightweight Research<br>then /feature-implement]):::success
-    ROUTE -->|STANDARD| RESEARCH([/feature-research<br>Phase 1]):::success
-    ROUTE -->|COMPLEX| RESEARCH
-
-    classDef gate fill:#ff6b6b,stroke:#d63031,color:#fff
-    classDef success fill:#51cf66,stroke:#37b24d,color:#fff
-```
-
-### Tier Classification Matrix
-
-| Tier | File Count | Behavioral Change | Test Impact | Structural Change | Integration Points |
-|---|---|---|---|---|---|
-| TRIVIAL | 1-2 | None | 0 test files | None (values only) | 0 |
-| SIMPLE | 1-5 | Minor or none | < 3 test files | None or minimal | 0-2 |
-| STANDARD | 3-15 | Yes | 3+ test files | Some new files/interfaces | 2-5 |
-| COMPLEX | 10+ | Significant | New test suites needed | New modules/schemas | 5+ |
-
-Tie-breaking rule: classify UP when heuristics span tiers.
+| `0.5 Continuation Detection` | Detail: Continuation Detection (Phase 0.5) |
+| `0.4 Collect Workflow Preferences` | Detail: Workflow Preferences Wizard (Phase 0.4) |
+| `0.7 Need-Flag Classification` | Detail: Need-Flag Classification (Phase 0.7) |
+| `0.1 Escape Hatch Detection` | Covered inline in Overview (three patterns, two user choices each) |
+| `0.2 / 0.3 Motivation + WHAT` | Covered inline in Overview (single AskUserQuestion per step) |
+| `0.6 Refactoring Mode` | Covered inline in Overview (keyword scan, boolean set) |

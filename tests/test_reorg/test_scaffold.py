@@ -40,7 +40,6 @@ class TestDomainPackages:
     @pytest.mark.parametrize(
         "package",
         [
-            "spellbook.memory",
             "spellbook.health",
             "spellbook.sessions",
             "spellbook.notifications",

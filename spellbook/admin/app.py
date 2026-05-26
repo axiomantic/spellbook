@@ -158,7 +158,6 @@ def create_admin_app() -> FastAPI:
     from spellbook.admin.routes import config as config_routes
     from spellbook.admin.routes import dashboard as dashboard_routes
     from spellbook.admin.routes import canvas as canvas_routes
-    from spellbook.admin.routes import memory as memory_routes
     from spellbook.admin.routes import sessions as sessions_routes
     from spellbook.admin.routes import fractal as fractal_routes
     from spellbook.admin.routes import events as events_routes
@@ -170,7 +169,6 @@ def create_admin_app() -> FastAPI:
     app.include_router(auth_routes.router, prefix="/api")
     app.include_router(config_routes.router, prefix="/api")
     app.include_router(dashboard_routes.router, prefix="/api")
-    app.include_router(memory_routes.router, prefix="/api")
     app.include_router(canvas_routes.router, prefix="/api")
     app.include_router(sessions_routes.router, prefix="/api")
     app.include_router(fractal_routes.router, prefix="/api")

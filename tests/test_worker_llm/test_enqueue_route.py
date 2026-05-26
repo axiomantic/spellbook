@@ -78,7 +78,7 @@ async def test_enqueue_route_accepts_valid_payload(
         r = await client.post(
             "/api/worker-llm/enqueue",
             json={
-                "task_name": "transcript_harvest",
+                "task_name": "tool_safety",
                 "prompt": "some body",
                 "context": {"namespace": "proj", "branch": "main"},
             },
@@ -86,7 +86,7 @@ async def test_enqueue_route_accepts_valid_payload(
     assert r.status_code == 202, r.text
     assert r.json() == {"ok": True, "dropped": False}
     assert len(queue_enabled_and_running) == 1
-    assert queue_enabled_and_running[0]["task_name"] == "transcript_harvest"
+    assert queue_enabled_and_running[0]["task_name"] == "tool_safety"
     assert queue_enabled_and_running[0]["prompt"] == "some body"
     assert queue_enabled_and_running[0]["context"] == {
         "namespace": "proj",
@@ -119,7 +119,7 @@ async def test_enqueue_route_reports_dropped_when_eviction_occurs(
     ) as client:
         r = await client.post(
             "/api/worker-llm/enqueue",
-            json={"task_name": "transcript_harvest", "prompt": "x"},
+            json={"task_name": "tool_safety", "prompt": "x"},
         )
     assert r.status_code == 202
     assert r.json() == {"ok": True, "dropped": True}
@@ -137,7 +137,7 @@ async def test_enqueue_route_503_when_feature_disabled(mcp_http_app, monkeypatch
     ) as client:
         r = await client.post(
             "/api/worker-llm/enqueue",
-            json={"task_name": "transcript_harvest", "prompt": "x"},
+            json={"task_name": "tool_safety", "prompt": "x"},
         )
     assert r.status_code == 503
 
@@ -160,7 +160,7 @@ async def test_enqueue_route_503_when_queue_not_running(mcp_http_app, monkeypatc
     ) as client:
         r = await client.post(
             "/api/worker-llm/enqueue",
-            json={"task_name": "transcript_harvest", "prompt": "x"},
+            json={"task_name": "tool_safety", "prompt": "x"},
         )
     assert r.status_code == 503
 
@@ -186,7 +186,7 @@ async def test_enqueue_route_rejects_missing_prompt(mcp_http_app):
     ) as client:
         r = await client.post(
             "/api/worker-llm/enqueue",
-            json={"task_name": "transcript_harvest"},
+            json={"task_name": "tool_safety"},
         )
     assert r.status_code == 400
 
@@ -200,7 +200,7 @@ async def test_enqueue_route_rejects_non_dict_context(mcp_http_app):
         r = await client.post(
             "/api/worker-llm/enqueue",
             json={
-                "task_name": "transcript_harvest",
+                "task_name": "tool_safety",
                 "prompt": "x",
                 "context": "not-a-dict",
             },

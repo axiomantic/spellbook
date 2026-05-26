@@ -1,7 +1,7 @@
 """Async fire-and-forget queue for worker-LLM calls.
 
-Fire-and-forget callers (transcript_harvest from the Stop hook, warm pings
-from tool_safety cold-start detection) do not want to block on the worker
+Fire-and-forget callers (warm pings from tool_safety cold-start detection)
+do not want to block on the worker
 endpoint. When the queue is enabled, callers enqueue a ``WorkerTask`` and
 return immediately; a single background consumer coroutine, owned by the
 daemon lifespan, drains the queue and calls ``client.call`` per task.

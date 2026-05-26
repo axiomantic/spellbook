@@ -16,7 +16,6 @@ from typing import Any, Dict, List
 from fastmcp import Context
 
 from spellbook.mcp.server import mcp
-from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import (
     get_project_dir_from_context,
     get_project_path_from_context,
@@ -26,7 +25,6 @@ from spellbook.sdk.unified import get_agent_client, AgentOptions
 
 
 @mcp.tool()
-@inject_recovery_context
 async def find_session(ctx: Context, name: str, limit: int = 10) -> List[Dict[str, Any]]:
     """
     Find sessions by name using case-insensitive substring matching.
@@ -70,7 +68,6 @@ async def find_session(ctx: Context, name: str, limit: int = 10) -> List[Dict[st
 
 
 @mcp.tool()
-@inject_recovery_context
 def split_session(session_path: str, start_line: int, char_limit: int) -> List[List[int]]:
     """
     Calculate chunk boundaries for a session that respect message boundaries.
@@ -96,7 +93,6 @@ def split_session(session_path: str, start_line: int, char_limit: int) -> List[L
 
 
 @mcp.tool()
-@inject_recovery_context
 async def list_sessions(ctx: Context, limit: int = 5) -> List[Dict[str, Any]]:
     """
     List recent sessions for current project with rich metadata and content samples.
@@ -163,7 +159,6 @@ def _get_session_id(ctx):
 
 
 @mcp.tool()
-@inject_recovery_context
 async def spawn_session(
     ctx: Context,
     prompt: str,
@@ -291,7 +286,6 @@ async def spawn_session(
 
 
 @mcp.tool()
-@inject_recovery_context
 async def spawn_claude_session(
     ctx: Context,
     prompt: str,

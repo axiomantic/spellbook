@@ -6,17 +6,13 @@ functions based on hook_event_name and tool_name from stdin JSON.
 
 Replaces all individual shell hooks (bash-gate.sh, spawn-guard.sh,
 state-sanitize.sh, notify-timer-start.sh, audit-log.sh, canary-check.sh,
-memory-inject.sh, notify-on-complete.sh, memory-capture.sh,
-pre-compact-save.sh, post-compact-recover.sh).
+notify-on-complete.sh, pre-compact-save.sh, post-compact-recover.sh).
 """
 
-import hashlib
 import json
 import logging
 import os
 import re
-import secrets
-import shlex
 import subprocess
 import sys
 import tempfile
@@ -24,7 +20,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from xml.sax.saxutils import escape as _xml_escape
 
@@ -48,27 +44,6 @@ CONFIG_PATH = Path(os.environ.get(
     "SPELLBOOK_CONFIG_PATH",
     str(Path.home() / ".config" / "spellbook" / "spellbook.json"),
 ))
-
-# ---------------------------------------------------------------------------
-# Auto memory recall: budget, dedup, keyword extraction
-# ---------------------------------------------------------------------------
-DEDUP_LOG_PATH = Path.home() / ".local" / "spellbook" / "cache" / "recent-memory-injections.json"
-DEDUP_TTL = timedelta(minutes=15)
-MEMORY_BUDGET_MAX_COUNT = 5
-MEMORY_BUDGET_MAX_TOKENS = 500
-MEMORY_PROMPT_MIN_LENGTH = 10
-
-_STOPWORDS = frozenset({
-    "the", "a", "an", "and", "or", "but", "for", "with",
-    "this", "that", "these", "those", "is", "was", "are",
-    "were", "to", "of", "in", "on", "at",
-})
-
-# Identifiers: CamelCase, camelCase, snake_case (require an internal boundary).
-_IDENT_RE = re.compile(r"\b(?:[A-Z][a-z0-9]+[A-Z][A-Za-z0-9]*|[a-z]+[A-Z][A-Za-z0-9]*|[A-Za-z]+_[A-Za-z0-9_]+)\b")
-# File paths: contain a '/' and non-space characters (allow extensions).
-_PATH_RE = re.compile(r"\b[\w.\-/]*/[\w.\-/]+")
-
 
 def _utcnow() -> datetime:
     """Return current UTC time. Indirection lets tests freeze time."""
@@ -249,7 +224,7 @@ def _fallback_directive() -> dict:
 # ---------------------------------------------------------------------------
 
 def _http_post(path: str, payload: dict, timeout: float = 5) -> dict | None:
-    """Direct HTTP POST (not JSON-RPC). Used by memory, TTS, capture.
+    """Direct HTTP POST (not JSON-RPC) to a daemon REST endpoint.
 
     ``path`` is an absolute URL path (e.g. ``/api/hook-log``).  The daemon
     base URL is derived from MCP_HOST and MCP_PORT.
@@ -325,8 +300,8 @@ _EXCLUDED_TOOLS = frozenset({
     "file_history_snapshot", "get_file_contents",
 })
 
-# Interactive/UI tools excluded from stint depth checks, memory capture,
-# and other handlers where we still want file-related tools to fire
+# Interactive/UI tools excluded from stint depth checks and other
+# handlers where we still want file-related tools to fire
 _INTERACTIVE_EXCLUDED_TOOLS = frozenset({
     "AskUserQuestion", "TodoRead", "TodoWrite",
     "TaskCreate", "TaskUpdate", "TaskGet", "TaskList",
@@ -494,55 +469,6 @@ def _record_tool_start(tool_name: str, data: dict) -> None:
         pass
 
 
-def _memory_inject(tool_name: str, data: dict) -> str | None:
-    """Memory: inject file memories. FAIL-OPEN.
-
-    For file-related tools (Read, Edit, Grep, Glob), extracts file_path
-    from tool_input and recalls associated memories from the MCP server.
-    Applies dedup + budget and returns formatted XML or None.
-    """
-    if not _auto_recall_enabled():
-        return None
-
-    tool_input = data.get("tool_input") or {}
-    cwd = data.get("cwd", "")
-
-    # Extract file path based on tool
-    if tool_name in ("Read", "Edit"):
-        file_path = tool_input.get("file_path", "")
-    elif tool_name in ("Grep", "Glob"):
-        file_path = tool_input.get("path", "")
-    else:
-        return None
-    if not file_path:
-        return None
-
-    namespace, resolved_cwd, branch = _derive_namespace(cwd)
-    if not namespace:
-        return None
-
-    memories = _recall(
-        namespace=namespace,
-        branch=branch,
-        resolved_cwd=resolved_cwd,
-        file_path=file_path,
-        limit=MEMORY_BUDGET_MAX_COUNT,
-    )
-    if not memories:
-        return None
-
-    log = _load_dedup_log()
-    memories = _filter_memories_by_dedup(memories, log)
-    memories = _apply_memory_budget(memories)
-    if not memories:
-        return None
-
-    xml = _format_memory_xml(memories)
-    if xml:
-        _touch_dedup_log([m.get("path", "") for m in memories])
-    return xml
-
-
 def _notify_on_complete(tool_name: str, data: dict) -> None:
     """OS notifications for long-running tools. FAIL-OPEN.
 
@@ -571,146 +497,6 @@ def _notify_on_complete(tool_name: str, data: dict) -> None:
     title = os.environ.get("SPELLBOOK_NOTIFY_TITLE", "Spellbook")
     body = f"{tool_name} finished ({elapsed}s)"
     _send_os_notification(title, body)
-
-
-def _memory_capture(tool_name: str, data: dict) -> None:
-    """Memory: capture tool use events. FAIL-OPEN.
-
-    Builds a summary of the tool call and POSTs to /api/memory/event.
-    """
-    if tool_name in _INTERACTIVE_EXCLUDED_TOOLS or not tool_name:
-        return
-    tool_input = data.get("tool_input") or {}
-    cwd = data.get("cwd", "")
-    session_id = data.get("session_id", "")
-
-    # Extract subject
-    if tool_name in ("Read", "Write", "Edit"):
-        subject = tool_input.get("file_path", "")
-    elif tool_name == "Bash":
-        subject = (tool_input.get("command", "") or "")[:200]
-    elif tool_name in ("Grep", "Glob"):
-        subject = tool_input.get("pattern", "")
-    elif tool_name == "WebFetch":
-        subject = tool_input.get("url", "")
-    else:
-        subject = tool_name
-
-    summary = tool_name
-    if subject:
-        summary += f": {subject[:100]}"
-    desc = tool_input.get("description", "")
-    if desc:
-        summary += f" ({desc[:80]})"
-
-    # Canonical namespace encoding lives in
-    # spellbook.memory.utils.derive_namespace_from_cwd; kept inline here
-    # because the hook must avoid importing the spellbook package.
-    resolved_cwd, branch = _resolve_git_context(cwd)
-    namespace = resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-") if resolved_cwd else "unknown"
-
-    tags_list = [tool_name.lower()]
-    if subject:
-        normalized = subject.replace("\\", "/")
-        parts = normalized.rsplit("/", 1)
-        if len(parts) > 1:
-            tags_list.append(parts[-1].lower())
-
-    payload = {
-        "session_id": session_id,
-        "project": namespace,
-        "tool_name": tool_name,
-        "subject": subject,
-        "summary": summary[:500],
-        "tags": ",".join(tags_list),
-        "event_type": "tool_use",
-        "branch": branch,
-    }
-    _http_post(
-        "/api/memory/event",
-        payload,
-        timeout=5,
-    )
-
-
-def _is_auto_memory_path(file_path: str) -> bool:
-    """Detect writes to Claude Code's auto-memory directory.
-
-    Matches: ~/.claude/projects/<anything>/memory/<anything>.md
-    """
-    normalized = file_path.replace("\\", "/")
-    return (
-        "/.claude/projects/" in normalized
-        and "/memory/" in normalized
-        and normalized.endswith(".md")
-    )
-
-
-def _memory_bridge(tool_name: str, data: dict) -> None:
-    """Bridge: capture auto-memory writes to spellbook. FAIL-OPEN."""
-    if tool_name != "Write":
-        return
-
-    tool_input = data.get("tool_input") or {}
-    file_path = tool_input.get("file_path", "")
-
-    if not _is_auto_memory_path(file_path):
-        return
-
-    content = tool_input.get("content", "")
-    if not content:
-        return
-
-    # Skip re-capturing spellbook-generated content (design doc Section 8.3).
-    # Bootstrap content will be re-captured when the model updates MEMORY.md,
-    # which is accepted by design. This lightweight filter avoids the most
-    # common echo: the regenerated header written by session init.
-    if content.lstrip().startswith("# Spellbook Memory System"):
-        return
-
-    cwd = data.get("cwd", "")
-    session_id = data.get("session_id", "")
-    resolved_cwd, branch = _resolve_git_context(cwd)
-    namespace = (
-        resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-")
-        if resolved_cwd else "unknown"
-    )
-
-    # Determine if this is MEMORY.md or a topic file
-    normalized = file_path.replace("\\", "/")
-    filename = normalized.rsplit("/", 1)[-1] if "/" in normalized else normalized
-    is_primary = filename == "MEMORY.md"
-
-    # 1. Audit trail (existing endpoint, lightweight)
-    _http_post(
-        "/api/memory/event",
-        {
-            "session_id": session_id,
-            "project": namespace,
-            "tool_name": "Write",
-            "subject": file_path,
-            "summary": f"auto-memory {'primary' if is_primary else 'topic'}: {filename}",
-            "tags": "auto-memory,bridge," + filename.lower().replace(".md", ""),
-            "event_type": "auto_memory_bridge",
-            "branch": branch,
-        },
-        timeout=5,
-    )
-
-    # 2. Full content capture (new endpoint)
-    _http_post(
-        "/api/memory/bridge-content",
-        {
-            "session_id": session_id,
-            "project": namespace,
-            "file_path": file_path,
-            "filename": filename,
-            "content": content[:50000],  # Safety cap: 50KB
-            "is_primary": is_primary,
-            "branch": branch,
-        },
-        timeout=10,
-    )
 
 
 def _stint_depth_check(data: dict) -> str | None:
@@ -817,17 +603,41 @@ def _build_recovery_directive(state: dict) -> str:
             if constraints:
                 parts.append(f"\n### Skill Constraints\n{constraints}")
 
-    # Binding decisions
-    binding_decisions = state.get("binding_decisions", [])
+    # Binding decisions. The state key is `decisions_binding` -- the key in
+    # _ALLOWED_STATE_KEYS and the one read back in spellbook/sessions/resume.py
+    # (the old `binding_decisions` read here was a dead key never present in
+    # saved state).
+    binding_decisions = state.get("decisions_binding", [])
     if binding_decisions:
         parts.append("\n### Binding Decisions")
         for decision in binding_decisions:
             parts.append(f"- {decision}")
 
-    # Next action
-    next_action = state.get("next_action", "")
-    if next_action:
-        parts.append(f"\n### Next Action\n{next_action}")
+    # Develop: remaining-gate ceremony re-assertion (design §4 C3, §4.6).
+    # Placed BEFORE Pending Todos so a resumed develop session sees the
+    # not-yet-done quality gates first and does not declare victory early.
+    # `remaining_gates` is a NEWLINE-JOINED SCALAR STRING (CRIT-1), never a
+    # stored list -- split locally for rendering. Absent ledger renders
+    # nothing (backward compatible with non-develop work).
+    ledger = state.get("develop_gate_ledger") or {}
+    remaining_raw = ledger.get("remaining_gates") or ""
+    remaining = [g for g in remaining_raw.split("\n") if g.strip()]
+    current_phase = ledger.get("current_phase", "")
+    plan_pointer = ledger.get("plan_pointer", "")
+    if ledger:
+        parts.append("\n### Develop: Remaining Work (DO NOT declare done)")
+        if current_phase:
+            parts.append(f"Current phase: {current_phase}")
+        if remaining:
+            parts.append("Remaining quality gates — these MUST still run:")
+            for g in remaining:
+                parts.append(f"- [ ] {g}")
+        else:
+            parts.append(
+                "No gates recorded as remaining; re-verify against the plan before finishing."
+            )
+        if plan_pointer:
+            parts.append(f"Plan: {plan_pointer}")
 
     # Workflow pattern
     workflow_pattern = state.get("workflow_pattern", "")
@@ -848,1044 +658,6 @@ def _build_recovery_directive(state: dict) -> str:
             parts.append(f"- {f}")
 
     return "\n".join(parts) if parts else "No active workflow state found."
-
-
-# ---------------------------------------------------------------------------
-# Memory auto-recall helpers
-# ---------------------------------------------------------------------------
-
-
-def _extract_keywords(prompt: str) -> list[str]:
-    """Extract significant keywords from a user prompt.
-
-    Combines three sources in order, preserving order of first appearance:
-    1. Path-like tokens (containing '/')
-    2. Code identifiers (CamelCase, camelCase, snake_case)
-    3. Plain words (len >= 4, not in stopword list)
-
-    Duplicates are removed.
-    """
-    seen: set[str] = set()
-    out: list[str] = []
-
-    def _push(tok: str) -> None:
-        if tok and tok not in seen:
-            seen.add(tok)
-            out.append(tok)
-
-    # Pass 1: tokenize preserving order across identifiers, paths, words.
-    # We walk the string, at each non-whitespace token classify it.
-    for raw in prompt.split():
-        # Strip common trailing punctuation but preserve '/' and '_' and '.'.
-        tok = raw.strip(",;:!?()[]{}\"'`")
-        if not tok:
-            continue
-        if "/" in tok:
-            _push(tok)
-            continue
-        if _IDENT_RE.fullmatch(tok):
-            _push(tok)
-            continue
-        # Plain word filter: accept alphanumerics with at least one letter
-        # (so tokens like ``gap3``, ``py314``, ``ody0042`` survive).
-        lower = tok.lower()
-        if (
-            len(tok) >= 4
-            and lower not in _STOPWORDS
-            and tok.isalnum()
-            and any(c.isalpha() for c in tok)
-        ):
-            _push(tok)
-    return out
-
-
-def _extract_tool_paths(tool_name: str, tool_input: dict) -> list[str]:
-    """Extract file paths from a tool invocation's input.
-
-    For Bash: split command and keep tokens containing '/'.
-    For Write/Edit: the 'file_path' field.
-    """
-    if tool_name == "Bash":
-        cmd = tool_input.get("command", "") or ""
-        try:
-            parts = shlex.split(cmd)
-        except ValueError:
-            parts = cmd.split()
-        return [p for p in parts if "/" in p]
-    if tool_name in ("Write", "Edit"):
-        fp = tool_input.get("file_path", "") or ""
-        return [fp] if fp else []
-    return []
-
-
-def _apply_memory_budget(
-    memories: list[dict],
-    max_count: int = MEMORY_BUDGET_MAX_COUNT,
-    max_tokens: int = MEMORY_BUDGET_MAX_TOKENS,
-) -> list[dict]:
-    """Cap a memory list by count and cumulative token estimate.
-
-    Token estimate: len(body) // 4 per memory. Stops before adding a memory
-    that would push cumulative tokens above max_tokens.
-    """
-    out: list[dict] = []
-    total = 0
-    for m in memories:
-        if len(out) >= max_count:
-            break
-        body = m.get("body", "") or ""
-        cost = len(body) // 4
-        if total + cost > max_tokens:
-            break
-        out.append(m)
-        total += cost
-    return out
-
-
-def _load_dedup_log(now: datetime | None = None) -> dict[str, str]:
-    """Load dedup log, dropping entries older than DEDUP_TTL.
-
-    Returns the remaining (fresh) entries as a path->ISO8601 dict.
-    """
-    if now is None:
-        now = _utcnow()
-    if not DEDUP_LOG_PATH.exists():
-        return {}
-    try:
-        raw = json.loads(DEDUP_LOG_PATH.read_text())
-    except FileNotFoundError:
-        # Raced with a delete between .exists() and .read_text() -> silent.
-        return {}
-    except (OSError, json.JSONDecodeError) as e:
-        # Unexpected: permission denied, disk error, corrupt JSON, etc.
-        # Route through the daemon's /api/hook-log endpoint so operators
-        # can diagnose; fall back to stderr if daemon unreachable. Dedup
-        # fails open regardless.
-        _log_hook_error("memory_dedup_load", str(DEDUP_LOG_PATH), e)
-        return {}
-    fresh: dict[str, str] = {}
-    cutoff = now - DEDUP_TTL
-    for path, ts in raw.items():
-        try:
-            t = datetime.fromisoformat(ts)
-            if t.tzinfo is None:
-                t = t.replace(tzinfo=timezone.utc)
-        except (ValueError, TypeError):
-            continue
-        if t >= cutoff:
-            fresh[path] = ts
-    return fresh
-
-
-def _filter_memories_by_dedup(memories: list[dict], log: dict[str, str]) -> list[dict]:
-    """Drop memories whose path appears in the dedup log."""
-    return [m for m in memories if m.get("path") not in log]
-
-
-def _atomic_write_json(path: Path, data: dict) -> None:
-    """Atomically write `data` as JSON to `path` via tempfile + os.replace.
-
-    The tempfile is created with O_EXCL and a random suffix; on collision we
-    retry with a fresh suffix. Once written, ``os.replace`` swaps it into
-    place so readers never observe a partially-written file.
-    """
-    path.parent.mkdir(parents=True, exist_ok=True)
-    payload = json.dumps(data).encode("utf-8")
-    for _ in range(5):
-        tmp = path.with_suffix(
-            f".tmp.{os.getpid()}.{secrets.token_hex(4)}"
-        )
-        try:
-            fd = os.open(
-                tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o644,
-            )
-        except FileExistsError:
-            continue
-        try:
-            with os.fdopen(fd, "wb") as fh:
-                fh.write(payload)
-            os.replace(tmp, path)
-            return
-        except Exception:
-            try:
-                tmp.unlink()
-            except OSError:
-                pass
-            raise
-    raise OSError(
-        f"unable to allocate unique tempfile for {path} after 5 retries"
-    )
-
-
-def _dedup_lock_path() -> Path:
-    return DEDUP_LOG_PATH.with_suffix(DEDUP_LOG_PATH.suffix + ".lock")
-
-
-def _acquire_dedup_lock(lock_fd: int, timeout_sec: float = 0.1) -> bool:
-    """Try to take an exclusive advisory lock on ``lock_fd``.
-
-    Non-blocking first, then a short spinning retry up to ``timeout_sec``.
-    Returns True on success, False on timeout. Windows (no ``fcntl``)
-    short-circuits to True (no lock taken; caller retains best-effort
-    semantics).
-    """
-    try:
-        import fcntl  # POSIX only
-    except ImportError:
-        return True
-
-    deadline = time.monotonic() + timeout_sec
-    while True:
-        try:
-            fcntl.flock(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            return True
-        except BlockingIOError:
-            if time.monotonic() >= deadline:
-                return False
-            time.sleep(0.005)
-        except OSError:
-            # Lock call failed unexpectedly — give up cleanly.
-            return False
-
-
-def _release_dedup_lock(lock_fd: int) -> None:
-    try:
-        import fcntl  # POSIX only
-        fcntl.flock(lock_fd, fcntl.LOCK_UN)
-    except (ImportError, OSError):
-        pass
-
-
-def _touch_dedup_log(paths: list[str], now: datetime | None = None) -> None:
-    """Stamp paths with ``now`` and write back the dedup log.
-
-    Exclusive-lock best effort with a 100ms timeout; on timeout we fall back
-    to the prior last-writer-wins semantics and log a diagnostic via
-    ``_log_hook_error`` so operators can diagnose contention. The write
-    itself is atomic (tempfile + os.replace) so partial writes are never
-    observable.
-    """
-    if now is None:
-        now = _utcnow()
-    ts = now.isoformat()
-
-    DEDUP_LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
-    lock_path = _dedup_lock_path()
-    lock_fd: int | None = None
-    locked = False
-    try:
-        try:
-            lock_fd = os.open(lock_path, os.O_WRONLY | os.O_CREAT, 0o600)
-        except OSError:
-            lock_fd = None
-
-        if lock_fd is not None:
-            locked = _acquire_dedup_lock(lock_fd)
-            if not locked:
-                _log_hook_error(
-                    "memory_dedup_lock_timeout",
-                    str(DEDUP_LOG_PATH),
-                    TimeoutError("dedup log lock contended beyond 100ms"),
-                )
-
-        log = _load_dedup_log(now=now)
-        for p in paths:
-            if p:
-                log[p] = ts
-        try:
-            _atomic_write_json(DEDUP_LOG_PATH, log)
-        except OSError:
-            pass
-    finally:
-        if lock_fd is not None:
-            if locked:
-                _release_dedup_lock(lock_fd)
-            try:
-                os.close(lock_fd)
-            except OSError:
-                pass
-
-
-def _format_memory_xml(memories: list[dict]) -> str | None:
-    """Format memories (filestore MemoryResult shape) as injected XML.
-
-    Shape expected per memory:
-      {path, score, match_context, frontmatter: {type, confidence, created,
-       last_verified}, body}
-
-    Returns None when the list is empty.
-    """
-    if not memories:
-        return None
-    lines = ["<spellbook-memory-context>"]
-    for m in memories:
-        fm = m.get("frontmatter") or {}
-        path = m.get("path", "")
-        mtype = fm.get("type", "") or ""
-        confidence = fm.get("confidence", "") or ""
-        created = fm.get("created", "") or ""
-        last_verified = fm.get("last_verified") or ""
-        score = m.get("score", 0.0) or 0.0
-        body = m.get("body", "") or ""
-        lines.append(
-            f'  <memory path="{path}" type="{mtype}" confidence="{confidence}"'
-            f' created="{created}" last_verified="{last_verified}"'
-            f' score="{float(score):.2f}">'
-        )
-        lines.append(f"    {body}")
-        lines.append("  </memory>")
-    lines.append("</spellbook-memory-context>")
-    return "\n".join(lines)
-
-
-def _auto_recall_enabled() -> bool:
-    """Return True when memory.auto_recall config is truthy (default True)."""
-    val = _get_config_value("memory.auto_recall", default=True)
-    return bool(val)
-
-
-def _derive_namespace(cwd: str) -> tuple[str, str, str]:
-    """Return (namespace, resolved_cwd, branch) for a given cwd.
-
-    Falls back to an empty namespace when cwd is missing.
-
-    Note: the namespace-encoding logic is canonicalized in
-    ``spellbook.memory.utils.derive_namespace_from_cwd``. This hook keeps
-    an inline copy to avoid importing the spellbook package at hook
-    startup (cold-start cost). Keep the encoding in sync with the
-    canonical implementation.
-    """
-    if not cwd:
-        return "", "", ""
-    resolved_cwd, branch = _resolve_git_context(cwd)
-    namespace = (
-        resolved_cwd.replace("\\", "/").replace("/", "-").lstrip("-")
-        if resolved_cwd else ""
-    )
-    return namespace, resolved_cwd, branch
-
-
-def _recall(namespace: str, branch: str, resolved_cwd: str,
-            query: str = "", file_path: str | None = None,
-            limit: int = MEMORY_BUDGET_MAX_COUNT) -> list[dict]:
-    """POST to /api/memory/recall and return the memories list."""
-    payload: dict = {
-        "namespace": namespace,
-        "branch": branch,
-        "repo_path": resolved_cwd,
-        "limit": limit,
-    }
-    if query:
-        payload["query"] = query
-    if file_path:
-        payload["file_path"] = file_path
-    resp = _http_post("/api/memory/recall", payload)
-    if not resp:
-        return []
-    return resp.get("memories", []) or []
-
-
-def _memory_recall_for_prompt(prompt: str, cwd: str) -> str | None:
-    """UserPromptSubmit handler: recall memories for a user prompt.
-
-    Skips trivial prompts (< 10 chars) and slash commands. Extracts keywords,
-    queries /api/memory/recall, applies dedup + budget, injects XML, and
-    records injected paths in the dedup log.
-    """
-    if not _auto_recall_enabled():
-        return None
-    if not prompt or len(prompt) < MEMORY_PROMPT_MIN_LENGTH:
-        return None
-    if prompt.startswith("/"):
-        return None
-
-    namespace, resolved_cwd, branch = _derive_namespace(cwd)
-    if not namespace:
-        return None
-
-    keywords = _extract_keywords(prompt)
-    if not keywords:
-        return None
-
-    query = " ".join(keywords)
-    memories = _recall(
-        namespace=namespace,
-        branch=branch,
-        resolved_cwd=resolved_cwd,
-        query=query,
-        limit=MEMORY_BUDGET_MAX_COUNT * 4,
-    )
-    if not memories:
-        return None
-
-    log = _load_dedup_log()
-    memories = _filter_memories_by_dedup(memories, log)
-    memories = _apply_memory_budget(memories)
-    if not memories:
-        return None
-
-    xml = _format_memory_xml(memories)
-    if xml:
-        _touch_dedup_log([m.get("path", "") for m in memories])
-    return xml
-
-
-# ---------------------------------------------------------------------------
-# Memory auto-store (Gap 4)
-# ---------------------------------------------------------------------------
-
-# Rule-dictation patterns take priority — match these FIRST and skip capture.
-_RULE_DICTATION_PATTERNS = [
-    re.compile(r"\bgive yourself the rule\b", re.IGNORECASE),
-    re.compile(r"\bthe rule is:", re.IGNORECASE),
-    re.compile(r"\bwrite this down as\b", re.IGNORECASE),
-    re.compile(r"\boutput the text only\b", re.IGNORECASE),
-    re.compile(r"\bwhat rule to give you\b", re.IGNORECASE),
-    re.compile(r"\bhere'?s a rule\b", re.IGNORECASE),
-]
-
-# Correction / feedback patterns.
-_CORRECTION_PREFIX_RE = re.compile(
-    r"^(no|don'?t|stop|actually)\b",
-    re.IGNORECASE,
-)
-_CORRECTION_BODY_PATTERNS = [
-    re.compile(r"\buse\s+\S+\s+instead\b", re.IGNORECASE),
-    re.compile(r"\balways\s+\S+", re.IGNORECASE),
-    re.compile(r"\bnever\s+\S+", re.IGNORECASE),
-]
-
-# Confirmation patterns.
-_CONFIRMATION_PATTERNS = [
-    re.compile(r"\byes exactly\b", re.IGNORECASE),
-    re.compile(r"\bperfect keep doing that\b", re.IGNORECASE),
-    re.compile(r"\bthat was right\b", re.IGNORECASE),
-    re.compile(r"\bnice that worked\b", re.IGNORECASE),
-]
-
-# Explicit remember / save patterns.
-_REMEMBER_PATTERNS = [
-    re.compile(r"\bremember that\b", re.IGNORECASE),
-    re.compile(r"\bremember this\b", re.IGNORECASE),
-    re.compile(r"\bsave this\b", re.IGNORECASE),
-    re.compile(r"\bnote for next time\b", re.IGNORECASE),
-    re.compile(r"\bfor future reference\b", re.IGNORECASE),
-]
-
-# XML parser for <memory-candidate> blocks. Non-greedy, multiline-aware.
-_CANDIDATE_BLOCK_RE = re.compile(
-    r"<memory-candidate>(.*?)</memory-candidate>",
-    re.DOTALL | re.IGNORECASE,
-)
-_FIELD_RE_CACHE: dict[str, re.Pattern[str]] = {}
-
-# Max content size for client-side auto-store. Single-fact feedback should
-# never exceed this; oversized content is almost always a mis-classified
-# pasted blob and must be skipped with a diagnostic log entry.
-_AUTO_STORE_MAX_CONTENT_BYTES = 2000
-
-
-def _log_autostore_oversized(content: str) -> None:
-    """Record an auto_store_skipped_oversized_prompt entry via the daemon.
-
-    Does NOT raise. Synthesizes a RuntimeError describing the skipped content
-    (first 200 chars preview + total length) and routes it through
-    ``_log_hook_error`` so the daemon's rotation-aware sink captures it.
-    """
-    preview = content[:200].replace("\n", " ")
-    detail = f"total_length={len(content)} preview={preview!r}"
-    _log_hook_error(
-        "auto_store_skipped_oversized_prompt",
-        "UserPromptSubmit",
-        RuntimeError(detail),
-    )
-
-
-def _auto_store_enabled() -> bool:
-    """Return True when memory.auto_store config is truthy (default True)."""
-    val = _get_config_value("memory.auto_store", default=True)
-    return bool(val)
-
-
-def _queue_enabled() -> bool:
-    """Return True when the async worker queue is enabled in config.
-
-    Read via ``_get_config_value`` so the hook does not import the full
-    ``spellbook.core.config`` module (the Stop hook must stay
-    subprocess-cheap). The daemon also checks ``is_available()`` at the
-    POST endpoint, so a stale-config False-positive here is caught there.
-    """
-    return bool(_get_config_value("worker_llm_queue_enabled", default=False))
-
-
-def _classify_prompt_for_autostore(prompt: str) -> tuple[str, str, str] | None:
-    """Classify a user prompt for auto-store.
-
-    Returns (type, tag_suffix, content_override) or None when the prompt
-    should not be auto-captured. ``content_override`` is an empty string
-    when the raw prompt should be stored verbatim; otherwise it is the
-    transformed content (e.g. for confirmations we prefix ``CONFIRMATION:``).
-
-    Rule-dictation patterns are checked FIRST. If any match, return None
-    so the dictation is echoed/stored by the user's own intent, not
-    auto-captured by this hook.
-    """
-    for pat in _RULE_DICTATION_PATTERNS:
-        if pat.search(prompt):
-            return None
-
-    if _CORRECTION_PREFIX_RE.match(prompt.lstrip()):
-        return ("feedback", "correction", "")
-    for pat in _CORRECTION_BODY_PATTERNS:
-        if pat.search(prompt):
-            return ("feedback", "correction", "")
-
-    for pat in _CONFIRMATION_PATTERNS:
-        if pat.search(prompt):
-            return ("feedback", "confirmation", f"CONFIRMATION: {prompt}")
-
-    for pat in _REMEMBER_PATTERNS:
-        if pat.search(prompt):
-            return ("user", "remember", "")
-
-    return None
-
-
-def _post_unconsolidated(
-    *,
-    project: str,
-    branch: str,
-    mtype: str,
-    content: str,
-    tags: str,
-    citations: str,
-    source: str,
-) -> bool:
-    """POST a self-nominated memory candidate to the unconsolidated endpoint.
-
-    Returns True when ``_http_post`` returned a non-None response body
-    (success), False on transport failure. Relies on ``_http_post`` being
-    fail-open — do not add a try/except wrapper here. That would mask real
-    bugs in payload construction and was a green-mirage double-catch.
-
-    Callers that need retry semantics (e.g. the Stop hook's per-transcript
-    idempotency record) MUST inspect the return value. Fire-and-forget
-    callers (e.g. UserPromptSubmit) can safely discard it.
-    """
-    resp = _http_post(
-        "/api/memory/unconsolidated",
-        {
-            "project": project,
-            "branch": branch,
-            "type": mtype,
-            "content": content,
-            "tags": tags,
-            "citations": citations,
-            "source": source,
-        },
-        timeout=5,
-    )
-    return resp is not None
-
-
-def _memory_autostore_for_prompt(prompt: str, cwd: str) -> None:
-    """UserPromptSubmit auto-store. FAIL-OPEN.
-
-    Detects correction/confirmation/remember patterns and POSTs a raw
-    unconsolidated event. Rule-dictation prompts are skipped entirely.
-    """
-    if not _auto_store_enabled():
-        return
-    if not prompt or len(prompt) < MEMORY_PROMPT_MIN_LENGTH:
-        return
-    if prompt.startswith("/"):
-        return
-
-    classification = _classify_prompt_for_autostore(prompt)
-    if classification is None:
-        return
-    mtype, tag_suffix, content_override = classification
-    content = content_override if content_override else prompt
-
-    # Single-fact feedback should be short. If the prompt produces an
-    # oversized content payload, skip the auto-store and log a diagnostic
-    # rather than POSTing a giant prompt as a "memory".
-    if len(content) > _AUTO_STORE_MAX_CONTENT_BYTES:
-        _log_autostore_oversized(content)
-        return
-
-    namespace, _resolved_cwd, branch = _derive_namespace(cwd)
-    if not namespace:
-        return
-
-    _post_unconsolidated(
-        project=namespace,
-        branch=branch,
-        mtype=mtype,
-        content=content,
-        tags=f"auto-store,user-prompt,{tag_suffix}",
-        citations="",
-        source="user_prompt_submit",
-    )
-
-
-def _extract_last_assistant_text(transcript_path: str) -> str:
-    """Return concatenated text of the final assistant message in a JSONL transcript.
-
-    Returns empty string when the file is missing, unreadable, or has no
-    assistant messages. Fail-open for the Stop hook.
-    """
-    p = Path(transcript_path)
-    if not p.exists():
-        return ""
-    try:
-        raw_lines = p.read_text(encoding="utf-8").splitlines()
-    except OSError:
-        return ""
-    last_text = ""
-    for line in raw_lines:
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            msg = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        # Transcript entries wrap an inner message dict.
-        inner = msg.get("message", msg)
-        role = inner.get("role") or msg.get("type")
-        if role != "assistant":
-            continue
-        content = inner.get("content", "")
-        if isinstance(content, str):
-            last_text = content
-            continue
-        if isinstance(content, list):
-            parts: list[str] = []
-            for item in content:
-                if isinstance(item, dict) and item.get("type") == "text":
-                    parts.append(item.get("text", ""))
-            last_text = "\n".join(parts)
-    return last_text
-
-
-def _extract_candidate_field(block: str, field: str) -> str:
-    """Extract a named field from a <memory-candidate> block body.
-
-    Returns empty string when the field is absent. Case-insensitive tag match.
-    """
-    pat = _FIELD_RE_CACHE.get(field)
-    if pat is None:
-        pat = re.compile(
-            rf"<{field}>\s*(.*?)\s*</{field}>",
-            re.DOTALL | re.IGNORECASE,
-        )
-        _FIELD_RE_CACHE[field] = pat
-    m = pat.search(block)
-    if not m:
-        return ""
-    return m.group(1).strip()
-
-
-def _parse_memory_candidates(text_body: str) -> list[dict]:
-    """Parse all well-formed <memory-candidate> blocks from assistant text.
-
-    A candidate is well-formed when it has a non-empty ``<type>`` AND
-    ``<content>``. Malformed blocks are silently dropped.
-    """
-    out: list[dict] = []
-    for m in _CANDIDATE_BLOCK_RE.finditer(text_body):
-        block = m.group(1)
-        mtype = _extract_candidate_field(block, "type")
-        content = _extract_candidate_field(block, "content")
-        if not mtype or not content:
-            continue
-        out.append({
-            "type": mtype,
-            "content": content,
-            "tags": _extract_candidate_field(block, "tags"),
-            "citations": _extract_candidate_field(block, "citations"),
-        })
-    return out
-
-
-STOP_HARVEST_CACHE_PATH = (
-    Path.home() / ".local" / "spellbook" / "cache" / "last-stop-harvest.json"
-)
-
-
-def _get_stop_harvest_cache_path() -> Path:
-    """Return the path to the Stop-hook harvest idempotency cache.
-
-    Indirection layer so tests can mock via tripwire. The module-level
-    ``STOP_HARVEST_CACHE_PATH`` constant is computed at import time and
-    bound by ``Path.home()`` resolved then; tripwire cannot intercept
-    bare attribute reads, so the production code paths route through this
-    helper instead of touching the constant directly.
-    """
-    return STOP_HARVEST_CACHE_PATH
-
-
-def _load_stop_harvest_cache() -> dict[str, str]:
-    """Return the {transcript_path: last_text_sha256} map, or {} on failure."""
-    cache_path = _get_stop_harvest_cache_path()
-    if not cache_path.exists():
-        return {}
-    try:
-        raw = json.loads(cache_path.read_text())
-    except (json.JSONDecodeError, OSError):
-        return {}
-    return raw if isinstance(raw, dict) else {}
-
-
-def _record_stop_harvest(transcript_path: str, text_sha: str) -> None:
-    """Persist the last-seen sha256 for a transcript. Best-effort."""
-    cache = _load_stop_harvest_cache()
-    cache[transcript_path] = text_sha
-    try:
-        _atomic_write_json(_get_stop_harvest_cache_path(), cache)
-    except OSError as exc:
-        # Cache write is best-effort -- losing it means the next Stop hook
-        # re-harvests the same content, which dedup catches downstream. We
-        # still log so disk-full / permission failures are observable
-        # rather than silently masked.
-        logger.warning(
-            "Failed to persist Stop-hook harvest cache to %s: %s",
-            _get_stop_harvest_cache_path(),
-            exc,
-        )
-
-
-def _merge_candidates(
-    regex_cands: list[dict], worker_cands: list[dict]
-) -> list[dict]:
-    """Content-hash dedup for merge-mode transcript harvest.
-
-    Worker wins on collision: the worker response carries strongly-typed
-    tags/citations (lists converted to comma strings), while the regex
-    path produces whatever the assistant wrote verbatim.
-    """
-    seen: dict[str, dict] = {}
-    for c in worker_cands:
-        key = hashlib.sha256(c["content"].strip().encode()).hexdigest()
-        seen[key] = c
-    for c in regex_cands:
-        key = hashlib.sha256(c["content"].strip().encode()).hexdigest()
-        seen.setdefault(key, c)
-    return list(seen.values())
-
-
-def _worker_error_block(task: str, err: BaseException) -> str:
-    """Render a ``<worker-llm-error>`` block for injection into the orchestrator.
-
-    Consumed by Claude Code / OpenCode / Codex / Gemini CLI as a structured
-    signal that a worker-LLM step failed. The <hint> points operators at
-    the doctor CLI and admin event monitor.
-
-    Every interpolated value is XML-escaped. ``task`` is typically a static
-    tag and ``type(err).__name__`` is a Python class name, but defensive
-    escaping costs nothing and protects the surrounding XML structure
-    against a drifty caller or unusual exception name that happens to
-    contain ``<``, ``>``, or ``&``. ``str(err)[:500]`` comes from
-    worker-LLM code paths and may include arbitrary characters including
-    closing-tag strings.
-    """
-    return (
-        "<worker-llm-error>\n"
-        f"  <task>{_xml_escape(task)}</task>\n"
-        f"  <type>{_xml_escape(type(err).__name__)}</type>\n"
-        f"  <message>{_xml_escape(str(err)[:500])}</message>\n"
-        "  <hint>Check `spellbook worker-llm doctor` and the admin EventMonitorPage.</hint>\n"
-        "</worker-llm-error>"
-    )
-
-
-def _handle_stop(data: dict) -> None:
-    """Stop hook: harvest <memory-candidate> blocks and POST each. FAIL-OPEN.
-
-    Idempotent: we hash the extracted final-assistant text per transcript
-    and skip harvest when the hash matches the most-recent processed value.
-
-    Three modes driven by ``worker_llm_feature_transcript_harvest`` +
-    ``worker_llm_transcript_harvest_mode``:
-
-    - Feature off (default): regex path unchanged. Byte-identical to the
-      pre-worker-LLM baseline.
-    - ``replace``: worker supersedes regex. Loud-fail on worker error —
-      inject ``<worker-llm-error>``, POST nothing, DO NOT record sha so the
-      next Stop retries.
-    - ``merge``: run both, content-hash dedup. Soft-fail on worker error
-      so existing regex behavior never regresses; record sha when regex
-      posts succeeded (the error block carries the loss-of-fidelity signal).
-    """
-    if not _auto_store_enabled():
-        return
-    transcript_path = data.get("transcript_path", "") or ""
-    if not transcript_path:
-        return
-    try:
-        text_body = _extract_last_assistant_text(transcript_path)
-    except Exception as e:
-        _log_hook_error("stop_extract_transcript", "Stop", e)
-        return
-    if not text_body:
-        return
-
-    text_sha = hashlib.sha256(text_body.encode("utf-8")).hexdigest()
-    cache = _load_stop_harvest_cache()
-    if cache.get(transcript_path) == text_sha:
-        return  # Already processed this exact transcript + final message.
-
-    # ---------- Worker-LLM gate ----------
-    # Imports are deferred to function scope so the hook module remains
-    # importable by the installer / standalone checks that do not carry
-    # the ``spellbook`` package on ``sys.path``. ``transcript_harvest`` is
-    # deferred further (inside ``if use_worker:`` below) so the regex-only
-    # fast path does not pay its httpx / client-adapter import cost.
-    try:
-        from spellbook.worker_llm import errors as _wl_errors
-        from spellbook.worker_llm import events as _wl_events
-        from spellbook.worker_llm.config import feature_enabled, get_worker_config
-        _wl_import_ok = True
-    except Exception:
-        # Standalone installer / sys.path-restricted invocations will not
-        # have the ``spellbook`` package importable; this is expected and
-        # must not break the regex fallback. DEBUG so operators can
-        # correlate unexplained "worker-llm skipped" rows.
-        logger.debug(
-            "stop_hook: worker-LLM import failed; using regex-only path",
-            exc_info=True,
-        )
-        _wl_import_ok = False
-        _wl_events = None  # type: ignore[assignment]
-
-    _wl_start = time.monotonic()
-
-    use_worker = _wl_import_ok and feature_enabled("transcript_harvest")
-    mode = (
-        get_worker_config().transcript_harvest_mode.lower()
-        if use_worker
-        else "skip"
-    )
-    worker_cands: list[dict] = []
-    worker_error: BaseException | None = None
-
-    # Async enqueue fast-path: when the queue is enabled, POST to the
-    # daemon and return immediately with regex-only fallback (merge mode)
-    # or an empty worker-candidate set (replace mode -- we still fall
-    # through below, but with worker_error left unset and worker_cands
-    # empty, which is treated as "worker returned nothing substantive").
-    # The daemon's consumer runs asynchronously and writes candidates via
-    # its own path; no blocking on the hook side.
-    async_enqueued = False
-    if use_worker and _queue_enabled():
-        namespace, _resolved_cwd, branch = _derive_namespace(data.get("cwd", ""))
-        enqueue_body = {
-            "task_name": "transcript_harvest",
-            "prompt": text_body,
-            "context": {
-                "namespace": namespace,
-                "branch": branch,
-                "session_id": str(data.get("session_id", "")),
-            },
-        }
-        resp = _http_post(
-            "/api/worker-llm/enqueue", enqueue_body, timeout=1.0,
-        )
-        # ``_http_post`` returns ``None`` on any non-2xx / exception. 202
-        # Accepted returns a dict with ``{"ok": true, "dropped": ...}``.
-        if resp is not None and resp.get("ok") is True:
-            async_enqueued = True
-
-    if async_enqueued:
-        # Record sha immediately so subsequent Stops don't re-harvest. The
-        # async consumer writes candidates via log_raw_event in the daemon
-        # path; from the hook's point of view this transcript is done.
-        _record_stop_harvest(transcript_path, text_sha)
-        if _wl_events is not None:
-            _wl_events.publish_hook_integration(
-                task="transcript_harvest",
-                mode="async",
-                candidate_count=-1,
-                duration_ms=int((time.monotonic() - _wl_start) * 1000),
-                status="ok",
-            )
-        return
-
-    if use_worker:
-        try:
-            from spellbook.worker_llm.tasks import transcript_harvest as _wl_harvest
-        except Exception:
-            # Defensive: the sibling worker_llm imports above succeeded, so
-            # this should not happen. If it does, degrade to regex-only
-            # rather than crashing the Stop hook.
-            logger.debug(
-                "stop_hook: late import of transcript_harvest failed",
-                exc_info=True,
-            )
-            use_worker = False
-            mode = "skip"
-
-    if use_worker:
-        try:
-            result = _wl_harvest.transcript_harvest(text_body)
-            worker_cands = [
-                {
-                    "type": c.type,
-                    "content": c.content,
-                    "tags": ",".join(c.tags),
-                    "citations": ",".join(c.citations),
-                }
-                for c in result
-            ]
-        except _wl_errors.WorkerLLMError as e:
-            worker_error = e
-            print(f"[worker-llm] transcript_harvest: {e}", file=sys.stderr)
-
-    if use_worker and mode == "replace":
-        if worker_error is not None:
-            # Loud: do not fall back, do not record sha.
-            print(
-                _worker_error_block("transcript_harvest", worker_error),
-                file=sys.stdout,
-            )
-            if _wl_events is not None:
-                _wl_events.publish_hook_integration(
-                    task="transcript_harvest",
-                    mode=mode,
-                    candidate_count=0,
-                    duration_ms=int((time.monotonic() - _wl_start) * 1000),
-                    status="worker_error",
-                    error=type(worker_error).__name__,
-                )
-            return
-        candidates = worker_cands
-    elif use_worker and mode == "merge":
-        regex_cands = _parse_memory_candidates(text_body)
-        if worker_error is not None:
-            candidates = regex_cands
-            print(
-                _worker_error_block("transcript_harvest", worker_error),
-                file=sys.stdout,
-            )
-        else:
-            candidates = _merge_candidates(regex_cands, worker_cands)
-    else:
-        # Feature off (or mode == "skip"): existing regex path unchanged.
-        candidates = _parse_memory_candidates(text_body)
-
-    if not candidates:
-        _record_stop_harvest(transcript_path, text_sha)
-        return
-
-    namespace, _resolved_cwd, branch = _derive_namespace(data.get("cwd", ""))
-    if not namespace:
-        _record_stop_harvest(transcript_path, text_sha)
-        return
-
-    failed = 0
-    for cand in candidates:
-        ok = _post_unconsolidated(
-            project=namespace,
-            branch=branch,
-            mtype=cand["type"],
-            content=cand["content"],
-            tags=cand.get("tags", ""),
-            citations=cand.get("citations", ""),
-            source="stop_hook",
-        )
-        if not ok:
-            failed += 1
-
-    # Sha recording policy:
-    #   REPLACE mode: recorded only when the worker succeeded (early return
-    #     above covers worker_error) AND every POST succeeded.
-    #   MERGE mode: record sha even when worker_error is set, because the
-    #     regex candidates were already POSTed successfully; NOT recording
-    #     would cause the same transcript to be re-harvested on every Stop
-    #     (duplicate regex posts) even though the only thing that failed is
-    #     the optional worker augmentation. The <worker-llm-error> block has
-    #     already been injected into the orchestrator, so the loss-of-fidelity
-    #     signal is preserved.
-    merge_mode_with_worker_only_error = (
-        use_worker
-        and mode == "merge"
-        and worker_error is not None
-        and failed == 0
-    )
-    if failed == 0 and (worker_error is None or merge_mode_with_worker_only_error):
-        _record_stop_harvest(transcript_path, text_sha)
-        _status = "ok" if worker_error is None else "worker_error"
-    else:
-        # Do NOT record the sha: the next Stop invocation must retry the
-        # whole harvest. Server-side consolidation dedups on content, so
-        # double-posting on retry is acceptable.
-        _log_hook_error(
-            "stop_harvest_partial_failure",
-            "Stop",
-            RuntimeError(
-                f"stop_harvest_partial_failure failed={failed} "
-                f"total={len(candidates)} "
-                f"worker_error={type(worker_error).__name__ if worker_error else 'none'}"
-            ),
-        )
-        _status = "partial"
-
-    if use_worker and _wl_events is not None:
-        _wl_events.publish_hook_integration(
-            task="transcript_harvest",
-            mode=mode,
-            candidate_count=len(candidates),
-            duration_ms=int((time.monotonic() - _wl_start) * 1000),
-            status=_status,
-            error=(type(worker_error).__name__ if worker_error else None),
-        )
-
-
-def _memory_recall_for_tool(tool_name: str, tool_input: dict, cwd: str) -> str | None:
-    """PreToolUse handler: recall memories for Bash/Write/Edit file targets."""
-    if not _auto_recall_enabled():
-        return None
-    if tool_name not in ("Bash", "Write", "Edit"):
-        return None
-
-    paths = _extract_tool_paths(tool_name, tool_input or {})
-    if not paths:
-        return None
-
-    namespace, resolved_cwd, branch = _derive_namespace(cwd)
-    if not namespace:
-        return None
-
-    collected: list[dict] = []
-    seen_paths: set[str] = set()
-    for fp in paths:
-        mems = _recall(
-            namespace=namespace,
-            branch=branch,
-            resolved_cwd=resolved_cwd,
-            file_path=fp,
-            limit=MEMORY_BUDGET_MAX_COUNT,
-        )
-        for m in mems:
-            p = m.get("path", "")
-            if p and p not in seen_paths:
-                seen_paths.add(p)
-                collected.append(m)
-
-    if not collected:
-        return None
-
-    log = _load_dedup_log()
-    collected = _filter_memories_by_dedup(collected, log)
-    collected = _apply_memory_budget(collected)
-    if not collected:
-        return None
-
-    xml = _format_memory_xml(collected)
-    if xml:
-        _touch_dedup_log([m.get("path", "") for m in collected])
-    return xml
 
 
 # ---------------------------------------------------------------------------
@@ -1948,8 +720,7 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
     Order of operations:
       1. Existing security gates (can exit non-zero) — untouched.
       2. Temporal tracking — untouched.
-      3. Existing memory recall — untouched.
-      4. NEW: worker-LLM tool-safety sniff. Fails OPEN on any error, and is
+      3. Worker-LLM tool-safety sniff. Fails OPEN on any error, and is
          cache-first (consults safety_cache before calling the worker). A
          fresh BLOCK triggers a 30-second bypass window so the user can retry.
     """
@@ -1965,17 +736,6 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
 
     # Temporal tracking (catch-all, non-blocking)
     _record_tool_start(tool_name, data)
-
-    # Memory auto-recall for file-modifying tools (non-blocking)
-    if tool_name in ("Bash", "Write", "Edit"):
-        try:
-            out = _memory_recall_for_tool(
-                tool_name, data.get("tool_input") or {}, data.get("cwd", ""),
-            )
-            if out:
-                outputs.append(out)
-        except Exception as e:
-            _log_hook_error("memory_recall_for_tool", tool_name, e)
 
     # Worker-LLM tool-safety sniff (fails OPEN)
     if tool_name in _SAFETY_APPLICABLE_TOOLS:
@@ -2269,16 +1029,120 @@ def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
     )
 
 
+# ---------------------------------------------------------------------------
+# Develop accountability nudge (design §6 / impl Tasks 6-8)
+#
+# Fires on UserPromptSubmit when the develop skill is marked active but has
+# moved past its Phase-0 wizard without recording any phase/gate progress in
+# workflow_state — the accountability failure where unrecorded progress would
+# be lost on the next compaction. Debounced once per session via a marker FILE
+# (NOT an in-process flag — hooks are per-event subprocesses, so no in-memory
+# state survives between events). The marker is cleaned up on SessionStart
+# (there is NO SessionEnd handler in this hook; the dispatch only handles
+# PreToolUse/PostToolUse/UserPromptSubmit/Stop/PreCompact/SessionStart).
+# ---------------------------------------------------------------------------
+
+_NUDGE_MARKER_MAX_AGE_SECONDS = 86400  # prune *.nudged markers older than a day
+
+_DEVELOP_NUDGE_MESSAGE = (
+    "[develop accountability] The develop skill is marked active for this project but no develop\n"
+    "phase/progress has been recorded in workflow_state. If you are mid-develop, record your current\n"
+    'phase and remaining gates now via workflow_state_update({"develop_gate_ledger": {...}}). If develop\n'
+    "is no longer active here, clear it. Unrecorded progress will be lost on the next context compaction."
+)
+
+
+def _develop_nudge_marker_dir() -> Path:
+    """Directory holding per-session develop-nudge marker files.
+
+    Honors ``$SPELLBOOK_CONFIG_DIR`` (set in tests and most installs) and falls
+    back to ``~/.local/spellbook`` (the default config dir) per design §6.2.
+    """
+    base = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
+    return Path(base) / "runtime" / "develop-nudge"
+
+
+def _develop_nudge_marker_path(session_id: str) -> Path:
+    """Marker file path for a given session (``<session_id>.nudged``)."""
+    return _develop_nudge_marker_dir() / f"{session_id}.nudged"
+
+
+def _prune_stale_nudge_markers() -> None:
+    """Remove ``*.nudged`` markers older than a day so the dir does not grow.
+
+    Fail-open: missing dir or stat/unlink errors on individual files are
+    ignored. Never raises.
+    """
+    marker_dir = _develop_nudge_marker_dir()
+    if not marker_dir.is_dir():
+        return
+    cutoff = time.time() - _NUDGE_MARKER_MAX_AGE_SECONDS
+    for marker in marker_dir.glob("*.nudged"):
+        try:
+            if marker.stat().st_mtime < cutoff:
+                marker.unlink(missing_ok=True)
+        except OSError:
+            continue
+
+
+def _develop_accountability_nudge(data: dict) -> str | None:
+    """Return the develop accountability nudge text, or None if it should not fire.
+
+    Predicate (design §6.1, ALL required, duration-blind):
+      1. ``active_skill == "develop"`` in workflow_state, AND
+      2. develop is past Phase 0 — ``skill_phase`` is set and not ``"0"``, AND
+      3. ``develop_gate_ledger`` is absent/empty.
+
+    Debounced once per session via the ``<session_id>.nudged`` marker file:
+    on predicate-true, if the marker is absent the nudge is emitted and the
+    marker is touched; if present, stays silent. An empty/missing ``session_id``
+    cannot be debounced safely, so the nudge is skipped.
+    """
+    session_id = data.get("session_id", "") or ""
+    # Validate before using as a filename: prevents path traversal / odd
+    # filenames if the payload carries a malformed session_id. Reuses the same
+    # constraint applied to session_ids elsewhere in this hook.
+    if not session_id or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+
+    # Already-nudged short-circuit, checked BEFORE the workflow_state_load DB
+    # read. Once a session has been nudged the marker exists for the rest of
+    # the session, so every subsequent qualifying prompt would otherwise pay
+    # for a workflow_state_load only to early-return here. Checking the marker
+    # first skips that per-prompt DB read. `marker` is computed once and reused
+    # for the marker.touch() on the not-yet-nudged path below.
+    marker = _develop_nudge_marker_path(session_id)
+    if marker.exists():
+        return None  # already nudged this session
+
+    ws = _mcp_call("workflow_state_load", {"project_path": data.get("cwd") or ""})
+    if not ws or not ws.get("found"):
+        return None
+    state = ws.get("state") or {}
+
+    # Condition 1: develop is the active skill.
+    if state.get("active_skill") != "develop":
+        return None
+    # Condition 2: past the Phase-0 wizard (skill_phase set and not "0").
+    skill_phase = state.get("skill_phase", "")
+    if not skill_phase or skill_phase == "0":
+        return None
+    # Condition 3: no ledger progress recorded yet.
+    if state.get("develop_gate_ledger"):
+        return None
+
+    # Stale-marker pruning is NOT done here: pruning per qualifying prompt is
+    # pure waste. Global pruning happens once per SessionStart in
+    # _handle_session_start; markers are tiny with a 24h TTL, so that is enough.
+    # (The already-nudged short-circuit happened earlier, before the DB read.)
+    marker.parent.mkdir(parents=True, exist_ok=True)
+    marker.touch()
+    return _DEVELOP_NUDGE_MESSAGE
+
+
 def _handle_user_prompt_submit(data: dict) -> list[str]:
-    """UserPromptSubmit handler: auto-inject memory context for prompts."""
+    """UserPromptSubmit handler: surface agent2agent inbox/watch-chain hints."""
     outputs: list[str] = []
-    prompt = data.get("prompt", "") or data.get("user_prompt", "") or ""
-    try:
-        out = _memory_recall_for_prompt(prompt, data.get("cwd", ""))
-        if out:
-            outputs.append(out)
-    except Exception as e:
-        _log_hook_error("memory_recall_for_prompt", "UserPromptSubmit", e)
 
     # agent2agent inbox metadata (only for sessions bound via `open <name>`).
     # Metadata-only by design: NEVER call read/peek/check from here.
@@ -2299,23 +1163,21 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
     except Exception as e:
         _log_hook_error("agent2agent_check_orphaned_chain", "UserPromptSubmit", e)
 
-    # Pattern-based self-capture (Gap 4). Non-blocking, fail-open.
+    # Develop accountability nudge (design §6): surface a one-shot reminder
+    # when develop is active past Phase 0 with no recorded ledger progress.
+    # Fail-open: a nudge failure must never break the prompt.
     try:
-        _memory_autostore_for_prompt(prompt, data.get("cwd", ""))
+        nudge = _develop_accountability_nudge(data)
+        if nudge:
+            outputs.append(nudge)
     except Exception as e:
-        _log_hook_error("memory_autostore_for_prompt", "UserPromptSubmit", e)
+        _log_hook_error("develop_accountability_nudge", "UserPromptSubmit", e)
     return outputs
 
 
 def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
     """PostToolUse handlers. Return list of output strings."""
     outputs = []
-
-    # Memory injection (specific matchers)
-    if tool_name in {"Read", "Edit", "Grep", "Glob"}:
-        out = _memory_inject(tool_name, data)
-        if out:
-            outputs.append(out)
 
     # Stint depth reminder (catch-all, non-blocking)
     out = _stint_depth_check(data)
@@ -2324,13 +1186,6 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
 
     # Notifications (catch-all, non-blocking)
     _fire_and_forget(_notify_on_complete, tool_name, data)
-
-    # Memory capture (catch-all, non-blocking)
-    _fire_and_forget(_memory_capture, tool_name, data)
-
-    # Auto-memory bridge (specific matcher: Write to auto-memory paths)
-    if tool_name == "Write":
-        _fire_and_forget(_memory_bridge, tool_name, data)
 
     return outputs
 
@@ -2383,6 +1238,20 @@ def _handle_session_start(data: dict) -> dict | None:
         present.
     """
     source = data.get("source", "")
+
+    # Develop-nudge marker cleanup runs unconditionally on every SessionStart,
+    # BEFORE the source-based early return, so the current session's marker is
+    # cleared (allowing a later prompt in this same session to nudge again) and
+    # stale markers are pruned. Cleanup lives here, not on SessionEnd, because
+    # this hook has NO SessionEnd handler (dispatch only covers PreToolUse/
+    # PostToolUse/UserPromptSubmit/Stop/PreCompact/SessionStart). Fail-open.
+    try:
+        session_id = data.get("session_id", "") or ""
+        if session_id and _A2A_SESSION_ID_RE.match(session_id):
+            _develop_nudge_marker_path(session_id).unlink(missing_ok=True)
+        _prune_stale_nudge_markers()
+    except Exception as e:
+        _log_hook_error("develop_nudge_marker_cleanup", "SessionStart", e)
 
     # Backstop runs unconditionally — orphan detection is independent of
     # source. Fail-open: any unexpected exception is logged and the rest
@@ -2470,11 +1339,6 @@ def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
         outputs.extend(_handle_post_tool_use(tool_name, data))
     elif event_name == "UserPromptSubmit":
         outputs.extend(_handle_user_prompt_submit(data))
-    elif event_name == "Stop":
-        try:
-            _handle_stop(data)
-        except Exception as e:
-            _log_hook_error("stop", "Stop", e)
     elif event_name == "PreCompact":
         _handle_pre_compact(data)
     elif event_name == "SessionStart":

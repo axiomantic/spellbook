@@ -45,6 +45,27 @@ except ImportError:
 MAX_LINES = 1900  # Buffer of 100 lines
 MAX_BYTES = 49152  # Buffer of 2KB (48KB)
 
+# Per-file SIZE-limit exemptions (byte + line checks ONLY).
+# Keyed by repo-relative POSIX path. Exempt files still undergo every other
+# check (frontmatter, Invariant Principles, reasoning tags, etc.); only the
+# truncation byte/line gate is waived.
+#
+# commands/crystallize.md: crystallize's PURPOSE is to shrink/consolidate other
+# docs, so it legitimately carries extensive instructional content and is allowed
+# to exceed the truncation size gate. This is a narrow, operator-directed
+# exemption — do not add files here without a documented rationale.
+#
+# skills/develop/SKILL.md: develop/SKILL.md is the governance-dense central
+# orchestrator; its untouchable + mandatory-preserve governance content exceeds
+# the byte limit and crystallize's 80% preservation floor cannot reach it without
+# dropping protected rules. Operator-approved exemption (2026-05-24).
+# DEFERRED: split reference material into a sibling file so this exemption
+# can be removed.
+SIZE_LIMIT_EXEMPT = {
+    "commands/crystallize.md",
+    "skills/develop/SKILL.md",
+}
+
 
 class ValidationResult(NamedTuple):
     path: str
@@ -127,8 +148,25 @@ def count_invariant_principles(content: str) -> int:
     return len(matches)
 
 
-def check_truncation_limits(content: str, errors: list[str]) -> None:
-    """Check if content exceeds opencode tool output truncation limits."""
+def repo_relative_key(path: Path) -> str:
+    """Return the repo-relative POSIX path used for per-file exemption lookups."""
+    repo_root = Path(__file__).parent.parent.absolute()
+    try:
+        return path.absolute().relative_to(repo_root).as_posix()
+    except ValueError:
+        # Path is outside the repo root; fall back to its own posix form.
+        return path.as_posix()
+
+
+def check_truncation_limits(content: str, errors: list[str], path: Path | None = None) -> None:
+    """Check if content exceeds opencode tool output truncation limits.
+
+    Files listed in SIZE_LIMIT_EXEMPT are exempt from the byte/line size gate
+    ONLY; all other checks still apply.
+    """
+    if path is not None and repo_relative_key(path) in SIZE_LIMIT_EXEMPT:
+        return
+
     line_count = len(content.splitlines())
     byte_count = len(content.encode("utf-8"))
 
@@ -152,7 +190,7 @@ def validate_skill(path: Path) -> ValidationResult:
     warnings = []
 
     # Check truncation limits first (hard error)
-    check_truncation_limits(content, errors)
+    check_truncation_limits(content, errors, path)
 
     frontmatter, body = parse_frontmatter(content)
 
@@ -229,7 +267,7 @@ def validate_command(path: Path) -> ValidationResult:
     warnings = []
 
     # Check truncation limits first (hard error)
-    check_truncation_limits(content, errors)
+    check_truncation_limits(content, errors, path)
 
     frontmatter, body = parse_frontmatter(content)
 
@@ -297,7 +335,7 @@ def validate_agent(path: Path) -> ValidationResult:
     warnings = []
 
     # Check truncation limits first (hard error)
-    check_truncation_limits(content, errors)
+    check_truncation_limits(content, errors, path)
 
     frontmatter, body = parse_frontmatter(content)
 

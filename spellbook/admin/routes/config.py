@@ -107,47 +107,15 @@ CONFIG_SCHEMA = [
         "default": 1.5,
     },
     {
-        "key": "worker_llm_transcript_harvest_mode",
-        "type": "string",
-        "description": (
-            "Stop-hook harvest mode: 'replace' (worker supersedes regex), "
-            "'merge' (combine worker + regex), or 'skip' (disable worker "
-            "harvest; regex-only)"
-        ),
-        "default": "replace",
-    },
-    {
         "key": "worker_llm_allow_prompt_overrides",
         "type": "boolean",
         "description": "Allow override prompts in ~/.local/spellbook/worker_prompts/*.md",
         "default": True,
     },
     {
-        "key": "worker_llm_read_claude_memory",
-        "type": "boolean",
-        "description": (
-            "Include Claude Code's ~/.claude/projects/<proj>/memory/ when recalling "
-            "memories. Opt-in toggle; independent of worker LLM endpoint. Default "
-            "False to preserve zero-change behavior for unconfigured users."
-        ),
-        "default": False,
-    },
-    {
-        "key": "worker_llm_feature_transcript_harvest",
-        "type": "boolean",
-        "description": "Enable worker-LLM semantic Stop-hook memory harvest",
-        "default": False,
-    },
-    {
         "key": "worker_llm_feature_roundtable",
         "type": "boolean",
         "description": "Enable local MCP roundtable execution via forge_roundtable_convene_local",
-        "default": False,
-    },
-    {
-        "key": "worker_llm_feature_memory_rerank",
-        "type": "boolean",
-        "description": "Enable worker-LLM reranking of memory_recall candidates",
         "default": False,
     },
     {
@@ -231,16 +199,16 @@ CONFIG_SCHEMA = [
         "default": 60,
     },
     # Worker LLM async queue (fire-and-forget). When enabled, the daemon
-    # spawns a background consumer that drains queued tasks so callers like
-    # the Stop-hook transcript_harvest do not block on the worker endpoint.
+    # spawns a background consumer that drains queued tasks so fire-and-forget
+    # callers do not block on the worker endpoint.
     {
         "key": "worker_llm_queue_enabled",
         "type": "boolean",
         "description": (
             "Opt-in async enqueue of fire-and-forget worker-LLM calls. "
             "When True, the daemon runs a consumer task that drains the "
-            "queue; callers (transcript_harvest, tool_safety warm probe) "
-            "return immediately instead of blocking on client.call_sync."
+            "queue; callers (e.g. the tool_safety warm probe) return "
+            "immediately instead of blocking on client.call_sync."
         ),
         "default": False,
     },
@@ -491,7 +459,6 @@ def _mask_secrets(config: dict[str, Any]) -> dict[str, Any]:
 # readable error code so admin UIs / scripted callers can surface the
 # problem. Keep the dispatch table tiny — most keys are plain str/bool/
 # number and need no additional validation beyond the schema type.
-_ALLOWED_TRANSCRIPT_HARVEST_MODES = ("replace", "merge", "skip")
 # Sourced from ``spellbook.core.config.SESSION_MODES`` so the admin validator,
 # the installer defaults wizard, and ``session_mode_set`` share one definition.
 _ALLOWED_SESSION_MODES = SESSION_MODES
@@ -544,15 +511,12 @@ def _validate_positive_number(key: str, value: Any) -> str | None:
 # check is one line here instead of another if-branch below.
 #
 # Categories:
-#   * Enum string keys (harvest mode, session mode).
+#   * Enum string keys (session mode).
 #   * Unit-interval floats: success-rate floor in [0.0, 1.0].
 #   * Positive integers: row caps, windowed sample counts, token ceilings.
 #   * Positive numbers (int or float, > 0): retention hours, timeouts,
 #     cache TTLs, purge/eval intervals.
 _VALIDATORS: dict[str, Any] = {
-    "worker_llm_transcript_harvest_mode": _validate_enum(
-        _ALLOWED_TRANSCRIPT_HARVEST_MODES
-    ),
     "session_mode": _validate_enum(_ALLOWED_SESSION_MODES),
     # Unit-interval floats.
     "worker_llm_observability_notify_threshold": _validate_unit_interval,
@@ -580,13 +544,7 @@ _VALIDATORS: dict[str, Any] = {
 def _validate_config_value(key: str, value: Any) -> str | None:
     """Return an error string if ``value`` is invalid for ``key``, else None.
 
-    M4 (Chunk 4 cleanup): ``worker_llm_transcript_harvest_mode`` only accepts
-    ``replace`` | ``merge`` | ``skip``. A typo (e.g. ``replce``) would
-    otherwise silently degrade the Stop hook to regex-only behavior because
-    the consumer's default branch falls through to the regex path. Reject
-    typos at config-set time so the operator sees the problem immediately.
-
-    ``session_mode`` gets the same treatment against
+    ``session_mode`` is enum-validated against
     ``spellbook.core.config.session_mode_set``'s canonical enum so an admin
     UI typo cannot land an invalid persisted mode that ``session_mode_get``
     would then hand back unchanged to the greeting path.

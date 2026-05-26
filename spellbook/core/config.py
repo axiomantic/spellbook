@@ -30,13 +30,11 @@ SESSION_MODES: tuple[str, ...] = ("fun", "tarot", "none")
 
 
 CONFIG_DEFAULTS: dict[str, Any] = {
-    "memory.auto_recall": True,
-    "memory.auto_store": True,
     # Default session profile slug (empty string = no profile). Kept in
     # CONFIG_DEFAULTS so session_init's ``config_get("profile.default")``
     # never raises KeyError on fresh installs.
     "profile.default": "",
-    # worker_llm: 14 flat keys. All feature flags default False (opt-in).
+    # worker_llm flat keys. All feature flags default False (opt-in).
     # Matches CONFIG_SCHEMA in spellbook/admin/routes/config.py.
     "worker_llm_base_url": "",
     "worker_llm_model": "",
@@ -44,12 +42,8 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     "worker_llm_timeout_s": 10.0,
     "worker_llm_max_tokens": 1024,
     "worker_llm_tool_safety_timeout_s": 1.5,
-    "worker_llm_transcript_harvest_mode": "replace",
     "worker_llm_allow_prompt_overrides": True,
-    "worker_llm_read_claude_memory": False,
-    "worker_llm_feature_transcript_harvest": False,
     "worker_llm_feature_roundtable": False,
-    "worker_llm_feature_memory_rerank": False,
     "worker_llm_feature_tool_safety": False,
     "worker_llm_safety_cache_ttl_s": 300,
     # worker_llm observability (design §7). Consumed by the purge loop and
@@ -726,17 +720,6 @@ def _get_repairs() -> list[dict]:
     return []
 
 
-def _regenerate_memory_md(project_path: Optional[str]) -> None:
-    """Regenerate MEMORY.md for the project. Fail-open."""
-    if not project_path:
-        return
-    try:
-        from spellbook.memory.bootstrap import regenerate_memory_md_for_project
-        regenerate_memory_md_for_project(project_path)
-    except Exception:
-        pass  # Fail-open: never block session init
-
-
 VALID_PLATFORMS = ("claude_code", "opencode", "codex", "gemini", "forgecode")
 
 
@@ -876,9 +859,6 @@ def session_init(
     # Add update notification (if any)
     _add_update_notification(result)
 
-    # Regenerate MEMORY.md from structured memory
-    _regenerate_memory_md(project_path)
-
     # Add resume fields
     result.update(_get_resume_context(continuation_message, project_path))
 
@@ -913,55 +893,22 @@ def _get_resume_context(
     continuation_message: Optional[str],
     project_path: Optional[str] = None
 ) -> dict:
-    """Get resume context based on continuation message.
+    """Get resume context for session_init.
+
+    The recovery-context resume path was removed in 0.68.0. No replacement
+    continuation path exists yet, so this always reports no resume available.
+    Re-wiring continuation-intent into a new resume path is intentionally
+    out of scope (see the removal design doc, section 5.6).
 
     Args:
-        continuation_message: User's first message (optional)
-        project_path: Project path (defaults to os.getcwd() if not provided)
+        continuation_message: User's first message (unused; retained for the
+            session_init call signature and future re-wiring).
+        project_path: Project path (unused; see above).
 
     Returns:
-        Dict with resume_available and optional resume_* fields
+        Dict with resume_available always False.
     """
-    from spellbook.core.db import get_db_path
-    from spellbook.sessions.resume import (
-        detect_continuation_intent,
-        get_resume_fields,
-    )
-
-    # Get project path - use provided path or fall back to cwd
-    if project_path is None:
-        project_path = os.getcwd()
-
-    # Get database path
-    try:
-        db_path = str(get_db_path())
-    except Exception:
-        # If no database, no resume available
-        return {"resume_available": False}
-
-    # Query for recent session
-    resume_fields = get_resume_fields(project_path, db_path)
-
-    # If no recent session available, return early
-    if not resume_fields.get("resume_available"):
-        return {"resume_available": False}
-
-    # If no continuation message provided, return resume fields unchanged
-    if not continuation_message:
-        return dict(resume_fields)
-
-    # Detect user intent
-    intent = detect_continuation_intent(
-        continuation_message,
-        has_recent_session=True  # We know there's a recent session
-    )
-
-    # Fresh start overrides resume
-    if intent["intent"] == "fresh_start":
-        return {"resume_available": False}
-
-    # Return resume fields for continue or neutral intent
-    return dict(resume_fields)
+    return {"resume_available": False}
 
 
 def telemetry_enable(endpoint_url: str = None, db_path: str = None) -> dict:

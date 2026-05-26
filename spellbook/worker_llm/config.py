@@ -1,4 +1,4 @@
-"""Typed config reader for the 14 flat ``worker_llm_*`` keys.
+"""Typed config reader for the flat ``worker_llm_*`` keys.
 
 The surrounding codebase stores config as flat keys in ``spellbook.json``
 (read via ``spellbook.core.config.config_get``). This module snapshots all
@@ -21,18 +21,14 @@ class WorkerConfig:
     timeout_s: float
     max_tokens: int
     tool_safety_timeout_s: float
-    transcript_harvest_mode: str        # "replace" | "merge"
     allow_prompt_overrides: bool
-    read_claude_memory: bool
-    feature_transcript_harvest: bool
     feature_roundtable: bool
-    feature_memory_rerank: bool
     feature_tool_safety: bool
     safety_cache_ttl_s: int
 
 
 def get_worker_config() -> WorkerConfig:
-    """Read all 14 keys in one pass and return an immutable snapshot."""
+    """Read all keys in one pass and return an immutable snapshot."""
     return WorkerConfig(
         base_url=str(config_get("worker_llm_base_url") or ""),
         model=str(config_get("worker_llm_model") or ""),
@@ -42,29 +38,13 @@ def get_worker_config() -> WorkerConfig:
         tool_safety_timeout_s=float(
             config_get("worker_llm_tool_safety_timeout_s") or 1.5
         ),
-        transcript_harvest_mode=str(
-            config_get("worker_llm_transcript_harvest_mode") or "replace"
-        ),
         allow_prompt_overrides=bool(
             config_get("worker_llm_allow_prompt_overrides")
             if config_get("worker_llm_allow_prompt_overrides") is not None
             else True
         ),
-        # Default False: opt-in even when worker LLM is unconfigured; preserves
-        # zero behavior change for existing users.
-        read_claude_memory=bool(
-            config_get("worker_llm_read_claude_memory")
-            if config_get("worker_llm_read_claude_memory") is not None
-            else False
-        ),
-        feature_transcript_harvest=bool(
-            config_get("worker_llm_feature_transcript_harvest") or False
-        ),
         feature_roundtable=bool(
             config_get("worker_llm_feature_roundtable") or False
-        ),
-        feature_memory_rerank=bool(
-            config_get("worker_llm_feature_memory_rerank") or False
         ),
         feature_tool_safety=bool(
             config_get("worker_llm_feature_tool_safety") or False
@@ -80,10 +60,8 @@ def is_configured(cfg: WorkerConfig | None = None) -> bool:
 
 
 _FEATURE_ATTRS = {
-    "transcript_harvest": "feature_transcript_harvest",
-    "roundtable":         "feature_roundtable",
-    "memory_rerank":      "feature_memory_rerank",
-    "tool_safety":        "feature_tool_safety",
+    "roundtable":  "feature_roundtable",
+    "tool_safety": "feature_tool_safety",
 }
 
 

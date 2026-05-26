@@ -63,16 +63,6 @@ class TestSessionsResumeImports:
 
         assert callable(detect_continuation_intent)
 
-    def test_import_generate_boot_prompt(self):
-        from spellbook.sessions.resume import generate_boot_prompt
-
-        assert callable(generate_boot_prompt)
-
-    def test_import_get_resume_fields(self):
-        from spellbook.sessions.resume import get_resume_fields
-
-        assert callable(get_resume_fields)
-
     def test_import_continuation_intent(self):
         from spellbook.sessions.resume import ContinuationIntent
 
@@ -174,31 +164,6 @@ class TestSessionsWatcherImports:
 
         assert callable(is_heartbeat_fresh)
 
-    def test_on_compaction_hooks_parameter(self):
-        """SessionWatcher.__init__ accepts on_compaction_hooks parameter."""
-        import inspect as _inspect
-
-        from spellbook.sessions.watcher import SessionWatcher
-
-        sig = _inspect.signature(SessionWatcher.__init__)
-        params = list(sig.parameters.keys())
-        assert "on_compaction_hooks" in params, (
-            f"SessionWatcher.__init__ must accept on_compaction_hooks parameter. "
-            f"Found params: {params}"
-        )
-
-    def test_on_compaction_hooks_default_none(self):
-        """on_compaction_hooks defaults to None and stores as empty list."""
-        import inspect as _inspect
-
-        from spellbook.sessions.watcher import SessionWatcher
-
-        sig = _inspect.signature(SessionWatcher.__init__)
-        param = sig.parameters["on_compaction_hooks"]
-        assert param.default is None, (
-            f"on_compaction_hooks default should be None, got {param.default}"
-        )
-
     def test_all_public_exports_match(self):
         """Every public callable/class in spellbook.sessions.watcher must exist."""
         import spellbook.sessions.watcher as old_mod
@@ -265,84 +230,3 @@ class TestSessionsSkillAnalyzerImports:
 
         missing = old_public - new_public
         assert not missing, f"Missing public exports in spellbook.sessions.skill_analyzer: {missing}"
-
-
-class TestSessionsInjectionImports:
-    """Test that spellbook.sessions.injection has key exports."""
-
-    def test_import_should_inject(self):
-        from spellbook.sessions.injection import should_inject
-
-        assert callable(should_inject)
-
-    def test_import_wrap_with_reminder(self):
-        from spellbook.sessions.injection import wrap_with_reminder
-
-        assert callable(wrap_with_reminder)
-
-    def test_import_build_recovery_context(self):
-        from spellbook.sessions.injection import build_recovery_context
-
-        assert callable(build_recovery_context)
-
-    def test_import_get_recovery_context(self):
-        from spellbook.sessions.injection import get_recovery_context
-
-        assert callable(get_recovery_context)
-
-    def test_import_inject_recovery_context(self):
-        from spellbook.sessions.injection import inject_recovery_context
-
-        assert callable(inject_recovery_context)
-
-    def test_all_public_exports_match(self):
-        """Every public callable in spellbook.sessions.injection must exist."""
-        import spellbook.sessions.injection as old_mod
-        import spellbook.sessions.injection as new_mod
-
-        old_public = {
-            name
-            for name, obj in inspect.getmembers(old_mod)
-            if not name.startswith("_") and callable(obj)
-        }
-        new_public = {
-            name
-            for name, obj in inspect.getmembers(new_mod)
-            if not name.startswith("_") and callable(obj)
-        }
-
-        missing = old_public - new_public
-        assert not missing, f"Missing public exports in spellbook.sessions.injection: {missing}"
-
-
-class TestSessionsSoulExtractorImports:
-    """Test that spellbook.sessions.soul_extractor has key exports."""
-
-    def test_import_read_jsonl(self):
-        from spellbook.sessions.soul_extractor import read_jsonl
-
-        assert callable(read_jsonl)
-
-    def test_import_extract_soul(self):
-        from spellbook.sessions.soul_extractor import extract_soul
-
-        assert callable(extract_soul)
-
-    def test_all_public_exports_match(self):
-        """Every public callable in spellbook.sessions.soul_extractor must exist."""
-        import spellbook.sessions.soul_extractor as old_mod
-        import spellbook.sessions.soul_extractor as new_mod
-
-        old_public = {
-            name
-            for name, obj in inspect.getmembers(old_mod)
-            if not name.startswith("_") and callable(obj)
-        }
-        new_public = {
-            name
-            for name, obj in inspect.getmembers(new_mod)
-            if not name.startswith("_") and callable(obj)
-        }
-
-        missing = old_public - new_public
-        assert not missing, f"Missing public exports in spellbook.sessions.soul_extractor: {missing}"

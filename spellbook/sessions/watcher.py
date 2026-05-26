@@ -1,15 +1,13 @@
-"""Background watcher for session compaction events."""
+"""Background watcher for session heartbeat and skill-invocation analysis."""
 
 import asyncio
-import json
 import logging
 import os
 import threading
 import time
-import uuid
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Callable, Dict, Set
+from typing import Dict, Set
 
 
 logger = logging.getLogger(__name__)
@@ -39,7 +37,6 @@ class SessionWatcher(threading.Thread):
 
     def __init__(
         self, db_path: str, poll_interval: float = 2.0, project_path: str = None,
-        on_compaction_hooks: list[Callable] | None = None,
     ):
         """Initialize watcher.
 
@@ -47,8 +44,6 @@ class SessionWatcher(threading.Thread):
             db_path: Path to SQLite database
             poll_interval: Seconds between polls (default 2.0)
             project_path: Project directory to monitor (defaults to cwd)
-            on_compaction_hooks: Optional list of callables invoked on compaction.
-                Preparation for Task 17 cross-domain import resolution via callbacks.
         """
         super().__init__(daemon=True)
         self.db_path = db_path
@@ -57,12 +52,9 @@ class SessionWatcher(threading.Thread):
         self._running = False
         self._shutdown = threading.Event()
         self._last_cleanup = 0.0
-        self._on_compaction_hooks = on_compaction_hooks or []
 
         # Session tracking: session_id -> {path, last_mtime, last_size}
         self.sessions: Dict[str, dict] = {}
-        # Track processed compaction events by (session_id, leaf_uuid)
-        self._processed_compactions: dict = {}  # (session_id, leaf_uuid) -> timestamp
         # Skill analysis state per session
         self._skill_states: Dict[str, SessionSkillState] = {}
 
@@ -98,7 +90,6 @@ class SessionWatcher(threading.Thread):
             try:
                 self._poll_sessions()
                 self._write_heartbeat()
-                self._prune_expired_compactions()
 
                 now = time.time()
                 if now - self._last_cleanup > self.CLEANUP_INTERVAL:
@@ -124,77 +115,15 @@ class SessionWatcher(threading.Thread):
             self._shutdown.wait(self.poll_interval)
 
     def _poll_sessions(self):
-        """Poll session files for compaction events and analyze skills.
+        """Poll session files and analyze skills for incremental persistence.
 
-        Checks the current project's session file for compaction markers
-        (messages with type='summary'). When compaction is detected:
-        1. Extracts the soul from the session transcript
-        2. Saves the soul to the database
-        3. Signals the injection module to trigger context recovery
-
-        Also analyzes skills for incremental persistence every poll cycle.
+        Runs the skill-invocation analysis every poll cycle.
         """
-        # Lazy imports to avoid circular dependency at module load time
-        from spellbook.sessions.compaction import (
-            _get_current_session_file,
-            check_for_compaction,
-        )
-        from spellbook.sessions.soul_extractor import extract_soul
-        from spellbook.sessions.injection import _set_pending_compaction
-
-        # Check for compaction event
-        event = check_for_compaction(self.project_path)
-
-        if event is not None:
-            # Create unique key for this compaction event
-            compaction_key = (event.session_id, event.leaf_uuid)
-
-            # Process if not already processed
-            if compaction_key not in self._processed_compactions:
-                logger.info(
-                    f"Compaction detected in session {event.session_id}, "
-                    f"extracting soul..."
-                )
-
-                # Get session file path for soul extraction
-                session_file = _get_current_session_file(self.project_path)
-                if session_file is not None:
-                    # Extract soul from transcript
-                    try:
-                        soul = extract_soul(str(session_file))
-                        # Save soul to database
-                        try:
-                            self._save_soul(event.session_id, soul)
-                            # Mark as processed
-                            self._processed_compactions[compaction_key] = time.time()
-                            # Signal injection module to trigger recovery on next tool call
-                            _set_pending_compaction(True)
-                            # Invoke compaction hooks
-                            for hook in self._on_compaction_hooks:
-                                try:
-                                    hook(event)
-                                except Exception as hook_err:
-                                    logger.warning(f"Compaction hook error: {hook_err}")
-                            logger.info(f"Soul saved and recovery triggered for session {event.session_id}")
-                        except Exception as e:
-                            logger.error(f"Failed to save soul: {e}", exc_info=True)
-                    except Exception as e:
-                        logger.error(f"Failed to extract soul: {e}", exc_info=True)
-                else:
-                    logger.warning("Session file not found for soul extraction")
-
         # Analyze skills for incremental persistence (runs every poll cycle)
         try:
             self._analyze_skills()
         except Exception as e:
             logger.warning(f"Skill analysis failed: {e}")
-
-    def _prune_expired_compactions(self):
-        """Remove compaction records older than 1 hour."""
-        now = time.time()
-        expired = [k for k, ts in self._processed_compactions.items() if now - ts > 3600]
-        for k in expired:
-            del self._processed_compactions[k]
 
     def _cleanup_stale_data(self):
         """Prune old rows from high-volume database tables."""
@@ -205,19 +134,16 @@ class SessionWatcher(threading.Thread):
             Correction,
             Decision,
             SkillOutcome as SkillOutcomeModel,
-            Soul,
             Subagent,
         )
 
         now = datetime.now()
-        cutoff_30d = (now - timedelta(days=30)).isoformat()
         cutoff_90d = (now - timedelta(days=90)).isoformat()
 
         try:
             with get_sync_session(self.db_path) as session:
                 # Each delete is wrapped in try/except to handle missing tables
                 cleanup_ops = [
-                    (Soul, Soul.bound_at, cutoff_30d),
                     (SkillOutcomeModel, SkillOutcomeModel.created_at, cutoff_90d),
                     (Subagent, Subagent.spawned_at, cutoff_90d),
                     (Decision, Decision.decided_at, cutoff_90d),
@@ -391,35 +317,6 @@ class SessionWatcher(threading.Thread):
         # Check if inactive long enough
         inactive_seconds = (datetime.now() - state.last_activity).total_seconds()
         return inactive_seconds >= SESSION_INACTIVE_THRESHOLD_SECONDS
-
-    def _save_soul(self, session_id: str, soul: dict) -> None:
-        """Save extracted soul to database.
-
-        Args:
-            session_id: Session identifier
-            soul: Extracted soul dict with keys: todos, active_skill, persona, etc.
-        """
-        from spellbook.db.engines import get_sync_session
-        from spellbook.db.spellbook_models import Soul
-
-        # Generate unique soul ID
-        soul_id = str(uuid.uuid4())
-
-        with get_sync_session(self.db_path) as session:
-            soul_record = Soul(
-                id=soul_id,
-                project_path=self.project_path,
-                session_id=session_id,
-                bound_at=datetime.now().isoformat(),
-                persona=soul.get("persona"),
-                active_skill=soul.get("active_skill"),
-                skill_phase=soul.get("skill_phase"),
-                todos=json.dumps(soul.get("todos", [])),
-                recent_files=json.dumps(soul.get("recent_files", [])),
-                exact_position=json.dumps(soul.get("exact_position", [])),
-                workflow_pattern=soul.get("workflow_pattern"),
-            )
-            session.add(soul_record)
 
     def _write_heartbeat(self):
         """Write heartbeat to database."""

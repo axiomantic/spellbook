@@ -293,65 +293,6 @@ class TestRecordToolStart:
         assert proc.returncode == 0
 
 
-class TestPostToolUseMemoryInject:
-    """Test memory injection in PostToolUse (fail-open).
-
-    Memory inject calls _http_post to /api/memory/recall. With a dead MCP port,
-    the call fails and returns None, producing no output. We mock at the Python
-    level to verify the handler attempts the call.
-    """
-
-    def test_memory_inject_attempts_recall_for_file_tool(self):
-        """Read tool should attempt memory recall via _memory_inject."""
-        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
-        import spellbook_hook
-
-        calls = []
-        original_http = spellbook_hook._http_post
-        spellbook_hook._http_post = lambda url, payload, timeout=5: (
-            calls.append(("http_post", url, payload)) or None
-        )
-
-        try:
-            spellbook_hook._handle_post_tool_use("Read", {
-                "tool_input": {"file_path": "/some/file.py"},
-                "tool_result": "file contents here",
-                "cwd": "/tmp/test-project",
-            })
-            # Memory inject should have attempted an HTTP POST to the recall endpoint
-            recall_calls = [c for c in calls if "/api/memory/recall" in c[1]]
-            assert len(recall_calls) == 1, (
-                f"Expected 1 memory recall call, got {len(recall_calls)}. All calls: {calls}"
-            )
-            assert recall_calls[0][2]["file_path"] == "/some/file.py"
-        finally:
-            spellbook_hook._http_post = original_http
-
-    def test_non_file_tool_skips_memory_inject(self):
-        """Bash tool should not trigger memory injection."""
-        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
-        import spellbook_hook
-
-        calls = []
-        original_http = spellbook_hook._http_post
-        spellbook_hook._http_post = lambda url, payload, timeout=5: (
-            calls.append(("http_post", url, payload)) or None
-        )
-
-        try:
-            spellbook_hook._handle_post_tool_use("Bash", {
-                "tool_input": {"command": "echo hello"},
-                "tool_result": "hello",
-            })
-            # No recall calls for non-file tools
-            recall_calls = [c for c in calls if "/api/memory/recall" in c[1]]
-            assert recall_calls == [], (
-                f"Bash tool should not trigger memory recall, got: {recall_calls}"
-            )
-        finally:
-            spellbook_hook._http_post = original_http
-
-
 class TestNotifyOnComplete:
     """Test OS notification handler (fail-open).
 
@@ -416,75 +357,6 @@ class TestNotifyOnComplete:
                 os.environ.pop("SPELLBOOK_NOTIFY_ENABLED", None)
             else:
                 os.environ["SPELLBOOK_NOTIFY_ENABLED"] = original_env
-
-
-class TestMemoryCapture:
-    """Test memory capture handler (fail-open).
-
-    Tests mock _http_post to verify the handler attempts to POST
-    to the /api/memory/event endpoint.
-    """
-
-    def test_capture_attempts_event_post_for_file_tool(self):
-        """Memory capture should attempt POST to /api/memory/event."""
-        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
-        import spellbook_hook
-
-        calls = []
-        original_http = spellbook_hook._http_post
-        original_resolve = spellbook_hook._resolve_git_context
-        spellbook_hook._http_post = lambda url, payload, timeout=5: (
-            calls.append(("http_post", url, payload)) or None
-        )
-        spellbook_hook._resolve_git_context = lambda cwd: (cwd, "main")
-
-        try:
-            spellbook_hook._memory_capture("Read", {
-                "tool_input": {"file_path": "/some/file.py"},
-                "tool_result": "file contents",
-                "cwd": "/tmp/test",
-            })
-            event_calls = [c for c in calls if "/api/memory/event" in c[1]]
-            assert len(event_calls) == 1, (
-                f"Expected 1 event call, got {len(event_calls)}. All calls: {calls}"
-            )
-            payload = event_calls[0][2]
-            assert payload == {
-                "session_id": "",
-                "project": "tmp-test",
-                "tool_name": "Read",
-                "subject": "/some/file.py",
-                "summary": "Read: /some/file.py",
-                "tags": "read,file.py",
-                "event_type": "tool_use",
-                "branch": "main",
-            }
-        finally:
-            spellbook_hook._http_post = original_http
-            spellbook_hook._resolve_git_context = original_resolve
-
-    def test_capture_skips_blacklisted_tools(self):
-        """Blacklisted tools should not trigger memory capture."""
-        sys.path.insert(0, os.path.join(PROJECT_ROOT, "hooks"))
-        import spellbook_hook
-
-        calls = []
-        original_http = spellbook_hook._http_post
-        spellbook_hook._http_post = lambda url, payload, timeout=5: (
-            calls.append(("http_post", url, payload)) or None
-        )
-
-        try:
-            for tool in ("AskUserQuestion", "TodoRead", "TodoWrite"):
-                spellbook_hook._memory_capture(tool, {
-                    "tool_input": {},
-                    "tool_result": "result",
-                })
-            assert calls == [], (
-                f"Blacklisted tools should not trigger capture, got: {calls}"
-            )
-        finally:
-            spellbook_hook._http_post = original_http
 
 
 # ---------------------------------------------------------------------------
@@ -1051,74 +923,118 @@ class TestBuildRecoveryDirectiveBugFixes:
             spellbook_hook._mcp_call = original
 
     def test_skill_info_failure_still_produces_directive(self):
-        """MCP failure for skill_instructions_get still produces the directive without constraints."""
-        from spellbook_hook import _build_recovery_directive
+        """MCP failure for skill_instructions_get still produces the directive without constraints.
+
+        Distinct path: when ``skill_instructions_get`` returns a falsy result
+        the Skill Constraints section is omitted, but the rest of the directive
+        (active skill, phase, binding decisions) must still render. Binding
+        decisions use the live ``decisions_binding`` state key.
+        """
+        import tripwire
 
         import spellbook_hook
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: None
 
-        try:
-            result = _build_recovery_directive({
-                "active_skill": "debug",
-                "skill_phase": "INVESTIGATE",
-                "binding_decisions": ["Use pytest", "Target auth module"],
-                "next_action": "Run failing test",
-            })
-            expected = (
-                "### Active Skill: debug\n"
-                "Phase: INVESTIGATE\n"
-                "Resume with: `Skill(skill='debug', --resume INVESTIGATE)`\n"
-                "\n### Binding Decisions\n"
-                "- Use pytest\n"
-                "- Target auth module\n"
-                "\n### Next Action\n"
-                "Run failing test"
-            )
-            assert result == expected
-        finally:
-            spellbook_hook._mcp_call = original
+        state = {
+            "active_skill": "debug",
+            "skill_phase": "INVESTIGATE",
+            "decisions_binding": ["Use pytest", "Target auth module"],
+        }
 
-    def test_full_directive_output(self):
-        """Full directive with all sections produces correct output."""
-        from spellbook_hook import _build_recovery_directive
+        # active_skill present -> _mcp_call is invoked once to fetch skill
+        # constraints. Return None to simulate the skill-info lookup failing;
+        # no Skill Constraints section should be appended.
+        mock_mcp = tripwire.mock("spellbook_hook:_mcp_call")
+        mock_mcp.returns(None)
 
-        import spellbook_hook
-        original = spellbook_hook._mcp_call
-        spellbook_hook._mcp_call = lambda tool, args=None: (
-            {"success": True, "content": "FORBIDDEN content"} if tool == "skill_instructions_get" else None
+        with tripwire:
+            result = spellbook_hook._build_recovery_directive(state)
+
+        mock_mcp.assert_call(
+            args=(
+                "skill_instructions_get",
+                {"skill_name": "debug", "sections": ["FORBIDDEN", "REQUIRED"]},
+            ),
+            kwargs={},
+            returned=None,
         )
 
-        try:
-            result = _build_recovery_directive({
-                "active_skill": "develop",
-                "skill_phase": "PLANNING",
-                "binding_decisions": ["TDD approach"],
-                "next_action": "Write tests",
-                "workflow_pattern": "TDD",
-                "todos": [
-                    {"content": "Write test", "completed": False},
-                    {"content": "Done item", "completed": True},
-                ],
-                "recent_files": ["/src/main.py"],
-            })
-            expected = (
-                "### Active Skill: develop\n"
-                "Phase: PLANNING\n"
-                "Resume with: `Skill(skill='develop', --resume PLANNING)`\n"
-                "\n### Skill Constraints\nFORBIDDEN content\n"
-                "\n### Binding Decisions\n"
-                "- TDD approach\n"
-                "\n### Next Action\nWrite tests\n"
-                "\n### Workflow Pattern: TDD\n"
-                "\n### Pending Todos\n"
-                "- [ ] Write test\n"
-                "\n### Recent Files\n"
-                "- /src/main.py"
-            )
-            assert result == expected
-        finally:
-            spellbook_hook._mcp_call = original
+        expected = (
+            "### Active Skill: debug\n"
+            "Phase: INVESTIGATE\n"
+            "Resume with: `Skill(skill='debug', --resume INVESTIGATE)`\n"
+            "\n### Binding Decisions\n"
+            "- Use pytest\n"
+            "- Target auth module"
+        )
+        assert result == expected
+
+    def test_full_directive_output(self):
+        """Full directive with all sections produces correct output.
+
+        Exercises every section in its rendered order against the current
+        contract: Skill Constraints, Binding Decisions (live ``decisions_binding``
+        key), the Develop remaining-work ledger (which replaced the removed
+        ``### Next Action`` block), Workflow Pattern, Pending Todos, and Recent
+        Files.
+        """
+        import tripwire
+
+        import spellbook_hook
+
+        state = {
+            "active_skill": "develop",
+            "skill_phase": "PLANNING",
+            "decisions_binding": ["TDD approach"],
+            "develop_gate_ledger": {
+                "current_phase": "PLANNING",
+                "remaining_gates": "design review\ntest suite",
+                "plan_pointer": "/plan.md",
+            },
+            "workflow_pattern": "TDD",
+            "todos": [
+                {"content": "Write test", "completed": False},
+                {"content": "Done item", "completed": True},
+            ],
+            "recent_files": ["/src/main.py"],
+        }
+
+        # active_skill present -> _mcp_call is invoked once to fetch skill
+        # constraints. Return a successful payload so the Skill Constraints
+        # section renders from the "content" key.
+        mock_mcp = tripwire.mock("spellbook_hook:_mcp_call")
+        mock_mcp.returns({"success": True, "content": "FORBIDDEN content"})
+
+        with tripwire:
+            result = spellbook_hook._build_recovery_directive(state)
+
+        mock_mcp.assert_call(
+            args=(
+                "skill_instructions_get",
+                {"skill_name": "develop", "sections": ["FORBIDDEN", "REQUIRED"]},
+            ),
+            kwargs={},
+        )
+
+        expected = (
+            "### Active Skill: develop\n"
+            "Phase: PLANNING\n"
+            "Resume with: `Skill(skill='develop', --resume PLANNING)`\n"
+            "\n### Skill Constraints\nFORBIDDEN content\n"
+            "\n### Binding Decisions\n"
+            "- TDD approach\n"
+            "\n### Develop: Remaining Work (DO NOT declare done)\n"
+            "Current phase: PLANNING\n"
+            "Remaining quality gates — these MUST still run:\n"
+            "- [ ] design review\n"
+            "- [ ] test suite\n"
+            "Plan: /plan.md\n"
+            "\n### Workflow Pattern: TDD\n"
+            "\n### Pending Todos\n"
+            "- [ ] Write test\n"
+            "\n### Recent Files\n"
+            "- /src/main.py"
+        )
+        assert result == expected
 
 
 class TestSessionStartFocusStackBehavioralMode:

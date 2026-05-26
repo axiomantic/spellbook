@@ -5,9 +5,8 @@ import { PageLayout } from '../components/layout/PageLayout'
 import { Badge } from '../components/shared/Badge'
 
 /**
- * Canvas list page (`/admin/canvas`). Mirrors `MemoryBrowser` for layout
- * and UX per OQ-1 ("most-like-MemoryBrowser" precedent locked in
- * Phase 1.5).
+ * Canvas list page (`/admin/canvas`). Uses the standard list-page layout
+ * and UX per OQ-1 (precedent locked in Phase 1.5).
  */
 export function CanvasList() {
   const { data, isLoading, isError, error, refetch } = useCanvasList()

@@ -190,8 +190,8 @@ Reusable workflows for structured development:
 | Category | Skills |
 |----------|--------|
 | **Core Workflow** | [design-exploration]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
-| **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
-| **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
+| **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [dedupe], [distilling-prs], [requesting-code-review]† |
+| **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators] *(deprecated)*, [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [permissions-from-transcripts] |
@@ -214,6 +214,7 @@ Reusable workflows for structured development:
 [fixing-tests]: https://axiomantic.github.io/spellbook/latest/skills/fixing-tests/
 [fact-checking]: https://axiomantic.github.io/spellbook/latest/skills/fact-checking/
 [finding-dead-code]: https://axiomantic.github.io/spellbook/latest/skills/finding-dead-code/
+[dedupe]: https://axiomantic.github.io/spellbook/latest/skills/dedupe/
 [requesting-code-review]: https://axiomantic.github.io/spellbook/latest/skills/requesting-code-review/
 [develop]: https://axiomantic.github.io/spellbook/latest/skills/develop/
 [reviewing-design-docs]: https://axiomantic.github.io/spellbook/latest/skills/reviewing-design-docs/
@@ -290,6 +291,10 @@ Reusable workflows for structured development:
 | [/dead-code-analyze] | Extract and triage code items for dead code verification |
 | [/dead-code-report] | Generate dead code findings report with deletion plan |
 | [/dead-code-implement] | Execute approved deletions with verification |
+| [/dedupe-setup] | Phase 0 of /dedupe: scope selection and group-expansion preview |
+| [/dedupe-analyze] | Phase 1 of /dedupe: detection + classification per pair with INLINE-MANDATORY screen |
+| [/dedupe-report] | Phase 2 of /dedupe: human-readable findings report from analyze output |
+| [/dedupe-apply] | Phase 3 of /dedupe: approval-gated, journaled, reversible consolidation |
 | [/deep-research-interview] | Phase 0: Structured interview and Research Brief generation |
 | [/deep-research-investigate] | Phase 2: Triplet search engine with plateau detection and micro-reports |
 | [/deep-research-plan] | Phase 1: Thread decomposition, source strategy, and convergence criteria |
@@ -391,6 +396,10 @@ Reusable workflows for structured development:
 [/crystallize-verify]: https://axiomantic.github.io/spellbook/latest/commands/crystallize-verify/
 [/dead-code-setup]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-setup/
 [/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
+[/dedupe-setup]: https://axiomantic.github.io/spellbook/latest/commands/dedupe-setup/
+[/dedupe-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dedupe-analyze/
+[/dedupe-report]: https://axiomantic.github.io/spellbook/latest/commands/dedupe-report/
+[/dedupe-apply]: https://axiomantic.github.io/spellbook/latest/commands/dedupe-apply/
 [/dead-code-report]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-report/
 [/dead-code-implement]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-implement/
 [/deep-research-interview]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-interview/

@@ -58,18 +58,18 @@ describe('Sidebar', () => {
       expect(canvasLink.closest('a')).toHaveAttribute('href', '/canvas')
     })
 
-    it('places // CANVAS between // MEMORY and // SECURITY', () => {
+    it('places // CANVAS between // CONFIG and // SECURITY', () => {
       const { container } = renderSidebar()
       const labels = Array.from(
         container.querySelectorAll('nav a'),
       ).map((el) => el.textContent)
 
-      const memoryIdx = labels.indexOf('// MEMORY')
+      const configIdx = labels.indexOf('// CONFIG')
       const canvasIdx = labels.indexOf('// CANVAS')
       const securityIdx = labels.indexOf('// SECURITY')
 
-      expect(memoryIdx).toBeGreaterThanOrEqual(0)
-      expect(canvasIdx).toBeGreaterThan(memoryIdx)
+      expect(configIdx).toBeGreaterThanOrEqual(0)
+      expect(canvasIdx).toBeGreaterThan(configIdx)
       expect(securityIdx).toBeGreaterThan(canvasIdx)
     })
   })

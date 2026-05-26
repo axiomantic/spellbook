@@ -1151,25 +1151,6 @@ Before completing crystallization:
 
 If ANY box unchecked: STOP and fix before declaring complete.
 
-## Related Systems
-
-**Memory system (`memory_store(type='rule', ...)`):**
-Rules in crystallized prompts and rules in the spellbook memory system are the
-same semantic concept (specific behavior-shaping instructions) but live in
-different storage layers:
-- Prompt-rules: content inside the canonical `## Rules` section of a
-  crystallized prompt. Lifecycle managed by `/crystallize` and
-  `/crystallize-consolidate`.
-- Memory-rules: stored as markdown files in the memory system. Lifecycle
-  managed by `memory_store` and `memory_forget`.
-
-**No cross-layer guarantee in this iteration.** Crystallize does NOT read
-memory; memory does NOT read crystallize. Operators MAY copy between layers
-manually (a memory rule may be quoted into a prompt; a prompt rule may be
-added to memory via `memory_store`). Both layers preserve verbatim:
-- Memory: archive-on-forget (recoverable from `.archive/`).
-- Crystallize: byte-fidelity in the canonical Rules section.
-
 ## Glossary
 
 **AI slop:** Loss of byte-level fidelity in instructions whose specificity (named tools, named anti-patterns, exact thresholds, exact phrasings) is the source of their behavioral effect on LLM execution. Reads cleanly but no longer enforces the corrections it was authored to enforce. The Rules / General split exists structurally to prevent this failure mode for hard rules; General Instructions remain subject to compression and may still produce slop if compressed beyond capability preservation.

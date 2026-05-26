@@ -1,6 +1,6 @@
 """Tests for spellbook.db ORM model definitions.
 
-Verifies that all 29 spellbook.db SQLAlchemy models match the actual
+Verifies that all 16 spellbook.db SQLAlchemy models match the actual
 CREATE TABLE schemas defined in spellbook/core/db.py and
 spellbook/coordination/curator.py.
 """
@@ -13,17 +13,12 @@ from sqlalchemy.orm import Session
 from spellbook.db.base import SpellbookBase
 
 
-# All 29 expected tables and their exact column definitions.
+# All 16 expected tables and their exact column definitions.
 # Derived from spellbook/core/db.py and
 # spellbook/coordination/curator.py.
 EXPECTED_TABLES = {
-    "souls": [
-        "id", "project_path", "session_id", "bound_at", "persona",
-        "active_skill", "skill_phase", "todos", "recent_files",
-        "exact_position", "workflow_pattern", "summoned_at",
-    ],
     "subagents": [
-        "id", "soul_id", "project_path", "spawned_at",
+        "id", "project_path", "spawned_at",
         "prompt_summary", "persona", "status", "last_output",
     ],
     "decisions": [
@@ -64,29 +59,6 @@ EXPECTED_TABLES = {
     "spawn_rate_limit": [
         "id", "timestamp", "session_id",
     ],
-    "memories": [
-        "id", "content", "memory_type", "namespace", "branch",
-        "scope", "importance", "created_at", "accessed_at", "status",
-        "deleted_at", "content_hash", "meta",
-    ],
-    "memory_citations": [
-        "id", "memory_id", "file_path", "line_range",
-        "content_snippet",
-    ],
-    "memory_links": [
-        "memory_a", "memory_b", "link_type", "weight", "last_seen",
-    ],
-    "memory_branches": [
-        "memory_id", "branch_name", "association_type", "created_at",
-    ],
-    "raw_events": [
-        "id", "session_id", "timestamp", "project", "branch",
-        "event_type", "tool_name", "subject", "summary", "tags",
-        "consolidated", "batch_id",
-    ],
-    "memory_audit_log": [
-        "id", "timestamp", "action", "memory_id", "details",
-    ],
     "stint_stack": [
         "id", "project_path", "session_id", "stack_json", "updated_at",
     ],
@@ -113,11 +85,10 @@ EXPECTED_TABLES = {
 def engine():
     """Create an in-memory SQLite engine with all spellbook models."""
     from spellbook.db.spellbook_models import (  # noqa: F401 - triggers registration
-        Soul, Subagent, Decision, Correction, Heartbeat,
+        Subagent, Decision, Correction, Heartbeat,
         SkillOutcome, TelemetryConfig, WorkflowState,
         Experiment, ExperimentVariant, VariantAssignment,
-        SpawnRateLimit, Memory, MemoryCitation,
-        MemoryLink, MemoryBranch, RawEvent, MemoryAuditLog,
+        SpawnRateLimit,
         StintStack, StintCorrectionEvent, CuratorEvent,
         WorkerLLMCall, HookEvent,
     )
@@ -127,10 +98,10 @@ def engine():
 
 
 class TestAllTablesExist:
-    """Verify all 29 expected tables are created by the ORM models."""
+    """Verify all 16 expected tables are created by the ORM models."""
 
-    def test_all_29_tables_created(self, engine):
-        """All 29 spellbook.db tables must exist after create_all."""
+    def test_all_16_tables_created(self, engine):
+        """All 16 spellbook.db tables must exist after create_all."""
         inspector = inspect(engine)
         table_names = set(inspector.get_table_names())
         expected = set(EXPECTED_TABLES.keys())
@@ -158,81 +129,6 @@ class TestTableColumns:
         )
 
 
-class TestSoulModel:
-    """Tests for the Soul ORM model."""
-
-    def test_to_dict_all_fields(self, engine):
-        """Soul.to_dict() returns all columns with correct values."""
-        from spellbook.db.spellbook_models import Soul
-        soul = Soul(
-            id="soul-1",
-            project_path="/home/user/project",
-            session_id="sess-abc",
-            bound_at="2026-01-15T10:00:00",
-            persona="A helpful assistant",
-            active_skill="develop",
-            skill_phase="DESIGN",
-            todos='[{"text": "implement feature", "done": false}]',
-            recent_files='["src/main.py", "tests/test_main.py"]',
-            exact_position="line 42 of main.py",
-            workflow_pattern="TDD",
-            summoned_at="2026-01-15T09:00:00",
-        )
-        d = soul.to_dict()
-        assert d == {
-            "id": "soul-1",
-            "project_path": "/home/user/project",
-            "session_id": "sess-abc",
-            "bound_at": "2026-01-15T10:00:00",
-            "persona": "A helpful assistant",
-            "active_skill": "develop",
-            "skill_phase": "DESIGN",
-            "todos": [{"text": "implement feature", "done": False}],
-            "recent_files": ["src/main.py", "tests/test_main.py"],
-            "exact_position": "line 42 of main.py",
-            "workflow_pattern": "TDD",
-            "summoned_at": "2026-01-15T09:00:00",
-        }
-
-    def test_to_dict_null_json_fields(self, engine):
-        """Soul.to_dict() handles null JSON fields gracefully."""
-        from spellbook.db.spellbook_models import Soul
-        soul = Soul(
-            id="soul-2",
-            project_path="/test",
-            todos=None,
-            recent_files=None,
-        )
-        d = soul.to_dict()
-        assert d == {
-            "id": "soul-2",
-            "project_path": "/test",
-            "session_id": None,
-            "bound_at": None,
-            "persona": None,
-            "active_skill": None,
-            "skill_phase": None,
-            "todos": None,
-            "recent_files": None,
-            "exact_position": None,
-            "workflow_pattern": None,
-            "summoned_at": None,
-        }
-
-    def test_relationship_to_subagents(self, engine):
-        """Soul.subagents relationship loads correctly."""
-        from spellbook.db.spellbook_models import Soul, Subagent
-        with Session(engine) as session:
-            soul = Soul(id="soul-1", project_path="/test")
-            sub = Subagent(id="sub-1", soul_id="soul-1", project_path="/test")
-            session.add_all([soul, sub])
-            session.commit()
-
-            loaded = session.get(Soul, "soul-1")
-            assert len(loaded.subagents) == 1
-            assert loaded.subagents[0].id == "sub-1"
-
-
 class TestSubagentModel:
     """Tests for the Subagent ORM model."""
 
@@ -241,7 +137,6 @@ class TestSubagentModel:
         from spellbook.db.spellbook_models import Subagent
         sub = Subagent(
             id="sub-1",
-            soul_id="soul-1",
             project_path="/test",
             spawned_at="2026-01-15T10:00:00",
             prompt_summary="Explore codebase",
@@ -252,7 +147,6 @@ class TestSubagentModel:
         d = sub.to_dict()
         assert d == {
             "id": "sub-1",
-            "soul_id": "soul-1",
             "project_path": "/test",
             "spawned_at": "2026-01-15T10:00:00",
             "prompt_summary": "Explore codebase",
@@ -530,275 +424,6 @@ class TestSpawnRateLimitModel:
         assert ts_type in ("REAL", "FLOAT"), (
             f"Expected REAL type for timestamp, got {ts_type}"
         )
-
-
-class TestMemoryModel:
-    """Tests for the Memory ORM model."""
-
-    def test_to_dict_parses_meta_json(self, engine):
-        """Memory.to_dict() parses meta JSON string to dict."""
-        from spellbook.db.spellbook_models import Memory
-        m = Memory(
-            id="mem-1",
-            content="Important discovery",
-            memory_type="insight",
-            namespace="project-a",
-            branch="main",
-            importance=0.9,
-            created_at="2026-01-15T10:00:00",
-            accessed_at="2026-01-15T11:00:00",
-            status="active",
-            deleted_at=None,
-            content_hash="hash123",
-            meta='{"source": "session", "tags": ["important"]}',
-        )
-        d = m.to_dict()
-        assert d == {
-            "id": "mem-1",
-            "content": "Important discovery",
-            "memory_type": "insight",
-            "namespace": "project-a",
-            "branch": "main",
-            "scope": None,
-            "importance": 0.9,
-            "created_at": "2026-01-15T10:00:00",
-            "accessed_at": "2026-01-15T11:00:00",
-            "status": "active",
-            "deleted_at": None,
-            "content_hash": "hash123",
-            "meta": {"source": "session", "tags": ["important"]},
-        }
-
-    def test_to_dict_null_meta(self, engine):
-        """Memory.to_dict() handles null meta gracefully."""
-        from spellbook.db.spellbook_models import Memory
-        m = Memory(
-            id="mem-2", content="test", namespace="ns",
-            created_at="2026-01-15", content_hash="abc",
-            meta=None,
-        )
-        d = m.to_dict()
-        assert d == {
-            "id": "mem-2",
-            "content": "test",
-            "memory_type": None,
-            "namespace": "ns",
-            "branch": None,
-            "scope": None,
-            "importance": None,
-            "created_at": "2026-01-15",
-            "accessed_at": None,
-            "status": None,
-            "deleted_at": None,
-            "content_hash": "abc",
-            "meta": None,
-        }
-
-    def test_to_dict_empty_meta(self, engine):
-        """Memory.to_dict() handles default '{}' meta."""
-        from spellbook.db.spellbook_models import Memory
-        m = Memory(
-            id="mem-3", content="test", namespace="ns",
-            created_at="2026-01-15", content_hash="abc",
-            meta="{}",
-        )
-        d = m.to_dict()
-        assert d["meta"] == {}
-
-    def test_relationship_to_citations(self, engine):
-        """Memory.citations relationship loads correctly."""
-        from spellbook.db.spellbook_models import Memory, MemoryCitation
-        with Session(engine) as session:
-            mem = Memory(
-                id="mem-1", content="test", namespace="ns",
-                created_at="2026-01-15", content_hash="abc",
-            )
-            cit = MemoryCitation(
-                id=1, memory_id="mem-1",
-                file_path="/src/main.py", line_range="10-20",
-                content_snippet="def main():",
-            )
-            session.add_all([mem, cit])
-            session.commit()
-            loaded = session.get(Memory, "mem-1")
-            assert len(loaded.citations) == 1
-            assert loaded.citations[0].file_path == "/src/main.py"
-
-    def test_relationship_to_branches(self, engine):
-        """Memory.branches relationship loads correctly."""
-        from spellbook.db.spellbook_models import Memory, MemoryBranch
-        with Session(engine) as session:
-            mem = Memory(
-                id="mem-1", content="test", namespace="ns",
-                created_at="2026-01-15", content_hash="abc",
-            )
-            branch = MemoryBranch(
-                memory_id="mem-1", branch_name="feature-x",
-                association_type="origin",
-                created_at="2026-01-15T10:00:00",
-            )
-            session.add_all([mem, branch])
-            session.commit()
-            loaded = session.get(Memory, "mem-1")
-            assert len(loaded.branches) == 1
-            assert loaded.branches[0].branch_name == "feature-x"
-
-
-class TestMemoryCitationModel:
-    """Tests for the MemoryCitation ORM model."""
-
-    def test_to_dict_all_fields(self, engine):
-        """MemoryCitation.to_dict() returns all columns."""
-        from spellbook.db.spellbook_models import MemoryCitation
-        mc = MemoryCitation(
-            id=1,
-            memory_id="mem-1",
-            file_path="/src/main.py",
-            line_range="10-20",
-            content_snippet="def main():",
-        )
-        d = mc.to_dict()
-        assert d == {
-            "id": 1,
-            "memory_id": "mem-1",
-            "file_path": "/src/main.py",
-            "line_range": "10-20",
-            "content_snippet": "def main():",
-        }
-
-
-class TestMemoryLinkModel:
-    """Tests for the MemoryLink ORM model."""
-
-    def test_composite_pk(self, engine):
-        """MemoryLink has 3-column composite PK (memory_a, memory_b, link_type)."""
-        from spellbook.db.spellbook_models import MemoryLink
-        with Session(engine) as session:
-            link = MemoryLink(
-                memory_a="m1", memory_b="m2",
-                link_type="related", weight=0.8,
-                last_seen="2026-01-15T10:00:00",
-            )
-            session.add(link)
-            session.commit()
-            loaded = session.get(MemoryLink, ("m1", "m2", "related"))
-            assert loaded is not None
-            assert loaded.weight == 0.8
-            assert loaded.last_seen == "2026-01-15T10:00:00"
-
-    def test_to_dict_all_fields(self, engine):
-        """MemoryLink.to_dict() returns all columns."""
-        from spellbook.db.spellbook_models import MemoryLink
-        ml = MemoryLink(
-            memory_a="m1", memory_b="m2",
-            link_type="related", weight=0.8,
-            last_seen="2026-01-15T10:00:00",
-        )
-        d = ml.to_dict()
-        assert d == {
-            "memory_a": "m1",
-            "memory_b": "m2",
-            "link_type": "related",
-            "weight": 0.8,
-            "last_seen": "2026-01-15T10:00:00",
-        }
-
-
-class TestMemoryBranchModel:
-    """Tests for the MemoryBranch ORM model."""
-
-    def test_composite_pk(self, engine):
-        """MemoryBranch has 2-column composite PK (memory_id, branch_name)."""
-        from spellbook.db.spellbook_models import MemoryBranch
-        with Session(engine) as session:
-            mb = MemoryBranch(
-                memory_id="mem-1", branch_name="main",
-                association_type="origin",
-                created_at="2026-01-15T10:00:00",
-            )
-            session.add(mb)
-            session.commit()
-            loaded = session.get(MemoryBranch, ("mem-1", "main"))
-            assert loaded is not None
-            assert loaded.association_type == "origin"
-
-    def test_to_dict_all_fields(self, engine):
-        """MemoryBranch uses branch_name (not branch) and association_type."""
-        from spellbook.db.spellbook_models import MemoryBranch
-        mb = MemoryBranch(
-            memory_id="mem-1", branch_name="feature-x",
-            association_type="ancestor",
-            created_at="2026-01-15T10:00:00",
-        )
-        d = mb.to_dict()
-        assert d == {
-            "memory_id": "mem-1",
-            "branch_name": "feature-x",
-            "association_type": "ancestor",
-            "created_at": "2026-01-15T10:00:00",
-        }
-
-
-class TestRawEventModel:
-    """Tests for the RawEvent ORM model."""
-
-    def test_to_dict_all_fields(self, engine):
-        """RawEvent has project, tool_name, subject, etc. (NOT payload_json)."""
-        from spellbook.db.spellbook_models import RawEvent
-        re = RawEvent(
-            id=1,
-            session_id="sess-1",
-            timestamp="2026-01-15T10:00:00",
-            project="/test",
-            branch="main",
-            event_type="tool_call",
-            tool_name="Read",
-            subject="test.py",
-            summary="Read a test file",
-            tags="read,file",
-            consolidated=0,
-            batch_id="batch-1",
-        )
-        d = re.to_dict()
-        assert d == {
-            "id": 1,
-            "session_id": "sess-1",
-            "timestamp": "2026-01-15T10:00:00",
-            "project": "/test",
-            "branch": "main",
-            "event_type": "tool_call",
-            "tool_name": "Read",
-            "subject": "test.py",
-            "summary": "Read a test file",
-            "tags": "read,file",
-            "consolidated": 0,
-            "batch_id": "batch-1",
-        }
-        assert "payload_json" not in d
-
-
-class TestMemoryAuditLogModel:
-    """Tests for the MemoryAuditLog ORM model."""
-
-    def test_to_dict_all_fields(self, engine):
-        """MemoryAuditLog has timestamp (not created_at) and details (plural)."""
-        from spellbook.db.spellbook_models import MemoryAuditLog
-        mal = MemoryAuditLog(
-            id=1,
-            timestamp="2026-01-15T10:00:00",
-            action="create",
-            memory_id="mem-1",
-            details="Created memory from session observation",
-        )
-        d = mal.to_dict()
-        assert d == {
-            "id": 1,
-            "timestamp": "2026-01-15T10:00:00",
-            "action": "create",
-            "memory_id": "mem-1",
-            "details": "Created memory from session observation",
-        }
-        assert "created_at" not in d
 
 
 class TestStintStackModel:

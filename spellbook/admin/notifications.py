@@ -31,10 +31,6 @@ def classify_event_scope(event: Event) -> str:
     if event.subsystem == Subsystem.CONFIG:
         return NotificationScope.BROADCAST
 
-    # Memory mutations scope to namespace
-    if event.subsystem == Subsystem.MEMORY and event.namespace:
-        return NotificationScope.NAMESPACE
-
     # Workflow state changes scope to specific session
     if event.subsystem == Subsystem.SESSION and event.session_id:
         return NotificationScope.SESSION

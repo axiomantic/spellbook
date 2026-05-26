@@ -57,8 +57,7 @@ class CanvasMeta(BaseModel):
 def _resolve_canvas_root() -> str:
     """Return ``~/.local/spellbook/canvas/``.
 
-    Tests monkeypatch this to redirect to a tmp directory. Mirrors
-    ``spellbook.admin.routes.memory._resolve_memory_root``.
+    Tests monkeypatch this to redirect to a tmp directory.
 
     Uses ``os.path.join`` (not a slash-literal subpath) so the result has
     consistent native separators on every platform. Mixed-separator paths
@@ -110,8 +109,8 @@ def _canvas_dir(name: str) -> str:
 
     Raises:
         ValueError: ``name`` fails the regex OR the resolved path escapes
-            the canvas root (path-traversal guard mirroring
-            ``spellbook/admin/routes/memory.py``).
+            the canvas root (path-traversal guard: the realpath of the
+            candidate must equal the canvas root or sit beneath it).
     """
     if not NAME_RE.match(name):
         raise ValueError(f"invalid_name: {name!r} does not match {NAME_RE.pattern}")

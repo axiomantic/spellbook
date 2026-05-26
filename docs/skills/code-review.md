@@ -8,383 +8,360 @@ Quick code review covering correctness, style, and common issues across four mod
 
 ## Workflow Diagram
 
-# Code Review Skill Diagrams
+The existing diagram is complete and verified against the source `SKILL.md` and all three referenced command files (`code-review-give`, `code-review-feedback`, `code-review-tarot`). Below is the verified diagram content.
 
-## Overview: Mode Router and High-Level Flow
+# Diagram: code-review
+
+Workflow diagrams for the `code-review` skill: mode routing, self/audit inline modes, give/feedback/tarot command workflows, and cross-reference index.
+
+## Overview
+
+High-level mode routing, modifiers, and terminal outputs for all four modes.
 
 ```mermaid
 flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"Subagent Dispatch"/]
-        L5[[Quality Gate]]
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    INVOKE["code-review invoked"]
+
+    INVOKE --> MODCHECK{"Modifier flags?"}
+
+    MODCHECK -->|"--tarot"| TAROT["code-review-tarot\n(wraps active mode)"]:::dispatch
+    MODCHECK -->|"--pr &lt;num&gt;"| PRFETCH["pr_fetch / pr_diff\n(MCP tools; fallback:\ngh CLI → local diff → paste)"]:::dispatch
+    MODCHECK -->|"none"| MODECHECK{"Mode flag?"}
+
+    TAROT --> MODECHECK{"Mode flag?"}
+    PRFETCH --> MODECHECK
+
+    MODECHECK -->|"--self / -s\nor no flag"| SELF["Self Mode\n(inline)"]:::dispatch
+    MODECHECK -->|"--feedback / -f"| FEEDBACK["code-review-feedback\ncommand"]:::dispatch
+    MODECHECK -->|"--give &lt;target&gt;"| GIVE["code-review-give\ncommand"]:::dispatch
+    MODECHECK -->|"--audit [scope]"| AUDIT["Audit Mode\n(inline)"]:::dispatch
+
+    SELF --> SELFOUT(["PASS / WARN / FAIL\n(severity gate)"]):::success
+    FEEDBACK --> FBOUT(["All items addressed\n+ self-review clean"]):::success
+    GIVE --> GIVEOUT(["APPROVE /\nREQUEST_CHANGES /\nCOMMENT"]):::success
+    AUDIT --> AUDITOUT(["Executive Summary\n+ Risk Assessment\nLOW / MEDIUM / HIGH / CRITICAL"]):::success
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end
+```
+
+---
+
+## Detail A — Self Mode and Audit Mode
+
+Both inline modes: Self on the left, Audit on the right.
+
+```mermaid
+flowchart TD
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    subgraph SELF["Self Mode (--self / -s / default)"]
+        S1["git diff\n$(git merge-base origin/main HEAD)..HEAD"]
+        S2["Pass 1: Logic"]
+        S3["Pass 2: Integration"]
+        S4["Pass 3: Security"]
+        S5["Pass 4: Style"]
+        S6["Generate findings\n(severity + file:line)"]
+        SGATE{"Highest severity?"}:::gate
+        SFAIL(["FAIL\n(Critical finding)"]):::success
+        SWARN(["WARN\n(Important finding)"]):::success
+        SPASS(["PASS\n(Minor only)"]):::success
+
+        S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> SGATE
+        SGATE -->|"Critical"| SFAIL
+        SGATE -->|"Important"| SWARN
+        SGATE -->|"Minor only"| SPASS
     end
 
-    style L4 fill:#4a9eff,color:#fff
-    style L5 fill:#ff6b6b,color:#fff
-    style L3 fill:#51cf66,color:#fff
+    subgraph AUDIT["Audit Mode (--audit [scope])"]
+        ASCOPE{"Scope\nresolution"}:::gate
+        ANONE["none → branch changes"]
+        AFILE["file.py → single file"]
+        ADIR["dir/ → directory"]
+        ASEC["security → security-only"]
+        AALL["all → full codebase"]
 
-    START([code-review invoked]) --> PARSE[Parse args:<br>mode flags + modifiers]
-    PARSE --> TAROT_CHECK{--tarot<br>modifier?}
-    TAROT_CHECK -->|Yes| LOAD_TAROT[Load code-review-tarot<br>persona mapping]
-    TAROT_CHECK -->|No| MODE
-    LOAD_TAROT --> MODE
+        AP1["Pass 1: Correctness\n+ API Hallucination Detection\nchecklist"]
+        AP2["Pass 2: Security"]
+        AP3["Pass 3: Performance"]
+        AP4["Pass 4: Maintainability"]
+        AP5["Pass 5: Edge Cases"]
 
-    MODE{Mode?}
-    MODE -->|--self / default| SELF[Self Mode<br>Pre-PR self-review]
-    MODE -->|--feedback| FEEDBACK[/"Dispatch:<br>code-review-feedback"/]
-    MODE -->|"--give target"| GIVE[/"Dispatch:<br>code-review-give"/]
-    MODE -->|"--audit [scope]"| AUDIT[Audit Mode<br>Deep single-pass]
+        AOUT(["Executive Summary\n+ findings by category\n+ Risk Assessment\nLOW / MEDIUM / HIGH / CRITICAL"]):::success
 
-    SELF --> SELF_GATE[[Gate:<br>Critical=FAIL<br>Important=WARN<br>Minor=PASS]]
-    FEEDBACK --> FB_OUT([Categorized responses<br>+ re-run self-review])
-    GIVE --> GIVE_OUT[[Recommendation:<br>APPROVE /<br>REQUEST_CHANGES /<br>COMMENT]]
-    AUDIT --> AUDIT_GATE[[Gate:<br>Risk Assessment<br>LOW/MED/HIGH/CRITICAL]]
+        ASCOPE -->|"none"| ANONE
+        ASCOPE -->|"file.py"| AFILE
+        ASCOPE -->|"dir/"| ADIR
+        ASCOPE -->|"security"| ASEC
+        ASCOPE -->|"all"| AALL
 
-    SELF_GATE --> DONE([Review Complete])
-    FB_OUT --> DONE
-    GIVE_OUT --> DONE
-    AUDIT_GATE --> DONE
+        ANONE --> AP1
+        AFILE --> AP1
+        ADIR --> AP1
+        ASEC --> AP2
+        AALL --> AP1
 
-    style FEEDBACK fill:#4a9eff,color:#fff
-    style GIVE fill:#4a9eff,color:#fff
-    style SELF_GATE fill:#ff6b6b,color:#fff
-    style GIVE_OUT fill:#ff6b6b,color:#fff
-    style AUDIT_GATE fill:#ff6b6b,color:#fff
-    style DONE fill:#51cf66,color:#fff
-    style START fill:#51cf66,color:#fff
+        AP1 --> AP2 --> AP3 --> AP4 --> AP5 --> AOUT
+    end
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end
 ```
+
+The API Hallucination Detection checklist (method existence, signature match, real config keys, resolvable imports, return-type contracts) runs inside the Correctness pass and is elevated to HIGH severity for AI-generated code.
+
+---
+
+## Detail B — Give Mode (code-review-give)
+
+Full step 0–3 workflow with all quality gates.
+
+```mermaid
+flowchart TD
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    subgraph STEP0["Step 0: Load Project Conventions (BEFORE any review)"]
+        C1["Read CLAUDE.md /\n.claude/CLAUDE.md"]
+        C2["Read style config\n(pyproject.toml / .eslintrc /\nbiome.json / setup.cfg)"]
+        C3["Check docs/code-review-instructions.md\nor .github/code-review-instructions.md"]
+        C4["Sample 1-2 adjacent files\nNOT in PR changed file set"]
+        CNOTE["CRITICAL: NEVER read local versions\nof files in the PR changed file set\n(local version is old code)"]:::gate
+
+        C1 --> C2 --> C3 --> C4 --> CNOTE
+    end
+
+    subgraph STEP1["Step 1: Fetch and Inventory"]
+        SRC{"Source type?"}
+        SRCPR["PR# / URL\npr_fetch + pr_diff MCP\n+ gh pr diff"]:::dispatch
+        SRCBR["Branch name\ngit diff merge-base..HEAD"]:::dispatch
+        MANIFEST["Build coverage manifest\nfrom ALL changed files\n(quality gate — must complete\nBEFORE beginning review)"]:::gate
+        PRIOR["Fetch prior review comments\ngh api pulls/number/comments\ngh api pulls/number/reviews"]:::dispatch
+        CLASSIFY["Classify each prior item:\nADDRESSED or STILL_OPEN"]
+
+        SRC -->|"PR# or URL"| SRCPR
+        SRC -->|"branch name"| SRCBR
+        SRCPR --> MANIFEST
+        SRCBR --> MANIFEST
+        MANIFEST --> PRIOR --> CLASSIFY
+    end
+
+    subgraph STEP2["Step 2: Multi-Pass Review"]
+        MANDATORY["Mandatory dimensions — every changed file\n(skip any = coverage failure)"]:::gate
+        D1["1. Correctness\n(logic errors, off-by-ones,\nnull handling, return types)"]
+        D2["2. Security\n(injection, auth, secrets,\nSSRF, input length)"]
+        D3["3. Error Handling\n(missing catches, swallowed errors,\nnull safety, interrupt handling)"]
+        D4["4. Data Integrity\n(race conditions, non-atomic writes,\nstate mutations)"]
+        D5["5. API Contracts\n(breaking changes, validation,\nschema drift)"]
+        D6["6. Test Coverage\n(changes tested, edge cases,\nmeaningful assertions)"]
+
+        CONDCHECK{"Conditional\ndimensions\ntriggered?"}
+        PERF["Performance pass\n(N+1 queries, missing indexes,\nallocations)"]:::dispatch
+        CONC["Concurrency/Async pass\n(REQUIRED when triggered)\nevent loop blocking, thread safety,\nrace conditions, lock ordering"]:::dispatch
+        A11Y["Accessibility pass\n(ARIA, keyboard nav,\nscreen readers)"]:::dispatch
+
+        SECPASS["Security Pass — runs for every review\nInput validation, path traversal,\nhardcoded secrets, auth/authz,\ninjection, SSRF"]:::gate
+
+        MANDATORY --> D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> CONDCHECK
+        CONDCHECK -->|"hot paths / DB ops"| PERF
+        CONDCHECK -->|"async / threading present"| CONC
+        CONDCHECK -->|"UI / HTML / templates"| A11Y
+        CONDCHECK -->|"none triggered"| SECPASS
+        PERF --> SECPASS
+        CONC --> SECPASS
+        A11Y --> SECPASS
+    end
+
+    subgraph STEP3["Step 3: Output and Post-Review Reflection Gate"]
+        FORMAT["Format output:\nSummary\n→ Coverage Manifest (N/N files, gaps)\n→ Prior Feedback Reconciliation\n→ Findings (CRITICAL/IMPORTANT/MINOR/QUESTION\nwith file:line + dimension)\n→ Recommendation"]
+
+        REFLECT{"Post-review\nreflection gate"}:::gate
+        RCHECK["Self-check:\nAll files in manifest evaluated?\nAll 6 mandatory dimensions checked?\nSecurity pass (all 6 checks)?\nIf async/threading: concurrency pass?\nAll prior items reconciled?\nSeverity ratings honest (impact-based)?"]
+
+        RFIX["Address gaps\nbefore output"]
+        TERMINAL(["APPROVE /\nREQUEST_CHANGES /\nCOMMENT"]):::success
+
+        FORMAT --> REFLECT
+        REFLECT -->|"gaps found"| RCHECK --> RFIX --> REFLECT
+        REFLECT -->|"all checks pass"| TERMINAL
+    end
+
+    STEP0 --> STEP1 --> STEP2 --> STEP3
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end
+```
+
+---
+
+## Detail C — Feedback Mode (code-review-feedback)
+
+Full categorize/decide/execute workflow.
+
+```mermaid
+flowchart TD
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    GATHER["Gather ALL feedback holistically\nacross related PRs\nbefore responding to any item"]:::gate
+
+    CATEGORIZE["Categorize each item:\nbug / style / question / suggestion / nit"]
+
+    DECIDE{"Decision\nper item"}
+
+    ACCEPT["Accept:\nmake the change"]
+    PUSHBACK["Push back:\ndisagree with evidence"]
+    CLARIFY["Clarify:\nask specific question"]
+    DEFER["Defer:\nacknowledge + scope reason"]
+
+    RATIONALE["Document rationale\n(WHY for each decision\nbefore responding)"]:::gate
+
+    FACTCHECK["Fact-check technical claims\nbefore accepting or disputing"]:::gate
+
+    EXECUTE["Execute accepted fixes"]:::dispatch
+
+    SELFREV["Re-run self-review\n(--self mode)"]:::dispatch
+
+    SELFGATE{"Self-review\nclean?"}:::gate
+    FIXMORE["Address new findings"]
+
+    subgraph TEMPLATES["Response Templates"]
+        T1["Accept: Fixed in &lt;SHA&gt;"]
+        T2["Push back: tradeoff + evidence"]
+        T3["Clarify: specific question"]
+        T4["Defer: scope + reason"]
+    end
+
+    RESPOND["Respond using templates"]
+
+    DONE(["All items addressed\n+ self-review clean"]):::success
+
+    GATHER --> CATEGORIZE --> DECIDE
+    DECIDE -->|"correct, improves code"| ACCEPT
+    DECIDE -->|"incorrect or harmful"| PUSHBACK
+    DECIDE -->|"ambiguous"| CLARIFY
+    DECIDE -->|"valid but out of scope"| DEFER
+
+    ACCEPT --> RATIONALE
+    PUSHBACK --> RATIONALE
+    CLARIFY --> RATIONALE
+    DEFER --> RATIONALE
+
+    RATIONALE --> FACTCHECK --> EXECUTE --> SELFREV --> SELFGATE
+    SELFGATE -->|"findings"| FIXMORE --> SELFREV
+    SELFGATE -->|"clean"| RESPOND --> TEMPLATES --> DONE
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end
+```
+
+---
+
+## Detail D — Tarot Overlay (code-review-tarot)
+
+Persona mapping, roundtable format, and audit integration.
+
+```mermaid
+flowchart TD
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    OPTIN["Opt-in: --tarot modifier\n(compatible with all modes)"]
+
+    subgraph PERSONAS["Persona Mapping"]
+        PH["Hermit\nRole: Security reviewer\nFocus: Input validation, injection\nStakes: Do NOT trust inputs"]
+        PP["Priestess\nRole: Architecture reviewer\nFocus: Design patterns, coupling\nStakes: Do NOT commit early"]
+        PF["Fool\nRole: Assumption challenger\nFocus: Hidden assumptions, edge cases\nStakes: Do NOT accept hidden complexity"]
+        PM["Magician\nRole: Synthesis / verdict\nFocus: Final assessment\nStakes: Clarity determines everything"]
+    end
+
+    subgraph ROUNDTABLE["Roundtable Format"]
+        RT1["Magician opens"]
+        RT2["Hermit speaks\n(security findings)"]
+        RT3["Priestess speaks\n(architecture findings)"]
+        RT4["Fool speaks\n(assumption challenges)"]
+        RT5["Magician synthesizes\nby evidence weight\nNOT majority vote"]:::gate
+
+        RT1 --> RT2 --> RT3 --> RT4 --> RT5
+    end
+
+    subgraph AUDITINT["Audit + Tarot Integration\n(parallel subagent prompts)"]
+        AI1["Security pass\n→ Hermit persona"]:::dispatch
+        AI2["Architecture pass\n→ Priestess persona"]:::dispatch
+        AI3["Assumption pass\n→ Fool persona"]:::dispatch
+        AI4["Synthesis\n→ Magician persona"]:::dispatch
+
+        AI1 --> AI4
+        AI2 --> AI4
+        AI3 --> AI4
+    end
+
+    RULES["Critical rules:\nPersona dialogue appears ONLY in dialogue sections\nNEVER in code suggestions or formal findings\nSynthesis by evidence weight (NOT majority vote)\nfile:line citations required even in persona dialogue"]:::gate
+
+    TOUT(["Tarot-annotated\nreview output"]):::success
+
+    OPTIN --> PERSONAS
+    OPTIN --> ROUNDTABLE
+    OPTIN --> AUDITINT
+    PERSONAS --> RULES
+    ROUNDTABLE --> RULES
+    AUDITINT --> RULES
+    RULES --> TOUT
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end
+```
+
+---
 
 ## Cross-Reference Table
 
-| Overview Node | Detail Diagram |
-|---------------|----------------|
-| Self Mode | [Self Mode Detail](#self-mode-detail) |
-| Feedback (code-review-feedback) | [Feedback Mode Detail](#feedback-mode-detail) |
-| Give (code-review-give) | [Give Mode Detail](#give-mode-detail) |
-| Audit Mode | [Audit Mode Detail](#audit-mode-detail) |
-| Tarot Integration | [Tarot Modifier Detail](#tarot-modifier-detail) |
-
----
-
-## Self Mode Detail
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L5[[Quality Gate]]
-    end
-    style L5 fill:#ff6b6b,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    S0([Self Mode Start]) --> S1["Get diff:<br>git diff merge-base..HEAD"]
-    S1 --> S2["Memory Priming:<br>memory_recall(review findings)"]
-    S2 --> S2B{spellbook-memory<br>context from files?}
-    S2B -->|Yes| S2C[Incorporate file-specific<br>+ project-wide patterns]
-    S2B -->|No| S3
-    S2C --> S3
-
-    S3[Multi-Pass Review]
-    S3 --> P1[Pass 1: Logic]
-    P1 --> P2[Pass 2: Integration]
-    P2 --> P3[Pass 3: Security]
-    P3 --> P4[Pass 4: Style]
-
-    P4 --> S4[Generate findings:<br>severity + file:line + description]
-    S4 --> S5["Persist significant findings:<br>memory_store_memories()"]
-    S5 --> S5A{Finding type?}
-    S5A -->|Confirmed issue| S5B["Store as antipattern<br>(warns future reviewers)"]
-    S5A -->|False positive| S5C["Store as fact<br>tag: false-positive"]
-    S5A -->|Minor / one-off| S5D[Do not store]
-    S5B --> S6
-    S5C --> S6
-    S5D --> S6
-
-    S6[[Severity Gate]]
-    S6 --> G1{Highest severity?}
-    G1 -->|Critical| FAIL([FAIL])
-    G1 -->|Important| WARN([WARN])
-    G1 -->|Minor only| PASS([PASS])
-
-    style S0 fill:#51cf66,color:#fff
-    style S6 fill:#ff6b6b,color:#fff
-    style FAIL fill:#ff6b6b,color:#fff
-    style WARN fill:#f59f00,color:#fff
-    style PASS fill:#51cf66,color:#fff
-```
-
----
-
-## Feedback Mode Detail
-
-Source: `commands/code-review-feedback.md`
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"Subagent / Command"/]
-    end
-    style L4 fill:#4a9eff,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    F0([Feedback Mode Start]) --> F1[Gather ALL feedback<br>across related PRs]
-    F1 --> F2[Categorize each item:<br>bug / style / question<br>/ suggestion / nit]
-
-    F2 --> F3{Decision<br>per item}
-    F3 -->|Correct, improves code| ACCEPT[Accept:<br>make the change]
-    F3 -->|Incorrect or harmful| PUSH[Push back:<br>disagree with evidence]
-    F3 -->|Ambiguous| CLARIFY[Clarify:<br>ask questions]
-    F3 -->|Valid but out of scope| DEFER[Defer:<br>acknowledge + follow-up]
-
-    ACCEPT --> F4
-    PUSH --> F4
-    CLARIFY --> F4
-    DEFER --> F4
-
-    F4[Document rationale<br>for each decision]
-    F4 --> F5[Fact-check:<br>verify technical claims]
-    F5 --> F6[Execute fixes]
-    F6 --> F7[/"Re-run self-review<br>(Self Mode)"/]
-    F7 --> DONE([Responses sent<br>with templates])
-
-    style F0 fill:#51cf66,color:#fff
-    style F7 fill:#4a9eff,color:#fff
-    style DONE fill:#51cf66,color:#fff
-```
-
----
-
-## Give Mode Detail
-
-Source: `commands/code-review-give.md`
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L5[[Quality Gate]]
-    end
-    style L5 fill:#ff6b6b,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    G0([Give Mode Start]) --> G0A["Parse target:<br>PR#, URL, branch"]
-
-    G0A --> G0B["Step 0: Load Project Conventions<br>Read CLAUDE.md, style configs,<br>code-review-instructions.md"]
-    G0B --> G0C["Sample adjacent files<br>(NOT in changed file set)"]
-
-    G0C --> G1["Step 1: Fetch and Inventory"]
-    G1 --> G1A["Get diff via gh pr diff<br>or git diff"]
-    G1A --> G1B["Build Coverage Manifest:<br>ALL changed files"]
-    G1B --> G1C["Fetch prior PR feedback<br>via gh api"]
-    G1C --> G1D{Prior feedback<br>exists?}
-    G1D -->|Yes| G1E[Classify each:<br>ADDRESSED / STILL_OPEN]
-    G1D -->|No| G2
-    G1E --> G2
-
-    G2["Step 2: Multi-Pass Review"]
-    G2 --> MAND["Mandatory Dimensions<br>(all 6 per file)"]
-
-    MAND --> D1["Correctness"]
-    MAND --> D2["Security"]
-    MAND --> D3["Error handling"]
-    MAND --> D4["Data integrity"]
-    MAND --> D5["API contracts"]
-    MAND --> D6["Test coverage"]
-
-    D1 & D2 & D3 & D4 & D5 & D6 --> COND{Conditional<br>triggers?}
-
-    COND -->|Hot paths / DB ops| PERF[Performance pass]
-    COND -->|Async / threading| CONC[Concurrency pass]
-    COND -->|UI / frontend| A11Y[Accessibility pass]
-    COND -->|None triggered| SEC
-
-    PERF --> SEC
-    CONC --> SEC
-    A11Y --> SEC
-
-    SEC["Security Pass<br>(always required):<br>Input validation, path traversal,<br>secrets, auth, injection, SSRF"]
-
-    SEC --> CONC_CHECK{Async/threading<br>in diff?}
-    CONC_CHECK -->|Yes| CONC_PASS["Concurrency Pass:<br>Event loop blocking,<br>thread safety, races,<br>interrupt handling,<br>lock ordering"]
-    CONC_CHECK -->|No| G3
-
-    CONC_PASS --> G3
-
-    G3["Step 3: Output"]
-    G3 --> MANIFEST[[Coverage Manifest Check:<br>all files evaluated?]]
-    MANIFEST --> GAP{Gaps?}
-    GAP -->|Yes| REPORT_GAP[Report coverage gaps]
-    GAP -->|No| RECONCILE
-    REPORT_GAP --> RECONCILE
-
-    RECONCILE[Prior Feedback<br>Reconciliation]
-    RECONCILE --> FINDINGS[Format findings:<br>severity + file:line<br>+ dimension + suggestion]
-
-    FINDINGS --> VERDICT[[Recommendation Gate]]
-    VERDICT --> V1{Verdict?}
-    V1 -->|No issues / minor| APPROVE([APPROVE])
-    V1 -->|Significant issues| REQ_CHANGES([REQUEST_CHANGES])
-    V1 -->|Needs discussion| COMMENT([COMMENT])
-
-    style G0 fill:#51cf66,color:#fff
-    style MANIFEST fill:#ff6b6b,color:#fff
-    style VERDICT fill:#ff6b6b,color:#fff
-    style APPROVE fill:#51cf66,color:#fff
-    style REQ_CHANGES fill:#ff6b6b,color:#fff
-    style COMMENT fill:#f59f00,color:#fff
-```
-
----
-
-## Audit Mode Detail
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L5[[Quality Gate]]
-    end
-    style L5 fill:#ff6b6b,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    A0([Audit Mode Start]) --> A0A{Scope?}
-    A0A -->|"(none)"| BRANCH[Branch changes]
-    A0A -->|file.py| FILE[Single file]
-    A0A -->|"dir/"| DIR[Directory]
-    A0A -->|security| SECONLY[Security-only audit]
-    A0A -->|all| ALL[Full codebase]
-
-    BRANCH & FILE & DIR & SECONLY & ALL --> A1
-
-    A1["Memory Priming:<br>memory_recall(review findings)"]
-    A1 --> A1B{spellbook-memory<br>context?}
-    A1B -->|Yes| A1C[Incorporate patterns]
-    A1B -->|No| A2
-    A1C --> A2
-
-    A2[Multi-Pass Audit]
-    A2 --> P1[Pass 1: Correctness]
-    P1 --> P2[Pass 2: Security]
-    P2 --> P3[Pass 3: Performance]
-    P3 --> P4[Pass 4: Maintainability]
-    P4 --> P5[Pass 5: Edge Cases]
-
-    P5 --> A3[Generate output:<br>Executive Summary +<br>Findings by category]
-
-    A3 --> A4["Persist significant findings:<br>memory_store_memories()"]
-    A4 --> A5[[Risk Assessment Gate]]
-    A5 --> R{Risk level?}
-    R -->|No issues| LOW([LOW])
-    R -->|Minor concerns| MED([MEDIUM])
-    R -->|Significant issues| HIGH([HIGH])
-    R -->|Security / data loss| CRIT([CRITICAL])
-
-    style A0 fill:#51cf66,color:#fff
-    style A5 fill:#ff6b6b,color:#fff
-    style LOW fill:#51cf66,color:#fff
-    style MED fill:#f59f00,color:#fff
-    style HIGH fill:#ff6b6b,color:#fff
-    style CRIT fill:#ff6b6b,color:#fff
-```
-
----
-
-## Tarot Modifier Detail
-
-Source: `commands/code-review-tarot.md`
-
-Applied as an overlay when `--tarot` flag is present on any mode.
-
-```mermaid
-flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"Subagent Dispatch"/]
-    end
-    style L4 fill:#4a9eff,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    T0([--tarot flag detected]) --> T1{Which mode?}
-
-    T1 -->|--self| TS[Self Mode +<br>Tarot dialogue wrapper]
-    T1 -->|--give| TG[Give Mode +<br>Tarot dialogue wrapper]
-    T1 -->|--audit| TA[Audit Mode +<br>Persona-per-pass]
-
-    TA --> TA1[/"Hermit subagent:<br>Security Pass"/]
-    TA --> TA2[/"Priestess subagent:<br>Architecture Pass"/]
-    TA --> TA3[/"Fool subagent:<br>Assumption Pass"/]
-
-    TA1 & TA2 & TA3 --> TA4[Magician: Synthesize<br>by evidence weight<br>(not majority vote)]
-
-    TS --> DIALOG
-    TG --> DIALOG
-
-    DIALOG[Roundtable Dialogue Format]
-    DIALOG --> D1["Magician opens:<br>Review convenes"]
-    D1 --> D2["Hermit examines:<br>Security findings"]
-    D2 --> D3["Priestess studies:<br>Architecture findings"]
-    D3 --> D4["Fool challenges:<br>Hidden assumptions"]
-    D4 --> D5["Magician synthesizes:<br>Final verdict"]
-
-    TA4 --> SEP
-    D5 --> SEP
-
-    SEP[Code Output Separation:<br>Persona in dialogue ONLY,<br>formal findings persona-free]
-    SEP --> DONE([Continue to<br>mode-specific output])
-
-    style T0 fill:#51cf66,color:#fff
-    style TA1 fill:#4a9eff,color:#fff
-    style TA2 fill:#4a9eff,color:#fff
-    style TA3 fill:#4a9eff,color:#fff
-    style DONE fill:#51cf66,color:#fff
-```
-
----
-
-## MCP Tool Integration
-
-```mermaid
-flowchart LR
-    subgraph "MCP Tools - Read/Analyze"
-        PR_FETCH["pr_fetch(num_or_url)"]
-        PR_DIFF["pr_diff(raw_diff)"]
-        PR_MATCH["pr_match_patterns(files, root)"]
-        PR_FILES["pr_files(pr_result)"]
-    end
-
-    subgraph "CLI - Write Operations"
-        GH["gh CLI:<br>post reviews, replies"]
-    end
-
-    subgraph "Memory Tools"
-        RECALL["memory_recall()"]
-        STORE["memory_store_memories()"]
-    end
-
-    subgraph "Fallback Chain"
-        direction TB
-        F1{MCP available?} -->|Yes| F2[Use MCP tools]
-        F1 -->|No| F3{gh CLI available?}
-        F3 -->|Yes| F4[Use gh CLI]
-        F3 -->|No| F5{Local diff available?}
-        F5 -->|Yes| F6[Use git diff]
-        F5 -->|No| F7[Manual paste]
-    end
-```
+| Overview node | Detail diagram | Section |
+|---|---|---|
+| Self Mode (inline) | Detail A | Self Mode subgraph |
+| Audit Mode (inline) | Detail A | Audit Mode subgraph |
+| code-review-give command | Detail B | Steps 0–3 |
+| code-review-feedback command | Detail C | Full workflow |
+| code-review-tarot command | Detail D | Personas + Roundtable + Audit integration |
+| pr_fetch / pr_diff modifier | Detail B | Step 1: Fetch and Inventory |
+| Severity gate | Detail A | Self Mode — highest severity decision node |
+| Coverage manifest gate | Detail B | Step 1: Build coverage manifest |
+| Post-review reflection gate | Detail B | Step 3: Reflection gate |
+| Synthesis by evidence weight | Detail D | Roundtable — Magician synthesizes node |
 
 ## Skill Content
 
@@ -456,32 +433,18 @@ Self-review finds what you missed. Assume bugs exist. Hunt them.
 
 **Workflow:**
 1. Get diff: `git diff $(git merge-base origin/main HEAD)..HEAD`
-2. **Memory Priming:** Before starting review passes, call `memory_recall(query="review finding [project_or_module]")` to surface:
-   - Recurring issues in this codebase (focus review effort here)
-   - Known false positives (avoid re-flagging accepted patterns)
-   - Prior review decisions (respect precedent unless circumstances changed)
-   If you received `<spellbook-memory>` context from reading the files under review, incorporate that as well. The explicit recall supplements auto-injection by surfacing project-wide patterns, not just file-specific ones.
-3. Multi-pass: Logic > Integration > Security > Style
-4. Generate findings with severity, file:line, description
+2. Multi-pass: Logic > Integration > Security > Style
+3. Generate findings with severity, file:line, description
 
 Example finding: `src/auth/login.py:42 [Critical] Token written to log — data exposure risk`
 
-5. **Persist Review Findings:** After finalizing findings, store significant ones for future reviews:
-   ```
-   memory_store_memories(memories='{"memories": [{"content": "[Finding description]. Severity: [level]. Status: [confirmed/false_positive/deferred].", "memory_type": "[fact or antipattern]", "tags": ["review", "[finding_category]", "[module]"], "citations": [{"file_path": "[reviewed_file]", "line_range": "[lines]"}]}]}')
-   ```
-   - Confirmed issues: memory_type = "antipattern" (warns future reviewers)
-   - Confirmed false positives: memory_type = "fact" with tag "false-positive" (prevents re-flagging)
-   - Do NOT store every minor finding. Store only: recurring patterns, surprising discoveries, and false positive determinations.
-6. Gate: Critical=FAIL, Important=WARN, Minor only=PASS
+4. Gate: Critical=FAIL, Important=WARN, Minor only=PASS
 
 ---
 
 ## Audit Mode (`--audit [scope]`)
 
 Scopes: (none)=branch changes, file.py, dir/, security, all
-
-**Memory Priming:** Before starting audit passes, call `memory_recall(query="review finding [project_or_module]")` to surface recurring issues, known false positives, and prior review decisions. Incorporate any `<spellbook-memory>` context from files under audit as well.
 
 **Passes:** Correctness > Security > Performance > Maintainability > Edge Cases
 
@@ -498,8 +461,6 @@ During the Correctness pass, check for API hallucination patterns:
 When reviewing AI-generated code, these checks are elevated to HIGH severity. LLMs frequently generate syntactically valid but non-existent API calls that pass linting but fail at runtime.
 
 Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
-
-**Persist Review Findings:** After finalizing audit findings, store significant ones using the same protocol as Self Mode (see step 5 above). Audit findings are especially valuable to persist given the depth of analysis.
 
 ---
 

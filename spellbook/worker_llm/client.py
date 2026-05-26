@@ -176,7 +176,7 @@ async def call(
         max_tokens: Override ``worker_llm_max_tokens`` (default 1024).
         timeout_s: Override ``worker_llm_timeout_s`` (default 10.0). Tool-safety
             integration passes its own short budget.
-        task: Observability tag (e.g. ``"transcript_harvest"``).
+        task: Observability tag (e.g. ``"tool_safety"``).
         override_loaded: True if prompt was loaded from the user override file.
 
     Returns:

@@ -161,41 +161,6 @@ def run(args: argparse.Namespace) -> None:
         from installer.wizards import run_worker_llm_wizard
         run_worker_llm_wizard(args)
 
-    # Memory system setup (QMD + Serena)
-    if not getattr(args, "dry_run", False):
-        try:
-            from installer.components.memory import (
-                is_qmd_installed,
-                is_serena_installed,
-                setup_memory_system,
-            )
-        except ImportError:
-            setup_memory_system = None  # type: ignore
-
-        if setup_memory_system is not None:
-            qmd_have = is_qmd_installed()
-            serena_have = is_serena_installed()
-            if not (qmd_have and serena_have) and sys.stdin.isatty():
-                print()
-                print("Memory system: requires QMD + Serena (~200MB, ~30s install)")
-                resp = input("Enable memory system? [y/N]: ").strip().lower()
-                enable = resp in ("y", "yes")
-                if enable:
-                    result = setup_memory_system(True)
-                    if result["qmd"] and result["serena"]:
-                        print("  Memory system: ready")
-                    else:
-                        missing = []
-                        if not result["qmd"]:
-                            missing.append("QMD")
-                        if not result["serena"]:
-                            missing.append("Serena")
-                        print(
-                            "  Warning: could not install: "
-                            + ", ".join(missing)
-                            + " (continuing without memory system)"
-                        )
-
     # Profile selection
     if not getattr(args, "dry_run", False):
         if renderer is not None:

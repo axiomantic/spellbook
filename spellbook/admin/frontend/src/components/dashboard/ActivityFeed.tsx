@@ -77,11 +77,6 @@ export function ActivityFeed({ initialItems = [] }: ActivityFeedProps) {
 function summarizeEvent(event: WSEvent): string {
   const data = event.data
   switch (event.subsystem) {
-    case 'memory':
-      if (event.event === 'memory.created') return `${data.count || 1} memories stored`
-      if (event.event === 'memory.deleted') return `Memory ${(data.memory_id as string)?.slice(0, 8) || ''} deleted`
-      if (event.event === 'memory.updated') return `Memory ${(data.memory_id as string)?.slice(0, 8) || ''} updated`
-      return event.event
     case 'config':
       return `Config "${data.key || ''}" updated`
     case 'security':

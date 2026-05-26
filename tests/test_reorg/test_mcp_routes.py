@@ -16,13 +16,3 @@ class TestMcpRoutesImportable:
         from spellbook.mcp.routes import api_health
 
         assert callable(api_health)
-
-    def test_api_memory_event_exists(self):
-        from spellbook.mcp.routes import api_memory_event
-
-        assert callable(api_memory_event)
-
-    def test_api_memory_recall_exists(self):
-        from spellbook.mcp.routes import api_memory_recall
-
-        assert callable(api_memory_recall)

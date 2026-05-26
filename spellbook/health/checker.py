@@ -160,7 +160,7 @@ def _check_database(db_path: str) -> DomainCheck:
     1. Database file exists and is readable
     2. Connection can be established
     3. Basic query executes successfully (SELECT 1)
-    4. Critical tables exist (souls, heartbeat, workflow_state)
+    4. Critical tables exist (heartbeat, workflow_state)
 
     Args:
         db_path: Path to SQLite database file
@@ -205,7 +205,7 @@ def _check_database(db_path: str) -> DomainCheck:
             table_count = cursor.fetchone()[0]
 
             # Verify critical tables exist
-            critical_tables = ["souls", "heartbeat", "workflow_state"]
+            critical_tables = ["heartbeat", "workflow_state"]
             cursor.execute(
                 "SELECT name FROM sqlite_master WHERE type='table'"
             )

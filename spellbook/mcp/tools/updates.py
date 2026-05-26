@@ -7,7 +7,6 @@ __all__ = [
 
 from spellbook.mcp.server import mcp
 from spellbook.core.config import get_spellbook_dir
-from spellbook.sessions.injection import inject_recovery_context
 from spellbook.updates.tools import (
     apply_update as do_apply_update,
     check_for_updates as do_check_for_updates,
@@ -16,7 +15,6 @@ from spellbook.updates.tools import (
 
 
 @mcp.tool()
-@inject_recovery_context
 def spellbook_check_for_updates(
     auto_apply: bool = False,
 ) -> dict:
@@ -61,7 +59,6 @@ def spellbook_check_for_updates(
 
 
 @mcp.tool()
-@inject_recovery_context
 def spellbook_get_update_status() -> dict:
     """
     Get the current update status without triggering a new check.

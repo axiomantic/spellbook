@@ -5,11 +5,78 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.70.0] - 2026-05-26
 
 ### Added
 
-- `/dedupe` instruction-deduplication skill (`skills/dedupe/`). A four-phase command family (`dedupe-setup`, `dedupe-analyze`, `dedupe-report`, `dedupe-apply`) backed by a pure-stdlib, detection-only engine (`skills/dedupe/scripts/dedupe.py`). The script never calls an LLM and never mutates sources; it performs group expansion (five reference-grammar shapes including backticked `.md` paths), multi-granularity markdown segmentation, two-signal similarity (inline Jaccard gather + `difflib.SequenceMatcher` confirm + drift delta), union-find clustering, an INLINE-MANDATORY safety predicate plus dangerous-action denylist, an external-caller scan, a cost ceiling, and an apply-journal `verify` subcommand. Classification is LLM-orchestrated by the skill via the Task tool; apply is approval-gated, journaled, and reversible (replace-with-reference, never delete). Canonical references live under `skills/dedupe/references/` (`verdict-taxonomy`, `counterfactual-prompt`).
+- **/dedupe instruction-deduplication skill.** Adds a four-phase command family
+  backed by a pure-stdlib, detection-only engine that finds duplicated
+  instruction content across skills, commands, and agents. The engine never
+  calls an LLM and never mutates sources — it produces a JSON report that the
+  skill workflow consumes. Centerpiece: `skills/dedupe/scripts/dedupe.py`,
+  with group expansion (five reference-grammar shapes including backticked
+  `.md` paths), multi-granularity matching, and an inline-mandatory predicate
+  that screens consolidation candidates.
+
+## [0.69.0] - 2026-05-25
+
+### Removed
+
+- **Memory system (complete removal, no deprecation window).** Deleted the entire
+  memory subsystem: the `memory_*` MCP tools (`memory_store`, `memory_recall`,
+  `memory_forget`, `memory_sync`, `memory_verify`, `memory_review_events`), the
+  admin memory routes and `MemoryBrowser` UI, the memory CLI commands, the
+  memory-related worker tasks (rerank/transcript-harvest), the memory hook
+  integrations and `<memory-candidate>` harvesting, and the installer's optional
+  QMD and Serena tooling for memory hybrid search. **DESTRUCTIVE:** the memory
+  database tables are dropped automatically on the next `init_db` (irreversible —
+  any stored memories are lost on upgrade with no migration path).
+- **Dead session-soul / recovery-injection chain.** Removed the unwired
+  session-soul persistence and recovery-injection code. The `souls` table is
+  dropped automatically on next `init_db` (irreversible). `detect_continuation_intent`
+  is retained but no longer wired into anything; session resume now always reports
+  `resume_available: False`.
+- **Follow-up Tasks subsystem (bundled with memory removal).** The Follow-up
+  Tasks feature introduced in 0.68.0 stored deferred work via `memory_store`
+  and surfaced an open-count in `session_init` via `memory_recall`. With the
+  memory backend gone, the feature has no storage and is removed in full:
+  `_get_open_followup_count` and the `follow_up_tasks_open` session-init key,
+  all skill/command Follow-up Task wording, schema validation entries, and
+  the `tests/test_session_init_followups.py` suite.
+
+## [0.68.0] - 2026-05-25
+
+### Added
+
+- **Core Philosophy guidance ("Build the right thing, not the easy thing")** in `AGENTS.spellbook.md` (mirrored to the global config). It guides both autonomous decision-making and the options develop presents to the operator: prefer the most correct, least deferred, most ergonomic, easiest-to-understand path.
+- **Self-contained operator questions** across the develop family. Every operator-facing question now restates why it is asked and defines its terms inline (with a definitions block in `feature-config`), so a low-context operator can answer without reading docs.
+- **Need-flag wizard** in `commands/feature-config.md`: plain-language `needs_research` / `needs_design` / `needs_infrastructure` flags plus a `size_estimate`, replacing the file-count classification at Phase 0.7.
+- **develop gate ledger.** develop records its progress (current phase, remaining quality gates, plan pointer) into `workflow_state` at each phase/gate transition via a new `develop_gate_ledger` key, so PreCompact/SessionStart recovery captures real progress.
+- **Accountability nudge.** A nudge fires when develop is the active skill past Phase 0 but no develop gate ledger has been recorded, surfacing stalled or unrecorded progress.
+- **Recovery directive remaining-gates rendering.** The SessionStart recovery directive now re-asserts the remaining quality gates after a compaction so a resumed session cannot declare completion with gates unrun.
+- **Grep gate** under `tests/` guarding against reintroduction of the removed execution-mode and tier vocabulary across `skills/`, `commands/`, and `agents/`.
+- **Per-file schema-size exemptions** for `commands/crystallize.md` (the shrink tool that cannot crystallize itself) and the governance-dense central orchestrator `skills/develop/SKILL.md`.
+
+### Changed
+
+- **develop classifies by need-flags, not file-count tiers.** Rigor is now driven by what the work actually requires (`needs_research` / `needs_design` / `needs_infrastructure` + `size_estimate`) rather than how many files it touches. All tier names (TRIVIAL/SIMPLE/STANDARD/COMPLEX) are gone.
+- **Zero-flag fast path.** A change with no need-flags takes a fast path where develop stays resident (it never exits) under a lighter-but-non-zero review floor, so trivial work still passes a baseline review.
+- **Single-orchestrator execution only.** develop now uses delegated or direct single-orchestrator execution exclusively.
+- `commands/pr-dance.md`: redefined the CI status check and bot review as two independent, concurrent gates rather than a CI-then-bot sequence. Step 3 now uses a single-shot, non-blocking `gh pr checks --json` poll the agent drives itself (interleaving with the Step 4 bot gate each round); `--watch` is demoted to a fallback for when the bot gate is already clean, since it blocks until CI is terminal. Raised the poll-interval floor to 60s and added a FORBIDDEN entry against blocking the bot gate in `--watch`.
+
+### Fixed
+
+- **develop now feeds the compact machinery.** workflow_state is written at phase/gate transitions so the PreCompact/SessionStart recovery machinery captures real progress instead of empty state.
+- **Compact-machinery allowlist.** `_ALLOWED_STATE_KEYS` (`spellbook/sessions/resume.py`) now accepts `stint_stack`, `compaction_flag`, and `develop_gate_ledger`, which the PreCompact hook and develop write; previously these keys failed validation and persisted nothing.
+- **Recovery directive key mismatch.** Corrected `binding_decisions` → `decisions_binding` so the bound-decisions section of the recovery directive renders instead of reading a non-existent key.
+- **Atomic `workflow_state_update`.** The update path is now a read-merge-write transaction (CRIT-2), preventing field loss when develop and the PreCompact hook write interleaved.
+
+### Removed
+
+- **Complexity tier model.** The TRIVIAL/SIMPLE/STANDARD/COMPLEX classification and all ~13 consumption sites are removed in favor of need-flags.
+- **`work_items` and `sub_orchestrators` execution modes** in develop. develop is single-orchestrator (delegated/direct) only. The forge work-packet subsystem (`spellbook/forged/`) is unaffected and preserved; only develop's routing into `work_items` was severed.
+- **`dispatching-sub-orchestrators` skill** reduced to a deprecation stub; its cross-references in `dispatching-parallel-agents` were removed.
+- **Dead `next_action` directive block** in `_build_recovery_directive` (the key was never allowlisted or written).
 
 ## [0.67.0] - 2026-05-20
 

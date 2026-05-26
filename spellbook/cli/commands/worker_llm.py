@@ -54,8 +54,6 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         "--bench",
         choices=[
             "tool_safety",
-            "transcript_harvest",
-            "memory_rerank",
             "roundtable_voice",
         ],
         default=None,
@@ -103,10 +101,8 @@ def _canned_tasks() -> list[tuple[str, Any]]:
     Kept as a function so imports happen lazily — keeps CLI startup fast when
     ``--help`` or unrelated subcommands run.
     """
-    from spellbook.worker_llm.tasks import memory_rerank as T_rerank
     from spellbook.worker_llm.tasks import roundtable as T_round
     from spellbook.worker_llm.tasks import tool_safety as T_safety
-    from spellbook.worker_llm.tasks import transcript_harvest as T_harvest
 
     def _roundtable_sync():
         # ``roundtable_voice`` is async by design (the MCP path is inside a
@@ -123,29 +119,6 @@ def _canned_tasks() -> list[tuple[str, Any]]:
         )
 
     return [
-        (
-            "transcript_harvest",
-            lambda: T_harvest.transcript_harvest(
-                "User preference: always run tests before committing.\n"
-                "Why: avoids broken main.\nHow to apply: add a pre-commit hook."
-            ),
-        ),
-        (
-            "memory_rerank",
-            lambda: T_rerank.memory_rerank(
-                "how does stop-hook dedup work",
-                [
-                    {
-                        "id": "a.md",
-                        "excerpt": "Stop hook uses SHA256 content-hash dedup.",
-                    },
-                    {
-                        "id": "b.md",
-                        "excerpt": "Unrelated memory about git worktrees.",
-                    },
-                ],
-            ),
-        ),
         ("roundtable_voice", _roundtable_sync),
         (
             "tool_safety",
@@ -167,7 +140,7 @@ def _detect_overrides() -> list[str]:
     override_dir = _prompts.OVERRIDE_PROMPT_DIR
     if not override_dir.exists():
         return []
-    known = ("transcript_harvest", "memory_rerank", "roundtable_voice", "tool_safety")
+    known = ("roundtable_voice", "tool_safety")
     found = []
     for name in known:
         if (override_dir / f"{name}.md").exists():
@@ -208,16 +181,13 @@ def _safety_cache_report() -> dict:
 
 
 def _feature_flags_state() -> dict:
-    """Snapshot the 4 feature flags."""
+    """Snapshot the feature flags."""
     from spellbook.worker_llm.config import get_worker_config
 
     cfg = get_worker_config()
     return {
-        "transcript_harvest": bool(cfg.feature_transcript_harvest),
         "tool_safety": bool(cfg.feature_tool_safety),
-        "memory_rerank": bool(cfg.feature_memory_rerank),
         "roundtable": bool(cfg.feature_roundtable),
-        "read_claude_memory": bool(cfg.read_claude_memory),
     }
 
 

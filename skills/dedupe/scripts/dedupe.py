@@ -23,8 +23,23 @@ import os
 import re
 import sys
 import types
+from collections import deque
 from dataclasses import dataclass, field
 from pathlib import Path
+
+
+def _resolved_str(p: Path | str) -> str:
+    """Canonical POSIX-form resolved path string (cross-platform stable).
+
+    Paths are stored and compared as strings in many places (corpus indexes,
+    block.file, candidate file, suffix-match against backticked `.md` refs).
+    On Windows ``str(Path(...).resolve())`` yields backslash-separated paths,
+    which break every comparison and ``endswith`` lookup against markdown
+    refs that use forward slashes. Normalizing via ``Path.as_posix()`` makes
+    the resolved-string form identical across platforms while preserving the
+    absolute-path semantics that the existing logic depends on.
+    """
+    return Path(p).resolve().as_posix()
 
 # When this module is loaded via ``importlib.util.spec_from_file_location`` +
 # ``exec_module`` (the test loader pattern, and any embedding harness), the
@@ -963,7 +978,9 @@ def _default_corpus_files(root: Path) -> list[Path]:
     claude = root / "CLAUDE.md"
     if claude.is_file():
         found.add(claude)
-    return sorted(p.resolve() for p in found)
+    # Sort by POSIX-form resolved path so platform-stable ordering matches the
+    # POSIX-form strings used everywhere else (see _resolved_str).
+    return sorted((p.resolve() for p in found), key=lambda p: p.as_posix())
 
 
 def resolve_corpus(corpus_arg: str | None) -> list[Path]:
@@ -996,7 +1013,8 @@ def resolve_corpus(corpus_arg: str | None) -> list[Path]:
             if path.suffix == ".md":
                 resolved.add(path.resolve())
             # non-.md file entries are skipped (design §8).
-    return sorted(resolved)
+    # Sort by POSIX-form path for cross-platform stable ordering.
+    return sorted(resolved, key=lambda p: p.as_posix())
 
 
 # ---------------------------------------------------------------------------
@@ -1028,7 +1046,7 @@ def build_corpus_index(corpus_files: list[Path]) -> dict[str, str]:
     """
     index: dict[str, str] = {}
     for path in corpus_files:
-        resolved = str(path.resolve())
+        resolved = _resolved_str(path)
         parent = path.parent.name
         if path.name == "SKILL.md" and parent:
             name = parent
@@ -1057,8 +1075,8 @@ def resolve_seed_entry(
       ``(None, name)`` when the name resolves, else ``(None, None)`` so the
       caller can raise a clear empty/not-found error (design §8).
     """
-    resolved_by_path = {str(p.resolve()): str(p.resolve()) for p in corpus_files}
-    by_basename = {p.name: str(p.resolve()) for p in corpus_files}
+    resolved_by_path = {_resolved_str(p): _resolved_str(p) for p in corpus_files}
+    by_basename = {p.name: _resolved_str(p) for p in corpus_files}
 
     is_pathlike = entry.endswith(".md")
     candidate = Path(entry)
@@ -1076,9 +1094,9 @@ def resolve_seed_entry(
         if entry in by_basename:
             return by_basename[entry], None
         if candidate.is_file():
-            return str(candidate.resolve()), None
+            return _resolved_str(candidate), None
         # ends in .md but not in the corpus -> still a path, resolve literally.
-        return str(candidate.resolve()), None
+        return _resolved_str(candidate), None
 
     # NAME path: resolve through the index.
     if entry in corpus_index:
@@ -1274,7 +1292,7 @@ def resolve_path_reference(
     #    refs; an absolute ref is anchored, not relative to from_file).
     if not ref.startswith("/"):
         try:
-            candidate = str((Path(from_file).parent / ref).resolve())
+            candidate = (Path(from_file).parent / ref).resolve().as_posix()
         except (OSError, ValueError):
             candidate = None
         if candidate is not None and candidate in corpus_by_resolved:
@@ -1305,7 +1323,7 @@ def expand_group(
     Note: references INSIDE an out-of-corpus path-seed are intentionally not
     traversed -- only files that are part of the corpus are read and followed.
     """
-    path_by_resolved = {str(p.resolve()) for p in corpus_files}
+    path_by_resolved = {_resolved_str(p) for p in corpus_files}
     # Same resolved-path set as a dict for the Shape-5 path-bypass resolver,
     # which membership-tests resolved candidates against the corpus.
     corpus_by_resolved = {p: p for p in path_by_resolved}
@@ -1313,7 +1331,9 @@ def expand_group(
     expanded: set[str] = set()
     unresolved: set[str] = set()
     # frontier holds (path, depth). Paths only; names are mapped to paths first.
-    frontier: list[tuple[str, int]] = []
+    # Use a deque so the BFS pop is O(1) at the head (popleft) instead of the
+    # O(n) list.pop(0) shift; FIFO ordering and BFS semantics are unchanged.
+    frontier: deque[tuple[str, int]] = deque()
 
     for entry in seed:
         path, name = resolve_seed_entry(
@@ -1331,7 +1351,7 @@ def expand_group(
 
     visited: set[str] = set()
     while frontier:
-        path, depth = frontier.pop(0)
+        path, depth = frontier.popleft()
         if path in visited:
             continue
         visited.add(path)
@@ -1342,7 +1362,13 @@ def expand_group(
             continue
         try:
             text = Path(path).read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeDecodeError) as e:
+            # Surface skipped corpus reads so a file that should be in the
+            # group but is unreadable does not vanish silently. Stderr keeps
+            # the JSON-on-stdout contract intact.
+            sys.stderr.write(
+                f"dedupe: skipped {path}: {type(e).__name__}: {e}\n"
+            )
             continue
         resolved_names, unresolved_strings = _extract_references(text, corpus_index)
         unresolved.update(unresolved_strings)
@@ -1400,7 +1426,7 @@ def cmd_expand_group(args: argparse.Namespace) -> int:
     payload = {
         "version": SCHEMA_VERSION,
         "seed": list(args.seed),
-        "corpus": [str(p) for p in corpus_files],
+        "corpus": [p.as_posix() for p in corpus_files],
         "expanded_group": expanded_group,
         "unresolved_references": unresolved_references,
         "group_size": len(expanded_group),
@@ -1456,7 +1482,7 @@ def external_caller_scan(
     output is deterministic and stable across runs.
     """
     callers: list[dict] = []
-    resolved_corpus = [str(p.resolve()) for p in corpus_roots]
+    resolved_corpus = [_resolved_str(p) for p in corpus_roots]
     # Cache per-file segmentation so each out-of-group file is parsed once even
     # when several candidates are compared against it.
     segmented: dict[str, list[Block]] = {}
@@ -1472,7 +1498,7 @@ def external_caller_scan(
         return segmented[path_str]
 
     for candidate in candidate_blocks:
-        candidate_file = str(Path(candidate.file).resolve())
+        candidate_file = _resolved_str(candidate.file)
         for path_str in resolved_corpus:
             if path_str in group_files:
                 continue
@@ -1497,24 +1523,51 @@ def external_caller_scan(
     return callers
 
 
-def _block_endpoint(block: Block) -> dict:
-    """The compact §3.9 endpoint view of a Block (a/b in a pair JSON entry)."""
+def _block_endpoint(
+    block: Block,
+    *,
+    danger_by_file: dict[str, dict[int, str]] | None = None,
+) -> dict:
+    """The compact §3.9 endpoint view of a Block (a/b in a pair JSON entry).
+
+    Carries ``parent_key`` (enclosing heading-section block_id, or ``None`` for
+    a heading-section root) so the analyze command can compute the INLINE-
+    MANDATORY child-level Clause-3 variant downstream (commands/dedupe-analyze.md
+    Phase 3). Also carries ``inline_mandatory`` -- the full predicate from
+    :func:`is_inline_mandatory`, evaluated against the block's own file's
+    ``danger_lines`` map so Clauses 1, 2, AND 3 are all reflected in detect
+    output (the analyze command's INLINE-MANDATORY screen relies on this).
+
+    When ``danger_by_file`` is omitted, the predicate falls back to
+    ``all_lines={}`` so only Clauses 1 and 2 (marker-based) contribute. The
+    integrated ``detect`` pipeline always passes the full map.
+    """
+    if danger_by_file is None:
+        all_lines: dict[int, str] = {}
+    else:
+        all_lines = danger_by_file.get(block.file, {})
     return {
         "file": block.file,
         "granularity": block.granularity,
         "start_line": block.start_line,
         "end_line": block.end_line,
         "block_id": block.block_id,
+        "parent_key": block.parent_key,
+        "inline_mandatory": is_inline_mandatory(block, all_lines=all_lines),
     }
 
 
-def _pair_to_json(pair: Pair) -> dict:
+def _pair_to_json(
+    pair: Pair,
+    *,
+    danger_by_file: dict[str, dict[int, str]] | None = None,
+) -> dict:
     """Serialize a Pair to the §3.9 detect-schema entry (a_text/b_text carry the
     normalized block text so the skill builds classifier prompts without
     re-reading files)."""
     return {
-        "a": _block_endpoint(pair.a),
-        "b": _block_endpoint(pair.b),
+        "a": _block_endpoint(pair.a, danger_by_file=danger_by_file),
+        "b": _block_endpoint(pair.b, danger_by_file=danger_by_file),
         "jaccard": pair.jaccard,
         "seqmatch_ratio": pair.seqmatch_ratio,
         "drift_delta": pair.drift_delta,
@@ -1551,15 +1604,23 @@ def cmd_detect(args: argparse.Namespace) -> int:
     group_files = frozenset(expanded_group)
 
     # Segment every file in the group, then pair within the group only.
+    # Also collect each file's danger_lines map so the INLINE-MANDATORY
+    # predicate (Clauses 1+2+3) can be evaluated per endpoint in
+    # _block_endpoint -- the analyze command depends on this in Phase 3.
     group_blocks: list[Block] = []
+    danger_by_file: dict[str, dict[int, str]] = {}
     for path_str in expanded_group:
         try:
             text = Path(path_str).read_text(encoding="utf-8")
-        except (OSError, UnicodeDecodeError):
+        except (OSError, UnicodeDecodeError) as e:
+            sys.stderr.write(
+                f"dedupe: skipped {path_str}: {type(e).__name__}: {e}\n"
+            )
             continue
         group_blocks.extend(
             segment(path_str, text, min_block_chars=args.min_block_chars)
         )
+        danger_by_file[path_str] = danger_lines(path_str, text)
 
     all_pairs = pair_corpus(
         group_blocks,
@@ -1609,12 +1670,15 @@ def cmd_detect(args: argparse.Namespace) -> int:
     payload = {
         "version": SCHEMA_VERSION,
         "seed": list(args.seed),
-        "corpus": [str(p) for p in corpus_files],
+        "corpus": [p.as_posix() for p in corpus_files],
         "expanded_group": expanded_group,
         "unresolved_references": unresolved_references,
         "cost_ceiling_exceeded": cost_ceiling_exceeded,
         "candidate_count": candidate_count,
-        "pairs": [_pair_to_json(p) for p in emitted_pairs],
+        "pairs": [
+            _pair_to_json(p, danger_by_file=danger_by_file)
+            for p in emitted_pairs
+        ],
         "external_callers": external_callers,
     }
     print(json.dumps(payload, indent=2, ensure_ascii=False))

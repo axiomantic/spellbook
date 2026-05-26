@@ -1612,6 +1612,29 @@ def test_resolve_path_reference_ambiguous_is_deterministic(dedupe):
     assert tied == tie_a, "equal-length paths must break ties lexicographically"
 
 
+def test_resolve_path_reference_handles_posix_form_corpus_keys(dedupe):
+    """REGRESSION (Windows path handling): backticked `.md`-PATH refs are written
+    with forward slashes (``refs/nested-ref.md``), but ``str(Path(p).resolve())``
+    on Windows yields backslashes. The resolver MUST compare in POSIX form so a
+    repo-relative ref ending in ``refs/nested-ref.md`` matches a corpus path that
+    was stored in canonical POSIX form. Exercises the contract directly so the
+    test passes on macOS/Linux while locking the cross-platform behavior."""
+    # corpus_by_resolved is populated with POSIX-form keys (the canonical form
+    # used everywhere in dedupe.py after _resolved_str / as_posix normalization).
+    posix_key = "/repo/skills/lead/refs/nested-ref.md"
+    corpus_by_resolved = {posix_key: posix_key}
+    # Bare-form path-ref (filename only): suffix-matches by ``/<ref>``.
+    assert dedupe.resolve_path_reference(
+        "nested-ref.md", from_file="/repo/skills/lead/SKILL.md",
+        corpus_by_resolved=corpus_by_resolved,
+    ) == posix_key
+    # Nested-form path-ref (POSIX-style ref): exact suffix match.
+    assert dedupe.resolve_path_reference(
+        "refs/nested-ref.md", from_file="/repo/skills/lead/SKILL.md",
+        corpus_by_resolved=corpus_by_resolved,
+    ) == posix_key
+
+
 def test_resolve_path_reference_ambiguous_e2e_deterministic_across_hashseed(dedupe):
     """E2E proof of non-vacuity: run the full ``expand-group`` path under several
     PYTHONHASHSEED values via subprocess; the chosen ambiguous member must be
@@ -1739,7 +1762,15 @@ def test_detect_emits_group_result_schema(dedupe):
         for endpoint in (pair["a"], pair["b"]):
             assert set(endpoint) == {
                 "file", "granularity", "start_line", "end_line", "block_id",
+                "parent_key", "inline_mandatory",
             }
+            # parent_key is the enclosing heading-section block_id (str) or None
+            # for a heading-section root; inline_mandatory is the full Clauses
+            # 1+2+3 predicate from is_inline_mandatory (commands/dedupe-analyze.md
+            # Phase 3 depends on this carrying the full predicate, not only the
+            # marker-based clauses).
+            assert endpoint["parent_key"] is None or isinstance(endpoint["parent_key"], str)
+            assert isinstance(endpoint["inline_mandatory"], bool)
 
 
 def test_detect_cost_ceiling(dedupe):

@@ -1,7 +1,7 @@
-"""SQLAlchemy ORM models for spellbook.db (25 tables).
+"""SQLAlchemy ORM models for spellbook.db.
 
 These models mirror the CREATE TABLE statements in spellbook/core/db.py
-(lines 102-640) and spellbook/coordination/curator.py (lines 17-26).
+and spellbook/coordination/curator.py.
 """
 
 import json
@@ -28,52 +28,12 @@ def _parse_json(value: Optional[str]):
     return json.loads(value)
 
 
-# ---- 1. souls ----
-
-class Soul(SpellbookBase):
-    __tablename__ = "souls"
-
-    id: Mapped[str] = mapped_column(Text, primary_key=True)
-    project_path: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    session_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True, index=True)
-    bound_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    persona: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    active_skill: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    skill_phase: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    todos: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    recent_files: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    exact_position: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    workflow_pattern: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    summoned_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    subagents = relationship("Subagent", back_populates="soul")
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "project_path": self.project_path,
-            "session_id": self.session_id,
-            "bound_at": self.bound_at,
-            "persona": self.persona,
-            "active_skill": self.active_skill,
-            "skill_phase": self.skill_phase,
-            "todos": _parse_json(self.todos),
-            "recent_files": _parse_json(self.recent_files),
-            "exact_position": self.exact_position,
-            "workflow_pattern": self.workflow_pattern,
-            "summoned_at": self.summoned_at,
-        }
-
-
-# ---- 2. subagents ----
+# ---- 1. subagents ----
 
 class Subagent(SpellbookBase):
     __tablename__ = "subagents"
 
     id: Mapped[str] = mapped_column(Text, primary_key=True)
-    soul_id: Mapped[Optional[str]] = mapped_column(
-        Text, ForeignKey("souls.id"), nullable=True,
-    )
     project_path: Mapped[str] = mapped_column(Text, nullable=False, index=True)
     spawned_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True, index=True)
     prompt_summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
@@ -81,12 +41,9 @@ class Subagent(SpellbookBase):
     status: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     last_output: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
-    soul = relationship("Soul", back_populates="subagents")
-
     def to_dict(self) -> dict:
         return {
             "id": self.id,
-            "soul_id": self.soul_id,
             "project_path": self.project_path,
             "spawned_at": self.spawned_at,
             "prompt_summary": self.prompt_summary,
@@ -361,180 +318,7 @@ class SpawnRateLimit(SpellbookBase):
         }
 
 
-# ---- 17. memories ----
-
-class Memory(SpellbookBase):
-    __tablename__ = "memories"
-
-    id: Mapped[str] = mapped_column(Text, primary_key=True)
-    content: Mapped[str] = mapped_column(Text, nullable=False)
-    memory_type: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    namespace: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    branch: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default="", index=True)
-    scope: Mapped[str] = mapped_column(
-        Text, nullable=False, default="project", index=True,
-    )
-    importance: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=1.0)
-    created_at: Mapped[str] = mapped_column(Text, nullable=False)
-    accessed_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    status: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default="active", index=True)
-    deleted_at: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    content_hash: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    meta: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default="{}")
-
-    citations = relationship("MemoryCitation", back_populates="memory")
-    branches = relationship("MemoryBranch", back_populates="memory")
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "content": self.content,
-            "memory_type": self.memory_type,
-            "namespace": self.namespace,
-            "branch": self.branch,
-            "scope": self.scope,
-            "importance": self.importance,
-            "created_at": self.created_at,
-            "accessed_at": self.accessed_at,
-            "status": self.status,
-            "deleted_at": self.deleted_at,
-            "content_hash": self.content_hash,
-            "meta": _parse_json(self.meta),
-        }
-
-
-# ---- 18. memory_citations ----
-
-class MemoryCitation(SpellbookBase):
-    __tablename__ = "memory_citations"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
-    memory_id: Mapped[str] = mapped_column(
-        Text, ForeignKey("memories.id"), nullable=False,
-    )
-    file_path: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    line_range: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    content_snippet: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    __table_args__ = (
-        UniqueConstraint("memory_id", "file_path", "line_range"),
-    )
-
-    memory = relationship("Memory", back_populates="citations")
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "memory_id": self.memory_id,
-            "file_path": self.file_path,
-            "line_range": self.line_range,
-            "content_snippet": self.content_snippet,
-        }
-
-
-# ---- 19. memory_links ----
-
-class MemoryLink(SpellbookBase):
-    __tablename__ = "memory_links"
-
-    memory_a: Mapped[str] = mapped_column(Text, primary_key=True)
-    memory_b: Mapped[str] = mapped_column(Text, primary_key=True)
-    link_type: Mapped[str] = mapped_column(Text, primary_key=True)
-    weight: Mapped[Optional[float]] = mapped_column(Float, nullable=True, default=1.0)
-    last_seen: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    def to_dict(self) -> dict:
-        return {
-            "memory_a": self.memory_a,
-            "memory_b": self.memory_b,
-            "link_type": self.link_type,
-            "weight": self.weight,
-            "last_seen": self.last_seen,
-        }
-
-
-# ---- 20. memory_branches ----
-
-class MemoryBranch(SpellbookBase):
-    __tablename__ = "memory_branches"
-
-    memory_id: Mapped[str] = mapped_column(
-        Text, ForeignKey("memories.id"), primary_key=True,
-    )
-    branch_name: Mapped[str] = mapped_column(Text, primary_key=True, index=True)
-    association_type: Mapped[str] = mapped_column(
-        Text, nullable=False, default="origin", index=True,
-    )
-    created_at: Mapped[str] = mapped_column(Text, nullable=False)
-
-    memory = relationship("Memory", back_populates="branches")
-
-    def to_dict(self) -> dict:
-        return {
-            "memory_id": self.memory_id,
-            "branch_name": self.branch_name,
-            "association_type": self.association_type,
-            "created_at": self.created_at,
-        }
-
-
-# ---- 21. raw_events ----
-
-class RawEvent(SpellbookBase):
-    __tablename__ = "raw_events"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    session_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    timestamp: Mapped[str] = mapped_column(Text, nullable=False)
-    project: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    branch: Mapped[Optional[str]] = mapped_column(Text, nullable=True, default="")
-    event_type: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    tool_name: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    subject: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    summary: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    tags: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    consolidated: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=0, index=True)
-    batch_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "session_id": self.session_id,
-            "timestamp": self.timestamp,
-            "project": self.project,
-            "branch": self.branch,
-            "event_type": self.event_type,
-            "tool_name": self.tool_name,
-            "subject": self.subject,
-            "summary": self.summary,
-            "tags": self.tags,
-            "consolidated": self.consolidated,
-            "batch_id": self.batch_id,
-        }
-
-
-# ---- 22. memory_audit_log ----
-
-class MemoryAuditLog(SpellbookBase):
-    __tablename__ = "memory_audit_log"
-
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    timestamp: Mapped[str] = mapped_column(Text, nullable=False)
-    action: Mapped[str] = mapped_column(Text, nullable=False, index=True)
-    memory_id: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    details: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-
-    def to_dict(self) -> dict:
-        return {
-            "id": self.id,
-            "timestamp": self.timestamp,
-            "action": self.action,
-            "memory_id": self.memory_id,
-            "details": self.details,
-        }
-
-
-# ---- 23. stint_stack ----
+# ---- 17. stint_stack ----
 
 class StintStack(SpellbookBase):
     __tablename__ = "stint_stack"

@@ -12,28 +12,6 @@ def _fake_cfg(allow_overrides: bool) -> SimpleNamespace:
     return SimpleNamespace(allow_prompt_overrides=allow_overrides)
 
 
-def test_load_transcript_harvest_returns_package_default(monkeypatch, tmp_path):
-    monkeypatch.setattr(wl_prompts, "OVERRIDE_PROMPT_DIR", tmp_path)
-    monkeypatch.setattr(
-        wl_prompts, "get_worker_config", lambda: _fake_cfg(True)
-    )
-    text, override_loaded = wl_prompts.load("transcript_harvest")
-    assert override_loaded is False
-    # The shipped default contains the anti-drift line.
-    assert "MUST start with [" in text
-    assert "end with ]" in text
-
-
-def test_load_memory_rerank_returns_default(monkeypatch, tmp_path):
-    monkeypatch.setattr(wl_prompts, "OVERRIDE_PROMPT_DIR", tmp_path)
-    monkeypatch.setattr(
-        wl_prompts, "get_worker_config", lambda: _fake_cfg(True)
-    )
-    text, override_loaded = wl_prompts.load("memory_rerank")
-    assert override_loaded is False
-    assert "relevance_0_1" in text
-
-
 def test_load_roundtable_voice_returns_default(monkeypatch, tmp_path):
     monkeypatch.setattr(wl_prompts, "OVERRIDE_PROMPT_DIR", tmp_path)
     monkeypatch.setattr(
@@ -67,12 +45,12 @@ def test_override_loaded_when_present_and_allowed(monkeypatch, tmp_path):
         "publish_override_loaded",
         lambda task, path: published.append((task, path)),
     )
-    override_file = tmp_path / "transcript_harvest.md"
+    override_file = tmp_path / "tool_safety.md"
     override_file.write_text("OVERRIDDEN BODY")
-    text, override_loaded = wl_prompts.load("transcript_harvest")
+    text, override_loaded = wl_prompts.load("tool_safety")
     assert text == "OVERRIDDEN BODY"
     assert override_loaded is True
-    assert published == [("transcript_harvest", str(override_file))]
+    assert published == [("tool_safety", str(override_file))]
 
 
 def test_override_disabled_flag_skips_override(monkeypatch, tmp_path):
@@ -86,8 +64,8 @@ def test_override_disabled_flag_skips_override(monkeypatch, tmp_path):
         "publish_override_loaded",
         lambda task, path: published.append((task, path)),
     )
-    (tmp_path / "transcript_harvest.md").write_text("OVERRIDDEN")
-    text, override_loaded = wl_prompts.load("transcript_harvest")
+    (tmp_path / "tool_safety.md").write_text("OVERRIDDEN")
+    text, override_loaded = wl_prompts.load("tool_safety")
     assert text != "OVERRIDDEN"
     assert override_loaded is False
     assert published == []

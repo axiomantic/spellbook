@@ -1,7 +1,6 @@
 """Performance validation tests for admin API endpoints.
 
 These tests verify response time budgets from the design doc:
-- Memory FTS search < 200ms
 - Dashboard load < 1s
 - Fractal cytoscape endpoint < 2s for 500 nodes
 - WebSocket event delivery < 500ms
@@ -85,46 +84,6 @@ class _MockAsyncSession:
 
 
 @pytest.mark.slow
-class TestMemorySearchPerformance:
-    def test_memory_fts_response_time(self, client):
-        """Memory FTS search should respond within 200ms."""
-        mock_rows = [
-            {
-                "id": f"mem-{i}",
-                "content": f"test memory {i}",
-                "memory_type": "fact",
-                "namespace": "test",
-                "branch": "main",
-                "importance": 1.0,
-                "created_at": "2026-03-14T10:00:00Z",
-                "accessed_at": None,
-                "status": "active",
-                "meta": "{}",
-                "deleted_at": None,
-                "content_hash": None,
-                "citation_count": 0,
-            }
-            for i in range(50)
-        ]
-        count_result = _ExecuteResult(scalar_one_value=100)
-        data_result = _ExecuteResult(mappings_all_value=mock_rows)
-        mock_session = _MockAsyncSession([count_result, data_result])
-
-        from spellbook.db import spellbook_db
-
-        client.app.dependency_overrides[spellbook_db] = lambda: mock_session
-        try:
-            start = time.monotonic()
-            response = client.get("/api/memories?q=test")
-            elapsed_ms = (time.monotonic() - start) * 1000
-
-            assert response.status_code == 200
-            assert elapsed_ms < 200, f"Memory FTS took {elapsed_ms:.0f}ms, budget is 200ms"
-        finally:
-            client.app.dependency_overrides.pop(spellbook_db, None)
-
-
-@pytest.mark.slow
 class TestDashboardPerformance:
     def test_dashboard_load_time(self, client, monkeypatch):
         """Dashboard endpoint should respond within 1 second."""
@@ -139,7 +98,6 @@ class TestDashboardPerformance:
             },
             "counts": {
                 "active_sessions": 0,
-                "total_memories": 0,
                 "security_events_24h": 0,
                 "running_swarms": 0,
                 "open_experiments": 0,
@@ -235,7 +193,7 @@ class TestWebSocketEventDelivery:
         queue = await bus.subscribe("perf-test")
 
         event = Event(
-            subsystem=Subsystem.MEMORY,
+            subsystem=Subsystem.CONFIG,
             event_type="created",
             data={"id": "perf-1"},
         )

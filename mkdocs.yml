@@ -5,7 +5,6 @@ exclude_docs: |
   /security.md
   /windows-support-report.md
   commands/toggle-fun.md
-  skills/code-review-diagram.md
 site_name: Spellbook
 site_description: Multi-platform AI assistant skills, commands, and configuration
 site_url: https://axiomantic.github.io/spellbook/
@@ -117,6 +116,7 @@ nav:
     - Project Quality:
       - skills/fact-checking.md
       - skills/finding-dead-code.md
+      - skills/dedupe.md
       - skills/security-auditing.md
       - skills/polish-repo.md
       - skills/enforcing-code-quality.md
@@ -125,7 +125,6 @@ nav:
   - Admin Interface:
     - Overview: admin/index.md
     - Dashboard: admin/dashboard.md
-    - Memory: admin/memory.md
     - Security: admin/security.md
     - Sessions: admin/sessions.md
     - Analytics: admin/analytics.md
@@ -153,6 +152,7 @@ nav:
       - skills/code-review.md
       - skills/creating-issues-and-pull-requests.md
       - skills/debugging.md
+      - skills/dedupe.md
       - skills/deep-research.md
       - skills/dehallucination.md
       - skills/designing-workflows.md
@@ -233,6 +233,10 @@ nav:
       - commands/dead-code-implement.md
       - commands/dead-code-report.md
       - commands/dead-code-setup.md
+      - commands/dedupe-analyze.md
+      - commands/dedupe-apply.md
+      - commands/dedupe-report.md
+      - commands/dedupe-setup.md
       - commands/deep-research-interview.md
       - commands/deep-research-investigate.md
       - commands/decompose-claims.md

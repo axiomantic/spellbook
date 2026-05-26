@@ -33,7 +33,6 @@ function SpellbookIcon({ className = '' }: { className?: string }) {
 const navItems = [
   { to: '/', label: '// DASHBOARD' },
   { to: '/config', label: '// CONFIG' },
-  { to: '/memory', label: '// MEMORY' },
   { to: '/canvas', label: '// CANVAS' },
   { to: '/security', label: '// SECURITY' },
   { to: '/sessions', label: '// SESSIONS' },

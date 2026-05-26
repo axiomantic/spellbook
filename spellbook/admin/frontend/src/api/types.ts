@@ -18,7 +18,6 @@ export interface HealthStatus {
 
 export interface DashboardCounts {
   active_sessions: number
-  total_memories: number
   security_events_24h: number
   running_swarms: number
   open_experiments: number
@@ -35,43 +34,6 @@ export interface DashboardResponse {
   health: HealthStatus
   counts: DashboardCounts
   recent_activity: ActivityItem[]
-}
-
-// Memory
-export interface Citation {
-  file: string
-  symbol: string | null
-  symbol_type: string | null
-}
-
-export interface MemoryItem {
-  id: string
-  type: string
-  kind: string | null
-  tags: string[]
-  citations: Citation[]
-  confidence: 'high' | 'medium' | 'low' | null
-  created: string
-  last_verified: string | null
-  body: string
-}
-
-export interface MemorySearchResult extends MemoryItem {
-  score: number
-  match_context: string | null
-}
-
-export interface MemoryListResponse {
-  items: MemoryItem[]
-  total: number
-  offset: number
-  limit: number
-}
-
-export interface MemorySearchResponse {
-  query: string
-  total: number
-  items: MemorySearchResult[]
 }
 
 // Security
