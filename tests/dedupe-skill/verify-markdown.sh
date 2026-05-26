@@ -7,8 +7,8 @@
 set -u
 
 if ! command -v markdownlint-cli2 >/dev/null 2>&1; then
-    echo "SKIP: D5 (markdownlint-cli2 not installed; install with 'npm i -g markdownlint-cli2' or 'brew install markdownlint-cli2' to enable)"
-    exit 0
+    echo "FAIL: markdownlint-cli2 is required but not installed. Install via 'brew install markdownlint-cli2' or 'npm install -g markdownlint-cli2'."
+    exit 1
 fi
 
 TARGETS=(

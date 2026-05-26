@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # D4: Verify every fenced ```json block parses individually via jq.
 #
-# Scans:
+# Default targets (when called with no args):
 #   skills/dedupe/references/counterfactual-prompt.md
 #   commands/dedupe-apply.md
+#
+# When called with arguments, those paths are scanned instead. This allows
+# the paired negative-control gate (verify-json-blocks-neg.sh) to point the
+# same logic at a malformed-JSON fixture.
 #
 # Each fenced ```json ... ``` block is extracted and piped through
 # `jq empty` separately (NOT concatenated). Any parse failure fails the gate.
@@ -15,10 +19,14 @@ if ! command -v jq >/dev/null 2>&1; then
     exit 1
 fi
 
-FILES=(
-    skills/dedupe/references/counterfactual-prompt.md
-    commands/dedupe-apply.md
-)
+if [ "$#" -gt 0 ]; then
+    FILES=("$@")
+else
+    FILES=(
+        skills/dedupe/references/counterfactual-prompt.md
+        commands/dedupe-apply.md
+    )
+fi
 
 TOTAL=0
 FAIL=0
