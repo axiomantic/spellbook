@@ -168,6 +168,29 @@ def _drop_deleted_security_tables(cursor):
             pass
 
 
+def _drop_deleted_memory_tables(cursor):
+    """Drop memory-system + session-soul tables removed in 0.68.0.
+
+    Idempotent: DROP TABLE IF EXISTS, safe on fresh and existing DBs.
+    Child-first FK order. Each DROP individually guarded so a residual
+    index/lock on one table cannot abort init_db for every user on upgrade.
+    """
+    for table_name in (
+        "memory_audit_log",
+        "memory_branches",
+        "memory_links",
+        "memory_citations",
+        "raw_events",
+        "memories_fts",
+        "memories",
+        "souls",
+    ):
+        try:
+            cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
+        except sqlite3.Error:
+            pass
+
+
 def init_db(db_path: str = None) -> None:
     """Initialize database schema.
 
@@ -179,41 +202,10 @@ def init_db(db_path: str = None) -> None:
     conn = get_connection(db_path)
     cursor = conn.cursor()
 
-    # Main soul state
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS souls (
-            id TEXT PRIMARY KEY,
-            project_path TEXT NOT NULL,
-            session_id TEXT,
-            bound_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
-            -- Extracted state (JSON)
-            persona TEXT,
-            active_skill TEXT,
-            skill_phase TEXT,
-            todos TEXT,
-            recent_files TEXT,
-            exact_position TEXT,
-            workflow_pattern TEXT,
-
-            -- Metadata
-            summoned_at TIMESTAMP
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_souls_project ON souls(project_path)
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_souls_session ON souls(session_id)
-    """)
-
     # Subagent tracking
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS subagents (
             id TEXT PRIMARY KEY,
-            soul_id TEXT,
             project_path TEXT NOT NULL,
             spawned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
@@ -221,9 +213,7 @@ def init_db(db_path: str = None) -> None:
             prompt_summary TEXT,
             persona TEXT,
             status TEXT,
-            last_output TEXT,
-
-            FOREIGN KEY (soul_id) REFERENCES souls(id)
+            last_output TEXT
         )
     """)
 
@@ -430,6 +420,9 @@ def init_db(db_path: str = None) -> None:
     # Drop legacy security tables removed in the nuclear security cleanup.
     _drop_deleted_security_tables(cursor)
 
+    # Drop memory-system + session-soul tables removed in 0.68.0.
+    _drop_deleted_memory_tables(cursor)
+
     # Spawn rate limiting for spawn_claude_session
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS spawn_rate_limit (
@@ -443,177 +436,6 @@ def init_db(db_path: str = None) -> None:
         CREATE INDEX IF NOT EXISTS idx_spawn_rate_limit_timestamp
         ON spawn_rate_limit(timestamp)
     """)
-
-    # --- Memory System Tables ---
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS memories (
-            id TEXT PRIMARY KEY,
-            content TEXT NOT NULL,
-            memory_type TEXT,
-            namespace TEXT NOT NULL,
-            branch TEXT DEFAULT '',
-            scope TEXT NOT NULL DEFAULT 'project',
-            importance REAL DEFAULT 1.0,
-            created_at TEXT NOT NULL,
-            accessed_at TEXT,
-            status TEXT DEFAULT 'active',
-            deleted_at TEXT,
-            content_hash TEXT NOT NULL,
-            meta TEXT DEFAULT '{}'
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memories_namespace
-        ON memories(namespace)
-    """)
-
-    # Migration: add branch column to existing memories tables
-    existing_cols = {
-        row[1] for row in cursor.execute("PRAGMA table_info(memories)").fetchall()
-    }
-    if "branch" not in existing_cols:
-        cursor.execute("ALTER TABLE memories ADD COLUMN branch TEXT DEFAULT ''")
-
-    # Migration: add scope column to existing memories tables
-    if "scope" not in existing_cols:
-        cursor.execute("ALTER TABLE memories ADD COLUMN scope TEXT NOT NULL DEFAULT 'project'")
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memories_branch
-        ON memories(branch)
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memories_scope
-        ON memories(scope)
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memories_content_hash
-        ON memories(content_hash)
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memories_status
-        ON memories(status)
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS memory_citations (
-            id INTEGER PRIMARY KEY,
-            memory_id TEXT NOT NULL REFERENCES memories(id),
-            file_path TEXT NOT NULL,
-            line_range TEXT,
-            content_snippet TEXT,
-            UNIQUE(memory_id, file_path, line_range)
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_citations_file
-        ON memory_citations(file_path)
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS memory_links (
-            memory_a TEXT NOT NULL,
-            memory_b TEXT NOT NULL,
-            link_type TEXT NOT NULL,
-            weight REAL DEFAULT 1.0,
-            last_seen TEXT,
-            PRIMARY KEY (memory_a, memory_b, link_type)
-        )
-    """)
-
-    # Junction table for M:N branch-to-memory associations.
-    # A memory can be associated with multiple branches (origin, ancestor, manual).
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS memory_branches (
-            memory_id TEXT NOT NULL REFERENCES memories(id),
-            branch_name TEXT NOT NULL,
-            association_type TEXT NOT NULL DEFAULT 'origin',
-            created_at TEXT NOT NULL DEFAULT (datetime('now')),
-            PRIMARY KEY (memory_id, branch_name)
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memory_branches_branch
-        ON memory_branches(branch_name)
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memory_branches_memory
-        ON memory_branches(memory_id)
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memory_branches_type
-        ON memory_branches(association_type)
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS raw_events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            session_id TEXT,
-            timestamp TEXT NOT NULL,
-            project TEXT NOT NULL,
-            branch TEXT DEFAULT '',
-            event_type TEXT,
-            tool_name TEXT,
-            subject TEXT,
-            summary TEXT,
-            tags TEXT,
-            consolidated INTEGER DEFAULT 0,
-            batch_id TEXT
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_raw_events_consolidated
-        ON raw_events(consolidated)
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_raw_events_project
-        ON raw_events(project)
-    """)
-
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS memory_audit_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT NOT NULL,
-            action TEXT NOT NULL,
-            memory_id TEXT,
-            details TEXT
-        )
-    """)
-
-    cursor.execute("""
-        CREATE INDEX IF NOT EXISTS idx_memory_audit_action
-        ON memory_audit_log(action)
-    """)
-
-    # FTS5 for BM25 retrieval (standalone table, manually synced)
-    # Note: Using IF NOT EXISTS is not directly supported by FTS5 CREATE VIRTUAL TABLE.
-    # Check if the table exists first.
-    # This is a standalone FTS5 table (not an external content table). The
-    # application manually inserts/deletes rows in memories_fts whenever
-    # memories are created or soft-deleted. A standalone table avoids the
-    # column-name-mismatch issues that external content tables cause (the
-    # FTS columns tags/citations do not exist on the memories table).
-    cursor.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name='memories_fts'"
-    )
-    if cursor.fetchone() is None:
-        cursor.execute("""
-            CREATE VIRTUAL TABLE memories_fts USING fts5(
-                content, tags, citations,
-                tokenize="unicode61 tokenchars '_.' "
-            )
-        """)
 
     # --- Stint Stack Tables (Zeigarnik focus tracking) ---
 

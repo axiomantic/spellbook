@@ -45,9 +45,9 @@ class _FakeItem:
 class _FakeConfig:
     """Minimal stand-in for the pytest ``config`` object.
 
-    The hook reads ``--run-docker`` via ``getoption`` and looks up the
-    ``terminalreporter`` plugin. We pin both: docker off (default) and
-    no terminal reporter (silences the memory-tools warning path).
+    The hook reads ``--run-docker`` via ``getoption``. We pin docker off
+    (default). ``get_plugin`` is retained for forward-compatibility with
+    any plugin lookup the hook may add.
     """
 
     def __init__(self):
@@ -66,13 +66,10 @@ class _FakeConfig:
 
 
 def _patch_platform(monkeypatch, value):
-    """Stub the memory-tools probe; it's orthogonal to mark routing and
-    would otherwise call ``shutil.which`` under a fake ``sys.platform``.
+    """Fake ``sys.platform`` so the mark-routing branches can be exercised
+    deterministically regardless of the host OS.
     """
-    import tests.conftest as _conftest
-
     monkeypatch.setattr(sys, "platform", value)
-    monkeypatch.setattr(_conftest, "_memory_tools_installed", lambda: True)
 
 
 def test_posix_only_skipped_on_windows(monkeypatch):

@@ -10,7 +10,6 @@ __all__ = [
 ]
 
 from spellbook.mcp.server import mcp
-from spellbook.sessions.injection import inject_recovery_context
 from spellbook.pr_distill.bless import (
     bless_pattern as do_bless_pattern,
     list_blessed_patterns,
@@ -23,7 +22,6 @@ from spellbook.pr_distill.patterns import BUILTIN_PATTERNS
 
 
 @mcp.tool()
-@inject_recovery_context
 def pr_fetch(pr_identifier: str) -> dict:
     """
     Fetch PR metadata and diff from GitHub.
@@ -46,7 +44,6 @@ def pr_fetch(pr_identifier: str) -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 def pr_diff(raw_diff: str) -> dict:
     """
     Parse unified diff into FileDiff objects.
@@ -64,7 +61,6 @@ def pr_diff(raw_diff: str) -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 def pr_files(pr_result: dict) -> list:
     """
     Extract file list from pr_fetch result.
@@ -102,7 +98,6 @@ def pr_files(pr_result: dict) -> list:
 
 
 @mcp.tool()
-@inject_recovery_context
 def pr_match_patterns(
     files: list,
     project_root: str,
@@ -143,7 +138,6 @@ def pr_match_patterns(
 
 
 @mcp.tool()
-@inject_recovery_context
 def pr_bless_pattern(project_root: str, pattern_id: str) -> dict:
     """
     Bless a pattern for elevated precedence.
@@ -182,7 +176,6 @@ def pr_bless_pattern(project_root: str, pattern_id: str) -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 def pr_list_patterns(project_root: str = None) -> dict:
     """
     List all available patterns (builtin and blessed).

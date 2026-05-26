@@ -36,21 +36,6 @@ def _chat_completion(content: str) -> dict:
 # ``spellbook/worker_llm/tasks/*`` and their existing happy-path tests for
 # the exact shape each parser consumes.
 _HAPPY_SCRIPT = [
-    SimpleNamespace(  # transcript_harvest
-        status=200,
-        body=_chat_completion(
-            '[{"content":"Memory body","type":"feedback","kind":"preference",'
-            '"tags":"t1","citations":""}]'
-        ),
-        delay_s=0.0,
-        raise_on_send=None,
-    ),
-    SimpleNamespace(  # memory_rerank
-        status=200,
-        body=_chat_completion('[{"id":"a.md","relevance_0_1":0.9}]'),
-        delay_s=0.0,
-        raise_on_send=None,
-    ),
     SimpleNamespace(  # roundtable_voice
         status=200,
         body=_chat_completion("**Magician**: analysis...\nVerdict: APPROVE"),
@@ -72,7 +57,7 @@ _HAPPY_SCRIPT = [
 
 
 class TestDoctorHappyPath:
-    """All 4 tasks succeed -> exit 0, JSON payload fully populated."""
+    """All tasks succeed -> exit 0, JSON payload fully populated."""
 
     def test_json_happy_path_exit_zero(
         self, worker_llm_transport, worker_llm_config, capsys
@@ -92,11 +77,9 @@ class TestDoctorHappyPath:
         payload = json.loads(captured.out)
         assert payload["endpoint"] == "http://test.local/v1"
         assert payload["model"] == "test-model"
-        assert len(payload["results"]) == 4
+        assert len(payload["results"]) == 2
         task_names = {r["task"] for r in payload["results"]}
         assert task_names == {
-            "transcript_harvest",
-            "memory_rerank",
             "roundtable_voice",
             "tool_safety",
         }
@@ -123,8 +106,6 @@ class TestDoctorHappyPath:
         assert "http://test.local/v1" in out
         assert "test-model" in out
         # Each task reported
-        assert "transcript_harvest" in out
-        assert "memory_rerank" in out
         assert "roundtable_voice" in out
         assert "tool_safety" in out
         # No FAIL marker
@@ -142,13 +123,13 @@ class TestDoctorConnectionFailure:
     def test_connect_error_exits_two(
         self, worker_llm_transport, worker_llm_config, capsys
     ):
-        # Every call raises ConnectError. Need 4 entries (one per task).
+        # Every call raises ConnectError. Need one entry per task.
         conn_err = httpx.ConnectError("connection refused")
         script = [
             SimpleNamespace(
                 status=0, body="", delay_s=0.0, raise_on_send=conn_err
             )
-            for _ in range(4)
+            for _ in range(2)
         ]
         worker_llm_transport(script)
 
@@ -221,7 +202,7 @@ class TestDoctorOverrideDetection:
         # the user's real ~/.local/spellbook/worker_prompts/ tree.
         override_dir = tmp_path / "worker_prompts"
         override_dir.mkdir(parents=True)
-        (override_dir / "transcript_harvest.md").write_text(
+        (override_dir / "tool_safety.md").write_text(
             "# override prompt body\n", encoding="utf-8"
         )
 
@@ -247,8 +228,8 @@ class TestDoctorOverrideDetection:
 
         payload = json.loads(capsys.readouterr().out)
         overrides = payload.get("overrides", [])
-        assert "transcript_harvest" in overrides, (
-            f"expected transcript_harvest in overrides, got {overrides!r}"
+        assert "tool_safety" in overrides, (
+            f"expected tool_safety in overrides, got {overrides!r}"
         )
 
 

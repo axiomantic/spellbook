@@ -51,8 +51,8 @@ class TestUnifiedHookRegistration:
         old_hooks = {
             "bash-gate.sh", "spawn-guard.sh", "state-sanitize.sh",
             "tts-timer-start.sh", "audit-log.sh", "canary-check.sh",
-            "memory-inject.sh", "notify-on-complete.sh", "tts-notify.sh",
-            "memory-capture.sh", "pre-compact-save.sh", "post-compact-recover.sh",
+            "notify-on-complete.sh", "tts-notify.sh",
+            "pre-compact-save.sh", "post-compact-recover.sh",
         }
         for phase, entries in HOOK_DEFINITIONS.items():
             for entry in entries:
@@ -79,7 +79,7 @@ class TestUnifiedHookRegistration:
                     )
 
     def test_post_tool_use_is_synchronous(self):
-        """PostToolUse must NOT have async (canary-check and memory-inject need stdout)."""
+        """PostToolUse must NOT have async (context injection needs stdout)."""
         for entry in HOOK_DEFINITIONS["PostToolUse"]:
             for hook in entry.get("hooks", []):
                 if isinstance(hook, dict) and "spellbook_hook" in hook.get("command", ""):

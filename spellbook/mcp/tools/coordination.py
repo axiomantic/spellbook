@@ -12,7 +12,6 @@ from typing import Optional
 from fastmcp import Context
 from spellbook.mcp.server import mcp
 from spellbook.coordination.curator import curator_track_prune
-from spellbook.sessions.injection import inject_recovery_context
 from spellbook.mcp.tools.config import _get_session_id
 
 
@@ -27,7 +26,6 @@ def _require_session_id(ctx: Optional[Context]) -> tuple[str | None, dict | None
 # Context Curator Tools
 
 @mcp.tool()
-@inject_recovery_context
 async def mcp_curator_track_prune(
     session_id: str,
     tool_ids: list,
@@ -52,7 +50,6 @@ async def mcp_curator_track_prune(
 # Stint Stack Tools (Zeigarnik focus tracking)
 
 @mcp.tool()
-@inject_recovery_context
 def stint_push(
     project_path: str,
     name: str,
@@ -112,7 +109,6 @@ def stint_push(
 
 
 @mcp.tool()
-@inject_recovery_context
 def stint_pop(
     project_path: str,
     name: str | None = None,
@@ -158,7 +154,6 @@ def stint_pop(
 
 
 @mcp.tool()
-@inject_recovery_context
 def stint_check(
     project_path: str,
     ctx: Optional[Context] = None,
@@ -182,7 +177,6 @@ def stint_check(
 
 
 @mcp.tool()
-@inject_recovery_context
 def stint_replace(
     project_path: str,
     stack: list[dict],

@@ -41,9 +41,6 @@ vi.mock('./components/layout/AppShell', () => ({
 vi.mock('./pages/Dashboard', () => ({
   default: () => <div data-testid="dashboard-page">Dashboard</div>,
 }))
-vi.mock('./pages/MemoryBrowser', () => ({
-  MemoryBrowser: () => <div data-testid="memory-page">Memory</div>,
-}))
 vi.mock('./pages/SecurityLog', () => ({
   SecurityLog: () => <div data-testid="security-page">Security</div>,
 }))

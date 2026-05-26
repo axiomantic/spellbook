@@ -21,7 +21,6 @@ from spellbook.core.config import (
     session_mode_get,
     session_mode_set,
 )
-from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import get_project_path_from_context
 
 logger = logging.getLogger(__name__)
@@ -43,7 +42,6 @@ def _get_session_id(ctx: Optional[Context]) -> Optional[str]:
 
 
 @mcp.tool()
-@inject_recovery_context
 def spellbook_config_get(key: str):
     """
     Read a config value from spellbook configuration.
@@ -60,7 +58,6 @@ def spellbook_config_get(key: str):
 
 
 @mcp.tool()
-@inject_recovery_context
 async def spellbook_config_set(key: str, value: Any) -> dict:
     """
     Write a config value to spellbook configuration.
@@ -94,7 +91,6 @@ async def spellbook_config_set(key: str, value: Any) -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 async def spellbook_session_init(
     ctx: Context,
     session_name: Optional[str] = None,
@@ -134,7 +130,6 @@ async def spellbook_session_init(
 
 
 @mcp.tool()
-@inject_recovery_context
 def spellbook_session_mode_set(ctx: Context, mode: str, permanent: bool = False) -> dict:
     """
     Set session mode, optionally persisting to config.
@@ -150,7 +145,6 @@ def spellbook_session_mode_set(ctx: Context, mode: str, permanent: bool = False)
 
 
 @mcp.tool()
-@inject_recovery_context
 def spellbook_session_mode_get(ctx: Context) -> dict:
     """
     Get current session mode state.

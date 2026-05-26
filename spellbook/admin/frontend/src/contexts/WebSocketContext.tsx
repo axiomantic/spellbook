@@ -30,10 +30,6 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
 
       // Invalidate relevant query caches based on subsystem
       switch (event.subsystem) {
-        case 'memory':
-          queryClient.invalidateQueries({ queryKey: ['memories'] })
-          queryClient.invalidateQueries({ queryKey: ['dashboard'] })
-          break
         case 'config':
           queryClient.invalidateQueries({ queryKey: ['config'] })
           queryClient.invalidateQueries({ queryKey: ['dashboard'] })

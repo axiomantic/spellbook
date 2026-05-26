@@ -34,9 +34,7 @@ class _MockContext:
     """Minimal stand-in for FastMCP ``Context`` used by canvas MCP tools.
 
     The canvas tools never call methods on ``ctx`` directly; the parameter
-    exists for FastMCP's auto-schema generation and the
-    ``inject_recovery_context`` decorator path (which only reads
-    ``os.getcwd()``, not ``ctx``).
+    exists for FastMCP's auto-schema generation.
     """
 
     def __init__(self) -> None:

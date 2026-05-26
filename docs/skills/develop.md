@@ -468,10 +468,6 @@ Run these commands to verify. If ANY check fails, go back and complete the phase
 
 ### After Phase 1.5 (Informed Discovery):
 
-**Memory-Primed Discovery:** At the start of discovery, call `memory_recall(query="design decision [subsystem]")` and `memory_recall(query="convention [project]")` to surface prior architectural decisions, naming conventions, and resolved ambiguities. Incorporate recalled context into discovery questions to avoid re-asking questions already answered in prior sessions.
-
-Note: The `<spellbook-memory>` auto-injection only fires on file reads. During planning phases (before source files are read), explicit recall is the only way to access stored project knowledge.
-
 ```bash
 ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 # MUST contain: understanding-[feature]-*.md
@@ -481,11 +477,6 @@ ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 - [ ] Completeness score = 100% (12/12 validation functions)
 - [ ] Dehallucination gate subagent was dispatched (Phase 1.5.7)
 - [ ] Devil's advocate subagent was dispatched
-
-**Persist Discovered Conventions:** If research or discovery revealed project conventions not documented in AGENTS.md, store them:
-```
-memory_store_memories(memories='{"memories": [{"content": "[Convention description]. Discovered in [context].", "memory_type": "rule", "tags": ["convention", "[area]"], "citations": [{"file_path": "[relevant_file]"}]}]}')
-```
 
 ### Phase 1.5.7: Dehallucination Gate
 
@@ -513,11 +504,6 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 - [ ] Design review subagent (reviewing-design-docs) was dispatched
 - [ ] All critical/important findings fixed (if any)
 - [ ] Assumption verification completed (Phase 2.5)
-
-**Persist Design Decisions:** After design is approved, store key architectural decisions for future sessions:
-```
-memory_store_memories(memories='{"memories": [{"content": "Design decision for [feature]: [chosen approach]. Rationale: [why]. Alternatives considered: [list].", "memory_type": "decision", "tags": ["design", "[subsystem]", "[feature_slug]"], "citations": [{"file_path": "[design_doc_path]"}]}]}')
-```
 
 ### Phase 2.5: Assumption Verification
 
@@ -842,10 +828,6 @@ echo "================================="
 
 If zero boxes are checked, the phase MUST be executed. There are no other valid reasons.
 
-### Memory-Informed Flagging
-
-Before settling the need-flags, call `memory_recall(query="need flags [domain_or_subsystem]")` to check whether similar features in this area previously needed research, design, or infrastructure work. Use prior flagging as a calibration reference, not as a binding precedent.
-
 ### Scope-Drift Protocol: Re-Flag and Continue
 
 If during execution the work reveals a need not captured by the Phase-0 flags (e.g. discovery surfaces an architectural decision, or a dependency/schema change emerges):
@@ -1022,13 +1004,13 @@ keeps the orchestrator's context lean without dropping any gate.
 |---|---|---|
 | < 8 | direct / delegated | one dispatch per gate per task |
 | 8–12 | delegated | batched per-domain dispatches (still one gate per task, grouped) |
-| > 12 OR ≥ 2 tracks | delegated (batched, aggressive) | batched per-domain dispatches; if the orchestrator's context cannot hold the whole run, checkpoint the `develop_gate_ledger` and write remaining tasks as Follow-up Tasks for a fresh session (design §14) |
+| > 12 OR ≥ 2 tracks | delegated (batched, aggressive) | batched per-domain dispatches; if the orchestrator's context cannot hold the whole run, checkpoint the `develop_gate_ledger` and hand off remaining work to a fresh session |
 
 **Do NOT collapse per-task gates into one batched gate.** That is not
 batching — that is gate elision (Pattern 8). Batching groups dispatches by
 domain while still running every gate for every task; elision runs fewer
 gates. When one session cannot hold a very large run, hand off via the
-ledger + Follow-up Tasks — never by skipping gates.
+ledger — never by skipping gates.
 
 **Subagent Prompt Length Verification:**
 Before dispatching ANY subagent:
@@ -1083,7 +1065,6 @@ Phase 0: Configuration Wizard
   ├─ 0.5: Continuation detection
   ├─ 0.6: Detect refactoring mode
   └─ 0.7: Need-flag wizard (Q-RESEARCH / Q-DESIGN / Q-INFRA / Q-SIZE -> need_flags + size_estimate)
-        └─ Memory-informed flagging (recall prior need-flags for this area)
     ↓
     ├─[zero flags]──> Direct/Lightweight Path (see below) — develop STAYS RESIDENT, lighter floor
     └─[any flag]───> run the flag-gated phases below (per design §2.1) under the full review floor
@@ -1095,7 +1076,6 @@ Phase 1: Research (if needs_research)
   └─ 1.4: GATE: Research Quality Score = 100%
     ↓
 Phase 1.5: Informed Discovery (if needs_research)
-  ├─ Memory-primed discovery (recall prior design decisions + conventions)
   ├─ 1.5.0: Disambiguation session (resolve ambiguities)
   ├─ 1.5.1: Generate 7-category discovery questions
   ├─ 1.5.2: Conduct discovery wizard (AskUserQuestion + ARH)
@@ -1134,16 +1114,16 @@ Phase 4: Implementation (direct or delegated)
   ├─ 4.6.3: Subagent invokes audit-green-mirage
   ├─ 4.6.4: Comprehensive fact-checking (if needs_research OR needs_design)
   ├─ 4.6.5: Pre-PR fact-checking
-  └─ 4.7: Subagent invokes finishing-a-development-branch (surfaces deferred Follow-up Tasks)
+  └─ 4.7: Subagent invokes finishing-a-development-branch
 
 Direct/Lightweight Path (zero flags — develop STAYS RESIDENT, never exits):
   ├─ D1: Lightweight Research (explore subagent, <=5 files, 1-paragraph summary)
   ├─ D2: Inline Plan (<=5 numbered steps in conversation, user confirms)
   └─ D3: Implementation under the LIGHTER review floor (design §3.2):
           code review + green-mirage ALWAYS run; test run only if tests cover the
-          touched code; TDD-first waived for pure literal/config edits (§3.4,
-          Follow-up Task FUT-TDD-CRITERIA); fact-checking has no artifact to act on
-          so it does not run. NEVER zero review.
+          touched code; TDD-first waived for pure literal/config edits (§3.4);
+          fact-checking has no artifact to act on so it does not run. NEVER zero
+          review.
 ```
 
 ---
@@ -1315,12 +1295,11 @@ TRUTH and are referenced here, not restated row-by-row.
 The fast path is lightweight in execution (fewer, faster gates) but **never zero
 review**; develop stays resident to enforce it (§2.5).
 
-**TDD-first waiver boundary (Follow-up Task FUT-TDD-CRITERIA):** the precise,
-mechanically-checkable boundary between "pure literal/config edit (TDD waivable)"
-and "carries behavioral logic (TDD required)" is a tracked, durable Follow-up Task
-(design §3.4 / §15), persisted via `memory_store` at ship time. Until it is
-resolved, the operating default is conservative: **if in doubt, do not waive
-TDD-first — write the test.**
+**TDD-first waiver boundary:** the precise, mechanically-checkable boundary
+between "pure literal/config edit (TDD waivable)" and "carries behavioral logic
+(TDD required)" is intentionally left as operator judgment (design §3.4). The
+operating default is conservative: **if in doubt, do not waive TDD-first —
+write the test.**
 
 ---
 
@@ -1374,7 +1353,7 @@ references it, it does not restate the rows.
 - `needs_design` (implied by `needs_infrastructure`) → Design (Phase 2).
 - `needs_infrastructure` → Design + heavier Phase-3 planning emphasis (call out migration/rollout/dependency-pinning).
 
-**Execution mode (single-orchestrator only):** `execution_mode` is `direct` or `delegated` ONLY — chosen in Phase 3.4.5 from the parallelization preference and `size_estimate`. There is no nested sub-orchestration or separate-session decomposition: one orchestrator carries the whole feature. For features too large for one session, checkpoint the `develop_gate_ledger` and write the remaining work as Follow-up Tasks for a fresh session to resume (see design §14, and the Follow-up Tasks mechanics below). The forge subsystem (`forge_*` tools) is a separate concern develop does NOT auto-invoke.
+**Execution mode (single-orchestrator only):** `execution_mode` is `direct` or `delegated` ONLY — chosen in Phase 3.4.5 from the parallelization preference and `size_estimate`. There is no nested sub-orchestration or separate-session decomposition: one orchestrator carries the whole feature. For features too large for one session, checkpoint the `develop_gate_ledger` and hand off the remaining work to a fresh session. The forge subsystem (`forge_*` tools) is a separate concern develop does NOT auto-invoke.
 
 ### Fast-Path Guardrails
 
@@ -1572,14 +1551,15 @@ C7).
 2. **Annotate each option** against the philosophy as exactly one of:
    - **`[ALIGNED]`** — this IS the most-correct / least-deferred / ergonomic /
      understandable path; or
-   - **`[DEVIATES → Follow-up]`** — a simpler unblock that does NOT fully satisfy
-     the philosophy. For any `[DEVIATES]` option that might be chosen, the deferred
-     work is captured as a concrete Follow-up Task (see below) **before** proceeding.
+   - **`[DEVIATES]`** — a simpler unblock that does NOT fully satisfy the
+     philosophy. For any `[DEVIATES]` option that might be chosen, the
+     deferred work must be called out explicitly (what is being left undone,
+     and why) before proceeding.
 3. **Present** via AskUserQuestion with the annotations visible, recommending the
    `[ALIGNED]` option.
 4. **Autonomous mode:** generate + annotate the same way, then pick the `[ALIGNED]`
    option. If forced to a `[DEVIATES]` option (an aligned option is genuinely
-   infeasible right now), write the Follow-up Task FIRST, then proceed. The
+   infeasible right now), state the gap explicitly first, then proceed. The
    philosophy drives the autonomous pick, not just the presentation.
 
 ### Single-Viable-Option Exemption (anti-self-granting guard, N-5)
@@ -1597,38 +1577,13 @@ exemption is self-invoked, it is not free to claim:
 This keeps the exemption from becoming a blanket escape from the option ritual
 (design §8.3).
 
-## Follow-up Tasks (durable deferrals)
+## Deferred Work
 
-Every deferral is a **concrete, tracked Follow-up Task** — never a hand-wave
-(Core Philosophy: least-deferred; design §7, C6).
-
-- **Persistence (source of truth):** each deferred blocker writes ONE `memory_store`
-  entry: type `project`, kind `decision`, tags `follow-up-task, develop-deferred`.
-  Memory is per-project and survives branch deletion (a deleted branch takes its
-  impl-plan `.md` with it, so the plan cannot be the source of truth). Body template
-  (design §7.2):
-
-  ```markdown
-  ## Follow-up: <short title>
-  **Deferred from:** <feature/branch name>, blocker at <phase/decision point>
-  **Why deferred:** <the simpler-unblock chosen instead of the philosophy-aligned path>
-  **The philosophy-aligned work:** <what "most correct" would have done>
-  **Actionable next step:** <what a fresh session should do to pick this up>
-  ```
-
-- **In-flight visibility:** develop ALSO appends the same content to the plan's
-  Follow-up Tasks section (working copy; memory remains the source of truth).
-- **Post-PR surfacing:** at Phase 4.7 (finishing-a-development-branch), after the PR
-  URL is reported, query `memory_recall(tags="follow-up-task")` for the project and,
-  if any are open, offer to (a) work them now, (b) emit a standalone prompt to paste
-  into a fresh session, or (c) leave them for later (design §7.3).
-- **Session-start surfacing:** `session_init` reports the open Follow-up-Tasks count
-  so deferrals do not rot between sessions (design §7.4; already wired in
-  `core/config.py`).
-
-The ONE deferral this rework itself introduces is **FUT-TDD-CRITERIA** (the precise
-fast-path TDD-first waiver boundary, design §3.4 / §15), persisted via the same
-`memory_store` path at ship time.
+Every deferral must be called out explicitly — never a hand-wave (Core
+Philosophy: least-deferred). State, at the point of deferral, exactly what is
+being left undone and what a fresh session would do to pick it up. There is no
+durable Follow-up-Tasks store; deferrals live in the impl-plan and in commit/PR
+messages, and any work that cannot be left to those should not be deferred.
 
 ---
 

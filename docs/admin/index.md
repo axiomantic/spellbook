@@ -37,7 +37,6 @@ WebSocket connection status is shown in the header.
 | Page | Description |
 |------|-------------|
 | [Dashboard](dashboard.md) | Server status, focus summary, live event bus, and recent activity |
-| [Memory](memory.md) | Search and browse stored memories with expandable detail rows |
 | [Security](security.md) | Security event log with severity and event type filtering |
 | [Sessions](sessions.md) | Claude Code and OpenCode session viewer with project filtering |
 | [Analytics](analytics.md) | Tool call frequency, error rates, and event volume timeline |

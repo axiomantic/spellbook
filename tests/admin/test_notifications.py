@@ -15,19 +15,6 @@ class TestClassifyEventScope:
         event = Event(subsystem=Subsystem.CONFIG, event_type="updated", data={})
         assert classify_event_scope(event) == NotificationScope.BROADCAST
 
-    def test_memory_with_namespace_is_namespace_scoped(self):
-        event = Event(
-            subsystem=Subsystem.MEMORY,
-            event_type="created",
-            data={},
-            namespace="my-project",
-        )
-        assert classify_event_scope(event) == NotificationScope.NAMESPACE
-
-    def test_memory_without_namespace_is_admin_only(self):
-        event = Event(subsystem=Subsystem.MEMORY, event_type="created", data={})
-        assert classify_event_scope(event) == NotificationScope.ADMIN_ONLY
-
     def test_session_with_session_id_is_session_scoped(self):
         event = Event(
             subsystem=Subsystem.SESSION,
@@ -78,25 +65,6 @@ class TestNotificationQueue:
         # Second drain gets nothing
         second = await q.drain("ns")
         assert len(second) == 0
-
-    @pytest.mark.asyncio
-    async def test_namespace_scoped_only_matches(self):
-        q = NotificationQueue()
-        event = Event(
-            subsystem=Subsystem.MEMORY,
-            event_type="created",
-            data={},
-            namespace="project-a",
-        )
-        await q.enqueue(event)
-
-        # Wrong namespace gets nothing
-        wrong_ns = await q.drain("project-b")
-        assert len(wrong_ns) == 0
-
-        # Right namespace gets it
-        right_ns = await q.drain("project-a")
-        assert len(right_ns) == 1
 
     @pytest.mark.asyncio
     async def test_session_scoped_only_matches(self):
@@ -155,40 +123,32 @@ class TestNotificationQueue:
         assert notifications[2].event_type == "event-4"
 
     @pytest.mark.asyncio
-    async def test_drain_combines_broadcast_and_namespace(self):
+    async def test_drain_combines_broadcast_and_session(self):
         q = NotificationQueue()
 
         # Broadcast event
         await q.enqueue(
             Event(subsystem=Subsystem.CONFIG, event_type="config_change", data={})
         )
-        # Namespace-scoped event
+        # Session-scoped event
         await q.enqueue(
             Event(
-                subsystem=Subsystem.MEMORY,
-                event_type="memory_created",
+                subsystem=Subsystem.SESSION,
+                event_type="state_updated",
                 data={},
-                namespace="my-proj",
+                session_id="s-1",
             )
         )
 
-        notifications = await q.drain("my-proj")
+        notifications = await q.drain("my-proj", session_id="s-1")
         assert len(notifications) == 2
 
     @pytest.mark.asyncio
-    async def test_drain_combines_all_scopes(self):
+    async def test_drain_combines_broadcast_and_session_scopes(self):
         q = NotificationQueue()
 
         await q.enqueue(
             Event(subsystem=Subsystem.CONFIG, event_type="broadcast_event", data={})
-        )
-        await q.enqueue(
-            Event(
-                subsystem=Subsystem.MEMORY,
-                event_type="ns_event",
-                data={},
-                namespace="proj",
-            )
         )
         await q.enqueue(
             Event(
@@ -200,7 +160,7 @@ class TestNotificationQueue:
         )
 
         notifications = await q.drain("proj", session_id="s-1")
-        assert len(notifications) == 3
+        assert len(notifications) == 2
 
     @pytest.mark.asyncio
     async def test_empty_drain_returns_empty_list(self):

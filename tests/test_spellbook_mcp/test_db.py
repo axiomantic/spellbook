@@ -12,9 +12,10 @@ def test_init_db_creates_schema(tmp_path):
     conn = get_connection(str(db_path))
     cursor = conn.cursor()
 
-    # Check souls table exists
+    # The souls table was removed in 0.68.0; init_db must NOT recreate it
+    # (and drops it on upgrade). Guard against accidental reintroduction.
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='souls'")
-    assert cursor.fetchone() is not None
+    assert cursor.fetchone() is None
 
     # Check subagents table exists
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='subagents'")

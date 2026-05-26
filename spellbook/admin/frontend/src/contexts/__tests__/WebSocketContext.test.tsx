@@ -160,7 +160,7 @@ describe('WebSocketProvider — canvas dispatch (B.3)', () => {
     })
   })
 
-  it('non-canvas frame (subsystem=memory) does NOT invalidate any [canvas] key', async () => {
+  it('non-canvas frame (unhandled subsystem) does NOT invalidate any [canvas] key', async () => {
     const client = makeClient()
     const invalidateSpy = vi.spyOn(client, 'invalidateQueries')
 
@@ -169,19 +169,16 @@ describe('WebSocketProvider — canvas dispatch (B.3)', () => {
 
     const frame: WSEvent = {
       type: 'event',
-      subsystem: 'memory',
+      subsystem: 'unhandled',
       event: 'updated',
       data: { canvas: 'should-be-ignored' },
       timestamp: '2026-05-14T10:00:00Z',
     }
     await deliverFrame(ws, frame)
 
-    // memory arm: invalidate ['memories'] and ['dashboard']. NO ['canvas'].
-    expect(invalidateSpy).toHaveBeenCalledTimes(2)
+    // default arm: invalidate only ['dashboard']. NO ['canvas'].
+    expect(invalidateSpy).toHaveBeenCalledTimes(1)
     expect(invalidateSpy).toHaveBeenNthCalledWith(1, {
-      queryKey: ['memories'],
-    })
-    expect(invalidateSpy).toHaveBeenNthCalledWith(2, {
       queryKey: ['dashboard'],
     })
 

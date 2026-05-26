@@ -7,7 +7,7 @@ Spellbook now supports single-orchestrator dispatch only (direct / delegated).
 Nested subagent dispatch proved unreliable because dispatched subagents do not
 reliably have the Task tool, so a "Manager" sub-orchestrator could not dispatch
 its own gate sub-subagents. Use develop's single-orchestrator delegated mode
-instead; for very large efforts, checkpoint via the Follow-up Tasks list and
+instead; for very large efforts, checkpoint the `develop_gate_ledger` and
 hand off to a fresh session. The original body is preserved in ARCHIVE.md.
 ## Skill Content
 
@@ -28,9 +28,9 @@ lost. The single-orchestrator model is the only reliable dispatch topology.
 **Migration:**
 - Use `develop`'s single-orchestrator **delegated** execution mode: one
   orchestrator dispatches gate subagents directly.
-- For very large features, do NOT nest orchestrators. Instead, checkpoint
-  progress in the **Follow-up Tasks** list and hand off to a fresh `develop`
-  session when the orchestrator's context approaches its limit.
+- For very large features, do NOT nest orchestrators. Instead, checkpoint the
+  `develop_gate_ledger` and hand off to a fresh `develop` session when the
+  orchestrator's context approaches its limit.
 - End-of-phase quality gates (comprehensive audit, full test suite, green-mirage
   audit, comprehensive fact-check, pre-PR claim validation) still run at the
   single orchestrator level.
@@ -46,5 +46,5 @@ Template, gotchas) is preserved verbatim in
    execution modes. Use `develop`'s single-orchestrator delegated mode instead.
 
 <analysis>This skill is deprecated. Nested sub-orchestrator dispatch is unsupported because dispatched subagents lack a reliable Task tool. The original body lives in ARCHIVE.md.</analysis>
-<reflection>If invoked, redirect the user to develop's single-orchestrator delegated mode, and point to the Follow-up Tasks list for checkpointing very large efforts.</reflection>
+<reflection>If invoked, redirect the user to develop's single-orchestrator delegated mode, and point to the `develop_gate_ledger` checkpoint mechanism for very large efforts.</reflection>
 ``````````

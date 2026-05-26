@@ -397,81 +397,6 @@ class TestSecretMasking:
         assert calls == [("security.sleuth.api_key", "sk-live-xyz")]
 
 
-class TestTranscriptHarvestModeValidator:
-    """worker_llm_transcript_harvest_mode accepts only replace|merge|skip."""
-
-    def test_accepts_replace(self, client, monkeypatch):
-        monkeypatch.setattr(
-            "spellbook.admin.routes.config.set_config_value",
-            lambda key, value: {"status": "ok", "config": {key: value}},
-        )
-        response = client.put(
-            "/api/config/worker_llm_transcript_harvest_mode",
-            json={"value": "replace"},
-        )
-        assert response.status_code == 200
-
-    def test_accepts_merge(self, client, monkeypatch):
-        monkeypatch.setattr(
-            "spellbook.admin.routes.config.set_config_value",
-            lambda key, value: {"status": "ok", "config": {key: value}},
-        )
-        response = client.put(
-            "/api/config/worker_llm_transcript_harvest_mode",
-            json={"value": "merge"},
-        )
-        assert response.status_code == 200
-
-    def test_accepts_skip(self, client, monkeypatch):
-        monkeypatch.setattr(
-            "spellbook.admin.routes.config.set_config_value",
-            lambda key, value: {"status": "ok", "config": {key: value}},
-        )
-        response = client.put(
-            "/api/config/worker_llm_transcript_harvest_mode",
-            json={"value": "skip"},
-        )
-        assert response.status_code == 200
-
-    def test_rejects_typo(self, client):
-        response = client.put(
-            "/api/config/worker_llm_transcript_harvest_mode",
-            json={"value": "replce"},
-        )
-        assert response.status_code == 400
-        data = response.json()
-        assert data["error"]["code"] == "CONFIG_VALUE_INVALID"
-        assert "worker_llm_transcript_harvest_mode" in data["error"]["message"]
-
-    def test_rejects_non_string(self, client):
-        response = client.put(
-            "/api/config/worker_llm_transcript_harvest_mode",
-            json={"value": 123},
-        )
-        assert response.status_code == 400
-        data = response.json()
-        assert data["error"]["code"] == "CONFIG_VALUE_INVALID"
-
-    def test_batch_rejects_typo(self, client, monkeypatch):
-        # Even mixed with a valid key, a bad transcript_harvest_mode must
-        # reject the whole batch.
-        monkeypatch.setattr(
-            "spellbook.admin.routes.config.batch_set_config",
-            lambda updates: {"status": "ok", "config": {}},
-        )
-        response = client.put(
-            "/api/config",
-            json={
-                "updates": {
-                    "notify_enabled": False,
-                    "worker_llm_transcript_harvest_mode": "replce",
-                }
-            },
-        )
-        assert response.status_code == 400
-        assert response.json()["error"]["code"] == "CONFIG_VALUE_INVALID"
-
-
 class TestSecretRoundTripSafe:
     """Secret keys must not be overwritten when the client echoes the mask.
 
@@ -600,7 +525,7 @@ class TestSecretRoundTripSafe:
 class TestNumericConfigValidation:
     """Numeric config keys reject out-of-range or wrong-type values.
 
-    Follow-up to the transcript_harvest_mode / session_mode enum validators:
+    Follow-up to the session_mode enum validator:
     range-check the numeric knobs that drive observability, retention, and
     timeout behavior. An operator typing ``notify_threshold=1.5`` or
     ``retention_hours=0`` would otherwise silently disable or corrupt the

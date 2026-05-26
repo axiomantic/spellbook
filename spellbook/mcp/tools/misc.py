@@ -15,7 +15,6 @@ from datetime import datetime, timezone
 
 from spellbook.core.db import get_connection
 from spellbook.mcp.server import mcp
-from spellbook.sessions.injection import inject_recovery_context
 from spellbook.sessions.resume import validate_workflow_state
 
 
@@ -39,7 +38,6 @@ def _deep_merge(base: dict, updates: dict) -> dict:
 
 
 @mcp.tool()
-@inject_recovery_context
 def workflow_state_save(
     project_path: str,
     state: dict,
@@ -109,7 +107,6 @@ def workflow_state_save(
 
 
 @mcp.tool()
-@inject_recovery_context
 def workflow_state_load(
     project_path: str,
     max_age_hours: float = 24.0,
@@ -221,7 +218,6 @@ def workflow_state_load(
 
 
 @mcp.tool()
-@inject_recovery_context
 def workflow_state_update(
     project_path: str,
     updates: dict,

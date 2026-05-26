@@ -333,9 +333,9 @@ class TestDatabaseCheck:
         assert result.status == HealthStatus.UNHEALTHY
         assert "missing" in result.message.lower()
         assert "missing_tables" in result.details
-        # All three critical tables should be missing
-        for table in ["souls", "heartbeat", "workflow_state"]:
-            assert table in result.details["missing_tables"]
+        # Both critical tables should be missing (souls dropped in 0.68.0;
+        # critical set is now heartbeat + workflow_state).
+        assert sorted(result.details["missing_tables"]) == ["heartbeat", "workflow_state"]
 
     def test_database_wal_mode_detection(self, tmp_path):
         """Database check detects WAL mode."""

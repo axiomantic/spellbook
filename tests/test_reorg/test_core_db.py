@@ -80,7 +80,12 @@ class TestCoreDbFunctionality:
                     "SELECT name FROM sqlite_master WHERE type='table'"
                 ).fetchall()
             }
-            assert "souls" in tables
-            assert "memories" in tables
+            # Surviving tables must be created.
+            assert "subagents" in tables
+            assert "skill_outcomes" in tables
+            # souls and memories were removed in 0.68.0; init_db must not
+            # recreate them (and drops them on upgrade).
+            assert "souls" not in tables
+            assert "memories" not in tables
         finally:
             close_all_connections()

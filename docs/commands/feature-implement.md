@@ -482,7 +482,7 @@ else:
 
 **Routing:** Both `direct` and `delegated` proceed to Phase 4 (the existing flow).
 There is no fan-out into separate sessions; a single orchestrator carries the whole
-plan. For efforts too large for one session, checkpoint via the Follow-up Tasks list
+plan. For efforts too large for one session, checkpoint the `develop_gate_ledger`
 and hand off to a fresh session (see `finishing-a-development-branch`).
 </analysis>
 

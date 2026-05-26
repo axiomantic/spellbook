@@ -60,7 +60,7 @@ MAX_BYTES = 49152  # Buffer of 2KB (48KB)
 # the byte limit and crystallize's 80% preservation floor cannot reach it without
 # dropping protected rules. Operator-approved exemption (2026-05-24).
 # DEFERRED: split reference material into a sibling file so this exemption
-# can be removed (tracked Follow-up Task).
+# can be removed.
 SIZE_LIMIT_EXEMPT = {
     "commands/crystallize.md",
     "skills/develop/SKILL.md",

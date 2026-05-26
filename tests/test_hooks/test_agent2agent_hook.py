@@ -32,7 +32,7 @@ from pathlib import Path
 
 import pytest
 import tripwire
-from dirty_equals import IsInstance, IsStr
+from dirty_equals import IsInstance
 
 # Ensure hooks/ is on sys.path so we can import spellbook_hook directly.
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
@@ -719,14 +719,10 @@ class TestUserPromptSubmitOrphanWiring:
             tmp_path, "sess-ups-orphan", name="alice",
             agent_id="agent-x", output_file=missing_transcript,
         )
-        # Stub out memory + notify + autostore so they don't contribute
-        # extra lines to outputs.
-        m_recall = tripwire.mock("spellbook_hook:_memory_recall_for_prompt")
-        m_recall.returns(None)
+        # Stub out the agent2agent notify call so it does not contribute
+        # extra lines to outputs; only the orphan hint should remain.
         m_notify = tripwire.mock("spellbook_hook:_agent2agent_notify_for_prompt")
         m_notify.returns(None)
-        m_autostore = tripwire.mock("spellbook_hook:_memory_autostore_for_prompt")
-        m_autostore.returns(None)
 
         with tripwire:
             outputs = spellbook_hook._handle_user_prompt_submit({
@@ -734,9 +730,7 @@ class TestUserPromptSubmitOrphanWiring:
                 "prompt": "hello",
                 "cwd": str(tmp_path),
             })
-        m_recall.assert_call(args=(IsStr(), IsStr()), kwargs={})
         m_notify.assert_call(args=(IsInstance(dict),), kwargs={})
-        m_autostore.assert_call(args=(IsStr(), IsStr()), kwargs={})
         expected_hint = (
             "[agent2agent] watch chain dropped (likely session compaction or "
             "process death). Run `/a2a open alice` to re-arm the inbox watcher."
@@ -746,12 +740,8 @@ class TestUserPromptSubmitOrphanWiring:
     def test_no_orphan_no_hint_in_outputs(self, tmp_path, monkeypatch):
         """No `.open/<sid>` -> no orphan line in outputs."""
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
-        m_recall = tripwire.mock("spellbook_hook:_memory_recall_for_prompt")
-        m_recall.returns(None)
         m_notify = tripwire.mock("spellbook_hook:_agent2agent_notify_for_prompt")
         m_notify.returns(None)
-        m_autostore = tripwire.mock("spellbook_hook:_memory_autostore_for_prompt")
-        m_autostore.returns(None)
 
         with tripwire:
             outputs = spellbook_hook._handle_user_prompt_submit({
@@ -759,7 +749,5 @@ class TestUserPromptSubmitOrphanWiring:
                 "prompt": "hello",
                 "cwd": str(tmp_path),
             })
-        m_recall.assert_call(args=(IsStr(), IsStr()), kwargs={})
         m_notify.assert_call(args=(IsInstance(dict),), kwargs={})
-        m_autostore.assert_call(args=(IsStr(), IsStr()), kwargs={})
         assert outputs == []

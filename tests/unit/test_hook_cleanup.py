@@ -12,12 +12,12 @@ class TestOldHooksRemoved:
     OLD_HOOKS = [
         "bash-gate.sh", "spawn-guard.sh", "state-sanitize.sh",
         "tts-timer-start.sh", "audit-log.sh", "canary-check.sh",
-        "memory-inject.sh", "notify-on-complete.sh", "tts-notify.sh",
-        "memory-capture.sh", "pre-compact-save.sh", "post-compact-recover.sh",
+        "notify-on-complete.sh", "tts-notify.sh",
+        "pre-compact-save.sh", "post-compact-recover.sh",
         "bash-gate.ps1", "spawn-guard.ps1", "state-sanitize.ps1",
         "tts-timer-start.ps1", "audit-log.ps1", "canary-check.ps1",
-        "memory-inject.ps1", "notify-on-complete.ps1", "tts-notify.ps1",
-        "memory-capture.ps1", "pre-compact-save.ps1", "post-compact-recover.ps1",
+        "notify-on-complete.ps1", "tts-notify.ps1",
+        "pre-compact-save.ps1", "post-compact-recover.ps1",
     ]
 
     def test_no_old_hooks_exist(self):

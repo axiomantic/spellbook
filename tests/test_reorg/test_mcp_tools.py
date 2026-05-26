@@ -12,7 +12,6 @@ TOOL_MODULES = [
     "spellbook.mcp.tools.sessions",
     "spellbook.mcp.tools.config",
     "spellbook.mcp.tools.health",
-    "spellbook.mcp.tools.memory",
     "spellbook.mcp.tools.security",
     "spellbook.mcp.tools.pr",
     "spellbook.mcp.tools.forged",

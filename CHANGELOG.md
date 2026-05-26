@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.69.0] - 2026-05-25
+
+### Removed
+
+- **Memory system (complete removal, no deprecation window).** Deleted the entire
+  memory subsystem: the `memory_*` MCP tools (`memory_store`, `memory_recall`,
+  `memory_forget`, `memory_sync`, `memory_verify`, `memory_review_events`), the
+  admin memory routes and `MemoryBrowser` UI, the memory CLI commands, the
+  memory-related worker tasks (rerank/transcript-harvest), the memory hook
+  integrations and `<memory-candidate>` harvesting, and the installer's optional
+  QMD and Serena tooling for memory hybrid search. **DESTRUCTIVE:** the memory
+  database tables are dropped automatically on the next `init_db` (irreversible —
+  any stored memories are lost on upgrade with no migration path).
+- **Dead session-soul / recovery-injection chain.** Removed the unwired
+  session-soul persistence and recovery-injection code. The `souls` table is
+  dropped automatically on next `init_db` (irreversible). `detect_continuation_intent`
+  is retained but no longer wired into anything; session resume now always reports
+  `resume_available: False`.
+- **Follow-up Tasks subsystem (bundled with memory removal).** The Follow-up
+  Tasks feature introduced in 0.68.0 stored deferred work via `memory_store`
+  and surfaced an open-count in `session_init` via `memory_recall`. With the
+  memory backend gone, the feature has no storage and is removed in full:
+  `_get_open_followup_count` and the `follow_up_tasks_open` session-init key,
+  all skill/command Follow-up Task wording, schema validation entries, and
+  the `tests/test_session_init_followups.py` suite.
+
 ## [0.68.0] - 2026-05-25
 
 ### Added
@@ -15,7 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **develop gate ledger.** develop records its progress (current phase, remaining quality gates, plan pointer) into `workflow_state` at each phase/gate transition via a new `develop_gate_ledger` key, so PreCompact/SessionStart recovery captures real progress.
 - **Accountability nudge.** A nudge fires when develop is the active skill past Phase 0 but no develop gate ledger has been recorded, surfacing stalled or unrecorded progress.
 - **Recovery directive remaining-gates rendering.** The SessionStart recovery directive now re-asserts the remaining quality gates after a compaction so a resumed session cannot declare completion with gates unrun.
-- **Follow-up Tasks subsystem.** Blocker options are annotated by alignment with the development philosophy; deferred work is captured as concrete Follow-up Tasks persisted via `memory_store`, surfaced post-PR, with an open-count shown in `session_init`.
 - **Grep gate** under `tests/` guarding against reintroduction of the removed execution-mode and tier vocabulary across `skills/`, `commands/`, and `agents/`.
 - **Per-file schema-size exemptions** for `commands/crystallize.md` (the shrink tool that cannot crystallize itself) and the governance-dense central orchestrator `skills/develop/SKILL.md`.
 
@@ -24,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **develop classifies by need-flags, not file-count tiers.** Rigor is now driven by what the work actually requires (`needs_research` / `needs_design` / `needs_infrastructure` + `size_estimate`) rather than how many files it touches. All tier names (TRIVIAL/SIMPLE/STANDARD/COMPLEX) are gone.
 - **Zero-flag fast path.** A change with no need-flags takes a fast path where develop stays resident (it never exits) under a lighter-but-non-zero review floor, so trivial work still passes a baseline review.
 - **Single-orchestrator execution only.** develop now uses delegated or direct single-orchestrator execution exclusively.
+- `commands/pr-dance.md`: redefined the CI status check and bot review as two independent, concurrent gates rather than a CI-then-bot sequence. Step 3 now uses a single-shot, non-blocking `gh pr checks --json` poll the agent drives itself (interleaving with the Step 4 bot gate each round); `--watch` is demoted to a fallback for when the bot gate is already clean, since it blocks until CI is terminal. Raised the poll-interval floor to 60s and added a FORBIDDEN entry against blocking the bot gate in `--watch`.
 
 ### Fixed
 
@@ -38,12 +64,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`work_items` and `sub_orchestrators` execution modes** in develop. develop is single-orchestrator (delegated/direct) only. The forge work-packet subsystem (`spellbook/forged/`) is unaffected and preserved; only develop's routing into `work_items` was severed.
 - **`dispatching-sub-orchestrators` skill** reduced to a deprecation stub; its cross-references in `dispatching-parallel-agents` were removed.
 - **Dead `next_action` directive block** in `_build_recovery_directive` (the key was never allowlisted or written).
-
-## [0.68.0] - 2026-05-25
-
-### Changed
-
-- `commands/pr-dance.md`: redefined the CI status check and bot review as two independent, concurrent gates rather than a CI-then-bot sequence. Step 3 now uses a single-shot, non-blocking `gh pr checks --json` poll the agent drives itself (interleaving with the Step 4 bot gate each round); `--watch` is demoted to a fallback for when the bot gate is already clean, since it blocks until CI is terminal. Raised the poll-interval floor to 60s and added a FORBIDDEN entry against blocking the bot gate in `--watch`.
 
 ## [0.67.0] - 2026-05-20
 

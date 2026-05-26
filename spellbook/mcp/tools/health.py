@@ -15,7 +15,6 @@ from spellbook.mcp import state as _state
 from spellbook.core.config import get_spellbook_dir
 from spellbook.core.db import get_db_path
 from spellbook.health.checker import run_health_check
-from spellbook.sessions.injection import inject_recovery_context
 from spellbook.core.path_utils import get_spellbook_config_dir
 
 # Use shared state from spellbook.mcp.state for health check tracking
@@ -70,7 +69,6 @@ def get_tool_names() -> List[str]:
 
 
 @mcp.tool()
-@inject_recovery_context
 def spellbook_health_check(full: bool = False) -> dict:
     """
     Check the health of the spellbook MCP server.
