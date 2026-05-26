@@ -1218,12 +1218,12 @@ def test_build_corpus_index_maps_names_to_paths(dedupe):
     corpus_files = dedupe.resolve_corpus(str(root))
     index = dedupe.build_corpus_index(corpus_files)
     expected = {
-        "seed": str((root / "skills" / "seed" / "SKILL.md").resolve()),
-        "orchestrator": str(
-            (root / "skills" / "orchestrator" / "SKILL.md").resolve()
+        "seed": (root / "skills" / "seed" / "SKILL.md").resolve().as_posix(),
+        "orchestrator": (
+            (root / "skills" / "orchestrator" / "SKILL.md").resolve().as_posix()
         ),
-        "helper": str((root / "skills" / "helper" / "SKILL.md").resolve()),
-        "analyzer": str((root / "skills" / "analyzer" / "SKILL.md").resolve()),
+        "helper": (root / "skills" / "helper" / "SKILL.md").resolve().as_posix(),
+        "analyzer": (root / "skills" / "analyzer" / "SKILL.md").resolve().as_posix(),
     }
     assert index == expected
 
@@ -1238,8 +1238,8 @@ def test_build_corpus_index_command_and_stem_names(dedupe, tmp_path):
     corpus_files = dedupe.resolve_corpus(str(tmp_path))
     index = dedupe.build_corpus_index(corpus_files)
     assert index == {
-        "do-thing": str(cmd.resolve()),
-        "loose_ref": str(flat.resolve()),
+        "do-thing": cmd.resolve().as_posix(),
+        "loose_ref": flat.resolve().as_posix(),
     }
 
 
@@ -1252,7 +1252,7 @@ def test_resolve_seed_entry_dot_md_is_path(dedupe):
     path, name = dedupe.resolve_seed_entry(
         "file_a.md", corpus_files=corpus_files, corpus_index=index
     )
-    assert path == str((root / "file_a.md").resolve())
+    assert path == (root / "file_a.md").resolve().as_posix()
     assert name is None
 
 
@@ -1262,7 +1262,7 @@ def test_resolve_seed_entry_existing_file_is_path(dedupe):
     root = FIXTURE_DIR
     corpus_files = dedupe.resolve_corpus(str(root))
     index = dedupe.build_corpus_index(corpus_files)
-    full = str((root / "file_a.md").resolve())
+    full = (root / "file_a.md").resolve().as_posix()
     path, name = dedupe.resolve_seed_entry(
         full, corpus_files=corpus_files, corpus_index=index
     )
@@ -1351,8 +1351,8 @@ def test_expand_group_emits_full_schema(dedupe):
     }
     assert data["version"] == "1"
     assert data["seed"] == ["seed"]
-    skill_path = lambda n: str(  # noqa: E731 - terse local for readability
-        (root / "skills" / n / "SKILL.md").resolve()
+    skill_path = lambda n: (  # noqa: E731 - terse local for readability
+        (root / "skills" / n / "SKILL.md").resolve().as_posix()
     )
     assert set(data["expanded_group"]) == {
         skill_path("seed"), skill_path("orchestrator"),
@@ -1662,7 +1662,7 @@ def test_resolve_path_reference_ambiguous_e2e_deterministic_across_hashseed(dedu
             "# Config B\n\nLong-path config target body content here.\n",
             encoding="utf-8",
         )
-        winner_basename_path = str((root / "a" / "config.md").resolve())
+        winner_basename_path = (root / "a" / "config.md").resolve().as_posix()
 
         chosen: set[str] = set()
         for seed in ("0", "1", "42", "1000"):
