@@ -151,6 +151,7 @@ nav:
       - skills/code-review.md
       - skills/creating-issues-and-pull-requests.md
       - skills/debugging.md
+      - skills/dedupe.md
       - skills/deep-research.md
       - skills/dehallucination.md
       - skills/designing-workflows.md
@@ -231,6 +232,10 @@ nav:
       - commands/dead-code-implement.md
       - commands/dead-code-report.md
       - commands/dead-code-setup.md
+      - commands/dedupe-analyze.md
+      - commands/dedupe-apply.md
+      - commands/dedupe-report.md
+      - commands/dedupe-setup.md
       - commands/deep-research-interview.md
       - commands/deep-research-investigate.md
       - commands/decompose-claims.md

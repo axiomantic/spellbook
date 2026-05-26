@@ -137,6 +137,7 @@ spellbook/
 | `extensions/gemini/` | Gemini extension (linked via `gemini extensions link`) |
 | `install.py` | Installer entry |
 | `spellbook/mcp/server.py` | MCP server entry point |
+| `skills/dedupe/SKILL.md` | `/dedupe` — semantic instruction deduplication via LLM judgment loop (skill-only, no Python module) |
 
 ## Commands
 

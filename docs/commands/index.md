@@ -31,6 +31,10 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/dead-code-report](dead-code-report.md) | Generate dead code findings report with implementation plan. Part of dead-code-*... | spellbook |
 | [/dead-code-setup](dead-code-setup.md) | Git safety and scope selection for dead code analysis. Part of dead-code-* famil... | spellbook |
 | [/decompose-claims](decompose-claims.md) | Decompose text into atomic, independently verifiable claims using FActScore-styl... | spellbook |
+| [/dedupe-analyze](dedupe-analyze.md) | Phase 2 of the dedupe skill family. Narrows candidate pairs through an 8-stage p... | spellbook |
+| [/dedupe-apply](dedupe-apply.md) | Phase 4 of the dedupe skill family. Applies operator-approved EXTRACT findings w... | spellbook |
+| [/dedupe-report](dedupe-report.md) | Phase 3 of the dedupe skill family. Aggregates verdicts into a human-readable re... | spellbook |
+| [/dedupe-setup](dedupe-setup.md) | Phase 1 of the dedupe skill family. Resolves seed paths, applies the block-segme... | spellbook |
 | [/deep-research-interview](deep-research-interview.md) | Phase 0 of deep-research: Structured interview and Research Brief generation. Tr... | spellbook |
 | [/deep-research-investigate](deep-research-investigate.md) | Phase 2 of deep-research: Triplet search engine with plateau detection and micro... | spellbook |
 | [/deep-research-plan](deep-research-plan.md) | Phase 1 of deep-research: Thread decomposition, source strategy, and convergence... | spellbook |
