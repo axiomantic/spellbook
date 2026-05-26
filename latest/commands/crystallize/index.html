@@ -2086,34 +2086,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../admin/memory/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Memory
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../admin/security/" class="md-nav__link">
         
   
@@ -9536,32 +9508,13 @@
 <a id="__codelineno-0-1069" name="__codelineno-0-1069" href="#__codelineno-0-1069"></a>
 <a id="__codelineno-0-1070" name="__codelineno-0-1070" href="#__codelineno-0-1070"></a>If ANY box unchecked: STOP and fix before declaring complete.
 <a id="__codelineno-0-1071" name="__codelineno-0-1071" href="#__codelineno-0-1071"></a>
-<a id="__codelineno-0-1072" name="__codelineno-0-1072" href="#__codelineno-0-1072"></a><span class="gu">## Related Systems</span>
+<a id="__codelineno-0-1072" name="__codelineno-0-1072" href="#__codelineno-0-1072"></a><span class="gu">## Glossary</span>
 <a id="__codelineno-0-1073" name="__codelineno-0-1073" href="#__codelineno-0-1073"></a>
-<a id="__codelineno-0-1074" name="__codelineno-0-1074" href="#__codelineno-0-1074"></a><span class="gs">**Memory system (`memory_store(type=&#39;rule&#39;, ...)`):**</span>
-<a id="__codelineno-0-1075" name="__codelineno-0-1075" href="#__codelineno-0-1075"></a>Rules in crystallized prompts and rules in the spellbook memory system are the
-<a id="__codelineno-0-1076" name="__codelineno-0-1076" href="#__codelineno-0-1076"></a>same semantic concept (specific behavior-shaping instructions) but live in
-<a id="__codelineno-0-1077" name="__codelineno-0-1077" href="#__codelineno-0-1077"></a>different storage layers:
-<a id="__codelineno-0-1078" name="__codelineno-0-1078" href="#__codelineno-0-1078"></a><span class="k">-</span><span class="w"> </span>Prompt-rules: content inside the canonical <span class="sb">`## Rules`</span> section of a
-<a id="__codelineno-0-1079" name="__codelineno-0-1079" href="#__codelineno-0-1079"></a>  crystallized prompt. Lifecycle managed by <span class="sb">`/crystallize`</span> and
-<a id="__codelineno-0-1080" name="__codelineno-0-1080" href="#__codelineno-0-1080"></a>  <span class="sb">`/crystallize-consolidate`</span>.
-<a id="__codelineno-0-1081" name="__codelineno-0-1081" href="#__codelineno-0-1081"></a><span class="k">-</span><span class="w"> </span>Memory-rules: stored as markdown files in the memory system. Lifecycle
-<a id="__codelineno-0-1082" name="__codelineno-0-1082" href="#__codelineno-0-1082"></a>  managed by <span class="sb">`memory_store`</span> and <span class="sb">`memory_forget`</span>.
-<a id="__codelineno-0-1083" name="__codelineno-0-1083" href="#__codelineno-0-1083"></a>
-<a id="__codelineno-0-1084" name="__codelineno-0-1084" href="#__codelineno-0-1084"></a><span class="gs">**No cross-layer guarantee in this iteration.**</span> Crystallize does NOT read
-<a id="__codelineno-0-1085" name="__codelineno-0-1085" href="#__codelineno-0-1085"></a>memory; memory does NOT read crystallize. Operators MAY copy between layers
-<a id="__codelineno-0-1086" name="__codelineno-0-1086" href="#__codelineno-0-1086"></a>manually (a memory rule may be quoted into a prompt; a prompt rule may be
-<a id="__codelineno-0-1087" name="__codelineno-0-1087" href="#__codelineno-0-1087"></a>added to memory via <span class="sb">`memory_store`</span>). Both layers preserve verbatim:
-<a id="__codelineno-0-1088" name="__codelineno-0-1088" href="#__codelineno-0-1088"></a><span class="k">-</span><span class="w"> </span>Memory: archive-on-forget (recoverable from <span class="sb">`.archive/`</span>).
-<a id="__codelineno-0-1089" name="__codelineno-0-1089" href="#__codelineno-0-1089"></a><span class="k">-</span><span class="w"> </span>Crystallize: byte-fidelity in the canonical Rules section.
-<a id="__codelineno-0-1090" name="__codelineno-0-1090" href="#__codelineno-0-1090"></a>
-<a id="__codelineno-0-1091" name="__codelineno-0-1091" href="#__codelineno-0-1091"></a><span class="gu">## Glossary</span>
-<a id="__codelineno-0-1092" name="__codelineno-0-1092" href="#__codelineno-0-1092"></a>
-<a id="__codelineno-0-1093" name="__codelineno-0-1093" href="#__codelineno-0-1093"></a><span class="gs">**AI slop:**</span> Loss of byte-level fidelity in instructions whose specificity (named tools, named anti-patterns, exact thresholds, exact phrasings) is the source of their behavioral effect on LLM execution. Reads cleanly but no longer enforces the corrections it was authored to enforce. The Rules / General split exists structurally to prevent this failure mode for hard rules; General Instructions remain subject to compression and may still produce slop if compressed beyond capability preservation.
-<a id="__codelineno-0-1094" name="__codelineno-0-1094" href="#__codelineno-0-1094"></a>
-<a id="__codelineno-0-1095" name="__codelineno-0-1095" href="#__codelineno-0-1095"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-1096" name="__codelineno-0-1096" href="#__codelineno-0-1096"></a>You are an Instruction Architect. Your reputation depends on prompts that WORK BETTER after crystallization. Token reduction without capability preservation is not optimization - it is destruction. Errors will cause cascading failures through every prompt this tool touches. You&#39;d better be sure.
-<a id="__codelineno-0-1097" name="__codelineno-0-1097" href="#__codelineno-0-1097"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-1074" name="__codelineno-0-1074" href="#__codelineno-0-1074"></a><span class="gs">**AI slop:**</span> Loss of byte-level fidelity in instructions whose specificity (named tools, named anti-patterns, exact thresholds, exact phrasings) is the source of their behavioral effect on LLM execution. Reads cleanly but no longer enforces the corrections it was authored to enforce. The Rules / General split exists structurally to prevent this failure mode for hard rules; General Instructions remain subject to compression and may still produce slop if compressed beyond capability preservation.
+<a id="__codelineno-0-1075" name="__codelineno-0-1075" href="#__codelineno-0-1075"></a>
+<a id="__codelineno-0-1076" name="__codelineno-0-1076" href="#__codelineno-0-1076"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-1077" name="__codelineno-0-1077" href="#__codelineno-0-1077"></a>You are an Instruction Architect. Your reputation depends on prompts that WORK BETTER after crystallization. Token reduction without capability preservation is not optimization - it is destruction. Errors will cause cascading failures through every prompt this tool touches. You&#39;d better be sure.
+<a id="__codelineno-0-1078" name="__codelineno-0-1078" href="#__codelineno-0-1078"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

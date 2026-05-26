@@ -2144,34 +2144,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../admin/memory/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Memory
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../admin/security/" class="md-nav__link">
         
   
@@ -8394,366 +8366,374 @@
 <p>Use when reviewing code. Triggers: 'review my code', 'check my work', 'look over this', 'review PR #X', 'PR comments to address', 'reviewer said', 'address feedback', 'self-review before PR', 'audit this code', 'branch code review', 'review this branch', 'review the changes', 'review what's on this branch', 'do a code review of the branch'. For heavyweight multi-phase analysis, use advanced-code-review instead. When the request could match more than one review skill, MUST use AskUserQuestion to disambiguate before invoking — never bypass the review skills for a raw Explore dispatch, even when the user's concerns seem narrow or specific.</p>
 </blockquote>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<h1 id="code-review-skill-diagrams">Code Review Skill Diagrams<a class="headerlink" href="#code-review-skill-diagrams" title="Permanent link">&para;</a></h1>
-<h2 id="overview-mode-router-and-high-level-flow">Overview: Mode Router and High-Level Flow<a class="headerlink" href="#overview-mode-router-and-high-level-flow" title="Permanent link">&para;</a></h2>
+<p>The existing diagram is complete and verified against the source <code>SKILL.md</code> and all three referenced command files (<code>code-review-give</code>, <code>code-review-feedback</code>, <code>code-review-tarot</code>). Below is the verified diagram content.</p>
+<h1 id="diagram-code-review">Diagram: code-review<a class="headerlink" href="#diagram-code-review" title="Permanent link">&para;</a></h1>
+<p>Workflow diagrams for the <code>code-review</code> skill: mode routing, self/audit inline modes, give/feedback/tarot command workflows, and cross-reference index.</p>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>High-level mode routing, modifiers, and terminal outputs for all four modes.</p>
 <pre class="mermaid"><code>flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"Subagent Dispatch"/]
-        L5[[Quality Gate]]
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    INVOKE["code-review invoked"]
+
+    INVOKE --&gt; MODCHECK{"Modifier flags?"}
+
+    MODCHECK --&gt;|"--tarot"| TAROT["code-review-tarot\n(wraps active mode)"]:::dispatch
+    MODCHECK --&gt;|"--pr &amp;lt;num&amp;gt;"| PRFETCH["pr_fetch / pr_diff\n(MCP tools; fallback:\ngh CLI → local diff → paste)"]:::dispatch
+    MODCHECK --&gt;|"none"| MODECHECK{"Mode flag?"}
+
+    TAROT --&gt; MODECHECK{"Mode flag?"}
+    PRFETCH --&gt; MODECHECK
+
+    MODECHECK --&gt;|"--self / -s\nor no flag"| SELF["Self Mode\n(inline)"]:::dispatch
+    MODECHECK --&gt;|"--feedback / -f"| FEEDBACK["code-review-feedback\ncommand"]:::dispatch
+    MODECHECK --&gt;|"--give &amp;lt;target&amp;gt;"| GIVE["code-review-give\ncommand"]:::dispatch
+    MODECHECK --&gt;|"--audit [scope]"| AUDIT["Audit Mode\n(inline)"]:::dispatch
+
+    SELF --&gt; SELFOUT(["PASS / WARN / FAIL\n(severity gate)"]):::success
+    FEEDBACK --&gt; FBOUT(["All items addressed\n+ self-review clean"]):::success
+    GIVE --&gt; GIVEOUT(["APPROVE /\nREQUEST_CHANGES /\nCOMMENT"]):::success
+    AUDIT --&gt; AUDITOUT(["Executive Summary\n+ Risk Assessment\nLOW / MEDIUM / HIGH / CRITICAL"]):::success
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end</code></pre>
+<hr />
+<h2 id="detail-a-self-mode-and-audit-mode">Detail A — Self Mode and Audit Mode<a class="headerlink" href="#detail-a-self-mode-and-audit-mode" title="Permanent link">&para;</a></h2>
+<p>Both inline modes: Self on the left, Audit on the right.</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    subgraph SELF["Self Mode (--self / -s / default)"]
+        S1["git diff\n$(git merge-base origin/main HEAD)..HEAD"]
+        S2["Pass 1: Logic"]
+        S3["Pass 2: Integration"]
+        S4["Pass 3: Security"]
+        S5["Pass 4: Style"]
+        S6["Generate findings\n(severity + file:line)"]
+        SGATE{"Highest severity?"}:::gate
+        SFAIL(["FAIL\n(Critical finding)"]):::success
+        SWARN(["WARN\n(Important finding)"]):::success
+        SPASS(["PASS\n(Minor only)"]):::success
+
+        S1 --&gt; S2 --&gt; S3 --&gt; S4 --&gt; S5 --&gt; S6 --&gt; SGATE
+        SGATE --&gt;|"Critical"| SFAIL
+        SGATE --&gt;|"Important"| SWARN
+        SGATE --&gt;|"Minor only"| SPASS
     end
 
-    style L4 fill:#4a9eff,color:#fff
-    style L5 fill:#ff6b6b,color:#fff
-    style L3 fill:#51cf66,color:#fff
+    subgraph AUDIT["Audit Mode (--audit [scope])"]
+        ASCOPE{"Scope\nresolution"}:::gate
+        ANONE["none → branch changes"]
+        AFILE["file.py → single file"]
+        ADIR["dir/ → directory"]
+        ASEC["security → security-only"]
+        AALL["all → full codebase"]
 
-    START([code-review invoked]) --&gt; PARSE[Parse args:&lt;br&gt;mode flags + modifiers]
-    PARSE --&gt; TAROT_CHECK{--tarot&lt;br&gt;modifier?}
-    TAROT_CHECK --&gt;|Yes| LOAD_TAROT[Load code-review-tarot&lt;br&gt;persona mapping]
-    TAROT_CHECK --&gt;|No| MODE
-    LOAD_TAROT --&gt; MODE
+        AP1["Pass 1: Correctness\n+ API Hallucination Detection\nchecklist"]
+        AP2["Pass 2: Security"]
+        AP3["Pass 3: Performance"]
+        AP4["Pass 4: Maintainability"]
+        AP5["Pass 5: Edge Cases"]
 
-    MODE{Mode?}
-    MODE --&gt;|--self / default| SELF[Self Mode&lt;br&gt;Pre-PR self-review]
-    MODE --&gt;|--feedback| FEEDBACK[/"Dispatch:&lt;br&gt;code-review-feedback"/]
-    MODE --&gt;|"--give target"| GIVE[/"Dispatch:&lt;br&gt;code-review-give"/]
-    MODE --&gt;|"--audit [scope]"| AUDIT[Audit Mode&lt;br&gt;Deep single-pass]
+        AOUT(["Executive Summary\n+ findings by category\n+ Risk Assessment\nLOW / MEDIUM / HIGH / CRITICAL"]):::success
 
-    SELF --&gt; SELF_GATE[[Gate:&lt;br&gt;Critical=FAIL&lt;br&gt;Important=WARN&lt;br&gt;Minor=PASS]]
-    FEEDBACK --&gt; FB_OUT([Categorized responses&lt;br&gt;+ re-run self-review])
-    GIVE --&gt; GIVE_OUT[[Recommendation:&lt;br&gt;APPROVE /&lt;br&gt;REQUEST_CHANGES /&lt;br&gt;COMMENT]]
-    AUDIT --&gt; AUDIT_GATE[[Gate:&lt;br&gt;Risk Assessment&lt;br&gt;LOW/MED/HIGH/CRITICAL]]
+        ASCOPE --&gt;|"none"| ANONE
+        ASCOPE --&gt;|"file.py"| AFILE
+        ASCOPE --&gt;|"dir/"| ADIR
+        ASCOPE --&gt;|"security"| ASEC
+        ASCOPE --&gt;|"all"| AALL
 
-    SELF_GATE --&gt; DONE([Review Complete])
-    FB_OUT --&gt; DONE
-    GIVE_OUT --&gt; DONE
-    AUDIT_GATE --&gt; DONE
+        ANONE --&gt; AP1
+        AFILE --&gt; AP1
+        ADIR --&gt; AP1
+        ASEC --&gt; AP2
+        AALL --&gt; AP1
 
-    style FEEDBACK fill:#4a9eff,color:#fff
-    style GIVE fill:#4a9eff,color:#fff
-    style SELF_GATE fill:#ff6b6b,color:#fff
-    style GIVE_OUT fill:#ff6b6b,color:#fff
-    style AUDIT_GATE fill:#ff6b6b,color:#fff
-    style DONE fill:#51cf66,color:#fff
-    style START fill:#51cf66,color:#fff</code></pre>
+        AP1 --&gt; AP2 --&gt; AP3 --&gt; AP4 --&gt; AP5 --&gt; AOUT
+    end
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end</code></pre>
+<p>The API Hallucination Detection checklist (method existence, signature match, real config keys, resolvable imports, return-type contracts) runs inside the Correctness pass and is elevated to HIGH severity for AI-generated code.</p>
+<hr />
+<h2 id="detail-b-give-mode-code-review-give">Detail B — Give Mode (code-review-give)<a class="headerlink" href="#detail-b-give-mode-code-review-give" title="Permanent link">&para;</a></h2>
+<p>Full step 0–3 workflow with all quality gates.</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    subgraph STEP0["Step 0: Load Project Conventions (BEFORE any review)"]
+        C1["Read CLAUDE.md /\n.claude/CLAUDE.md"]
+        C2["Read style config\n(pyproject.toml / .eslintrc /\nbiome.json / setup.cfg)"]
+        C3["Check docs/code-review-instructions.md\nor .github/code-review-instructions.md"]
+        C4["Sample 1-2 adjacent files\nNOT in PR changed file set"]
+        CNOTE["CRITICAL: NEVER read local versions\nof files in the PR changed file set\n(local version is old code)"]:::gate
+
+        C1 --&gt; C2 --&gt; C3 --&gt; C4 --&gt; CNOTE
+    end
+
+    subgraph STEP1["Step 1: Fetch and Inventory"]
+        SRC{"Source type?"}
+        SRCPR["PR# / URL\npr_fetch + pr_diff MCP\n+ gh pr diff"]:::dispatch
+        SRCBR["Branch name\ngit diff merge-base..HEAD"]:::dispatch
+        MANIFEST["Build coverage manifest\nfrom ALL changed files\n(quality gate — must complete\nBEFORE beginning review)"]:::gate
+        PRIOR["Fetch prior review comments\ngh api pulls/number/comments\ngh api pulls/number/reviews"]:::dispatch
+        CLASSIFY["Classify each prior item:\nADDRESSED or STILL_OPEN"]
+
+        SRC --&gt;|"PR# or URL"| SRCPR
+        SRC --&gt;|"branch name"| SRCBR
+        SRCPR --&gt; MANIFEST
+        SRCBR --&gt; MANIFEST
+        MANIFEST --&gt; PRIOR --&gt; CLASSIFY
+    end
+
+    subgraph STEP2["Step 2: Multi-Pass Review"]
+        MANDATORY["Mandatory dimensions — every changed file\n(skip any = coverage failure)"]:::gate
+        D1["1. Correctness\n(logic errors, off-by-ones,\nnull handling, return types)"]
+        D2["2. Security\n(injection, auth, secrets,\nSSRF, input length)"]
+        D3["3. Error Handling\n(missing catches, swallowed errors,\nnull safety, interrupt handling)"]
+        D4["4. Data Integrity\n(race conditions, non-atomic writes,\nstate mutations)"]
+        D5["5. API Contracts\n(breaking changes, validation,\nschema drift)"]
+        D6["6. Test Coverage\n(changes tested, edge cases,\nmeaningful assertions)"]
+
+        CONDCHECK{"Conditional\ndimensions\ntriggered?"}
+        PERF["Performance pass\n(N+1 queries, missing indexes,\nallocations)"]:::dispatch
+        CONC["Concurrency/Async pass\n(REQUIRED when triggered)\nevent loop blocking, thread safety,\nrace conditions, lock ordering"]:::dispatch
+        A11Y["Accessibility pass\n(ARIA, keyboard nav,\nscreen readers)"]:::dispatch
+
+        SECPASS["Security Pass — runs for every review\nInput validation, path traversal,\nhardcoded secrets, auth/authz,\ninjection, SSRF"]:::gate
+
+        MANDATORY --&gt; D1 --&gt; D2 --&gt; D3 --&gt; D4 --&gt; D5 --&gt; D6 --&gt; CONDCHECK
+        CONDCHECK --&gt;|"hot paths / DB ops"| PERF
+        CONDCHECK --&gt;|"async / threading present"| CONC
+        CONDCHECK --&gt;|"UI / HTML / templates"| A11Y
+        CONDCHECK --&gt;|"none triggered"| SECPASS
+        PERF --&gt; SECPASS
+        CONC --&gt; SECPASS
+        A11Y --&gt; SECPASS
+    end
+
+    subgraph STEP3["Step 3: Output and Post-Review Reflection Gate"]
+        FORMAT["Format output:\nSummary\n→ Coverage Manifest (N/N files, gaps)\n→ Prior Feedback Reconciliation\n→ Findings (CRITICAL/IMPORTANT/MINOR/QUESTION\nwith file:line + dimension)\n→ Recommendation"]
+
+        REFLECT{"Post-review\nreflection gate"}:::gate
+        RCHECK["Self-check:\nAll files in manifest evaluated?\nAll 6 mandatory dimensions checked?\nSecurity pass (all 6 checks)?\nIf async/threading: concurrency pass?\nAll prior items reconciled?\nSeverity ratings honest (impact-based)?"]
+
+        RFIX["Address gaps\nbefore output"]
+        TERMINAL(["APPROVE /\nREQUEST_CHANGES /\nCOMMENT"]):::success
+
+        FORMAT --&gt; REFLECT
+        REFLECT --&gt;|"gaps found"| RCHECK --&gt; RFIX --&gt; REFLECT
+        REFLECT --&gt;|"all checks pass"| TERMINAL
+    end
+
+    STEP0 --&gt; STEP1 --&gt; STEP2 --&gt; STEP3
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end</code></pre>
+<hr />
+<h2 id="detail-c-feedback-mode-code-review-feedback">Detail C — Feedback Mode (code-review-feedback)<a class="headerlink" href="#detail-c-feedback-mode-code-review-feedback" title="Permanent link">&para;</a></h2>
+<p>Full categorize/decide/execute workflow.</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    GATHER["Gather ALL feedback holistically\nacross related PRs\nbefore responding to any item"]:::gate
+
+    CATEGORIZE["Categorize each item:\nbug / style / question / suggestion / nit"]
+
+    DECIDE{"Decision\nper item"}
+
+    ACCEPT["Accept:\nmake the change"]
+    PUSHBACK["Push back:\ndisagree with evidence"]
+    CLARIFY["Clarify:\nask specific question"]
+    DEFER["Defer:\nacknowledge + scope reason"]
+
+    RATIONALE["Document rationale\n(WHY for each decision\nbefore responding)"]:::gate
+
+    FACTCHECK["Fact-check technical claims\nbefore accepting or disputing"]:::gate
+
+    EXECUTE["Execute accepted fixes"]:::dispatch
+
+    SELFREV["Re-run self-review\n(--self mode)"]:::dispatch
+
+    SELFGATE{"Self-review\nclean?"}:::gate
+    FIXMORE["Address new findings"]
+
+    subgraph TEMPLATES["Response Templates"]
+        T1["Accept: Fixed in &amp;lt;SHA&amp;gt;"]
+        T2["Push back: tradeoff + evidence"]
+        T3["Clarify: specific question"]
+        T4["Defer: scope + reason"]
+    end
+
+    RESPOND["Respond using templates"]
+
+    DONE(["All items addressed\n+ self-review clean"]):::success
+
+    GATHER --&gt; CATEGORIZE --&gt; DECIDE
+    DECIDE --&gt;|"correct, improves code"| ACCEPT
+    DECIDE --&gt;|"incorrect or harmful"| PUSHBACK
+    DECIDE --&gt;|"ambiguous"| CLARIFY
+    DECIDE --&gt;|"valid but out of scope"| DEFER
+
+    ACCEPT --&gt; RATIONALE
+    PUSHBACK --&gt; RATIONALE
+    CLARIFY --&gt; RATIONALE
+    DEFER --&gt; RATIONALE
+
+    RATIONALE --&gt; FACTCHECK --&gt; EXECUTE --&gt; SELFREV --&gt; SELFGATE
+    SELFGATE --&gt;|"findings"| FIXMORE --&gt; SELFREV
+    SELFGATE --&gt;|"clean"| RESPOND --&gt; TEMPLATES --&gt; DONE
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end</code></pre>
+<hr />
+<h2 id="detail-d-tarot-overlay-code-review-tarot">Detail D — Tarot Overlay (code-review-tarot)<a class="headerlink" href="#detail-d-tarot-overlay-code-review-tarot" title="Permanent link">&para;</a></h2>
+<p>Persona mapping, roundtable format, and audit integration.</p>
+<pre class="mermaid"><code>flowchart TD
+    classDef dispatch fill:#4a9eff,color:#000
+    classDef gate fill:#ff6b6b,color:#000
+    classDef success fill:#51cf66,color:#000
+
+    OPTIN["Opt-in: --tarot modifier\n(compatible with all modes)"]
+
+    subgraph PERSONAS["Persona Mapping"]
+        PH["Hermit\nRole: Security reviewer\nFocus: Input validation, injection\nStakes: Do NOT trust inputs"]
+        PP["Priestess\nRole: Architecture reviewer\nFocus: Design patterns, coupling\nStakes: Do NOT commit early"]
+        PF["Fool\nRole: Assumption challenger\nFocus: Hidden assumptions, edge cases\nStakes: Do NOT accept hidden complexity"]
+        PM["Magician\nRole: Synthesis / verdict\nFocus: Final assessment\nStakes: Clarity determines everything"]
+    end
+
+    subgraph ROUNDTABLE["Roundtable Format"]
+        RT1["Magician opens"]
+        RT2["Hermit speaks\n(security findings)"]
+        RT3["Priestess speaks\n(architecture findings)"]
+        RT4["Fool speaks\n(assumption challenges)"]
+        RT5["Magician synthesizes\nby evidence weight\nNOT majority vote"]:::gate
+
+        RT1 --&gt; RT2 --&gt; RT3 --&gt; RT4 --&gt; RT5
+    end
+
+    subgraph AUDITINT["Audit + Tarot Integration\n(parallel subagent prompts)"]
+        AI1["Security pass\n→ Hermit persona"]:::dispatch
+        AI2["Architecture pass\n→ Priestess persona"]:::dispatch
+        AI3["Assumption pass\n→ Fool persona"]:::dispatch
+        AI4["Synthesis\n→ Magician persona"]:::dispatch
+
+        AI1 --&gt; AI4
+        AI2 --&gt; AI4
+        AI3 --&gt; AI4
+    end
+
+    RULES["Critical rules:\nPersona dialogue appears ONLY in dialogue sections\nNEVER in code suggestions or formal findings\nSynthesis by evidence weight (NOT majority vote)\nfile:line citations required even in persona dialogue"]:::gate
+
+    TOUT(["Tarot-annotated\nreview output"]):::success
+
+    OPTIN --&gt; PERSONAS
+    OPTIN --&gt; ROUNDTABLE
+    OPTIN --&gt; AUDITINT
+    PERSONAS --&gt; RULES
+    ROUNDTABLE --&gt; RULES
+    AUDITINT --&gt; RULES
+    RULES --&gt; TOUT
+
+    subgraph LEGEND["Legend"]
+        LL1["Process"]
+        LL2{"Decision"}
+        LL3(["Terminal"]):::success
+        LL4["Dispatch node"]:::dispatch
+        LL5["Quality gate"]:::gate
+    end</code></pre>
+<hr />
 <h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Overview Node</th>
-<th>Detail Diagram</th>
+<th>Overview node</th>
+<th>Detail diagram</th>
+<th>Section</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Self Mode</td>
-<td><a href="#self-mode-detail">Self Mode Detail</a></td>
+<td>Self Mode (inline)</td>
+<td>Detail A</td>
+<td>Self Mode subgraph</td>
 </tr>
 <tr>
-<td>Feedback (code-review-feedback)</td>
-<td><a href="#feedback-mode-detail">Feedback Mode Detail</a></td>
+<td>Audit Mode (inline)</td>
+<td>Detail A</td>
+<td>Audit Mode subgraph</td>
 </tr>
 <tr>
-<td>Give (code-review-give)</td>
-<td><a href="#give-mode-detail">Give Mode Detail</a></td>
+<td>code-review-give command</td>
+<td>Detail B</td>
+<td>Steps 0–3</td>
 </tr>
 <tr>
-<td>Audit Mode</td>
-<td><a href="#audit-mode-detail">Audit Mode Detail</a></td>
+<td>code-review-feedback command</td>
+<td>Detail C</td>
+<td>Full workflow</td>
 </tr>
 <tr>
-<td>Tarot Integration</td>
-<td><a href="#tarot-modifier-detail">Tarot Modifier Detail</a></td>
+<td>code-review-tarot command</td>
+<td>Detail D</td>
+<td>Personas + Roundtable + Audit integration</td>
+</tr>
+<tr>
+<td>pr_fetch / pr_diff modifier</td>
+<td>Detail B</td>
+<td>Step 1: Fetch and Inventory</td>
+</tr>
+<tr>
+<td>Severity gate</td>
+<td>Detail A</td>
+<td>Self Mode — highest severity decision node</td>
+</tr>
+<tr>
+<td>Coverage manifest gate</td>
+<td>Detail B</td>
+<td>Step 1: Build coverage manifest</td>
+</tr>
+<tr>
+<td>Post-review reflection gate</td>
+<td>Detail B</td>
+<td>Step 3: Reflection gate</td>
+</tr>
+<tr>
+<td>Synthesis by evidence weight</td>
+<td>Detail D</td>
+<td>Roundtable — Magician synthesizes node</td>
 </tr>
 </tbody>
 </table>
-<hr />
-<h2 id="self-mode-detail">Self Mode Detail<a class="headerlink" href="#self-mode-detail" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L5[[Quality Gate]]
-    end
-    style L5 fill:#ff6b6b,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    S0([Self Mode Start]) --&gt; S1["Get diff:&lt;br&gt;git diff merge-base..HEAD"]
-    S1 --&gt; S2["Memory Priming:&lt;br&gt;memory_recall(review findings)"]
-    S2 --&gt; S2B{spellbook-memory&lt;br&gt;context from files?}
-    S2B --&gt;|Yes| S2C[Incorporate file-specific&lt;br&gt;+ project-wide patterns]
-    S2B --&gt;|No| S3
-    S2C --&gt; S3
-
-    S3[Multi-Pass Review]
-    S3 --&gt; P1[Pass 1: Logic]
-    P1 --&gt; P2[Pass 2: Integration]
-    P2 --&gt; P3[Pass 3: Security]
-    P3 --&gt; P4[Pass 4: Style]
-
-    P4 --&gt; S4[Generate findings:&lt;br&gt;severity + file:line + description]
-    S4 --&gt; S5["Persist significant findings:&lt;br&gt;memory_store_memories()"]
-    S5 --&gt; S5A{Finding type?}
-    S5A --&gt;|Confirmed issue| S5B["Store as antipattern&lt;br&gt;(warns future reviewers)"]
-    S5A --&gt;|False positive| S5C["Store as fact&lt;br&gt;tag: false-positive"]
-    S5A --&gt;|Minor / one-off| S5D[Do not store]
-    S5B --&gt; S6
-    S5C --&gt; S6
-    S5D --&gt; S6
-
-    S6[[Severity Gate]]
-    S6 --&gt; G1{Highest severity?}
-    G1 --&gt;|Critical| FAIL([FAIL])
-    G1 --&gt;|Important| WARN([WARN])
-    G1 --&gt;|Minor only| PASS([PASS])
-
-    style S0 fill:#51cf66,color:#fff
-    style S6 fill:#ff6b6b,color:#fff
-    style FAIL fill:#ff6b6b,color:#fff
-    style WARN fill:#f59f00,color:#fff
-    style PASS fill:#51cf66,color:#fff</code></pre>
-<hr />
-<h2 id="feedback-mode-detail">Feedback Mode Detail<a class="headerlink" href="#feedback-mode-detail" title="Permanent link">&para;</a></h2>
-<p>Source: <code>commands/code-review-feedback.md</code></p>
-<pre class="mermaid"><code>flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"Subagent / Command"/]
-    end
-    style L4 fill:#4a9eff,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    F0([Feedback Mode Start]) --&gt; F1[Gather ALL feedback&lt;br&gt;across related PRs]
-    F1 --&gt; F2[Categorize each item:&lt;br&gt;bug / style / question&lt;br&gt;/ suggestion / nit]
-
-    F2 --&gt; F3{Decision&lt;br&gt;per item}
-    F3 --&gt;|Correct, improves code| ACCEPT[Accept:&lt;br&gt;make the change]
-    F3 --&gt;|Incorrect or harmful| PUSH[Push back:&lt;br&gt;disagree with evidence]
-    F3 --&gt;|Ambiguous| CLARIFY[Clarify:&lt;br&gt;ask questions]
-    F3 --&gt;|Valid but out of scope| DEFER[Defer:&lt;br&gt;acknowledge + follow-up]
-
-    ACCEPT --&gt; F4
-    PUSH --&gt; F4
-    CLARIFY --&gt; F4
-    DEFER --&gt; F4
-
-    F4[Document rationale&lt;br&gt;for each decision]
-    F4 --&gt; F5[Fact-check:&lt;br&gt;verify technical claims]
-    F5 --&gt; F6[Execute fixes]
-    F6 --&gt; F7[/"Re-run self-review&lt;br&gt;(Self Mode)"/]
-    F7 --&gt; DONE([Responses sent&lt;br&gt;with templates])
-
-    style F0 fill:#51cf66,color:#fff
-    style F7 fill:#4a9eff,color:#fff
-    style DONE fill:#51cf66,color:#fff</code></pre>
-<hr />
-<h2 id="give-mode-detail">Give Mode Detail<a class="headerlink" href="#give-mode-detail" title="Permanent link">&para;</a></h2>
-<p>Source: <code>commands/code-review-give.md</code></p>
-<pre class="mermaid"><code>flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L5[[Quality Gate]]
-    end
-    style L5 fill:#ff6b6b,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    G0([Give Mode Start]) --&gt; G0A["Parse target:&lt;br&gt;PR#, URL, branch"]
-
-    G0A --&gt; G0B["Step 0: Load Project Conventions&lt;br&gt;Read CLAUDE.md, style configs,&lt;br&gt;code-review-instructions.md"]
-    G0B --&gt; G0C["Sample adjacent files&lt;br&gt;(NOT in changed file set)"]
-
-    G0C --&gt; G1["Step 1: Fetch and Inventory"]
-    G1 --&gt; G1A["Get diff via gh pr diff&lt;br&gt;or git diff"]
-    G1A --&gt; G1B["Build Coverage Manifest:&lt;br&gt;ALL changed files"]
-    G1B --&gt; G1C["Fetch prior PR feedback&lt;br&gt;via gh api"]
-    G1C --&gt; G1D{Prior feedback&lt;br&gt;exists?}
-    G1D --&gt;|Yes| G1E[Classify each:&lt;br&gt;ADDRESSED / STILL_OPEN]
-    G1D --&gt;|No| G2
-    G1E --&gt; G2
-
-    G2["Step 2: Multi-Pass Review"]
-    G2 --&gt; MAND["Mandatory Dimensions&lt;br&gt;(all 6 per file)"]
-
-    MAND --&gt; D1["Correctness"]
-    MAND --&gt; D2["Security"]
-    MAND --&gt; D3["Error handling"]
-    MAND --&gt; D4["Data integrity"]
-    MAND --&gt; D5["API contracts"]
-    MAND --&gt; D6["Test coverage"]
-
-    D1 &amp; D2 &amp; D3 &amp; D4 &amp; D5 &amp; D6 --&gt; COND{Conditional&lt;br&gt;triggers?}
-
-    COND --&gt;|Hot paths / DB ops| PERF[Performance pass]
-    COND --&gt;|Async / threading| CONC[Concurrency pass]
-    COND --&gt;|UI / frontend| A11Y[Accessibility pass]
-    COND --&gt;|None triggered| SEC
-
-    PERF --&gt; SEC
-    CONC --&gt; SEC
-    A11Y --&gt; SEC
-
-    SEC["Security Pass&lt;br&gt;(always required):&lt;br&gt;Input validation, path traversal,&lt;br&gt;secrets, auth, injection, SSRF"]
-
-    SEC --&gt; CONC_CHECK{Async/threading&lt;br&gt;in diff?}
-    CONC_CHECK --&gt;|Yes| CONC_PASS["Concurrency Pass:&lt;br&gt;Event loop blocking,&lt;br&gt;thread safety, races,&lt;br&gt;interrupt handling,&lt;br&gt;lock ordering"]
-    CONC_CHECK --&gt;|No| G3
-
-    CONC_PASS --&gt; G3
-
-    G3["Step 3: Output"]
-    G3 --&gt; MANIFEST[[Coverage Manifest Check:&lt;br&gt;all files evaluated?]]
-    MANIFEST --&gt; GAP{Gaps?}
-    GAP --&gt;|Yes| REPORT_GAP[Report coverage gaps]
-    GAP --&gt;|No| RECONCILE
-    REPORT_GAP --&gt; RECONCILE
-
-    RECONCILE[Prior Feedback&lt;br&gt;Reconciliation]
-    RECONCILE --&gt; FINDINGS[Format findings:&lt;br&gt;severity + file:line&lt;br&gt;+ dimension + suggestion]
-
-    FINDINGS --&gt; VERDICT[[Recommendation Gate]]
-    VERDICT --&gt; V1{Verdict?}
-    V1 --&gt;|No issues / minor| APPROVE([APPROVE])
-    V1 --&gt;|Significant issues| REQ_CHANGES([REQUEST_CHANGES])
-    V1 --&gt;|Needs discussion| COMMENT([COMMENT])
-
-    style G0 fill:#51cf66,color:#fff
-    style MANIFEST fill:#ff6b6b,color:#fff
-    style VERDICT fill:#ff6b6b,color:#fff
-    style APPROVE fill:#51cf66,color:#fff
-    style REQ_CHANGES fill:#ff6b6b,color:#fff
-    style COMMENT fill:#f59f00,color:#fff</code></pre>
-<hr />
-<h2 id="audit-mode-detail">Audit Mode Detail<a class="headerlink" href="#audit-mode-detail" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L5[[Quality Gate]]
-    end
-    style L5 fill:#ff6b6b,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    A0([Audit Mode Start]) --&gt; A0A{Scope?}
-    A0A --&gt;|"(none)"| BRANCH[Branch changes]
-    A0A --&gt;|file.py| FILE[Single file]
-    A0A --&gt;|"dir/"| DIR[Directory]
-    A0A --&gt;|security| SECONLY[Security-only audit]
-    A0A --&gt;|all| ALL[Full codebase]
-
-    BRANCH &amp; FILE &amp; DIR &amp; SECONLY &amp; ALL --&gt; A1
-
-    A1["Memory Priming:&lt;br&gt;memory_recall(review findings)"]
-    A1 --&gt; A1B{spellbook-memory&lt;br&gt;context?}
-    A1B --&gt;|Yes| A1C[Incorporate patterns]
-    A1B --&gt;|No| A2
-    A1C --&gt; A2
-
-    A2[Multi-Pass Audit]
-    A2 --&gt; P1[Pass 1: Correctness]
-    P1 --&gt; P2[Pass 2: Security]
-    P2 --&gt; P3[Pass 3: Performance]
-    P3 --&gt; P4[Pass 4: Maintainability]
-    P4 --&gt; P5[Pass 5: Edge Cases]
-
-    P5 --&gt; A3[Generate output:&lt;br&gt;Executive Summary +&lt;br&gt;Findings by category]
-
-    A3 --&gt; A4["Persist significant findings:&lt;br&gt;memory_store_memories()"]
-    A4 --&gt; A5[[Risk Assessment Gate]]
-    A5 --&gt; R{Risk level?}
-    R --&gt;|No issues| LOW([LOW])
-    R --&gt;|Minor concerns| MED([MEDIUM])
-    R --&gt;|Significant issues| HIGH([HIGH])
-    R --&gt;|Security / data loss| CRIT([CRITICAL])
-
-    style A0 fill:#51cf66,color:#fff
-    style A5 fill:#ff6b6b,color:#fff
-    style LOW fill:#51cf66,color:#fff
-    style MED fill:#f59f00,color:#fff
-    style HIGH fill:#ff6b6b,color:#fff
-    style CRIT fill:#ff6b6b,color:#fff</code></pre>
-<hr />
-<h2 id="tarot-modifier-detail">Tarot Modifier Detail<a class="headerlink" href="#tarot-modifier-detail" title="Permanent link">&para;</a></h2>
-<p>Source: <code>commands/code-review-tarot.md</code></p>
-<p>Applied as an overlay when <code>--tarot</code> flag is present on any mode.</p>
-<pre class="mermaid"><code>flowchart TD
-    subgraph Legend
-        L1[Process]
-        L2{Decision}
-        L3([Terminal])
-        L4[/"Subagent Dispatch"/]
-    end
-    style L4 fill:#4a9eff,color:#fff
-    style L3 fill:#51cf66,color:#fff
-
-    T0([--tarot flag detected]) --&gt; T1{Which mode?}
-
-    T1 --&gt;|--self| TS[Self Mode +&lt;br&gt;Tarot dialogue wrapper]
-    T1 --&gt;|--give| TG[Give Mode +&lt;br&gt;Tarot dialogue wrapper]
-    T1 --&gt;|--audit| TA[Audit Mode +&lt;br&gt;Persona-per-pass]
-
-    TA --&gt; TA1[/"Hermit subagent:&lt;br&gt;Security Pass"/]
-    TA --&gt; TA2[/"Priestess subagent:&lt;br&gt;Architecture Pass"/]
-    TA --&gt; TA3[/"Fool subagent:&lt;br&gt;Assumption Pass"/]
-
-    TA1 &amp; TA2 &amp; TA3 --&gt; TA4[Magician: Synthesize&lt;br&gt;by evidence weight&lt;br&gt;(not majority vote)]
-
-    TS --&gt; DIALOG
-    TG --&gt; DIALOG
-
-    DIALOG[Roundtable Dialogue Format]
-    DIALOG --&gt; D1["Magician opens:&lt;br&gt;Review convenes"]
-    D1 --&gt; D2["Hermit examines:&lt;br&gt;Security findings"]
-    D2 --&gt; D3["Priestess studies:&lt;br&gt;Architecture findings"]
-    D3 --&gt; D4["Fool challenges:&lt;br&gt;Hidden assumptions"]
-    D4 --&gt; D5["Magician synthesizes:&lt;br&gt;Final verdict"]
-
-    TA4 --&gt; SEP
-    D5 --&gt; SEP
-
-    SEP[Code Output Separation:&lt;br&gt;Persona in dialogue ONLY,&lt;br&gt;formal findings persona-free]
-    SEP --&gt; DONE([Continue to&lt;br&gt;mode-specific output])
-
-    style T0 fill:#51cf66,color:#fff
-    style TA1 fill:#4a9eff,color:#fff
-    style TA2 fill:#4a9eff,color:#fff
-    style TA3 fill:#4a9eff,color:#fff
-    style DONE fill:#51cf66,color:#fff</code></pre>
-<hr />
-<h2 id="mcp-tool-integration">MCP Tool Integration<a class="headerlink" href="#mcp-tool-integration" title="Permanent link">&para;</a></h2>
-<pre class="mermaid"><code>flowchart LR
-    subgraph "MCP Tools - Read/Analyze"
-        PR_FETCH["pr_fetch(num_or_url)"]
-        PR_DIFF["pr_diff(raw_diff)"]
-        PR_MATCH["pr_match_patterns(files, root)"]
-        PR_FILES["pr_files(pr_result)"]
-    end
-
-    subgraph "CLI - Write Operations"
-        GH["gh CLI:&lt;br&gt;post reviews, replies"]
-    end
-
-    subgraph "Memory Tools"
-        RECALL["memory_recall()"]
-        STORE["memory_store_memories()"]
-    end
-
-    subgraph "Fallback Chain"
-        direction TB
-        F1{MCP available?} --&gt;|Yes| F2[Use MCP tools]
-        F1 --&gt;|No| F3{gh CLI available?}
-        F3 --&gt;|Yes| F4[Use gh CLI]
-        F3 --&gt;|No| F5{Local diff available?}
-        F5 --&gt;|Yes| F6[Use git diff]
-        F5 --&gt;|No| F7[Manual paste]
-    end</code></pre>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Code Review</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -8822,72 +8802,56 @@
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gs">**Workflow:**</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">1.</span> Get diff: <span class="sb">`git diff $(git merge-base origin/main HEAD)..HEAD`</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">2.</span> <span class="gs">**Memory Priming:**</span> Before starting review passes, call <span class="sb">`memory_recall(query=&quot;review finding [project_or_module]&quot;)`</span> to surface:
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Recurring issues in this codebase (focus review effort here)
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Known false positives (avoid re-flagging accepted patterns)
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Prior review decisions (respect precedent unless circumstances changed)
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>   If you received <span class="sb">`&lt;spellbook-memory&gt;`</span> context from reading the files under review, incorporate that as well. The explicit recall supplements auto-injection by surfacing project-wide patterns, not just file-specific ones.
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">3.</span> Multi-pass: Logic &gt; Integration &gt; Security &gt; Style
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">4.</span> Generate findings with severity, file:line, description
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>Example finding: <span class="sb">`src/auth/login.py:42 [Critical] Token written to log — data exposure risk`</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">5.</span> <span class="gs">**Persist Review Findings:**</span> After finalizing findings, store significant ones for future reviews:
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="sb">   memory_store_memories(memories=&#39;{&quot;memories&quot;: [{&quot;content&quot;: &quot;[Finding description]. Severity: [level]. Status: [confirmed/false_positive/deferred].&quot;, &quot;memory_type&quot;: &quot;[fact or antipattern]&quot;, &quot;tags&quot;: [&quot;review&quot;, &quot;[finding_category]&quot;, &quot;[module]&quot;], &quot;citations&quot;: [{&quot;file_path&quot;: &quot;[reviewed_file]&quot;, &quot;line_range&quot;: &quot;[lines]&quot;}]}]}&#39;)</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Confirmed issues: memory_type = &quot;antipattern&quot; (warns future reviewers)
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Confirmed false positives: memory_type = &quot;fact&quot; with tag &quot;false-positive&quot; (prevents re-flagging)
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Do NOT store every minor finding. Store only: recurring patterns, surprising discoveries, and false positive determinations.
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">6.</span> Gate: Critical=FAIL, Important=WARN, Minor only=PASS
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">2.</span> Multi-pass: Logic &gt; Integration &gt; Security &gt; Style
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">3.</span> Generate findings with severity, file:line, description
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>Example finding: <span class="sb">`src/auth/login.py:42 [Critical] Token written to log — data exposure risk`</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">4.</span> Gate: Critical=FAIL, Important=WARN, Minor only=PASS
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>---
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="gu">## Audit Mode (`--audit [scope]`)</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>Scopes: (none)=branch changes, file.py, dir/, security, all
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gs">**Passes:**</span> Correctness &gt; Security &gt; Performance &gt; Maintainability &gt; Edge Cases
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gs">**API Hallucination Detection (Correctness Pass):**</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>During the Correctness pass, check for API hallucination patterns:
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>---
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gu">## Audit Mode (`--audit [scope]`)</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>Scopes: (none)=branch changes, file.py, dir/, security, all
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">- [ ]</span> Method calls use APIs that exist in the imported library version (not invented methods)
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">- [ ]</span> Function signatures match actual library definitions (parameter names, types, order)
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">- [ ]</span> Configuration keys and environment variables are real (not plausible-sounding inventions)
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">- [ ]</span> Import paths resolve to actual modules (not hallucinated package structures)
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">- [ ]</span> Return types match actual API contracts (not assumed shapes)
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gs">**Memory Priming:**</span> Before starting audit passes, call <span class="sb">`memory_recall(query=&quot;review finding [project_or_module]&quot;)`</span> to surface recurring issues, known false positives, and prior review decisions. Incorporate any <span class="sb">`&lt;spellbook-memory&gt;`</span> context from files under audit as well.
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>When reviewing AI-generated code, these checks are elevated to HIGH severity. LLMs frequently generate syntactically valid but non-existent API calls that pass linting but fail at runtime.
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gs">**Passes:**</span> Correctness &gt; Security &gt; Performance &gt; Maintainability &gt; Edge Cases
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="gs">**API Hallucination Detection (Correctness Pass):**</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>---
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>During the Correctness pass, check for API hallucination patterns:
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">- [ ]</span> Method calls use APIs that exist in the imported library version (not invented methods)
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">- [ ]</span> Function signatures match actual library definitions (parameter names, types, order)
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">- [ ]</span> Configuration keys and environment variables are real (not plausible-sounding inventions)
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">- [ ]</span> Import paths resolve to actual modules (not hallucinated package structures)
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">- [ ]</span> Return types match actual API contracts (not assumed shapes)
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>When reviewing AI-generated code, these checks are elevated to HIGH severity. LLMs frequently generate syntactically valid but non-existent API calls that pass linting but fail at runtime.
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="gs">**Persist Review Findings:**</span> After finalizing audit findings, store significant ones using the same protocol as Self Mode (see step 5 above). Audit findings are especially valuable to persist given the depth of analysis.
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>---
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Skip self-review for &quot;small&quot; changes
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>Ignore Critical findings
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>Dismiss feedback without evidence
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>Give vague feedback without file:line
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Approve to avoid conflict
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Rate severity by effort instead of impact
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">- [ ]</span> Correct mode identified
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">- [ ]</span> All findings have file:line
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">- [ ]</span> Severity based on impact, not effort
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">- [ ]</span> Output matches mode spec
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">-</span><span class="w"> </span>Skip self-review for &quot;small&quot; changes
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">-</span><span class="w"> </span>Ignore Critical findings
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">-</span><span class="w"> </span>Dismiss feedback without evidence
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">-</span><span class="w"> </span>Give vague feedback without file:line
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="k">-</span><span class="w"> </span>Approve to avoid conflict
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">-</span><span class="w"> </span>Rate severity by effort instead of impact
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">- [ ]</span> Correct mode identified
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">- [ ]</span> All findings have file:line
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">- [ ]</span> Severity based on impact, not effort
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">- [ ]</span> Output matches mode spec
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

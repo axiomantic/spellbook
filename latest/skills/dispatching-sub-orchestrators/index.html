@@ -2086,34 +2086,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../admin/memory/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Memory
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../admin/security/" class="md-nav__link">
         
   
@@ -8337,7 +8309,7 @@ Spellbook now supports single-orchestrator dispatch only (direct / delegated).
 Nested subagent dispatch proved unreliable because dispatched subagents do not
 reliably have the Task tool, so a "Manager" sub-orchestrator could not dispatch
 its own gate sub-subagents. Use develop's single-orchestrator delegated mode
-instead; for very large efforts, checkpoint via the Follow-up Tasks list and
+instead; for very large efforts, checkpoint the <code>develop_gate_ledger</code> and
 hand off to a fresh session. The original body is preserved in ARCHIVE.md.</p>
 </blockquote>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
@@ -8357,9 +8329,9 @@ hand off to a fresh session. The original body is preserved in ARCHIVE.md.</p>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gs">**Migration:**</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`develop`</span>&#39;s single-orchestrator <span class="gs">**delegated**</span> execution mode: one
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  orchestrator dispatches gate subagents directly.
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>For very large features, do NOT nest orchestrators. Instead, checkpoint
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  progress in the <span class="gs">**Follow-up Tasks**</span> list and hand off to a fresh <span class="sb">`develop`</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  session when the orchestrator&#39;s context approaches its limit.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>For very large features, do NOT nest orchestrators. Instead, checkpoint the
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  <span class="sb">`develop_gate_ledger`</span> and hand off to a fresh <span class="sb">`develop`</span> session when the
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  orchestrator&#39;s context approaches its limit.
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>End-of-phase quality gates (comprehensive audit, full test suite, green-mirage
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  audit, comprehensive fact-check, pre-PR claim validation) still run at the
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  single orchestrator level.
@@ -8375,7 +8347,7 @@ hand off to a fresh session. The original body is preserved in ARCHIVE.md.</p>
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>   execution modes. Use <span class="sb">`develop`</span>&#39;s single-orchestrator delegated mode instead.
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>&lt;analysis&gt;This skill is deprecated. Nested sub-orchestrator dispatch is unsupported because dispatched subagents lack a reliable Task tool. The original body lives in ARCHIVE.md.&lt;/analysis&gt;
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>&lt;reflection&gt;If invoked, redirect the user to develop&#39;s single-orchestrator delegated mode, and point to the Follow-up Tasks list for checkpointing very large efforts.&lt;/reflection&gt;
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>&lt;reflection&gt;If invoked, redirect the user to develop&#39;s single-orchestrator delegated mode, and point to the <span class="sb">`develop_gate_ledger`</span> checkpoint mechanism for very large efforts.&lt;/reflection&gt;
 </code></pre></div>
 
 
