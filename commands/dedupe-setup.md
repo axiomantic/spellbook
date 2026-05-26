@@ -69,10 +69,10 @@ Examples:
 1. Split the seed argument on commas. Trim whitespace from each entry.
    Reject an empty seed argument with an explicit error.
 2. For each entry, resolve it to a canonical absolute path via the
-   harness Bash tool (e.g., `cd <dir> && pwd -P`, or
-   `python3 -c 'import os,sys; print(os.path.realpath(sys.argv[1]))'`
-   is FORBIDDEN here — use POSIX `readlink -f` / `realpath` only, or
-   `cd "$(dirname "$path")" && printf '%s/%s\n' "$(pwd -P)" "$(basename "$path")"`).
+   harness Bash tool. Use POSIX `readlink -f` / `realpath` only, or
+   `cd "$(dirname "$path")" && printf '%s/%s\n' "$(pwd -P)" "$(basename "$path")"`.
+   Do NOT shell out to interpreter languages for path resolution; the
+   skill is harness-agnostic and must rely only on POSIX shell tools.
 3. If any resolved path does not exist on disk, HALT with the explicit
    error message:
 
