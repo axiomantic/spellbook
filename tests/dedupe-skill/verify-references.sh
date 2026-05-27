@@ -33,9 +33,10 @@ else
 fi
 
 # Case-sensitive existence check: is $1 an exact (byte-for-byte) entry in $TRACKED?
+# Uses a bash here-string to avoid spawning printf and a pipe per lookup.
 exists_exact() {
     local needle="$1"
-    printf '%s\n' "$TRACKED" | grep -Fxq -- "$needle"
+    grep -Fxq -- "$needle" <<<"$TRACKED"
 }
 
 MISSING=0
@@ -79,7 +80,11 @@ for src in "${SOURCES[@]}"; do
     while IFS= read -r cmd; do
         [ -z "$cmd" ] && continue
         # Strip any trailing punctuation that grep -oE might have caught.
-        cmd="${cmd%[.,;:\`\'\"\)\]]}"
+        # Define the punctuation pattern in a single-quoted variable so the
+        # escapes are not subject to double-quote parameter-expansion parsing,
+        # which varies between bash versions.
+        punct='[.,;:`'\''")\]]'
+        cmd="${cmd%$punct}"
         phase="${cmd#/dedupe-}"
         CHECKED=$((CHECKED + 1))
         # Native shell `case` membership test against KNOWN_PHASES
