@@ -47,8 +47,8 @@
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
-  - [Skills (57 total)](#skills-57-total)
-  - [Commands (96 total)](#commands-96-total)
+  - [Skills (58 total)](#skills-58-total)
+  - [Commands (100 total)](#commands-100-total)
   - [Agents (16 total)](#agents-16-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
@@ -183,7 +183,7 @@ Complete feature implementation, greenfield project creation, refactoring (with 
 
 ## What's Included
 
-### Skills (57 total)
+### Skills (58 total)
 
 Reusable workflows for structured development:
 
@@ -193,7 +193,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators] *(deprecated)*, [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas], [dedupe] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [permissions-from-transcripts] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications], [agent2agent] |
 
@@ -256,6 +256,7 @@ Reusable workflows for structured development:
 [branch-context]: https://axiomantic.github.io/spellbook/latest/skills/branch-context/
 [agent2agent]: https://axiomantic.github.io/spellbook/latest/skills/agent2agent/
 [canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
+[dedupe]: https://axiomantic.github.io/spellbook/latest/skills/dedupe/
 [permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
@@ -274,7 +275,7 @@ Reusable workflows for structured development:
 [canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
 [permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 
-### Commands (96 total)
+### Commands (100 total)
 
 | Command | Description |
 |---------|-------------|
@@ -290,6 +291,10 @@ Reusable workflows for structured development:
 | [/dead-code-analyze] | Extract and triage code items for dead code verification |
 | [/dead-code-report] | Generate dead code findings report with deletion plan |
 | [/dead-code-implement] | Execute approved deletions with verification |
+| [/dedupe-setup] | Phase 1: Configure target dirs and segmentation for semantic dedupe |
+| [/dedupe-analyze] | Phase 2: LLM judgment loop detecting semantically-equivalent instruction blocks |
+| [/dedupe-report] | Phase 3: Render proposed consolidations into a reviewable report |
+| [/dedupe-apply] | Phase 4: Apply approved consolidations with diffs and rollback |
 | [/deep-research-interview] | Phase 0: Structured interview and Research Brief generation |
 | [/deep-research-investigate] | Phase 2: Triplet search engine with plateau detection and micro-reports |
 | [/deep-research-plan] | Phase 1: Thread decomposition, source strategy, and convergence criteria |
@@ -393,6 +398,10 @@ Reusable workflows for structured development:
 [/dead-code-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-analyze/
 [/dead-code-report]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-report/
 [/dead-code-implement]: https://axiomantic.github.io/spellbook/latest/commands/dead-code-implement/
+[/dedupe-setup]: https://axiomantic.github.io/spellbook/latest/commands/dedupe-setup/
+[/dedupe-analyze]: https://axiomantic.github.io/spellbook/latest/commands/dedupe-analyze/
+[/dedupe-report]: https://axiomantic.github.io/spellbook/latest/commands/dedupe-report/
+[/dedupe-apply]: https://axiomantic.github.io/spellbook/latest/commands/dedupe-apply/
 [/deep-research-interview]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-interview/
 [/deep-research-investigate]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-investigate/
 [/deep-research-plan]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-plan/

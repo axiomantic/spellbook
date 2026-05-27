@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.70.0] - 2026-05-26
+
+### Added
+
+- **`/dedupe` skill (semantic instruction deduplication).** A skill-only artifact (no Python module, no CLI script) that uses an LLM judgment loop to detect semantically-equivalent instruction blocks across markdown files. The analyze phase IS the LLM judgment (consolidation counterfactual), not a lexical-similarity prefilter. Embeddings are deferred to v2 as a candidate narrower with documented revival triggers. Structure: `skills/dedupe/SKILL.md` + 4 reference markdown files + 4 slash-command files (`/dedupe-setup`, `/dedupe-analyze`, `/dedupe-report`, `/dedupe-apply`). Includes a verification suite under `tests/dedupe-skill/` with negative-control fixtures proving the M6 anti-irony and no-Python gates catch what they claim. Design: `~/.local/spellbook/docs/Users-eek-Development-spellbook/plans/2026-05-26-semantic-dedupe-design.md`.
+
 ## [0.69.0] - 2026-05-25
 
 ### Removed
@@ -3137,6 +3143,7 @@ validator, and the pre-commit scanner.
 - Grammar fixes in documentation
 
 [Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.9.11...HEAD
+[0.70.0]: https://github.com/axiomantic/spellbook/compare/v0.69.0...v0.70.0
 [0.9.11]: https://github.com/axiomantic/spellbook/compare/v0.9.10...v0.9.11
 [0.9.10]: https://github.com/axiomantic/spellbook/compare/v0.9.9...v0.9.10
 [0.9.9]: https://github.com/axiomantic/spellbook/compare/v0.9.8...v0.9.9
