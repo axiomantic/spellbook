@@ -27,7 +27,7 @@ if [ "${#TARGETS[@]}" -eq 0 ]; then
 fi
 
 # Canonical ERE pattern: imports, .py files, shebangs, python interpreter, pip, python -m
-PATTERN='(^[[:space:]]*(import|from)[[:space:]]+[A-Za-z_])|(\.py($|[^A-Za-z]))|(^#!.*python)|(\bpython[23]?([[:space:]]|[(),;|&]|$))|(\bpip[[:space:]]+install)|(python[[:space:]]+-m)'
+PATTERN='(^[[:space:]]*(import|from)[[:space:]]+[A-Za-z_])|(\.py($|[^A-Za-z]))|(^#!.*python)|(\bpython[23]?([[:space:]]|[(),;|&]|$))|(\bpip[23]?[[:space:]]+install)|(python[[:space:]]+-m)'
 
 # Build grep args
 GREP_ARGS=(-rnE --include='*.md' --include='*.sh')

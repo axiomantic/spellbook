@@ -30,6 +30,10 @@ NEGATIVE CONTROL — D2 must catch this:
 
     pip install foo
 
+NEGATIVE CONTROL — D2 must catch this (pip3 variant):
+
+    pip3 install bar
+
 NEGATIVE CONTROL — D2 must catch this:
 
     python -m pytest tests/

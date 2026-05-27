@@ -79,12 +79,8 @@ for src in "${SOURCES[@]}"; do
     # perl to enforce that left-boundary, then extract the command token.
     while IFS= read -r cmd; do
         [ -z "$cmd" ] && continue
-        # Strip any trailing punctuation that grep -oE might have caught.
-        # Define the punctuation pattern in a single-quoted variable so the
-        # escapes are not subject to double-quote parameter-expansion parsing,
-        # which varies between bash versions.
-        punct='[.,;:`'\''")\]]'
-        cmd="${cmd%$punct}"
+        # The perl regex above captures only [A-Za-z0-9_-], so no trailing
+        # punctuation can leak into $cmd. No strip needed.
         phase="${cmd#/dedupe-}"
         CHECKED=$((CHECKED + 1))
         # Native shell `case` membership test against KNOWN_PHASES

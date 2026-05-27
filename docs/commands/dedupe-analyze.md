@@ -171,8 +171,13 @@ Each dispatch:
    from `/dev/urandom` via the harness Bash tool, e.g.:
 
    ```sh
-   NONCE="$(LC_ALL=C tr -dc 0-9a-f < /dev/urandom | head -c 16)"
+   NONCE="$(od -An -vtx1 -N8 /dev/urandom | tr -d ' \n')"
    ```
+
+   This reads 8 bytes (`-N8`) from `/dev/urandom`, formats them as
+   hex pairs (`-tx1`) with no offset prefix (`-An`), and strips
+   whitespace — yielding exactly 16 hex chars using only POSIX
+   utilities (`od`, `tr`).
 
 3. Constructs the dispatch prompt with the following sections, in
    order:
