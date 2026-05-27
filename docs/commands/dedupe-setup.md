@@ -69,7 +69,9 @@ Examples:
    Reject an empty seed argument with an explicit error.
 2. For each entry, resolve it to a canonical absolute path via the
    harness Bash tool. Use POSIX `readlink -f` / `realpath` only, or
-   `cd "$(dirname "$path")" && printf '%s/%s\n' "$(pwd -P)" "$(basename "$path")"`.
+   `(cd "$(dirname "$path")" && printf '%s/%s\n' "$(pwd -P)" "$(basename "$path")")`.
+   The outer parentheses run the `cd` in a subshell so the working
+   directory of the invoking shell is preserved.
    Do NOT shell out to interpreter languages for path resolution; the
    skill is harness-agnostic and must rely only on POSIX shell tools.
 3. If any resolved path does not exist on disk, HALT with the explicit

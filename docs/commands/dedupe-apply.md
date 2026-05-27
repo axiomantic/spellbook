@@ -146,13 +146,17 @@ For each `apply` finding, in the order they appear in the report:
    harness Bash tool, e.g.:
 
    ```sh
-   ORIG_A_B64="$(printf '%s' "$ORIG_A" | base64)"
+   ORIG_A_B64="$(printf '%s' "$ORIG_A" | base64 | tr -d '\n')"
    ```
 
-   The `printf '%s'` form avoids `echo`'s trailing newline. Decoded
-   round-trip is verified before writing the journal entry: if
-   `printf '%s' "$ORIG_A_B64" | base64 -d` does not produce byte-exact
-   `$ORIG_A`, HALT with a journal-encode-failure error.
+   The `printf '%s'` form avoids `echo`'s trailing newline. The
+   `| tr -d '\n'` strips GNU `base64`'s default 76-column line wraps so
+   the resulting string survives embedding in a single-line JSON value.
+   Decoded round-trip is verified before writing the journal entry: if
+   `printf '%s' "$ORIG_A_B64" | base64 --decode` does not produce
+   byte-exact `$ORIG_A`, HALT with a journal-encode-failure error.
+   Use `base64 --decode` (not `-d`) for portability across GNU and
+   BSD/macOS implementations.
 
 4. **Write the canonical home.** Create or overwrite the file at the
    proposed canonical home path under `skills/shared-references/`. The
@@ -252,7 +256,7 @@ first), restore in three steps:
      Skip steps 2 and 3 for this entry. Move to the next entry.
 
 2. **Restore block A.** Base64-decode `original_text_a_b64` via
-   `base64 -d` through the harness Bash tool. In the source file at
+   `base64 --decode` through the harness Bash tool. In the source file at
    `original_path_a`, replace the current single-line reference
    plumbing with the decoded original bytes.
 

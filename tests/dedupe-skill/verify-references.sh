@@ -79,12 +79,16 @@ for src in "${SOURCES[@]}"; do
         cmd="${cmd%[.,;:\`\'\"\)\]]}"
         phase="${cmd#/dedupe-}"
         CHECKED=$((CHECKED + 1))
-        # Whitespace-padded membership test against KNOWN_PHASES.
-        if ! printf ' %s ' "$KNOWN_PHASES" | grep -q " $phase "; then
-            echo "FAIL: $src uses unknown slash-command phase: $cmd (known: $KNOWN_PHASES)"
-            MISSING=$((MISSING + 1))
-            continue
-        fi
+        # Native shell `case` membership test against KNOWN_PHASES
+        # (avoids spawning printf+grep for each token).
+        case " $KNOWN_PHASES " in
+            *" $phase "*) ;;
+            *)
+                echo "FAIL: $src uses unknown slash-command phase: $cmd (known: $KNOWN_PHASES)"
+                MISSING=$((MISSING + 1))
+                continue
+                ;;
+        esac
         target="commands/dedupe-${phase}.md"
         if ! exists_exact "$target"; then
             echo "FAIL: $src references missing command file (case-sensitive): $target (from $cmd)"

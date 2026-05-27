@@ -52,34 +52,37 @@ is_expected() {
     return 1
 }
 
-# References directory
+# References directory: portable shell globbing replaces non-POSIX
+# `find -maxdepth`. Globbing the bare directory (no `*.md` filter) also
+# catches non-markdown orphans that might otherwise ship silently.
 if [ -d skills/dedupe/references ]; then
-    while IFS= read -r actual; do
-        [ -z "$actual" ] && continue
+    for actual in skills/dedupe/references/*; do
+        [ -e "$actual" ] || continue
         if ! is_expected "$actual"; then
             echo "FAIL: orphan file (not in expected set): $actual"
             FAILURES=$((FAILURES + 1))
         fi
-    done < <(find skills/dedupe/references -maxdepth 1 -type f -name '*.md' 2>/dev/null | sort)
+    done
 fi
 
-# Top-level SKILL.md is the only allowed top-level .md under skills/dedupe/
-while IFS= read -r actual; do
-    [ -z "$actual" ] && continue
+# Top-level SKILL.md is the only allowed top-level entry under skills/dedupe/
+# (subdirectory `references/` is handled above; this loop sees only files).
+for actual in skills/dedupe/*; do
+    [ -f "$actual" ] || continue
     if ! is_expected "$actual"; then
         echo "FAIL: orphan file (not in expected set): $actual"
         FAILURES=$((FAILURES + 1))
     fi
-done < <(find skills/dedupe -maxdepth 1 -type f -name '*.md' 2>/dev/null | sort)
+done
 
 # commands/dedupe-*.md
-while IFS= read -r actual; do
-    [ -z "$actual" ] && continue
+for actual in commands/dedupe-*; do
+    [ -f "$actual" ] || continue
     if ! is_expected "$actual"; then
         echo "FAIL: orphan file (not in expected set): $actual"
         FAILURES=$((FAILURES + 1))
     fi
-done < <(find commands -maxdepth 1 -type f -name 'dedupe-*.md' 2>/dev/null | sort)
+done
 
 if [ "$FAILURES" -gt 0 ]; then
     echo "FAIL: D1 ($FAILURES issue(s) detected)"

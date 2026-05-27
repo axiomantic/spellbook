@@ -27,12 +27,16 @@ if [ "${#TARGETS[@]}" -eq 0 ]; then
 fi
 
 # Canonical ERE pattern: imports, .py files, shebangs, python interpreter, pip, python -m
-PATTERN='(^[[:space:]]*(import|from)[[:space:]]+[A-Za-z_])|(\.py($|[^A-Za-z]))|(^#!.*python)|(\bpython[23]?[[:space:]])|(\bpip[[:space:]]+install)|(python[[:space:]]+-m)'
+PATTERN='(^[[:space:]]*(import|from)[[:space:]]+[A-Za-z_])|(\.py($|[^A-Za-z]))|(^#!.*python)|(\bpython[23]?([[:space:]]|[(),;|&]|$))|(\bpip[[:space:]]+install)|(python[[:space:]]+-m)'
 
 # Build grep args
 GREP_ARGS=(-rnE --include='*.md' --include='*.sh')
 GREP_ARGS+=(--exclude=verify-no-python.sh)
 GREP_ARGS+=(--exclude=verify-no-python-neg.sh)
+# verify-anti-irony.sh contains regex pattern literals that mention "python"
+# as part of forbidden-pattern definitions (e.g., `code:python` in a marker
+# token); excluded for the same reason this script excludes itself.
+GREP_ARGS+=(--exclude=verify-anti-irony.sh)
 if [ "$EXCLUDE_FIXTURES" -eq 1 ]; then
     GREP_ARGS+=(--exclude-dir=fixtures)
 fi
