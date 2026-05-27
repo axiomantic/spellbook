@@ -8468,97 +8468,101 @@
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">2.</span> <span class="gs">**Mechanical safety-marker predicate runs before the LLM safety screen.**</span> A regex-based predicate force-marks blocks containing INLINE-MANDATORY safety markers, short-circuiting the classifier to KEEP-contextual with <span class="sb">`inline_mandatory=true`</span>. The pattern table is the canonical source in <span class="sb">`references/safety-markers.md`</span>; the orchestrator applies those patterns inline via harness Grep/Read, never via a compiled engine.
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">3.</span> <span class="gs">**Fail-safe coercion direction is always KEEP, never EXTRACT.**</span> Off-schema classifier responses, low-confidence verdicts, or any ambiguity coerce to a KEEP verdict. Deletion requires positive, schema-valid evidence; silence or malformed output preserves both blocks. The coercion rule is canonically stated in <span class="sb">`references/counterfactual-prompt.md`</span>.
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">3.</span> <span class="gs">**Structural-template heading allowlist short-circuits intra-bucket pairs.**</span> Pairs whose <span class="sb">`bucket_key`</span> matches a slot in spellbook&#39;s canonical skill-/command-authoring template (e.g., <span class="sb">`invariant principles`</span>, <span class="sb">`inputs`</span>, <span class="sb">`outputs`</span>, <span class="sb">`self-check`</span>, <span class="sb">`prerequisite verification`</span>, numbered <span class="sb">`phase N`</span> headings) resolve to <span class="sb">`KEEP-placement`</span> with <span class="sb">`source=structural_template`</span> without classifier dispatch. The allowlist and its phase-name regex patterns live in <span class="sb">`references/template-headings.md`</span>. Cross-bucket triage pairs are exempt from this floor so RECONCILE-drifted findings remain detectable.
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">4.</span> <span class="gs">**Clean git tree is a hard gate for apply.**</span> Phase 4 (<span class="sb">`/dedupe-apply`</span>) refuses to run unless <span class="sb">`git status --porcelain`</span> is empty. The skill never writes to source files with pending unrelated changes; rollback uses a journaled record of every per-finding edit.
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">4.</span> <span class="gs">**Fail-safe coercion direction is always KEEP, never EXTRACT.**</span> Off-schema classifier responses, low-confidence verdicts, or any ambiguity coerce to a KEEP verdict. Deletion requires positive, schema-valid evidence; silence or malformed output preserves both blocks. The coercion rule is canonically stated in <span class="sb">`references/counterfactual-prompt.md`</span>.
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">5.</span> <span class="gs">**M6 anti-irony: definitions live in `references/`, downstream artifacts cite by path.**</span> SKILL.md, phase commands, and reports reference the canonical homes without restating their content. A grep-based gate in Track D enforces this. Restating verdict definitions, safety regexes, the classifier JSON schema, or the segmentation recipe inside this file is the failure mode this principle exists to prevent.
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">5.</span> <span class="gs">**Clean git tree is a hard gate for apply.**</span> Phase 4 (<span class="sb">`/dedupe-apply`</span>) refuses to run unless <span class="sb">`git status --porcelain`</span> is empty. The skill never writes to source files with pending unrelated changes; rollback uses a journaled record of every per-finding edit.
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">6.</span> <span class="gs">**Phases are non-fungible.**</span> Setup, analyze, report, and apply are distinct phases with explicit handoff artifacts. Phase collapse — e.g., classifying during setup, or applying without operator approval at the report gate — is forbidden even when the corpus is small or the operator says &quot;wrap up&quot;. The dispatch surface is the four commands listed below.
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">6.</span> <span class="gs">**M6 anti-irony: definitions live in `references/`, downstream artifacts cite by path.**</span> SKILL.md, phase commands, and reports reference the canonical homes without restating their content. A grep-based gate in Track D enforces this. Restating verdict definitions, safety regexes, the classifier JSON schema, or the segmentation recipe inside this file is the failure mode this principle exists to prevent.
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Architecture</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">7.</span> <span class="gs">**Phases are non-fungible.**</span> Setup, analyze, report, and apply are distinct phases with explicit handoff artifacts. Phase collapse — e.g., classifying during setup, or applying without operator approval at the report gate — is forbidden even when the corpus is small or the operator says &quot;wrap up&quot;. The dispatch surface is the four commands listed below.
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="sb">```</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="sb">skills/dedupe/</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="sb">├── SKILL.md                              # This file: orchestration contract</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="sb">└── references/</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="sb">    ├── verdict-taxonomy.md               # 5 verdicts + INLINE-MANDATORY semantics</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">    ├── counterfactual-prompt.md          # Classifier prompt + strict JSON schema + fail-safe coercion</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">    ├── segmentation-protocol.md          # Block segmentation + finding_id hashing recipe</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">    └── safety-markers.md                 # INLINE-MANDATORY regex pattern table</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">commands/</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">├── dedupe-setup.md                       # Phase 1: parse seed, segment blocks, emit manifest</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">├── dedupe-analyze.md                     # Phase 2: bucket, triage, classifier dispatch, verdicts</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">├── dedupe-report.md                      # Phase 3: render findings report, drive approval</span>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">└── dedupe-apply.md                       # Phase 4: clean-tree gate, journaled apply, rollback</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">```</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>No Python, no helper scripts, no compiled tooling. Every artifact is prose-only markdown. The orchestrator (this file plus phase commands) uses only harness-native tools (Read, Grep, Write, AskUserQuestion, Task).
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gu">## Workflow</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>The skill drives four sequential phases. Each phase has a dedicated command file; see design doc §4 for the full per-phase contract, inputs, dispatches, and gates.
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| Order | Phase | Command | One-line summary |
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>|-------|-------|---------|------------------|
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| 1 | Setup | <span class="sb">`commands/dedupe-setup.md`</span> | Parse seed paths, segment each markdown file into blocks per the segmentation protocol, apply the mechanical safety-marker predicate, emit the blocks manifest. |
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| 2 | Analyze | <span class="sb">`commands/dedupe-analyze.md`</span> | Bucket by heading chain, optionally run LLM-triage for cross-bucket candidates, dispatch one classifier subagent per surviving pair, collect verdicts. |
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| 3 | Report | <span class="sb">`commands/dedupe-report.md`</span> | Render the findings report grouped by verdict, drive per-finding operator approval via AskUserQuestion. |
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| 4 | Apply | <span class="sb">`commands/dedupe-apply.md`</span> | Enforce clean-tree gate, execute approved EXTRACT and RECONCILE actions with a per-finding journal, support rollback. |
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>Operator review gates separate each phase. The skill never auto-advances past a gate; the natural-language entry point drives the sequence with checkpoints, and each command can also be invoked standalone for re-runs.
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gu">## Invocation</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>Two invocation surfaces, both equivalent in capability:
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Natural-language trigger.**</span> The operator says something like &quot;dedupe the X skills&quot;, &quot;find duplicate instructions in Y&quot;, or &quot;consolidate these instruction files&quot;. The orchestrator loads SKILL.md, requests the seed paths, and walks all four phases with operator gates between.
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Direct phase command.**</span> The operator invokes a single phase by its slash command:
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="sb">`commands/dedupe-setup.md`</span> — accepts the seed paths; standalone for re-running segmentation after edits.
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="sb">`commands/dedupe-analyze.md`</span> — requires the Phase 1 manifest; standalone for re-analyzing after operator-driven manifest review.
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="sb">`commands/dedupe-report.md`</span> — requires Phase 2 verdicts; standalone for re-rendering or re-driving approval.
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="sb">`commands/dedupe-apply.md`</span> — requires the approved report and a clean git tree; standalone for applying or rolling back.
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">## References (canonical homes)</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>These files are the authoritative source for their respective content. SKILL.md and the phase commands cite them by path; they do not restate.
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| Reference | Purpose |
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>|-----------|---------|
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| <span class="sb">`references/verdict-taxonomy.md`</span> | Defines the five verdicts and the INLINE-MANDATORY interaction. The verdict names may appear in orchestration prose; the definitions live only here. |
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>| <span class="sb">`references/counterfactual-prompt.md`</span> | Classifier prompt text, strict JSON verdict schema, and the off-schema fail-safe coercion rule. |
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>| <span class="sb">`references/segmentation-protocol.md`</span> | Heading-bounded block segmentation rules, the bucket-key derivation, and the <span class="sb">`finding_id`</span> hashing recipe. |
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>| <span class="sb">`references/safety-markers.md`</span> | Regex pattern table for the mechanical INLINE-MANDATORY safety-floor predicate. |
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">## Quality gates</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>The skill&#39;s correctness depends on three categories of mechanical gate. Track D scripts implement the verification surface.
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="gu">## Architecture</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="sb">```</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="sb">skills/dedupe/</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="sb">├── SKILL.md                              # This file: orchestration contract</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">└── references/</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">    ├── verdict-taxonomy.md               # 5 verdicts + INLINE-MANDATORY semantics</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">    ├── counterfactual-prompt.md          # Classifier prompt + strict JSON schema + fail-safe coercion</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">    ├── segmentation-protocol.md          # Block segmentation + finding_id hashing recipe</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">    ├── safety-markers.md                 # INLINE-MANDATORY regex pattern table</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">    └── template-headings.md              # Structural-template bucket-key allowlist (Stage 5.5 floor)</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="sb">commands/</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">├── dedupe-setup.md                       # Phase 1: parse seed, segment blocks, emit manifest</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">├── dedupe-analyze.md                     # Phase 2: bucket, triage, classifier dispatch, verdicts</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">├── dedupe-report.md                      # Phase 3: render findings report, drive approval</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">└── dedupe-apply.md                       # Phase 4: clean-tree gate, journaled apply, rollback</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">```</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>No Python, no helper scripts, no compiled tooling. Every artifact is prose-only markdown. The orchestrator (this file plus phase commands) uses only harness-native tools (Read, Grep, Write, AskUserQuestion, Task).
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="gu">## Workflow</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>The skill drives four sequential phases. Each phase has a dedicated command file; see design doc §4 for the full per-phase contract, inputs, dispatches, and gates.
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| Order | Phase | Command | One-line summary |
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>|-------|-------|---------|------------------|
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| 1 | Setup | <span class="sb">`commands/dedupe-setup.md`</span> | Parse seed paths, segment each markdown file into blocks per the segmentation protocol, apply the mechanical safety-marker predicate, emit the blocks manifest. |
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| 2 | Analyze | <span class="sb">`commands/dedupe-analyze.md`</span> | Bucket by heading chain, optionally run LLM-triage for cross-bucket candidates, dispatch one classifier subagent per surviving pair, collect verdicts. |
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| 3 | Report | <span class="sb">`commands/dedupe-report.md`</span> | Render the findings report grouped by verdict, drive per-finding operator approval via AskUserQuestion. |
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| 4 | Apply | <span class="sb">`commands/dedupe-apply.md`</span> | Enforce clean-tree gate, execute approved EXTRACT and RECONCILE actions with a per-finding journal, support rollback. |
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>Operator review gates separate each phase. The skill never auto-advances past a gate; the natural-language entry point drives the sequence with checkpoints, and each command can also be invoked standalone for re-runs.
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gu">## Invocation</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>Two invocation surfaces, both equivalent in capability:
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Natural-language trigger.**</span> The operator says something like &quot;dedupe the X skills&quot;, &quot;find duplicate instructions in Y&quot;, or &quot;consolidate these instruction files&quot;. The orchestrator loads SKILL.md, requests the seed paths, and walks all four phases with operator gates between.
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Direct phase command.**</span> The operator invokes a single phase by its slash command:
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="sb">`commands/dedupe-setup.md`</span> — accepts the seed paths; standalone for re-running segmentation after edits.
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="sb">`commands/dedupe-analyze.md`</span> — requires the Phase 1 manifest; standalone for re-analyzing after operator-driven manifest review.
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="sb">`commands/dedupe-report.md`</span> — requires Phase 2 verdicts; standalone for re-rendering or re-driving approval.
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="sb">`commands/dedupe-apply.md`</span> — requires the approved report and a clean git tree; standalone for applying or rolling back.
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gu">## References (canonical homes)</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>These files are the authoritative source for their respective content. SKILL.md and the phase commands cite them by path; they do not restate.
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>| Reference | Purpose |
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>|-----------|---------|
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>| <span class="sb">`references/verdict-taxonomy.md`</span> | Defines the five verdicts and the INLINE-MANDATORY interaction. The verdict names may appear in orchestration prose; the definitions live only here. |
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>| <span class="sb">`references/counterfactual-prompt.md`</span> | Classifier prompt text, strict JSON verdict schema, and the off-schema fail-safe coercion rule. |
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>| <span class="sb">`references/segmentation-protocol.md`</span> | Heading-bounded block segmentation rules, the bucket-key derivation, and the <span class="sb">`finding_id`</span> hashing recipe. |
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>| <span class="sb">`references/safety-markers.md`</span> | Regex pattern table for the mechanical INLINE-MANDATORY safety-floor predicate. |
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| <span class="sb">`references/template-headings.md`</span> | Bucket-key allowlist (and phase-name regex patterns) for the Stage 5.5 structural-template floor. |
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gs">**Invariant: no executable helper code inside `skills/dedupe/` or the dedupe phase command files.**</span> Verified by a grep-based scan covering interpreter imports, scripting-language file extensions, interpreter shebangs, and package-installation strings. The canonical pattern list lives in the Track D verification script.
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gu">## Quality gates</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gs">**Invariant: M6 anti-irony — no restatement of reference content in SKILL.md, phase commands, or reports.**</span> Verified by grep scans for verdict-definition signatures, safety-marker regex tokens, classifier schema field names, and segmentation recipe markers.
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>The skill&#39;s correctness depends on three categories of mechanical gate. Track D scripts implement the verification surface.
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="gs">**Structural gates per phase.**</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>Phase 1: manifest has the required columns; every block has a <span class="sb">`finding_id`</span>; oversized blocks are flagged and excluded from later dispatch.
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">-</span><span class="w"> </span>Phase 2: every pair produces a verdict (KEEP coercion on off-schema); the cost-ceiling gate fires when pair count exceeds the default.
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Phase 3: the report groups findings by verdict and surfaces operator approval per finding.
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Phase 4: clean-tree gate refuses dirty trees; every applied edit has a journal entry; rollback restores byte-identical source.
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>Hard gate for apply: clean git tree. No exceptions.
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>&lt;reflection&gt;
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>After each phase, the orchestrator verifies:
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>Setup: the manifest contains every required column and every block has a <span class="sb">`finding_id`</span>; oversized blocks are flagged.
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>Analyze: every surviving pair produced a verdict; off-schema responses were coerced to a KEEP verdict, never to EXTRACT.
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Report: every finding has an operator decision recorded; nothing advances to apply without explicit approval.
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Apply: the git tree was clean at gate time; every applied edit produced a journal entry; rollback restores byte-identical source.
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>All phases: SKILL.md, phase commands, and the rendered report cite reference files by path and do not restate their content.
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="gu">## v2 scope (deferred)</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>Embeddings as a candidate narrower are deferred to v2. Revival triggers: measured cross-bucket miss rate exceeds 20% on a seeded test corpus, or the operator lifts the no-Python constraint. See design doc §15 for the v2 revival criteria.
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="gs">**Invariant: no executable helper code inside `skills/dedupe/` or the dedupe phase command files.**</span> Verified by a grep-based scan covering interpreter imports, scripting-language file extensions, interpreter shebangs, and package-installation strings. The canonical pattern list lives in the Track D verification script.
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**Invariant: M6 anti-irony — no restatement of reference content in SKILL.md, phase commands, or reports.**</span> Verified by grep scans for verdict-definition signatures, safety-marker regex tokens, classifier schema field names, and segmentation recipe markers.
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gs">**Structural gates per phase.**</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Phase 1: manifest has the required columns; every block has a <span class="sb">`finding_id`</span>; oversized blocks are flagged and excluded from later dispatch.
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Phase 2: every pair produces a verdict (KEEP coercion on off-schema); the cost-ceiling gate fires when pair count exceeds the default.
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Phase 3: the report groups findings by verdict and surfaces operator approval per finding.
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Phase 4: clean-tree gate refuses dirty trees; every applied edit has a journal entry; rollback restores byte-identical source.
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>Hard gate for apply: clean git tree. No exceptions.
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>&lt;reflection&gt;
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>After each phase, the orchestrator verifies:
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>Setup: the manifest contains every required column and every block has a <span class="sb">`finding_id`</span>; oversized blocks are flagged.
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">-</span><span class="w"> </span>Analyze: every surviving pair produced a verdict; off-schema responses were coerced to a KEEP verdict, never to EXTRACT.
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">-</span><span class="w"> </span>Report: every finding has an operator decision recorded; nothing advances to apply without explicit approval.
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">-</span><span class="w"> </span>Apply: the git tree was clean at gate time; every applied edit produced a journal entry; rollback restores byte-identical source.
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>All phases: SKILL.md, phase commands, and the rendered report cite reference files by path and do not restate their content.
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="gu">## v2 scope (deferred)</span>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>Embeddings as a candidate narrower are deferred to v2. Revival triggers: measured cross-bucket miss rate exceeds 20% on a seeded test corpus, or the operator lifts the no-Python constraint. See design doc §15 for the v2 revival criteria.
 </code></pre></div>
 
 
