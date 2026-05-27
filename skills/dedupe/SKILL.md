@@ -25,13 +25,15 @@ Before invoking any phase, the orchestrator confirms:
 
 2. **Mechanical safety-marker predicate runs before the LLM safety screen.** A regex-based predicate force-marks blocks containing INLINE-MANDATORY safety markers, short-circuiting the classifier to KEEP-contextual with `inline_mandatory=true`. The pattern table is the canonical source in `references/safety-markers.md`; the orchestrator applies those patterns inline via harness Grep/Read, never via a compiled engine.
 
-3. **Fail-safe coercion direction is always KEEP, never EXTRACT.** Off-schema classifier responses, low-confidence verdicts, or any ambiguity coerce to a KEEP verdict. Deletion requires positive, schema-valid evidence; silence or malformed output preserves both blocks. The coercion rule is canonically stated in `references/counterfactual-prompt.md`.
+3. **Structural-template heading allowlist short-circuits intra-bucket pairs.** Pairs whose `bucket_key` matches a slot in spellbook's canonical skill-/command-authoring template (e.g., `invariant principles`, `inputs`, `outputs`, `self-check`, `prerequisite verification`, numbered `phase N` headings) resolve to `KEEP-placement` with `source=structural_template` without classifier dispatch. The allowlist and its phase-name regex patterns live in `references/template-headings.md`. Cross-bucket triage pairs are exempt from this floor so RECONCILE-drifted findings remain detectable.
 
-4. **Clean git tree is a hard gate for apply.** Phase 4 (`/dedupe-apply`) refuses to run unless `git status --porcelain` is empty. The skill never writes to source files with pending unrelated changes; rollback uses a journaled record of every per-finding edit.
+4. **Fail-safe coercion direction is always KEEP, never EXTRACT.** Off-schema classifier responses, low-confidence verdicts, or any ambiguity coerce to a KEEP verdict. Deletion requires positive, schema-valid evidence; silence or malformed output preserves both blocks. The coercion rule is canonically stated in `references/counterfactual-prompt.md`.
 
-5. **M6 anti-irony: definitions live in `references/`, downstream artifacts cite by path.** SKILL.md, phase commands, and reports reference the canonical homes without restating their content. A grep-based gate in Track D enforces this. Restating verdict definitions, safety regexes, the classifier JSON schema, or the segmentation recipe inside this file is the failure mode this principle exists to prevent.
+5. **Clean git tree is a hard gate for apply.** Phase 4 (`/dedupe-apply`) refuses to run unless `git status --porcelain` is empty. The skill never writes to source files with pending unrelated changes; rollback uses a journaled record of every per-finding edit.
 
-6. **Phases are non-fungible.** Setup, analyze, report, and apply are distinct phases with explicit handoff artifacts. Phase collapse — e.g., classifying during setup, or applying without operator approval at the report gate — is forbidden even when the corpus is small or the operator says "wrap up". The dispatch surface is the four commands listed below.
+6. **M6 anti-irony: definitions live in `references/`, downstream artifacts cite by path.** SKILL.md, phase commands, and reports reference the canonical homes without restating their content. A grep-based gate in Track D enforces this. Restating verdict definitions, safety regexes, the classifier JSON schema, or the segmentation recipe inside this file is the failure mode this principle exists to prevent.
+
+7. **Phases are non-fungible.** Setup, analyze, report, and apply are distinct phases with explicit handoff artifacts. Phase collapse — e.g., classifying during setup, or applying without operator approval at the report gate — is forbidden even when the corpus is small or the operator says "wrap up". The dispatch surface is the four commands listed below.
 
 ## Architecture
 
@@ -42,7 +44,8 @@ skills/dedupe/
     ├── verdict-taxonomy.md               # 5 verdicts + INLINE-MANDATORY semantics
     ├── counterfactual-prompt.md          # Classifier prompt + strict JSON schema + fail-safe coercion
     ├── segmentation-protocol.md          # Block segmentation + finding_id hashing recipe
-    └── safety-markers.md                 # INLINE-MANDATORY regex pattern table
+    ├── safety-markers.md                 # INLINE-MANDATORY regex pattern table
+    └── template-headings.md              # Structural-template bucket-key allowlist (Stage 5.5 floor)
 
 commands/
 ├── dedupe-setup.md                       # Phase 1: parse seed, segment blocks, emit manifest
@@ -87,6 +90,7 @@ These files are the authoritative source for their respective content. SKILL.md 
 | `references/counterfactual-prompt.md` | Classifier prompt text, strict JSON verdict schema, and the off-schema fail-safe coercion rule. |
 | `references/segmentation-protocol.md` | Heading-bounded block segmentation rules, the bucket-key derivation, and the `finding_id` hashing recipe. |
 | `references/safety-markers.md` | Regex pattern table for the mechanical INLINE-MANDATORY safety-floor predicate. |
+| `references/template-headings.md` | Bucket-key allowlist (and phase-name regex patterns) for the Stage 5.5 structural-template floor. |
 
 ## Quality gates
 

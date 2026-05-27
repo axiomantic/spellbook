@@ -21,15 +21,21 @@ before `/dedupe-report`.
    with a block flagged `inline_mandatory_mechanical=true` is recorded
    as a KEEP-flavored verdict with `source=mechanical_floor` without a
    classifier dispatch.
-3. **One subagent per surviving pair** — each pair gets exactly one
+3. **Structural template floor short-circuits classification** — any
+   intra-bucket pair whose `bucket_key` matches the allowlist in
+   `skills/dedupe/references/template-headings.md` is recorded as
+   `KEEP-placement` with `source=structural_template` without a
+   classifier dispatch. Cross-bucket pairs surfaced by triage are
+   exempt to preserve drift detection.
+4. **One subagent per surviving pair** — each pair gets exactly one
    `Task` dispatch with a per-pair randomized 16-hex-char sentinel
    nonce wrapping the inert-DATA blocks.
-4. **Off-schema fails safe toward KEEP** — verdict-scoped only; the
+5. **Off-schema fails safe toward KEEP** — verdict-scoped only; the
    coercion rule is defined in the canonical home (see References).
-5. **Triage off-schema HALTS** — a malformed triage response means the
+6. **Triage off-schema HALTS** — a malformed triage response means the
    cross-bucket signal is unreliable; halting is the safety-preserving
    choice. There is no triage coercion.
-6. **Off-schema halt threshold is 25%** — running rate over the last 20
+7. **Off-schema halt threshold is 25%** — running rate over the last 20
    verdicts (or all verdicts if M < 20). Exceeding the threshold HALTS
    analyze with a failure report. This is NOT verdict coercion; the
    halt produces a failure artifact, not a misleading clean run.
@@ -141,6 +147,38 @@ drive `AskUserQuestion` with these options:
 The same prompt offers an optional knob to tune the off-schema halt
 threshold (default 25%, see Stage 7). The operator may raise or lower
 it within `[10%, 50%]`.
+
+### Stage 5.5 — Structural template floor
+
+Before the mechanical safety floor and classifier dispatch, apply the
+bucket-key allowlist defined in
+`skills/dedupe/references/template-headings.md`. For every surviving
+pair, if **both** blocks' `bucket_key` matches either the exact-match
+allowlist or one of the phase-name regex patterns declared in that
+file, short-circuit the pair:
+
+- record the verdict as `KEEP-placement` (each block fills a per-skill
+  or per-command structural slot prescribed by spellbook's authoring
+  conventions; the location IS the load-bearing signal);
+- set `source=structural_template`;
+- carry `inline_mandatory` from the manifest (do NOT clear it; the
+  mechanical safety floor's flag is sticky per `safety-markers.md`);
+- do NOT dispatch a classifier subagent for this pair.
+
+This stage runs BEFORE Stage 6. If Stage 6 would short-circuit the
+same pair (either block has `inline_mandatory_mechanical=true`), the
+Stage 6 short-circuit wins: the verdict family stays KEEP, but the
+`source` becomes `mechanical_floor` and `inline_mandatory=true`.
+
+Cross-bucket pairs surfaced by Stage 4 triage are NOT short-circuited
+by this floor even if both blocks happen to be in template buckets,
+because cross-bucket pairs are by definition the drift-detection
+channel; suppressing them would mask exactly the RECONCILE-drifted
+findings the dedupe pass exists to surface.
+
+This pair contributes a "structural-template short-circuit" line to
+the progress stream and is included in the verdicts artifact with
+`source=structural_template`.
 
 ### Stage 6 — Mechanical safety floor (re-apply)
 
@@ -365,3 +403,5 @@ This command produces exactly one artifact:
   `skills/dedupe/references/safety-markers.md`.
 - Block segmentation, the bucket key, and `finding_id` derivation:
   `skills/dedupe/references/segmentation-protocol.md`.
+- Structural-template heading allowlist that short-circuits Stage 5.5:
+  `skills/dedupe/references/template-headings.md`.

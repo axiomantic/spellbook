@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **`/dedupe` Stage 5.5 — structural template floor.** New
+  `skills/dedupe/references/template-headings.md` allowlist short-circuits
+  intra-bucket pairs whose `bucket_key` matches a slot in spellbook's
+  canonical skill/command authoring template (e.g., `invariant principles`,
+  `inputs`, `outputs`, `self-check`, `prerequisite verification`, numbered
+  `phase N`). Pairs resolve to `KEEP-placement` with
+  `source=structural_template` without classifier dispatch. Cross-bucket
+  triage pairs are exempt so RECONCILE-drifted findings remain detectable.
+  Eliminates the dominant false-positive class on well-templated skill
+  families.
+
 ## [0.70.0] - 2026-05-26
 
 ### Added
