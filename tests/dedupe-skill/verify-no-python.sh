@@ -62,6 +62,12 @@ for t in "${TARGETS[@]}"; do
     fi
 done
 
+# Guard: if all targets filter to empty, grep would read stdin and hang.
+if [ "${#FILTERED_TARGETS[@]}" -eq 0 ]; then
+    echo "PASS: D2 (no targets to scan)"
+    exit 0
+fi
+
 MATCHES=$(grep "${GREP_ARGS[@]}" "$PATTERN" "${FILTERED_TARGETS[@]}" 2>/dev/null || true)
 
 if [ -n "$MATCHES" ]; then

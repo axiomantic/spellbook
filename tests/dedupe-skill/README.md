@@ -31,6 +31,10 @@ All scripts must exit 0.
   Install via `brew install markdownlint-cli2` or `npm install -g markdownlint-cli2`.
   D5 previously skipped silently when this was missing; the green-mirage audit
   treated that as a false-positive PASS and the gate now fails loudly instead.
+- `perl` for D6 — HARD dependency, used by `verify-references.sh` to
+  extract `/dedupe-<phase>` slash-command mentions with a left-boundary
+  predicate that POSIX ERE cannot express. Present by default on macOS
+  and on every mainstream Linux distribution; verify with `perl -v`.
 
 ## What each gate checks
 

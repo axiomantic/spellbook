@@ -21,10 +21,13 @@ SOURCES=(
 
 KNOWN_PHASES="setup analyze report apply"
 
-# Snapshot tracked files once (case-sensitive index view). Falls back to
-# `find` if not in a git checkout (unlikely in CI but kept for robustness).
+# Snapshot tracked + non-ignored untracked files once (case-sensitive
+# index view). Including `--others --exclude-standard` makes the gate
+# usable during local development before a referenced file is staged,
+# without picking up gitignored noise. Falls back to `find` if not in
+# a git checkout (unlikely in CI but kept for robustness).
 if command -v git >/dev/null 2>&1 && git rev-parse --git-dir >/dev/null 2>&1; then
-    TRACKED=$(git ls-files)
+    TRACKED=$(git ls-files --cached --others --exclude-standard)
 else
     TRACKED=$(find skills commands -type f 2>/dev/null)
 fi

@@ -231,8 +231,12 @@ The content between them is JSON.
 Pipe each JSON block through `jq` for parsing and field extraction:
 
 ```sh
-echo "$JSON" | jq -r '.id, .status, .original_path_a, .original_text_a_b64, ...'
+printf '%s\n' "$JSON" | jq -r '.id, .status, .original_path_a, .original_text_a_b64, ...'
 ```
+
+Use `printf '%s\n'` rather than `echo "$JSON"`: `echo` may interpret
+backslashes (`\n`, `\t`) inside JSON string values or treat a JSON
+fragment beginning with `-` as a flag.
 
 Discard entries whose `status` is not `applied`.
 
