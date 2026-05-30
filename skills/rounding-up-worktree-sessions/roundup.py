@@ -73,6 +73,10 @@ def _find_project_dir(projects_root, cwd):
     """
     leading = encode_cwd_literal(cwd)
     for name in (leading, leading.lstrip("-")):
+        # Finding 3: cwd="/" encodes to "-", whose lstrip("-") is "". Joining an empty
+        # name yields projects_root itself, which isdir -> a false positive. Skip empties.
+        if not name:
+            continue
         candidate = os.path.join(projects_root, name)
         if os.path.isdir(candidate):
             return candidate
@@ -260,6 +264,19 @@ def _has_git(dir_path):
     return os.path.exists(os.path.join(dir_path, ".git"))
 
 
+def _safe_listdir(path):
+    """os.listdir that returns [] instead of raising on OSError (Finding 4).
+
+    `os.path.isdir` can pass for a dir that is then unreadable (no read permission,
+    TOCTOU removal, etc.); listing it would crash the whole scan. Treat such a dir
+    as empty so enumeration degrades gracefully.
+    """
+    try:
+        return os.listdir(path)
+    except OSError:
+        return []
+
+
 def enumerate_worktree_dirs(worktrees_root, repos_root):
     """Enumerate candidate worktree dirs on disk (design §6.1).
 
@@ -269,17 +286,17 @@ def enumerate_worktree_dirs(worktrees_root, repos_root):
     """
     dirs = []
     if os.path.isdir(worktrees_root):
-        for workspace in sorted(os.listdir(worktrees_root)):
+        for workspace in sorted(_safe_listdir(worktrees_root)):
             ws_path = os.path.join(worktrees_root, workspace)
             if not os.path.isdir(ws_path):
                 continue
             dirs.append(ws_path)  # workspace root
-            for project in sorted(os.listdir(ws_path)):
+            for project in sorted(_safe_listdir(ws_path)):
                 proj_path = os.path.join(ws_path, project)
                 if os.path.isdir(proj_path) and _has_git(proj_path):
                     dirs.append(proj_path)
     if os.path.isdir(repos_root):
-        for project in sorted(os.listdir(repos_root)):
+        for project in sorted(_safe_listdir(repos_root)):
             proj_path = os.path.join(repos_root, project)
             # Skip the worktrees_root itself if it lives under repos_root.
             if os.path.abspath(proj_path) == os.path.abspath(worktrees_root):
@@ -685,6 +702,14 @@ def build_reorient_plan(sessions_by_uuid, decisions, path_exists):
         elif target == "repo_subdir":
             target_dir = session.get("resolved_worktree_dir")
             base["target_kind"] = "repo_subdir"
+            # Finding 2: resolved_worktree_dir can be None under Phase-B group-plurality
+            # resolution. A None target_dir would crash encode_cwd_literal -> re.sub;
+            # emit a skipped plan instead (mirrors the workspace_root None guard above).
+            if not target_dir:
+                base["skipped"] = True
+                base["skip_reason"] = "no_repo_subdir"
+                plans.append(base)
+                continue
         else:
             base["skipped"] = True
             base["skip_reason"] = "unknown_target"
@@ -989,11 +1014,25 @@ def scan_config_dirs(config_dirs, *, lookback_hours, since_iso, running_threshol
         if not os.path.isdir(projects_root):
             warnings.append("config dir has no projects/ subdir: %s" % config_dir)
             continue
-        for project_name in sorted(os.listdir(projects_root)):
+        # Finding 5: an unreadable projects_root (passes isdir, fails listdir) must
+        # warn and skip this config dir rather than crash the whole scan.
+        try:
+            project_names = sorted(os.listdir(projects_root))
+        except OSError as e:
+            warnings.append("failed to list projects dir %s: %s" % (projects_root, e))
+            continue
+        for project_name in project_names:
             project_dir = os.path.join(projects_root, project_name)
             if not os.path.isdir(project_dir):
                 continue
-            for fname in sorted(os.listdir(project_dir)):
+            # Finding 5: likewise, a single unreadable project_dir is skipped with a
+            # warning so other readable project dirs still scan.
+            try:
+                fnames = sorted(os.listdir(project_dir))
+            except OSError as e:
+                warnings.append("failed to list project dir %s: %s" % (project_dir, e))
+                continue
+            for fname in fnames:
                 if not fname.endswith(".jsonl"):
                     continue
                 if fname.startswith("agent-"):

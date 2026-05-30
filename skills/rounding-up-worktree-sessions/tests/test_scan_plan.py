@@ -100,6 +100,48 @@ def test_scan_running_threshold_recent_mtime(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Finding 5 — scan tolerates unreadable config/project dirs (os.listdir OSError)
+# ---------------------------------------------------------------------------
+def test_scan_tolerates_unreadable_projects_root(tmp_path):
+    # os.path.isdir(projects_root) passes but os.listdir raises PermissionError.
+    # scan_config_dirs must warn and continue, not crash.
+    import stat
+
+    cfg = tmp_path / ".claude"
+    projects = cfg / "projects"
+    projects.mkdir(parents=True)
+    os.chmod(str(projects), 0)
+    try:
+        sessions, warnings = roundup.scan_config_dirs(
+            [str(cfg)], lookback_hours=100000, since_iso=None, running_threshold_sec=120
+        )
+    finally:
+        os.chmod(str(projects), stat.S_IRWXU)
+    assert sessions == []
+    assert any("failed to list" in w for w in warnings)
+
+
+def test_scan_tolerates_unreadable_project_dir(tmp_path):
+    # A single unreadable <project_dir> must be skipped with a warning; other
+    # readable project dirs still scan.
+    import stat
+
+    cfg = _make_config(tmp_path)
+    bad = os.path.join(cfg, "projects", "-Users-eek-Development-worktrees-ODY-styleseat")
+    os.chmod(bad, 0)
+    try:
+        sessions, warnings = roundup.scan_config_dirs(
+            [cfg], lookback_hours=100000, since_iso=None, running_threshold_sec=120
+        )
+    finally:
+        os.chmod(bad, stat.S_IRWXU)
+    assert any("failed to list" in w for w in warnings)
+    # Sessions from OTHER readable project dirs are still returned.
+    uuids = {s["uuid"] for s in sessions}
+    assert "1a2b3c4d-6666-4ddd-8eee-0123456789ab" in uuids
+
+
+# ---------------------------------------------------------------------------
 # plan
 # ---------------------------------------------------------------------------
 def test_plan_emits_envelope(tmp_path):

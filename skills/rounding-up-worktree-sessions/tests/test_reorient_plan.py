@@ -86,3 +86,16 @@ def test_unresolved_skipped():
     plans = roundup.build_reorient_plan(_by_uuid(s),
         [{"uuid": "u1", "config_dir": "/Users/eek/.claude", "target": "repo_subdir"}], NEVER)
     assert plans[0]["skipped"] and plans[0]["skip_reason"] == "unresolved"
+
+
+def test_repo_subdir_none_target_dir_skipped_not_crash():
+    # Finding 2: a repo_subdir decision for a session whose resolved_worktree_dir is
+    # None (possible under Phase-B group-plurality resolution) must yield a skipped
+    # MovePlan (reason no_repo_subdir), NOT a TypeError from encode_cwd_literal(None).
+    # The session must be resolved (conf != unresolved) so it reaches the target
+    # resolution branch.
+    s = _sess("u1", "/Users/eek/.claude/projects/-old/u1.jsonl", None, "/wt-root", conf="high")
+    plans = roundup.build_reorient_plan(_by_uuid(s),
+        [{"uuid": "u1", "config_dir": "/Users/eek/.claude", "target": "repo_subdir"}], NEVER)
+    assert plans[0]["target_kind"] == "repo_subdir"
+    assert plans[0]["skipped"] and plans[0]["skip_reason"] == "no_repo_subdir"

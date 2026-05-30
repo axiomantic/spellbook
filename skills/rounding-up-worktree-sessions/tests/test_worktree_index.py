@@ -31,3 +31,60 @@ def test_build_index_maps_and_workspace_root(tmp_path):
     assert idx["workspace_root_of"][repo] == ws       # subdir -> workspace root
     assert idx["workspace_root_of"][ws] == ws         # root -> itself
     assert idx["workspace_root_of"][main] is None      # main repo -> None
+
+
+def test_enumerate_nonexistent_roots_return_empty(tmp_path):
+    # Finding 4 (baseline): nonexistent roots must yield [] without raising.
+    dirs = roundup.enumerate_worktree_dirs(
+        str(tmp_path / "no-worktrees"), str(tmp_path / "no-repos")
+    )
+    assert dirs == []
+
+
+def test_enumerate_unreadable_worktrees_root_tolerated(tmp_path):
+    # Finding 4: an unreadable worktrees_root passes os.path.isdir but os.listdir
+    # raises PermissionError. The scan must not crash; it returns what it can (here,
+    # the repos_root contents).
+    import stat
+
+    wt = tmp_path / "worktrees"
+    wt.mkdir()
+    repos = tmp_path / "repos"
+    main = repos / "lockfreequeues"
+    main.mkdir(parents=True)
+    _mk_git(str(main))
+    # Strip read permission from worktrees_root so os.listdir(worktrees_root) raises.
+    os.chmod(str(wt), 0)
+    try:
+        dirs = roundup.enumerate_worktree_dirs(str(wt), str(repos))
+    finally:
+        os.chmod(str(wt), stat.S_IRWXU)
+    # No crash; the readable repos_root entry is still enumerated.
+    assert str(main) in dirs
+
+
+def test_enumerate_unreadable_repos_root_tolerated(tmp_path):
+    # Finding 4: an unreadable repos_root must be treated as empty, not crash.
+    import stat
+
+    wt = tmp_path / "worktrees"
+    repo = wt / "ODY" / "styleseat"
+    repo.mkdir(parents=True)
+    _mk_git(str(repo))
+    repos = tmp_path / "repos"
+    repos.mkdir()
+    os.chmod(str(repos), 0)
+    try:
+        dirs = roundup.enumerate_worktree_dirs(str(wt), str(repos))
+    finally:
+        os.chmod(str(repos), stat.S_IRWXU)
+    assert str(repo) in dirs
+
+
+def test_find_project_dir_all_dash_cwd_does_not_return_root(tmp_path):
+    # Finding 3: cwd="/" encodes to "-", whose lstrip("-") is "". os.path.join(root, "")
+    # == root, which isdir -> the old code wrongly returned projects_root itself. The
+    # loop must skip empty candidate names so an all-dashes cwd resolves to None.
+    projects = tmp_path / "projects"
+    projects.mkdir()
+    assert roundup._find_project_dir(str(projects), "/") is None
