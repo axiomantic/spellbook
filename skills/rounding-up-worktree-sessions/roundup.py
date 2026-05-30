@@ -15,6 +15,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -788,8 +789,13 @@ def build_pane_command(session, default_config_dir, explicit_config_env):
     uuid = session["uuid"]
     config_dir = session.get("config_dir")
     # C1: unconditional prefix using the session's own config_dir.
-    prefix = "CLAUDE_CONFIG_DIR=%s " % config_dir
-    return "cd %s && %sclaude --dangerously-skip-permissions --resume %s" % (cd_target, prefix, uuid)
+    # MEDIUM Fix 1: shell-safe quoting of paths (spaces/special chars) via shlex.quote.
+    prefix = "CLAUDE_CONFIG_DIR=%s " % shlex.quote(config_dir)
+    return "cd %s && %sclaude --dangerously-skip-permissions --resume %s" % (
+        shlex.quote(cd_target),
+        prefix,
+        uuid,
+    )
 
 
 def render_applescript(
@@ -1198,16 +1204,24 @@ def _rewrite_history(history_path, old_to_new):
             proj = rec.get("project")
             if proj in old_to_new:
                 rec["project"] = old_to_new[proj]
-                out_lines.append(json.dumps(rec) + "\n")
+                # MEDIUM Fix 2: preserve non-ASCII chars (don't \uXXXX-escape).
+                out_lines.append(json.dumps(rec, ensure_ascii=False) + "\n")
                 rewritten += 1
             else:
                 out_lines.append(line)
-    fd, tmp_path = tempfile.mkstemp(dir=os.path.dirname(history_path), suffix=".tmp")
+    # MEDIUM Fix 3: `dir=""` (cwd-relative history_path) is invalid for mkstemp; pass
+    # None so it falls back to the default temp dir. Guard the fd against leaks on error.
+    dir_name = os.path.dirname(history_path) or None
+    fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as out:
             out.writelines(out_lines)
         os.replace(tmp_path, history_path)
     except Exception:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
         raise
@@ -1431,6 +1445,12 @@ def _run_osascript(script):
             ["osascript", path], capture_output=True, text=True, check=False
         )
     finally:
+        # MEDIUM Fix 4: guard against fd leak if fdopen never took ownership of fd.
+        # Double-close after the `with` is harmless (guarded by except OSError).
+        try:
+            os.close(fd)
+        except OSError:
+            pass
         try:
             os.remove(path)
         except OSError:
@@ -1555,7 +1575,8 @@ def _lookback_args(args):
 
 def _emit(doc, out_path):
     """Write `doc` as JSON to `out_path` if given, else to stdout."""
-    text = json.dumps(doc, indent=2)
+    # MEDIUM Fix 5: preserve non-ASCII chars in emitted JSON.
+    text = json.dumps(doc, indent=2, ensure_ascii=False)
     if out_path:
         with open(out_path, "w", encoding="utf-8") as fh:
             fh.write(text + "\n")

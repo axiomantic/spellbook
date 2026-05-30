@@ -115,6 +115,23 @@ def test_pane_command_none_cd_target_returns_none():
     assert cmd is None
 
 
+def test_pane_command_shell_quotes_paths_with_spaces():
+    """MEDIUM Fix 1: cd_target / config_dir with spaces are shlex.quote-escaped.
+
+    A path containing a space must be quoted so the emitted `cd` and the
+    CLAUDE_CONFIG_DIR assignment remain a single shell-safe token.
+    """
+    cmd = roundup.build_pane_command(
+        _s("u1", "/wt/my project", config_dir="/Users/eek/.claude config"),
+        DEFAULT,
+        False,
+    )
+    assert cmd == (
+        "cd '/wt/my project' && CLAUDE_CONFIG_DIR='/Users/eek/.claude config' "
+        "claude --dangerously-skip-permissions --resume u1"
+    )
+
+
 # ---------------------------------------------------------------------------
 # render_applescript — FULL-script equality (GM-I2)
 # ---------------------------------------------------------------------------

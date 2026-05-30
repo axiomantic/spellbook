@@ -374,6 +374,24 @@ def test_rewrite_history_preserves_malformed_lines_verbatim(tmp_path):
     assert rewritten_rec["sessionId"] == "u1"
 
 
+def test_rewrite_history_preserves_non_ascii(tmp_path):
+    """MEDIUM Fix 2: rewritten records keep non-ASCII chars unescaped (ensure_ascii=False)."""
+    history = tmp_path / "history.jsonl"
+    match = json.dumps({"project": "/Users/eek/old", "summary": "café déjà"}) + "\n"
+    history.write_text(match)
+
+    rewritten = roundup._rewrite_history(str(history), {"/Users/eek/old": "/Users/eek/new"})
+    assert rewritten == 1
+
+    out = history.read_text(encoding="utf-8")
+    # Non-ASCII chars are written literally, not as \uXXXX escapes.
+    assert "café déjà" in out
+    assert "\\u" not in out
+    rec = json.loads(out)
+    assert rec["project"] == "/Users/eek/new"
+    assert rec["summary"] == "café déjà"
+
+
 def test_already_correct_noop_skipped_no_move(tmp_path):
     """Second line of defense: a decision whose old==new is skipped with
     'already_correct' and performs NO filesystem move (a no-op move must never be
