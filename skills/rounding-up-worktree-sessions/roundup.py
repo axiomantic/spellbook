@@ -1507,18 +1507,28 @@ def execute_launch(
     if dry_run:
         print(script)
     else:
-        result = run_osascript(script)
-        ran = True
-        # Surface TCC / automation-permission failure (-1743) with remediation (§9.7).
-        if result is not None and getattr(result, "returncode", 0) != 0:
-            stderr = getattr(result, "stderr", "") or ""
-            if "-1743" in stderr or "Not authorized" in stderr or "not allowed" in stderr.lower():
-                warnings.append(
-                    "osascript was not authorized to control Ghostty (-1743). Grant access in "
-                    "System Settings -> Privacy & Security -> Automation, then re-run."
-                )
-            else:
-                warnings.append("osascript failed: %s" % stderr.strip())
+        # `osascript` only exists on macOS; on other platforms the runner raises
+        # FileNotFoundError. Degrade gracefully with a warning instead of
+        # propagating the exception (relaunch is macOS-only).
+        try:
+            result = run_osascript(script)
+        except FileNotFoundError:
+            warnings.append(
+                "osascript command not found. Relaunching sessions is only supported on macOS."
+            )
+            ran = False
+        else:
+            ran = True
+            # Surface TCC / automation-permission failure (-1743) with remediation (§9.7).
+            if result is not None and getattr(result, "returncode", 0) != 0:
+                stderr = getattr(result, "stderr", "") or ""
+                if "-1743" in stderr or "Not authorized" in stderr or "not allowed" in stderr.lower():
+                    warnings.append(
+                        "osascript was not authorized to control Ghostty (-1743). Grant access in "
+                        "System Settings -> Privacy & Security -> Automation, then re-run."
+                    )
+                else:
+                    warnings.append("osascript failed: %s" % stderr.strip())
 
     return {"script": script, "warnings": warnings, "ran": ran}
 

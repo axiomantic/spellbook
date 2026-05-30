@@ -82,6 +82,31 @@ def test_live_invokes_runner_once():
     assert 'tell application "Ghostty"' in calls[0]
 
 
+def test_live_osascript_missing_warns_and_does_not_propagate():
+    """On non-macOS, `osascript` is absent and the runner raises FileNotFoundError.
+
+    execute_launch must degrade gracefully: emit the not-found warning, report
+    ran=False, and NOT propagate the exception.
+    """
+    plan = _plan([_sess("u1")], [{"group_key": "g", "sessions": ["u1"]}])
+
+    def missing_osascript(_script):
+        raise FileNotFoundError(2, "No such file or directory", "osascript")
+
+    result = roundup.execute_launch(
+        plan,
+        dry_run=False,
+        default_config_dir=DEFAULT,
+        run_osascript=missing_osascript,
+    )
+
+    assert result["ran"] is False
+    assert (
+        "osascript command not found. Relaunching sessions is only supported on macOS."
+        in result["warnings"]
+    )
+
+
 def test_warning_for_non_default_config_session():
     plan = _plan(
         [_sess("u1", config_dir="/Users/eek/.claude-work")],

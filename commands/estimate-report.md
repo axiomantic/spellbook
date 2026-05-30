@@ -140,7 +140,7 @@ Task:
   description: "Save estimate report"
   prompt: |
     Write the following report to:
-    /Users/eek/.local/spellbook/docs/[PROJECT_ENCODED]/estimates/[DATE]-[SLUG].md
+    $SPELLBOOK_CONFIG_DIR/docs/[PROJECT_ENCODED]/estimates/[DATE]-[SLUG].md
 
     Create the parent directory if it does not exist (mkdir -p).
 

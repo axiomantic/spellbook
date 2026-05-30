@@ -43,7 +43,7 @@ Task:
   description: "PERT three-point: [ticket id]"
   prompt: |
     First, READ:
-    /Users/eek/Development/spellbook/skills/estimating-tickets/pert-and-brooks.md
+    $SPELLBOOK_DIR/skills/estimating-tickets/pert-and-brooks.md
 
     Generate three-point estimates for this ticket.
 

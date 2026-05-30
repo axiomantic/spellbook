@@ -11,10 +11,30 @@ import shutil
 import subprocess
 import sys
 
+import tripwire
+
 import roundup
 
 SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROUNDUP = os.path.join(SKILL, "roundup.py")
+
+
+class _IsInstance:
+    """Argument matcher: equals any instance of ``cls``.
+
+    Used in tripwire ``assert_call(raised=...)`` to match the exception
+    instance recorded for a ``.raises()`` side effect without pinning the
+    exact object identity.
+    """
+
+    def __init__(self, cls):
+        self._cls = cls
+
+    def __eq__(self, other):
+        return isinstance(other, self._cls)
+
+    def __repr__(self):
+        return f"_IsInstance({self._cls.__name__})"
 
 TARGET = "/Users/eek/Development/worktrees/ODY/styleseat"
 TARGET2 = "/Users/eek/Development/worktrees/ODY/mobileweb"
@@ -105,7 +125,7 @@ def test_collision_refusal(tmp_path):
     )
 
 
-def test_rollback_on_injected_sidecar_failure(tmp_path, monkeypatch):
+def test_rollback_on_injected_sidecar_failure(tmp_path):
     # GM-C1: assert CONTENT (exact bytes), not just path existence, after rollback.
     JSONL_BODY = '{"cwd":"/x"}\n{"type":"message"}\n'
     SIDECAR_MARKER = "sidecar-marker-content\n"
@@ -120,18 +140,34 @@ def test_rollback_on_injected_sidecar_failure(tmp_path, monkeypatch):
     s = _session(cfg, old, sidecar=os.path.join(old, "u1"))
     plans = roundup.build_reorient_plan({"u1": s}, [_decision(cfg)], os.path.exists)
 
-    calls = {"n": 0}
+    # tripwire: mock the module-level shutil.move at its import site in roundup.
+    # execute_reorient calls shutil.move in FIFO order:
+    #   1) jsonl move  (succeeds -> real move)
+    #   2) sidecar move (FAILS -> raises, triggers journal rollback)
+    #   3) rollback reversal of the jsonl journal entry (succeeds -> real move)
+    # Each registered side effect fires exactly once and is asserted after the
+    # sandbox, satisfying tripwire's use + assert guarantees.
     real_move = shutil.move
 
-    def flaky_move(src, dst):
-        calls["n"] += 1
-        # First move = jsonl (succeeds), second = sidecar (fails) -> rollback jsonl.
-        if calls["n"] == 2:
-            raise OSError("injected sidecar move failure")
+    def real(src, dst):
         return real_move(src, dst)
 
-    monkeypatch.setattr(roundup.shutil, "move", flaky_move)
-    result = roundup.execute_reorient(plans, dry_run=False, update_history=False)
+    move_mock = tripwire.mock("roundup:shutil.move")
+    move_mock.calls(real)  # 1) jsonl move
+    move_mock.raises(OSError("injected sidecar move failure"))  # 2) sidecar move
+    move_mock.calls(real)  # 3) rollback: jsonl moved back
+
+    with tripwire:
+        result = roundup.execute_reorient(plans, dry_run=False, update_history=False)
+
+    # Assert the exact move sequence (FIFO order).
+    move_mock.assert_call(args=(plans[0]["old_jsonl"], plans[0]["new_jsonl"]), kwargs={})
+    move_mock.assert_call(
+        args=(plans[0]["old_sidecar"], plans[0]["new_sidecar"]),
+        kwargs={},
+        raised=_IsInstance(OSError),
+    )
+    move_mock.assert_call(args=(plans[0]["new_jsonl"], plans[0]["old_jsonl"]), kwargs={})
 
     # jsonl restored to the old dir with EXACT original bytes.
     restored_jsonl = os.path.join(old, "u1.jsonl")
@@ -226,7 +262,7 @@ def test_update_history_rewrites_and_backs_up(tmp_path):
     assert result["history_updated"] is True
 
 
-def test_history_failure_leaves_moves_intact(tmp_path, monkeypatch):
+def test_history_failure_leaves_moves_intact(tmp_path):
     cfg, old = _setup(tmp_path)
     enc = roundup.encode_cwd_literal(TARGET)
     history = os.path.join(cfg, "history.jsonl")
@@ -236,14 +272,22 @@ def test_history_failure_leaves_moves_intact(tmp_path, monkeypatch):
     s["launch_cwd"] = "/Users/eek/old-cwd"
     plans = roundup.build_reorient_plan({"u1": s}, [_decision(cfg)], os.path.exists)
 
-    # Force the history rewrite to blow up AFTER the file move has happened.
-    def boom(*a, **k):
-        raise OSError("injected history failure")
+    # tripwire: force the history rewrite to blow up AFTER the file move has
+    # happened. _rewrite_history fires exactly once (one config_dir with a
+    # matching launch_cwd) and is asserted after the sandbox.
+    rewrite_mock = tripwire.mock("roundup:_rewrite_history")
+    rewrite_mock.raises(OSError("injected history failure"))
 
-    monkeypatch.setattr(roundup, "_rewrite_history", boom)
-    result = roundup.execute_reorient(
-        plans, dry_run=False, update_history=True, now_stamp="2026-05-29T00:00:00Z",
-        sessions_by_uuid={"u1": s},
+    with tripwire:
+        result = roundup.execute_reorient(
+            plans, dry_run=False, update_history=True, now_stamp="2026-05-29T00:00:00Z",
+            sessions_by_uuid={"u1": s},
+        )
+
+    rewrite_mock.assert_call(
+        args=(history, {"/Users/eek/old-cwd": TARGET}),
+        kwargs={},
+        raised=_IsInstance(OSError),
     )
     # File move still stands.
     assert os.path.exists(os.path.join(cfg, "projects", enc, "u1.jsonl"))
@@ -367,7 +411,7 @@ def test_already_correct_noop_skipped_no_move(tmp_path):
     assert jsonl.read_text() == JSONL_BODY
 
 
-def test_history_skipped_when_rolled_back_nonempty(tmp_path, monkeypatch):
+def test_history_skipped_when_rolled_back_nonempty(tmp_path):
     """GM-M3: history rewrite is SKIPPED when rolled_back is non-empty, even though
     a prior item moved successfully."""
     cfg, old = _setup(tmp_path, uuid="u1")
@@ -400,24 +444,45 @@ def test_history_skipped_when_rolled_back_nonempty(tmp_path, monkeypatch):
         os.path.exists,
     )
 
-    calls = {"n": 0}
+    # tripwire: mock module-level shutil.move at its import site in roundup.
+    # FIFO move sequence inside execute_reorient:
+    #   1) u1.jsonl move  (ok)
+    #   2) u2.jsonl move  (ok)
+    #   3) u2 sidecar move (FAILS -> raises, triggers u2 rollback + batch break)
+    #   4) u2 rollback: u2.jsonl moved back (ok)
+    # History is then SKIPPED (rolled_back non-empty), so no shutil.move /
+    # copy2 / _rewrite_history fires afterward.
     real_move = shutil.move
 
-    def flaky_move(src, dst):
-        calls["n"] += 1
-        # moves: 1=u1.jsonl ok, 2=u2.jsonl ok, 3=u2 sidecar FAIL -> rollback u2, break.
-        if calls["n"] == 3:
-            raise OSError("injected u2 sidecar failure")
+    def real(src, dst):
         return real_move(src, dst)
 
-    monkeypatch.setattr(roundup.shutil, "move", flaky_move)
-    result = roundup.execute_reorient(
-        plans,
-        dry_run=False,
-        update_history=True,
-        now_stamp="2026-05-29T00:00:00Z",
-        sessions_by_uuid=sbu,
+    move_mock = tripwire.mock("roundup:shutil.move")
+    move_mock.calls(real)  # 1) u1.jsonl
+    move_mock.calls(real)  # 2) u2.jsonl
+    move_mock.raises(OSError("injected u2 sidecar failure"))  # 3) u2 sidecar
+    move_mock.calls(real)  # 4) rollback: u2.jsonl back
+
+    p1 = plans[0]
+    p2 = plans[1]
+
+    with tripwire:
+        result = roundup.execute_reorient(
+            plans,
+            dry_run=False,
+            update_history=True,
+            now_stamp="2026-05-29T00:00:00Z",
+            sessions_by_uuid=sbu,
+        )
+
+    move_mock.assert_call(args=(p1["old_jsonl"], p1["new_jsonl"]), kwargs={})
+    move_mock.assert_call(args=(p2["old_jsonl"], p2["new_jsonl"]), kwargs={})
+    move_mock.assert_call(
+        args=(p2["old_sidecar"], p2["new_sidecar"]),
+        kwargs={},
+        raised=_IsInstance(OSError),
     )
+    move_mock.assert_call(args=(p2["new_jsonl"], p2["old_jsonl"]), kwargs={})
 
     # u1 moved; u2 rolled back; batch stopped.
     assert [m["uuid"] for m in result["moved"]] == ["u1"]

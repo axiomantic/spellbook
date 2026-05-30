@@ -64,7 +64,7 @@ Task:
   description: "Point [ticket id] as [persona]"
   prompt: |
     First, READ the pointing rubric at:
-    /Users/eek/Development/spellbook/skills/estimating-tickets/pointing-rubric.md
+    $SPELLBOOK_DIR/skills/estimating-tickets/pointing-rubric.md
 
     You are a [persona name] estimating story points for this ticket.
     Use ReAct-style reasoning: thought, action, observation.
@@ -85,7 +85,7 @@ Task:
     2. ACTION: Map the work to the rubric (3 / 5 / 8 / 13 / 21 / 34).
     3. OBSERVATION: Cross-check against your THOUGHT. Does the point value account for the risk?
     4. Classify complexity as Low or High per the heuristics in ai-multipliers.md:
-       /Users/eek/Development/spellbook/skills/estimating-tickets/ai-multipliers.md
+       $SPELLBOOK_DIR/skills/estimating-tickets/ai-multipliers.md
 
     Return strict JSON:
     {
@@ -119,7 +119,7 @@ Task:
   description: "Reconcile [ticket id] as [persona]"
   prompt: |
     First, RE-READ:
-    /Users/eek/Development/spellbook/skills/estimating-tickets/pointing-rubric.md
+    $SPELLBOOK_DIR/skills/estimating-tickets/pointing-rubric.md
 
     You previously pointed ticket [id] at [your prior points].
     The other personas pointed it as follows:
@@ -166,7 +166,7 @@ After splitting, re-run `estimate-point` on the new sub-tickets. Do NOT proceed 
 
 For each ticket, take the consensus complexity classification (Low or High — if personas disagreed, take the HIGHER complexity).
 
-Apply M_AI from `/Users/eek/Development/spellbook/skills/estimating-tickets/ai-multipliers.md`:
+Apply M_AI from `$SPELLBOOK_DIR/skills/estimating-tickets/ai-multipliers.md`:
 
 - Low complexity: M_AI = 0.7
 - High complexity: M_AI = 1.25
