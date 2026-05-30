@@ -47,6 +47,10 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/docs-write](docs-write.md) | Phase 3 of documenting-projects: Generate documentation with adaptive tone per s... | spellbook |
 | [/encyclopedia-build](encyclopedia-build.md) | [DEPRECATED] Build encyclopedia content: glossary, architecture, decisions, and ... | spellbook |
 | [/encyclopedia-validate](encyclopedia-validate.md) | [DEPRECATED] Assemble and validate encyclopedia, write to output path (Phase 6) | spellbook |
+| [/estimate-buffer](estimate-buffer.md) | Phases 6-7 of estimating-tickets. PERT three-point estimation per ticket + Brook... | spellbook |
+| [/estimate-point](estimate-point.md) | Phases 4-5 of estimating-tickets. Multi-agent consensus pointing per ticket + AI... | spellbook |
+| [/estimate-report](estimate-report.md) | Phase 8 of estimating-tickets. Produce the final structured estimation report. | spellbook |
+| [/estimate-scope](estimate-scope.md) | Phase 1-3 of estimating-tickets. Ingest the test card, validate external-domain ... | spellbook |
 | [/execute-plan](execute-plan.md) | Execute implementation plans with structured review checkpoints. Use when you ha... | [superpowers](https://github.com/obra/superpowers) |
 | [/execute-work-packet](execute-work-packet.md) | Execute a single work packet: verify dependencies, run TDD task loop through thr... | spellbook |
 | [/execute-work-packets-seq](execute-work-packets-seq.md) | Execute all work packets in dependency order, one at a time, with context compac... | spellbook |

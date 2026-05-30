@@ -47,8 +47,8 @@
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
-  - [Skills (58 total)](#skills-58-total)
-  - [Commands (100 total)](#commands-100-total)
+  - [Skills (60 total)](#skills-60-total)
+  - [Commands (104 total)](#commands-104-total)
   - [Agents (16 total)](#agents-16-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
@@ -183,7 +183,7 @@ Complete feature implementation, greenfield project creation, refactoring (with 
 
 ## What's Included
 
-### Skills (58 total)
+### Skills (60 total)
 
 Reusable workflows for structured development:
 
@@ -193,7 +193,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators] *(deprecated)*, [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas], [dedupe] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas], [dedupe], [estimating-tickets], [rounding-up-worktree-sessions] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [permissions-from-transcripts] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications], [agent2agent] |
 
@@ -229,6 +229,8 @@ Reusable workflows for structured development:
 [generating-diagrams]: https://axiomantic.github.io/spellbook/latest/skills/generating-diagrams/
 [shared-references]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/
 [tooling-discovery]: https://axiomantic.github.io/spellbook/latest/skills/tooling-discovery/
+[estimating-tickets]: https://axiomantic.github.io/spellbook/latest/skills/estimating-tickets/
+[rounding-up-worktree-sessions]: https://axiomantic.github.io/spellbook/latest/skills/rounding-up-worktree-sessions/
 [code-review]: https://axiomantic.github.io/spellbook/latest/skills/code-review/
 [using-skills]: https://axiomantic.github.io/spellbook/latest/skills/using-skills/
 [writing-skills]: https://axiomantic.github.io/spellbook/latest/skills/writing-skills/
@@ -275,7 +277,7 @@ Reusable workflows for structured development:
 [canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
 [permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 
-### Commands (100 total)
+### Commands (104 total)
 
 | Command | Description |
 |---------|-------------|
@@ -328,6 +330,10 @@ Reusable workflows for structured development:
 | [/execute-plan]† | Execute implementation plan |
 | [/execute-work-packet] | Execute a single work packet with TDD |
 | [/execute-work-packets-seq] | Execute all packets sequentially |
+| [/estimate-scope] | Ingest a test card, validate constraints, decompose into repo-tagged tickets |
+| [/estimate-point] | Multi-agent consensus pointing + AI productivity multiplier per ticket |
+| [/estimate-buffer] | PERT three-point estimation + Brooks's Law resource scaling |
+| [/estimate-report] | Produce the final structured estimation report |
 | [/merge-work-packets] | Merge completed packets with QA gates |
 | [/mode] | Switch session mode (fun/tarot/off) |
 | [/pr-dance] | Loop PR through CI + bot review until merge-ready |
@@ -434,6 +440,10 @@ Reusable workflows for structured development:
 [/write-plan]: https://axiomantic.github.io/spellbook/latest/commands/write-plan/
 [/execute-plan]: https://axiomantic.github.io/spellbook/latest/commands/execute-plan/
 [/execute-work-packet]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packet/
+[/estimate-scope]: https://axiomantic.github.io/spellbook/latest/commands/estimate-scope/
+[/estimate-point]: https://axiomantic.github.io/spellbook/latest/commands/estimate-point/
+[/estimate-buffer]: https://axiomantic.github.io/spellbook/latest/commands/estimate-buffer/
+[/estimate-report]: https://axiomantic.github.io/spellbook/latest/commands/estimate-report/
 [/execute-work-packets-seq]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/
 [/merge-work-packets]: https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/
 [/mode]: https://axiomantic.github.io/spellbook/latest/commands/mode/
