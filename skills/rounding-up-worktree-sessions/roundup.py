@@ -11,6 +11,8 @@ so this module defines its own `encode_cwd_literal` (design §8.4). Likewise
 on a missing file, which is wrong for a best-effort scan; `_read_session` here is
 tolerant and never raises (design §5.4).
 """
+from __future__ import annotations
+
 import argparse
 import json
 import os
@@ -22,6 +24,7 @@ import sys
 import tempfile
 from collections import Counter
 from datetime import datetime, timedelta, timezone
+from typing import Any, Callable
 
 try:  # fcntl is POSIX-only; supplementary running-probe (design §8.6). Optional import.
     import fcntl  # noqa: F401
@@ -41,7 +44,7 @@ _UUID_RE = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F
 # ---------------------------------------------------------------------------
 # Task 3: encoding + read-side both-forms project-dir matcher
 # ---------------------------------------------------------------------------
-def encode_cwd_literal(path):
+def encode_cwd_literal(path: str) -> str:
     """Encode an absolute cwd to Claude Code's project-dir name (design §8.4).
 
     VERIFIED RULE (Bug A): Claude Code replaces EVERY character that is not in
@@ -66,7 +69,7 @@ def encode_cwd_literal(path):
     return re.sub(r"[^A-Za-z0-9]", "-", path)
 
 
-def _find_project_dir(projects_root, cwd):
+def _find_project_dir(projects_root: str, cwd: str) -> str | None:
     """Return the existing project dir for `cwd`, trying both encoding forms.
 
     Tries the leading-dash form first, then the stripped form. Returns the first
@@ -87,7 +90,7 @@ def _find_project_dir(projects_root, cwd):
 # ---------------------------------------------------------------------------
 # Task 4: tolerant JSONL reader
 # ---------------------------------------------------------------------------
-def _read_session(path):
+def _read_session(path: str) -> list[dict[str, Any]]:
     """Read a session JSONL tolerantly (design §5.4). NEVER raises.
 
     - Reads line-by-line; skips lines that fail `json.loads` (JSONDecodeError).
@@ -115,14 +118,14 @@ def _read_session(path):
 # Task 5: SessionRecord extraction
 # ---------------------------------------------------------------------------
 def build_session_record(
-    uuid,
-    config_dir,
-    jsonl_path,
-    sidecar_dir,
-    encoded_cwd_current,
-    records,
-    file_mtime_iso,
-):
+    uuid: str,
+    config_dir: str,
+    jsonl_path: str,
+    sidecar_dir: str | None,
+    encoded_cwd_current: str,
+    records: list[dict[str, Any]],
+    file_mtime_iso: str | None,
+) -> dict[str, Any]:
     """Build a SessionRecord dict from parsed JSONL records (design §4.1, §5.5, §6.2).
 
     Title precedence uses the CONFIRMED field names: `customTitle`, then `agentName`,
@@ -204,7 +207,7 @@ def build_session_record(
 # ---------------------------------------------------------------------------
 # Task 6: title-group extraction
 # ---------------------------------------------------------------------------
-def strip_disambiguator(title):
+def strip_disambiguator(title: str) -> str:
     """Strip a single trailing disambiguator token from a title (design §7.2).
 
     Lowercase, apply DISAMBIGUATOR ONCE (non-greedy, $-anchored). If it matches and
@@ -220,7 +223,7 @@ def strip_disambiguator(title):
     return lowered
 
 
-def compute_group_key(session):
+def compute_group_key(session: dict[str, Any]) -> tuple[str | None, str]:
     """Compute (group_key, group_key_source) for a session (design §7.1).
 
     Precedence: (1) non-null title -> (strip_disambiguator(title), 'title_prefix');
@@ -239,7 +242,7 @@ def compute_group_key(session):
 # ---------------------------------------------------------------------------
 # Task 7: worktree enumeration + branch index
 # ---------------------------------------------------------------------------
-def _git_branch(dir_path):
+def _git_branch(dir_path: str) -> str | None:
     """Return the current branch of `dir_path` via git, or None on failure.
 
     Thin I/O wrapper (`git -C <dir> rev-parse --abbrev-ref HEAD`). Not unit-tested
@@ -260,12 +263,12 @@ def _git_branch(dir_path):
     return branch or None
 
 
-def _has_git(dir_path):
+def _has_git(dir_path: str) -> bool:
     """True if `dir_path` contains a `.git` file or directory."""
     return os.path.exists(os.path.join(dir_path, ".git"))
 
 
-def _safe_listdir(path):
+def _safe_listdir(path: str) -> list[str]:
     """os.listdir that returns [] instead of raising on OSError (Finding 4).
 
     `os.path.isdir` can pass for a dir that is then unreadable (no read permission,
@@ -278,7 +281,7 @@ def _safe_listdir(path):
         return []
 
 
-def enumerate_worktree_dirs(worktrees_root, repos_root):
+def enumerate_worktree_dirs(worktrees_root: str, repos_root: str) -> list[str]:
     """Enumerate candidate worktree dirs on disk (design §6.1).
 
     Returns absolute dir paths for: (1) each workspace root under `worktrees_root`;
@@ -307,7 +310,9 @@ def enumerate_worktree_dirs(worktrees_root, repos_root):
     return dirs
 
 
-def build_worktree_index(dirs, branch_of, worktrees_root):
+def build_worktree_index(
+    dirs: list[str], branch_of: Callable[[str], str | None], worktrees_root: str
+) -> dict[str, Any]:
     """Build branch/workspace maps over candidate dirs (design §6.1).
 
     `branch_of` is an injectable callable (dir -> branch|None). Returns:
@@ -336,7 +341,7 @@ def build_worktree_index(dirs, branch_of, worktrees_root):
     }
 
 
-def _workspace_root_of(d, wt_root_abs):
+def _workspace_root_of(d: str, wt_root_abs: str) -> str | None:
     """Resolve the workspace-root dir for `d`, or None for main repos."""
     d_abs = os.path.abspath(d)
     if d_abs == wt_root_abs:
@@ -352,7 +357,7 @@ def _workspace_root_of(d, wt_root_abs):
 # ---------------------------------------------------------------------------
 # Task 8: worktree derivation (Phase A)
 # ---------------------------------------------------------------------------
-def _dir_mtime_for_tiebreak(d):
+def _dir_mtime_for_tiebreak(d: str) -> float:
     """mtime of `<dir>/.git` (file or dir), fallback `<dir>` st_mtime (design §6.2)."""
     git_path = os.path.join(d, ".git")
     try:
@@ -364,7 +369,7 @@ def _dir_mtime_for_tiebreak(d):
             return 0.0
 
 
-def derive_worktree(session, index):
+def derive_worktree(session: dict[str, Any], index: dict[str, Any]) -> dict[str, Any]:
     """Resolve a session's worktree via the §6.2 fallback chain (Phase A only).
 
     Phase A = git_branch (high) -> cwd (medium) -> UNRESOLVED. The group_plurality
@@ -492,7 +497,7 @@ def derive_worktree(session, index):
     }
 
 
-def _resolve_launch_cd_target(session, index):
+def _resolve_launch_cd_target(session: dict[str, Any], index: dict[str, Any]) -> str | None:
     """Resolve the launch cd-target from the CURRENT storage project dir (Fix 1).
 
     Resume is cwd-scoped: the jsonl lives under `$CONFIG/projects/<encode(cwd)>/`, so
@@ -525,7 +530,7 @@ def _resolve_launch_cd_target(session, index):
     return launch_cwd
 
 
-def _is_under_worktrees(cwd, index):
+def _is_under_worktrees(cwd: str | None, index: dict[str, Any]) -> bool:
     """True if `cwd` is a known dir under the worktrees root in the index.
 
     Conservative: only treats a cwd as worktree-resolvable when it appears in the
@@ -534,7 +539,12 @@ def _is_under_worktrees(cwd, index):
     return cwd in index.get("workspace_root_of", {})
 
 
-def _cwd_is_known_repo(last_cwd, launch_cwd, dir_to_branch, index):
+def _cwd_is_known_repo(
+    last_cwd: str | None,
+    launch_cwd: str | None,
+    dir_to_branch: dict[str, str],
+    index: dict[str, Any],
+) -> bool:
     """True if last_cwd OR launch_cwd is a known repo/worktree dir (Bug B).
 
     "Known" matches the Step-2 cwd resolution criteria EXACTLY: the cwd appears in
@@ -553,7 +563,9 @@ def _cwd_is_known_repo(last_cwd, launch_cwd, dir_to_branch, index):
 # ---------------------------------------------------------------------------
 # Task 9: grouping assembly + Phase-B group-plurality
 # ---------------------------------------------------------------------------
-def group_sessions(sessions):
+def group_sessions(
+    sessions: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
     """Assemble groups and run Phase-B group-plurality resolution (design §6.4, §7.3).
 
     Input: sessions already enriched by `derive_worktree` (Phase A). Computes group
@@ -631,7 +643,11 @@ def group_sessions(sessions):
 # ---------------------------------------------------------------------------
 # Task 10: reorient PLAN generation (pure, no mutation)
 # ---------------------------------------------------------------------------
-def build_reorient_plan(sessions_by_uuid, decisions, path_exists):
+def build_reorient_plan(
+    sessions_by_uuid: dict[str, dict[str, Any]],
+    decisions: list[dict[str, Any]],
+    path_exists: Callable[[str], bool],
+) -> list[dict[str, Any]]:
     """Compute MovePlans without mutating anything (design §8.1-§8.8, §4.4).
 
     `decisions`: [{"uuid","config_dir","target": "repo_subdir"|"workspace_root"|"skip"}].
@@ -748,7 +764,7 @@ def build_reorient_plan(sessions_by_uuid, decisions, path_exists):
 # ---------------------------------------------------------------------------
 # Task 11: AppleScript generation
 # ---------------------------------------------------------------------------
-def _escape_applescript(s):
+def _escape_applescript(s: str) -> str:
     """Escape a string for an AppleScript double-quoted literal (design §9.5).
 
     Backslash first, then double-quote. Raises ValueError on newline / control chars
@@ -759,7 +775,9 @@ def _escape_applescript(s):
     return s.replace("\\", "\\\\").replace('"', '\\"')
 
 
-def build_pane_command(session, default_config_dir, explicit_config_env):
+def build_pane_command(
+    session: dict[str, Any], default_config_dir: str, explicit_config_env: bool
+) -> str | None:
     """Build the pane resume command (SPIKE Decision A; design §9.3, §9.4).
 
     Returns:
@@ -799,8 +817,13 @@ def build_pane_command(session, default_config_dir, explicit_config_env):
 
 
 def render_applescript(
-    groups, sessions_by_uuid, *, default_config_dir, explicit_config_env=False, warnings=None
-):
+    groups: list[dict[str, Any]],
+    sessions_by_uuid: dict[str, dict[str, Any]],
+    *,
+    default_config_dir: str,
+    explicit_config_env: bool = False,
+    warnings: list[str] | None = None,
+) -> str:
     """Render the Ghostty AppleScript (design §9.1, §9.2). Pure string output.
 
     One `tell application "Ghostty"` window per group. Layout (design §9.2):
@@ -899,7 +922,9 @@ def render_applescript(
     return "\n".join(lines)
 
 
-def apply_reorient_launch_overrides(plan, reorient_summary):
+def apply_reorient_launch_overrides(
+    plan: dict[str, Any], reorient_summary: dict[str, Any]
+) -> dict[str, Any]:
     """Point reoriented sessions' launch cd-target at their POST-MOVE dir (C2; Fix 2).
 
     MECHANISM: `execute_launch` calls this when invoked with `--reorient-summary` (the
@@ -926,7 +951,7 @@ def apply_reorient_launch_overrides(plan, reorient_summary):
 # ---------------------------------------------------------------------------
 # Task 12: recency / lookback filter
 # ---------------------------------------------------------------------------
-def _parse_iso(ts):
+def _parse_iso(ts: str) -> datetime:
     """Parse an ISO-8601 timestamp (handles trailing 'Z') to an aware datetime."""
     if ts.endswith("Z"):
         ts = ts[:-1] + "+00:00"
@@ -936,7 +961,12 @@ def _parse_iso(ts):
     return dt
 
 
-def within_lookback(recency_ts, now_iso, lookback_hours, since_iso):
+def within_lookback(
+    recency_ts: str,
+    now_iso: str,
+    lookback_hours: float | None,
+    since_iso: str | None,
+) -> bool:
     """True if `recency_ts` is within the lookback window (design §5.5, §5.6).
 
     If `since_iso` is given, include when recency >= since. Else compute
@@ -957,17 +987,17 @@ def within_lookback(recency_ts, now_iso, lookback_hours, since_iso):
 # ---------------------------------------------------------------------------
 # Task 13: scan + plan subcommands (read-only) — side-effect-free I/O wrappers
 # ---------------------------------------------------------------------------
-def _iso_from_mtime(mtime):
+def _iso_from_mtime(mtime: float) -> str:
     """Format a POSIX mtime (float) as a Zulu ISO-8601 string (UTC, second resolution)."""
     return datetime.fromtimestamp(mtime, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _now_iso():
+def _now_iso() -> str:
     """Current time as a Zulu ISO-8601 string (UTC, second resolution)."""
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def _has_running_lock(project_dir, uuid):
+def _has_running_lock(project_dir: str, uuid: str) -> bool:
     """True if a sibling lock file marks the session as running (design §8.6).
 
     PRIMARY signal: presence of `<uuid>.lock` OR any `*.lock` in the project dir.
@@ -985,12 +1015,14 @@ def _has_running_lock(project_dir, uuid):
     return False
 
 
-def _recent_mtime(mtime, now_ts, threshold_sec):
+def _recent_mtime(mtime: float, now_ts: float, threshold_sec: float) -> bool:
     """True if `mtime` is within `threshold_sec` of `now_ts` (design §8.6 recency signal)."""
     return (now_ts - mtime) <= threshold_sec
 
 
-def _detect_running(project_dir, uuid, mtime, now_ts, threshold_sec):
+def _detect_running(
+    project_dir: str, uuid: str, mtime: float, now_ts: float, threshold_sec: float
+) -> bool:
     """Combine the §8.6 PRIMARY running signals: lock presence OR recent mtime.
 
     The flock probe (design §8.6) is OPTIONAL/best-effort and intentionally NOT
@@ -1001,7 +1033,14 @@ def _detect_running(project_dir, uuid, mtime, now_ts, threshold_sec):
     return _recent_mtime(mtime, now_ts, threshold_sec)
 
 
-def scan_config_dirs(config_dirs, *, lookback_hours, since_iso, running_threshold_sec, now_iso=None):
+def scan_config_dirs(
+    config_dirs: list[str],
+    *,
+    lookback_hours: float | None,
+    since_iso: str | None,
+    running_threshold_sec: float,
+    now_iso: str | None = None,
+) -> tuple[list[dict[str, Any]], list[str]]:
     """Walk config dirs and build filtered SessionRecords (design §5, §8.6, Task 13).
 
     For each `<config_dir>/projects/*/<uuid>.jsonl` (UUID-pattern, EXCLUDING
@@ -1076,7 +1115,15 @@ def scan_config_dirs(config_dirs, *, lookback_hours, since_iso, running_threshol
     return sessions, warnings
 
 
-def _scan_envelope(config_dirs, sessions, warnings, *, lookback_hours, since_iso, now_iso):
+def _scan_envelope(
+    config_dirs: list[str],
+    sessions: list[dict[str, Any]],
+    warnings: list[str],
+    *,
+    lookback_hours: float | None,
+    since_iso: str | None,
+    now_iso: str,
+) -> dict[str, Any]:
     """Build the `scan` JSON envelope (design §4.1 collection)."""
     env = {
         "schema_version": SCHEMA_VERSION,
@@ -1092,7 +1139,13 @@ def _scan_envelope(config_dirs, sessions, warnings, *, lookback_hours, since_iso
     return env
 
 
-def build_plan(sessions, *, worktrees_root, repos_root, branch_of=None):
+def build_plan(
+    sessions: list[dict[str, Any]],
+    *,
+    worktrees_root: str,
+    repos_root: str,
+    branch_of: Callable[[str], str | None] | None = None,
+) -> dict[str, Any]:
     """Derive worktrees, group, and compute reorient candidates (design §4.4, Task 13).
 
     Enumerates on-disk worktree dirs, builds the branch index via real git (the
@@ -1145,7 +1198,7 @@ def build_plan(sessions, *, worktrees_root, repos_root, branch_of=None):
 # ---------------------------------------------------------------------------
 # Task 14: reorient executor (live + dry-run, journal rollback, history backup)
 # ---------------------------------------------------------------------------
-def _live_running(plan):
+def _live_running(plan: dict[str, Any]) -> bool:
     """Live TOCTOU re-check of the §8.6 primary running signals for a MovePlan.
 
     Re-stats the SOURCE jsonl at move time: lock presence OR recent mtime (120s).
@@ -1168,7 +1221,7 @@ def _live_running(plan):
     return _recent_mtime(mtime, now_ts, 120)
 
 
-def _live_collision(plan):
+def _live_collision(plan: dict[str, Any]) -> bool:
     """Live TOCTOU re-check for destination collision (design §8.8 M5)."""
     new_jsonl = plan.get("new_jsonl")
     new_sidecar = plan.get("new_sidecar")
@@ -1179,7 +1232,7 @@ def _live_collision(plan):
     return False
 
 
-def _rewrite_history(history_path, old_to_new):
+def _rewrite_history(history_path: str, old_to_new: dict[str, str]) -> int:
     """Rewrite matching `project` lines in history.jsonl (design §8.7).
 
     `old_to_new`: {old_literal_cwd: new_literal_cwd}. CONFIRMED by the spike: the
@@ -1209,9 +1262,12 @@ def _rewrite_history(history_path, old_to_new):
                 rewritten += 1
             else:
                 out_lines.append(line)
-    # MEDIUM Fix 3: `dir=""` (cwd-relative history_path) is invalid for mkstemp; pass
-    # None so it falls back to the default temp dir. Guard the fd against leaks on error.
-    dir_name = os.path.dirname(history_path) or None
+    # HIGH Fix: a RELATIVE history_path has dirname "" -> mkstemp would fall back to
+    # the system temp dir, risking a cross-device os.replace failure. Resolve to an
+    # absolute path FIRST so the temp file lands in the SAME dir as the target, keeping
+    # os.replace atomic and same-filesystem. Guard the fd against leaks on error.
+    abs_history_path = os.path.abspath(history_path)
+    dir_name = os.path.dirname(abs_history_path)
     fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as out:
@@ -1229,14 +1285,14 @@ def _rewrite_history(history_path, old_to_new):
 
 
 def execute_reorient(
-    plans,
+    plans: list[dict[str, Any]],
     *,
-    dry_run,
-    update_history,
-    now_stamp=None,
-    sessions_by_uuid=None,
-    json_mode=False,
-):
+    dry_run: bool,
+    update_history: bool,
+    now_stamp: str | None = None,
+    sessions_by_uuid: dict[str, dict[str, Any]] | None = None,
+    json_mode: bool = False,
+) -> dict[str, Any]:
     """Execute (or preview) per-item reorientation moves (design §8.5-§8.10, Task 14).
 
     For each non-skipped MovePlan: re-check running-status and destination collision
@@ -1430,7 +1486,7 @@ def execute_reorient(
 # ---------------------------------------------------------------------------
 # Task 15: launch executor (Ghostty native via osascript)
 # ---------------------------------------------------------------------------
-def _run_osascript(script):
+def _run_osascript(script: str) -> subprocess.CompletedProcess[str]:
     """Write the AppleScript to a temp file and run it via `osascript` (design §9.1).
 
     Returns the CompletedProcess. On the macOS Automation-permission error
@@ -1458,14 +1514,14 @@ def _run_osascript(script):
 
 
 def execute_launch(
-    plan,
+    plan: dict[str, Any],
     *,
-    dry_run,
-    default_config_dir,
-    explicit_config_env=False,
-    run_osascript=None,
-    reorient_summary=None,
-):
+    dry_run: bool,
+    default_config_dir: str,
+    explicit_config_env: bool = False,
+    run_osascript: Callable[[str], Any] | None = None,
+    reorient_summary: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """Render and (unless dry-run) run the Ghostty AppleScript for a plan (Task 15).
 
     Builds `sessions_by_uuid` from the plan, renders via `render_applescript`
@@ -1556,12 +1612,12 @@ def execute_launch(
 # ---------------------------------------------------------------------------
 # CLI subcommand handlers
 # ---------------------------------------------------------------------------
-def _expand(path):
+def _expand(path: str) -> str:
     """Expand `~` and env vars in a path argument."""
     return os.path.expanduser(os.path.expandvars(path))
 
 
-def _lookback_args(args):
+def _lookback_args(args: argparse.Namespace) -> tuple[float | None, str | None]:
     """Resolve mutually-exclusive lookback inputs to (lookback_hours, since_iso).
 
     `--since` wins when present (lookback_hours -> None); otherwise the
@@ -1573,7 +1629,7 @@ def _lookback_args(args):
     return args.lookback_hours, None
 
 
-def _emit(doc, out_path):
+def _emit(doc: dict[str, Any], out_path: str | None) -> None:
     """Write `doc` as JSON to `out_path` if given, else to stdout."""
     # MEDIUM Fix 5: preserve non-ASCII chars in emitted JSON.
     text = json.dumps(doc, indent=2, ensure_ascii=False)
@@ -1584,7 +1640,7 @@ def _emit(doc, out_path):
         print(text)
 
 
-def _cmd_scan(args):
+def _cmd_scan(args: argparse.Namespace) -> int:
     # I-scanplan-json: always-JSON; args.json is intentionally not consulted (no-op).
     config_dirs = [_expand(c) for c in (args.config_dir or ["~/.claude"])]
     now_iso = _now_iso()
@@ -1608,7 +1664,7 @@ def _cmd_scan(args):
     return 0
 
 
-def _cmd_plan(args):
+def _cmd_plan(args: argparse.Namespace) -> int:
     # I-scanplan-json: always-JSON; args.json is intentionally not consulted (no-op).
     config_dirs = [_expand(c) for c in (args.config_dir or ["~/.claude"])]
     now_iso = _now_iso()
@@ -1649,7 +1705,7 @@ def _cmd_plan(args):
     return 0
 
 
-def _cmd_reorient(args):
+def _cmd_reorient(args: argparse.Namespace) -> int:
     with open(args.decisions, "r", encoding="utf-8") as fh:
         decisions = json.load(fh)
     if args.plan:
@@ -1689,7 +1745,7 @@ def _cmd_reorient(args):
     return 0
 
 
-def _cmd_launch(args):
+def _cmd_launch(args: argparse.Namespace) -> int:
     if args.launch_mode != "native" or args.terminal != "ghostty":
         # gui / iTerm2 fallback is DEFERRED (design §9.6, §13.4). No working fallback yet.
         sys.stderr.write(
@@ -1727,7 +1783,7 @@ def _cmd_launch(args):
     return 0
 
 
-def main(argv=None):
+def main(argv: list[str] | None = None) -> int:
     """CLI entry point: scan / plan / reorient / launch (design §11)."""
     parser = argparse.ArgumentParser(description="Round up scattered Claude Code worktree sessions.")
     sub = parser.add_subparsers(dest="command")
