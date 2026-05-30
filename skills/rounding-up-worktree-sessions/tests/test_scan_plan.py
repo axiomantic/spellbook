@@ -278,3 +278,31 @@ def test_plan_includes_genuinely_misfiled_session(tmp_path):
     enriched = {x["uuid"]: x for x in body["sessions"]}[s["uuid"]]
     assert enriched["resolved_worktree_dir"] == repo  # resolved, just misfiled
     assert body["reorient_candidates"] == [s["uuid"]]
+
+
+def test_plan_excludes_already_at_target_stripped_encoding(tmp_path):
+    """MEDIUM Fix 1: older Claude sessions store the STRIPPED encoding (no leading
+    dash). The target encodings from encode_cwd_literal carry the leading dash. A
+    direct comparison falsely flags an already-at-target session as a candidate.
+    Normalizing both sides (lstrip('-')) must exclude it. The control above proves
+    a genuinely-misfiled session is still included, so this is not vacuous."""
+    repos_root = tmp_path / "repos"
+    empty_worktrees = tmp_path / "worktrees"  # no worktrees -> workspace_root None
+    empty_worktrees.mkdir()
+    repo = _mkrepo(str(repos_root / "styleseat.github"))  # DOT in the basename
+    enc_stripped = roundup.encode_cwd_literal(repo).lstrip("-")  # STRIPPED form on disk
+    # The session's storage dir is the STRIPPED encoding of the resolved repo dir.
+    s = _plan_session("7c0ffee0-1234-4abc-9def-fedcba987654", enc_stripped, repo, repo, branch="mw")
+
+    def branch_of(d):
+        return "mw" if d == repo else None
+
+    body = roundup.build_plan(
+        [s], worktrees_root=str(empty_worktrees), repos_root=str(repos_root),
+        branch_of=branch_of,
+    )
+    enriched = {x["uuid"]: x for x in body["sessions"]}[s["uuid"]]
+    assert enriched["resolved_worktree_dir"] == repo
+    assert enriched["workspace_root_dir"] is None
+    # Already-at-target under stripped encoding: must NOT be a reorient_candidate.
+    assert body["reorient_candidates"] == []

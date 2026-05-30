@@ -130,10 +130,11 @@ parallel_calendar_days_N2 = (parallel_hours / 2) / 8
 total_calendar_days_N2 = pair_calendar_days_N2 + parallel_calendar_days_N2
 ```
 
-Apply confidence intervals to N=2 using the same sigma_total (the overhead/integration constants do NOT change the variance — they change the calendar conversion). Specifically:
+Apply confidence intervals to N=2 using a SCALED sigma. The overhead/integration constants scale each expected effort E_i; the standard deviation of a scaled quantity scales by the same constant (variance scales by the constant squared), so the aggregate sigma must be scaled by the same pair/parallel constants before forming the interval. Specifically:
 
 ```
-upper_X_calendar_N2 = (E_total_with_overhead + Z_X * sigma_total) / (2 * 8)
+upper_X_calendar_N2 = (E_total_with_overhead + Z_X * sigma_total_with_overhead) / (2 * 8)
+lower_X_calendar_N2 = (E_total_with_overhead - Z_X * sigma_total_with_overhead) / (2 * 8)
 ```
 
 where `E_total_with_overhead` redistributes the pair vs parallel constants. Compute it as:
@@ -142,6 +143,14 @@ where `E_total_with_overhead` redistributes the pair vs parallel constants. Comp
 E_pair = sum(E_i for i in pair_program_suitable) * 1.15
 E_parallel = sum(E_i for i in parallel_suitable) * 1.10
 E_total_with_overhead = E_pair + E_parallel
+```
+
+and `sigma_total_with_overhead` scales each partition's variance by the SAME constant squared (variance scales by c^2 when effort scales by c):
+
+```
+sigma_pair = sum(sigma_i^2 for i in pair_program_suitable) * 1.15^2
+sigma_parallel = sum(sigma_i^2 for i in parallel_suitable) * 1.10^2
+sigma_total_with_overhead = sqrt(sigma_pair + sigma_parallel)
 ```
 
 ### Step 5: Sanity check — 55% compression heuristic

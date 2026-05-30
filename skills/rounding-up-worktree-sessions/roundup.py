@@ -737,7 +737,14 @@ def build_reorient_plan(
         base["new_project_dir"] = new_project_dir
 
         # Already-correct skip (I2).
-        if new_project_dir == old_project_dir:
+        # MEDIUM Fix 2: old_project_dir may be the STRIPPED encoding (no leading dash)
+        # for older Claude sessions, while new_project_dir is built via encode_cwd_literal
+        # (canonical leading-dash form). Compare the project-dir basenames with leading
+        # dashes stripped from BOTH so the SAME path under either encoding is recognized
+        # as already-correct and skipped.
+        if old_project_dir and os.path.basename(new_project_dir).lstrip("-") == os.path.basename(
+            old_project_dir
+        ).lstrip("-"):
             base["skipped"] = True
             base["skip_reason"] = "already_correct"
             plans.append(base)
@@ -1175,16 +1182,21 @@ def build_plan(
             continue
         if s.get("appears_running"):
             continue
+        # MEDIUM Fix 1: encoded_cwd_current may be the STRIPPED form (no leading dash)
+        # for older Claude sessions, while target_encodings always carry the canonical
+        # leading-dash form from encode_cwd_literal. Normalize BOTH sides (strip leading
+        # dashes) before comparison so an already-at-target session is not falsely flagged.
         current = s.get("encoded_cwd_current")
+        current_norm = current.lstrip("-") if current else ""
         repo_dir = s.get("resolved_worktree_dir")
         ws_root = s.get("workspace_root_dir")
         target_encodings = set()
         if repo_dir:
-            target_encodings.add(encode_cwd_literal(repo_dir))
+            target_encodings.add(encode_cwd_literal(repo_dir).lstrip("-"))
         if ws_root:
-            target_encodings.add(encode_cwd_literal(ws_root))
+            target_encodings.add(encode_cwd_literal(ws_root).lstrip("-"))
         # Something to move only if the current dir is not already a valid target (§4.4, I2).
-        if target_encodings and current not in target_encodings:
+        if target_encodings and current_norm not in target_encodings:
             reorient_candidates.append(s["uuid"])
 
     return {

@@ -70,6 +70,21 @@ def test_already_correct_skipped():
     assert plans[0]["skipped"] and plans[0]["skip_reason"] == "already_correct"
 
 
+def test_already_correct_skipped_stripped_old_dir():
+    # MEDIUM Fix 2: the session's CURRENT storage dir is the STRIPPED encoding of the
+    # target (older Claude sessions), while new_project_dir is the leading-dash form
+    # from encode_cwd_literal. The already-correct skip must normalize basenames
+    # (lstrip('-')) so the SAME path under either encoding is recognized as correct
+    # and skipped (no move). Without normalization this session is wrongly moved.
+    target = "/Users/eek/Development/worktrees/ODY/styleseat"
+    enc_stripped = roundup.encode_cwd_literal(target).lstrip("-")  # STRIPPED on disk
+    old = os.path.join("/Users/eek/.claude/projects", enc_stripped, "u1.jsonl")
+    s = _sess("u1", old, target, "/Users/eek/Development/worktrees/ODY")
+    plans = roundup.build_reorient_plan(_by_uuid(s),
+        [{"uuid": "u1", "config_dir": "/Users/eek/.claude", "target": "repo_subdir"}], NEVER)
+    assert plans[0]["skipped"] and plans[0]["skip_reason"] == "already_correct"
+
+
 def test_collision_flagged():
     s = _sess("u1", "/Users/eek/.claude/projects/-old/u1.jsonl", "/wt", "/wt-root")
     s["resolved_worktree_dir"] = "/Users/eek/Development/worktrees/ODY/styleseat"
