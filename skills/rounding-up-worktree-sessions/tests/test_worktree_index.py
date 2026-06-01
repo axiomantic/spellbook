@@ -106,7 +106,7 @@ def test_git_branch_returns_none_on_timeout(tmp_path):
     # MEDIUM Fix 4: a hung git (TimeoutExpired) must be folded into the graceful
     # "branch unknown" path (return None), not propagate and crash enumeration.
     # The repo style guide forbids monkeypatch.setattr; use the tripwire framework.
-    run_mock = tripwire.mock("roundup:subprocess.run")
+    run_mock = tripwire.mock("subprocess:run")
     run_mock.raises(subprocess.TimeoutExpired(cmd=["git"], timeout=5.0))
 
     with tripwire:

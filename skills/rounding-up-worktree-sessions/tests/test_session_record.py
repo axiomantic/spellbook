@@ -29,6 +29,28 @@ def test_first_and_last_cwd():
     assert out["last_cwd"] == "/c"
 
 
+def test_non_string_cwd_is_excluded():
+    # MEDIUM Fix 1: a NON-STRING cwd (dict/number) must be excluded from the cwds list.
+    # An unhashable value (dict) would later crash `cwd in dir_to_branch` in
+    # derive_worktree; a number would corrupt dict lookups. The valid string cwds on
+    # other records must still drive launch_cwd/last_cwd; build must not crash.
+    for bad in ({"k": "v"}, 123):
+        recs = [_rec(cwd=bad), _rec(cwd="/a"), _rec(cwd="/b")]
+        out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T00:00:00Z", **BASE)
+        assert out["launch_cwd"] == "/a"
+        assert out["last_cwd"] == "/b"
+
+
+def test_non_string_branch_is_ignored():
+    # MEDIUM Fix 2: a NON-STRING gitBranch (list/number) used as a dict key would raise
+    # TypeError: unhashable type (list) or corrupt counts. It must be skipped entirely:
+    # not counted, not selected. The valid string branch wins the dominant computation.
+    for bad in (["x"], 42):
+        recs = [_rec(branch=bad), _rec(branch="feat")]
+        out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T00:00:00Z", **BASE)
+        assert out["git_branch_dominant"] == "feat"
+
+
 def test_dominant_branch_ignores_head():
     recs = [_rec(branch="feat"), _rec(branch="HEAD"), _rec(branch="feat")]
     out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T00:00:00Z", **BASE)

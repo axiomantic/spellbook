@@ -153,7 +153,7 @@ def test_rollback_on_injected_sidecar_failure(tmp_path):
     def real(src, dst):
         return real_move(src, dst)
 
-    move_mock = tripwire.mock("roundup:shutil.move")
+    move_mock = tripwire.mock("shutil:move")
     move_mock.calls(real)  # 1) jsonl move
     move_mock.raises(OSError("injected sidecar move failure"))  # 2) sidecar move
     move_mock.calls(real)  # 3) rollback: jsonl moved back
@@ -619,7 +619,7 @@ def test_history_skipped_when_rolled_back_nonempty(tmp_path):
     def real(src, dst):
         return real_move(src, dst)
 
-    move_mock = tripwire.mock("roundup:shutil.move")
+    move_mock = tripwire.mock("shutil:move")
     move_mock.calls(real)  # 1) u1.jsonl
     move_mock.calls(real)  # 2) u2.jsonl
     move_mock.raises(OSError("injected u2 sidecar failure"))  # 3) u2 sidecar

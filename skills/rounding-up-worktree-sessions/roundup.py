@@ -134,7 +134,7 @@ def build_session_record(
     file order; `HEAD` is never selected. `appears_running` is set False here; the scan
     wrapper (Task 13) overrides it via the lock/mtime signals.
     """
-    cwds = [r.get("cwd") for r in records if r.get("cwd") is not None]
+    cwds = [r.get("cwd") for r in records if isinstance(r.get("cwd"), str)]
     launch_cwd = cwds[0] if cwds else None
     last_cwd = cwds[-1] if cwds else None
 
@@ -144,7 +144,7 @@ def build_session_record(
     last_index = {}
     for i, r in enumerate(records):
         b = r.get("gitBranch")
-        if b is None:
+        if not isinstance(b, str):
             continue
         if b not in raw_values:
             raw_values.append(b)
