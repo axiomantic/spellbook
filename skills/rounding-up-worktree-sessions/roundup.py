@@ -106,7 +106,12 @@ def _read_session(path: str) -> list[dict[str, Any]]:
                 if not line:
                     continue
                 try:
-                    records.append(json.loads(line))
+                    obj = json.loads(line)
+                    # HIGH Fix 1: a valid-JSON-but-non-object line (bare number / array /
+                    # string / bool) would survive json.loads yet break downstream `.get()`
+                    # calls in build_session_record. Only append dict records.
+                    if isinstance(obj, dict):
+                        records.append(obj)
                 except json.JSONDecodeError:
                     continue
     except (FileNotFoundError, OSError):
@@ -254,8 +259,13 @@ def _git_branch(dir_path: str) -> str | None:
             capture_output=True,
             text=True,
             check=False,
+            # MEDIUM Fix 4: bound the git call so a stuck repo can't hang enumeration.
+            timeout=5.0,
         )
-    except (OSError, subprocess.SubprocessError):
+    # subprocess.TimeoutExpired is raised by the timeout above and is NOT suppressed by
+    # check=False; fold it (and the existing OSError/SubprocessError) into the graceful
+    # "branch unknown" path so a hung git returns None instead of crashing the scan.
+    except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
         return None
     if out.returncode != 0:
         return None
@@ -812,7 +822,9 @@ def build_pane_command(
     if not cd_target:
         return None
     uuid = session["uuid"]
-    config_dir = session.get("config_dir")
+    # MEDIUM Fix 3: a missing/None config_dir must fall back to default_config_dir so the
+    # prefix never becomes CLAUDE_CONFIG_DIR='' (which would inherit the wrong store).
+    config_dir = session.get("config_dir") or default_config_dir
     # C1: unconditional prefix using the session's own config_dir.
     # MEDIUM Fix 1: shell-safe quoting of paths (spaces/special chars) via shlex.quote.
     prefix = "CLAUDE_CONFIG_DIR=%s " % shlex.quote(config_dir)
@@ -1116,7 +1128,16 @@ def scan_config_dirs(
                 if record["recency_ts"] is None:
                     warnings.append("session %s has no recency timestamp; skipped by lookback" % uuid)
                     continue
-                if not within_lookback(record["recency_ts"], now_iso, lookback_hours, since_iso):
+                # HIGH Fix 2: a corrupt recency_ts makes _parse_iso raise ValueError inside
+                # within_lookback. Guard so one bad session is warned+skipped rather than
+                # crashing the whole scan; OTHER valid sessions still return.
+                try:
+                    if not within_lookback(record["recency_ts"], now_iso, lookback_hours, since_iso):
+                        continue
+                except ValueError as e:
+                    warnings.append(
+                        "session %s has invalid recency timestamp %r: %s" % (uuid, record["recency_ts"], e)
+                    )
                     continue
                 sessions.append(record)
     return sessions, warnings

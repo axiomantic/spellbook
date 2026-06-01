@@ -1,4 +1,8 @@
 import os
+import subprocess
+
+import tripwire
+
 import roundup
 
 
@@ -79,6 +83,42 @@ def test_enumerate_unreadable_repos_root_tolerated(tmp_path):
     finally:
         os.chmod(str(repos), stat.S_IRWXU)
     assert str(repo) in dirs
+
+
+class _IsInstance:
+    """Argument matcher: equal to any instance of the given type.
+
+    Used in tripwire ``assert_call(raised=...)`` to match the recorded
+    exception instance by type without pinning the exact object.
+    """
+
+    def __init__(self, typ):
+        self._typ = typ
+
+    def __eq__(self, other):
+        return isinstance(other, self._typ)
+
+    def __repr__(self):
+        return "<instance of %s>" % self._typ.__name__
+
+
+def test_git_branch_returns_none_on_timeout(tmp_path):
+    # MEDIUM Fix 4: a hung git (TimeoutExpired) must be folded into the graceful
+    # "branch unknown" path (return None), not propagate and crash enumeration.
+    # The repo style guide forbids monkeypatch.setattr; use the tripwire framework.
+    run_mock = tripwire.mock("roundup:subprocess.run")
+    run_mock.raises(subprocess.TimeoutExpired(cmd=["git"], timeout=5.0))
+
+    with tripwire:
+        assert roundup._git_branch(str(tmp_path)) is None
+
+    # The fix must call git with a bounded timeout; assert the call interaction,
+    # including that a timeout kwarg was passed and the TimeoutExpired was raised.
+    run_mock.assert_call(
+        args=(["git", "-C", str(tmp_path), "rev-parse", "--abbrev-ref", "HEAD"],),
+        kwargs={"capture_output": True, "text": True, "check": False, "timeout": 5.0},
+        raised=_IsInstance(subprocess.TimeoutExpired),
+    )
 
 
 def test_find_project_dir_all_dash_cwd_does_not_return_root(tmp_path):

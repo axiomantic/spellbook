@@ -198,6 +198,20 @@ def test_resolved_not_reoriented_session_cds_to_launch_cwd():
     assert "cd %s" % REPO not in cmd
 
 
+def test_pane_command_falls_back_to_default_config_dir():
+    """MEDIUM Fix 3: a session with no `config_dir` (None/missing) must fall back to
+    `default_config_dir` for the CLAUDE_CONFIG_DIR prefix rather than crashing in
+    shlex.quote(None)."""
+    s = {"uuid": "u1", "launch_cd_target": "/wt/x"}  # no config_dir key at all
+    cmd = roundup.build_pane_command(s, "/Users/eek/.claude-work", False)
+    assert cmd is not None
+    assert "CLAUDE_CONFIG_DIR=/Users/eek/.claude-work " in cmd
+    # An explicit None value must also fall back.
+    s2 = {"uuid": "u2", "launch_cd_target": "/wt/y", "config_dir": None}
+    cmd2 = roundup.build_pane_command(s2, "/Users/eek/.claude-work", False)
+    assert "CLAUDE_CONFIG_DIR=/Users/eek/.claude-work " in cmd2
+
+
 def test_session_reoriented_to_workspace_root_cds_to_workspace_root():
     """After a workspace_root reorient THIS RUN, the pane must cd to workspace_root."""
     s = _pipeline_session()

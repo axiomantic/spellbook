@@ -142,6 +142,41 @@ def test_scan_tolerates_unreadable_project_dir(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# HIGH Fix 2 — scan tolerates a corrupt recency timestamp (within_lookback ValueError)
+# ---------------------------------------------------------------------------
+def test_scan_tolerates_corrupt_recency_timestamp(tmp_path):
+    # A session whose internal `timestamp` is not parseable ISO yet sorts lexically
+    # after the file mtime becomes the session's recency_ts; within_lookback then
+    # raises ValueError inside _parse_iso. scan_config_dirs must warn and skip that
+    # one session WITHOUT crashing, and still return OTHER valid sessions.
+    cfg = tmp_path / ".claude"
+    projects = cfg / "projects"
+    good_dir = projects / "-Users-eek-Development-good"
+    bad_dir = projects / "-Users-eek-Development-bad"
+    good_dir.mkdir(parents=True)
+    bad_dir.mkdir(parents=True)
+
+    good_uuid = "0f3c1a2b-1111-4aaa-8bbb-0123456789ab"
+    bad_uuid = "9ab1c2d3-2222-4ccc-8ddd-0123456789ab"
+    (good_dir / (good_uuid + ".jsonl")).write_text(
+        '{"timestamp": "2026-05-28T00:00:00Z", "cwd": "/Users/eek/Development/good"}\n'
+    )
+    # A "ZZZZ..." timestamp sorts after any real ISO mtime (so it wins max()) and is
+    # NOT parseable by datetime.fromisoformat -> ValueError in within_lookback.
+    (bad_dir / (bad_uuid + ".jsonl")).write_text(
+        '{"timestamp": "ZZZZ-not-a-real-timestamp", "cwd": "/Users/eek/Development/bad"}\n'
+    )
+
+    sessions, warnings = roundup.scan_config_dirs(
+        [str(cfg)], lookback_hours=100000, since_iso=None, running_threshold_sec=120
+    )
+    uuids = {s["uuid"] for s in sessions}
+    assert good_uuid in uuids  # valid session still returned
+    assert bad_uuid not in uuids  # corrupt one skipped
+    assert any(bad_uuid in w and "recency timestamp" in w for w in warnings)
+
+
+# ---------------------------------------------------------------------------
 # plan
 # ---------------------------------------------------------------------------
 def test_plan_emits_envelope(tmp_path):
