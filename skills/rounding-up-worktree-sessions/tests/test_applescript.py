@@ -175,6 +175,23 @@ def test_render_skips_pane_with_no_cd_target_and_warns():
     assert any("u2" in w for w in warnings)
 
 
+def test_render_skips_pane_with_missing_uuid_and_warns():
+    """MEDIUM Fix: a group referencing a uuid absent from sessions_by_uuid must be
+    SKIPPED (no KeyError), with the OTHER pane still rendering.
+
+    The defensive `.get` + skip mirrors the cd-None and unescapable-command skips.
+    """
+    group = {"group_key": "g", "sessions": ["u1", "missing"]}
+    by_uuid = {"u1": _s("u1", "/wt/u1")}  # "missing" is absent
+    warnings = []
+    script = roundup.render_applescript(
+        [group], by_uuid, default_config_dir=DEFAULT, warnings=warnings
+    )
+    # Only u1 survives -> single-pane window (no split), no KeyError raised.
+    assert script == _expected_one("u1", "/wt/u1")
+    assert any("missing" in w for w in warnings)
+
+
 def test_render_skips_pane_with_unescapable_command_and_warns():
     """Fix 2/3: a pane whose built command contains a control char/newline must be
     SKIPPED with a warning (escaping happens in the first loop, ValueError caught),

@@ -912,7 +912,16 @@ def render_applescript(
         # the emit loop reuses the pre-escaped string.
         launchable = []  # [(uuid, escaped_cmd), ...]
         for uuid in group["sessions"]:
-            session = sessions_by_uuid[uuid]
+            # MEDIUM Fix: defensive lookup — a group referencing a uuid absent from the
+            # scan results must SKIP that pane (matching the other skips in this loop)
+            # rather than raise KeyError and crash the whole launch.
+            session = sessions_by_uuid.get(uuid)
+            if not session:
+                if warnings is not None:
+                    warnings.append(
+                        "session %s not found in scan results; pane skipped" % uuid
+                    )
+                continue
             cmd = build_pane_command(session, default_config_dir, explicit_config_env)
             if cmd is None:
                 if warnings is not None:
@@ -1352,9 +1361,28 @@ def _rewrite_history(history_path: str, uuid_to_new: dict[str, str]) -> int:
     abs_history_path = os.path.realpath(history_path)
     dir_name = os.path.dirname(abs_history_path)
     fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
+    # MEDIUM Fix: SPLIT the write phase from the file-ops phase so the fd is closed
+    # exactly once on every path. The `with os.fdopen(fd)` already closes fd on success;
+    # only the write-failure branch may need to close it (when fdopen itself raised
+    # before taking ownership). The second block does copymode+replace with NO fd
+    # handling — a failure there must NOT re-close the already-closed fd (double-close
+    # race); it only cleans up the temp file.
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as out:
             out.writelines(out_lines)
+    except Exception:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+        if os.path.exists(tmp_path):
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+        raise
+
+    try:
         # MEDIUM Fix: mkstemp creates the temp file 0o600, so os.replace would clobber
         # the original file's permissions. Copy the original mode onto the temp file
         # first so the rewritten history.jsonl keeps its prior permission bits.
@@ -1364,12 +1392,11 @@ def _rewrite_history(history_path: str, uuid_to_new: dict[str, str]) -> int:
             pass
         os.replace(tmp_path, abs_history_path)
     except Exception:
-        try:
-            os.close(fd)
-        except OSError:
-            pass
         if os.path.exists(tmp_path):
-            os.remove(tmp_path)
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
         raise
     return rewritten
 
@@ -1588,19 +1615,30 @@ def _run_osascript(script: str) -> subprocess.CompletedProcess[str]:
     not unit-tested (tests inject a stub runner instead).
     """
     fd, path = tempfile.mkstemp(suffix=".scpt")
+    # MEDIUM Fix: SPLIT the write phase from the subprocess phase so the fd is closed
+    # exactly once. The `with os.fdopen(fd)` closes fd on success; only the write-failure
+    # branch may need to close it (when fdopen itself raised). The subprocess block does
+    # NO fd handling — a prior `finally: os.close(fd)` double-closed the fd on EVERY
+    # success. The finally here only removes the temp script.
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(script)
-        return subprocess.run(
-            ["osascript", path], capture_output=True, text=True, check=False, timeout=15.0
-        )
-    finally:
-        # MEDIUM Fix 4: guard against fd leak if fdopen never took ownership of fd.
-        # Double-close after the `with` is harmless (guarded by except OSError).
+    except Exception:
         try:
             os.close(fd)
         except OSError:
             pass
+        try:
+            os.remove(path)
+        except OSError:
+            pass
+        raise
+
+    try:
+        return subprocess.run(
+            ["osascript", path], capture_output=True, text=True, check=False, timeout=15.0
+        )
+    finally:
         try:
             os.remove(path)
         except OSError:
