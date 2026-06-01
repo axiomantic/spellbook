@@ -93,3 +93,31 @@ def test_message_count():
     recs = [_rec(cwd="/a"), _rec(cwd="/b")]
     out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T00:00:00Z", **BASE)
     assert out["message_count"] == 2
+
+
+def test_numeric_timestamp_epoch_seconds():
+    # A NUMERIC epoch-seconds timestamp must be converted to an ISO string so the
+    # downstream max()/recency computation does not raise TypeError (str vs number).
+    # 1748433600 s -> 2025-05-28T12:00:00Z.
+    recs = [_rec(ts=1748433600)]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2025-05-28T10:00:00Z", **BASE)
+    assert out["last_internal_ts"] == "2025-05-28T12:00:00Z"
+    # recency takes max of file_mtime and the converted internal ts (ISO lexicographic).
+    assert out["recency_ts"] == "2025-05-28T12:00:00Z"
+
+
+def test_numeric_timestamp_epoch_milliseconds():
+    # A NUMERIC milliseconds timestamp (> 1e11) must be divided by 1000 before conversion.
+    # 1748433600000 ms -> 1748433600 s -> 2025-05-28T12:00:00Z.
+    recs = [_rec(ts=1748433600000)]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2025-05-28T10:00:00Z", **BASE)
+    assert out["last_internal_ts"] == "2025-05-28T12:00:00Z"
+    assert out["recency_ts"] == "2025-05-28T12:00:00Z"
+
+
+def test_iso_string_timestamp_still_works():
+    # Regression: a normal ISO-string timestamp is used as-is.
+    recs = [_rec(ts="2026-05-28T14:00:00Z")]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T12:00:00Z", **BASE)
+    assert out["last_internal_ts"] == "2026-05-28T14:00:00Z"
+    assert out["recency_ts"] == "2026-05-28T14:00:00Z"

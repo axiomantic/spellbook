@@ -174,12 +174,29 @@ def build_session_record(
         if title is not None:
             break
 
-    # Last internal timestamp.
+    # Last internal timestamp. Robustness: a record's `timestamp` is normally an
+    # ISO-8601 STRING, but some sources emit a NUMERIC epoch value (seconds or ms).
+    # A numeric ts would later break `max(file_mtime_iso, last_internal_ts)` (str vs
+    # number) and `_parse_iso(recency_ts)` during lookback filtering. Convert numbers
+    # to an ISO-8601 UTC string; use strings as-is; skip anything else. "Last
+    # non-empty timestamp in file order wins" is preserved.
     last_internal_ts = None
     for r in records:
         ts = r.get("timestamp")
-        if ts:
+        if not ts:
+            continue
+        if isinstance(ts, str):
             last_internal_ts = ts
+        elif isinstance(ts, (int, float)):
+            try:
+                # Heuristic: values > 1e11 are milliseconds; divide to seconds.
+                seconds = ts / 1000.0 if ts > 1e11 else ts
+                last_internal_ts = datetime.fromtimestamp(seconds, tz=timezone.utc).strftime(
+                    "%Y-%m-%dT%H:%M:%SZ"
+                )
+            except (ValueError, OverflowError, OSError):
+                continue
+        # else: non-str/non-number -> skip
 
     # recency = max(file_mtime, last_internal_ts) by ISO lexicographic comparison.
     if file_mtime_iso and last_internal_ts:
