@@ -400,3 +400,39 @@ def test_launch_gui_fallback_is_stub(tmp_path):
     assert res.returncode != 0
     combined = (res.stdout + res.stderr).lower()
     assert "not implemented" in combined
+
+
+# ---------------------------------------------------------------------------
+# Bug fix — `launch --json --print-script` emits PURE parseable JSON.
+# Before the fix, execute_launch's dry-run path printed the raw AppleScript to
+# stdout AND _cmd_launch then printed a JSON object, concatenating script text +
+# JSON into unparseable stdout. Mirrors the reorient json_mode pattern: the human
+# print is suppressed under json_mode and the script is folded into the payload.
+# ---------------------------------------------------------------------------
+def test_launch_print_script_json_is_pure_and_includes_script(tmp_path):
+    plan = _plan([_sess("u1")], [{"group_key": "g", "sessions": ["u1"]}])
+    pf = tmp_path / "plan.json"
+    pf.write_text(json.dumps(plan))
+    res = subprocess.run(
+        [sys.executable, ROUNDUP, "launch", "--plan", str(pf), "--print-script", "--json"],
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0, res.stderr
+    # stdout MUST parse as JSON (no raw AppleScript leaking before/around it).
+    doc = json.loads(res.stdout)
+    assert "warnings" in doc
+    assert "ran" in doc
+    assert "script" in doc
+    # ran is False under --print-script (osascript never invoked).
+    assert doc["ran"] is False
+    # The folded script is the rendered AppleScript, present ONLY inside the JSON.
+    assert 'tell application "Ghostty"' in doc["script"]
+    assert "--resume u1" in doc["script"]
+    assert 'input text "' in doc["script"]
+    # No raw script leaked outside the JSON object: the only `tell application`
+    # occurrence is the JSON-escaped one inside doc["script"]. A leaked raw print
+    # would contain an UNescaped `tell application "Ghostty"` line. After json.dumps
+    # the embedded quotes are escaped (\"Ghostty\"), so the raw form must be absent.
+    assert 'tell application "Ghostty"' not in res.stdout
+    assert '\\"Ghostty\\"' in res.stdout

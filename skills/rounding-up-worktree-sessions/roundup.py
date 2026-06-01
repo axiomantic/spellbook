@@ -1659,6 +1659,7 @@ def execute_launch(
     explicit_config_env: bool = False,
     run_osascript: Callable[[str], Any] | None = None,
     reorient_summary: dict[str, Any] | None = None,
+    json_mode: bool = False,
 ) -> dict[str, Any]:
     """Render and (unless dry-run) run the Ghostty AppleScript for a plan (Task 15).
 
@@ -1675,6 +1676,11 @@ def execute_launch(
     rendering so every session actually moved this run cd's to its POST-MOVE target dir
     instead of its pre-move launch cd-target. Sessions not in the summary's `moved` keep
     the launch_cd_target derived from their current storage dir.
+
+    When `json_mode` is True, the dry-run path SUPPRESSES the human `print(script)`
+    (which would otherwise corrupt stdout that the caller emits as a JSON object) and
+    instead leaves the rendered script in the returned `script` field for the caller to
+    fold into its JSON payload. Mirrors `execute_reorient`'s json_mode contract.
 
     The implemented backend is Ghostty's native AppleScript API (Ghostty >= 1.2.0,
     confirmed against the 1.3.1 scripting dictionary). It requires one-time Automation
@@ -1719,7 +1725,10 @@ def execute_launch(
 
     ran = False
     if dry_run:
-        print(script)
+        # Under json_mode the caller folds `script` into its JSON payload; printing it
+        # here would prepend raw AppleScript to stdout and corrupt that JSON.
+        if not json_mode:
+            print(script)
     else:
         # `osascript` only exists on macOS; on other platforms the runner raises
         # FileNotFoundError. It may also fail with other OS errors (permissions) or
@@ -1914,14 +1923,19 @@ def _cmd_launch(args: argparse.Namespace) -> int:
         default_config_dir=default_config_dir,
         explicit_config_env=args.explicit_config_env,
         reorient_summary=reorient_summary,
+        json_mode=args.json,  # suppress execute_launch's raw script print so stdout is pure JSON
     )
-    if args.print_script and not args.json:
-        # script already printed by execute_launch; surface warnings on stderr.
-        for w in result["warnings"]:
-            sys.stderr.write("WARNING: " + w + "\n")
-    elif args.json:
-        print(json.dumps({"warnings": result["warnings"], "ran": result["ran"]}, indent=2))
+    if args.json:
+        # JSON mode: execute_launch suppressed its human script print (json_mode), so
+        # stdout is a single parseable JSON object. Under --print-script, fold the
+        # rendered AppleScript into the payload instead of dumping it raw.
+        out = {"warnings": result["warnings"], "ran": result["ran"]}
+        if args.print_script:
+            out["script"] = result["script"]
+        print(json.dumps(out, indent=2, ensure_ascii=False))
     else:
+        # Non-JSON mode: under --print-script the script was already printed by
+        # execute_launch (json_mode False); surface warnings on stderr either way.
         for w in result["warnings"]:
             sys.stderr.write("WARNING: " + w + "\n")
     return 0
