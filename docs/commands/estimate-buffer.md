@@ -102,9 +102,9 @@ Variance adds, not standard deviation. Use sum-of-squares for aggregation.
 ### Step 3: Confidence Intervals (N=1)
 
 ```
-upper_80 = E_total + 1.282 * sigma_total
-upper_90 = E_total + 1.645 * sigma_total
-upper_95 = E_total + 1.960 * sigma_total
+upper_80 = E_total + 0.842 * sigma_total
+upper_90 = E_total + 1.282 * sigma_total
+upper_95 = E_total + 1.645 * sigma_total
 ```
 
 Convert each to calendar days at 8 productive hours per day:

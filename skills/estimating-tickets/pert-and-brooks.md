@@ -41,9 +41,9 @@ upper_bound(C) = E_total + Z(C) * sigma_total
 
 | Confidence | Z-score |
 |------------|---------|
-| 80% | 1.282 |
-| 90% | 1.645 |
-| 95% | 1.960 |
+| 80% | 0.842 |
+| 90% | 1.282 |
+| 95% | 1.645 |
 
 Always report all three bands. A single band hides the shape of the distribution from the audience.
 

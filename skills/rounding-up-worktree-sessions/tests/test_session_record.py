@@ -55,6 +55,30 @@ def test_title_prefers_custom_then_agent():
     assert out["title_source"] == "customTitle"
 
 
+def test_title_precedence_spans_records():
+    # An EARLY record carries a low-precedence aiTitle; a LATER record carries a
+    # high-precedence customTitle. Precedence is across the whole session, so the
+    # customTitle must win even though the aiTitle appears first.
+    recs = [
+        _rec(title="ai-generated", title_field="aiTitle"),
+        _rec(title="user-custom", title_field="customTitle"),
+    ]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T00:00:00Z", **BASE)
+    assert out["title"] == "user-custom"
+    assert out["title_source"] == "customTitle"
+
+
+def test_title_latest_value_within_field():
+    # Multiple records carry the same (highest-precedence) field; the latest value wins.
+    recs = [
+        _rec(title="old-custom", title_field="customTitle"),
+        _rec(title="new-custom", title_field="customTitle"),
+    ]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T00:00:00Z", **BASE)
+    assert out["title"] == "new-custom"
+    assert out["title_source"] == "customTitle"
+
+
 def test_recency_takes_max():
     recs = [_rec(ts="2026-05-28T10:00:00Z")]
     out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T12:00:00Z", **BASE)

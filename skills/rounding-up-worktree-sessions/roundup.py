@@ -163,11 +163,14 @@ def build_session_record(
         tied = [b for b, c in counts.items() if c == max_count]
         git_branch_dominant = max(tied, key=lambda b: last_index[b])
 
-    # Title precedence: customTitle -> agentName -> aiTitle.
+    # Title precedence: customTitle -> agentName -> aiTitle. Precedence applies
+    # across the whole session: a higher-precedence field on any record wins over
+    # a lower-precedence field on an earlier record. Within a field, the latest
+    # (reversed-scan) value wins.
     title = None
     title_source = None
-    for r in records:
-        for field in ("customTitle", "agentName", "aiTitle"):
+    for field in ("customTitle", "agentName", "aiTitle"):
+        for r in reversed(records):
             val = r.get(field)
             if val:
                 title = val
@@ -313,7 +316,7 @@ def enumerate_worktree_dirs(worktrees_root: str, repos_root: str) -> list[str]:
         for project in sorted(_safe_listdir(repos_root)):
             proj_path = os.path.join(repos_root, project)
             # Skip the worktrees_root itself if it lives under repos_root.
-            if os.path.abspath(proj_path) == os.path.abspath(worktrees_root):
+            if os.path.realpath(proj_path) == os.path.realpath(worktrees_root):
                 continue
             if os.path.isdir(proj_path) and _has_git(proj_path):
                 dirs.append(proj_path)
@@ -337,7 +340,7 @@ def build_worktree_index(
     dir_to_branch = {}
     workspace_root_of = {}
 
-    wt_root_abs = os.path.abspath(worktrees_root)
+    wt_root_abs = os.path.realpath(worktrees_root)
     for d in dirs:
         branch = branch_of(d)
         if branch is not None:
@@ -353,7 +356,7 @@ def build_worktree_index(
 
 def _workspace_root_of(d: str, wt_root_abs: str) -> str | None:
     """Resolve the workspace-root dir for `d`, or None for main repos."""
-    d_abs = os.path.abspath(d)
+    d_abs = os.path.realpath(d)
     if d_abs == wt_root_abs:
         return None  # the worktrees root itself is not a workspace
     prefix = wt_root_abs + os.sep
@@ -1531,7 +1534,7 @@ def _run_osascript(script: str) -> subprocess.CompletedProcess[str]:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(script)
         return subprocess.run(
-            ["osascript", path], capture_output=True, text=True, check=False
+            ["osascript", path], capture_output=True, text=True, check=False, timeout=15.0
         )
     finally:
         # MEDIUM Fix 4: guard against fd leak if fdopen never took ownership of fd.
@@ -1617,13 +1620,14 @@ def execute_launch(
         print(script)
     else:
         # `osascript` only exists on macOS; on other platforms the runner raises
-        # FileNotFoundError. Degrade gracefully with a warning instead of
-        # propagating the exception (relaunch is macOS-only).
+        # FileNotFoundError. It may also fail with other OS errors (permissions) or
+        # a TimeoutExpired (see _run_osascript timeout). Degrade gracefully with a
+        # warning instead of propagating the exception (relaunch is macOS-only).
         try:
             result = run_osascript(script)
-        except FileNotFoundError:
+        except (OSError, subprocess.SubprocessError) as e:
             warnings.append(
-                "osascript command not found. Relaunching sessions is only supported on macOS."
+                "Failed to run osascript: %s. Relaunching sessions is only supported on macOS." % e
             )
             ran = False
         else:

@@ -81,10 +81,10 @@ Highlight confidence: [80% | 90% | 95%]
 
 | Confidence | Upper bound (hours) | Calendar days @ 8h/day |
 |------------|---------------------|------------------------|
-| 80% | E_total + 1.282 * sigma_total = [X] | [X / 8] |
+| 80% | E_total + 0.842 * sigma_total = [X] | [X / 8] |
 | **[highlighted]** | **... ** | **...** |
-| 90% | E_total + 1.645 * sigma_total = [X] | [X / 8] |
-| 95% | E_total + 1.960 * sigma_total = [X] | [X / 8] |
+| 90% | E_total + 1.282 * sigma_total = [X] | [X / 8] |
+| 95% | E_total + 1.645 * sigma_total = [X] | [X / 8] |
 
 ## Double-Engineer Timeline (N=2)
 

@@ -85,8 +85,9 @@ def test_live_invokes_runner_once():
 def test_live_osascript_missing_warns_and_does_not_propagate():
     """On non-macOS, `osascript` is absent and the runner raises FileNotFoundError.
 
-    execute_launch must degrade gracefully: emit the not-found warning, report
-    ran=False, and NOT propagate the exception.
+    execute_launch must degrade gracefully: emit the failure warning, report
+    ran=False, and NOT propagate the exception. FileNotFoundError is an OSError
+    subclass, so it is caught by the broadened (OSError, SubprocessError) handler.
     """
     plan = _plan([_sess("u1")], [{"group_key": "g", "sessions": ["u1"]}])
 
@@ -101,9 +102,10 @@ def test_live_osascript_missing_warns_and_does_not_propagate():
     )
 
     assert result["ran"] is False
-    assert (
-        "osascript command not found. Relaunching sessions is only supported on macOS."
-        in result["warnings"]
+    assert any(
+        w.startswith("Failed to run osascript:")
+        and "Relaunching sessions is only supported on macOS." in w
+        for w in result["warnings"]
     )
 
 
