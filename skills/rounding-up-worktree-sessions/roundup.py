@@ -713,8 +713,9 @@ def build_reorient_plan(
         # HIGH Fix (safety invariant): reorient must NEVER cross
         # ~/.claude <-> ~/.claude-work. If the decision's config_dir differs from the
         # session's actual config_dir, refuse the move at plan-build time.
-        if session.get("config_dir") and os.path.abspath(config_dir) != os.path.abspath(
-            session["config_dir"]
+        if session.get("config_dir") and (
+            os.path.realpath(os.path.expanduser(os.path.expandvars(config_dir)))
+            != os.path.realpath(os.path.expanduser(os.path.expandvars(session["config_dir"])))
         ):
             base["skipped"] = True
             base["skip_reason"] = "cross_config_dir"
@@ -906,7 +907,10 @@ def render_applescript(
     lines = ['tell application "Ghostty"']
     for group in groups:
         # Resolve commands first; drop sessions with no usable cd-target (I-launch-1).
-        launchable = []  # [(uuid, cmd), ...]
+        # Escape+validate ONCE here so a command with control chars/newlines skips
+        # only that pane (matching the cd-None skip) instead of crashing the launch;
+        # the emit loop reuses the pre-escaped string.
+        launchable = []  # [(uuid, escaped_cmd), ...]
         for uuid in group["sessions"]:
             session = sessions_by_uuid[uuid]
             cmd = build_pane_command(session, default_config_dir, explicit_config_env)
@@ -917,7 +921,16 @@ def render_applescript(
                         "pane skipped" % uuid
                     )
                 continue
-            launchable.append((uuid, cmd))
+            try:
+                escaped = _escape_applescript(cmd)
+            except ValueError as e:
+                if warnings is not None:
+                    warnings.append(
+                        "session %s command contains invalid characters: %s; pane skipped"
+                        % (uuid, e)
+                    )
+                continue
+            launchable.append((uuid, escaped))
 
         n = len(launchable)
         if n == 0:
@@ -954,9 +967,8 @@ def render_applescript(
             pane_var = "pane%d" % (i + 1)
             lines.append("\tset %s to (split %s direction %s)" % (pane_var, parent, direction))
             pane_vars.append(pane_var)
-        # Emit commands per pane.
-        for pane_var, (uuid, cmd) in zip(pane_vars, launchable):
-            escaped = _escape_applescript(cmd)
+        # Emit commands per pane (reuse the pre-escaped command from the first loop).
+        for pane_var, (uuid, escaped) in zip(pane_vars, launchable):
             lines.append('\tinput text "%s" to %s' % (escaped, pane_var))
             lines.append("\tdelay 0.3")
             # `input text` pastes without a trailing newline; submit via the
@@ -1343,6 +1355,13 @@ def _rewrite_history(history_path: str, uuid_to_new: dict[str, str]) -> int:
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as out:
             out.writelines(out_lines)
+        # MEDIUM Fix: mkstemp creates the temp file 0o600, so os.replace would clobber
+        # the original file's permissions. Copy the original mode onto the temp file
+        # first so the rewritten history.jsonl keeps its prior permission bits.
+        try:
+            shutil.copymode(abs_history_path, tmp_path)
+        except OSError:
+            pass
         os.replace(tmp_path, abs_history_path)
     except Exception:
         try:

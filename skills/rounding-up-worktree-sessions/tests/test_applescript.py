@@ -173,3 +173,25 @@ def test_render_skips_pane_with_no_cd_target_and_warns():
     assert script == _expected_one("u1", "/wt/u1")
     assert "cd None" not in script
     assert any("u2" in w for w in warnings)
+
+
+def test_render_skips_pane_with_unescapable_command_and_warns():
+    """Fix 2/3: a pane whose built command contains a control char/newline must be
+    SKIPPED with a warning (escaping happens in the first loop, ValueError caught),
+    not crash the whole launch. The OTHER pane still emits.
+
+    The newline is injected via launch_cd_target; shlex.quote preserves the newline,
+    so the built command carries it into _escape_applescript, which raises ValueError.
+    """
+    group = {"group_key": "g", "sessions": ["u1", "u2"]}
+    by_uuid = {
+        "u1": _s("u1", "/wt/u1"),
+        "u2": _s("u2", "/wt/bad\npath"),  # newline -> command fails escaping
+    }
+    warnings = []
+    script = roundup.render_applescript(
+        [group], by_uuid, default_config_dir=DEFAULT, warnings=warnings
+    )
+    # Only u1 survives -> single-pane window (no split), no exception raised.
+    assert script == _expected_one("u1", "/wt/u1")
+    assert any("u2" in w and "invalid characters" in w for w in warnings)

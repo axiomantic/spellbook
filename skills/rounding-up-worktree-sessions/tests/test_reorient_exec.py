@@ -8,6 +8,7 @@ makes a backup; history failure leaves moves intact.
 import json
 import os
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -472,6 +473,22 @@ def test_rewrite_history_preserves_non_ascii(tmp_path):
     rec = json.loads(out)
     assert rec["project"] == "/Users/eek/new"
     assert rec["summary"] == "café déjà"
+
+
+def test_rewrite_history_preserves_file_mode(tmp_path):
+    """MEDIUM Fix 4: the atomic mkstemp replace must NOT clobber the original file's
+    permissions. mkstemp creates the temp file 0o600; copymode restores the prior
+    mode (here 0o644) onto it before os.replace."""
+    history = tmp_path / "history.jsonl"
+    match = json.dumps({"project": "/Users/eek/old", "sessionId": "u1"}) + "\n"
+    history.write_text(match)
+    os.chmod(str(history), 0o644)
+
+    rewritten = roundup._rewrite_history(str(history), {"u1": "/Users/eek/new"})
+    assert rewritten == 1
+
+    mode = stat.S_IMODE(os.stat(str(history)).st_mode)
+    assert mode == 0o644
 
 
 def test_already_correct_noop_skipped_no_move(tmp_path):

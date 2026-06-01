@@ -120,6 +120,26 @@ def test_cross_config_dir_skipped():
     assert p["new_project_dir"] is None
 
 
+def test_same_config_dir_expressed_differently_not_skipped():
+    # HIGH Fix 1: the cross_config_dir guard normalizes BOTH sides with
+    # realpath(expanduser(expandvars(...))). The same config dir expressed
+    # differently (here the decision uses '~/.claude' while the session stores the
+    # expanded '/Users/eek/.claude') must NOT be treated as a cross-config mismatch,
+    # so the move proceeds. The old os.path.abspath comparison did NOT expand '~'
+    # and would wrongly skip this as cross_config_dir.
+    home = os.path.expanduser("~")
+    session_config = os.path.join(home, ".claude")
+    s = _sess("u1", "/Users/eek/.claude/projects/-old/u1.jsonl",
+              "/Users/eek/Development/worktrees/ODY/styleseat",
+              "/Users/eek/Development/worktrees/ODY")
+    s["config_dir"] = session_config
+    plans = roundup.build_reorient_plan(_by_uuid(s),
+        [{"uuid": "u1", "config_dir": "~/.claude", "target": "repo_subdir"}], NEVER)
+    p = plans[0]
+    assert p["skip_reason"] != "cross_config_dir"
+    assert not p["skipped"]
+
+
 def test_repo_subdir_none_target_dir_skipped_not_crash():
     # Finding 2: a repo_subdir decision for a session whose resolved_worktree_dir is
     # None (possible under Phase-B group-plurality resolution) must yield a skipped
