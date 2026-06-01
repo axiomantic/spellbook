@@ -4,6 +4,7 @@ import subprocess
 import tripwire
 
 import roundup
+from _matchers import _IsInstance
 
 
 def _mk_git(d):
@@ -83,23 +84,6 @@ def test_enumerate_unreadable_repos_root_tolerated(tmp_path):
     finally:
         os.chmod(str(repos), stat.S_IRWXU)
     assert str(repo) in dirs
-
-
-class _IsInstance:
-    """Argument matcher: equal to any instance of the given type.
-
-    Used in tripwire ``assert_call(raised=...)`` to match the recorded
-    exception instance by type without pinning the exact object.
-    """
-
-    def __init__(self, typ):
-        self._typ = typ
-
-    def __eq__(self, other):
-        return isinstance(other, self._typ)
-
-    def __repr__(self):
-        return "<instance of %s>" % self._typ.__name__
 
 
 def test_git_branch_returns_none_on_timeout(tmp_path):

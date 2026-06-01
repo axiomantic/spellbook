@@ -15,27 +15,11 @@ import sys
 import tripwire
 
 import roundup
+from _matchers import _IsInstance
 
 SKILL = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ROUNDUP = os.path.join(SKILL, "roundup.py")
 
-
-class _IsInstance:
-    """Argument matcher: equals any instance of ``cls``.
-
-    Used in tripwire ``assert_call(raised=...)`` to match the exception
-    instance recorded for a ``.raises()`` side effect without pinning the
-    exact object identity.
-    """
-
-    def __init__(self, cls):
-        self._cls = cls
-
-    def __eq__(self, other):
-        return isinstance(other, self._cls)
-
-    def __repr__(self):
-        return f"_IsInstance({self._cls.__name__})"
 
 TARGET = "/Users/eek/Development/worktrees/ODY/styleseat"
 TARGET2 = "/Users/eek/Development/worktrees/ODY/mobileweb"
