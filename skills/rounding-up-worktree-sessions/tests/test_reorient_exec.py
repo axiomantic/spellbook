@@ -262,6 +262,55 @@ def test_update_history_rewrites_and_backs_up(tmp_path):
     assert result["history_updated"] is True
 
 
+def test_update_history_matches_by_session_id_not_shared_cwd(tmp_path):
+    """Fix 1+2: two sessions sharing the SAME old project path (launch_cwd) but
+    reorienting to DIFFERENT targets must each have THEIR OWN history line rewritten
+    to THEIR OWN new target, keyed by sessionId.
+
+    Under the old cwd-path matching, both history lines (same `project` value) would
+    be clobbered to a single target — this test pins the per-session correctness the
+    fix provides.
+    """
+    cfg, old = _setup(tmp_path, uuid="u1")
+    # Second session lives in a DIFFERENT old dir but shares the same launch_cwd.
+    old2 = os.path.join(cfg, "projects", "-old2")
+    os.makedirs(old2, exist_ok=True)
+    jsonl2 = os.path.join(old2, "u2.jsonl")
+    with open(jsonl2, "w") as fh:
+        fh.write('{"cwd":"/y"}\n')
+    _age(jsonl2)
+
+    SHARED_CWD = "/Users/eek/shared-cwd"
+    s1 = _session(cfg, old, uuid="u1", target=TARGET)
+    s1["launch_cwd"] = SHARED_CWD
+    s2 = _session(cfg, old2, uuid="u2", target=TARGET2)
+    s2["launch_cwd"] = SHARED_CWD
+
+    # Two history lines: SAME project path, DIFFERENT sessionId.
+    history = os.path.join(cfg, "history.jsonl")
+    with open(history, "w") as fh:
+        fh.write(json.dumps({"project": SHARED_CWD, "sessionId": "u1"}) + "\n")
+        fh.write(json.dumps({"project": SHARED_CWD, "sessionId": "u2"}) + "\n")
+
+    sbu = {"u1": s1, "u2": s2}
+    plans = roundup.build_reorient_plan(
+        sbu,
+        [_decision(cfg, "u1", "repo_subdir"), _decision(cfg, "u2", "repo_subdir")],
+        os.path.exists,
+    )
+    result = roundup.execute_reorient(
+        plans, dry_run=False, update_history=True, now_stamp="2026-05-29T00:00:00Z",
+        sessions_by_uuid=sbu,
+    )
+
+    assert result["history_updated"] is True
+    lines = [json.loads(line) for line in open(history) if line.strip()]
+    by_sid = {r["sessionId"]: r for r in lines}
+    # Each line rewritten to ITS OWN target, by sessionId (no clobber).
+    assert by_sid["u1"]["project"] == TARGET
+    assert by_sid["u2"]["project"] == TARGET2
+
+
 def test_history_failure_leaves_moves_intact(tmp_path):
     cfg, old = _setup(tmp_path)
     enc = roundup.encode_cwd_literal(TARGET)
@@ -284,8 +333,9 @@ def test_history_failure_leaves_moves_intact(tmp_path):
             sessions_by_uuid={"u1": s},
         )
 
+    # Fix 1+2: the map is keyed by sessionId (== uuid), not the old literal cwd.
     rewrite_mock.assert_call(
-        args=(history, {"/Users/eek/old-cwd": TARGET}),
+        args=(history, {"u1": TARGET}),
         kwargs={},
         raised=_IsInstance(OSError),
     )
@@ -350,7 +400,7 @@ def test_reorient_dry_run_json_is_pure_and_no_mutation(tmp_path):
 # ---------------------------------------------------------------------------
 def test_rewrite_history_preserves_malformed_lines_verbatim(tmp_path):
     """GM-M3: non-JSON / malformed / blank lines are preserved byte-for-byte; only
-    matching `project` lines are rewritten."""
+    lines whose `sessionId` is in the map are rewritten."""
     history = tmp_path / "history.jsonl"
     malformed = "this is not json at all {oops\n"
     blank = "\n"
@@ -358,7 +408,8 @@ def test_rewrite_history_preserves_malformed_lines_verbatim(tmp_path):
     match = json.dumps({"project": "/Users/eek/old", "sessionId": "u1"}) + "\n"
     history.write_text(malformed + blank + nonmatch + match)
 
-    rewritten = roundup._rewrite_history(str(history), {"/Users/eek/old": "/Users/eek/new"})
+    # Fix 1+2: match by sessionId, not project path.
+    rewritten = roundup._rewrite_history(str(history), {"u1": "/Users/eek/new"})
     assert rewritten == 1
 
     out = history.read_text()
@@ -366,9 +417,9 @@ def test_rewrite_history_preserves_malformed_lines_verbatim(tmp_path):
     # Malformed and blank lines preserved EXACTLY and in order.
     assert out_lines[0] == malformed
     assert out_lines[1] == blank
-    # Non-matching JSON line preserved verbatim (re-serialization not applied).
+    # Non-matching JSON line (sessionId not in map) preserved verbatim.
     assert out_lines[2] == nonmatch
-    # Matching line rewritten to the new project value.
+    # Matching line (sessionId u1) rewritten to the new project value.
     rewritten_rec = json.loads(out_lines[3])
     assert rewritten_rec["project"] == "/Users/eek/new"
     assert rewritten_rec["sessionId"] == "u1"
@@ -387,7 +438,8 @@ def test_rewrite_history_preserves_non_object_json_lines_verbatim(tmp_path):
     match = json.dumps({"project": "/Users/eek/old", "sessionId": "u1"}) + "\n"
     history.write_text(bare_number + bare_string + bare_array + bare_bool + match)
 
-    rewritten = roundup._rewrite_history(str(history), {"/Users/eek/old": "/Users/eek/new"})
+    # Fix 1+2: match by sessionId, not project path.
+    rewritten = roundup._rewrite_history(str(history), {"u1": "/Users/eek/new"})
     assert rewritten == 1
 
     out = history.read_text()
@@ -406,10 +458,11 @@ def test_rewrite_history_preserves_non_object_json_lines_verbatim(tmp_path):
 def test_rewrite_history_preserves_non_ascii(tmp_path):
     """MEDIUM Fix 2: rewritten records keep non-ASCII chars unescaped (ensure_ascii=False)."""
     history = tmp_path / "history.jsonl"
-    match = json.dumps({"project": "/Users/eek/old", "summary": "café déjà"}) + "\n"
+    match = json.dumps({"project": "/Users/eek/old", "summary": "café déjà", "sessionId": "u1"}) + "\n"
     history.write_text(match)
 
-    rewritten = roundup._rewrite_history(str(history), {"/Users/eek/old": "/Users/eek/new"})
+    # Fix 1+2: match by sessionId, not project path.
+    rewritten = roundup._rewrite_history(str(history), {"u1": "/Users/eek/new"})
     assert rewritten == 1
 
     out = history.read_text(encoding="utf-8")

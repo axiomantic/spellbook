@@ -90,11 +90,11 @@ calendar_days(N=1) = hours / 8
 For a ticket portfolio mixing pair-program and parallel tickets:
 
 ```
-pair_hours = sum(adjusted_hours_i for i in pair-suitable) * 1.15
+pair_hours = sum(adjusted_hours_i for i in pair_program_suitable) * 1.15
 pair_calendar_days = (pair_hours / 2) / 8
                      # divided by 2 because both engineers work the ticket together
 
-parallel_hours = sum(adjusted_hours_i for i in parallel-suitable) * 1.10
+parallel_hours = sum(adjusted_hours_i for i in parallel_suitable) * 1.10
 parallel_calendar_days = (parallel_hours / 2) / 8
                          # divided by 2 because engineers work different tickets in parallel
 

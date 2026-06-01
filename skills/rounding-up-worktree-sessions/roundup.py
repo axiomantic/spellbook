@@ -1274,14 +1274,20 @@ def _live_collision(plan: dict[str, Any]) -> bool:
     return False
 
 
-def _rewrite_history(history_path: str, old_to_new: dict[str, str]) -> int:
+def _rewrite_history(history_path: str, uuid_to_new: dict[str, str]) -> int:
     """Rewrite matching `project` lines in history.jsonl (design §8.7).
 
-    `old_to_new`: {old_literal_cwd: new_literal_cwd}. CONFIRMED by the spike: the
-    project-reference field is `project`, holding a LITERAL absolute cwd path.
-    Rewrites only lines whose `project` value is a key in `old_to_new`; everything
-    else is preserved verbatim (including non-JSON lines). Writes atomically via a
-    temp file + rename in the same dir. Returns the count of rewritten lines.
+    `uuid_to_new`: {sessionId: new_literal_cwd}. CONFIRMED by the spike: the
+    project-reference field is `project`, holding a LITERAL absolute cwd path, and
+    each entry carries a unique `sessionId` (== the session UUID).
+
+    MEDIUM Fix 1+2: match by `sessionId`, NOT the `project` path. Two sessions can
+    share the same old literal cwd but reorient to DIFFERENT targets in one run;
+    path-matching would clobber both lines with a single target. Keying on the
+    unique `sessionId` rewrites each line to its OWN new cwd. Lines whose
+    `sessionId` is not in the map are preserved verbatim (including non-JSON lines).
+    Writes atomically via a temp file + rename in the same dir. Returns the count of
+    rewritten lines.
     """
     out_lines = []
     rewritten = 0
@@ -1299,9 +1305,9 @@ def _rewrite_history(history_path: str, old_to_new: dict[str, str]) -> int:
             except json.JSONDecodeError:
                 out_lines.append(line)  # preserve unknown shapes verbatim
                 continue
-            proj = rec.get("project")
-            if proj in old_to_new:
-                rec["project"] = old_to_new[proj]
+            sid = rec.get("sessionId")
+            if sid in uuid_to_new:
+                rec["project"] = uuid_to_new[sid]
                 # MEDIUM Fix 2: preserve non-ASCII chars (don't \uXXXX-escape).
                 out_lines.append(json.dumps(rec, ensure_ascii=False) + "\n")
                 rewritten += 1
@@ -1359,11 +1365,12 @@ def execute_reorient(
     keeps the human prints and returns an empty `dry_run_moves`.
 
     `--update-history` (DEFAULT OFF) runs LAST, after all moves: back up
-    `<config_dir>/history.jsonl` to a TIMESTAMPED `.backup.<stamp>` then rewrite
-    `project` lines whose value matches a moved session's old literal cwd. The stamp
-    is injectable via `now_stamp` (no hidden datetime.now() call in tests). A history
-    failure leaves the file moves standing and is reported via `history_updated=False`
-    plus a warning.
+    `<config_dir>/history.jsonl` to a TIMESTAMPED `.backup.<stamp>` then rewrite the
+    `project` field of each line whose `sessionId` matches a moved session's UUID,
+    setting it to that session's new literal cwd (MEDIUM Fix 1+2 — keyed by
+    sessionId, not the shared old cwd). The stamp is injectable via `now_stamp` (no
+    hidden datetime.now() call in tests). A history failure leaves the file moves
+    standing and is reported via `history_updated=False` plus a warning.
 
     Returns a JSON-able summary: moved[], skipped[], collisions[], rolled_back[],
     warnings[], history_updated.
@@ -1430,7 +1437,10 @@ def execute_reorient(
         }
 
     # ---- live: per-item TOCTOU re-check, move, journal rollback on exception ----
-    history_pairs = {}  # config_dir -> {old_literal_cwd: new_literal_cwd}
+    # MEDIUM Fix 1+2: key the history rewrite map by sessionId (== uuid), NOT the old
+    # literal cwd. Two moved sessions can share an old cwd but reorient to different
+    # targets; cwd-keying would clobber both history lines with one target.
+    history_uuids = {}  # config_dir -> {sessionId: new_literal_cwd}
     for plan in plans:
         if plan.get("skipped"):
             skipped.append({"uuid": plan["uuid"], "skip_reason": plan.get("skip_reason")})
@@ -1479,9 +1489,9 @@ def execute_reorient(
             )
             break  # stop processing further items (design §8.10)
 
-        # Record history pair for the LAST-phase rewrite.
+        # Record the history rewrite entry for the LAST-phase rewrite, keyed by the
+        # session's UUID (== history.jsonl `sessionId`). MEDIUM Fix 1+2.
         session = sessions_by_uuid.get(plan["uuid"], {})
-        old_cwd = session.get("launch_cwd")
         target_dir = (
             session.get("workspace_root_dir")
             if plan.get("target_kind") == "workspace_root"
@@ -1499,21 +1509,21 @@ def execute_reorient(
                 "target_dir": target_dir,
             }
         )
-        if old_cwd and target_dir:
-            history_pairs.setdefault(plan["config_dir"], {})[old_cwd] = target_dir
+        if target_dir:
+            history_uuids.setdefault(plan["config_dir"], {})[plan["uuid"]] = target_dir
 
     # ---- history update: LAST, only if requested and only if moves stand ----
     if update_history and moved and not rolled_back:
         stamp = now_stamp or _now_iso()
         try:
-            for config_dir, pairs in history_pairs.items():
+            for config_dir, uuid_to_new in history_uuids.items():
                 history_path = os.path.join(config_dir, "history.jsonl")
                 if not os.path.exists(history_path):
                     warnings.append("history.jsonl not found; skipped: %s" % history_path)
                     continue
                 backup_path = "%s.backup.%s" % (history_path, stamp)
                 shutil.copy2(history_path, backup_path)
-                _rewrite_history(history_path, pairs)
+                _rewrite_history(history_path, uuid_to_new)
                 history_updated = True
         except Exception as exc:
             history_updated = False
