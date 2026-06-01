@@ -141,3 +141,14 @@ def test_iso_string_timestamp_still_works():
     out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T12:00:00Z", **BASE)
     assert out["last_internal_ts"] == "2026-05-28T14:00:00Z"
     assert out["recency_ts"] == "2026-05-28T14:00:00Z"
+
+
+def test_recency_chronological_not_lexicographic():
+    # MEDIUM Fix: recency must compare datetimes CHRONOLOGICALLY, not as strings.
+    # The internal ts ".123Z" is 123ms NEWER than the whole-second mtime, but a
+    # lexicographic max() picks the mtime because 'Z'(90) > '.'(46) at the second
+    # boundary. The chronologically newer internal ts must win.
+    recs = [_rec(ts="2026-05-28T21:10:00.123Z")]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T21:10:00Z", **BASE)
+    assert out["last_internal_ts"] == "2026-05-28T21:10:00.123Z"
+    assert out["recency_ts"] == "2026-05-28T21:10:00.123Z"

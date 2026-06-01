@@ -198,9 +198,20 @@ def build_session_record(
                 continue
         # else: non-str/non-number -> skip
 
-    # recency = max(file_mtime, last_internal_ts) by ISO lexicographic comparison.
+    # recency = max(file_mtime, last_internal_ts) by CHRONOLOGICAL comparison.
+    # A lexicographic max() misorders when sub-second precision or tz designators
+    # differ (e.g. "...:00Z" sorts after "...:00.123Z" because 'Z'(90) > '.'(46),
+    # but the latter is chronologically newer). Parse to aware datetimes via
+    # _parse_iso; fall back to lexicographic max only if parsing fails.
     if file_mtime_iso and last_internal_ts:
-        recency_ts = max(file_mtime_iso, last_internal_ts)
+        try:
+            recency_ts = (
+                file_mtime_iso
+                if _parse_iso(file_mtime_iso) >= _parse_iso(last_internal_ts)
+                else last_internal_ts
+            )
+        except (ValueError, TypeError):
+            recency_ts = max(file_mtime_iso, last_internal_ts)
     else:
         recency_ts = file_mtime_iso or last_internal_ts
 
