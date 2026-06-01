@@ -1881,6 +1881,11 @@ def _cmd_reorient(args: argparse.Namespace) -> int:
             fh.write(json.dumps(summary, indent=2) + "\n")
     if args.json:
         print(json.dumps(summary, indent=2))
+    else:
+        # Match the launch command: surface skipped-move / collision / history
+        # warnings to stderr in non-JSON mode instead of silently dropping them.
+        for w in summary.get("warnings", []):
+            sys.stderr.write("WARNING: " + w + "\n")
     return 0
 
 

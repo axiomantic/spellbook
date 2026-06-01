@@ -396,6 +396,51 @@ def test_reorient_dry_run_json_is_pure_and_no_mutation(tmp_path):
     assert doc["moved"] == []
 
 
+def test_reorient_non_json_surfaces_warnings_to_stderr(tmp_path):
+    """MEDIUM Fix: in non-JSON mode, reorient must surface summary warnings to
+    stderr (matching the launch command's "WARNING: " prefix), instead of
+    silently dropping them.
+
+    Scenario: a pre-created colliding destination makes the only move skip, so
+    nothing moves; with --update-history requested, execute_reorient appends the
+    "history update skipped: no successful moves" warning. That warning must reach
+    stderr in non-JSON mode.
+    """
+    cfg, old = _setup(tmp_path)
+    enc = roundup.encode_cwd_literal(TARGET)
+    # Pre-create the destination jsonl so the move is refused (collision) and
+    # nothing moves -> history update is skipped -> warning is emitted.
+    new_dir = os.path.join(cfg, "projects", enc)
+    os.makedirs(new_dir)
+    open(os.path.join(new_dir, "u1.jsonl"), "w").close()
+    s = _session(cfg, old)
+    plan_doc = {"schema_version": 1, "sessions": [s]}
+    plan_file = tmp_path / "plan.json"
+    plan_file.write_text(json.dumps(plan_doc))
+    decisions_file = tmp_path / "decisions.json"
+    decisions_file.write_text(json.dumps([_decision(cfg)]))
+
+    res = subprocess.run(
+        [
+            sys.executable,
+            ROUNDUP,
+            "reorient",
+            "--decisions",
+            str(decisions_file),
+            "--plan",
+            str(plan_file),
+            "--update-history",
+        ],
+        capture_output=True,
+        text=True,
+    )
+    assert res.returncode == 0, res.stderr
+    # The warning is surfaced to stderr with the launch-style "WARNING: " prefix.
+    assert "WARNING: history update skipped: no successful moves" in res.stderr
+    # Non-JSON mode emits nothing to stdout.
+    assert res.stdout == ""
+
+
 # ---------------------------------------------------------------------------
 # GM-M3 extras
 # ---------------------------------------------------------------------------
