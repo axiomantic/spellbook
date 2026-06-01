@@ -1367,14 +1367,17 @@ def _rewrite_history(history_path: str, uuid_to_new: dict[str, str]) -> int:
     # before taking ownership). The second block does copymode+replace with NO fd
     # handling — a failure there must NOT re-close the already-closed fd (double-close
     # race); it only cleans up the temp file.
+    opened = False
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as out:
+            opened = True
             out.writelines(out_lines)
     except Exception:
-        try:
-            os.close(fd)
-        except OSError:
-            pass
+        if not opened:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
         if os.path.exists(tmp_path):
             try:
                 os.remove(tmp_path)
@@ -1620,14 +1623,17 @@ def _run_osascript(script: str) -> subprocess.CompletedProcess[str]:
     # branch may need to close it (when fdopen itself raised). The subprocess block does
     # NO fd handling — a prior `finally: os.close(fd)` double-closed the fd on EVERY
     # success. The finally here only removes the temp script.
+    opened = False
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            opened = True
             fh.write(script)
     except Exception:
-        try:
-            os.close(fd)
-        except OSError:
-            pass
+        if not opened:
+            try:
+                os.close(fd)
+            except OSError:
+                pass
         try:
             os.remove(path)
         except OSError:
