@@ -167,7 +167,7 @@ def build_session_record(
     for field in ("customTitle", "agentName", "aiTitle"):
         for r in reversed(records):
             val = r.get(field)
-            if val:
+            if val and isinstance(val, str):
                 title = val
                 title_source = field
                 break
@@ -1064,9 +1064,12 @@ def within_lookback(
 # ---------------------------------------------------------------------------
 # Task 13: scan + plan subcommands (read-only) — side-effect-free I/O wrappers
 # ---------------------------------------------------------------------------
-def _iso_from_mtime(mtime: float) -> str:
+def _iso_from_mtime(mtime: float) -> str | None:
     """Format a POSIX mtime (float) as a Zulu ISO-8601 string (UTC, second resolution)."""
-    return datetime.fromtimestamp(mtime, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        return datetime.fromtimestamp(mtime, tz=timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except (ValueError, OverflowError, OSError):
+        return None
 
 
 def _now_iso() -> str:

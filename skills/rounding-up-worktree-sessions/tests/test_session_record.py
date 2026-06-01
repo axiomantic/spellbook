@@ -79,6 +79,29 @@ def test_title_latest_value_within_field():
     assert out["title_source"] == "customTitle"
 
 
+def test_title_ignores_non_string_value_and_falls_through():
+    # A record's customTitle is a NON-STRING (int/bool/list). A non-string title would
+    # later crash strip_disambiguator via title.lower(), so it must be ignored. The
+    # valid lower-precedence aiTitle on another record wins instead.
+    recs = [
+        _rec(title=123, title_field="customTitle"),
+        _rec(title="ai-generated", title_field="aiTitle"),
+    ]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T00:00:00Z", **BASE)
+    assert out["title"] == "ai-generated"
+    assert out["title_source"] == "aiTitle"
+
+
+def test_title_non_string_only_leaves_title_none():
+    # The ONLY title-bearing field is a non-string; title must stay None (no crash),
+    # not be set to the non-string value.
+    for bad in (True, ["x"], {"k": "v"}):
+        recs = [_rec(title=bad, title_field="customTitle")]
+        out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T00:00:00Z", **BASE)
+        assert out["title"] is None
+        assert out["title_source"] is None
+
+
 def test_recency_takes_max():
     recs = [_rec(ts="2026-05-28T10:00:00Z")]
     out = roundup.build_session_record(records=recs, file_mtime_iso="2026-05-28T12:00:00Z", **BASE)

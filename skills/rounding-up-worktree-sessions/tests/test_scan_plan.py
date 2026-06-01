@@ -341,3 +341,19 @@ def test_plan_excludes_already_at_target_stripped_encoding(tmp_path):
     assert enriched["workspace_root_dir"] is None
     # Already-at-target under stripped encoding: must NOT be a reorient_candidate.
     assert body["reorient_candidates"] == []
+
+
+# ---------------------------------------------------------------------------
+# _iso_from_mtime — robustness to corrupt/out-of-range mtimes
+# ---------------------------------------------------------------------------
+def test_iso_from_mtime_normal_value_returns_iso():
+    # A normal POSIX mtime formats to a Zulu ISO-8601 string.
+    assert roundup._iso_from_mtime(0.0) == "1970-01-01T00:00:00Z"
+
+
+def test_iso_from_mtime_out_of_range_returns_none():
+    # MEDIUM Fix 2: datetime.fromtimestamp raises ValueError/OverflowError/OSError for
+    # corrupt/out-of-range mtimes. _iso_from_mtime must swallow these and return None
+    # (consumers already treat the result as str | None) instead of crashing the scan.
+    for bad in (1e308, -1e308):
+        assert roundup._iso_from_mtime(bad) is None
