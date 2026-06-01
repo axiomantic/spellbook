@@ -374,6 +374,35 @@ def test_rewrite_history_preserves_malformed_lines_verbatim(tmp_path):
     assert rewritten_rec["sessionId"] == "u1"
 
 
+def test_rewrite_history_preserves_non_object_json_lines_verbatim(tmp_path):
+    """HIGH Fix: a valid-but-non-object JSON line (bare number / string / array /
+    bool) must be preserved verbatim, IDENTICALLY to the malformed-line branch, and
+    must NOT crash with AttributeError on rec.get(). Matching object lines still
+    rewrite normally."""
+    history = tmp_path / "history.jsonl"
+    bare_number = "123\n"
+    bare_string = '"foo"\n'
+    bare_array = "[1, 2, 3]\n"
+    bare_bool = "true\n"
+    match = json.dumps({"project": "/Users/eek/old", "sessionId": "u1"}) + "\n"
+    history.write_text(bare_number + bare_string + bare_array + bare_bool + match)
+
+    rewritten = roundup._rewrite_history(str(history), {"/Users/eek/old": "/Users/eek/new"})
+    assert rewritten == 1
+
+    out = history.read_text()
+    out_lines = out.splitlines(keepends=True)
+    # Non-object JSON lines preserved EXACTLY and in order (same as malformed branch).
+    assert out_lines[0] == bare_number
+    assert out_lines[1] == bare_string
+    assert out_lines[2] == bare_array
+    assert out_lines[3] == bare_bool
+    # Matching object line still rewritten.
+    rewritten_rec = json.loads(out_lines[4])
+    assert rewritten_rec["project"] == "/Users/eek/new"
+    assert rewritten_rec["sessionId"] == "u1"
+
+
 def test_rewrite_history_preserves_non_ascii(tmp_path):
     """MEDIUM Fix 2: rewritten records keep non-ASCII chars unescaped (ensure_ascii=False)."""
     history = tmp_path / "history.jsonl"

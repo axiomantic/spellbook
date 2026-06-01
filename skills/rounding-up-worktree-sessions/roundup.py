@@ -26,11 +26,6 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from typing import Any, Callable
 
-try:  # fcntl is POSIX-only; supplementary running-probe (design §8.6). Optional import.
-    import fcntl  # noqa: F401
-except ImportError:  # pragma: no cover - non-POSIX
-    fcntl = None
-
 SCHEMA_VERSION = 1
 
 # Disambiguator-stripping regex (design §7.2). Non-greedy base, single trailing token
@@ -1287,6 +1282,9 @@ def _rewrite_history(history_path: str, old_to_new: dict[str, str]) -> int:
                 continue
             try:
                 rec = json.loads(stripped)
+                if not isinstance(rec, dict):
+                    out_lines.append(line)  # preserve non-object JSON verbatim
+                    continue
             except json.JSONDecodeError:
                 out_lines.append(line)  # preserve unknown shapes verbatim
                 continue
