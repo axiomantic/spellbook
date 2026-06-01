@@ -693,6 +693,17 @@ def build_reorient_plan(
             "skip_reason": None,
         }
 
+        # HIGH Fix (safety invariant): reorient must NEVER cross
+        # ~/.claude <-> ~/.claude-work. If the decision's config_dir differs from the
+        # session's actual config_dir, refuse the move at plan-build time.
+        if session.get("config_dir") and os.path.abspath(config_dir) != os.path.abspath(
+            session["config_dir"]
+        ):
+            base["skipped"] = True
+            base["skip_reason"] = "cross_config_dir"
+            plans.append(base)
+            continue
+
         # Explicit user skip.
         if target == "skip":
             base["skipped"] = True
@@ -1300,13 +1311,16 @@ def _rewrite_history(history_path: str, old_to_new: dict[str, str]) -> int:
     # the system temp dir, risking a cross-device os.replace failure. Resolve to an
     # absolute path FIRST so the temp file lands in the SAME dir as the target, keeping
     # os.replace atomic and same-filesystem. Guard the fd against leaks on error.
-    abs_history_path = os.path.abspath(history_path)
+    # MEDIUM Fix: use realpath (not abspath) so a SYMLINKED history_path is updated
+    # via its real target file; replacing into the symlink path would clobber the link
+    # with a regular file. realpath == abspath for non-symlink paths.
+    abs_history_path = os.path.realpath(history_path)
     dir_name = os.path.dirname(abs_history_path)
     fd, tmp_path = tempfile.mkstemp(dir=dir_name, suffix=".tmp")
     try:
         with os.fdopen(fd, "w", encoding="utf-8") as out:
             out.writelines(out_lines)
-        os.replace(tmp_path, history_path)
+        os.replace(tmp_path, abs_history_path)
     except Exception:
         try:
             os.close(fd)

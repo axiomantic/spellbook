@@ -103,6 +103,23 @@ def test_unresolved_skipped():
     assert plans[0]["skipped"] and plans[0]["skip_reason"] == "unresolved"
 
 
+def test_cross_config_dir_skipped():
+    # HIGH Fix: reorient must NEVER cross ~/.claude <-> ~/.claude-work. When a
+    # decision's config_dir differs from the session's actual config_dir, the plan
+    # must be SKIPPED with reason 'cross_config_dir' and build no move (no
+    # new_project_dir / new_jsonl). Here the session lives under ~/.claude but the
+    # decision targets ~/.claude-work, so the move must be refused.
+    s = _sess("u1", "/Users/eek/.claude/projects/-old/u1.jsonl",
+              "/Users/eek/Development/worktrees/ODY/styleseat",
+              "/Users/eek/Development/worktrees/ODY")
+    plans = roundup.build_reorient_plan(_by_uuid(s),
+        [{"uuid": "u1", "config_dir": "/Users/eek/.claude-work", "target": "repo_subdir"}], NEVER)
+    p = plans[0]
+    assert p["skipped"] and p["skip_reason"] == "cross_config_dir"
+    assert p["new_jsonl"] is None
+    assert p["new_project_dir"] is None
+
+
 def test_repo_subdir_none_target_dir_skipped_not_crash():
     # Finding 2: a repo_subdir decision for a session whose resolved_worktree_dir is
     # None (possible under Phase-B group-plurality resolution) must yield a skipped
