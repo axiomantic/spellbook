@@ -187,7 +187,7 @@ def build_session_record(
             continue
         if isinstance(ts, str):
             last_internal_ts = ts
-        elif isinstance(ts, (int, float)):
+        elif isinstance(ts, (int, float)) and not isinstance(ts, bool):
             try:
                 # Heuristic: values > 1e11 are milliseconds; divide to seconds.
                 seconds = ts / 1000.0 if ts > 1e11 else ts
@@ -1887,9 +1887,9 @@ def _cmd_reorient(args: argparse.Namespace) -> int:
     # --reorient-summary (same-run cd-target override without a re-scan).
     if args.summary_out:
         with open(args.summary_out, "w", encoding="utf-8") as fh:
-            fh.write(json.dumps(summary, indent=2) + "\n")
+            fh.write(json.dumps(summary, indent=2, ensure_ascii=False) + "\n")
     if args.json:
-        print(json.dumps(summary, indent=2))
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
     else:
         # Match the launch command: surface skipped-move / collision / history
         # warnings to stderr in non-JSON mode instead of silently dropping them.

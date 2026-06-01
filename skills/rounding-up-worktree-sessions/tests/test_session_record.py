@@ -115,6 +115,26 @@ def test_numeric_timestamp_epoch_milliseconds():
     assert out["recency_ts"] == "2025-05-28T12:00:00Z"
 
 
+def test_bool_timestamp_is_ignored():
+    # Fix 1: bool is a subclass of int, so `isinstance(True, (int, float))` is True. A
+    # boolean timestamp must NOT be treated as numeric epoch (1.0s -> 1970-01-01T00:00:01Z);
+    # it falls through to "skip" and leaves last_internal_ts unset for that record.
+    recs = [_rec(ts=True)]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2025-05-28T10:00:00Z", **BASE)
+    assert out["last_internal_ts"] is None
+    assert not str(out["last_internal_ts"] or "").startswith("1970")
+    # recency falls back to file_mtime since no internal ts was accepted.
+    assert out["recency_ts"] == "2025-05-28T10:00:00Z"
+
+
+def test_bool_timestamp_ignored_real_numeric_still_wins():
+    # A later real numeric timestamp must still convert even after a bool is skipped.
+    recs = [_rec(ts=True), _rec(ts=1748433600)]
+    out = roundup.build_session_record(records=recs, file_mtime_iso="2025-05-28T10:00:00Z", **BASE)
+    assert out["last_internal_ts"] == "2025-05-28T12:00:00Z"
+    assert out["recency_ts"] == "2025-05-28T12:00:00Z"
+
+
 def test_iso_string_timestamp_still_works():
     # Regression: a normal ISO-string timestamp is used as-is.
     recs = [_rec(ts="2026-05-28T14:00:00Z")]
