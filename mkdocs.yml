@@ -163,6 +163,7 @@ nav:
       - skills/documenting-tools.md
       - skills/emotional-stakes.md
       - skills/enforcing-code-quality.md
+      - skills/estimating-tickets.md
       - skills/executing-plans.md
       - skills/fact-checking.md
       - skills/finding-dead-code.md
@@ -185,6 +186,7 @@ nav:
       - skills/reflexion.md
       - skills/requesting-code-review.md
       - skills/resolving-merge-conflicts.md
+      - skills/rounding-up-worktree-sessions.md
       - skills/reviewing-design-docs.md
       - skills/reviewing-impl-plans.md
       - skills/reviewing-prs.md
@@ -248,6 +250,10 @@ nav:
       - commands/distill-session.md
       - commands/encyclopedia-build.md
       - commands/encyclopedia-validate.md
+      - commands/estimate-buffer.md
+      - commands/estimate-point.md
+      - commands/estimate-report.md
+      - commands/estimate-scope.md
       - commands/execute-plan.md
       - commands/execute-work-packet.md
       - commands/execute-work-packets-seq.md

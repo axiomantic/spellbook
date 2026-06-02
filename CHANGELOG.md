@@ -19,6 +19,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   triage pairs are exempt so RECONCILE-drifted findings remain detectable.
   Eliminates the dominant false-positive class on well-templated skill
   families.
+- **`rounding-up-worktree-sessions` skill.** Finds recent Claude Code sessions
+  across config dirs, groups them by effort (title prefix + git worktree derived
+  from JSONL `gitBranch`/`cwd`), optionally reorients session metadata to the
+  correct worktree project dir (metadata-only, never code; dry-run preview,
+  collision/running guards, journal rollback, default-off history update), and
+  optionally relaunches each group as a Ghostty window (native AppleScript: new
+  window per group, split pane per session). Self-contained stdlib-only
+  `roundup.py` with `scan`/`plan`/`reorient`/`launch`; 125 unit tests.
+- **`estimating-tickets` skill** plus `estimate-scope`/`estimate-point`/
+  `estimate-buffer`/`estimate-report` phase commands. PERT three-point
+  estimation, multi-agent consensus pointing, AI-productivity multipliers, and
+  Brooks's Law scaling.
 
 ## [0.70.0] - 2026-05-26
 
