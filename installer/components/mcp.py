@@ -48,14 +48,21 @@ def check_claude_cli_available() -> bool:
         return False
 
 
-def list_registered_mcp_servers() -> List[MCPStatus]:
-    """Get list of registered MCP servers from claude CLI."""
+def list_registered_mcp_servers(env: Optional[dict] = None) -> List[MCPStatus]:
+    """Get list of registered MCP servers from claude CLI.
+
+    Args:
+        env: If provided, the environment passed to the ``claude mcp list``
+            subprocess (used to set CLAUDE_CONFIG_DIR so the listing reflects
+            a specific config directory instead of the ambient default).
+    """
     if not check_claude_cli_available():
         return []
 
     try:
         result = subprocess.run(
-            ["claude", "mcp", "list"], capture_output=True, text=True, timeout=30
+            ["claude", "mcp", "list"], capture_output=True, text=True, timeout=30,
+            env=env,
         )
 
         if result.returncode != 0:
@@ -92,9 +99,15 @@ def list_registered_mcp_servers() -> List[MCPStatus]:
         return []
 
 
-def is_mcp_registered(name: str) -> bool:
-    """Check if an MCP server is registered."""
-    servers = list_registered_mcp_servers()
+def is_mcp_registered(name: str, env: Optional[dict] = None) -> bool:
+    """Check if an MCP server is registered.
+
+    Args:
+        name: Server name to look for.
+        env: If provided, threaded through to ``list_registered_mcp_servers``
+            so the check targets a specific CLAUDE_CONFIG_DIR.
+    """
+    servers = list_registered_mcp_servers(env=env)
     return any(s.name == name for s in servers)
 
 
@@ -144,26 +157,37 @@ def register_mcp_server(
         return (False, str(e))
 
 
-def unregister_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
+def unregister_mcp_server(
+    name: str, dry_run: bool = False, config_dir: Optional[Path] = None
+) -> Tuple[bool, str]:
     """
     Remove an MCP server registration.
 
     Args:
         name: Server name
         dry_run: If True, don't actually unregister
+        config_dir: If provided, set CLAUDE_CONFIG_DIR so the registration
+            check and removal target this specific config directory instead
+            of the ambient default. The mcpServers entry lives in each config
+            dir's ``.claude.json``, so unregistration must be scoped per dir.
 
     Returns: (success, message)
     """
     if not check_claude_cli_available():
         return (False, "claude CLI not available")
 
+    # Build environment with optional config dir override
+    env = None
+    if config_dir is not None:
+        env = {**os.environ, "CLAUDE_CONFIG_DIR": str(config_dir)}
+
     if dry_run:
-        if is_mcp_registered(name):
+        if is_mcp_registered(name, env=env):
             return (True, f"Would unregister MCP server: {name}")
         return (True, "MCP server not registered")
 
     try:
-        if not is_mcp_registered(name):
+        if not is_mcp_registered(name, env=env):
             return (True, "was not registered")
 
         result = subprocess.run(
@@ -171,6 +195,7 @@ def unregister_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
             capture_output=True,
             text=True,
             timeout=10,
+            env=env,
         )
 
         if result.returncode == 0:
