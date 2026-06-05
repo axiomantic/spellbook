@@ -45,6 +45,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Corrected the `[0.64.0]` cost model, which measured main-transcript activity
   only and under-counted the true per-recycle subagent cost.
+- **Installer registers/unregisters the spellbook MCP server per
+  `--claude-config-dir`.** MCP registration was gated behind the
+  global-steps flag, so only the first config dir received the `spellbook`
+  `mcpServers` entry in its `.claude.json` — additional config dirs got
+  hooks but zero spellbook MCP tools at runtime. Uninstall had the
+  symmetric bug. Registration and unregistration now run for every config
+  dir (the MCP daemon itself remains global, installed/removed once);
+  the unregister chain is config-dir-aware via an optional
+  `CLAUDE_CONFIG_DIR` env threaded through `list_registered_mcp_servers`,
+  `is_mcp_registered`, and `unregister_mcp_server` (all new params default
+  to `None`, backward compatible).
 
 ### Migration
 
