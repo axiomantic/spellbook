@@ -992,6 +992,36 @@ def test_watch_infinite_mode_delivers_without_recycle(a2a, tmp_path):
     assert "Traceback" not in stderr and "TypeError" not in stderr, stderr
 
 
+def test_watch_emits_no_per_iteration_stdout(tmp_path):
+    """A finite-budget watch over an empty inbox iterates several poll cycles
+    and emits EXACTLY ONE non-empty stdout line (the terminal marker). The
+    'fswatch unavailable' notice goes to stderr, not stdout (design §12.3)."""
+    _open_inbox(tmp_path, "alice")
+    # ~5 iterations at 0.2s poll under a 1s budget.
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=1.0, poll_interval=0.2)
+    stdout, stderr = proc.communicate(timeout=5)
+    nonempty = [ln for ln in stdout.splitlines() if ln.strip()]
+    assert nonempty == ["WATCH_RECYCLE elapsed=1s"], (
+        f"expected exactly one terminal marker line, got {nonempty!r}"
+    )
+
+
+def test_watch_emits_no_per_iteration_stdout_no_fswatch(tmp_path):
+    """Same invariant on the polling-only path: the 'fswatch unavailable'
+    notice must be on stderr, not stdout (design §12.3)."""
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch_no_fswatch(tmp_path, "alice", max_elapsed=1.0)
+    stdout, stderr = proc.communicate(timeout=5)
+    nonempty = [ln for ln in stdout.splitlines() if ln.strip()]
+    assert nonempty == ["WATCH_RECYCLE elapsed=1s"], (
+        f"stdout must hold only the marker, got {nonempty!r}"
+    )
+    assert "fswatch" not in stdout, "fswatch notice leaked to stdout"
+    assert "fswatch unavailable, polling-only" in stderr, (
+        f"polling-only marker missing in stderr={stderr!r}"
+    )
+
+
 def test_watch_touches_heartbeat_on_entry_and_interval(tmp_path):
     """Heartbeat exists within <1s of start (first-touch-immediate) and its
     mtime advances across an interval (design §3.1, §12.4). Uses the
