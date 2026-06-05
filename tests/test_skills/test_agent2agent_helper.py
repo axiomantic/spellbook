@@ -1468,6 +1468,28 @@ def test_open_state_alive_missing_transcript_returns_1(a2a, tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Infinite-mode sentinel: _max_elapsed parser (T2)
+# ---------------------------------------------------------------------------
+
+
+def test_max_elapsed_none_skips_recycle_branch(a2a):
+    """_max_elapsed parser: 'none' (any case) -> None; numeric -> float;
+    <=0 -> ArgumentTypeError; float('inf') is never produced (design §4.1)."""
+    assert a2a._max_elapsed("none") is None
+    assert a2a._max_elapsed("NONE") is None
+    assert a2a._max_elapsed("540") == 540.0
+    assert a2a._max_elapsed("0.2") == 0.2
+
+    import argparse as _ap
+    for bad in ("0", "-1", "-0.5"):
+        with pytest.raises(_ap.ArgumentTypeError):
+            a2a._max_elapsed(bad)
+
+    # Sentinel is None, never a numeric magic value.
+    assert a2a._max_elapsed("none") is not float("inf")
+
+
+# ---------------------------------------------------------------------------
 # Documentation-vs-implementation pin test
 # ---------------------------------------------------------------------------
 #

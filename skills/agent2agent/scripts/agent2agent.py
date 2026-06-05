@@ -729,7 +729,7 @@ def cmd_watch(args: argparse.Namespace) -> int:
     try:
         while True:
             elapsed = time.monotonic() - start
-            if elapsed >= max_elapsed:
+            if max_elapsed is not None and elapsed >= max_elapsed:
                 print(f"WATCH_RECYCLE elapsed={int(max_elapsed)}s")
                 return 0
 
@@ -775,8 +775,11 @@ def cmd_watch(args: argparse.Namespace) -> int:
                     pass
                 # Loop continues — recompute elapsed at top.
 
-            remaining = max_elapsed - elapsed
-            wait_slice = min(poll_interval, remaining)
+            wait_slice = (
+                poll_interval
+                if max_elapsed is None
+                else min(poll_interval, max_elapsed - elapsed)
+            )
             if fswatch_proc is not None and fswatch_proc.poll() is None:
                 try:
                     rlist, _, _ = select.select(
@@ -938,6 +941,19 @@ def cmd_open_state(args: argparse.Namespace) -> int:
     return 2
 
 
+def _max_elapsed(v: str):
+    """Parse --max-elapsed: the literal 'none' (any case) -> None (infinite
+    mode); otherwise a positive float. <= 0 is rejected. The None sentinel —
+    never float('inf') (int(inf) raises OverflowError) and never 0.0 (exits
+    immediately) — drives infinite mode (design §4.1)."""
+    if v.lower() == "none":
+        return None
+    f = float(v)
+    if f <= 0.0:
+        raise argparse.ArgumentTypeError("--max-elapsed must be > 0 or 'none'")
+    return f
+
+
 def cmd_help(_args: argparse.Namespace) -> int:
     print(_USAGE)
     return 0
@@ -1052,7 +1068,9 @@ def _build_parser() -> argparse.ArgumentParser:
     sp_watch.add_argument("name")
     sp_watch.add_argument("--poll-interval", dest="poll_interval", type=float, default=0.5)
     sp_watch.add_argument("--max-batch", dest="max_batch", type=int, default=50)
-    sp_watch.add_argument("--max-elapsed", dest="max_elapsed", type=float, default=540.0)
+    sp_watch.add_argument(
+        "--max-elapsed", dest="max_elapsed", type=_max_elapsed, default=None
+    )
     sp_watch.set_defaults(func=cmd_watch)
 
     # Slash-command-internal: persist/probe the watch-chain open-state record.
