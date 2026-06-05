@@ -186,3 +186,82 @@ def test_install_registers_mcp_even_when_skip_global_steps(home_dir, spellbook_d
     assert mcp_result.success is True
     assert mcp_result.action == "skipped"
     assert mcp_result.platform == "claude_code"
+
+
+# ---------------------------------------------------------------------------
+# Budgets for the old-variant-cleanup scoping test below. Unlike the budgets
+# above, this test MOCKS unregister_mcp_server at the claude_code binding, so
+# the real function never runs and its internal mcp-binding CLI check never
+# fires -- hence _MCP_CLI_CALLS is 0 here (vs 1 above). The claude_code-binding
+# CLI check at the register block still fires exactly once.
+# ---------------------------------------------------------------------------
+
+_CLEANUP_STATE_PATH_CALLS_PER_INSTALL = 9
+
+_CLEANUP_HOME_CALLS_PER_INSTALL = 2
+
+_CLEANUP_CC_CLI_CALLS_PER_INSTALL = 1
+
+# unregister_mcp_server is called once per old variant name in ["spellbook-http"].
+_CLEANUP_UNREGISTER_CALLS_PER_INSTALL = 1
+
+
+def test_install_scopes_old_variant_unregister_to_config_dir(
+    home_dir, spellbook_dir, tmp_path
+):
+    """Regression: the old-variant-name cleanup loop must thread config_dir.
+
+    install() removes legacy MCP server names (e.g. ``spellbook-http``) before
+    registering the canonical ``spellbook`` entry. That cleanup call must pass
+    ``config_dir=self.config_dir`` so the removal targets THIS config dir's
+    ``.claude.json`` -- not the ambient default. Pre-fix the call omitted
+    config_dir, so legacy entries were only ever unregistered from the default
+    dir. This test mocks unregister_mcp_server and asserts the kwarg, so a
+    regression to the unscoped call fails here.
+    """
+    from installer.platforms.claude_code import ClaudeCodeInstaller
+
+    config_dir = home_dir / ".claude-work"
+
+    state_budget = _CLEANUP_STATE_PATH_CALLS_PER_INSTALL
+    state_mock = _redirect_state_file(tmp_path, budget=state_budget)
+
+    mock_home = tripwire.mock("pathlib:Path.home")
+    for _ in range(_CLEANUP_HOME_CALLS_PER_INSTALL):
+        mock_home.returns(home_dir)
+
+    # Only the claude_code-binding CLI check fires (register block guard). The
+    # mcp-binding check is gone because unregister_mcp_server is mocked. Return
+    # False so the register block takes the "claude CLI not available" branch.
+    mock_cc_cli = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
+    )
+    for _ in range(_CLEANUP_CC_CLI_CALLS_PER_INSTALL):
+        mock_cc_cli.returns(False)
+
+    mock_unregister = tripwire.mock(
+        "installer.platforms.claude_code:unregister_mcp_server"
+    )
+    for _ in range(_CLEANUP_UNREGISTER_CALLS_PER_INSTALL):
+        mock_unregister.returns((True, "was not registered"))
+
+    _register_powershell_which_mock()
+
+    installer = ClaudeCodeInstaller(spellbook_dir, config_dir, "0.10.0")
+
+    with tripwire:
+        installer.install(skip_global_steps=True)
+
+    with tripwire.in_any_order():
+        for _ in range(_CLEANUP_HOME_CALLS_PER_INSTALL):
+            mock_home.assert_call(args=(), kwargs={})
+        for _ in range(_CLEANUP_CC_CLI_CALLS_PER_INSTALL):
+            mock_cc_cli.assert_call(args=(), kwargs={})
+        # Core assertion: the old-variant cleanup call must receive
+        # config_dir=self.config_dir, proving per-dir scoping of the removal.
+        mock_unregister.assert_call(
+            args=("spellbook-http",),
+            kwargs={"dry_run": False, "config_dir": config_dir},
+        )
+    _assert_state_file_mock(state_mock, budget=state_budget)
+    _assert_powershell_which_if_windows()

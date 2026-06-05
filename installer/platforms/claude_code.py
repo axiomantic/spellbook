@@ -395,7 +395,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
 
         # Remove any old variant names
         for old_name in ["spellbook-http"]:
-            unregister_mcp_server(old_name, dry_run=self.dry_run)
+            unregister_mcp_server(old_name, dry_run=self.dry_run, config_dir=self.config_dir)
 
         if check_claude_cli_available():
             server_url = get_spellbook_server_url()
