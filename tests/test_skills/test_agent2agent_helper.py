@@ -960,6 +960,38 @@ def test_watch_kill_releases_lockfile_via_kernel(tmp_path):
     )
 
 
+def test_watch_infinite_mode_delivers_without_recycle(a2a, tmp_path):
+    """Production path: NO --max-elapsed (infinite). The loop survives >=2 poll
+    intervals (proves both line-718 and line-764 guards), a sent message yields
+    PENDING_BATCH, and WATCH_RECYCLE never appears (design §12.1)."""
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch(tmp_path, "alice", infinite=True, poll_interval=0.2)
+    try:
+        # Loop-survival: alive after >=2 full poll intervals + slack.
+        time.sleep(0.2 * 2 + 0.6)
+        assert proc.poll() is None, (
+            "watcher crashed within 2 poll intervals — likely the line-764 "
+            "None - float TypeError (infinite mode unguarded)"
+        )
+        # Deliver a message.
+        _run(a2a, "send", "--from", "bob", "--to", "alice", "hello")
+        # Expect PENDING_BATCH within ~3s.
+        stdout, stderr = proc.communicate(timeout=3)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        stdout, stderr = proc.communicate()
+        raise AssertionError(f"watcher did not deliver in time; stderr={stderr!r}")
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait(timeout=5)
+    assert proc.returncode == 0, f"expected exit 0, got {proc.returncode}; stderr={stderr!r}"
+    assert re.search(r"^PENDING_BATCH \S+ count=1$", stdout, re.M), stdout
+    assert "WATCH_RECYCLE" not in stdout, "infinite mode must never recycle"
+    # Diagnostic: a regression must name the cause.
+    assert "Traceback" not in stderr and "TypeError" not in stderr, stderr
+
+
 def test_watch_touches_heartbeat_on_entry_and_interval(tmp_path):
     """Heartbeat exists within <1s of start (first-touch-immediate) and its
     mtime advances across an interval (design §3.1, §12.4). Uses the
