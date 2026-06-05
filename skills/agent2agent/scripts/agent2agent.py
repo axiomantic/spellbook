@@ -44,6 +44,20 @@ except ImportError:
     fcntl = None  # type: ignore[assignment]
 
 # ---------------------------------------------------------------------------
+# Heartbeat liveness constants (design §3)
+# ---------------------------------------------------------------------------
+# A live `watch` process `os.utime`s <inbox>/.watcher.heartbeat every
+# _HEARTBEAT_INTERVAL_S seconds (monotonic-throttled). Liveness probes treat a
+# heartbeat older than _HEARTBEAT_STALE_S as DEAD. The stale window is
+# 3 × the interval: three missed touches is unambiguous death/stall, not jitter.
+# _HEARTBEAT_STALE_S is the shared liveness contract (mirrored as the 90.0
+# literal in hooks/spellbook_hook.py::_bg_agent_alive) and MUST stay a fixed
+# constant — it is NEVER derived from the --heartbeat-interval test seam, so a
+# test cannot mask a wrong production threshold.
+_HEARTBEAT_INTERVAL_S = 30.0
+_HEARTBEAT_STALE_S = 90.0
+
+# ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
 
