@@ -561,6 +561,45 @@ def cmd_drain(args: argparse.Namespace) -> int:
     return 0
 
 
+def _sweep_stray_fswatch(inbox: Path) -> None:
+    """Best-effort reaper for an orphaned fswatch child of a SIGKILLed watch
+    parent. Called AFTER flock acquisition (only the single live watcher
+    sweeps) and BEFORE this watcher spawns its own fswatch (so it targets only
+    PRE-EXISTING strays, never its own child) — design §6.2.
+
+    Stray predicate (BOTH clauses): the ``ps`` command line contains the literal
+    token ``fswatch`` AND contains ``str(inbox)`` exactly as the spawn passes
+    it (the UNRESOLVED path at the Popen below; the spawn does NOT call
+    .resolve()). A surviving stray costs one idle fswatch process, not
+    correctness (the leak bound is documented in cmd_watch)."""
+    try:
+        out = subprocess.run(
+            ["ps", "-axo", "pid=,command="],
+            capture_output=True,
+            text=True,
+            timeout=5.0,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return  # no ps / permission / timeout: advisory, swallow
+    needle = str(inbox)
+    for line in out.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        # Split once: "<pid> <command...>"
+        head, _, command = line.partition(" ")
+        if "fswatch" not in command or needle not in command:
+            continue
+        try:
+            pid = int(head)
+        except ValueError:
+            continue
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            pass  # already gone / not ours: advisory
+
+
 def cmd_watch(args: argparse.Namespace) -> int:
     """Block until a new message lands or the recycle budget elapses.
 
@@ -594,6 +633,15 @@ def cmd_watch(args: argparse.Namespace) -> int:
         the same persistent inode and acquires flock. Unlinking is
         deliberately avoided to prevent a flock+unlink race in which two
         watchers end up holding flock on disjoint inodes for the same path.
+
+    fswatch leak bound (design §6.3): on an ungraceful (SIGKILL) watcher death
+    the fswatch child can orphan (the finally/signal cleanup does not run on
+    SIGKILL). The reaper is the next watcher on the same inbox: it sweeps
+    pre-existing strays after acquiring the flock and before spawning its own
+    fswatch. Because re-arm requires the single inbox flock, strays cannot
+    accumulate faster than one-per-death-between-rearms; the steady-state bound
+    is one stray per crash, cleared on the next /a2a open or message delivery.
+    If ps is unavailable the sweep is a no-op and the bound stands unreaped.
     """
     if fcntl is None:
         # POSIX-only: the watch subcommand depends on fcntl.flock for the
@@ -707,6 +755,11 @@ def cmd_watch(args: argparse.Namespace) -> int:
     # re-enter the loop without emitting a zero-count batch. Concurrent
     # readers that drain every candidate file mid-claim cause us to tear
     # down the empty batch dir and re-enter WAIT.
+    # Defense-in-depth (design §6.2): reap any fswatch orphaned by a prior
+    # SIGKILLed watcher on THIS inbox. Runs after flock (only the live watcher
+    # sweeps) and before our own spawn (so we never kill our own child).
+    _sweep_stray_fswatch(inbox)
+
     fswatch_path = shutil.which("fswatch")
     fswatch_proc: subprocess.Popen | None = None
     if fswatch_path:
@@ -716,6 +769,7 @@ def cmd_watch(args: argparse.Namespace) -> int:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
                 bufsize=0,
+                start_new_session=True,  # own session/pgid (design §6.1)
             )
         except OSError:
             fswatch_proc = None

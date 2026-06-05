@@ -1244,6 +1244,122 @@ def test_watch_atomic_consume_under_concurrent_reader(tmp_path):
     )
 
 
+_FSWATCH_OR_PS_MISSING = (
+    shutil.which("fswatch") is None or shutil.which("ps") is None
+)
+
+
+def _count_stray_fswatch(inbox) -> int:
+    """Count live `fswatch ... <inbox>` processes (matches the helper's
+    str(inbox)-exact substring predicate)."""
+    out = subprocess.run(
+        ["ps", "-axo", "command="], capture_output=True, text=True
+    ).stdout
+    return sum(
+        1 for ln in out.splitlines()
+        if "fswatch" in ln and str(inbox) in ln
+    )
+
+
+def _plant_fswatch_stray(inbox: Path) -> subprocess.Popen:
+    """Plant a long-lived `fswatch -0 -l 0.1 <inbox>` process whose command
+    line matches the helper's sweep predicate exactly.
+
+    NOTE (empirical, 2026-06-05): a real watcher's own fswatch child does NOT
+    survive parent SIGKILL on this platform — its stdout pipe to the dead
+    parent breaks and SIGPIPE reaps it, independent of process group. So the
+    SIGKILL-orphans-fswatch premise is not reproducible here. To exercise the
+    sweep contract deterministically we plant a stray ourselves with stdout to
+    DEVNULL (no pipe to break) and its own session, then assert the next
+    watcher's pre-spawn sweep SIGTERMs it. This tests the load-bearing
+    behavior (_sweep_stray_fswatch) without relying on unreproducible
+    orphaning.
+    """
+    return subprocess.Popen(
+        ["fswatch", "-0", "-l", "0.1", str(inbox)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+
+
+@pytest.mark.skipif(_FSWATCH_OR_PS_MISSING, reason="needs fswatch and ps")
+def test_fswatch_stray_swept_on_rearm(tmp_path):
+    """A pre-existing fswatch stray on an inbox is SIGTERM-reaped by the next
+    watcher on that inbox, before that watcher spawns its own (design §6.2,
+    §12.8). The sweep runs after flock + before spawn."""
+    _open_inbox(tmp_path, "alice")
+    inbox = tmp_path / "alice" / "inbox"  # two-level: <root>/<name>/inbox
+    stray = _plant_fswatch_stray(inbox)
+    try:
+        # Let the stray register in the process table.
+        deadline = time.time() + 2.0
+        while time.time() < deadline and _count_stray_fswatch(inbox) < 1:
+            time.sleep(0.05)
+        assert _count_stray_fswatch(inbox) == 1, "planted stray not visible in ps"
+
+        # Run a short finite watch on the same inbox: its pre-spawn sweep must
+        # SIGTERM the planted stray. Run to completion so the watcher's own
+        # fswatch child is gone too, leaving zero strays.
+        proc = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
+        rc, _, stderr = _wait_proc(proc, paranoia_timeout=10.0)
+        assert rc == 0, f"stderr={stderr!r}"
+
+        # The planted stray received SIGTERM and exited.
+        stray.wait(timeout=5)
+        assert stray.poll() is not None, "sweep did not reap the planted stray"
+        # No fswatch remains on this inbox (stray reaped, watcher's own gone).
+        assert _count_stray_fswatch(inbox) == 0, "stray survived the sweep"
+    finally:
+        if stray.poll() is None:
+            stray.terminate()
+            stray.wait(timeout=5)
+
+
+@pytest.mark.skipif(_FSWATCH_OR_PS_MISSING, reason="needs fswatch and ps")
+def test_sweep_spares_fswatch_for_different_inbox(tmp_path):
+    """The sweep's str(inbox)-exact predicate reaps the same-inbox stray but
+    must NOT kill an fswatch watching a DIFFERENT inbox (design §6.2, §12.8).
+
+    Plant a stray on BOTH alice and bob, then run a watcher on alice: alice's
+    stray must be reaped (proves the sweep ran) AND bob's stray must survive
+    (proves the predicate is inbox-exact, not 'any fswatch')."""
+    _open_inbox(tmp_path, "alice")
+    _open_inbox(tmp_path, "bob")
+    alice_inbox = tmp_path / "alice" / "inbox"
+    bob_inbox = tmp_path / "bob" / "inbox"  # two-level
+    alice_stray = _plant_fswatch_stray(alice_inbox)
+    bob_stray = _plant_fswatch_stray(bob_inbox)
+    try:
+        deadline = time.time() + 2.0
+        while time.time() < deadline and (
+            _count_stray_fswatch(alice_inbox) < 1
+            or _count_stray_fswatch(bob_inbox) < 1
+        ):
+            time.sleep(0.05)
+        assert _count_stray_fswatch(alice_inbox) == 1, "alice stray not visible"
+        assert _count_stray_fswatch(bob_inbox) == 1, "bob stray not visible"
+
+        # A watcher on ALICE's inbox sweeps. Inbox-exact predicate: reap
+        # alice's stray, spare bob's.
+        proc = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
+        rc, _, stderr = _wait_proc(proc, paranoia_timeout=10.0)
+        assert rc == 0, f"stderr={stderr!r}"
+
+        # alice's planted stray reaped (proves the sweep actually ran).
+        alice_stray.wait(timeout=5)
+        assert alice_stray.poll() is not None, "alice's stray was not swept"
+        assert _count_stray_fswatch(alice_inbox) == 0, "alice stray survived"
+        # bob's fswatch must still be alive — the sweep is inbox-exact.
+        assert bob_stray.poll() is None, "bob's fswatch was wrongly reaped"
+        assert _count_stray_fswatch(bob_inbox) == 1, "bob's stray must survive"
+    finally:
+        for s in (alice_stray, bob_stray):
+            if s.poll() is None:
+                s.terminate()
+                s.wait(timeout=5)
+
+
 def test_watch_caps_batch_at_max_batch(tmp_path):
     """--max-batch caps the batch size; overflow stays in inbox for next cycle.
 
