@@ -202,7 +202,7 @@ substitution is performed at dispatch time:
 - `<NAME>` → the inbox name from Phase C.
 - `<SPELLBOOK_ABS>` → the **absolute** path of `$SPELLBOOK_DIR` (resolved
   from `~/.claude/CLAUDE.md`'s `SPELLBOOK_DIR=...` line, e.g.
-  `/Users/eek/Development/spellbook` or `~/.local/spellbook/source`).
+  `/Users/you/Development/spellbook` or `~/.local/spellbook/source`).
 - `<AGENT2AGENT_DIR>` → the bus directory: the value of the `$AGENT2AGENT_DIR`
   env var if it is set, otherwise `~/.local/share/agent2agent` (expanded to an
   absolute path). This mirrors `bus_dir()` in the helper
