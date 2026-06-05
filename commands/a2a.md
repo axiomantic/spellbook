@@ -308,7 +308,7 @@ WHEN THE BG WATCHER EXITS (you receive a bg-Bash completion notification):
    against the four marker regexes:
      (a) ^PENDING_BATCH (\S+) count=(\d+)$   [multi-line]  — messages arrived
      (b) ^WATCH_INBOX_GONE$                               — inbox closed elsewhere
-     (c) ^WATCH_LOCKED \d+$                               — another watcher owns it
+     (c) ^WATCH_LOCKED (\d+|unknown)$                     — another watcher owns it
      (d) WATCH_RECYCLE elapsed=             [substring]    — finite-mode stray (debug)
    The <summary> exit code corroborates only (75 ↔ WATCH_LOCKED, 1 ↔
    WATCH_INBOX_GONE); when exit code and marker disagree, the marker wins.
