@@ -90,6 +90,36 @@ def _run_user_prompt_submit(
     )
 
 
+@pytest.fixture
+def a2a(tmp_path, monkeypatch):
+    """Load the agent2agent helper module fresh, with the bus pinned to the
+    SAME tmp_path the hook side reads (AGENT2AGENT_DIR). Used by the
+    cross-process parity test to drive the helper's `_open_state alive` op
+    in-process against the identical heartbeat fixture the hook probes.
+    """
+    import importlib.util
+
+    monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+    monkeypatch.delenv("CLAUDE_CODE_SESSION_ID", raising=False)
+    spec = importlib.util.spec_from_file_location("_a2a_helper_hooktest", HELPER)
+    module = importlib.util.module_from_spec(spec)
+    assert spec.loader is not None
+    spec.loader.exec_module(module)
+    return module
+
+
+def _run_helper(module, *argv: str) -> tuple[int, str, str]:
+    """Invoke the helper module's main() in-process; capture (rc, out, err)."""
+    import io
+    from contextlib import redirect_stderr, redirect_stdout
+
+    out = io.StringIO()
+    err = io.StringIO()
+    with redirect_stdout(out), redirect_stderr(err):
+        rc = module.main(list(argv))
+    return rc, out.getvalue(), err.getvalue()
+
+
 def _bind(bus_dir: Path, session_id: str, name: str) -> None:
     """Set up an inbox for ``name`` and bind ``session_id`` to it."""
     env = os.environ.copy()
@@ -377,8 +407,8 @@ def test_hook_helper_constants_in_sync():
 # ---------------------------------------------------------------------------
 #
 # These tests exercise the hook-side backstop that surfaces a re-arm hint
-# when the bg watch agent for an `open <name>` session has died. The
-# liveness probe is FAIL-SAFE-DEAD and shares the mtime+600s-window probe
+# when the bg watcher for an `open <name>` session has died. The
+# liveness probe is FAIL-SAFE-DEAD and shares the mtime+90s-window probe
 # with the helper's `cmd__open_state alive` (see T4); the two sides
 # differ only in return contract (bool here, exit codes 0/1/2 there).
 
@@ -391,7 +421,12 @@ def _seed_open_state(
     agent_id: str = "agent-fake-001",
     output_file: Path | None = None,
 ) -> Path:
-    """Plant a `<bus>/.open/<sid>` state file. Returns the state path."""
+    """Plant a `<bus>/.open/<sid>` state file. Returns the state path.
+
+    Under the immortal-watcher architecture `output_file` is the watcher's
+    `.watcher.heartbeat` path (not a Task transcript); callers seed + os.utime
+    a heartbeat file (design §12.9).
+    """
     open_dir = bus_dir / ".open"
     open_dir.mkdir(parents=True, exist_ok=True)
     payload = {
@@ -416,27 +451,34 @@ class TestBgAgentAlive:
       - missing/empty agent_id        -> False
       - state missing output_file     -> False
       - output_file path not on disk  -> False
-      - mtime stale (>= 600s)         -> False
-      - mtime fresh (< 600s)          -> True
+      - mtime stale (>= 90s)          -> False
+      - mtime fresh (< 90s)           -> True
     """
 
-    def test_returns_true_when_transcript_recent(self, tmp_path):
-        transcript = tmp_path / "agent-transcript.output"
-        transcript.write_text("", encoding="utf-8")
+    def test_returns_true_when_heartbeat_recent(self, tmp_path):
+        hb = tmp_path / "agent.heartbeat"
+        hb.write_text("", encoding="utf-8")
         now = time.time()
-        os.utime(transcript, (now, now))
-        state = {"agent_id": "agent-x", "output_file": str(transcript)}
+        os.utime(hb, (now, now))
+        state = {"agent_id": "agent-x", "output_file": str(hb)}
         assert spellbook_hook._bg_agent_alive("agent-x", state) is True
 
-    def test_returns_false_when_transcript_stale(self, tmp_path):
-        transcript = tmp_path / "agent-transcript.output"
-        transcript.write_text("", encoding="utf-8")
-        # Push mtime past the 600s liveness threshold (use 700s to leave
-        # plenty of margin against clock skew on slow CI runners).
-        old = time.time() - 700.0
-        os.utime(transcript, (old, old))
-        state = {"agent_id": "agent-x", "output_file": str(transcript)}
+    def test_returns_false_when_heartbeat_stale(self, tmp_path):
+        """91s-stale heartbeat -> DEAD; 60s-stale -> ALIVE. The pair fences the
+        90s window; the 60s-ALIVE assertion FAILS iff the threshold is still
+        600 (design §12.9)."""
+        hb = tmp_path / "agent.heartbeat"
+        hb.write_text("", encoding="utf-8")
+        now = time.time()
+        # 91s stale -> DEAD at the 90s window.
+        old = now - 91.0
+        os.utime(hb, (old, old))
+        state = {"agent_id": "agent-x", "output_file": str(hb)}
         assert spellbook_hook._bg_agent_alive("agent-x", state) is False
+        # 60s stale -> ALIVE. FAILS if the threshold is still 600.
+        fresh_ish = now - 60.0
+        os.utime(hb, (fresh_ish, fresh_ish))
+        assert spellbook_hook._bg_agent_alive("agent-x", state) is True
 
     def test_returns_false_when_transcript_missing(self, tmp_path):
         # output_file path that does not exist on disk.
@@ -462,14 +504,14 @@ class TestBgAgentAlive:
         ``cmd_open_state`` op=alive **byte-for-byte**, but the two
         differ in their return contract (the hook returns ``bool``;
         the helper returns exit codes 0/1/2). The docstring must
-        honestly describe what is shared (the mtime+600s-window probe)
+        honestly describe what is shared (the mtime+90s-window probe)
         and what differs (return type, fail-safe orientation),
         without the misleading "byte-for-byte" claim.
         """
         doc = spellbook_hook._bg_agent_alive.__doc__ or ""
         assert "byte-for-byte" not in doc, (
             "T8 reconciliation: `_bg_agent_alive` and `cmd_open_state alive` "
-            "share the mtime+600s-window probe but differ in return contract "
+            "share the mtime+90s-window probe but differ in return contract "
             "(bool vs exit code). The docstring must not claim "
             "byte-for-byte parity. Drop the phrase or qualify it."
         )
@@ -479,6 +521,44 @@ class TestBgAgentAlive:
             "Docstring must continue to call out FAIL-SAFE-DEAD orientation "
             "(no fail-safe-alive branch)."
         )
+
+    @pytest.mark.skipif(
+        sys.platform == "win32",
+        reason="loads the agent2agent helper module which requires fcntl (POSIX-only)",
+    )
+    def test_bg_agent_alive_parity(self, a2a, tmp_path):
+        """Hook _bg_agent_alive and helper `_open_state alive` agree on the
+        same heartbeat fixture across fresh / 91s-stale / missing (the
+        shared-probe invariant, design §3.4, §12.4)."""
+        hb = tmp_path / "parity.heartbeat"
+        hb.write_text("", encoding="utf-8")
+        # Seed helper state pointing at the same heartbeat.
+        rc, out, err = _run_helper(
+            a2a, "_open_state", "write", "sess-par", "alice",
+            "agent-x", "--output-file", str(hb),
+        )
+        assert (rc, out, err) == (0, "", "")
+        state = {"agent_id": "agent-x", "output_file": str(hb)}
+        now = time.time()
+
+        # Fresh: both ALIVE.
+        os.utime(hb, (now, now))
+        assert spellbook_hook._bg_agent_alive("agent-x", state) is True
+        rc, out, err = _run_helper(a2a, "_open_state", "alive", "sess-par")
+        assert (rc, out, err) == (0, "", "")
+
+        # 91s stale: both DEAD.
+        old = now - 91.0
+        os.utime(hb, (old, old))
+        assert spellbook_hook._bg_agent_alive("agent-x", state) is False
+        rc, out, err = _run_helper(a2a, "_open_state", "alive", "sess-par")
+        assert (rc, out, err) == (1, "", "")
+
+        # Missing: both DEAD.
+        hb.unlink()
+        assert spellbook_hook._bg_agent_alive("agent-x", state) is False
+        rc, out, err = _run_helper(a2a, "_open_state", "alive", "sess-par")
+        assert (rc, out, err) == (1, "", "")
 
 
 class TestOrphanedChainCheck:
