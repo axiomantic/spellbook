@@ -763,7 +763,14 @@ class TestOrphanedChainCheck:
         mtime = 1_700_000_000.0
         os.utime(hb, (mtime, mtime))
         frozen_now = mtime + 120.0
-        monkeypatch.setattr(spellbook_hook.time, "time", lambda: frozen_now)
+        # The orphan-chain path calls time.time() TWICE on the
+        # alive-but-stale branch: once in `_bg_agent_alive` (heartbeat age >
+        # 90s -> DEAD) and once computing the hint `age_s`. tripwire's
+        # `.returns()` is a single-use FIFO entry, so enqueue one frozen
+        # value per call.
+        m_time = tripwire.mock("time:time")
+        m_time.returns(frozen_now)
+        m_time.returns(frozen_now)
         # Two inbox messages with secret bodies that must NOT leak.
         (inbox / "001.json").write_text('{"body":"SECRET-AAA"}', encoding="utf-8")
         (inbox / "002.json").write_text('{"body":"SECRET-BBB"}', encoding="utf-8")
@@ -771,9 +778,13 @@ class TestOrphanedChainCheck:
             tmp_path, "11111111-1111-1111-1111-111111111111",
             name="alice", agent_id="agent-x", output_file=hb,
         )
-        result = spellbook_hook._agent2agent_check_orphaned_chain(
-            {"session_id": "11111111-1111-1111-1111-111111111111"}
-        )
+        with tripwire:
+            result = spellbook_hook._agent2agent_check_orphaned_chain(
+                {"session_id": "11111111-1111-1111-1111-111111111111"}
+            )
+        # Both frozen-clock calls (alive probe + hint age) must be asserted.
+        m_time.assert_call()
+        m_time.assert_call()
         assert result == _expected_orphan_hint("alice", age_s=120, count=2)
 
     def test_orphan_hint_zero_messages_omits_count_clause(
@@ -789,14 +800,23 @@ class TestOrphanedChainCheck:
         mtime = 1_700_000_000.0
         os.utime(hb, (mtime, mtime))
         frozen_now = mtime + 120.0
-        monkeypatch.setattr(spellbook_hook.time, "time", lambda: frozen_now)
+        # Two time.time() calls on the alive-but-stale branch (see
+        # test_orphan_hint_includes_count_and_heartbeat_age): `_bg_agent_alive`
+        # + hint `age_s`. Enqueue one frozen value per call.
+        m_time = tripwire.mock("time:time")
+        m_time.returns(frozen_now)
+        m_time.returns(frozen_now)
         _seed_open_state(
             tmp_path, "22222222-2222-2222-2222-222222222222",
             name="alice", agent_id="agent-x", output_file=hb,
         )
-        result = spellbook_hook._agent2agent_check_orphaned_chain(
-            {"session_id": "22222222-2222-2222-2222-222222222222"}
-        )
+        with tripwire:
+            result = spellbook_hook._agent2agent_check_orphaned_chain(
+                {"session_id": "22222222-2222-2222-2222-222222222222"}
+            )
+        # Both frozen-clock calls (alive probe + hint age) must be asserted.
+        m_time.assert_call()
+        m_time.assert_call()
         assert result == _expected_orphan_hint("alice", age_s=120, count=0)
 
     def test_orphan_hint_non_string_output_file_uses_no_age_clause(
@@ -851,14 +871,20 @@ class TestOrphanedChainCheck:
         os.utime(hb, (mtime, mtime))
         # Freeze now 300s BEFORE the heartbeat mtime -> raw age == -300.
         frozen_now = mtime - 300.0
-        monkeypatch.setattr(spellbook_hook.time, "time", lambda: frozen_now)
+        # Only ONE time.time() call here: the empty agent_id short-circuits
+        # `_bg_agent_alive` before its heartbeat stat, so the lone call is the
+        # hint `age_s` computation.
+        m_time = tripwire.mock("time:time")
+        m_time.returns(frozen_now)
         _seed_open_state(
             tmp_path, "44444444-4444-4444-4444-444444444444",
             name="alice", agent_id="", output_file=hb,
         )
-        result = spellbook_hook._agent2agent_check_orphaned_chain(
-            {"session_id": "44444444-4444-4444-4444-444444444444"}
-        )
+        with tripwire:
+            result = spellbook_hook._agent2agent_check_orphaned_chain(
+                {"session_id": "44444444-4444-4444-4444-444444444444"}
+            )
+        m_time.assert_call()
         assert result == _expected_orphan_hint("alice", age_s=0, count=0)
 
 
