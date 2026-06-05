@@ -48,14 +48,37 @@ def check_claude_cli_available() -> bool:
         return False
 
 
-def list_registered_mcp_servers() -> List[MCPStatus]:
-    """Get list of registered MCP servers from claude CLI."""
+def _subprocess_env(config_dir: Optional[Path]) -> Optional[dict]:
+    """Build the subprocess environment for a ``claude mcp`` invocation.
+
+    When ``config_dir`` is given, returns a copy of ``os.environ`` with
+    ``CLAUDE_CONFIG_DIR`` set so the command targets that specific config
+    directory. Merging ``os.environ`` here (rather than at each call site)
+    keeps essential variables like ``PATH`` intact and prevents subtle
+    PATH-loss bugs. When ``config_dir`` is ``None``, returns ``None`` so the
+    subprocess inherits the ambient environment unchanged.
+    """
+    if config_dir is None:
+        return None
+    return {**os.environ, "CLAUDE_CONFIG_DIR": str(config_dir)}
+
+
+def list_registered_mcp_servers(config_dir: Optional[Path] = None) -> List[MCPStatus]:
+    """Get list of registered MCP servers from claude CLI.
+
+    Args:
+        config_dir: If provided, set CLAUDE_CONFIG_DIR so the listing reflects
+            a specific config directory instead of the ambient default.
+    """
     if not check_claude_cli_available():
         return []
 
+    env = _subprocess_env(config_dir)
+
     try:
         result = subprocess.run(
-            ["claude", "mcp", "list"], capture_output=True, text=True, timeout=30
+            ["claude", "mcp", "list"], capture_output=True, text=True, timeout=30,
+            env=env,
         )
 
         if result.returncode != 0:
@@ -92,9 +115,16 @@ def list_registered_mcp_servers() -> List[MCPStatus]:
         return []
 
 
-def is_mcp_registered(name: str) -> bool:
-    """Check if an MCP server is registered."""
-    servers = list_registered_mcp_servers()
+def is_mcp_registered(name: str, config_dir: Optional[Path] = None) -> bool:
+    """Check if an MCP server is registered.
+
+    Args:
+        name: Server name to look for.
+        config_dir: If provided, threaded through to
+            ``list_registered_mcp_servers`` so the check targets a specific
+            CLAUDE_CONFIG_DIR instead of the ambient default.
+    """
+    servers = list_registered_mcp_servers(config_dir=config_dir)
     return any(s.name == name for s in servers)
 
 
@@ -144,13 +174,19 @@ def register_mcp_server(
         return (False, str(e))
 
 
-def unregister_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
+def unregister_mcp_server(
+    name: str, dry_run: bool = False, config_dir: Optional[Path] = None
+) -> Tuple[bool, str]:
     """
     Remove an MCP server registration.
 
     Args:
         name: Server name
         dry_run: If True, don't actually unregister
+        config_dir: If provided, set CLAUDE_CONFIG_DIR so the registration
+            check and removal target this specific config directory instead
+            of the ambient default. The mcpServers entry lives in each config
+            dir's ``.claude.json``, so unregistration must be scoped per dir.
 
     Returns: (success, message)
     """
@@ -158,12 +194,12 @@ def unregister_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
         return (False, "claude CLI not available")
 
     if dry_run:
-        if is_mcp_registered(name):
+        if is_mcp_registered(name, config_dir=config_dir):
             return (True, f"Would unregister MCP server: {name}")
         return (True, "MCP server not registered")
 
     try:
-        if not is_mcp_registered(name):
+        if not is_mcp_registered(name, config_dir=config_dir):
             return (True, "was not registered")
 
         result = subprocess.run(
@@ -171,6 +207,7 @@ def unregister_mcp_server(name: str, dry_run: bool = False) -> Tuple[bool, str]:
             capture_output=True,
             text=True,
             timeout=10,
+            env=_subprocess_env(config_dir),
         )
 
         if result.returncode == 0:
@@ -859,10 +896,7 @@ def register_mcp_http_server(
     token = get_mcp_auth_token()
     auth_header = f"Authorization: Bearer {token}" if token else None
 
-    # Build environment with optional config dir override
-    env = None
-    if config_dir is not None:
-        env = {**os.environ, "CLAUDE_CONFIG_DIR": str(config_dir)}
+    env = _subprocess_env(config_dir)
 
     try:
         # Always try to remove first (ignore errors)

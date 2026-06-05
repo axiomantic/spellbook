@@ -383,42 +383,47 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         )
                     )
 
-        # Register MCP server connection (daemon is installed centrally by core.py)
-        # This is a global step: MCP registration is system-wide, not per-dir.
-        if not skip_global_steps:
-            self._step("Registering MCP server")
+        # Register the MCP server connection in THIS config dir's .claude.json.
+        # The daemon itself is global (installed once by core.py), but each Claude
+        # config dir needs its own mcpServers entry pointing at that daemon -- so
+        # registration is per-config-dir, NOT a global step. register_mcp_http_server
+        # sets CLAUDE_CONFIG_DIR from config_dir so the entry lands in the right file.
+        # (Gating this behind skip_global_steps previously left every config dir
+        # after the first -- e.g. a second --claude-config-dir -- with hooks but no
+        # MCP registration.)
+        self._step("Registering MCP server")
 
-            # Remove any old variant names
-            for old_name in ["spellbook-http"]:
-                unregister_mcp_server(old_name, dry_run=self.dry_run)
+        # Remove any old variant names
+        for old_name in ["spellbook-http"]:
+            unregister_mcp_server(old_name, dry_run=self.dry_run, config_dir=self.config_dir)
 
-            if check_claude_cli_available():
-                server_url = get_spellbook_server_url()
-                reg_success, reg_msg = register_mcp_http_server(
-                    "spellbook",
-                    server_url,
-                    dry_run=self.dry_run,
-                    config_dir=self.config_dir,
+        if check_claude_cli_available():
+            server_url = get_spellbook_server_url()
+            reg_success, reg_msg = register_mcp_http_server(
+                "spellbook",
+                server_url,
+                dry_run=self.dry_run,
+                config_dir=self.config_dir,
+            )
+            results.append(
+                InstallResult(
+                    component="mcp_server",
+                    platform=self.platform_id,
+                    success=reg_success,
+                    action="installed" if reg_success else "failed",
+                    message=f"MCP server: {reg_msg}",
                 )
-                results.append(
-                    InstallResult(
-                        component="mcp_server",
-                        platform=self.platform_id,
-                        success=reg_success,
-                        action="installed" if reg_success else "failed",
-                        message=f"MCP server: {reg_msg}",
-                    )
+            )
+        else:
+            results.append(
+                InstallResult(
+                    component="mcp_server",
+                    platform=self.platform_id,
+                    success=True,
+                    action="skipped",
+                    message="MCP server: claude CLI not available (configure manually)",
                 )
-            else:
-                results.append(
-                    InstallResult(
-                        component="mcp_server",
-                        platform=self.platform_id,
-                        success=True,
-                        action="skipped",
-                        message="MCP server: claude CLI not available (configure manually)",
-                    )
-                )
+            )
 
         # Install security hooks in settings.json
         # NOTE: Claude Code only reads hooks from ~/.claude/settings.json (user-level),
@@ -606,7 +611,15 @@ class ClaudeCodeInstaller(PlatformInstaller):
                             )
                         )
 
-        # Uninstall MCP daemon and unregister MCP servers (global steps)
+        # Uninstall MCP daemon (global). The daemon is genuinely global -- it is
+        # installed once by core.py and killed once here -- so its teardown stays
+        # gated behind skip_global_steps. Unregistration, by contrast, is
+        # per-config-dir: the mcpServers entry lives in each config dir's
+        # .claude.json, so it must run for EVERY config dir (mirroring the
+        # per-dir registration in install()). Gating unregistration behind
+        # skip_global_steps previously left every config dir after the first --
+        # e.g. a second --claude-config-dir -- with its spellbook mcpServers
+        # entry never removed on --uninstall.
         if not skip_global_steps:
             daemon_success, daemon_msg = uninstall_daemon(dry_run=self.dry_run)
             results.append(
@@ -619,36 +632,40 @@ class ClaudeCodeInstaller(PlatformInstaller):
                 )
             )
 
-            # Unregister MCP servers (both stdio and HTTP variants)
-            if check_claude_cli_available():
-                # Remove all known spellbook MCP server names
-                mcp_names = ["spellbook", "spellbook-http"]
-                removed = []
-                for name in mcp_names:
-                    success, msg = unregister_mcp_server(name, dry_run=self.dry_run)
-                    if success and "not registered" not in msg.lower():
-                        removed.append(name)
+        # Unregister MCP servers (both stdio and HTTP variants) for THIS config
+        # dir. unregister_mcp_server sets CLAUDE_CONFIG_DIR from config_dir so the
+        # removal targets the right .claude.json. Runs per config dir, not gated.
+        if check_claude_cli_available():
+            # Remove all known spellbook MCP server names
+            mcp_names = ["spellbook", "spellbook-http"]
+            removed = []
+            for name in mcp_names:
+                success, msg = unregister_mcp_server(
+                    name, dry_run=self.dry_run, config_dir=self.config_dir
+                )
+                if success and "not registered" not in msg.lower():
+                    removed.append(name)
 
-                if removed:
-                    results.append(
-                        InstallResult(
-                            component="mcp_server",
-                            platform=self.platform_id,
-                            success=True,
-                            action="removed",
-                            message=f"MCP servers: removed {', '.join(removed)}",
-                        )
+            if removed:
+                results.append(
+                    InstallResult(
+                        component="mcp_server",
+                        platform=self.platform_id,
+                        success=True,
+                        action="removed",
+                        message=f"MCP servers: removed {', '.join(removed)}",
                     )
-                else:
-                    results.append(
-                        InstallResult(
-                            component="mcp_server",
-                            platform=self.platform_id,
-                            success=True,
-                            action="unchanged",
-                            message="MCP servers: none were registered",
-                        )
+                )
+            else:
+                results.append(
+                    InstallResult(
+                        component="mcp_server",
+                        platform=self.platform_id,
+                        success=True,
+                        action="unchanged",
+                        message="MCP servers: none were registered",
                     )
+                )
 
         # Uninstall security hooks from settings.json
         settings_path = self.config_dir / "settings.json"
