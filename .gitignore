@@ -154,6 +154,9 @@ Thumbs.db
 # Node
 node_modules/
 
+# Admin SPA bundle — built at install time (npm run build), not committed.
+spellbook/admin/static/
+
 # ============================================
 # Spellbook-specific ignores
 # ============================================

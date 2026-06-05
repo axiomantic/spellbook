@@ -8,3 +8,6 @@ code_review:
     code_review: true
 ignore_patterns:
   - "package-lock.json"
+  # Masks the bundle-deletion hunks in transition PRs and any stray build artifacts.
+  - "spellbook/admin/static/**"
+  - "**/.build-hash"
