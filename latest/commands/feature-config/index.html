@@ -2814,6 +2814,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/canvas-decision/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    canvas-decision
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/code-review/" class="md-nav__link">
         
   
@@ -6052,10 +6080,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#overview-feature-configuration-phase-0" class="md-nav__link">
+  <a href="#overview-feature-config-phase-0" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview: Feature Configuration (Phase 0)
+        Overview: feature-config (Phase 0)
       
     </span>
   </a>
@@ -6063,10 +6091,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detail-continuation-detection-phase-05" class="md-nav__link">
+  <a href="#detail-1-section-05-continuation-detection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detail: Continuation Detection (Phase 0.5)
+        Detail 1: Section 0.5 — Continuation Detection
       
     </span>
   </a>
@@ -6074,10 +6102,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detail-workflow-preferences-wizard-phase-04" class="md-nav__link">
+  <a href="#detail-2-sections-0107-fresh-start-wizard" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detail: Workflow Preferences Wizard (Phase 0.4)
+        Detail 2: Sections 0.1–0.7 — Fresh Start Wizard
       
     </span>
   </a>
@@ -6085,21 +6113,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detail-need-flag-classification-phase-07" class="md-nav__link">
+  <a href="#cross-reference-table" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detail: Need-Flag Classification (Phase 0.7)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-reference-overview-nodes-detail-diagrams" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cross-Reference: Overview Nodes → Detail Diagrams
+        Cross-Reference Table
       
     </span>
   </a>
@@ -8656,10 +8673,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#overview-feature-configuration-phase-0" class="md-nav__link">
+  <a href="#overview-feature-config-phase-0" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Overview: Feature Configuration (Phase 0)
+        Overview: feature-config (Phase 0)
       
     </span>
   </a>
@@ -8667,10 +8684,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detail-continuation-detection-phase-05" class="md-nav__link">
+  <a href="#detail-1-section-05-continuation-detection" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detail: Continuation Detection (Phase 0.5)
+        Detail 1: Section 0.5 — Continuation Detection
       
     </span>
   </a>
@@ -8678,10 +8695,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detail-workflow-preferences-wizard-phase-04" class="md-nav__link">
+  <a href="#detail-2-sections-0107-fresh-start-wizard" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detail: Workflow Preferences Wizard (Phase 0.4)
+        Detail 2: Sections 0.1–0.7 — Fresh Start Wizard
       
     </span>
   </a>
@@ -8689,21 +8706,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#detail-need-flag-classification-phase-07" class="md-nav__link">
+  <a href="#cross-reference-table" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Detail: Need-Flag Classification (Phase 0.7)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#cross-reference-overview-nodes-detail-diagrams" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Cross-Reference: Overview Nodes → Detail Diagrams
+        Cross-Reference Table
       
     </span>
   </a>
@@ -8743,257 +8749,223 @@
 
 <h1 id="feature-config">/feature-config<a class="headerlink" href="#feature-config" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<h2 id="overview-feature-configuration-phase-0">Overview: Feature Configuration (Phase 0)<a class="headerlink" href="#overview-feature-configuration-phase-0" title="Permanent link">&para;</a></h2>
-<p>High-level flow through all seven sub-phases of the configuration wizard, showing decision branches and terminal routes.</p>
+<h2 id="overview-feature-config-phase-0">Overview: <code>feature-config</code> (Phase 0)<a class="headerlink" href="#overview-feature-config-phase-0" title="Permanent link">&para;</a></h2>
+<p>High-level flow showing all sections and how they connect.</p>
 <pre class="mermaid"><code>flowchart TD
-    START(["`**Phase 0: Feature Config**
-    _feature-config_`"]) --&gt; CONT
+    classDef dispatch fill:#4a9eff,stroke:#2d7de0,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
+    classDef terminal fill:#51cf66,stroke:#3a9449,color:#000
 
-    CONT["0.5 Continuation Detection\n_(runs FIRST — always)_"]
-    CONT --&gt; CONT_DEC{Continuation\nsignals present?}
+    START(["feature-config — Phase 0 Entry"])
 
-    CONT_DEC -- No --&gt; ESC
-    CONT_DEC -- Yes --&gt; RESUME["Resume Flow\n(parse → verify → preferences → synthesize → confirm)"]
+    START --&gt; CD{"0.5 Continuation\nDetection\nEXECUTES FIRST"}
 
-    RESUME --&gt; PHASE_JUMP(["Phase Jump Mechanism\n→ Target Phase"])
+    CD --&gt;|"signals present"| RESUME["Resume Flow\n(Steps 1–5)\nsee Detail 1"]
+    CD --&gt;|"no signals"| EH{"0.1 Detect\nEscape Hatches"}
 
-    ESC["0.1 Escape Hatch Detection\n_(parse initial message)_"]
-    ESC --&gt; ESC_DEC{Escape hatch\ndetected?}
+    RESUME --&gt; JUMP(["Phase Jump\nto Target Phase"])
 
-    ESC_DEC -- "design doc / impl plan / no docs" --&gt; ESC_ASK["AskUserQuestion:\nDocument handling"]
-    ESC_ASK --&gt; ESC_ROUTE(["Jump to Phase 2, 3, or 4"])
-    ESC_DEC -- None --&gt; MOT
+    EH --&gt;|"escape hatch found"| EHSKIP(["Phase Skip\nsee Detail 2"])
+    EH --&gt;|"no escape hatch"| MOT["0.2 Clarify Motivation\nWHY — AskUserQuestion"]
+    MOT --&gt; FEAT["0.3 Clarify Feature\nWHAT — AskUserQuestion"]
+    FEAT --&gt; WIZ["0.4 Workflow\nPreferences Wizard\n8 Questions"]
+    WIZ --&gt; REF["0.6 Refactoring\nMode Detection\nKeyword scan"]
+    REF --&gt; NF["0.7 Need-Flag\nClassification\n4 Questions"]
+    NF --&gt; CHK[["Phase 0\nComplete Checklist"]]
 
-    MOT["0.2 Clarify Motivation\n(WHY)"]
-    MOT --&gt; MOT_DEC{Motivation\nclear from request?}
-    MOT_DEC -- No --&gt; MOT_ASK["AskUserQuestion:\nMotivation"]
-    MOT_DEC -- Yes --&gt; WHAT
-    MOT_ASK --&gt; WHAT
+    CHK --&gt;|"zero flags"| FAST(["Fast Path:\nInline plan → Implement\ndevelop resident"])
+    CHK --&gt;|"needs_research"| RESEARCH(["/feature-research"])
+    CHK --&gt;|"needs_design or infra\nno research"| DESIGN(["/feature-design"])
 
-    WHAT["0.3 Clarify Feature\n(WHAT — core essence + resources)"]
-    WHAT --&gt; PREFS["0.4 Collect Workflow Preferences\n(7-question wizard via AskUserQuestion)"]
+    class WIZ,NF dispatch
+    class CHK gate
+    class JUMP,EHSKIP,FAST,RESEARCH,DESIGN terminal
 
-    PREFS --&gt; REFACT["0.6 Detect Refactoring Mode\n_(keyword scan)_"]
-    REFACT --&gt; REFACT_DEC{Keywords match:\nrefactor / reorganize\nextract / migrate\nsplit / consolidate?}
-    REFACT_DEC -- Yes --&gt; SET_REFACT["Set refactoring_mode = true"]
-    REFACT_DEC -- No --&gt; NEEDFLAGS
-    SET_REFACT --&gt; NEEDFLAGS
-
-    NEEDFLAGS["0.7 Need-Flag Classification\n(4 AskUserQuestion calls)"]
-    NEEDFLAGS --&gt; INFRA_DEC{Q-INFRA = yes?}
-    INFRA_DEC -- Yes --&gt; AUTO_DESIGN["Auto-set needs_design = true\n_(skip Q-DESIGN)_"]
-    INFRA_DEC -- No --&gt; NEEDFLAGS2["Resolve Q-DESIGN independently"]
-    AUTO_DESIGN --&gt; CHECKLIST
-    NEEDFLAGS2 --&gt; CHECKLIST
-
-    CHECKLIST{"Phase 0\nVerification\nChecklist\n(all items checked?)"}
-    CHECKLIST -- Incomplete --&gt; COMPLETE_P0["Complete missing steps"]
-    COMPLETE_P0 --&gt; CHECKLIST
-
-    CHECKLIST -- "Zero flags" --&gt; FASTPATH(["Fast Path:\nInline plan → implement\n(lighter review floor, develop resident)"])
-    CHECKLIST -- "needs_research = true" --&gt; RESEARCH(["→ /feature-research"])
-    CHECKLIST -- "needs_design or needs_infrastructure\n(no research)" --&gt; DESIGN(["→ /feature-design"])
-
-    subgraph legend["Legend"]
+    subgraph LEGEND [" "]
         L1["Process"]
         L2{Decision}
-        L3(["Terminal / Jump"])
-        L4["AskUserQuestion"]:::askq
-        L5["Quality gate"]:::gate
+        L3["Subagent Dispatch / AskUserQuestion"]:::dispatch
+        L4[["Quality Gate"]]:::gate
+        L5(["Terminal / Exit"]):::terminal
+    end</code></pre>
+<hr />
+<h2 id="detail-1-section-05-continuation-detection">Detail 1: Section 0.5 — Continuation Detection<a class="headerlink" href="#detail-1-section-05-continuation-detection" title="Permanent link">&para;</a></h2>
+<pre class="mermaid"><code>flowchart TD
+    classDef dispatch fill:#4a9eff,stroke:#2d7de0,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
+    classDef terminal fill:#51cf66,stroke:#3a9449,color:#000
+
+    ENTRY(["Continuation Signal Detected\n(any of: prompt keyword, system-reminder\nskill phase marker, or artifacts on disk)"])
+
+    ENTRY --&gt; S1["Step 1: Parse Recovery Context\nExtract from system-reminder:\nactive_skill · skill_phase · todos · exact_position"]
+
+    S1 --&gt; S2["Step 2: Verify Artifact Existence\nRun bash: ls understanding/ · plans/*-design.md\nplans/*-impl.md · git worktree list"]
+
+    S2 --&gt; ARTCHK{"Artifacts match\nclaimed phase?"}
+
+    ARTCHK --&gt;|"All expected found"| S3
+    ARTCHK --&gt;|"Artifacts missing"| MISSING["Report Missing Artifacts\nList each with expected path"]
+    MISSING --&gt; CHOICE{"User choice"}
+    CHOICE --&gt;|"Regenerate"| S3
+    CHOICE --&gt;|"Start fresh"| FRESH(["→ Phase 0.1\nFresh Start"])
+
+    S3["Step 3: Quick Preferences Check\nRe-ask only 4 session preferences:\nExecution Mode · Parallelization\nWorktree · Post-Implementation"]
+
+    S3 --&gt; S4["Step 4: Synthesize Resume Point"]
+
+    S4 --&gt; PRIORITY{"Priority\nof resume\nevidence"}
+    PRIORITY --&gt;|"in-progress todo in restored list"| USE_TODO["Use in-progress todo\nas exact resume point\n(highest confidence)"]
+    PRIORITY --&gt;|"no todo; skill_phase in reminder"| USE_PHASE["Use skill_phase\nfrom system-reminder"]
+    PRIORITY --&gt;|"neither"| ARTIFACT_TABLE["Infer from\nArtifact Pattern Table\n(HIGH confidence lookups)"]
+
+    USE_TODO --&gt; S5
+    USE_PHASE --&gt; S5
+    ARTIFACT_TABLE --&gt; S5
+
+    S5["Step 5: Confirm &amp;amp; Resume\nDisplay: skipped phases · current resume point\nAnnounce target with SKIPPED / CURRENT labels"]
+
+    S5 --&gt; JUMP[["Phase Jump Mechanism\n1. Determine target phase\n2. Skip all prior phases by number\n3. Execute only from target forward"]]
+
+    JUMP --&gt; TARGET(["Resume at\nTarget Phase"])
+
+    class S2 dispatch
+    class JUMP gate
+    class FRESH,TARGET terminal
+
+    subgraph ARTIFACT_REF ["Artifact → Phase Table (used by Step 4 fallback)"]
+        AT1["No artifacts → Phase 0 (fresh)"]
+        AT2["Understanding doc, no design → resume Phase 2"]
+        AT3["Design doc, no impl plan → resume Phase 3"]
+        AT4["Design + impl plan, no worktree → resume Phase 4.1"]
+        AT5["Worktree with uncommitted changes → Phase 4 in progress"]
+        AT6["PR exists → Phase 4.7 finishing"]
     end
 
-    classDef askq fill:#4a9eff,color:#fff,stroke:#2266cc
-    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc3333
-    classDef success fill:#51cf66,color:#000,stroke:#2f9e44
-    classDef skip fill:#888,color:#fff,stroke:#555
-
-    class MOT_ASK,ESC_ASK askq
-    class CHECKLIST gate
-    class FASTPATH,RESEARCH,DESIGN,PHASE_JUMP,ESC_ROUTE success
-    class AUTO_DESIGN skip</code></pre>
-<hr />
-<h2 id="detail-continuation-detection-phase-05">Detail: Continuation Detection (Phase 0.5)<a class="headerlink" href="#detail-continuation-detection-phase-05" title="Permanent link">&para;</a></h2>
-<p>Five-step resume flow executed before any wizard interaction.</p>
-<pre class="mermaid"><code>flowchart TD
-    START(["Enter 0.5\nContinuation Detection"]) --&gt; SIG_CHECK
-
-    SIG_CHECK{"Any continuation signal?\n① prompt: continue/resume/pick up/\nwhere we left off/compacted\n② system-reminder: Skill Phase with develop phase\n③ system-reminder: Active Skill = develop\n④ artifacts exist on disk"}
-
-    SIG_CHECK -- None --&gt; NO_CONT(["No signals → proceed to 0.1"])
-
-    SIG_CHECK -- "Signal detected" --&gt; STEP1
-
-    STEP1["Step 1: Parse Recovery Context\n(from system-reminder)\n• active_skill\n• skill_phase\n• todos\n• exact_position"]
-    STEP1 --&gt; STEP2
-
-    STEP2["Step 2: Verify Artifact Existence\n(bash: ls ~/.local/spellbook/docs/…\ngit worktree list)"]
-    STEP2 --&gt; ART_CHECK{Artifacts match\nclaimed phase?}
-
-    ART_CHECK -- "Artifacts present &amp; match" --&gt; STEP3
-    ART_CHECK -- "Artifacts MISSING\n(but phase implies they should exist)" --&gt; MISSING_REPORT["Report missing artifacts:\n① Regenerate from context\n② Start fresh from Phase 0"]:::gate
-    MISSING_REPORT --&gt; USER_CHOICE{User chooses}
-    USER_CHOICE -- "Regenerate" --&gt; STEP3
-    USER_CHOICE -- "Fresh start" --&gt; FRESH(["Exit resume → Phase 0.1"])
-
-    STEP3["Step 3: Quick Preferences Check\n(AskUserQuestion — 4 prefs only)\n• Execution mode\n• Parallelization\n• Worktree\n• Post-implementation"]:::askq
-    STEP3 --&gt; STEP4
-
-    STEP4["Step 4: Synthesize Resume Point\n(priority order)\n① In-progress todo from restored todos\n② skill_phase from system-reminder\n③ Artifact-pattern fallback table"]
-    STEP4 --&gt; ART_TABLE{Artifact pattern\nfallback needed?}
-
-    ART_TABLE -- No --&gt; STEP5
-    ART_TABLE -- Yes --&gt; FALLBACK["Fallback table lookup:\n• No artifacts → Phase 0\n• Understanding doc only → Phase 2\n• Design doc, no impl → Phase 3\n• Design + impl, no worktree → Phase 4.1\n• Worktree uncommitted → Phase 4\n• Worktree + commits, no PR → Phase 4 late\n• PR exists → Phase 4.7"]
-    FALLBACK --&gt; STEP5
-
-    STEP5["Step 5: Confirm and Resume\n(display prior progress + current task)"]
-    STEP5 --&gt; JUMP["Phase Jump Mechanism:\n① determine target from skill_phase + artifacts\n② skip all prior phases\n③ execute from target forward\n(display SKIPPED / CURRENT summary)"]
-    JUMP --&gt; TARGET(["Jump to Target Phase"])
-
-    subgraph legend["Legend"]
+    subgraph LEGEND [" "]
         L1["Process"]
         L2{Decision}
-        L3(["Terminal"])
-        L4["AskUserQuestion"]:::askq
-        L5["Gate / Error state"]:::gate
-    end
-
-    classDef askq fill:#4a9eff,color:#fff,stroke:#2266cc
-    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc3333
-    classDef success fill:#51cf66,color:#000,stroke:#2f9e44
-
-    class STEP3 askq
-    class MISSING_REPORT gate
-    class NO_CONT,FRESH,TARGET success</code></pre>
+        L3["Subagent Dispatch / Bash"]:::dispatch
+        L4[["Quality Gate"]]:::gate
+        L5(["Terminal / Exit"]):::terminal
+    end</code></pre>
 <hr />
-<h2 id="detail-workflow-preferences-wizard-phase-04">Detail: Workflow Preferences Wizard (Phase 0.4)<a class="headerlink" href="#detail-workflow-preferences-wizard-phase-04" title="Permanent link">&para;</a></h2>
-<p>Seven-question wizard with conditional Q6 and a coupling rule.</p>
+<h2 id="detail-2-sections-0107-fresh-start-wizard">Detail 2: Sections 0.1–0.7 — Fresh Start Wizard<a class="headerlink" href="#detail-2-sections-0107-fresh-start-wizard" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart TD
-    START(["Enter 0.4\nWorkflow Preferences"]) --&gt; Q1
+    classDef dispatch fill:#4a9eff,stroke:#2d7de0,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
+    classDef terminal fill:#51cf66,stroke:#3a9449,color:#000
 
-    Q1["Q1: Execution Mode\n• Fully autonomous ✓\n• Interactive\n• Mostly autonomous"]:::askq
-    Q1 --&gt; Q2
+    ENTRY(["No Continuation Signals\nFresh Start Entry"])
 
-    Q2["Q2: Parallelization Strategy\n• Maximize parallel ✓\n• Conservative\n• Ask each time"]:::askq
-    Q2 --&gt; Q3
+    ENTRY --&gt; EH{"0.1 Detect Escape Hatches\nParse initial user message"}
 
-    Q3["Q3: Git Worktree Strategy\n• Single worktree ✓\n• Per parallel track\n• No worktree"]:::askq
-    Q3 --&gt; Q3_CHECK{worktree ==\nper_parallel_track?}
-    Q3_CHECK -- Yes --&gt; FORCE_PARALLEL["Auto-set parallelization = maximize\n_(coupling rule)_"]
-    Q3_CHECK -- No --&gt; Q4
-    FORCE_PARALLEL --&gt; Q4
+    EH --&gt;|"'using design doc path'"| EH_DD{"Document\nHandling?"}
+    EH --&gt;|"'using impl plan path'"| EH_IP{"Document\nHandling?"}
+    EH --&gt;|"'just implement no docs'"| SKIP4(["Skip to Phase 4"])
+    EH --&gt;|"No escape hatch"| MOT
 
-    Q4["Q4: Post-Implementation Handling\n• Offer options ✓\n• Create PR automatically\n• Just stop"]:::askq
-    Q4 --&gt; Q5
+    EH_DD --&gt;|"Review first"| SKIP22(["Skip 2.1 → Phase 2.2\n(load + review design)"])
+    EH_DD --&gt;|"Treat as ready"| SKIP3(["Skip Phase 2 → Phase 3"])
+    EH_IP --&gt;|"Review first"| SKIP32(["Skip 2.1-3.1 → Phase 3.2"])
+    EH_IP --&gt;|"Treat as ready"| SKIP23(["Skip Phases 2-3 → Phase 4"])
 
-    Q5["Q5: Dialectic Mode\n• None ✓\n• Roundtable"]:::askq
-    Q5 --&gt; Q5_CHECK{dialectic_mode\n≠ none?}
-    Q5_CHECK -- No --&gt; Q7
-    Q5_CHECK -- Yes --&gt; Q6
+    MOT["0.2 Clarify Motivation WHY\nAskUserQuestion\nSuggest 6 categories\nStore → SESSION_CONTEXT.motivation"]
 
-    Q6["Q6: Dialectic Level\n• Planning only\n• Planning + gates ✓\n• Full"]:::askq
-    Q6 --&gt; Q7
+    MOT --&gt; FEAT["0.3 Clarify Feature WHAT\nAskUserQuestion\n• Core purpose 1-2 sentences\n• Resources / links for research\nStore → SESSION_CONTEXT.feature_essence"]
 
-    Q7["Q7: Token Enforcement\n• Work-item level\n• Gate level ✓\n• Every step"]:::askq
-    Q7 --&gt; STORE["Store all in SESSION_PREFERENCES"]
-    STORE --&gt; DONE(["0.4 Complete → 0.6"])
+    FEAT --&gt; WIZ_ENTRY["0.4 Workflow Preferences Wizard\nAll 8 questions in single AskUserQuestion call"]
 
-    subgraph legend["Legend"]
-        L1["AskUserQuestion"]:::askq
+    WIZ_ENTRY --&gt; Q1["Q1 — Execution Mode\nFully autonomous · Interactive\nMostly autonomous"]
+    Q1 --&gt; Q2["Q2 — Parallelization\nMaximize · Conservative · Ask each time"]
+    Q2 --&gt; Q3["Q3 — Worktree Strategy\nSingle · Per parallel track · None"]
+    Q3 --&gt; Q4["Q4 — Post-Implementation\nOffer options · Auto PR · Just stop"]
+    Q4 --&gt; Q5{"Q5 — Dialectic Mode\nNone · Roundtable"}
+    Q5 --&gt;|"none"| Q7
+    Q5 --&gt;|"roundtable"| Q6["Q6 — Dialectic Level\nPlanning only\nPlanning + gates\nFull — conditional on Q5 != none"]
+    Q6 --&gt; Q7["Q7 — Token Enforcement\nWork-item · Gate level · Every step"]
+    Q7 --&gt; Q8["Q8 — Decision Surface\nTerminal questions\nInteractive canvas page\nStore → SESSION_PREFERENCES.decision_surface"]
+    Q8 --&gt; COUPLE["Coupling Rule\nworktree=per_parallel_track\n→ auto-set parallelization=maximize"]
+
+    COUPLE --&gt; REF{"0.6 Refactoring Mode\nKeyword scan on request text"}
+    REF --&gt;|"refactor / reorganize / extract\nmigrate / split / consolidate"| SET_REF["Set SESSION_PREFERENCES\n.refactoring_mode = true"]
+    REF --&gt;|"no keywords"| NF_ENTRY
+    SET_REF --&gt; NF_ENTRY
+
+    NF_ENTRY["0.7 Need-Flag Classification\n4 self-contained AskUserQuestion items"]
+
+    NF_ENTRY --&gt; QR["Q-RESEARCH\nUnfamiliar code OR fuzzy requirements?\nYes → enables Research + Discovery phases\nneeds_research boolean"]
+    QR --&gt; QINFRA["Q-INFRA\nNew deps / infra / schema changes?\nYes → auto-sets needs_design=true"]
+    QINFRA --&gt; INFRA_CHK{"Q-INFRA\nanswer?"}
+    INFRA_CHK --&gt;|"yes → auto-set needs_design=true"| SKIP_QD["Skip Q-DESIGN\nneeds_design forced true"]
+    INFRA_CHK --&gt;|"no"| QD["Q-DESIGN\nReal architectural decision?\nYes → enables Design phase\nneeds_design boolean"]
+    QD --&gt; QS
+    SKIP_QD --&gt; QS["Q-SIZE\nSmall · Medium · Large\nSignal only — tunes parallelization\nnever gates phases"]
+
+    QS --&gt; STORE["Store in SESSION_PREFERENCES\nneeds_research · needs_design\nneeds_infrastructure · size_estimate"]
+
+    STORE --&gt; ROUTE[["Flag Routing\n(quality gate before exit)"]]
+
+    ROUTE --&gt;|"all flags false"| ANNOUNCE["Announce Fast Path\n(verbatim script required)"]
+    ANNOUNCE --&gt; FAST(["Fast Path:\nShort inline plan confirmed\n→ Implement under lighter floor\ndevelop stays resident"])
+
+    ROUTE --&gt;|"needs_research = true"| RPHASE(["/feature-research"])
+    ROUTE --&gt;|"needs_design or infra\nno research"| DPHASE(["/feature-design"])
+
+    class WIZ_ENTRY,MOT,FEAT,NF_ENTRY dispatch
+    class ROUTE gate
+    class SKIP22,SKIP3,SKIP32,SKIP23,SKIP4,FAST,RPHASE,DPHASE terminal
+
+    subgraph MOTIVATION_CATS ["Motivation Categories → Key Questions (stored, used in later phases)"]
+        MC1["User Pain → current journey + failure mode"]
+        MC2["Performance → current metrics + target"]
+        MC3["Technical Debt → what breaks when touched"]
+        MC4["Business Need → deadline + priority"]
+        MC5["Security/Compliance → threat model + requirement"]
+        MC6["Developer Experience → frequency + workaround"]
+    end
+
+    subgraph LEGEND [" "]
+        L1["Process"]
         L2{Decision}
-        L3["Auto-derived"]
-        L4(["Terminal"])
-    end
-
-    classDef askq fill:#4a9eff,color:#fff,stroke:#2266cc
-    classDef success fill:#51cf66,color:#000,stroke:#2f9e44
-
-    class Q1,Q2,Q3,Q4,Q5,Q6,Q7 askq
-    class DONE success</code></pre>
+        L3["AskUserQuestion / Dispatch"]:::dispatch
+        L4[["Quality Gate"]]:::gate
+        L5(["Terminal / Exit"]):::terminal
+    end</code></pre>
 <hr />
-<h2 id="detail-need-flag-classification-phase-07">Detail: Need-Flag Classification (Phase 0.7)<a class="headerlink" href="#detail-need-flag-classification-phase-07" title="Permanent link">&para;</a></h2>
-<p>Four-question classification that routes the entire develop session into fast path or flag-gated phases.</p>
-<pre class="mermaid"><code>flowchart TD
-    START(["Enter 0.7\nNeed-Flag Classification"]) --&gt; QRESEARCH
-
-    QRESEARCH["Q-RESEARCH:\n'Do we need to investigate before building?'\n(unfamiliar code OR fuzzy requirements)\nYes → turns on Research + Discovery phases"]:::askq
-    QRESEARCH --&gt; QINFRA
-
-    QINFRA["Q-INFRA:\n'New dependencies, infrastructure, or schema changes?'\n(new 3P dep / new service / table-column-field / migration)\nYes → auto-sets needs_design"]:::askq
-    QINFRA --&gt; INFRA_CHECK{Q-INFRA = yes?}
-
-    INFRA_CHECK -- Yes --&gt; AUTO_DESIGN["Auto-set needs_design = true\n_(skip Q-DESIGN — infra implies design)_"]
-    INFRA_CHECK -- No --&gt; QDESIGN
-
-    QDESIGN["Q-DESIGN:\n'Is there a real design decision to make?'\n(new structure / choice between approaches /\ninterface other code will depend on)\nYes → turns on Design phase"]:::askq
-    QDESIGN --&gt; QSIZE
-
-    AUTO_DESIGN --&gt; QSIZE
-
-    QSIZE["Q-SIZE:\n'Roughly how big is this?'\nSmall / Medium / Large\n(signal only — tunes parallelization +\ncheckpoints; NEVER affects rigor or gates)"]:::askq
-    QSIZE --&gt; RESOLVE
-
-    RESOLVE["Resolve booleans:\n• needs_research\n• needs_design\n• needs_infrastructure\n• size_estimate\n→ store in SESSION_PREFERENCES"]
-    RESOLVE --&gt; FLAG_EVAL{Any flag\nset to true?}
-
-    FLAG_EVAL -- "Zero flags" --&gt; FAST_ANNOUNCE["Announce fast path (verbatim):\n'This looks like a small, well-understood change…\nI'll take the fast path: skip research/discovery/\ndesign/planning, write a short inline plan for\nyou to confirm, then implement…'"]
-    FAST_ANNOUNCE --&gt; LOG_FAST["Log: 'Fast path: zero-flag change.\nFewer phases, lighter floor, develop resident.'"]
-    LOG_FAST --&gt; FASTPATH(["Fast Path:\nShort inline plan → operator confirm → implement\n(lighter review floor, develop STAYS resident)"])
-
-    FLAG_EVAL -- "needs_research = true" --&gt; RESEARCH_FIRST(["→ /feature-research\n(then design/plan/implement per flags)"])
-
-    FLAG_EVAL -- "needs_design or needs_infrastructure\n(no research)" --&gt; DESIGN_FIRST(["→ /feature-design"])
-
-    subgraph note["Orthogonality rules"]
-        N1["needs_research ⊥ needs_design ⊥ needs_infrastructure\nsize_estimate ⊥ all flags (never gates a phase)\nQ-INFRA=yes ⟹ needs_design=true (auto, no re-ask)"]
-    end
-
-    subgraph legend["Legend"]
-        L1["AskUserQuestion"]:::askq
-        L2{Decision}
-        L3(["Terminal / Route"]):::success
-        L4["Gate"]:::gate
-    end
-
-    classDef askq fill:#4a9eff,color:#fff,stroke:#2266cc
-    classDef gate fill:#ff6b6b,color:#fff,stroke:#cc3333
-    classDef success fill:#51cf66,color:#000,stroke:#2f9e44
-
-    class QRESEARCH,QINFRA,QDESIGN,QSIZE askq
-    class FASTPATH,RESEARCH_FIRST,DESIGN_FIRST success
-    class FLAG_EVAL gate</code></pre>
-<hr />
-<h2 id="cross-reference-overview-nodes-detail-diagrams">Cross-Reference: Overview Nodes → Detail Diagrams<a class="headerlink" href="#cross-reference-overview-nodes-detail-diagrams" title="Permanent link">&para;</a></h2>
+<h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Overview Node</th>
 <th>Detail Diagram</th>
+<th>Section</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>0.5 Continuation Detection</code></td>
-<td>Detail: Continuation Detection (Phase 0.5)</td>
+<td><code>Resume Flow (Steps 1–5)</code></td>
+<td>Detail 1</td>
+<td>0.5 Continuation Detection</td>
 </tr>
 <tr>
-<td><code>0.4 Collect Workflow Preferences</code></td>
-<td>Detail: Workflow Preferences Wizard (Phase 0.4)</td>
+<td><code>Phase Skip</code> (escape hatches)</td>
+<td>Detail 2, top</td>
+<td>0.1 Escape Hatch Detection</td>
+</tr>
+<tr>
+<td><code>0.4 Workflow Preferences Wizard</code></td>
+<td>Detail 2, wizard block</td>
+<td>Q1–Q8 including conditional Q6</td>
 </tr>
 <tr>
 <td><code>0.7 Need-Flag Classification</code></td>
-<td>Detail: Need-Flag Classification (Phase 0.7)</td>
+<td>Detail 2, bottom</td>
+<td>Q-RESEARCH, Q-DESIGN, Q-INFRA, Q-SIZE</td>
 </tr>
 <tr>
-<td><code>0.1 Escape Hatch Detection</code></td>
-<td>Covered inline in Overview (three patterns, two user choices each)</td>
-</tr>
-<tr>
-<td><code>0.2 / 0.3 Motivation + WHAT</code></td>
-<td>Covered inline in Overview (single AskUserQuestion per step)</td>
-</tr>
-<tr>
-<td><code>0.6 Refactoring Mode</code></td>
-<td>Covered inline in Overview (keyword scan, boolean set)</td>
+<td><code>Phase 0 Complete Checklist</code></td>
+<td>Detail 2</td>
+<td>Flag Routing → ROUTE gate</td>
 </tr>
 </tbody>
 </table>
@@ -9324,128 +9296,145 @@
 <a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="k">-</span><span class="w"> </span>Work-item level: Tokens gate work item start/complete only
 <a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">-</span><span class="w"> </span>Gate level (Recommended): Each quality gate requires a token
 <a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="k">-</span><span class="w"> </span>Every step: Every phase transition requires a token
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="sb">```</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>Store all preferences in <span class="sb">`SESSION_PREFERENCES`</span>.
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="gs">**Coupling rule:**</span> If <span class="sb">`worktree == &quot;per_parallel_track&quot;`</span>, automatically set <span class="sb">`parallelization = &quot;maximize&quot;`</span>.
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="gu">### 0.6 Detect Refactoring Mode</span>
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="gu">### Question 8: Decision Surface</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>Header: &quot;How should I ask you to decide?&quot;
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>Question: &quot;When I hit a turning point that needs your direction — a design
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>approval, a fork between approaches, a blocker — and there&#39;s real context to
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>weigh (several options, trade-offs, a diagram that helps), where do you want to
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>make the call?&quot;
 <a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>&lt;RULE&gt;Activate when: &quot;refactor&quot;, &quot;reorganize&quot;, &quot;extract&quot;, &quot;migrate&quot;, &quot;split&quot;, &quot;consolidate&quot; appear in request.&lt;/RULE&gt;
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">request</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/refactor|reorganize|extract|migrate|split|consolidate/i</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="w">  </span><span class="nx">SESSION_PREFERENCES</span><span class="p">.</span><span class="nx">refactoring_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="p">}</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="sb">```</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>Refactoring is NOT greenfield. Behavior preservation is the primary constraint. See Refactoring Mode section in <span class="sb">`/feature-implement`</span>.
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="gu">### 0.7 Need-Flag Classification</span>
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>Classify the work by what it NEEDS, not by file counts. Ask the four questions below
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>via AskUserQuestion (one concept per question, self-contained — each states WHY and
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>defines its terms inline). The answers set three boolean need-flags plus a size estimate.
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>The flags directly gate which develop phases run. There is no tier, no mechanical heuristic,
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>and no auto-exit.
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="gu">#### Step 1: Define the flags (at point of use)</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="k">-</span><span class="w"> </span><span class="gs">**needs_research**</span> — the work touches code, systems, or libraries you don&#39;t already understand, OR the requirements themselves are still fuzzy (what it should do, for whom, in which cases). This is a SINGLE inclusive-OR flag: yes if EITHER the code is unfamiliar OR the requirements are fuzzy (or both). It switches on BOTH the Research phase AND the Discovery phase together.
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="k">-</span><span class="w"> </span><span class="gs">**needs_design**</span> — the work involves a real architectural decision: a new structure, a choice between two valid approaches, or an interface/contract other code will depend on.
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="k">-</span><span class="w"> </span><span class="gs">**needs_infrastructure**</span> — the work adds a new third-party dependency, stands up new infrastructure/services, or changes a data schema (new tables/columns/fields or a migration). Answering yes IMPLIES <span class="sb">`needs_design`</span> (adding infra is itself an architectural decision); the wizard auto-sets <span class="sb">`needs_design=true`</span> and does NOT re-ask the design question.
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="k">-</span><span class="w"> </span><span class="gs">**size_estimate**</span> — <span class="sb">`small`</span> / <span class="sb">`medium`</span> / <span class="sb">`large`</span>. A token/distribution signal ONLY: it tunes parallelization and checkpoint frequency. It NEVER affects rigor or which gates run.
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>Options:
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="k">-</span><span class="w"> </span>Terminal questions (Recommended): I ask right here with a multiple-choice
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>  prompt. Fast, no context-switch. Best when the choice is quick to grasp.
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">-</span><span class="w"> </span>Interactive canvas page: I open a browser page that lays out the options with
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>  explanations and diagrams, and you submit your decision there; it flows back
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>  to me automatically. Best when a decision benefits from seeing it visually.
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>  (I still ask in the terminal for quick yes/no gates regardless.)
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="sb">```</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>Store all preferences in <span class="sb">`SESSION_PREFERENCES`</span>. Question 8 stores
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="sb">`SESSION_PREFERENCES.decision_surface ∈ {&quot;terminal&quot;, &quot;canvas&quot;}`</span>, default
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">`&quot;terminal&quot;`</span>.
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="gs">**Coupling rule:**</span> If <span class="sb">`worktree == &quot;per_parallel_track&quot;`</span>, automatically set <span class="sb">`parallelization = &quot;maximize&quot;`</span>.
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="gu">### 0.6 Detect Refactoring Mode</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>&lt;RULE&gt;Activate when: &quot;refactor&quot;, &quot;reorganize&quot;, &quot;extract&quot;, &quot;migrate&quot;, &quot;split&quot;, &quot;consolidate&quot; appear in request.&lt;/RULE&gt;
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="sb">```typescript</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">request</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/refactor|reorganize|extract|migrate|split|consolidate/i</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="w">  </span><span class="nx">SESSION_PREFERENCES</span><span class="p">.</span><span class="nx">refactoring_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="p">}</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="sb">```</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>Refactoring is NOT greenfield. Behavior preservation is the primary constraint. See Refactoring Mode section in <span class="sb">`/feature-implement`</span>.
 <a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="gu">#### Step 2: Ask the four questions (via AskUserQuestion)</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="gu">### 0.7 Need-Flag Classification</span>
 <a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>Ask each as a separate, self-contained question. Phrasing (verbatim):
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="gu">### Q-RESEARCH — &quot;Do we need to investigate before building?&quot;</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>Answer yes if any part of this work touches code, systems, or libraries you don&#39;t already understand,
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>OR if the requirements themselves are still fuzzy (what exactly should it do, for whom, in which
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>cases). Answering yes turns on the Research and Discovery phases, where I explore the codebase and we
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>nail down requirements before any design. Answer no only if you already understand both the code and
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>exactly what is wanted.
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>Suggested: <span class="sb">`Yes — investigate first`</span> / <span class="sb">`No — I understand the code and the requirements`</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="gu">### Q-DESIGN — &quot;Is there a real design decision to make?&quot;</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>Answer yes if this work involves an architectural choice: a new structure, picking between two valid
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>approaches, or defining an interface/contract other code will depend on. Answering yes turns on the
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>Design phase (a written design doc, reviewed before coding). Answer no for changes whose shape is
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>obvious — there is only one sensible way to do it.
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>Suggested: <span class="sb">`Yes — a design decision exists`</span> / <span class="sb">`No — the shape is obvious`</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="gu">### Q-INFRA — &quot;Does this add new dependencies, infrastructure, or schema changes?&quot;</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>Answer yes if the work pulls in a new third-party dependency, stands up new infrastructure/services,
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>or changes a data schema (new tables/columns/fields or a migration). Answering yes turns on the
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>Design phase (if not already on) and makes the implementation plan call out migration, rollout, and
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>dependency-pinning steps explicitly. Answer no if you&#39;re only changing existing code paths.
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>Suggested: <span class="sb">`Yes — new deps/infra/schema`</span> / <span class="sb">`No — existing code only`</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a><span class="gu">### Q-SIZE — &quot;Roughly how big is this?&quot; (signal only — does not change rigor)</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>Pick the rough scale. This only tunes how aggressively I parallelize and how often I checkpoint
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>progress; it never changes which review or design steps run.
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>Suggested: <span class="sb">`Small`</span> / <span class="sb">`Medium`</span> / <span class="sb">`Large`</span>
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="sb">```</span>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="gs">**Orthogonality:**</span> If Q-INFRA is answered yes, auto-set <span class="sb">`needs_design=true`</span> and do NOT ask Q-DESIGN separately. <span class="sb">`needs_research`</span> is independent of the other two (you can need design without prior research and vice versa). <span class="sb">`size_estimate`</span> is orthogonal to all flags and never gates a phase.
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a><span class="gu">#### Step 3: Route by Flags</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>Classify the work by what it NEEDS, not by file counts. Ask the four questions below
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>via AskUserQuestion (one concept per question, self-contained — each states WHY and
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>defines its terms inline). The answers set three boolean need-flags plus a size estimate.
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>The flags directly gate which develop phases run. There is no tier, no mechanical heuristic,
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>and no auto-exit.
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="gu">#### Step 1: Define the flags (at point of use)</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="k">-</span><span class="w"> </span><span class="gs">**needs_research**</span> — the work touches code, systems, or libraries you don&#39;t already understand, OR the requirements themselves are still fuzzy (what it should do, for whom, in which cases). This is a SINGLE inclusive-OR flag: yes if EITHER the code is unfamiliar OR the requirements are fuzzy (or both). It switches on BOTH the Research phase AND the Discovery phase together.
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="k">-</span><span class="w"> </span><span class="gs">**needs_design**</span> — the work involves a real architectural decision: a new structure, a choice between two valid approaches, or an interface/contract other code will depend on.
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="k">-</span><span class="w"> </span><span class="gs">**needs_infrastructure**</span> — the work adds a new third-party dependency, stands up new infrastructure/services, or changes a data schema (new tables/columns/fields or a migration). Answering yes IMPLIES <span class="sb">`needs_design`</span> (adding infra is itself an architectural decision); the wizard auto-sets <span class="sb">`needs_design=true`</span> and does NOT re-ask the design question.
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="k">-</span><span class="w"> </span><span class="gs">**size_estimate**</span> — <span class="sb">`small`</span> / <span class="sb">`medium`</span> / <span class="sb">`large`</span>. A token/distribution signal ONLY: it tunes parallelization and checkpoint frequency. It NEVER affects rigor or which gates run.
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="gu">#### Step 2: Ask the four questions (via AskUserQuestion)</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>Ask each as a separate, self-contained question. Phrasing (verbatim):
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="gu">### Q-RESEARCH — &quot;Do we need to investigate before building?&quot;</span>
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>Answer yes if any part of this work touches code, systems, or libraries you don&#39;t already understand,
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>OR if the requirements themselves are still fuzzy (what exactly should it do, for whom, in which
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>cases). Answering yes turns on the Research and Discovery phases, where I explore the codebase and we
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>nail down requirements before any design. Answer no only if you already understand both the code and
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>exactly what is wanted.
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>Suggested: <span class="sb">`Yes — investigate first`</span> / <span class="sb">`No — I understand the code and the requirements`</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a><span class="gu">### Q-DESIGN — &quot;Is there a real design decision to make?&quot;</span>
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>Answer yes if this work involves an architectural choice: a new structure, picking between two valid
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>approaches, or defining an interface/contract other code will depend on. Answering yes turns on the
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>Design phase (a written design doc, reviewed before coding). Answer no for changes whose shape is
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>obvious — there is only one sensible way to do it.
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>Suggested: <span class="sb">`Yes — a design decision exists`</span> / <span class="sb">`No — the shape is obvious`</span>
 <a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>
-<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>Resolve the three booleans, then route:
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Zero flags**</span> (<span class="sb">`needs_research=no`</span>, <span class="sb">`needs_design=no`</span>, <span class="sb">`needs_infrastructure=no`</span>) → <span class="gs">**fast path**</span>. Skip the Research, Discovery, Design, and Planning-as-a-phase steps; write a short inline plan (≤5 numbered steps) for the operator to confirm, then implement under the lighter review floor. develop STAYS RESIDENT — it never exits and never asks permission to stay. Announce (verbatim, do not ask):
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="k">  &gt; </span><span class="ge">&quot;This looks like a small, well-understood change with no research, design, or infrastructure work. I&#39;ll take the **fast path**: skip the research/discovery/design/planning phases, write a short inline plan for you to confirm, then implement it with the lighter review floor (code review + green-mirage, plus a test run if tests already cover the touched code). I stay in develop the whole time so review isn&#39;t skipped.&quot;</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>  Then log: <span class="sb">`&quot;Fast path: zero-flag change. Fewer phases, lighter floor, develop resident.&quot;`</span> and proceed.
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>
-<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Any flag set**</span> → run the phases gated by the flags (see the need-flag → phase mapping in the design doc §2.1) under the full review floor (see the review-floor policy in the design doc §3.2). More flags ⇒ more phases.
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>The need-flag → phase mapping (§2.1) and the need-flag → depth-gate mapping (§3.3) are the single source of truth; this command references them and does not restate their rows.
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>Store the resolved <span class="sb">`need_flags`</span> (<span class="sb">`needs_research`</span>, <span class="sb">`needs_design`</span>, <span class="sb">`needs_infrastructure`</span> booleans) and <span class="sb">`size_estimate`</span> in <span class="sb">`SESSION_PREFERENCES`</span>.
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="k">-</span><span class="w"> </span>Proceeding past 0.4 without all preferences collected (4 base + up to 3 conditional)
-<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a><span class="k">-</span><span class="w"> </span>Running wizard questions before checking 0.5 continuation signals
-<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a><span class="k">-</span><span class="w"> </span>Trusting session summary without artifact verification
-<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a><span class="k">-</span><span class="w"> </span>Proceeding without answering all four need-flag questions (Q-RESEARCH, Q-DESIGN, Q-INFRA, Q-SIZE; Q-DESIGN auto-resolved when Q-INFRA is yes)
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="k">-</span><span class="w"> </span>Auto-exiting develop on a zero-flag change (the fast path keeps develop resident)
-<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="k">-</span><span class="w"> </span>Skipping motivation clarification when request intent is ambiguous
-<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="k">-</span><span class="w"> </span>Asking wizard questions again when resuming (only re-ask the 4 preference questions)
-<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>
-<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>---
-<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a>
-<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="gu">## Phase 0 Complete</span>
-<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>
-<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>Before proceeding, verify:
-<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>
-<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a><span class="k">- [ ]</span> 0.5 Continuation check executed first (resume or fresh start determined)
-<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a><span class="k">- [ ]</span> Escape hatches detected (or confirmed none)
-<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a><span class="k">- [ ]</span> Motivation clarified (WHY)
-<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="k">- [ ]</span> Feature essence clarified (WHAT)
-<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="k">- [ ]</span> All 4 workflow preferences collected and stored in SESSION_PREFERENCES
-<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="k">- [ ]</span> Dialectic mode and level selected (if dialectic != none)
-<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="k">- [ ]</span> Token enforcement level selected
-<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a><span class="k">- [ ]</span> Refactoring mode detected if applicable
-<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="k">- [ ]</span> All four need-flag questions answered; <span class="sb">`need_flags`</span> + <span class="sb">`size_estimate`</span> stored in SESSION_PREFERENCES
-<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a><span class="k">- [ ]</span> Flag routing determined (fast path vs. flag-gated phases)
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a><span class="gu">### Q-INFRA — &quot;Does this add new dependencies, infrastructure, or schema changes?&quot;</span>
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>Answer yes if the work pulls in a new third-party dependency, stands up new infrastructure/services,
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>or changes a data schema (new tables/columns/fields or a migration). Answering yes turns on the
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>Design phase (if not already on) and makes the implementation plan call out migration, rollout, and
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>dependency-pinning steps explicitly. Answer no if you&#39;re only changing existing code paths.
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>Suggested: <span class="sb">`Yes — new deps/infra/schema`</span> / <span class="sb">`No — existing code only`</span>
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="gu">### Q-SIZE — &quot;Roughly how big is this?&quot; (signal only — does not change rigor)</span>
+<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>Pick the rough scale. This only tunes how aggressively I parallelize and how often I checkpoint
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>progress; it never changes which review or design steps run.
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>Suggested: <span class="sb">`Small`</span> / <span class="sb">`Medium`</span> / <span class="sb">`Large`</span>
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="sb">```</span>
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="gs">**Orthogonality:**</span> If Q-INFRA is answered yes, auto-set <span class="sb">`needs_design=true`</span> and do NOT ask Q-DESIGN separately. <span class="sb">`needs_research`</span> is independent of the other two (you can need design without prior research and vice versa). <span class="sb">`size_estimate`</span> is orthogonal to all flags and never gates a phase.
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a><span class="gu">#### Step 3: Route by Flags</span>
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>
+<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>Resolve the three booleans, then route:
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Zero flags**</span> (<span class="sb">`needs_research=no`</span>, <span class="sb">`needs_design=no`</span>, <span class="sb">`needs_infrastructure=no`</span>) → <span class="gs">**fast path**</span>. Skip the Research, Discovery, Design, and Planning-as-a-phase steps; write a short inline plan (≤5 numbered steps) for the operator to confirm, then implement under the lighter review floor. develop STAYS RESIDENT — it never exits and never asks permission to stay. Announce (verbatim, do not ask):
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a>
+<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="k">  &gt; </span><span class="ge">&quot;This looks like a small, well-understood change with no research, design, or infrastructure work. I&#39;ll take the **fast path**: skip the research/discovery/design/planning phases, write a short inline plan for you to confirm, then implement it with the lighter review floor (code review + green-mirage, plus a test run if tests already cover the touched code). I stay in develop the whole time so review isn&#39;t skipped.&quot;</span>
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a>
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a>  Then log: <span class="sb">`&quot;Fast path: zero-flag change. Fewer phases, lighter floor, develop resident.&quot;`</span> and proceed.
+<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Any flag set**</span> → run the phases gated by the flags (see the need-flag → phase mapping in the design doc §2.1) under the full review floor (see the review-floor policy in the design doc §3.2). More flags ⇒ more phases.
+<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a>
+<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>The need-flag → phase mapping (§2.1) and the need-flag → depth-gate mapping (§3.3) are the single source of truth; this command references them and does not restate their rows.
+<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>Store the resolved <span class="sb">`need_flags`</span> (<span class="sb">`needs_research`</span>, <span class="sb">`needs_design`</span>, <span class="sb">`needs_infrastructure`</span> booleans) and <span class="sb">`size_estimate`</span> in <span class="sb">`SESSION_PREFERENCES`</span>.
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a><span class="k">-</span><span class="w"> </span>Proceeding past 0.4 without all preferences collected (4 base + up to 3 conditional)
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a><span class="k">-</span><span class="w"> </span>Running wizard questions before checking 0.5 continuation signals
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="k">-</span><span class="w"> </span>Trusting session summary without artifact verification
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a><span class="k">-</span><span class="w"> </span>Proceeding without answering all four need-flag questions (Q-RESEARCH, Q-DESIGN, Q-INFRA, Q-SIZE; Q-DESIGN auto-resolved when Q-INFRA is yes)
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a><span class="k">-</span><span class="w"> </span>Auto-exiting develop on a zero-flag change (the fast path keeps develop resident)
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a><span class="k">-</span><span class="w"> </span>Skipping motivation clarification when request intent is ambiguous
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a><span class="k">-</span><span class="w"> </span>Asking wizard questions again when resuming (only re-ask the 4 preference questions)
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a>
-<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a>If ANY unchecked: Complete Phase 0. Do NOT proceed.
+<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a>---
 <a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a>
-<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="gs">**Next (by flags):**</span>
-<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="k">-</span><span class="w"> </span>Zero flags: fast path — short inline plan, then implement under the lighter review floor (develop resident)
-<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="k">-</span><span class="w"> </span>Any flag set: run the flag-gated phases under the full review floor — start with <span class="sb">`/feature-research`</span> when <span class="sb">`needs_research`</span>, else jump to the first gated phase (<span class="sb">`/feature-design`</span> for <span class="sb">`needs_design`</span>/<span class="sb">`needs_infrastructure`</span>)
+<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="gu">## Phase 0 Complete</span>
+<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a>
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a>Before proceeding, verify:
 <a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a>
-<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>Configuration is the foundation every subsequent phase builds on. Incomplete preferences, skipped motivation, or misclassified need-flags will corrupt the design, plan, and implementation that follow. Every shortcut here multiplies into rework downstream. Do not proceed until Phase 0 is complete.
-<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="k">- [ ]</span> 0.5 Continuation check executed first (resume or fresh start determined)
+<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a><span class="k">- [ ]</span> Escape hatches detected (or confirmed none)
+<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="k">- [ ]</span> Motivation clarified (WHY)
+<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a><span class="k">- [ ]</span> Feature essence clarified (WHAT)
+<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a><span class="k">- [ ]</span> All 4 workflow preferences collected and stored in SESSION_PREFERENCES
+<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a><span class="k">- [ ]</span> Dialectic mode and level selected (if dialectic != none)
+<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a><span class="k">- [ ]</span> Token enforcement level selected
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="k">- [ ]</span> Refactoring mode detected if applicable
+<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="k">- [ ]</span> All four need-flag questions answered; <span class="sb">`need_flags`</span> + <span class="sb">`size_estimate`</span> stored in SESSION_PREFERENCES
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a><span class="k">- [ ]</span> Flag routing determined (fast path vs. flag-gated phases)
+<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a>
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a>If ANY unchecked: Complete Phase 0. Do NOT proceed.
+<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a>
+<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a><span class="gs">**Next (by flags):**</span>
+<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a><span class="k">-</span><span class="w"> </span>Zero flags: fast path — short inline plan, then implement under the lighter review floor (develop resident)
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="k">-</span><span class="w"> </span>Any flag set: run the flag-gated phases under the full review floor — start with <span class="sb">`/feature-research`</span> when <span class="sb">`needs_research`</span>, else jump to the first gated phase (<span class="sb">`/feature-design`</span> for <span class="sb">`needs_design`</span>/<span class="sb">`needs_infrastructure`</span>)
+<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>Configuration is the foundation every subsequent phase builds on. Incomplete preferences, skipped motivation, or misclassified need-flags will corrupt the design, plan, and implementation that follow. Every shortcut here multiplies into rework downstream. Do not proceed until Phase 0 is complete.
+<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
