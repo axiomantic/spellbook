@@ -580,8 +580,11 @@ def _sweep_stray_fswatch(inbox: Path) -> None:
             text=True,
             timeout=5.0,
         ).stdout
-    except (OSError, subprocess.SubprocessError):
-        return  # no ps / permission / timeout: advisory, swallow
+    except (OSError, ValueError, subprocess.SubprocessError):
+        # no ps / permission / timeout, or a non-UTF-8 cmdline that makes
+        # text=True decoding raise UnicodeDecodeError (a ValueError subclass):
+        # advisory reaper, swallow and skip the sweep.
+        return
     needle = str(inbox)
     for line in out.splitlines():
         line = line.strip()
