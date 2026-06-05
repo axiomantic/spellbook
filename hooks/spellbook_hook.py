@@ -943,7 +943,7 @@ def _agent2agent_notify_for_prompt(data: dict) -> str | None:
 
 
 def _bg_agent_alive(agent_id, state) -> bool:
-    """FAIL-SAFE-DEAD liveness probe of the bg watch-chain Task agent.
+    """FAIL-SAFE-DEAD liveness probe of the bg watch-chain watcher.
 
     Shares the mtime+90s-window probe with
     ``skills/agent2agent/scripts/agent2agent.py::cmd_open_state``
@@ -1077,7 +1077,8 @@ def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
     # No message body is ever read (IR-3): a crafted body cannot spoof the hint.
     # name_dir is the per-name root <bus>/<name>; inbox and pending are SIBLINGS
     # under it (inbox = name_dir/"inbox", pending = name_dir/"pending"), matching
-    # agent2agent.py::inbox_dir / ::pending_dir. The hint mentions the inbox path.
+    # agent2agent.py::inbox_dir / ::pending_dir. The count spans BOTH, so the hint
+    # says "N message(s) waiting" without naming a location.
     name_dir = bus / name
     age_s = None
     output_path = state.get("output_file")
@@ -1093,7 +1094,10 @@ def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
             age_s = None
     count = _a2a_count_pending(name_dir)
     age_clause = f"heartbeat ~{age_s}s stale" if age_s is not None else "heartbeat stale"
-    count_clause = f"; {count} message(s) waiting in inbox" if count > 0 else ""
+    # NOTE: count sums BOTH inbox *.json files AND staged pending/<batch>/ files
+    # (see _a2a_count_pending), so the clause says "waiting" WITHOUT a location —
+    # claiming "in inbox" would be false for messages already staged in pending/.
+    count_clause = f"; {count} message(s) waiting" if count > 0 else ""
     return (
         f"[agent2agent] watch chain looks dropped for '{name}' ({age_clause}"
         f"{count_clause}). Likely session compaction, process death, or a laptop "

@@ -453,7 +453,9 @@ def _expected_orphan_hint(name: str, *, age_s: int | None, count: int) -> str:
     rebuilt here from (name, age_s, count).
     """
     age_clause = f"heartbeat ~{age_s}s stale" if age_s is not None else "heartbeat stale"
-    count_clause = f"; {count} message(s) waiting in inbox" if count > 0 else ""
+    # Mirror of production: count spans inbox + staged pending/, so the clause is
+    # location-less ("waiting"), never "in inbox" (would be false for pending/).
+    count_clause = f"; {count} message(s) waiting" if count > 0 else ""
     return (
         f"[agent2agent] watch chain looks dropped for '{name}' ({age_clause}"
         f"{count_clause}). Likely session compaction, process death, or a laptop "
@@ -700,7 +702,7 @@ class TestOrphanedChainCheck:
             {"session_id": "sess-leakcheck"}
         )
         # Missing heartbeat -> age_clause = bare 'heartbeat stale'; one inbox
-        # *.json message -> count clause says "1 message(s) waiting in inbox".
+        # *.json message -> count clause says "1 message(s) waiting".
         # The whole hint is static (the body is only COUNTED, never read), so
         # exact equality both pins the count clause AND proves the secret body
         # cannot appear: the expected string is constructed without it.
@@ -714,7 +716,7 @@ class TestOrphanedChainCheck:
     ):
         """Stale-but-present heartbeat + 2 inbox messages -> the enriched hint
         names the bound name, carries a 'heartbeat ~120s stale' age token, and
-        a '2 message(s) waiting in inbox' count clause; the message bodies are
+        a '2 message(s) waiting' count clause; the message bodies are
         only counted, never read (design §7.3, §12.6).
 
         time.time is frozen so the age token (int(now - mtime)) is exactly 120
