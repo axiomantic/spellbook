@@ -990,23 +990,68 @@ def _bg_agent_alive(agent_id, state) -> bool:
     return age < 90.0
 
 
+def _a2a_count_pending(name_dir: Path) -> int:
+    """Stat/enumerate-only count of pending messages for an orphan hint, over
+    TWO sibling locations summed (design §7.3). ``name_dir`` is the per-name
+    root ``<bus>/<name>`` (= agent2agent.py::name_dir(name)); inbox and pending
+    are SIBLINGS under it, NOT nested:
+        inbox   = name_dir / "inbox"     (agent2agent.py::inbox_dir)
+        pending = name_dir / "pending"   (agent2agent.py::pending_dir)
+    They are computed INDEPENDENTLY here — pending is NEVER inbox/"pending".
+    Predicate matches agent2agent.py::_list_inbox (a *.json file, not a dotfile)
+    for the inbox, and the drain filter (non-dotfile) for pending batches.
+    Bodies are NEVER opened (IR-3). Any error yields a best-effort
+    partial/zero count.
+    """
+    total = 0
+    inbox = name_dir / "inbox"
+    try:
+        for entry in inbox.iterdir():
+            if (
+                entry.is_file()
+                and entry.name.endswith(".json")
+                and not entry.name.startswith(".")
+            ):
+                total += 1
+    except OSError:
+        pass
+    pending_root = name_dir / "pending"  # SIBLING of inbox, not inbox/"pending"
+    try:
+        batches = [d for d in pending_root.iterdir() if d.is_dir()]
+    except OSError:
+        batches = []
+    for batch in batches:
+        try:
+            for f in batch.iterdir():
+                if f.is_file() and not f.name.startswith("."):
+                    total += 1
+        except OSError:
+            continue
+    return total
+
+
 def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
     """SessionStart / UserPromptSubmit backstop: detect a dropped watch chain.
 
-    Returns a static-template re-arm hint string when the current session
-    has an open watch-chain record (``<bus>/.open/<sid>``) whose bg agent
-    is no longer alive (per ``_bg_agent_alive`` / T4). Returns ``None`` in
-    every other case (silent path: no state, alive agent, malformed JSON,
-    invalid bound name, etc.).
+    Returns an enriched re-arm hint string when the current session has an
+    open watch-chain record (``<bus>/.open/<sid>``) whose bg watcher is no
+    longer alive (per ``_bg_agent_alive`` / T4). The hint carries the
+    heartbeat age and a stat-only pending-message count (NEVER a body).
+    Returns ``None`` in every other case (silent path: no state, alive
+    watcher, malformed JSON, invalid bound name, etc.).
 
     SECURITY: this function ONLY:
       - reads JSON from ``.open/<sid>`` (a file written by THIS user's
         slash command);
-      - stats the bg-agent transcript path captured in that JSON;
-      - emits a static template that includes the bound name (already
-        public to the operator).
+      - stats the bg watcher's ``.watcher.heartbeat`` path captured in
+        that JSON (for the age token);
+      - stat-COUNTS pending messages via ``_a2a_count_pending`` (no body
+        is ever opened — IR-3);
+      - emits a template that includes the bound name (already public to
+        the operator), the heartbeat age, and the pending count.
     NEVER calls ``read``, ``peek``, ``check``, or anything that could
-    surface message bodies. The transcript file is stat'd, NOT read.
+    surface message bodies. The heartbeat file is stat'd, NOT read; the
+    pending count is an enumerate-only stat, never a body read.
     """
     session_id = data.get("session_id", "") or ""
     if not session_id or not _A2A_SESSION_ID_RE.match(session_id):
@@ -1025,9 +1070,28 @@ def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
         return None
     if _bg_agent_alive(agent_id, state):
         return None
+    # Enriched hint (design §7.3): heartbeat age + stat-only pending count.
+    # No message body is ever read (IR-3): a crafted body cannot spoof the hint.
+    # name_dir is the per-name root <bus>/<name>; inbox and pending are SIBLINGS
+    # under it (inbox = name_dir/"inbox", pending = name_dir/"pending"), matching
+    # agent2agent.py::inbox_dir / ::pending_dir. The hint mentions the inbox path.
+    name_dir = bus / name
+    age_s = None
+    output_path = state.get("output_file")
+    if output_path:
+        try:
+            age_s = int(time.time() - Path(output_path).stat().st_mtime)
+        except OSError:
+            age_s = None
+    count = _a2a_count_pending(name_dir)
+    age_clause = f"heartbeat ~{age_s}s stale" if age_s is not None else "heartbeat stale"
+    count_clause = f"; {count} message(s) waiting in inbox" if count > 0 else ""
     return (
-        f"[agent2agent] watch chain dropped (likely session compaction or "
-        f"process death). Run `/a2a open {name}` to re-arm the inbox watcher."
+        f"[agent2agent] watch chain looks dropped for '{name}' ({age_clause}"
+        f"{count_clause}). Likely session compaction, process death, or a laptop "
+        f"wake. Run `/a2a open {name}` to re-arm; if the watcher is in fact still "
+        f"alive you'll see \"watcher actually alive, no action needed\" and "
+        f"nothing else changes."
     )
 
 

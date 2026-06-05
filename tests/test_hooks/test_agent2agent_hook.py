@@ -441,7 +441,26 @@ def _seed_open_state(
     return state_path
 
 
-REARM_HINT_PREFIX = "[agent2agent] watch chain dropped"
+REARM_HINT_PREFIX = "[agent2agent] watch chain looks dropped"
+
+
+def _expected_orphan_hint(name: str, *, age_s: int | None, count: int) -> str:
+    """Reconstruct the exact enriched orphan hint produced by
+    ``_agent2agent_check_orphaned_chain`` for a DEAD watcher, using the SAME
+    age/count formatting logic as production (design §7.3). This is the
+    independently-computed expected value for GOLD exact-equality assertions —
+    it is NOT a call into production code (no tautology): the clauses are
+    rebuilt here from (name, age_s, count).
+    """
+    age_clause = f"heartbeat ~{age_s}s stale" if age_s is not None else "heartbeat stale"
+    count_clause = f"; {count} message(s) waiting in inbox" if count > 0 else ""
+    return (
+        f"[agent2agent] watch chain looks dropped for '{name}' ({age_clause}"
+        f"{count_clause}). Likely session compaction, process death, or a laptop "
+        f"wake. Run `/a2a open {name}` to re-arm; if the watcher is in fact still "
+        f"alive you'll see \"watcher actually alive, no action needed\" and "
+        f"nothing else changes."
+    )
 
 
 class TestBgAgentAlive:
@@ -588,7 +607,13 @@ class TestOrphanedChainCheck:
         assert result is None
 
     def test_dead_emits_rearm_hint(self, tmp_path, monkeypatch):
-        """State present + agent dead -> returns the static-template hint."""
+        """State present + watcher dead (missing heartbeat) -> enriched hint.
+
+        Missing heartbeat path -> stat() raises -> age_clause is the bare
+        'heartbeat stale' (no age token); no inbox messages -> count clause
+        omitted. The whole hint is therefore static and asserted by exact
+        equality (design §7.3).
+        """
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
         # output_file path that does NOT exist -> FAIL-SAFE-DEAD -> orphan.
         missing_transcript = tmp_path / "missing.output"
@@ -599,11 +624,7 @@ class TestOrphanedChainCheck:
         result = spellbook_hook._agent2agent_check_orphaned_chain(
             {"session_id": "sess-dead"}
         )
-        expected = (
-            "[agent2agent] watch chain dropped (likely session compaction or "
-            "process death). Run `/a2a open alice` to re-arm the inbox watcher."
-        )
-        assert result == expected
+        assert result == _expected_orphan_hint("alice", age_s=None, count=0)
 
     def test_invalid_session_id_silent(self, tmp_path, monkeypatch):
         """Empty / bad session_id short-circuits before any IO."""
@@ -668,11 +689,73 @@ class TestOrphanedChainCheck:
         result = spellbook_hook._agent2agent_check_orphaned_chain(
             {"session_id": "sess-leakcheck"}
         )
-        # The hint must be returned (orphan was detected).
-        assert result is not None
-        assert result.startswith(REARM_HINT_PREFIX)
-        # Critically: the secret body must NOT appear in the hint.
+        # Missing heartbeat -> age_clause = bare 'heartbeat stale'; one inbox
+        # *.json message -> count clause says "1 message(s) waiting in inbox".
+        # The whole hint is static (the body is only COUNTED, never read), so
+        # exact equality both pins the count clause AND proves the secret body
+        # cannot appear: the expected string is constructed without it.
+        expected = _expected_orphan_hint("alice", age_s=None, count=1)
+        assert result == expected
+        # Belt-and-suspenders: the distinctive body marker is absent.
         assert secret not in result
+
+    def test_orphan_hint_includes_count_and_heartbeat_age(
+        self, tmp_path, monkeypatch
+    ):
+        """Stale-but-present heartbeat + 2 inbox messages -> the enriched hint
+        names the bound name, carries a 'heartbeat ~120s stale' age token, and
+        a '2 message(s) waiting in inbox' count clause; the message bodies are
+        only counted, never read (design §7.3, §12.6).
+
+        time.time is frozen so the age token (int(now - mtime)) is exactly 120
+        — production and the expected value share one clock, giving GOLD exact
+        equality with zero clock-race flake.
+        """
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        # inbox is two-level: <bus>/<name>/inbox.
+        inbox = tmp_path / "alice" / "inbox"
+        inbox.mkdir(parents=True)
+        # Heartbeat with a fixed mtime; freeze now = mtime + 120 -> age_s == 120.
+        hb = inbox / ".watcher.heartbeat"
+        hb.write_text("", encoding="utf-8")
+        mtime = 1_700_000_000.0
+        os.utime(hb, (mtime, mtime))
+        frozen_now = mtime + 120.0
+        monkeypatch.setattr(spellbook_hook.time, "time", lambda: frozen_now)
+        # Two inbox messages with secret bodies that must NOT leak.
+        (inbox / "001.json").write_text('{"body":"SECRET-AAA"}', encoding="utf-8")
+        (inbox / "002.json").write_text('{"body":"SECRET-BBB"}', encoding="utf-8")
+        _seed_open_state(
+            tmp_path, "11111111-1111-1111-1111-111111111111",
+            name="alice", agent_id="agent-x", output_file=hb,
+        )
+        result = spellbook_hook._agent2agent_check_orphaned_chain(
+            {"session_id": "11111111-1111-1111-1111-111111111111"}
+        )
+        assert result == _expected_orphan_hint("alice", age_s=120, count=2)
+
+    def test_orphan_hint_zero_messages_omits_count_clause(
+        self, tmp_path, monkeypatch
+    ):
+        """Empty inbox -> the hint omits the 'N message(s) waiting' clause while
+        still carrying the heartbeat-age token (design §7.3, §12.6)."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        inbox = tmp_path / "alice" / "inbox"  # two-level
+        inbox.mkdir(parents=True)
+        hb = inbox / ".watcher.heartbeat"
+        hb.write_text("", encoding="utf-8")
+        mtime = 1_700_000_000.0
+        os.utime(hb, (mtime, mtime))
+        frozen_now = mtime + 120.0
+        monkeypatch.setattr(spellbook_hook.time, "time", lambda: frozen_now)
+        _seed_open_state(
+            tmp_path, "22222222-2222-2222-2222-222222222222",
+            name="alice", agent_id="agent-x", output_file=hb,
+        )
+        result = spellbook_hook._agent2agent_check_orphaned_chain(
+            {"session_id": "22222222-2222-2222-2222-222222222222"}
+        )
+        assert result == _expected_orphan_hint("alice", age_s=120, count=0)
 
 
 class TestSessionStartOrphanWiring:
@@ -695,10 +778,7 @@ class TestSessionStartOrphanWiring:
             "session_id": "sess-orphan-startup",
             "source": "startup",
         })
-        expected_hint = (
-            "[agent2agent] watch chain dropped (likely session compaction or "
-            "process death). Run `/a2a open alice` to re-arm the inbox watcher."
-        )
+        expected_hint = _expected_orphan_hint("alice", age_s=None, count=0)
         assert result == {
             "hookSpecificOutput": {
                 "hookEventName": "SessionStart",
@@ -742,10 +822,7 @@ class TestSessionStartOrphanWiring:
                 "cwd": str(tmp_path),
             })
         m_mcp.assert_call(args=("workflow_state_load", IsInstance(dict)), kwargs={})
-        expected_hint = (
-            "[agent2agent] watch chain dropped (likely session compaction or "
-            "process death). Run `/a2a open alice` to re-arm the inbox watcher."
-        )
+        expected_hint = _expected_orphan_hint("alice", age_s=None, count=0)
         fallback_text = (
             "Session resumed after compaction. Workflow state could not "
             "be loaded. Re-read any planning documents, check your todo "
@@ -811,10 +888,7 @@ class TestUserPromptSubmitOrphanWiring:
                 "cwd": str(tmp_path),
             })
         m_notify.assert_call(args=(IsInstance(dict),), kwargs={})
-        expected_hint = (
-            "[agent2agent] watch chain dropped (likely session compaction or "
-            "process death). Run `/a2a open alice` to re-arm the inbox watcher."
-        )
+        expected_hint = _expected_orphan_hint("alice", age_s=None, count=0)
         assert outputs == [expected_hint]
 
     def test_no_orphan_no_hint_in_outputs(self, tmp_path, monkeypatch):
