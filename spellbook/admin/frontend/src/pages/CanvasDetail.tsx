@@ -1,8 +1,11 @@
+import { useCallback, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useCanvas } from '../hooks/useCanvases'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { PageLayout } from '../components/layout/PageLayout'
 import { CanvasRender } from '../canvas/render'
+import { CanvasDecisionContext } from '../canvas/CanvasDecisionContext'
+import { useDecisionSubmit } from '../hooks/useDecisionSubmit'
 
 /**
  * Canvas detail page (`/admin/canvas/:name`). Loads a single canvas via
@@ -17,6 +20,35 @@ import { CanvasRender } from '../canvas/render'
 export function CanvasDetail() {
   const { name } = useParams<{ name: string }>()
   const { data, isLoading, isError, error } = useCanvas(name ?? null)
+  // Hoisted decision-submit state (§8.1 / RT-6). Instantiated above the
+  // early returns to satisfy the Rules of Hooks; the mutation only fires on
+  // an explicit `mutate()`, so an empty name pre-load is inert.
+  const submit = useDecisionSubmit(name ?? '')
+
+  // Controlled re-auth (§8.4 / D1). Hoisted here so both the <choice> and
+  // <approve> leaves share one implementation. A plain reload hands control to
+  // the existing login/handoff flow; the decision is server-side and durable,
+  // so the still-`pending` control re-renders after re-auth and the operator
+  // re-submits. Stable identity (no deps) keeps the memoized context value from
+  // churning on every render.
+  const reauthenticate = useCallback(() => {
+    window.location.reload()
+  }, [])
+
+  // Memoize the context value so the provider only hands a new identity to
+  // CanvasRender's shortcode consumers when an observable input actually
+  // changes — not on every CanvasDetail render. Hoisted above the early
+  // returns to satisfy the Rules of Hooks; `data` is undefined until loaded,
+  // and the value is only consumed in the happy-path branch below.
+  const decisionValue = useMemo(
+    () => ({
+      canvasName: data?.name ?? '',
+      decision: data?.decision ?? null,
+      submit,
+      reauthenticate,
+    }),
+    [data?.name, data?.decision, submit, reauthenticate],
+  )
 
   if (isLoading) {
     return (
@@ -74,8 +106,32 @@ export function CanvasDetail() {
         )}
 
         <div className="text-text-primary text-sm leading-relaxed">
-          <CanvasRender content={data.content} />
+          <CanvasDecisionContext.Provider value={decisionValue}>
+            <CanvasRender content={data.content} />
+          </CanvasDecisionContext.Provider>
         </div>
+
+        {/* In-flight submission handle (§8.2). A stable top-level marker so a
+            content-invalidation refetch (which remounts CanvasRender's leaves)
+            cannot drop the hoisted submitting state (RT-6). */}
+        {submit.status === 'pending' && (
+          <p
+            role="status"
+            data-testid="decision-submitting"
+            className="mt-3 font-mono text-xs uppercase tracking-widest text-accent-yellow"
+          >
+            Submitting…
+          </p>
+        )}
+
+        {/* Free-text echo (§8.3 / DA-10). The operator's own typed note,
+            rendered as an escaped plain-text node — NEVER through CanvasRender
+            / react-markdown / rehype-raw — so an injected <script> is inert. */}
+        {submit.status === 'success' && submit.lastFreeText !== null && (
+          <p className="mt-3 text-sm text-text-secondary" data-testid="decision-free-text-echo">
+            {submit.lastFreeText}
+          </p>
+        )}
       </div>
     </PageLayout>
   )

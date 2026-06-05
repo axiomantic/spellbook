@@ -20,7 +20,7 @@ Flag as **high severity** if the version bump or changelog entry is missing. Fla
 ## General Review Focus
 
 - Python code should follow PEP 8 and use type hints
-- All MCP tool functions must have `@mcp.tool()` and `@inject_recovery_context` decorators
+- All MCP tool functions must have the `@mcp.tool()` decorator
 - Silent `except Exception: pass` blocks should log the exception
 - Prefer top-level imports over function-level imports unless there is a circular dependency
 

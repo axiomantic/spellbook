@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import mermaid from 'mermaid'
 
 interface MermaidImplProps {
@@ -31,7 +31,12 @@ function ensureInitialized() {
 export default function MermaidImpl({ source }: MermaidImplProps) {
   const [svg, setSvg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const idRef = useRef(`mermaid-${Math.random().toString(36).slice(2, 10)}`)
+  // `useId()` yields a stable, render-pure unique id. Mermaid uses this value
+  // to build SVG element ids, so strip the colons React emits (invalid in CSS
+  // selectors / SVG id refs) to keep the `mermaid-<token>` shape the renderer
+  // expects.
+  const rawId = useId()
+  const idRef = useRef(`mermaid-${rawId.replace(/:/g, '')}`)
 
   useEffect(() => {
     ensureInitialized()
@@ -82,7 +87,6 @@ export default function MermaidImpl({ source }: MermaidImplProps) {
   return (
     <div
       data-testid="mermaid-svg"
-      // eslint-disable-next-line react/no-danger
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   )

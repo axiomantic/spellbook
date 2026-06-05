@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Canvas two-way decisions.** Canvas pages become a decision surface: the
+  agent declares a decision (`canvas_decision_open`), the operator answers in
+  the browser via activated `<choice>`/`<approve>` controls, and the answer
+  flows back into the live session (`canvas_decision_await` — a bounded
+  long-poll with event-bus fast path over a durable inbox with first-wins
+  claim and exactly-once delivery, surviving daemon restarts). Adds a new
+  authenticated submit endpoint, the `canvas-decision` skill (when-to-use
+  boundary, main-context-only), a canvas skill doctrine rewrite, and a develop
+  `decision_surface` preference (feature-config Question 8, default `terminal`)
+  honored at the design and plan approval gates.
 - **`/dedupe` Stage 5.5 — structural template floor.** New
   `skills/dedupe/references/template-headings.md` allowlist short-circuits
   intra-bucket pairs whose `bucket_key` matches a slot in spellbook's

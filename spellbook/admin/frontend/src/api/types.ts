@@ -1,3 +1,5 @@
+import type { DecisionDetail } from '../canvas/CanvasDecisionContext'
+
 // Pagination
 export interface PaginatedResponse {
   total: number
@@ -334,6 +336,10 @@ export interface CanvasDetail {
   page: string
   content: string
   bytes: number
+  // Projected pending decision (design §3.0 / §15 step 1). Present on the
+  // GET detail response when a decision is live; `await_binding`/`free_text`
+  // are never included. Additive; old clients ignore it (§13).
+  decision?: DecisionDetail | null
 }
 
 export interface CanvasErrorResponse {

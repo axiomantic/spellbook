@@ -14,6 +14,28 @@ vi.mock('../shortcodes/ChartImpl', () => ({
 // Import AFTER the mocks above so `Diagram` / `Chart` pick up the mocked
 // dynamic imports.
 import { CanvasRender } from '../render'
+import { CanvasDecisionContext } from '../CanvasDecisionContext'
+import type { CanvasDecisionValue } from '../CanvasDecisionContext'
+import type { ReactNode } from 'react'
+
+// In production `CanvasRender` is always wrapped in `CanvasDecisionProvider`
+// (CanvasDetail, §8.1). The activated <choice>/<approve> shortcodes call
+// `useCanvasDecision()`, which throws outside a provider, so the dispatch
+// tests for those two render inside a no-live-decision provider (decision:
+// null → controls render disabled).
+const noDecisionValue: CanvasDecisionValue = {
+  canvasName: 'plan-x',
+  decision: null,
+  submit: { mutate: () => {}, status: 'idle', error: null, lastFreeText: null },
+  reauthenticate: () => {},
+}
+function withProvider(ui: ReactNode) {
+  return (
+    <CanvasDecisionContext.Provider value={noDecisionValue}>
+      {ui}
+    </CanvasDecisionContext.Provider>
+  )
+}
 
 describe('CanvasRender — shortcode dispatch pipeline', () => {
   it('renders plain markdown headings via remark-gfm', () => {
@@ -60,22 +82,23 @@ describe('CanvasRender — shortcode dispatch pipeline', () => {
     expect(screen.getByText('just-content')).toBeInTheDocument()
   })
 
-  it('dispatches <choice> to the v2-disabled preview', () => {
+  it('dispatches <choice> to the activated control (disabled with no live decision)', () => {
     const content =
       '<choice id="c1" prompt="Pick one" options=\'[{"value":"a","label":"Alpha"},{"value":"b","label":"Beta"}]\'></choice>'
-    render(<CanvasRender content={content} />)
+    render(withProvider(<CanvasRender content={content} />))
     expect(screen.getByTestId('choice')).toBeInTheDocument()
     expect(screen.getByText('Pick one')).toBeInTheDocument()
-    expect(screen.getByText('Reserved for v2')).toBeInTheDocument()
+    // No live decision matches id → control is disabled.
     expect(screen.getByLabelText('Alpha')).toBeDisabled()
   })
 
-  it('dispatches <approve> to the v2-disabled preview', () => {
+  it('dispatches <approve> to the activated control (disabled with no live decision)', () => {
     const content =
       '<approve id="a1" prompt="Ship it?" confirm_label="Yes" decline_label="No"></approve>'
-    render(<CanvasRender content={content} />)
+    render(withProvider(<CanvasRender content={content} />))
     expect(screen.getByTestId('approve')).toBeInTheDocument()
     expect(screen.getByText('Ship it?')).toBeInTheDocument()
+    // No live decision matches id → confirm/decline buttons are disabled.
     expect(screen.getByText('Yes')).toBeDisabled()
     expect(screen.getByText('No')).toBeDisabled()
   })

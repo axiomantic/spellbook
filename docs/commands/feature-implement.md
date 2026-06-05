@@ -441,6 +441,20 @@ Task (or subagent simulation):
 
 ### 3.3 Approval Gate
 
+**Decision surface (honors `SESSION_PREFERENCES.decision_surface`):** the
+plan-approval prompt is presented via `AskUserQuestion` when
+`decision_surface == "terminal"` (default). When `decision_surface == "canvas"`
+AND this approval meets the boundary in the "When to Use (testable boundary)"
+section of the canvas-decision skill (context-heavy: several plan options or
+trade-offs, a diagram that aids the call, or a hard-to-reverse plan
+commitment), invoke the `canvas-decision` skill instead — render the
+plan/one-pager approval as a canvas page and await the operator's submission.
+This wraps the gate; it does NOT change it: the never-auto-proceed contract
+holds, and quick yes/no acknowledgments stay terminal even under `canvas`. Map
+the submitted decision to the gate's outcomes — the approve/affirmative value →
+APPROVE (proceed); declined/reject value → ITERATE (return to 3.1/3.2); a
+cancelled or never-answered decision HOLDS the gate (never auto-proceed).
+
 **Interactive mode:** Present findings to user. Ask: APPROVE (proceed to 3.4.5) or ITERATE (return to 3.1/3.2).
 **Autonomous mode:** If findings are critical/important → fix automatically (dispatch executing-plans subagent). If minor → proceed.
 

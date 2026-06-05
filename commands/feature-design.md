@@ -153,6 +153,20 @@ Task:
 
 ### 2.3 Approval Gate
 
+**Decision surface (honors `SESSION_PREFERENCES.decision_surface`):** the
+design-approval prompt below is presented via `AskUserQuestion` when
+`decision_surface == "terminal"` (default). When `decision_surface == "canvas"`
+AND this approval meets the boundary in the "When to Use (testable boundary)"
+section of the canvas-decision skill (context-heavy: multiple options with
+non-obvious trade-offs, prose/diagram aids, or a hard-to-reverse design
+choice), invoke the `canvas-decision` skill instead — render the approval as a
+canvas page and await the operator's submission. This wraps the gate; it does
+NOT change it: the never-auto-proceed contract holds, and quick yes/no
+acknowledgments stay terminal even under `canvas`. Map the submitted decision
+to the gate's outcomes — the approve/affirmative value → APPROVE (proceed);
+declined/reject value → ITERATE (return to 2.1/2.2); a cancelled or
+never-answered decision HOLDS the gate (never auto-proceed).
+
 ```python
 def handle_review_checkpoint(findings, mode):
     if mode == "autonomous":

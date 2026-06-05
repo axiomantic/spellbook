@@ -114,7 +114,8 @@ export function SecurityLog() {
 
   const handleSeverityChange = (value: string) => {
     if (value === 'all') {
-      const { severity: _, ...rest } = listPage.filters
+      const rest = { ...listPage.filters }
+      delete rest.severity
       listPage.setFilters(rest)
     } else {
       listPage.setFilters({ ...listPage.filters, severity: value })

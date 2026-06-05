@@ -6,19 +6,36 @@ type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error'
 
 interface UseWebSocketOptions {
   onEvent?: (event: WSEvent) => void
+  /**
+   * Fired when a connection opens that is NOT the first one — i.e. a
+   * reconnect after a drop (design D2). Lets the consumer resync state that
+   * may have changed while the socket was down (e.g. invalidate the canvas
+   * query so a tab offline during a decision event catches up). The very first
+   * connect is intentionally skipped: the initial data load is the query's own
+   * responsibility, and invalidating on mount would force a redundant refetch.
+   */
+  onReconnect?: () => void
   enabled?: boolean
 }
 
 const MAX_BACKOFF = 30_000
 const INITIAL_BACKOFF = 1_000
 
-export function useWebSocket({ onEvent, enabled = true }: UseWebSocketOptions = {}) {
+export function useWebSocket({ onEvent, onReconnect, enabled = true }: UseWebSocketOptions = {}) {
   const [state, setState] = useState<ConnectionState>('disconnected')
   const wsRef = useRef<WebSocket | null>(null)
   const backoffRef = useRef(INITIAL_BACKOFF)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const enabledRef = useRef(enabled)
   const scheduleReconnectRef = useRef<(() => void) | undefined>(undefined)
+  // Distinguishes the first successful open (initial load — no resync) from a
+  // reconnect open (resync via onReconnect). D2.
+  const hasConnectedRef = useRef(false)
+  const onReconnectRef = useRef(onReconnect)
+
+  useEffect(() => {
+    onReconnectRef.current = onReconnect
+  }, [onReconnect])
 
   useEffect(() => {
     enabledRef.current = enabled
@@ -42,6 +59,13 @@ export function useWebSocket({ onEvent, enabled = true }: UseWebSocketOptions = 
       ws.onopen = () => {
         setState('connected')
         backoffRef.current = INITIAL_BACKOFF
+        // Skip the first open (initial load); fire onReconnect on every
+        // subsequent open so reconnected tabs resync missed events (D2).
+        if (hasConnectedRef.current) {
+          onReconnectRef.current?.()
+        } else {
+          hasConnectedRef.current = true
+        }
       }
 
       ws.onmessage = (e) => {

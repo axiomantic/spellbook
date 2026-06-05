@@ -1,8 +1,8 @@
 """Shared fixtures for canvas tests.
 
-Per design §14.2 (lines 1266-1289), exposes three reusable fixtures consumed
-by A.1 (store tests), A.3 (MCP tool tests), A.4 (route tests), and A.5
-(integration tests). Downstream test modules import these explicitly:
+Per design §12 (Test Plan, "Existing fixtures:"), exposes reusable fixtures
+consumed by the store tests, MCP tool tests, route tests, and integration
+tests. Downstream test modules import these explicitly:
 
     from tests.canvas.conftest import canvas_tmp_root, mock_ctx, event_subscriber  # noqa: F401
 
@@ -45,6 +45,41 @@ class _MockContext:
 def mock_ctx() -> _MockContext:
     """Return a fake FastMCP ``Context`` for MCP tool tests."""
     return _MockContext()
+
+
+@pytest.fixture
+def mcp_ctx_with_session():
+    """Factory: returns a Context-like object whose ``.session_id == sid``.
+
+    ``_get_session_id(ctx)`` (sessions.py:151-158) returns ``sid`` for it. The
+    decision tests call ``mcp_ctx_with_session("sess-1")`` to build a context
+    bound to a specific session id.
+    """
+
+    def _make(sid: str):
+        class _Ctx:
+            session_id = sid
+
+        return _Ctx()
+
+    return _make
+
+
+class _NoSessionCtx:
+    """Context whose ``.session_id`` access raises ``RuntimeError``, so the
+    guarded accessor ``_get_session_id`` (sessions.py:151-158) returns ``None``.
+    """
+
+    @property
+    def session_id(self):
+        raise RuntimeError("no session identity in this context")
+
+
+@pytest.fixture
+def mcp_ctx_no_session() -> _NoSessionCtx:
+    """Return a context whose ``.session_id`` raises, mirroring the guard at
+    sessions.py:151-158 so ``_get_session_id`` returns ``None``."""
+    return _NoSessionCtx()
 
 
 @pytest.fixture
