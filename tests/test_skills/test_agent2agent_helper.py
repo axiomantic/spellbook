@@ -661,13 +661,31 @@ def _open_inbox(tmp_path: Path, name: str) -> None:
     assert rc == 0
 
 
-def _spawn_watch(tmp_path: Path, name: str, max_elapsed: float) -> subprocess.Popen:
-    """Spawn `watch <name> --max-elapsed=<n>` as a subprocess; returns Popen."""
+def _spawn_watch(
+    tmp_path: Path,
+    name: str,
+    max_elapsed: float = 10.0,
+    *,
+    infinite: bool = False,
+    poll_interval: float | None = None,
+    heartbeat_interval: float | None = None,
+) -> subprocess.Popen:
+    """Spawn `watch <name>` as a subprocess; returns Popen.
+
+    - infinite=True omits --max-elapsed entirely (production infinite mode,
+      design §12.1). When False, passes --max-elapsed <max_elapsed>.
+    - poll_interval / heartbeat_interval, when given, append the corresponding
+      flags (the latter is the slash-internal cadence test seam, §12.4).
+    """
+    argv = ["watch", name]
+    if not infinite:
+        argv += ["--max-elapsed", str(max_elapsed)]
+    if poll_interval is not None:
+        argv += ["--poll-interval", str(poll_interval)]
+    if heartbeat_interval is not None:
+        argv += ["--heartbeat-interval", str(heartbeat_interval)]
     return subprocess.Popen(
-        [
-            sys.executable, str(HELPER_PATH),
-            "watch", name, "--max-elapsed", str(max_elapsed),
-        ],
+        [sys.executable, str(HELPER_PATH), *argv],
         env=_watch_env(tmp_path),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
