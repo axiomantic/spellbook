@@ -22,6 +22,7 @@ import argparse
 import atexit
 import errno
 import json
+import math
 import os
 import re
 import select
@@ -42,6 +43,20 @@ try:
     import fcntl  # type: ignore[import-not-found]
 except ImportError:
     fcntl = None  # type: ignore[assignment]
+
+# ---------------------------------------------------------------------------
+# Heartbeat liveness constants (design §3)
+# ---------------------------------------------------------------------------
+# A live `watch` process `os.utime`s <inbox>/.watcher.heartbeat every
+# _HEARTBEAT_INTERVAL_S seconds (monotonic-throttled). Liveness probes treat a
+# heartbeat older than _HEARTBEAT_STALE_S as DEAD. The stale window is
+# 3 × the interval: three missed touches is unambiguous death/stall, not jitter.
+# _HEARTBEAT_STALE_S is the shared liveness contract (mirrored as the 90.0
+# literal in hooks/spellbook_hook.py::_bg_agent_alive) and MUST stay a fixed
+# constant — it is NEVER derived from the --heartbeat-interval test seam, so a
+# test cannot mask a wrong production threshold.
+_HEARTBEAT_INTERVAL_S = 30.0
+_HEARTBEAT_STALE_S = 90.0
 
 # ---------------------------------------------------------------------------
 # Paths
@@ -547,6 +562,55 @@ def cmd_drain(args: argparse.Namespace) -> int:
     return 0
 
 
+def _sweep_stray_fswatch(inbox: Path) -> None:
+    """Best-effort reaper for an orphaned fswatch child of a SIGKILLed watch
+    parent. Called AFTER flock acquisition (only the single live watcher
+    sweeps) and BEFORE this watcher spawns its own fswatch (so it targets only
+    PRE-EXISTING strays, never its own child) — design §6.2.
+
+    Stray predicate (BOTH clauses): the ``ps`` command line contains the literal
+    token ``fswatch`` AND contains ``str(inbox)`` exactly as the spawn passes
+    it (the UNRESOLVED path at the Popen below; the spawn does NOT call
+    .resolve()). A surviving stray costs one idle fswatch process, not
+    correctness (the leak bound is documented in cmd_watch)."""
+    try:
+        out = subprocess.run(
+            ["ps", "-axo", "pid=,command="],
+            capture_output=True,
+            text=True,
+            timeout=5.0,
+        ).stdout
+    except (OSError, ValueError, subprocess.SubprocessError):
+        # no ps / permission / timeout, or a non-UTF-8 cmdline that makes
+        # text=True decoding raise UnicodeDecodeError (a ValueError subclass):
+        # advisory reaper, swallow and skip the sweep.
+        return
+    needle = str(inbox)
+    for line in out.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        # Split once: "<pid> <command...>"
+        head, _, command = line.partition(" ")
+        # `needle` is str(inbox), i.e. the path ENDING in the literal "/inbox"
+        # segment (name_dir/<name>/inbox). That trailing segment is what makes
+        # this substring match collision-proof across sibling names: the bus
+        # path for "alice" is ".../alice/inbox" and for "alice2" is
+        # ".../alice2/inbox", so ".../alice/inbox" is NOT a substring of
+        # ".../alice2/inbox". A bare ".../alice" prefix WOULD collide; the
+        # "/inbox" suffix is load-bearing and depends on the <name>/inbox layout.
+        if "fswatch" not in command or needle not in command:
+            continue
+        try:
+            pid = int(head)
+        except ValueError:
+            continue
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError:
+            pass  # already gone / not ours: advisory
+
+
 def cmd_watch(args: argparse.Namespace) -> int:
     """Block until a new message lands or the recycle budget elapses.
 
@@ -580,6 +644,15 @@ def cmd_watch(args: argparse.Namespace) -> int:
         the same persistent inode and acquires flock. Unlinking is
         deliberately avoided to prevent a flock+unlink race in which two
         watchers end up holding flock on disjoint inodes for the same path.
+
+    fswatch leak bound (design §6.3): on an ungraceful (SIGKILL) watcher death
+    the fswatch child can orphan (the finally/signal cleanup does not run on
+    SIGKILL). The reaper is the next watcher on the same inbox: it sweeps
+    pre-existing strays after acquiring the flock and before spawning its own
+    fswatch. Because re-arm requires the single inbox flock, strays cannot
+    accumulate faster than one-per-death-between-rearms; the steady-state bound
+    is one stray per crash, cleared on the next /a2a open or message delivery.
+    If ps is unavailable the sweep is a no-op and the bound stands unreaped.
     """
     if fcntl is None:
         # POSIX-only: the watch subcommand depends on fcntl.flock for the
@@ -693,6 +766,11 @@ def cmd_watch(args: argparse.Namespace) -> int:
     # re-enter the loop without emitting a zero-count batch. Concurrent
     # readers that drain every candidate file mid-claim cause us to tear
     # down the empty batch dir and re-enter WAIT.
+    # Defense-in-depth (design §6.2): reap any fswatch orphaned by a prior
+    # SIGKILLed watcher on THIS inbox. Runs after flock (only the live watcher
+    # sweeps) and before our own spawn (so we never kill our own child).
+    _sweep_stray_fswatch(inbox)
+
     fswatch_path = shutil.which("fswatch")
     fswatch_proc: subprocess.Popen | None = None
     if fswatch_path:
@@ -702,6 +780,7 @@ def cmd_watch(args: argparse.Namespace) -> int:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL,
                 bufsize=0,
+                start_new_session=True,  # own session/pgid (design §6.1)
             )
         except OSError:
             fswatch_proc = None
@@ -711,13 +790,36 @@ def cmd_watch(args: argparse.Namespace) -> int:
     poll_interval = args.poll_interval
     max_elapsed = args.max_elapsed
     max_batch = args.max_batch
+
+    heartbeat_path = inbox / ".watcher.heartbeat"
+    heartbeat_interval = (
+        args.heartbeat_interval
+        if getattr(args, "heartbeat_interval", None) is not None
+        else _HEARTBEAT_INTERVAL_S
+    )
+    last_heartbeat = None  # force an immediate first touch
+    # Create the heartbeat once; subsequent updates are os.utime only (no fd
+    # churn / no fd leak — design §3.1 OS-3). Best-effort: advisory, never fatal.
+    try:
+        heartbeat_path.touch(exist_ok=True)
+    except OSError:
+        pass
+
     start = time.monotonic()
     try:
         while True:
             elapsed = time.monotonic() - start
-            if elapsed >= max_elapsed:
+            if max_elapsed is not None and elapsed >= max_elapsed:
                 print(f"WATCH_RECYCLE elapsed={int(max_elapsed)}s")
                 return 0
+
+            now_mono = time.monotonic()
+            if last_heartbeat is None or (now_mono - last_heartbeat) >= heartbeat_interval:
+                try:
+                    os.utime(heartbeat_path, None)  # OS-3: no fd churn
+                except OSError:
+                    pass  # advisory; never fatal
+                last_heartbeat = now_mono
 
             # Snapshot inbox; if any real messages are present, attempt an
             # atomic batch claim. If every candidate vanishes mid-claim
@@ -761,8 +863,11 @@ def cmd_watch(args: argparse.Namespace) -> int:
                     pass
                 # Loop continues — recompute elapsed at top.
 
-            remaining = max_elapsed - elapsed
-            wait_slice = min(poll_interval, remaining)
+            wait_slice = (
+                poll_interval
+                if max_elapsed is None
+                else min(poll_interval, max_elapsed - elapsed)
+            )
             if fswatch_proc is not None and fswatch_proc.poll() is None:
                 try:
                     rlist, _, _ = select.select(
@@ -808,18 +913,38 @@ def cmd_open_state(args: argparse.Namespace) -> int:
     watch-chain session. State lives at ``<bus>/.open/<session-id>``.
 
     Operations:
-      - ``write <sid> <name> <agent-id> --output-file <abs-path>``
+      - ``write <sid> <name> [<agent-id>] [--output-file <abs-path>]``
             Atomically write JSON ``{name, agent_id, started_at, output_file}``
-            via ``tempfile.NamedTemporaryFile`` + ``os.replace``.
+            via ``tempfile.NamedTemporaryFile`` + ``os.replace``. Under the
+            immortal-watcher architecture ``agent_id`` holds the bg-Bash task
+            id (the name is retained for reader/back-compat stability, §5.2)
+            and ``output_file`` holds the absolute ``.watcher.heartbeat`` path,
+            not a Task transcript path.
+
+            ``name`` is the only required field. ``agent_id`` and
+            ``output_file`` are both optional and default to ``""``:
+
+              * Tier-0 no-watcher sentinel — empty ``agent_id`` AND empty/
+                omitted ``--output-file`` are VALID together and persist
+                ``{name, agent_id: "", started_at, output_file: ""}``. This
+                records an open chain that has no live background watcher.
+              * A NON-empty ``output_file`` must still be absolute (else
+                exit 2).
+              * Mixed states (one of ``agent_id``/``output_file`` set, the
+                other empty) are ALLOWED and written verbatim. ``alive`` is
+                fail-safe: any falsy ``agent_id`` or ``output_file`` reads as
+                DEAD (exit 1), so the sentinel and mixed states never report a
+                live watcher.
       - ``clear <sid>`` -- ``os.unlink`` the state file; idempotent on missing.
       - ``read  <sid>`` -- print raw JSON or empty string when absent (exit 0).
-      - ``alive <sid>`` -- FAIL-SAFE-DEAD probe of the bg agent's transcript:
+      - ``alive <sid>`` -- FAIL-SAFE-DEAD probe of the bg watcher's heartbeat:
             exit 2 → state file missing or malformed
-            exit 0 → output_file exists AND mtime < 600s ago
-            exit 1 → output_file missing OR mtime >= 600s ago
+            exit 0 → output_file (= the .watcher.heartbeat path) exists AND
+                     mtime < 90s ago
+            exit 1 → output_file missing OR mtime >= 90s ago
             Stdout is empty on every exit (machine-checkable via ``$?`` only).
 
-    Shares the mtime+600s-window probe with
+    Shares the mtime+90s-window probe with
     ``hooks/spellbook_hook.py::_bg_agent_alive`` (both fail-safe-DEAD).
     The two sides differ in return contract — this CLI op uses exit
     codes 0/1/2 (machine-checkable via ``$?``) while the hook helper
@@ -838,9 +963,9 @@ def cmd_open_state(args: argparse.Namespace) -> int:
     target = state_dir / sid
 
     if op == "write":
-        if not args.name or not args.agent_id:
+        if not args.name:
             print(
-                "agent2agent: write requires <name> <agent-id>",
+                "agent2agent: write requires <name>",
                 file=sys.stderr,
             )
             return 2
@@ -850,24 +975,25 @@ def cmd_open_state(args: argparse.Namespace) -> int:
                 file=sys.stderr,
             )
             return 2
-        if not args.output_file:
+        # Tier-0 no-watcher sentinel: agent_id and output_file are both
+        # optional. Empty/omitted values are coerced to "" and written as
+        # given. A NON-empty output_file must still be absolute. Mixed states
+        # (one set, the other empty) are written verbatim — alive is fail-safe
+        # and reads any falsy agent_id/output_file as DEAD (exit 1).
+        agent_id = args.agent_id or ""
+        output_file = args.output_file or ""
+        if output_file and not os.path.isabs(output_file):
             print(
-                "agent2agent: write requires --output-file <abs-path>",
-                file=sys.stderr,
-            )
-            return 2
-        if not os.path.isabs(args.output_file):
-            print(
-                f"agent2agent: --output-file must be absolute: {args.output_file}",
+                f"agent2agent: --output-file must be absolute: {output_file}",
                 file=sys.stderr,
             )
             return 2
         state_dir.mkdir(parents=True, exist_ok=True)
         payload = {
             "name": args.name,
-            "agent_id": args.agent_id,
+            "agent_id": agent_id,
             "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "output_file": args.output_file,
+            "output_file": output_file,
         }
         with tempfile.NamedTemporaryFile(
             mode="w",
@@ -914,14 +1040,139 @@ def cmd_open_state(args: argparse.Namespace) -> int:
             age = time.time() - op_path.stat().st_mtime
         except OSError:
             return 1
-        # 600s threshold must exceed the 540s WATCH_RECYCLE budget so the
-        # liveness probe doesn't false-positive DEAD during a normal idle
-        # window. See _bg_agent_alive in hooks/spellbook_hook.py for the
-        # full rationale.
-        return 0 if age < 600.0 else 1
+        # Staleness threshold is 3 × heartbeat interval (90s). A live watcher
+        # os.utime's <inbox>/.watcher.heartbeat every 30s (monotonic-throttled);
+        # three missed touches is unambiguous death/stall, not jitter. There is
+        # no recycle budget under the immortal-watcher architecture. A
+        # wall-clock-stale heartbeat after a >90s laptop sleep is an accepted
+        # one-shot false-positive (the orphan hint carries the heartbeat age;
+        # re-arm reveals WATCH_LOCKED if the watcher is in fact alive). See
+        # _bg_agent_alive in hooks/spellbook_hook.py for the mirrored probe.
+        return 0 if age < _HEARTBEAT_STALE_S else 1
 
     print(f"agent2agent: unknown op: {op}", file=sys.stderr)
     return 2
+
+
+def _max_elapsed(v: str):
+    """Parse --max-elapsed: the literal 'none' (any case) -> None (infinite
+    mode); otherwise a positive float. <= 0 is rejected. The None sentinel —
+    never float('inf') (int(inf) raises OverflowError) and never 0.0 (exits
+    immediately) — drives infinite mode (design §4.1)."""
+    if v.lower() == "none":
+        return None
+    f = float(v)
+    # Reject inf/nan: inf would make `elapsed >= max_elapsed` never true (a
+    # finite-looking budget that never recycles) and nan makes every comparison
+    # False (same silent never-recycle, plus int(nan) raises OverflowError when
+    # the recycle marker is formatted). Infinite mode is the explicit 'none'
+    # sentinel only, never a non-finite float.
+    if not math.isfinite(f):
+        raise argparse.ArgumentTypeError("--max-elapsed must be finite (> 0) or 'none'")
+    if f <= 0.0:
+        raise argparse.ArgumentTypeError("--max-elapsed must be > 0 or 'none'")
+    return f
+
+
+def _heartbeat_interval(v: str) -> float:
+    """Parse --heartbeat-interval: a positive, finite float. Rejects <= 0 and
+    inf/nan with ArgumentTypeError, for symmetry with _max_elapsed. A
+    non-positive or non-finite cadence would wedge the monotonic-throttle
+    comparison that gates each os.utime touch (design §3.1)."""
+    f = float(v)
+    if not math.isfinite(f) or f <= 0.0:
+        raise argparse.ArgumentTypeError("--heartbeat-interval must be a finite float > 0")
+    return f
+
+
+def cmd_watcher_kill(args: argparse.Namespace) -> int:
+    """Slash-command-internal: probe-gated kill of the live watcher for <name>.
+
+    Close flow (§8): after a best-effort TaskStop the slash command ALWAYS
+    runs this LOCK_NB probe. It is the single canonical fcntl probe locus
+    (Invariant #5: the command body must not implement fcntl inline).
+
+    factcheck 2026-06-05: TaskStop on a Bash(run_in_background) task DID kill
+    the whole process tree (zsh wrapper + child) empirically in-session; this
+    probe-gated kill remains the trust-nothing fallback regardless.
+
+    Branch table (design §8.1):
+      1. invalid name           -> stderr error, exit 2 (validate FIRST)
+      2. inbox/lockfile absent   -> WATCHER_GONE, exit 0 (nothing to kill;
+                                    do NOT create the dir/lockfile as a side effect)
+      3. lock FREE (LOCK_NB ok)  -> WATCHER_GONE, exit 0 (release immediately)
+      4. lock HELD + numeric pid -> os.kill(pid, SIGTERM); WATCHER_KILLED <pid>, exit 0
+      5. lock HELD + empty/bad pid-> WATCHER_KILL_FAILED unknown EINVAL, exit 1
+      6. lock HELD + kill raises  -> WATCHER_KILL_FAILED <pid> <errno>, exit 1
+
+    PID-trust (§8.1): a held flock implies a live holder (the kernel releases
+    flock on holder death), and the holder wrote its own pid under the lock at
+    acquisition, so "lock held + pid in file" is a trustworthy (alive, pid)
+    pair. Branch 6 guards the race where the holder dies between the LOCK_NB
+    failure and os.kill (surfaces as ESRCH). All branches are best-effort:
+    close proceeds regardless of exit code. NOT in _USAGE (slash-internal).
+    """
+    if fcntl is None:
+        print("watch: not supported on this platform (POSIX-only)", file=sys.stderr)
+        return 1
+    name = args.name
+    _validate_name(name)  # branch 1: raises/exits before any fs access
+    inbox = inbox_dir(name)
+    lockfile = inbox / ".watcher.lock"
+    # Branch 2: do NOT create the inbox or lockfile as a side effect of probing.
+    if not inbox.is_dir() or not lockfile.exists():
+        print("WATCHER_GONE")
+        return 0
+    try:
+        fd = os.open(str(lockfile), os.O_RDWR)
+    except OSError:
+        print("WATCHER_GONE")
+        return 0
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            pass  # lock HELD -> fall through to the kill branches
+        else:
+            # Branch 3: lock FREE -> no live watcher. Release immediately.
+            fcntl.flock(fd, fcntl.LOCK_UN)
+            print("WATCHER_GONE")
+            return 0
+        # Lock is HELD. Read the holder pid (written by the holder under the lock).
+        try:
+            os.lseek(fd, 0, os.SEEK_SET)
+            raw = os.read(fd, 64).decode("ascii", errors="replace").strip()
+        except OSError:
+            raw = ""
+        try:
+            pid = int(raw)
+        except ValueError:
+            # Branch 5: cannot derive a pid.
+            print("WATCHER_KILL_FAILED unknown EINVAL")
+            return 1
+        try:
+            # Residual race (accepted): if the holder dies AFTER the LOCK_NB
+            # failure above but BEFORE this os.kill, ESRCH (branch 6) catches
+            # the dead case. The unguarded microsecond window is recycle: the
+            # kernel could reassign `pid` to an unrelated live process between
+            # death and this call, in which case we SIGTERM a stranger. Blast
+            # radius is a single SIGTERM (no loop, no escalation), so this is
+            # accepted residual risk rather than guarded with a pidfd/cmdline
+            # recheck.
+            os.kill(pid, signal.SIGTERM)
+        except OSError as exc:
+            # Branch 6: pid resolved but signal failed (ESRCH/EPERM).
+            sym = errno.errorcode.get(exc.errno, str(exc.errno))
+            print(f"WATCHER_KILL_FAILED {pid} {sym}")
+            return 1
+        # Branch 4: SIGTERM sent.
+        print(f"WATCHER_KILLED {pid}")
+        return 0
+    finally:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
 
 
 def cmd_help(_args: argparse.Namespace) -> int:
@@ -1038,7 +1289,18 @@ def _build_parser() -> argparse.ArgumentParser:
     sp_watch.add_argument("name")
     sp_watch.add_argument("--poll-interval", dest="poll_interval", type=float, default=0.5)
     sp_watch.add_argument("--max-batch", dest="max_batch", type=int, default=50)
-    sp_watch.add_argument("--max-elapsed", dest="max_elapsed", type=float, default=540.0)
+    sp_watch.add_argument(
+        "--max-elapsed", dest="max_elapsed", type=_max_elapsed, default=None
+    )
+    # Test seam (slash-internal; NOT in _USAGE): override the heartbeat touch
+    # cadence. Accelerates --heartbeat-interval in tests; does NOT affect the
+    # fixed _HEARTBEAT_STALE_S liveness window (design §3.1, §12.4).
+    sp_watch.add_argument(
+        "--heartbeat-interval",
+        dest="heartbeat_interval",
+        type=_heartbeat_interval,
+        default=None,
+    )
     sp_watch.set_defaults(func=cmd_watch)
 
     # Slash-command-internal: persist/probe the watch-chain open-state record.
@@ -1053,9 +1315,15 @@ def _build_parser() -> argparse.ArgumentParser:
         "--output-file",
         dest="output_file",
         default=None,
-        help="Absolute path to bg Task agent's transcript file (write only).",
+        help="Absolute path to the watcher's .watcher.heartbeat file (write only).",
     )
     sp_open_state.set_defaults(func=cmd_open_state)
+
+    # Slash-command-internal: probe-gated kill of the live watcher (close flow).
+    # Leading underscore marks it not-for-direct-use; NOT advertised in _USAGE.
+    sp_watcher_kill = sub.add_parser("_watcher_kill", add_help=False)
+    sp_watcher_kill.add_argument("name")
+    sp_watcher_kill.set_defaults(func=cmd_watcher_kill)
 
     for alias in ("help", "-h", "--help"):
         sp_help = sub.add_parser(alias, add_help=False)

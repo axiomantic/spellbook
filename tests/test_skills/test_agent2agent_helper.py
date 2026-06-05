@@ -100,7 +100,13 @@ def test_open_creates_inbox_and_bindings(a2a, monkeypatch):
 def test_open_without_session_id_still_creates_inbox(a2a):
     rc, stdout, _ = _run(a2a, "open", "alice")
     assert rc == 0
-    assert "no CLAUDE_CODE_SESSION_ID" in stdout
+    # Static stdout: assert the COMPLETE line by exact equality (the no-session
+    # branch of cmd_open). A partial substring would pass on a truncated or
+    # reworded notice that drops the "hook auto-notify disabled" rationale.
+    assert stdout.strip() == (
+        "agent2agent: opened as 'alice' "
+        "(no CLAUDE_CODE_SESSION_ID — hook auto-notify disabled)"
+    )
     assert (a2a.bus_dir() / "alice" / "inbox").is_dir()
 
 
@@ -181,7 +187,13 @@ def test_bound_name_with_explicit_session_id(a2a, monkeypatch):
 def test_send_to_unregistered_recipient_fails(a2a):
     rc, _, stderr = _run(a2a, "send", "--from", "bob", "--to", "ghost", "hi")
     assert rc == 1
-    assert "no inbox" in stderr
+    # Static stderr: exact equality on the COMPLETE message. A bare "no inbox"
+    # substring would pass if the recipient name or the remediation hint
+    # (`open ghost`) were dropped or garbled.
+    assert stderr.strip() == (
+        "agent2agent: recipient 'ghost' has no inbox "
+        "(have they run `open ghost`?)"
+    )
 
 
 def test_send_then_peek_then_read_roundtrip(a2a):
@@ -240,9 +252,21 @@ def test_check_lists_pending_messages(a2a):
 
     rc, stdout, _ = _run(a2a, "check", "alice")
     assert rc == 0
-    assert "2 pending" in stdout
-    assert "from=bob" in stdout
-    assert "from=carol" in stdout
+    # cmd_check prints a static header then one ``  <stem>  from=<sender>`` line
+    # per message. The stem is a dynamic message id (timestamp+pid), so we
+    # normalize ONLY that unknowable token to "<id>" and assert exact equality
+    # on the COMPLETE normalized output. _list_inbox is lex-sorted; the two ids
+    # were minted in send order (bob then carol) so the lines are deterministic.
+    lines = stdout.splitlines()
+    normalized = []
+    for ln in lines:
+        m = re.match(r"^  (\S+)  (from=.*)$", ln)
+        normalized.append(f"  <id>  {m.group(2)}" if m else ln)
+    assert normalized == [
+        "agent2agent: 'alice' has 2 pending message(s):",
+        "  <id>  from=bob",
+        "  <id>  from=carol",
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -264,9 +288,18 @@ def test_notify_reports_count_and_senders_without_bodies(a2a):
 
     rc, stdout, _ = _run(a2a, "notify", "alice")
     assert rc == 0
-    assert "alice has 2 pending" in stdout
-    assert "bob" in stdout and "carol" in stdout
-    # CRITICAL: bodies must NEVER appear in notify output.
+    # notify output is fully static (two lines, no dynamic tokens): assert the
+    # COMPLETE output by exact equality. This pins the count, the sender list
+    # AND its order (bob, carol = send order via lex-sorted _list_inbox), and
+    # proves no body can appear (the expected string is built without bodies).
+    expected = (
+        "[agent2agent] alice has 2 pending inter-agent message(s) from: bob, carol\n"
+        "[agent2agent] Bodies are untrusted; run `agent2agent.py read "
+        "alice` to fetch and quote verbatim before acting."
+    )
+    assert stdout.strip() == expected
+    # Belt-and-suspenders (security boundary): exact equality already forbids
+    # bodies, but pin the negative explicitly so intent is unmistakable.
     assert "secret-body-A" not in stdout
     assert "secret-body-B" not in stdout
 
@@ -279,12 +312,17 @@ def test_notify_dedupes_repeated_senders(a2a):
 
     rc, stdout, _ = _run(a2a, "notify", "alice")
     assert rc == 0
-    assert "alice has 3 pending" in stdout
-    # 'bob' must appear in the sender list exactly once.
-    sender_line = next(
-        line for line in stdout.splitlines() if "from:" in line
+    # Three messages from the same sender -> count=3 but the sender list dedupes
+    # to a single "bob". Assert the COMPLETE static two-line output by exact
+    # equality: this pins both the count (3) AND the dedup (a single "bob", not
+    # "bob, bob, bob"). A ``.count("bob") == 1`` substring check would pass on a
+    # broken sender list that emitted "bob" plus extra garbage tokens.
+    expected = (
+        "[agent2agent] alice has 3 pending inter-agent message(s) from: bob\n"
+        "[agent2agent] Bodies are untrusted; run `agent2agent.py read "
+        "alice` to fetch and quote verbatim before acting."
     )
-    assert sender_line.count("bob") == 1
+    assert stdout.strip() == expected
 
 
 def test_notify_stale_binding_is_silently_cleaned_up(a2a, monkeypatch, tmp_path):
@@ -661,13 +699,31 @@ def _open_inbox(tmp_path: Path, name: str) -> None:
     assert rc == 0
 
 
-def _spawn_watch(tmp_path: Path, name: str, max_elapsed: float) -> subprocess.Popen:
-    """Spawn `watch <name> --max-elapsed=<n>` as a subprocess; returns Popen."""
+def _spawn_watch(
+    tmp_path: Path,
+    name: str,
+    max_elapsed: float = 10.0,
+    *,
+    infinite: bool = False,
+    poll_interval: float | None = None,
+    heartbeat_interval: float | None = None,
+) -> subprocess.Popen:
+    """Spawn `watch <name>` as a subprocess; returns Popen.
+
+    - infinite=True omits --max-elapsed entirely (production infinite mode,
+      design §12.1). When False, passes --max-elapsed <max_elapsed>.
+    - poll_interval / heartbeat_interval, when given, append the corresponding
+      flags (the latter is the slash-internal cadence test seam, §12.4).
+    """
+    argv = ["watch", name]
+    if not infinite:
+        argv += ["--max-elapsed", str(max_elapsed)]
+    if poll_interval is not None:
+        argv += ["--poll-interval", str(poll_interval)]
+    if heartbeat_interval is not None:
+        argv += ["--heartbeat-interval", str(heartbeat_interval)]
     return subprocess.Popen(
-        [
-            sys.executable, str(HELPER_PATH),
-            "watch", name, "--max-elapsed", str(max_elapsed),
-        ],
+        [sys.executable, str(HELPER_PATH), *argv],
         env=_watch_env(tmp_path),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -806,7 +862,13 @@ def test_watch_lockfile_released_on_exit(tmp_path):
     proc = _spawn_watch(tmp_path, "alice", max_elapsed=10.0)
     rc, stdout, _ = _wait_proc(proc, paranoia_timeout=5.0)
     assert rc == 0
-    assert "PENDING_BATCH" in stdout
+    # Single recovered batch of one seeded message. The batch id is dynamic
+    # (timestamp+pid), so full-match the COMPLETE marker line, pinning the
+    # ``count=1`` exactly. A bare ``"PENDING_BATCH" in stdout`` would pass on a
+    # ``count=0`` zero-batch or a marker with trailing garbage.
+    assert re.match(r"^PENDING_BATCH \S+ count=1$", stdout.strip()), (
+        f"stdout={stdout!r}"
+    )
 
     lockfile = tmp_path / "alice" / "inbox" / ".watcher.lock"
     assert _flock_acquirable(lockfile), (
@@ -942,6 +1004,101 @@ def test_watch_kill_releases_lockfile_via_kernel(tmp_path):
     )
 
 
+def test_watch_infinite_mode_delivers_without_recycle(a2a, tmp_path):
+    """Production path: NO --max-elapsed (infinite). The loop survives >=2 poll
+    intervals (proves the `max_elapsed is not None` recycle guard does not
+    crash on a None budget), a sent message yields PENDING_BATCH, and
+    WATCH_RECYCLE never appears (design §12.1)."""
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch(tmp_path, "alice", infinite=True, poll_interval=0.2)
+    try:
+        # Loop-survival: alive after >=2 full poll intervals + slack.
+        time.sleep(0.2 * 2 + 0.6)
+        assert proc.poll() is None, (
+            "watcher crashed within 2 poll intervals — likely the "
+            "None - float TypeError from an unguarded max_elapsed comparison "
+            "(infinite mode)"
+        )
+        # Deliver a message.
+        _run(a2a, "send", "--from", "bob", "--to", "alice", "hello")
+        # Expect PENDING_BATCH within ~3s.
+        stdout, stderr = proc.communicate(timeout=3)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        stdout, stderr = proc.communicate()
+        raise AssertionError(f"watcher did not deliver in time; stderr={stderr!r}")
+    finally:
+        if proc.poll() is None:
+            proc.kill()
+            proc.wait(timeout=5)
+    assert proc.returncode == 0, f"expected exit 0, got {proc.returncode}; stderr={stderr!r}"
+    assert re.search(r"^PENDING_BATCH \S+ count=1$", stdout, re.M), stdout
+    assert "WATCH_RECYCLE" not in stdout, "infinite mode must never recycle"
+    # Diagnostic: a regression must name the cause.
+    assert "Traceback" not in stderr and "TypeError" not in stderr, stderr
+
+
+def test_watch_emits_no_per_iteration_stdout(tmp_path):
+    """A finite-budget watch over an empty inbox iterates several poll cycles
+    and emits EXACTLY ONE non-empty stdout line (the terminal marker). The
+    'fswatch unavailable' notice goes to stderr, not stdout (design §12.3)."""
+    _open_inbox(tmp_path, "alice")
+    # ~5 iterations at 0.2s poll under a 1s budget.
+    proc = _spawn_watch(tmp_path, "alice", max_elapsed=1.0, poll_interval=0.2)
+    stdout, stderr = proc.communicate(timeout=5)
+    nonempty = [ln for ln in stdout.splitlines() if ln.strip()]
+    assert nonempty == ["WATCH_RECYCLE elapsed=1s"], (
+        f"expected exactly one terminal marker line, got {nonempty!r}"
+    )
+
+
+def test_watch_emits_no_per_iteration_stdout_no_fswatch(tmp_path):
+    """Same invariant on the polling-only path: the 'fswatch unavailable'
+    notice must be on stderr, not stdout (design §12.3)."""
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch_no_fswatch(tmp_path, "alice", max_elapsed=1.0)
+    stdout, stderr = proc.communicate(timeout=5)
+    nonempty = [ln for ln in stdout.splitlines() if ln.strip()]
+    assert nonempty == ["WATCH_RECYCLE elapsed=1s"], (
+        f"stdout must hold only the marker, got {nonempty!r}"
+    )
+    assert "fswatch" not in stdout, "fswatch notice leaked to stdout"
+    # stderr is a diagnostic stream that may carry environment-dependent noise,
+    # so whole-stream exact equality is not achievable. Strengthen the bare
+    # substring to a COMPLETE-LINE membership check: the notice must appear as
+    # the exact line production emits ("watch: fswatch unavailable,
+    # polling-only"), not merely as a substring fragment of some other line.
+    assert "watch: fswatch unavailable, polling-only" in stderr.splitlines(), (
+        f"polling-only marker missing/garbled in stderr={stderr!r}"
+    )
+
+
+def test_watch_touches_heartbeat_on_entry_and_interval(tmp_path):
+    """Heartbeat exists within <1s of start (first-touch-immediate) and its
+    mtime advances across an interval (design §3.1, §12.4). Uses the
+    --heartbeat-interval test seam (cadence only)."""
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch(
+        tmp_path, "alice", max_elapsed=6.0, heartbeat_interval=1.0
+    )
+    try:
+        inbox = tmp_path / "alice" / "inbox"  # two-level: <root>/<name>/inbox
+        hb = inbox / ".watcher.heartbeat"
+        # First-touch-immediate: heartbeat exists within ~1s.
+        deadline = time.time() + 1.5
+        while time.time() < deadline and not hb.exists():
+            time.sleep(0.05)
+        assert hb.exists(), "heartbeat not created on loop entry"
+        mtime1 = hb.stat().st_mtime
+        # Interval touch: mtime advances after >1 interval.
+        time.sleep(2.5)
+        mtime2 = hb.stat().st_mtime
+        assert mtime2 > mtime1, "heartbeat mtime did not advance across interval"
+    finally:
+        proc.terminate()
+        proc.wait(timeout=5)
+
+
 # ---------------------------------------------------------------------------
 # watch: fswatch + 500ms polling backstop + spurious-wake re-entry (T3b)
 #
@@ -1072,7 +1229,9 @@ def test_watch_polling_path_when_no_fswatch(tmp_path):
     m = re.match(r"^PENDING_BATCH (\S+) count=1$", stdout.strip())
     assert m, f"stdout={stdout!r}"
     batch_id = m.group(1)
-    assert "fswatch unavailable, polling-only" in stderr, (
+    # Complete-line membership (stderr carries env-dependent noise; the notice
+    # must match the exact production line, not a substring fragment).
+    assert "watch: fswatch unavailable, polling-only" in stderr.splitlines(), (
         f"polling-only marker missing in stderr={stderr!r}"
     )
 
@@ -1200,6 +1359,122 @@ def test_watch_atomic_consume_under_concurrent_reader(tmp_path):
     )
 
 
+_FSWATCH_OR_PS_MISSING = (
+    shutil.which("fswatch") is None or shutil.which("ps") is None
+)
+
+
+def _count_stray_fswatch(inbox) -> int:
+    """Count live `fswatch ... <inbox>` processes (matches the helper's
+    str(inbox)-exact substring predicate)."""
+    out = subprocess.run(
+        ["ps", "-axo", "command="], capture_output=True, text=True
+    ).stdout
+    return sum(
+        1 for ln in out.splitlines()
+        if "fswatch" in ln and str(inbox) in ln
+    )
+
+
+def _plant_fswatch_stray(inbox: Path) -> subprocess.Popen:
+    """Plant a long-lived `fswatch -0 -l 0.1 <inbox>` process whose command
+    line matches the helper's sweep predicate exactly.
+
+    NOTE (empirical, 2026-06-05): a real watcher's own fswatch child does NOT
+    survive parent SIGKILL on this platform — its stdout pipe to the dead
+    parent breaks and SIGPIPE reaps it, independent of process group. So the
+    SIGKILL-orphans-fswatch premise is not reproducible here. To exercise the
+    sweep contract deterministically we plant a stray ourselves with stdout to
+    DEVNULL (no pipe to break) and its own session, then assert the next
+    watcher's pre-spawn sweep SIGTERMs it. This tests the load-bearing
+    behavior (_sweep_stray_fswatch) without relying on unreproducible
+    orphaning.
+    """
+    return subprocess.Popen(
+        ["fswatch", "-0", "-l", "0.1", str(inbox)],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
+
+
+@pytest.mark.skipif(_FSWATCH_OR_PS_MISSING, reason="needs fswatch and ps")
+def test_fswatch_stray_swept_on_rearm(tmp_path):
+    """A pre-existing fswatch stray on an inbox is SIGTERM-reaped by the next
+    watcher on that inbox, before that watcher spawns its own (design §6.2,
+    §12.8). The sweep runs after flock + before spawn."""
+    _open_inbox(tmp_path, "alice")
+    inbox = tmp_path / "alice" / "inbox"  # two-level: <root>/<name>/inbox
+    stray = _plant_fswatch_stray(inbox)
+    try:
+        # Let the stray register in the process table.
+        deadline = time.time() + 2.0
+        while time.time() < deadline and _count_stray_fswatch(inbox) < 1:
+            time.sleep(0.05)
+        assert _count_stray_fswatch(inbox) == 1, "planted stray not visible in ps"
+
+        # Run a short finite watch on the same inbox: its pre-spawn sweep must
+        # SIGTERM the planted stray. Run to completion so the watcher's own
+        # fswatch child is gone too, leaving zero strays.
+        proc = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
+        rc, _, stderr = _wait_proc(proc, paranoia_timeout=10.0)
+        assert rc == 0, f"stderr={stderr!r}"
+
+        # The planted stray received SIGTERM and exited.
+        stray.wait(timeout=5)
+        assert stray.poll() is not None, "sweep did not reap the planted stray"
+        # No fswatch remains on this inbox (stray reaped, watcher's own gone).
+        assert _count_stray_fswatch(inbox) == 0, "stray survived the sweep"
+    finally:
+        if stray.poll() is None:
+            stray.terminate()
+            stray.wait(timeout=5)
+
+
+@pytest.mark.skipif(_FSWATCH_OR_PS_MISSING, reason="needs fswatch and ps")
+def test_sweep_spares_fswatch_for_different_inbox(tmp_path):
+    """The sweep's str(inbox)-exact predicate reaps the same-inbox stray but
+    must NOT kill an fswatch watching a DIFFERENT inbox (design §6.2, §12.8).
+
+    Plant a stray on BOTH alice and bob, then run a watcher on alice: alice's
+    stray must be reaped (proves the sweep ran) AND bob's stray must survive
+    (proves the predicate is inbox-exact, not 'any fswatch')."""
+    _open_inbox(tmp_path, "alice")
+    _open_inbox(tmp_path, "bob")
+    alice_inbox = tmp_path / "alice" / "inbox"
+    bob_inbox = tmp_path / "bob" / "inbox"  # two-level
+    alice_stray = _plant_fswatch_stray(alice_inbox)
+    bob_stray = _plant_fswatch_stray(bob_inbox)
+    try:
+        deadline = time.time() + 2.0
+        while time.time() < deadline and (
+            _count_stray_fswatch(alice_inbox) < 1
+            or _count_stray_fswatch(bob_inbox) < 1
+        ):
+            time.sleep(0.05)
+        assert _count_stray_fswatch(alice_inbox) == 1, "alice stray not visible"
+        assert _count_stray_fswatch(bob_inbox) == 1, "bob stray not visible"
+
+        # A watcher on ALICE's inbox sweeps. Inbox-exact predicate: reap
+        # alice's stray, spare bob's.
+        proc = _spawn_watch(tmp_path, "alice", max_elapsed=1.0)
+        rc, _, stderr = _wait_proc(proc, paranoia_timeout=10.0)
+        assert rc == 0, f"stderr={stderr!r}"
+
+        # alice's planted stray reaped (proves the sweep actually ran).
+        alice_stray.wait(timeout=5)
+        assert alice_stray.poll() is not None, "alice's stray was not swept"
+        assert _count_stray_fswatch(alice_inbox) == 0, "alice stray survived"
+        # bob's fswatch must still be alive — the sweep is inbox-exact.
+        assert bob_stray.poll() is None, "bob's fswatch was wrongly reaped"
+        assert _count_stray_fswatch(bob_inbox) == 1, "bob's stray must survive"
+    finally:
+        for s in (alice_stray, bob_stray):
+            if s.poll() is None:
+                s.terminate()
+                s.wait(timeout=5)
+
+
 def test_watch_caps_batch_at_max_batch(tmp_path):
     """--max-batch caps the batch size; overflow stays in inbox for next cycle.
 
@@ -1271,10 +1546,10 @@ def test_watch_caps_batch_at_max_batch(tmp_path):
 #   - JSON payload: {name, agent_id, started_at (UTC ISO8601), output_file}.
 #   - `write` requires absolute --output-file. `clear` is idempotent.
 #   - `read` prints raw JSON or empty string when absent (exit 0).
-#   - `alive`:
+#   - `alive` (output_file = the watcher's .watcher.heartbeat path):
 #         exit 2 → state file missing or malformed (FAIL-SAFE-DEAD)
-#         exit 0 → transcript exists AND mtime < 600s old
-#         exit 1 → transcript missing OR mtime ≥ 600s old
+#         exit 0 → heartbeat exists AND mtime < 90s old (3x the 30s interval)
+#         exit 1 → heartbeat missing OR mtime ≥ 90s old
 #     Stdout is empty on every alive exit (machine-checkable via $? only).
 # ---------------------------------------------------------------------------
 
@@ -1316,14 +1591,23 @@ def test_open_state_write_atomic(a2a, tmp_path):
     }
     assert payload == expected
 
+    # Field set is structurally unchanged under the immortal-watcher
+    # architecture (design §5.2, §12.9): agent_id now carries the bg-Bash task
+    # id (name retained for reader/back-compat stability) and output_file the
+    # .watcher.heartbeat path. The probe reads agent_id only for truthiness.
+    assert set(payload.keys()) == {"name", "agent_id", "started_at", "output_file"}
 
-def test_open_state_write_requires_output_file(a2a):
-    """Missing --output-file fails with exit 2 + stderr mentioning the flag."""
+
+def test_open_state_write_requires_name(a2a):
+    """Name is still required: an empty name fails with exit 2 + stderr
+    mentioning the requirement. (agent_id and output_file are now optional —
+    the Tier-0 sentinel relaxes both; only name remains mandatory.)"""
     rc, _, stderr = _run(
-        a2a, "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        a2a, "_open_state", "write", "sess-foo", "", "",
     )
     assert rc == 2
-    assert "--output-file" in stderr
+    # Static stderr: exact equality on the COMPLETE line.
+    assert stderr.strip() == "agent2agent: write requires <name>"
 
 
 def test_open_state_write_rejects_relative_output_file(a2a):
@@ -1334,7 +1618,80 @@ def test_open_state_write_rejects_relative_output_file(a2a):
         "--output-file", "rel/path.output",
     )
     assert rc == 2
-    assert "must be absolute" in stderr
+    # Static stderr including the offending path: exact equality on the
+    # COMPLETE line (the path echo is deterministic from the input above).
+    assert stderr.strip() == (
+        "agent2agent: --output-file must be absolute: rel/path.output"
+    )
+
+
+def test_open_state_write_tier0_sentinel(a2a):
+    """Tier-0 no-watcher sentinel: empty agent_id AND omitted --output-file are
+    VALID together. Writes {name, agent_id:"", started_at, output_file:""},
+    exit 0. Name is still required."""
+    rc, stdout, stderr = _run(a2a, "_open_state", "write", "sess-t0", "alice", "")
+    assert rc == 0
+    assert stdout == ""
+    assert stderr == ""
+
+    bus = a2a.bus_dir()
+    state_file = _open_state_path(bus, "sess-t0")
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+
+    # started_at is the only dynamic field; round-trip it from the observed value.
+    started_at = payload.get("started_at", "")
+    parsed = datetime.fromisoformat(started_at)
+    assert parsed.tzinfo is not None and parsed.utcoffset() == timedelta(0), (
+        f"started_at must be UTC ISO8601, got {started_at!r}"
+    )
+
+    expected = {
+        "name": "alice",
+        "agent_id": "",
+        "started_at": started_at,
+        "output_file": "",
+    }
+    assert payload == expected
+
+
+def test_open_state_alive_tier0_sentinel_returns_1(a2a):
+    """alive on the Tier-0 sentinel (empty agent_id + empty output_file) reads
+    DEAD via exit 1 — there is no live watcher chain. Empty stdout."""
+    rc, _, _ = _run(a2a, "_open_state", "write", "sess-t0", "alice", "")
+    assert rc == 0
+
+    rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-t0")
+    assert rc == 1
+    assert stdout == ""
+
+
+def test_open_state_write_mixed_state_allowed(a2a):
+    """Mixed state (agent_id set, output_file omitted) is ALLOWED — written as
+    given; alive remains fail-safe. Exit 0 with output_file:"" in the payload."""
+    rc, stdout, stderr = _run(
+        a2a, "_open_state", "write", "sess-mix", "alice", "agent-xyz",
+    )
+    assert rc == 0
+    assert stdout == ""
+    assert stderr == ""
+
+    bus = a2a.bus_dir()
+    state_file = _open_state_path(bus, "sess-mix")
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+
+    started_at = payload.get("started_at", "")
+    parsed = datetime.fromisoformat(started_at)
+    assert parsed.tzinfo is not None and parsed.utcoffset() == timedelta(0), (
+        f"started_at must be UTC ISO8601, got {started_at!r}"
+    )
+
+    expected = {
+        "name": "alice",
+        "agent_id": "agent-xyz",
+        "started_at": started_at,
+        "output_file": "",
+    }
+    assert payload == expected
 
 
 def test_open_state_clear_idempotent(a2a, tmp_path):
@@ -1406,7 +1763,7 @@ def test_open_state_alive_missing_returns_2(a2a):
 
 
 def test_open_state_alive_recent_transcript_returns_0(a2a, tmp_path):
-    """alive: state present + transcript mtime < 600s ago → exit 0."""
+    """alive: state present + heartbeat mtime < 90s ago → exit 0."""
     transcript = tmp_path / "fresh.output"
     transcript.write_text("x", encoding="utf-8")
 
@@ -1426,24 +1783,74 @@ def test_open_state_alive_recent_transcript_returns_0(a2a, tmp_path):
     assert stdout == ""
 
 
+def test_open_state_alive_uses_heartbeat_90s(a2a, tmp_path):
+    """alive: output_file = heartbeat path. Fresh -> exit 0; 91s -> exit 1;
+    removed -> exit 1; missing state -> exit 2 (design §3.5, §12.4)."""
+    hb = tmp_path / ".watcher.heartbeat"
+    hb.write_text("", encoding="utf-8")
+
+    rc, _, _ = _run(
+        a2a, "_open_state", "write", "sess-hb", "alice", "agent-xyz",
+        "--output-file", str(hb),
+    )
+    assert rc == 0
+
+    now = time.time()
+    os.utime(str(hb), (now, now))
+    rc, _, _ = _run(a2a, "_open_state", "alive", "sess-hb")
+    assert rc == 0, "fresh heartbeat must read ALIVE"
+
+    stale = now - 91.0
+    os.utime(str(hb), (stale, stale))
+    rc, _, _ = _run(a2a, "_open_state", "alive", "sess-hb")
+    assert rc == 1, "91s-stale heartbeat must read DEAD at the 90s window"
+
+    hb.unlink()
+    rc, _, _ = _run(a2a, "_open_state", "alive", "sess-hb")
+    assert rc == 1, "removed heartbeat must read DEAD"
+
+    rc, _, _ = _run(a2a, "_open_state", "alive", "sess-missing")
+    assert rc == 2, "missing state must read 2 (malformed/absent)"
+
+
 def test_open_state_alive_stale_transcript_returns_1(a2a, tmp_path):
-    """alive: state present + transcript mtime ≥ 600s ago → exit 1."""
-    transcript = tmp_path / "stale.output"
-    transcript.write_text("x", encoding="utf-8")
+    """alive: 91s-stale heartbeat → exit 1 (DEAD); 60s-stale → exit 0 (ALIVE).
+
+    The pair brackets the staleness threshold to the half-open window (60, 91]:
+      * 91s-DEAD (exit 1) FAILS if the threshold regresses UPWARD past 91 — e.g.
+        a regression back to 600 makes 91 < 600 read ALIVE (exit 0), tripping
+        this assertion. This is the assertion that catches the 600 regression.
+      * 60s-ALIVE (exit 0) FAILS if the threshold regresses DOWNWARD to <= 60 —
+        e.g. a 30s threshold makes 60 >= 30 read DEAD (exit 1), tripping this
+        assertion.
+    Neither assertion alone pins 90; together they fence it to (60, 91] (design
+    §12.9)."""
+    hb = tmp_path / "stale.heartbeat"
+    hb.write_text("x", encoding="utf-8")
 
     rc, _, _ = _run(
         a2a,
         "_open_state", "write", "sess-foo", "alice", "agent-xyz",
-        "--output-file", str(transcript),
+        "--output-file", str(hb),
     )
     assert rc == 0
 
-    # Force mtime to ~700s in the past (well beyond the 600s threshold).
-    stale = time.time() - 700.0
-    os.utime(str(transcript), (stale, stale))
-
+    now = time.time()
+    # 91s stale -> DEAD at the 90s window. This is the assertion that catches a
+    # threshold regression UPWARD (e.g. back to 600: 91 < 600 -> exit 0 here).
+    stale = now - 91.0
+    os.utime(str(hb), (stale, stale))
     rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
     assert rc == 1
+    assert stdout == ""
+
+    # 60s stale -> ALIVE. This catches a threshold regression DOWNWARD (e.g. to
+    # 30: 60 >= 30 -> exit 1 here). It does NOT catch a regression to 600 — that
+    # is the 91s-DEAD assertion above. Together they fence the window to (60, 91].
+    fresh_ish = now - 60.0
+    os.utime(str(hb), (fresh_ish, fresh_ish))
+    rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
+    assert rc == 0
     assert stdout == ""
 
 
@@ -1465,6 +1872,193 @@ def test_open_state_alive_missing_transcript_returns_1(a2a, tmp_path):
     rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
     assert rc == 1
     assert stdout == ""
+
+
+# ---------------------------------------------------------------------------
+# _watcher_kill: probe-gated SIGTERM close helper (T6)
+# ---------------------------------------------------------------------------
+
+
+def test_watcher_kill_lock_free_reports_gone(a2a, tmp_path):
+    """No live watcher (lock free or absent) -> WATCHER_GONE, exit 0
+    (design §8.1 rows 2-3, §12.7)."""
+    _open_inbox(tmp_path, "alice")  # inbox exists, no watcher holding the lock
+    rc, stdout, _ = _run(a2a, "_watcher_kill", "alice")
+    assert rc == 0
+    assert stdout.strip() == "WATCHER_GONE"
+
+
+@pytest.mark.skipif(shutil.which("python3") is None, reason="needs python3")
+def test_watcher_kill_lock_held_sends_sigterm(a2a, tmp_path):
+    """A live watch holds the flock -> WATCHER_KILLED <pid>, exit 0, and the
+    watcher terminates (design §8.1 row 4, §12.7)."""
+    _open_inbox(tmp_path, "alice")
+    watcher = _spawn_watch(tmp_path, "alice", max_elapsed=60.0)
+    try:
+        # Wait until the watcher actually holds the flock (pid written).
+        lockfile = tmp_path / "alice" / "inbox" / ".watcher.lock"
+        _wait_for_watcher_locked(lockfile, timeout=2.0)
+        rc, stdout, _ = _run(a2a, "_watcher_kill", "alice")
+        assert rc == 0
+        assert re.match(r"^WATCHER_KILLED \d+$", stdout.strip()), stdout
+        # The killed pid must be the live watcher's own pid.
+        killed_pid = int(stdout.strip().split()[1])
+        assert killed_pid == watcher.pid, (
+            f"WATCHER_KILLED reported pid={killed_pid}; expected watcher "
+            f"pid={watcher.pid}"
+        )
+        # The watcher's SIGTERM handler exits cleanly.
+        watcher.wait(timeout=5)
+        assert watcher.poll() is not None
+    finally:
+        if watcher.poll() is None:
+            watcher.kill()
+            watcher.wait(timeout=5)
+
+
+def _hold_lockfile_flock(inbox: Path, body: bytes) -> int:
+    """Create ``inbox/.watcher.lock``, write ``body``, and hold an exclusive
+    flock on it from THIS (test) process. Returns the open fd.
+
+    cmd_watcher_kill opens the same path with ``os.open(O_RDWR)`` (no O_CREAT)
+    and attempts ``flock(LOCK_EX | LOCK_NB)``; because this fd holds LOCK_EX the
+    helper's non-blocking acquire raises BlockingIOError and falls through to
+    the kill branches (branch 2's ``lockfile.exists()`` guard is satisfied
+    because we created the file). The caller MUST ``os.close`` the returned fd
+    to release the lock.
+    """
+    inbox.mkdir(parents=True, exist_ok=True)
+    lockfile = inbox / ".watcher.lock"
+    fd = os.open(str(lockfile), os.O_CREAT | os.O_RDWR, 0o644)
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    os.ftruncate(fd, 0)
+    if body:
+        os.write(fd, body)
+        os.fsync(fd)
+    return fd
+
+
+def _dead_pid() -> int:
+    """Spawn a trivial child, wait for it to exit, and return its (now
+    guaranteed-dead and fully-reaped) pid. The pid is unallocated for the brief
+    window before the kernel recycles it, so ``os.kill(pid, SIGTERM)`` raises
+    ESRCH deterministically in-test. Uses subprocess (not os.fork) so the
+    multi-threaded test process emits no fork DeprecationWarning.
+    """
+    proc = subprocess.Popen(
+        [sys.executable, "-c", ""],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    proc.wait(timeout=5)  # reap so the pid is no longer a live process.
+    return proc.pid
+
+
+def test_watcher_kill_lock_held_bad_pid_reports_einval(a2a, tmp_path):
+    """Branch 5 (design §8.1 row 5): lock HELD but the lockfile body is empty
+    / non-numeric -> WATCHER_KILL_FAILED unknown EINVAL, exit 1. No signal is
+    sent because no pid can be derived."""
+    _open_inbox(tmp_path, "alice")
+    inbox = tmp_path / "alice" / "inbox"
+    # Garbage body (non-digit) so int(raw) raises ValueError -> branch 5.
+    held_fd = _hold_lockfile_flock(inbox, b"not-a-pid")
+    try:
+        rc, stdout, stderr = _run(a2a, "_watcher_kill", "alice")
+    finally:
+        os.close(held_fd)  # release the flock.
+    assert rc == 1
+    assert stdout.strip() == "WATCHER_KILL_FAILED unknown EINVAL"
+    assert stderr == ""
+
+
+def test_watcher_kill_lock_held_empty_pid_reports_einval(a2a, tmp_path):
+    """Branch 5 (design §8.1 row 5): lock HELD with an EMPTY lockfile body
+    (the truncate/write race window on the holder side) -> the same
+    WATCHER_KILL_FAILED unknown EINVAL, exit 1."""
+    _open_inbox(tmp_path, "alice")
+    inbox = tmp_path / "alice" / "inbox"
+    held_fd = _hold_lockfile_flock(inbox, b"")  # empty body -> int("") ValueError.
+    try:
+        rc, stdout, stderr = _run(a2a, "_watcher_kill", "alice")
+    finally:
+        os.close(held_fd)
+    assert rc == 1
+    assert stdout.strip() == "WATCHER_KILL_FAILED unknown EINVAL"
+    assert stderr == ""
+
+
+def test_watcher_kill_lock_held_dead_pid_reports_esrch(a2a, tmp_path):
+    """Branch 6 (design §8.1 row 6): lock HELD + a numeric pid that names a
+    dead process -> os.kill raises ESRCH -> WATCHER_KILL_FAILED <pid> ESRCH,
+    exit 1. Guards the race where the flock holder dies between the LOCK_NB
+    failure and os.kill."""
+    _open_inbox(tmp_path, "alice")
+    inbox = tmp_path / "alice" / "inbox"
+    dead_pid = _dead_pid()
+    held_fd = _hold_lockfile_flock(inbox, str(dead_pid).encode("ascii"))
+    try:
+        rc, stdout, stderr = _run(a2a, "_watcher_kill", "alice")
+    finally:
+        os.close(held_fd)
+    assert rc == 1
+    # The marker prints the SYMBOLIC errno name (errno.errorcode.get), so the
+    # ESRCH symbol — not the integer 3. Construct the complete expected line.
+    assert stdout.strip() == f"WATCHER_KILL_FAILED {dead_pid} ESRCH"
+    assert stderr == ""
+
+
+# ---------------------------------------------------------------------------
+# Infinite-mode sentinel: _max_elapsed parser (T2)
+# ---------------------------------------------------------------------------
+
+
+def test_max_elapsed_none_skips_recycle_branch(a2a):
+    """_max_elapsed parser: 'none' (any case) -> None; numeric -> float;
+    <=0 -> ArgumentTypeError; float('inf') is never produced (design §4.1)."""
+    assert a2a._max_elapsed("none") is None
+    assert a2a._max_elapsed("NONE") is None
+    assert a2a._max_elapsed("540") == 540.0
+    assert a2a._max_elapsed("0.2") == 0.2
+
+    import argparse as _ap
+    for bad in ("0", "-1", "-0.5"):
+        with pytest.raises(_ap.ArgumentTypeError):
+            a2a._max_elapsed(bad)
+
+    # Sentinel is None, never a numeric magic value.
+    assert a2a._max_elapsed("none") is not float("inf")
+
+
+def test_max_elapsed_rejects_non_finite(a2a):
+    """M-2: _max_elapsed must reject 'inf' and 'nan' with ArgumentTypeError.
+
+    Without a math.isfinite guard, float('inf') parses to inf (which would make
+    ``elapsed >= max_elapsed`` never true -> a finite-looking budget that never
+    recycles) and float('nan') parses to nan (every comparison False -> same
+    silent never-recycle, plus int(nan) raises later). Both must be rejected at
+    parse time, identically to the <= 0 case."""
+    import argparse as _ap
+    for bad in ("inf", "Inf", "INF", "infinity", "+inf", "-inf", "nan", "NaN", "-nan"):
+        with pytest.raises(_ap.ArgumentTypeError):
+            a2a._max_elapsed(bad)
+
+
+def test_heartbeat_interval_parser_accepts_positive(a2a):
+    """M-3: --heartbeat-interval parser accepts positive floats unchanged."""
+    assert a2a._heartbeat_interval("1.0") == 1.0
+    assert a2a._heartbeat_interval("30") == 30.0
+    assert a2a._heartbeat_interval("0.05") == 0.05
+
+
+def test_heartbeat_interval_parser_rejects_non_positive_and_non_finite(a2a):
+    """M-3: --heartbeat-interval must be > 0 and finite, for symmetry with
+    _max_elapsed. <= 0 would make the monotonic-throttle touch on every loop
+    iteration (or never advance last_heartbeat sanely); inf/nan would wedge the
+    throttle comparison. All rejected with ArgumentTypeError."""
+    import argparse as _ap
+    for bad in ("0", "-1", "-0.5", "inf", "-inf", "nan", "NaN"):
+        with pytest.raises(_ap.ArgumentTypeError):
+            a2a._heartbeat_interval(bad)
 
 
 # ---------------------------------------------------------------------------

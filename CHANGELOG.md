@@ -32,6 +32,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   estimation, multi-agent consensus pointing, AI-productivity multipliers, and
   Brooks's Law scaling.
 
+### Changed
+
+- a2a watch chain replaced by a single immortal background-Bash watcher that
+  exits only on message arrival / inbox-gone / lock-contention. Eliminates the
+  per-cycle Task recycle (~15-25k tokens/cycle) — idle sessions now incur ~0
+  watcher-induced tokens. Liveness moves from Task-transcript mtime to a
+  heartbeat file (90s window). Non-Claude platforms degrade to the hook-notify
+  floor (Tier 0).
+
+### Fixed
+
+- Corrected the `[0.64.0]` cost model, which measured main-transcript activity
+  only and under-counted the true per-recycle subagent cost.
+
+### Migration
+
+- Any open watch chain must be re-armed once after upgrade: run `/a2a open
+  <name>`. The orphan hint will prompt you on your next turn.
+
 ## [0.70.0] - 2026-05-26
 
 ### Added
