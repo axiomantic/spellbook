@@ -25,29 +25,17 @@ structure is copied verbatim from
 ``test_claude_code_wires_default_mode_and_permissions.py``.
 """
 
-import sys
-
 import pytest
 import tripwire
 
-# install_hooks calls shutil.which("powershell") on Windows. Tripwire's
-# SubprocessPlugin always intercepts shutil.which; register a strict
-# return on Windows so the SUT can complete and assert exactly one call
-# afterwards. On non-Windows the SUT does not enter that branch.
-_FAKE_POWERSHELL = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
-
-
-def _register_powershell_which_mock() -> None:
-    if sys.platform == "win32":
-        tripwire.subprocess.mock_which("powershell", returns=_FAKE_POWERSHELL)
-
-
-def _assert_powershell_which_if_windows(times: int = 1) -> None:
-    if sys.platform == "win32":
-        for _ in range(times):
-            tripwire.subprocess.assert_which(
-                "powershell", returns=_FAKE_POWERSHELL
-            )
+# NOTE: the install-side sibling test registers a Windows-only
+# shutil.which("powershell") mock because install() calls install_hooks(),
+# which probes for PowerShell on win32 (installer/components/hooks.py). The
+# uninstall path exercised here calls uninstall_hooks() instead, and
+# uninstall_hooks() does NOT probe for PowerShell -- so no which("powershell")
+# interaction ever fires on any platform. Registering one here (as an
+# over-copied expectation) left an unconsumed mock that tripwire flagged at
+# end-of-test on Windows only. Hence: no powershell mock in this file.
 
 
 @pytest.fixture
@@ -158,7 +146,6 @@ def test_uninstall_unregisters_mcp_even_when_skip_global_steps(
 
     state_budget = _STATE_PATH_CALLS_PER_UNINSTALL
     state_mock = _redirect_state_file(tmp_path, budget=state_budget)
-    _register_powershell_which_mock()
 
     # uninstall does not call Path.home() in this path (budget 0), but tripwire
     # requires the target be registered if it is ever touched. Registering zero
@@ -208,7 +195,6 @@ def test_uninstall_unregisters_mcp_even_when_skip_global_steps(
                 kwargs={"dry_run": False, "config_dir": config_dir},
             )
     _assert_state_file_mock(state_mock, budget=state_budget)
-    _assert_powershell_which_if_windows()
 
     # The unregistration ran (ungated) and emitted exactly one mcp_server result.
     mcp_results = [r for r in results if r.component == "mcp_server"]
