@@ -725,6 +725,21 @@ def cmd_watch(args: argparse.Namespace) -> int:
     poll_interval = args.poll_interval
     max_elapsed = args.max_elapsed
     max_batch = args.max_batch
+
+    heartbeat_path = inbox / ".watcher.heartbeat"
+    heartbeat_interval = (
+        args.heartbeat_interval
+        if getattr(args, "heartbeat_interval", None) is not None
+        else _HEARTBEAT_INTERVAL_S
+    )
+    last_heartbeat = None  # force an immediate first touch
+    # Create the heartbeat once; subsequent updates are os.utime only (no fd
+    # churn / no fd leak — design §3.1 OS-3). Best-effort: advisory, never fatal.
+    try:
+        heartbeat_path.touch(exist_ok=True)
+    except OSError:
+        pass
+
     start = time.monotonic()
     try:
         while True:
@@ -732,6 +747,14 @@ def cmd_watch(args: argparse.Namespace) -> int:
             if max_elapsed is not None and elapsed >= max_elapsed:
                 print(f"WATCH_RECYCLE elapsed={int(max_elapsed)}s")
                 return 0
+
+            now_mono = time.monotonic()
+            if last_heartbeat is None or (now_mono - last_heartbeat) >= heartbeat_interval:
+                try:
+                    os.utime(heartbeat_path, None)  # OS-3: no fd churn
+                except OSError:
+                    pass  # advisory; never fatal
+                last_heartbeat = now_mono
 
             # Snapshot inbox; if any real messages are present, attempt an
             # atomic batch claim. If every candidate vanishes mid-claim
@@ -1070,6 +1093,15 @@ def _build_parser() -> argparse.ArgumentParser:
     sp_watch.add_argument("--max-batch", dest="max_batch", type=int, default=50)
     sp_watch.add_argument(
         "--max-elapsed", dest="max_elapsed", type=_max_elapsed, default=None
+    )
+    # Test seam (slash-internal; NOT in _USAGE): override the heartbeat touch
+    # cadence. Accelerates --heartbeat-interval in tests; does NOT affect the
+    # fixed _HEARTBEAT_STALE_S liveness window (design §3.1, §12.4).
+    sp_watch.add_argument(
+        "--heartbeat-interval",
+        dest="heartbeat_interval",
+        type=float,
+        default=None,
     )
     sp_watch.set_defaults(func=cmd_watch)
 

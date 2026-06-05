@@ -960,6 +960,32 @@ def test_watch_kill_releases_lockfile_via_kernel(tmp_path):
     )
 
 
+def test_watch_touches_heartbeat_on_entry_and_interval(tmp_path):
+    """Heartbeat exists within <1s of start (first-touch-immediate) and its
+    mtime advances across an interval (design §3.1, §12.4). Uses the
+    --heartbeat-interval test seam (cadence only)."""
+    _open_inbox(tmp_path, "alice")
+    proc = _spawn_watch(
+        tmp_path, "alice", max_elapsed=6.0, heartbeat_interval=1.0
+    )
+    try:
+        inbox = tmp_path / "alice" / "inbox"  # two-level: <root>/<name>/inbox
+        hb = inbox / ".watcher.heartbeat"
+        # First-touch-immediate: heartbeat exists within ~1s.
+        deadline = time.time() + 1.5
+        while time.time() < deadline and not hb.exists():
+            time.sleep(0.05)
+        assert hb.exists(), "heartbeat not created on loop entry"
+        mtime1 = hb.stat().st_mtime
+        # Interval touch: mtime advances after >1 interval.
+        time.sleep(2.5)
+        mtime2 = hb.stat().st_mtime
+        assert mtime2 > mtime1, "heartbeat mtime did not advance across interval"
+    finally:
+        proc.terminate()
+        proc.wait(timeout=5)
+
+
 # ---------------------------------------------------------------------------
 # watch: fswatch + 500ms polling backstop + spurious-wake re-entry (T3b)
 #
