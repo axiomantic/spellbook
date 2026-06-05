@@ -56,13 +56,6 @@ repos:
         stages: [manual]
         files: ^skills/.*SKILL\.md$
 
-      - id: check-admin-build
-        name: Check admin frontend build is up to date
-        entry: python3 scripts/check_admin_build.py
-        language: system
-        pass_filenames: false
-        files: ^spellbook/admin/frontend/(src/|index\.html|package\.json|package-lock\.json|vite\.config\.ts|tsconfig\.json|tailwind\.config\.js|postcss\.config\.js)
-
       - id: check-admin-frontend
         name: Check admin frontend (lint + typecheck)
         entry: bash -c 'cd spellbook/admin/frontend && npm run lint && npx tsc --noEmit'

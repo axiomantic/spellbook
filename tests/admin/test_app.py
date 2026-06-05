@@ -176,6 +176,93 @@ def test_admin_app_allows_bearer_post_without_origin():
     route_load_token.assert_call(args=(), kwargs={})
 
 
+def test_admin_app_warns_when_static_bundle_missing(tmp_path, monkeypatch, caplog):
+    """When ``STATIC_DIR`` does not exist, ``create_admin_app()`` emits
+    exactly ONE WARNING naming the missing path and the build command.
+
+    The warning is the only operator-facing signal that the admin UI will
+    404 because the SPA bundle was never built. We pin the FULL rendered
+    message (constructed from the patched path) so a regression that drops
+    the build instructions, the path, or the warning itself is caught.
+
+    ESCAPE: test_admin_app_warns_when_static_bundle_missing
+      CLAIM: A missing STATIC_DIR produces exactly one WARNING from
+             ``spellbook.admin.app`` whose rendered message equals the full
+             expected string including the patched nonexistent path.
+      PATH:  create_admin_app() -> ``if not STATIC_DIR.exists():`` (True) ->
+             logger.warning(...) with STATIC_DIR as the %s arg.
+      CHECK: exactly one record from the app logger at WARNING level, and
+             getMessage() == the complete expected string.
+      MUTATION: (a) Removing the warning entirely -> zero records, len check
+                fails. (b) Dropping the path %s arg or changing the literal
+                text -> getMessage() mismatch. (c) Inverting the guard
+                (warn when present) -> zero records here. (d) Emitting at a
+                lower level (info/debug) -> caplog at WARNING captures zero.
+      ESCAPE: An implementation that logged the warning unconditionally
+              (even when the dir exists) would still pass THIS test, but the
+              symmetric ``...does_not_warn_when_present`` test below fails
+              for it.
+      IMPACT: A missing warning hides a broken admin UI install; a garbled
+              message misdirects the operator's fix.
+    """
+    import logging
+
+    import spellbook.admin.app as admin_app_mod
+
+    missing = tmp_path / "no-such-static"
+    assert not missing.exists()
+    monkeypatch.setattr(admin_app_mod, "STATIC_DIR", missing)
+
+    expected_message = (
+        f"Admin SPA bundle not found at {missing}; the admin UI will not "
+        f"load. Build it with: cd spellbook/admin/frontend && npm ci "
+        f"--legacy-peer-deps && npm run build (or re-run the spellbook "
+        f"installer)."
+    )
+
+    with caplog.at_level(logging.WARNING, logger="spellbook.admin.app"):
+        admin_app_mod.create_admin_app()
+
+    static_warnings = [
+        r
+        for r in caplog.records
+        if r.name == "spellbook.admin.app"
+        and r.levelno == logging.WARNING
+        and r.getMessage() == expected_message
+    ]
+    assert len(static_warnings) == 1
+
+
+def test_admin_app_does_not_warn_when_static_bundle_present(
+    tmp_path, monkeypatch, caplog
+):
+    """Symmetric case: when ``STATIC_DIR`` exists, ``create_admin_app()``
+    emits ZERO of the missing-bundle warnings.
+
+    Pairs with the missing-bundle test to rule out an implementation that
+    warns unconditionally.
+    """
+    import logging
+
+    import spellbook.admin.app as admin_app_mod
+
+    present = tmp_path / "static"
+    present.mkdir()
+    monkeypatch.setattr(admin_app_mod, "STATIC_DIR", present)
+
+    with caplog.at_level(logging.WARNING, logger="spellbook.admin.app"):
+        admin_app_mod.create_admin_app()
+
+    missing_bundle_warnings = [
+        r
+        for r in caplog.records
+        if r.name == "spellbook.admin.app"
+        and r.levelno == logging.WARNING
+        and "Admin SPA bundle not found at" in r.getMessage()
+    ]
+    assert missing_bundle_warnings == []
+
+
 def test_admin_app_creates():
     from spellbook.admin.app import create_admin_app
 
