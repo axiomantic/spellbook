@@ -962,16 +962,18 @@ def test_watch_kill_releases_lockfile_via_kernel(tmp_path):
 
 def test_watch_infinite_mode_delivers_without_recycle(a2a, tmp_path):
     """Production path: NO --max-elapsed (infinite). The loop survives >=2 poll
-    intervals (proves both line-718 and line-764 guards), a sent message yields
-    PENDING_BATCH, and WATCH_RECYCLE never appears (design §12.1)."""
+    intervals (proves the `max_elapsed is not None` recycle guard does not
+    crash on a None budget), a sent message yields PENDING_BATCH, and
+    WATCH_RECYCLE never appears (design §12.1)."""
     _open_inbox(tmp_path, "alice")
     proc = _spawn_watch(tmp_path, "alice", infinite=True, poll_interval=0.2)
     try:
         # Loop-survival: alive after >=2 full poll intervals + slack.
         time.sleep(0.2 * 2 + 0.6)
         assert proc.poll() is None, (
-            "watcher crashed within 2 poll intervals — likely the line-764 "
-            "None - float TypeError (infinite mode unguarded)"
+            "watcher crashed within 2 poll intervals — likely the "
+            "None - float TypeError from an unguarded max_elapsed comparison "
+            "(infinite mode)"
         )
         # Deliver a message.
         _run(a2a, "send", "--from", "bob", "--to", "alice", "hello")
@@ -1493,10 +1495,10 @@ def test_watch_caps_batch_at_max_batch(tmp_path):
 #   - JSON payload: {name, agent_id, started_at (UTC ISO8601), output_file}.
 #   - `write` requires absolute --output-file. `clear` is idempotent.
 #   - `read` prints raw JSON or empty string when absent (exit 0).
-#   - `alive`:
+#   - `alive` (output_file = the watcher's .watcher.heartbeat path):
 #         exit 2 → state file missing or malformed (FAIL-SAFE-DEAD)
-#         exit 0 → transcript exists AND mtime < 600s old
-#         exit 1 → transcript missing OR mtime ≥ 600s old
+#         exit 0 → heartbeat exists AND mtime < 90s old (3x the 30s interval)
+#         exit 1 → heartbeat missing OR mtime ≥ 90s old
 #     Stdout is empty on every alive exit (machine-checkable via $? only).
 # ---------------------------------------------------------------------------
 
@@ -1634,7 +1636,7 @@ def test_open_state_alive_missing_returns_2(a2a):
 
 
 def test_open_state_alive_recent_transcript_returns_0(a2a, tmp_path):
-    """alive: state present + transcript mtime < 600s ago → exit 0."""
+    """alive: state present + heartbeat mtime < 90s ago → exit 0."""
     transcript = tmp_path / "fresh.output"
     transcript.write_text("x", encoding="utf-8")
 

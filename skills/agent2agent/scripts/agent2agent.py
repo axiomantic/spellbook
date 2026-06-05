@@ -1296,7 +1296,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--output-file",
         dest="output_file",
         default=None,
-        help="Absolute path to bg Task agent's transcript file (write only).",
+        help="Absolute path to the watcher's .watcher.heartbeat file (write only).",
     )
     sp_open_state.set_defaults(func=cmd_open_state)
 
