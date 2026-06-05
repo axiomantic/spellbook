@@ -1233,7 +1233,7 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
 
     # agent2agent orphaned-chain backstop: surface a re-arm hint when the
     # bg watch agent for an open chain has died (compaction, process death).
-    # Metadata-only: reads `.open/<sid>` JSON + stats the transcript path.
+    # Metadata-only: reads `.open/<sid>` JSON + stats the `.watcher.heartbeat` path.
     try:
         orphan_hint = _agent2agent_check_orphaned_chain(data)
         if orphan_hint:
