@@ -347,6 +347,20 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
     settings.json by calling install_permissions with derive_managed_deny output.
 
     Uses a fixture spellbook_dir that contains a minimal tiers.toml.
+
+    Per-config-dir MCP contract: the MCP registration block in
+    ``ClaudeCodeInstaller.install()`` is no longer gated behind
+    ``skip_global_steps``. It runs for EVERY config dir, including a second
+    ``--claude-config-dir`` installed with ``skip_global_steps=True`` (see
+    ``test_claude_code_registers_mcp_per_config_dir.py``). That block first
+    calls ``unregister_mcp_server("spellbook-http")`` -- which internally hits
+    the ``installer.components.mcp`` binding of ``check_claude_cli_available``
+    -- and then calls the ``installer.platforms.claude_code`` binding of
+    ``check_claude_cli_available`` for the registration guard. Both bindings
+    are mocked to ``False`` here so the block short-circuits to the
+    "claude CLI not available" branch without ever shelling out to
+    ``claude --version`` / ``claude mcp ...``. This mirrors the mocking idiom
+    in ``test_claude_code_registers_mcp_per_config_dir.py``.
     """
     # Isolate HOME / USERPROFILE so any install-time path that resolves
     # through Path.home() does not touch the operator's real config.
@@ -356,13 +370,37 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
 
     # ``ClaudeCodeInstaller.install(skip_global_steps=True)`` calls
     # ``_state_file_path`` 9 times and ``generate_claude_context`` once
-    # (one CLAUDE.md write); ``check_claude_cli_available`` is bypassed
-    # entirely under skip_global_steps. These counts are intentional and
-    # part of the contract pinned by this test.
+    # (one CLAUDE.md write). The MCP block runs ungated under
+    # skip_global_steps but never touches ``_state_file_path`` (that symbol
+    # lives only in ``managed_permissions_state``; the MCP path uses
+    # subprocess/CLAUDE_CONFIG_DIR, not the managed-permissions state file),
+    # so the state-path count is unchanged at 9. ``check_claude_cli_available``
+    # is hit exactly once per binding (claude_code + mcp), both mocked False.
+    # These counts are intentional and part of the contract pinned by this test.
     expected_state_calls = 9
     expected_ctx_calls = 1
+    expected_cli_calls = 1  # per binding
     state_path = tmp_path / "state" / "managed_permissions.json"
     state_path_mock = _mock_state_path(state_path, expected_state_calls)
+
+    # MCP block (now ungated under skip_global_steps): mock BOTH
+    # ``check_claude_cli_available`` bindings to False so the block takes the
+    # "claude CLI not available" branch and emits a single skipped mcp_server
+    # result without shelling out. The ``..components.mcp import
+    # check_claude_cli_available`` in claude_code.py creates a SEPARATE binding
+    # from the symbol defined in mcp.py: ``unregister_mcp_server`` (called
+    # inside mcp.py) uses mcp's binding, the registration guard (called inside
+    # claude_code.py) uses claude_code's binding. Two bindings, two mocks.
+    cc_cli_mock = tripwire.mock(
+        "installer.platforms.claude_code:check_claude_cli_available"
+    )
+    for _ in range(expected_cli_calls):
+        cc_cli_mock.returns(False)
+    mcp_cli_mock = tripwire.mock(
+        "installer.components.mcp:check_claude_cli_available"
+    )
+    for _ in range(expected_cli_calls):
+        mcp_cli_mock.returns(False)
 
     sbdir = _make_spellbook_dir(
         tmp_path,
@@ -393,8 +431,8 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
         version="test",
     )
     # Stub out the CLAUDE.md generation side-effect; we only assert deny
-    # patterns reach settings.json here. ``check_claude_cli_available`` is
-    # bypassed by ``skip_global_steps=True`` so it does not need a mock.
+    # patterns reach settings.json here. The MCP block's CLI probes are
+    # mocked above (cc_cli_mock / mcp_cli_mock).
     ctx_mock = tripwire.mock(
         "installer.platforms.claude_code:generate_claude_context"
     )
@@ -402,7 +440,7 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
         ctx_mock.returns("")
 
     with tripwire:
-        inst.install(skip_global_steps=True)
+        results = inst.install(skip_global_steps=True)
 
     settings_path = config_dir / "settings.json"
     assert settings_path.exists()
@@ -416,6 +454,18 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
     with tripwire.in_any_order():
         for _ in range(expected_ctx_calls):
             ctx_mock.assert_call(args=(sbdir,))
+    # MCP block CLI probes (ungated under skip_global_steps): each binding of
+    # ``check_claude_cli_available`` is hit exactly once.
+    with tripwire.in_any_order():
+        for _ in range(expected_cli_calls):
+            cc_cli_mock.assert_call(args=(), kwargs={})
+        for _ in range(expected_cli_calls):
+            mcp_cli_mock.assert_call(args=(), kwargs={})
+    # The MCP block emitted exactly one skipped mcp_server result (CLI mocked
+    # unavailable), confirming registration ran ungated for this config dir.
+    mcp_results = [r for r in results if r.component == "mcp_server"]
+    assert len(mcp_results) == 1, mcp_results
+    assert mcp_results[0].action == "skipped"
     # On Windows, ``hooks.install_hooks`` probes for PowerShell via
     # ``shutil.which``; tripwire intercepts that call and requires it to be
     # asserted explicitly. On other platforms, no such call is made.
