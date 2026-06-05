@@ -41,6 +41,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `estimate-buffer`/`estimate-report` phase commands. PERT three-point
   estimation, multi-agent consensus pointing, AI-productivity multipliers, and
   Brooks's Law scaling.
+- **Admin SPA built at install time.** The installer now compiles the admin
+  frontend (`admin_build` component: `npm ci --legacy-peer-deps` + `npm run
+  build`) during install/update instead of shipping a pre-built bundle in the
+  repo. Node and npm are now a hard requirement — a missing toolchain fails the
+  install with an actionable error.
+
+### Changed
+
+- **Admin bundle no longer committed.** `spellbook/admin/static/` is now
+  generated locally and git-ignored; the `check-admin-build` pre-commit hash
+  gate and `scripts/check_admin_build.py` are removed. The admin app logs a
+  warning at startup, naming the build command, when the bundle is absent.
 
 ### Changed
 

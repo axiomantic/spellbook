@@ -125,6 +125,14 @@ class TestInstallerRunDaemonCentralized:
 
         monkeypatch.setattr("installer.core.get_platform_installer", mock_get_platform_installer)
         monkeypatch.setattr("installer.components.mcp.install_daemon", mock_install_daemon)
+        # A real admin build would fail in this fake spellbook_dir (no
+        # frontend source) and now HALTS the install before platform
+        # installs. This test asserts daemon/platform ordering, not the
+        # build, so stub a successful build.
+        monkeypatch.setattr(
+            "installer.components.admin_build.build_admin_frontend",
+            lambda *a, **kw: (True, "built"),
+        )
 
         installer = Installer(spellbook_dir)
         installer.run(platforms=["claude_code", "opencode"], dry_run=False)
@@ -153,6 +161,12 @@ class TestInstallerRunDaemonCentralized:
         )
         monkeypatch.setattr("installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok"))
         monkeypatch.setattr("installer.components.mcp.check_daemon_health", lambda *a, **kw: (True, "healthy"))
+        # Stub a successful admin build so the install does not halt before
+        # platform installs (real build would fail in the fake spellbook_dir).
+        monkeypatch.setattr(
+            "installer.components.admin_build.build_admin_frontend",
+            lambda *a, **kw: (True, "built"),
+        )
 
         installer = Installer(spellbook_dir)
         installer.run(platforms=["claude_code"], dry_run=False, on_progress=on_progress)
@@ -215,6 +229,12 @@ class TestInstallerRunDaemonCentralized:
             lambda *a, **kw: _fake_platform_installer("Test", "test"),
         )
         monkeypatch.setattr("installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok"))
+        # Stub a successful admin build so the install reaches the health
+        # check (a real build failure would now halt before it).
+        monkeypatch.setattr(
+            "installer.components.admin_build.build_admin_frontend",
+            lambda *a, **kw: (True, "built"),
+        )
 
         health_called = []
 
@@ -288,6 +308,392 @@ class TestInstallerRunDaemonCentralized:
         daemon_results = [r for r in session.results if r.component == "mcp_daemon"]
         assert daemon_results[0].success is False
         assert daemon_results[0].action == "failed"
+
+
+class TestInstallerRunBuildsAdminFrontend:
+    """The admin SPA is built once during Installer.run(), and its result
+    is recorded with component='admin_frontend' / platform='system'.
+    """
+
+    def _patch_common(self, spellbook_dir, home_dir, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+        monkeypatch.setattr(
+            "installer.core.get_platform_config_dir", lambda p: home_dir / ".claude"
+        )
+        monkeypatch.setattr(
+            "installer.demarcation.get_installed_version", lambda p: None
+        )
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda *a, **kw: _fake_platform_installer("Test", "test"),
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok")
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_daemon_health",
+            lambda *a, **kw: (True, "ok"),
+        )
+
+    def test_build_admin_frontend_called_with_spellbook_dir(
+        self, spellbook_dir, home_dir, monkeypatch
+    ):
+        """build_admin_frontend is invoked exactly once with the install's
+        spellbook_dir and the run's dry_run flag, and the result is recorded.
+        """
+        from installer.core import Installer
+
+        self._patch_common(spellbook_dir, home_dir, monkeypatch)
+
+        build_calls = []
+
+        def fake_build(sb_dir, dry_run=False):
+            build_calls.append((sb_dir, dry_run))
+            return (True, "Admin SPA built (npm ci + npm run build)")
+
+        monkeypatch.setattr(
+            "installer.components.admin_build.build_admin_frontend", fake_build
+        )
+
+        installer = Installer(spellbook_dir)
+        session = installer.run(platforms=["claude_code"], dry_run=False)
+
+        assert build_calls == [(spellbook_dir, False)]
+        admin_results = [
+            r for r in session.results if r.component == "admin_frontend"
+        ]
+        assert len(admin_results) == 1
+        assert admin_results[0].platform == "system"
+        assert admin_results[0].success is True
+        assert admin_results[0].action == "installed"
+        assert admin_results[0].message == (
+            "Admin SPA: Admin SPA built (npm ci + npm run build)"
+        )
+
+    def test_build_failure_recorded_as_failed_result(
+        self, spellbook_dir, home_dir, monkeypatch
+    ):
+        """A build failure (e.g. missing node) is recorded as a failed
+        result so session.success is False and the operator sees the cause.
+        """
+        from installer.core import Installer
+
+        self._patch_common(spellbook_dir, home_dir, monkeypatch)
+
+        node_missing_msg = (
+            "node is required to build the admin SPA but was not found on "
+            "PATH. Install Node.js (https://nodejs.org) and re-run the "
+            "spellbook installer."
+        )
+        monkeypatch.setattr(
+            "installer.components.admin_build.build_admin_frontend",
+            lambda sb_dir, dry_run=False: (False, node_missing_msg),
+        )
+
+        installer = Installer(spellbook_dir)
+        session = installer.run(platforms=["claude_code"], dry_run=False)
+
+        admin_results = [
+            r for r in session.results if r.component == "admin_frontend"
+        ]
+        assert len(admin_results) == 1
+        assert admin_results[0].platform == "system"
+        assert admin_results[0].success is False
+        assert admin_results[0].action == "failed"
+        assert admin_results[0].message == f"Admin SPA: {node_missing_msg}"
+        assert session.success is False
+
+    def test_build_failure_halts_before_platform_installs(
+        self, spellbook_dir, home_dir, monkeypatch
+    ):
+        """Operator decision: an admin-build failure HALTS the install. When
+        the build fails and it is not a dry run, platform installs must NOT
+        run, the failed ``admin_frontend`` result is recorded, and
+        ``session.success`` is False.
+
+        This is an intentional deviation from the daemon-failure
+        fall-through precedent (where a failed daemon still lets platform
+        installs proceed): node/npm are a hard requirement, so a build
+        failure aborts the whole install.
+        """
+        from installer.core import Installer
+
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+        monkeypatch.setattr(
+            "installer.core.get_platform_config_dir", lambda p: home_dir / ".claude"
+        )
+        monkeypatch.setattr(
+            "installer.demarcation.get_installed_version", lambda p: None
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok")
+        )
+        # If the health check runs it would mean we did NOT halt; track it.
+        health_called = []
+        monkeypatch.setattr(
+            "installer.components.mcp.check_daemon_health",
+            lambda *a, **kw: (health_called.append(True), (True, "ok"))[-1],
+        )
+
+        call_order = []
+
+        node_missing_msg = (
+            "node is required to build the admin SPA but was not found on "
+            "PATH. Install Node.js (https://nodejs.org) and re-run the "
+            "spellbook installer."
+        )
+
+        def fake_build(sb_dir, dry_run=False):
+            call_order.append("build_admin_frontend")
+            return (False, node_missing_msg)
+
+        monkeypatch.setattr(
+            "installer.components.admin_build.build_admin_frontend", fake_build
+        )
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda platform, *a, **kw: _fake_platform_installer(
+                platform, platform, call_order
+            ),
+        )
+
+        installer = Installer(spellbook_dir)
+        session = installer.run(
+            platforms=["claude_code", "opencode"], dry_run=False
+        )
+
+        # The build ran and halted the install: no platform install fired.
+        assert call_order == ["build_admin_frontend"]
+        # The health check did not run either (we early-returned).
+        assert health_called == []
+
+        # The failed admin_frontend result is present and pins the message.
+        admin_results = [
+            r for r in session.results if r.component == "admin_frontend"
+        ]
+        assert len(admin_results) == 1
+        assert admin_results[0].platform == "system"
+        assert admin_results[0].success is False
+        assert admin_results[0].action == "failed"
+        assert admin_results[0].message == f"Admin SPA: {node_missing_msg}"
+
+        # No platform results were recorded at all (halt before the loop).
+        platform_results = [
+            r for r in session.results if r.component == "platform"
+        ]
+        assert platform_results == []
+
+        assert session.success is False
+
+    def test_dry_run_build_failure_does_not_halt(
+        self, spellbook_dir, home_dir, monkeypatch
+    ):
+        """The halt is scoped to real installs. Under ``dry_run`` a build
+        failure does NOT early-return: platform installers still run so the
+        operator sees the full dry-run plan.
+        """
+        from installer.core import Installer
+
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+        monkeypatch.setattr(
+            "installer.core.get_platform_config_dir", lambda p: home_dir / ".claude"
+        )
+        monkeypatch.setattr(
+            "installer.demarcation.get_installed_version", lambda p: None
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok")
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_daemon_health",
+            lambda *a, **kw: (True, "ok"),
+        )
+
+        call_order = []
+
+        def fake_build(sb_dir, dry_run=False):
+            call_order.append("build_admin_frontend")
+            return (False, "node missing")
+
+        monkeypatch.setattr(
+            "installer.components.admin_build.build_admin_frontend", fake_build
+        )
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda platform, *a, **kw: _fake_platform_installer(
+                platform, platform, call_order
+            ),
+        )
+
+        installer = Installer(spellbook_dir)
+        installer.run(platforms=["claude_code"], dry_run=True)
+
+        # Under dry_run, the platform install still ran after the build.
+        assert call_order == [
+            "build_admin_frontend",
+            "platform_install:claude_code",
+        ]
+
+    def test_build_runs_before_platform_installs(
+        self, spellbook_dir, home_dir, monkeypatch
+    ):
+        """The admin build runs before any platform installer.install()."""
+        from installer.core import Installer
+
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+        monkeypatch.setattr(
+            "installer.core.get_platform_config_dir", lambda p: home_dir / ".claude"
+        )
+        monkeypatch.setattr(
+            "installer.demarcation.get_installed_version", lambda p: None
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.install_daemon", lambda *a, **kw: (True, "ok")
+        )
+        monkeypatch.setattr(
+            "installer.components.mcp.check_daemon_health",
+            lambda *a, **kw: (True, "ok"),
+        )
+
+        call_order = []
+
+        def fake_build(sb_dir, dry_run=False):
+            call_order.append("build_admin_frontend")
+            return (True, "built")
+
+        monkeypatch.setattr(
+            "installer.components.admin_build.build_admin_frontend", fake_build
+        )
+        monkeypatch.setattr(
+            "installer.core.get_platform_installer",
+            lambda platform, *a, **kw: _fake_platform_installer(
+                platform, platform, call_order
+            ),
+        )
+
+        installer = Installer(spellbook_dir)
+        installer.run(platforms=["claude_code"], dry_run=False)
+
+        assert "build_admin_frontend" in call_order
+        platform_installs = [
+            c for c in call_order if c.startswith("platform_install:")
+        ]
+        assert len(platform_installs) == 1
+        assert call_order.index("build_admin_frontend") < call_order.index(
+            platform_installs[0]
+        )
+
+
+class TestUninstallRemovesAdminStatic:
+    """Uninstall removes the install-time-generated admin SPA bundle at
+    ``spellbook/admin/static/``. The bundle is no longer committed; it is
+    generated by the installer, so uninstall must clean it up. Absence of
+    the directory is tolerated (ignore-errors).
+    """
+
+    def _patch_uninstall_common(self, home_dir, monkeypatch):
+        monkeypatch.setattr(Path, "home", lambda: home_dir)
+        monkeypatch.setattr(
+            "installer.core.resolve_config_dirs",
+            lambda platform, cli_dirs=None: [],
+        )
+        # No system MCP service installed -> _uninstall_mcp_service returns None.
+        monkeypatch.setattr(
+            "installer.core.ServiceManager",
+            lambda *a, **kw: type(
+                "FakeMgr", (), {"is_installed": lambda self: False}
+            )(),
+        )
+
+    def test_uninstall_removes_generated_static_dir(
+        self, spellbook_dir, home_dir, monkeypatch
+    ):
+        """When ``spellbook/admin/static/`` exists, uninstall removes it
+        entirely and records a successful ``admin_frontend`` removal result.
+        """
+        from installer.core import Uninstaller
+
+        self._patch_uninstall_common(home_dir, monkeypatch)
+
+        static_dir = spellbook_dir / "spellbook" / "admin" / "static"
+        static_dir.mkdir(parents=True)
+        (static_dir / "index.html").write_text("<!doctype html>")
+        (static_dir / "assets").mkdir()
+        (static_dir / "assets" / "app.js").write_text("console.log(1)")
+
+        uninstaller = Uninstaller(spellbook_dir)
+        session = uninstaller.run(platforms=["claude_code"], dry_run=False)
+
+        assert not static_dir.exists()
+
+        admin_results = [
+            r for r in session.results if r.component == "admin_frontend"
+        ]
+        assert len(admin_results) == 1
+        assert admin_results[0].platform == "system"
+        assert admin_results[0].success is True
+        assert admin_results[0].action == "removed"
+        assert admin_results[0].message == (
+            f"Admin SPA: removed generated bundle at {static_dir}"
+        )
+
+    def test_uninstall_absent_static_dir_is_noop(
+        self, spellbook_dir, home_dir, monkeypatch
+    ):
+        """When the static dir does not exist, uninstall records a benign
+        not-present result and removes nothing (ignore-errors on absence).
+        """
+        from installer.core import Uninstaller
+
+        self._patch_uninstall_common(home_dir, monkeypatch)
+
+        static_dir = spellbook_dir / "spellbook" / "admin" / "static"
+        assert not static_dir.exists()
+
+        uninstaller = Uninstaller(spellbook_dir)
+        session = uninstaller.run(platforms=["claude_code"], dry_run=False)
+
+        admin_results = [
+            r for r in session.results if r.component == "admin_frontend"
+        ]
+        assert len(admin_results) == 1
+        assert admin_results[0].platform == "system"
+        assert admin_results[0].success is True
+        assert admin_results[0].action == "removed"
+        assert admin_results[0].message == (
+            "Admin SPA: no generated bundle to remove"
+        )
+
+    def test_uninstall_dry_run_does_not_remove_static_dir(
+        self, spellbook_dir, home_dir, monkeypatch
+    ):
+        """A dry-run uninstall reports the intended removal but leaves the
+        static dir on disk.
+        """
+        from installer.core import Uninstaller
+
+        self._patch_uninstall_common(home_dir, monkeypatch)
+
+        static_dir = spellbook_dir / "spellbook" / "admin" / "static"
+        static_dir.mkdir(parents=True)
+        (static_dir / "index.html").write_text("<!doctype html>")
+
+        uninstaller = Uninstaller(spellbook_dir)
+        session = uninstaller.run(platforms=["claude_code"], dry_run=True)
+
+        assert static_dir.exists()
+        assert (static_dir / "index.html").read_text() == "<!doctype html>"
+
+        admin_results = [
+            r for r in session.results if r.component == "admin_frontend"
+        ]
+        assert len(admin_results) == 1
+        assert admin_results[0].platform == "system"
+        assert admin_results[0].success is True
+        assert admin_results[0].action == "removed"
+        assert admin_results[0].message == (
+            f"Admin SPA: would remove generated bundle at {static_dir}"
+        )
 
 
 # ---------------------------------------------------------------------------

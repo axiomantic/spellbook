@@ -183,7 +183,19 @@ def create_admin_app() -> FastAPI:
 
     app.websocket("/ws")(websocket_handler)
 
-    # Serve static frontend with SPA fallback
+    # Serve static frontend with SPA fallback. The bundle is built at install
+    # time (npm ci + npm run build); it is not committed to the repo. If it is
+    # absent, the admin API still works but the browser UI 404s -- warn loudly
+    # and name the fix.
+    if not STATIC_DIR.exists():
+        logger.warning(
+            "Admin SPA bundle not found at %s; the admin UI will not load. "
+            "Build it with: cd spellbook/admin/frontend && npm ci "
+            "--legacy-peer-deps && npm run build (or re-run the spellbook "
+            "installer).",
+            STATIC_DIR,
+        )
+
     if STATIC_DIR.exists():
         # Mount static assets (JS, CSS, etc.) at /assets
         assets_dir = STATIC_DIR / "assets"
