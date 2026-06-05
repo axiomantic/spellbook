@@ -1470,24 +1470,63 @@ def test_open_state_alive_recent_transcript_returns_0(a2a, tmp_path):
     assert stdout == ""
 
 
+def test_open_state_alive_uses_heartbeat_90s(a2a, tmp_path):
+    """alive: output_file = heartbeat path. Fresh -> exit 0; 91s -> exit 1;
+    removed -> exit 1; missing state -> exit 2 (design §3.5, §12.4)."""
+    hb = tmp_path / ".watcher.heartbeat"
+    hb.write_text("", encoding="utf-8")
+
+    rc, _, _ = _run(
+        a2a, "_open_state", "write", "sess-hb", "alice", "agent-xyz",
+        "--output-file", str(hb),
+    )
+    assert rc == 0
+
+    now = time.time()
+    os.utime(str(hb), (now, now))
+    rc, _, _ = _run(a2a, "_open_state", "alive", "sess-hb")
+    assert rc == 0, "fresh heartbeat must read ALIVE"
+
+    stale = now - 91.0
+    os.utime(str(hb), (stale, stale))
+    rc, _, _ = _run(a2a, "_open_state", "alive", "sess-hb")
+    assert rc == 1, "91s-stale heartbeat must read DEAD at the 90s window"
+
+    hb.unlink()
+    rc, _, _ = _run(a2a, "_open_state", "alive", "sess-hb")
+    assert rc == 1, "removed heartbeat must read DEAD"
+
+    rc, _, _ = _run(a2a, "_open_state", "alive", "sess-missing")
+    assert rc == 2, "missing state must read 2 (malformed/absent)"
+
+
 def test_open_state_alive_stale_transcript_returns_1(a2a, tmp_path):
-    """alive: state present + transcript mtime ≥ 600s ago → exit 1."""
-    transcript = tmp_path / "stale.output"
-    transcript.write_text("x", encoding="utf-8")
+    """alive: 91s-stale heartbeat → exit 1 (DEAD); 60s-stale → exit 0 (ALIVE).
+    The pair fences the window to (60, 91) i.e. 90s; the 60s-ALIVE assertion
+    FAILS iff the threshold is left at 600 (design §12.9)."""
+    hb = tmp_path / "stale.heartbeat"
+    hb.write_text("x", encoding="utf-8")
 
     rc, _, _ = _run(
         a2a,
         "_open_state", "write", "sess-foo", "alice", "agent-xyz",
-        "--output-file", str(transcript),
+        "--output-file", str(hb),
     )
     assert rc == 0
 
-    # Force mtime to ~700s in the past (well beyond the 600s threshold).
-    stale = time.time() - 700.0
-    os.utime(str(transcript), (stale, stale))
-
+    now = time.time()
+    # 91s stale -> DEAD at the 90s window.
+    stale = now - 91.0
+    os.utime(str(hb), (stale, stale))
     rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
     assert rc == 1
+    assert stdout == ""
+
+    # 60s stale -> ALIVE. This FAILS if the threshold is still 600.
+    fresh_ish = now - 60.0
+    os.utime(str(hb), (fresh_ish, fresh_ish))
+    rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-foo")
+    assert rc == 0
     assert stdout == ""
 
 
