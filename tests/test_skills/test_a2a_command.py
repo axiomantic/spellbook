@@ -39,13 +39,13 @@ COMMAND_PATH = (
 )
 
 
-# Verbatim Phase D prompt template per impl plan §Task 6 Step 6.2 Phase D
-# (lines 1071-1077 of 2026-05-07-a2a-watch-chain-impl.md). The plan is
-# authoritative for ship-time behavior; design §5.3 lacks the
-# `Set the Bash timeout parameter...` line, but the impl plan (line 1081)
-# elevates it to a MUST and inserts it between the bash command line and
-# the "When it exits" sentence. Reproduce that ordering exactly so a
-# drift in either side fails the test.
+# Verbatim Phase D dispatch block for the IMMORTAL bg-watcher architecture
+# (commands/a2a.md Phase D, "Dispatch via:" block). The slash command no
+# longer dispatches a Task subagent with a natural-language prompt; it
+# dispatches a single immortal `Bash(run_in_background: true)` watcher that
+# exits only on a terminal marker. The load-bearing content is the
+# `Bash(run_in_background: true, command: ...)` block — its drift can
+# reintroduce LLM-side polling or silently break delivery.
 #
 # The script path uses ``<SPELLBOOK_ABS>`` as a substitution placeholder
 # (parallel to ``<NAME>``) rather than a hardcoded developer-machine
@@ -55,29 +55,36 @@ COMMAND_PATH = (
 # ``SPELLBOOK_DIR`` value resolved per ``~/.claude/CLAUDE.md``. Earlier
 # revisions used the literal token ``$SPELLBOOK_DIR`` here, but that
 # relied on an LLM-side reading convention that does NOT carry through
-# to dispatched subagent prompts: the bg Task agent's Bash invocation
-# expanded ``$SPELLBOOK_DIR`` against the shell environment (where it is
-# unset and empty), producing ``python3 /skills/agent2agent/...`` and
-# failing on the first cycle. Using an obvious placeholder forces the
-# orchestrator to substitute, matching the existing ``<NAME>`` pattern.
+# to dispatched background commands: the bg shell expands
+# ``$SPELLBOOK_DIR`` against the (empty) environment, producing
+# ``python3 /skills/agent2agent/...`` and failing on the first cycle.
+# Using an obvious placeholder forces the orchestrator to substitute,
+# matching the existing ``<NAME>`` pattern.
+#
+# CRITICAL: the dispatch carries NO `--max-elapsed` flag (infinite mode)
+# and the watcher must NOT be given a 600000ms Bash timeout — see
+# PHASE_D_FORBIDDEN_TIMEOUT_LINE / PHASE_D_OLD_TIMEOUT_LINE below.
 PHASE_D_PROMPT_VERBATIM = (
-    "Run exactly this one Bash command and wait for it to exit:\n"
-    "\n"
-    "    python3 <SPELLBOOK_ABS>/skills/agent2agent/scripts/agent2agent.py watch <NAME>\n"
-    "\n"
-    "Set the Bash timeout parameter to 600000 milliseconds.\n"
-    "\n"
-    "When it exits, respond with ONLY the last non-empty line of its stdout. "
-    "Do not interpret, summarize, or wrap it. Do not perform any other tool calls. "
-    "Do not run any loops. Do not check anything periodically. "
-    "Do not respond until the bash command exits."
+    "Bash(\n"
+    "    run_in_background: true,\n"
+    "    command: python3 <SPELLBOOK_ABS>/skills/agent2agent/scripts/agent2agent.py watch <NAME>\n"
+    ")"
 )
 
 
-# The "Set the Bash timeout parameter to 600000 milliseconds." line is
-# REQUIRED by the impl plan (§Task 6, Step 6.2 Phase D, line 1081):
-# the Phase D prompt must include this line unconditionally.
-PHASE_D_BASH_TIMEOUT_LINE = (
+# The immortal watcher dispatch must FORBID the per-call Bash timeout: a
+# `run_in_background` task detaches and ignores the per-call ceiling, so a
+# timeout is both unnecessary and a footgun. commands/a2a.md Phase D pins
+# this invariant verbatim ("Do NOT set a 600000ms timeout: ...").
+PHASE_D_FORBIDDEN_TIMEOUT_LINE = (
+    "Do NOT set a 600000ms timeout"
+)
+
+
+# The OLD architecture (Task-subagent recycle chain) instructed the agent to
+# "Set the Bash timeout parameter to 600000 milliseconds." That line is now
+# an ANTIPATTERN and must be ABSENT from the immortal-watcher command file.
+PHASE_D_OLD_TIMEOUT_LINE = (
     "Set the Bash timeout parameter to 600000 milliseconds."
 )
 
@@ -308,34 +315,53 @@ def test_a2a_close_invokes_open_state_clear() -> None:
 
 
 def test_a2a_phase_d_prompt_is_verbatim() -> None:
-    """The Phase D bg-agent prompt is LOAD-BEARING and must be verbatim.
+    """The Phase D bg-watcher dispatch is LOAD-BEARING and must be verbatim.
 
-    Per impl plan line 1101: "The Phase D prompt block matches the
-    design §5.3 Phase D text byte-for-byte." A drift here can
-    reintroduce LLM-side polling and blow up silent-idle token cost.
+    Under the immortal-watcher architecture, Phase D dispatches a single
+    `Bash(run_in_background: true)` watcher whose command line carries the
+    `<SPELLBOOK_ABS>` and `<NAME>` substitution tokens and `watch <NAME>`
+    with NO `--max-elapsed`. A drift here can reintroduce LLM-side polling
+    and blow up silent-idle token cost, or silently break delivery.
     """
     body = _read_command()
     # Normalize line endings; the markdown file may have been edited
     # cross-platform, but the verbatim payload must appear once.
     normalized = body.replace("\r\n", "\n")
     assert PHASE_D_PROMPT_VERBATIM in normalized, (
-        "Phase D bg-agent prompt MUST appear verbatim per design §5.3 "
-        "Phase D / impl plan line 1101. Expected payload:\n"
+        "Phase D bg-watcher dispatch block MUST appear verbatim. "
+        "Expected payload:\n"
         f"{PHASE_D_PROMPT_VERBATIM!r}"
+    )
+    # Infinite mode: the dispatched watcher command line carries NO
+    # --max-elapsed flag. (The flag name may still appear in prose — e.g.
+    # Invariant Principle "no `--max-elapsed`" — so assert specifically that
+    # the `watch <NAME>` command line is not immediately followed by the
+    # flag, rather than that the literal never appears anywhere.)
+    assert "agent2agent.py watch <NAME> --max-elapsed" not in normalized, (
+        "Phase D dispatch command line must NOT pass --max-elapsed "
+        "(infinite mode); the immortal watcher exits only on a terminal marker"
     )
 
 
-def test_a2a_phase_d_prompt_includes_bash_timeout_line() -> None:
-    """Phase D must include the unconditional Bash timeout instruction.
+def test_a2a_phase_d_forbids_bash_timeout_line() -> None:
+    """Phase D must FORBID the 600000ms Bash timeout, not require it.
 
-    Per impl plan line 1081: "The Phase D prompt template MUST also
-    include the line `Set the Bash timeout parameter to 600000
-    milliseconds.` unconditionally (no probing, no conditionalization)."
+    The immortal watcher is dispatched via `Bash(run_in_background: true)`,
+    which detaches and ignores the per-call timeout ceiling. The OLD
+    Task-recycle architecture instructed "Set the Bash timeout parameter to
+    600000 milliseconds." — that line is now an antipattern. The command
+    file must (a) pin the forbid-timeout invariant verbatim and (b) NOT
+    contain the old set-timeout instruction.
     """
     body = _read_command()
-    assert PHASE_D_BASH_TIMEOUT_LINE in body, (
-        f"Phase D prompt must include verbatim line: "
-        f"{PHASE_D_BASH_TIMEOUT_LINE!r} (impl plan line 1081)"
+    assert PHASE_D_FORBIDDEN_TIMEOUT_LINE in body, (
+        f"Phase D must pin the forbid-timeout invariant verbatim: "
+        f"{PHASE_D_FORBIDDEN_TIMEOUT_LINE!r}"
+    )
+    assert PHASE_D_OLD_TIMEOUT_LINE not in body, (
+        f"Phase D must NOT contain the OLD set-timeout instruction "
+        f"{PHASE_D_OLD_TIMEOUT_LINE!r}; a `run_in_background` task ignores "
+        f"the per-call timeout ceiling, so setting it is a footgun"
     )
 
 
@@ -344,17 +370,27 @@ def test_a2a_phase_d_prompt_includes_bash_timeout_line() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_a2a_phase_f_documents_both_markers() -> None:
-    """Phase F must reference both PENDING_BATCH and WATCH_RECYCLE markers.
+def test_a2a_phase_f_documents_terminal_markers() -> None:
+    """Phase F must reference the immortal watcher's terminal markers.
 
-    Per design §5.3 Phase F, the parent dispatches behavior on the
-    bg agent's last stdout line, which is one of these two markers.
+    Under the immortal-watcher architecture the parent dispatches behavior
+    on the bg watcher's last stdout line. The production terminal markers
+    are PENDING_BATCH (messages arrived → drain + re-arm), WATCH_INBOX_GONE
+    (inbox closed elsewhere → clear, no re-arm), and WATCH_LOCKED (another
+    watcher owns it → no re-arm). WATCH_RECYCLE is the finite-mode/debug
+    stray (never emitted in production) and Phase F documents its benign
+    silent-re-arm handling.
     """
     body = _read_command()
-    for marker in ("PENDING_BATCH", "WATCH_RECYCLE"):
+    for marker in (
+        "PENDING_BATCH",
+        "WATCH_INBOX_GONE",
+        "WATCH_LOCKED",
+        "WATCH_RECYCLE",
+    ):
         assert marker in body, (
-            f"Phase F must reference the {marker} marker per design §5.3 "
-            f"Phase F (parent's per-completion dispatch logic)"
+            f"Phase F must reference the {marker} marker (parent's "
+            f"per-completion dispatch logic for the immortal watcher)"
         )
 
 
@@ -382,37 +418,41 @@ SKILL_PATH = (
 
 
 def test_skill_md_documents_watch_chain() -> None:
-    """SKILL.md must document the watch-chain architecture per impl plan §Task 8.
+    """SKILL.md must document the immortal watch-chain architecture.
 
-    The pre-T8 SKILL.md only covered the hook-driven UserPromptSubmit
-    notify path; T8 adds an architecture section that explains the new
-    watch chain (T3a/T3b/T4/T5/T6 implementation), the open-state record
-    at ``<bus>/.open/<sid>``, the ``WATCH_RECYCLE`` heartbeat, the
-    fswatch + polling backstop, the silent-idle cost model, and the
-    ``/a2a`` slash command surface.
+    SKILL.md's architecture section explains the immortal bg-Bash watch
+    chain, the open-state record at ``<bus>/.open/<sid>``, the heartbeat
+    liveness contract, the fswatch + polling backstop, the silent-idle
+    cost model, and the ``/a2a`` slash command surface.
 
     These markers are the load-bearing terms a reader needs to find when
-    diagnosing a chain issue or onboarding to the architecture. Each
-    must appear in SKILL.md; their absence is a regression of the prose
-    pass.
+    diagnosing a chain issue or onboarding to the architecture. Each must
+    appear in SKILL.md; their absence is a regression of the prose pass.
+
+    Note: under the immortal-watcher architecture SKILL.md documents the
+    terminal markers PENDING_BATCH / WATCH_INBOX_GONE / WATCH_LOCKED (the
+    per-cycle WATCH_RECYCLE is finite-mode/debug-only and is documented in
+    commands/a2a.md, not here).
     """
     body = SKILL_PATH.read_text(encoding="utf-8")
     required_markers = [
-        # Watch-chain architecture (impl plan §Task 8 Step 8.3)
+        # Watch-chain architecture
         "watch chain",
-        "WATCH_RECYCLE",
+        # Immortal-watcher terminal markers
         "PENDING_BATCH",
+        "WATCH_INBOX_GONE",
+        "WATCH_LOCKED",
         "pending/",
         "open-state",
         "fswatch",
-        # Compaction limitation (impl plan §Task 8 Step 8.3 para 3)
+        # Compaction limitation
         "Compaction",
-        # Silent-idle cost model (impl plan §Task 8 Step 8.4)
+        # Silent-idle cost model
         "Silent-Idle",
-        # Slash command surface (impl plan §Task 8 Step 8.5)
+        # Slash command surface
         "/a2a open",
         "/a2a close",
-        # Protocol-internal subcommands (impl plan §Task 8 Step 8.5)
+        # Protocol-internal subcommands
         "watch",
         "drain",
     ]
@@ -424,28 +464,30 @@ def test_skill_md_documents_watch_chain() -> None:
 
 
 def test_skill_md_silent_idle_cost_model_cites_token_numbers() -> None:
-    """SKILL.md Silent-Idle section must cite the design §0.5 cost numbers.
+    """SKILL.md Silent-Idle Cost Model table must carry its idle-window rows.
 
-    Per impl plan §Task 8 Step 8.4: the Silent-Idle Cost Model
-    subsection embeds the per-cycle, per-hour, and per-day idle token
-    estimates from design §0.5. These numbers gate the operator's
-    decision to ``/a2a close`` for overnight idle. Drifting away from
-    them silently is a regression.
+    Under the immortal-watcher architecture the cost model headline is that
+    an idle session incurs ~0 watcher-induced tokens (no recycle). The
+    Silent-Idle Cost Model table enumerates the per-batch and idle-window
+    rows; the prose explains that there is no longer an overnight-idle token
+    reason to ``/a2a close`` (close only retires a name). Drifting away from
+    these row labels silently is a regression of the cost-model pass.
     """
     body = SKILL_PATH.read_text(encoding="utf-8")
-    # Per-hour idle range (~10–15k tokens) is the most decision-relevant
-    # number; per-day (~240–400k) is the headline that drives the
-    # `/a2a close` recommendation. Both must be present.
+    # Table row labels from the immortal-watcher cost model, plus the
+    # `/a2a close` reference the prose anchors the retire-vs-silence
+    # distinction on.
     required_phrases = [
-        "Per-hour",  # table row label per design §0.5 phrasing
-        "Per-day",   # table row label per design §0.5 phrasing
+        "Per real message batch",  # table row label
+        "Idle hour",               # table row label
+        "Idle day",                # table row label
         "/a2a close",
     ]
     missing = [p for p in required_phrases if p not in body]
     assert not missing, (
-        "SKILL.md Silent-Idle Cost Model subsection must cite per-hour/"
-        "per-day idle estimates and recommend `/a2a close` for true "
-        f"silence per impl plan §Task 8 Step 8.4; missing: {missing!r}"
+        "SKILL.md Silent-Idle Cost Model subsection must carry the "
+        "per-batch / idle-hour / idle-day rows and reference `/a2a close`; "
+        f"missing: {missing!r}"
     )
 
 
