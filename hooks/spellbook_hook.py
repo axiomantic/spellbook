@@ -978,7 +978,10 @@ def _bg_agent_alive(agent_id, state) -> bool:
     if not agent_id:
         return False
     output_path = state.get("output_file") if isinstance(state, dict) else None
-    if not output_path:
+    # Corrupt `.open` JSON may carry a non-string (e.g. int) output_file. A
+    # truthy non-str would reach Path(...) and raise TypeError, escaping the
+    # OSError-only guard below; treat it as DEAD (FAIL-SAFE-DEAD).
+    if not output_path or not isinstance(output_path, str):
         return False
     op = Path(output_path)
     if not op.exists():
@@ -1080,8 +1083,13 @@ def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
     output_path = state.get("output_file")
     if output_path:
         try:
-            age_s = int(time.time() - Path(output_path).stat().st_mtime)
-        except OSError:
+            # max(0, ...) clamps a future-dated heartbeat mtime (clock skew /
+            # laptop wake) to 0 so the hint never renders "~-Ns stale". A
+            # non-string output_file makes Path(...) raise TypeError; broaden
+            # the guard (alongside OSError/ValueError) so it degrades to the
+            # no-age "heartbeat stale" fallback rather than escaping.
+            age_s = max(0, int(time.time() - Path(output_path).stat().st_mtime))
+        except (OSError, TypeError, ValueError):
             age_s = None
     count = _a2a_count_pending(name_dir)
     age_clause = f"heartbeat ~{age_s}s stale" if age_s is not None else "heartbeat stale"

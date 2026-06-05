@@ -516,6 +516,16 @@ class TestBgAgentAlive:
         state = {"agent_id": "agent-x"}  # no output_file key
         assert spellbook_hook._bg_agent_alive("agent-x", state) is False
 
+    def test_returns_false_when_output_file_not_a_string(self, tmp_path):
+        """Corrupt `.open` JSON with a non-string (int) output_file must NOT
+        raise TypeError out of the narrow except; FAIL-SAFE-DEAD -> False.
+
+        A truthy-but-non-str output_file (e.g. 123) would reach Path(123),
+        which raises TypeError, escaping the OSError-only guard. The probe
+        must treat a non-string path as DEAD, not crash."""
+        state = {"agent_id": "agent-x", "output_file": 123}
+        assert spellbook_hook._bg_agent_alive("agent-x", state) is False
+
     def test_docstring_does_not_overclaim_byte_for_byte_parity(self):
         """T8 docstring reconciliation: hook returns bool, helper returns exit codes.
 
@@ -756,6 +766,68 @@ class TestOrphanedChainCheck:
             {"session_id": "22222222-2222-2222-2222-222222222222"}
         )
         assert result == _expected_orphan_hint("alice", age_s=120, count=0)
+
+    def test_orphan_hint_non_string_output_file_uses_no_age_clause(
+        self, tmp_path, monkeypatch
+    ):
+        """Corrupt `.open` JSON with a non-string (int) output_file must not
+        crash the hint path: Path(123) raises TypeError, which must degrade to
+        the no-age 'heartbeat stale' fallback rather than escape the guard.
+
+        `_bg_agent_alive` also sees the int output_file and returns DEAD, so the
+        orphan hint still fires. No inbox messages -> count clause omitted; the
+        whole hint is therefore the static no-age form, asserted by exact
+        equality.
+        """
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        # Plant the raw int output_file directly (bypass _seed_open_state, which
+        # str()-coerces output_file) to reproduce the corrupt-JSON shape.
+        open_dir = tmp_path / ".open"
+        open_dir.mkdir()
+        (open_dir / "sess-int-output").write_text(
+            json.dumps({
+                "name": "alice",
+                "agent_id": "agent-x",
+                "started_at": "2026-05-07T00:00:00+00:00",
+                "output_file": 123,
+            }),
+            encoding="utf-8",
+        )
+        result = spellbook_hook._agent2agent_check_orphaned_chain(
+            {"session_id": "sess-int-output"}
+        )
+        assert result == _expected_orphan_hint("alice", age_s=None, count=0)
+
+    def test_orphan_hint_future_heartbeat_clamps_age_to_zero(
+        self, tmp_path, monkeypatch
+    ):
+        """A future-dated heartbeat mtime (clock skew / laptop wake) must render
+        age 0, never a negative 'heartbeat ~-300s stale'. time.time is frozen so
+        now - mtime == -300; the clamp must yield exactly 'heartbeat ~0s stale'.
+        Empty inbox -> count clause omitted; exact-equality assertion.
+
+        The watcher is forced DEAD via an empty agent_id (a future mtime alone
+        reads ALIVE in `_bg_agent_alive`, which has no lower bound). That lets
+        the hint fire while still stat'ing the future-dated heartbeat, so the
+        clamp on the *hint* age computation is what is under test."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+        inbox = tmp_path / "alice" / "inbox"  # two-level
+        inbox.mkdir(parents=True)
+        hb = inbox / ".watcher.heartbeat"
+        hb.write_text("", encoding="utf-8")
+        mtime = 1_700_000_000.0
+        os.utime(hb, (mtime, mtime))
+        # Freeze now 300s BEFORE the heartbeat mtime -> raw age == -300.
+        frozen_now = mtime - 300.0
+        monkeypatch.setattr(spellbook_hook.time, "time", lambda: frozen_now)
+        _seed_open_state(
+            tmp_path, "44444444-4444-4444-4444-444444444444",
+            name="alice", agent_id="", output_file=hb,
+        )
+        result = spellbook_hook._agent2agent_check_orphaned_chain(
+            {"session_id": "44444444-4444-4444-4444-444444444444"}
+        )
+        assert result == _expected_orphan_hint("alice", age_s=0, count=0)
 
 
 class TestSessionStartOrphanWiring:
