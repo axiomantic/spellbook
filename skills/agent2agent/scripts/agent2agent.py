@@ -1040,6 +1040,88 @@ def _max_elapsed(v: str):
     return f
 
 
+def cmd_watcher_kill(args: argparse.Namespace) -> int:
+    """Slash-command-internal: probe-gated kill of the live watcher for <name>.
+
+    Close flow (§8): after a best-effort TaskStop the slash command ALWAYS
+    runs this LOCK_NB probe. It is the single canonical fcntl probe locus
+    (Invariant #5: the command body must not implement fcntl inline).
+
+    factcheck 2026-06-05: TaskStop on a Bash(run_in_background) task DID kill
+    the whole process tree (zsh wrapper + child) empirically in-session; this
+    probe-gated kill remains the trust-nothing fallback regardless.
+
+    Branch table (design §8.1):
+      1. invalid name           -> stderr error, exit 2 (validate FIRST)
+      2. inbox/lockfile absent   -> WATCHER_GONE, exit 0 (nothing to kill;
+                                    do NOT create the dir/lockfile as a side effect)
+      3. lock FREE (LOCK_NB ok)  -> WATCHER_GONE, exit 0 (release immediately)
+      4. lock HELD + numeric pid -> os.kill(pid, SIGTERM); WATCHER_KILLED <pid>, exit 0
+      5. lock HELD + empty/bad pid-> WATCHER_KILL_FAILED unknown EINVAL, exit 1
+      6. lock HELD + kill raises  -> WATCHER_KILL_FAILED <pid> <errno>, exit 1
+
+    PID-trust (§8.1): a held flock implies a live holder (the kernel releases
+    flock on holder death), and the holder wrote its own pid under the lock at
+    acquisition, so "lock held + pid in file" is a trustworthy (alive, pid)
+    pair. Branch 6 guards the race where the holder dies between the LOCK_NB
+    failure and os.kill (surfaces as ESRCH). All branches are best-effort:
+    close proceeds regardless of exit code. NOT in _USAGE (slash-internal).
+    """
+    if fcntl is None:
+        print("watch: not supported on this platform (POSIX-only)", file=sys.stderr)
+        return 1
+    name = args.name
+    _validate_name(name)  # branch 1: raises/exits before any fs access
+    inbox = inbox_dir(name)
+    lockfile = inbox / ".watcher.lock"
+    # Branch 2: do NOT create the inbox or lockfile as a side effect of probing.
+    if not inbox.is_dir() or not lockfile.exists():
+        print("WATCHER_GONE")
+        return 0
+    try:
+        fd = os.open(str(lockfile), os.O_RDWR)
+    except OSError:
+        print("WATCHER_GONE")
+        return 0
+    try:
+        try:
+            fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError:
+            pass  # lock HELD -> fall through to the kill branches
+        else:
+            # Branch 3: lock FREE -> no live watcher. Release immediately.
+            fcntl.flock(fd, fcntl.LOCK_UN)
+            print("WATCHER_GONE")
+            return 0
+        # Lock is HELD. Read the holder pid (written by the holder under the lock).
+        try:
+            os.lseek(fd, 0, os.SEEK_SET)
+            raw = os.read(fd, 64).decode("ascii", errors="replace").strip()
+        except OSError:
+            raw = ""
+        try:
+            pid = int(raw)
+        except ValueError:
+            # Branch 5: cannot derive a pid.
+            print("WATCHER_KILL_FAILED unknown EINVAL")
+            return 1
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except OSError as exc:
+            # Branch 6: pid resolved but signal failed (ESRCH/EPERM).
+            sym = errno.errorcode.get(exc.errno, str(exc.errno))
+            print(f"WATCHER_KILL_FAILED {pid} {sym}")
+            return 1
+        # Branch 4: SIGTERM sent.
+        print(f"WATCHER_KILLED {pid}")
+        return 0
+    finally:
+        try:
+            os.close(fd)
+        except OSError:
+            pass
+
+
 def cmd_help(_args: argparse.Namespace) -> int:
     print(_USAGE)
     return 0
@@ -1183,6 +1265,12 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Absolute path to bg Task agent's transcript file (write only).",
     )
     sp_open_state.set_defaults(func=cmd_open_state)
+
+    # Slash-command-internal: probe-gated kill of the live watcher (close flow).
+    # Leading underscore marks it not-for-direct-use; NOT advertised in _USAGE.
+    sp_watcher_kill = sub.add_parser("_watcher_kill", add_help=False)
+    sp_watcher_kill.add_argument("name")
+    sp_watcher_kill.set_defaults(func=cmd_watcher_kill)
 
     for alias in ("help", "-h", "--help"):
         sp_help = sub.add_parser(alias, add_help=False)

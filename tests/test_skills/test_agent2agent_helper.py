@@ -1667,6 +1667,48 @@ def test_open_state_alive_missing_transcript_returns_1(a2a, tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# _watcher_kill: probe-gated SIGTERM close helper (T6)
+# ---------------------------------------------------------------------------
+
+
+def test_watcher_kill_lock_free_reports_gone(a2a, tmp_path):
+    """No live watcher (lock free or absent) -> WATCHER_GONE, exit 0
+    (design §8.1 rows 2-3, §12.7)."""
+    _open_inbox(tmp_path, "alice")  # inbox exists, no watcher holding the lock
+    rc, stdout, _ = _run(a2a, "_watcher_kill", "alice")
+    assert rc == 0
+    assert stdout.strip() == "WATCHER_GONE"
+
+
+@pytest.mark.skipif(shutil.which("python3") is None, reason="needs python3")
+def test_watcher_kill_lock_held_sends_sigterm(a2a, tmp_path):
+    """A live watch holds the flock -> WATCHER_KILLED <pid>, exit 0, and the
+    watcher terminates (design §8.1 row 4, §12.7)."""
+    _open_inbox(tmp_path, "alice")
+    watcher = _spawn_watch(tmp_path, "alice", max_elapsed=60.0)
+    try:
+        # Wait until the watcher actually holds the flock (pid written).
+        lockfile = tmp_path / "alice" / "inbox" / ".watcher.lock"
+        _wait_for_watcher_locked(lockfile, timeout=2.0)
+        rc, stdout, _ = _run(a2a, "_watcher_kill", "alice")
+        assert rc == 0
+        assert re.match(r"^WATCHER_KILLED \d+$", stdout.strip()), stdout
+        # The killed pid must be the live watcher's own pid.
+        killed_pid = int(stdout.strip().split()[1])
+        assert killed_pid == watcher.pid, (
+            f"WATCHER_KILLED reported pid={killed_pid}; expected watcher "
+            f"pid={watcher.pid}"
+        )
+        # The watcher's SIGTERM handler exits cleanly.
+        watcher.wait(timeout=5)
+        assert watcher.poll() is not None
+    finally:
+        if watcher.poll() is None:
+            watcher.kill()
+            watcher.wait(timeout=5)
+
+
+# ---------------------------------------------------------------------------
 # Infinite-mode sentinel: _max_elapsed parser (T2)
 # ---------------------------------------------------------------------------
 
