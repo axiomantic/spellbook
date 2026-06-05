@@ -910,13 +910,28 @@ def cmd_open_state(args: argparse.Namespace) -> int:
     watch-chain session. State lives at ``<bus>/.open/<session-id>``.
 
     Operations:
-      - ``write <sid> <name> <agent-id> --output-file <abs-path>``
+      - ``write <sid> <name> [<agent-id>] [--output-file <abs-path>]``
             Atomically write JSON ``{name, agent_id, started_at, output_file}``
             via ``tempfile.NamedTemporaryFile`` + ``os.replace``. Under the
             immortal-watcher architecture ``agent_id`` holds the bg-Bash task
             id (the name is retained for reader/back-compat stability, §5.2)
             and ``output_file`` holds the absolute ``.watcher.heartbeat`` path,
             not a Task transcript path.
+
+            ``name`` is the only required field. ``agent_id`` and
+            ``output_file`` are both optional and default to ``""``:
+
+              * Tier-0 no-watcher sentinel — empty ``agent_id`` AND empty/
+                omitted ``--output-file`` are VALID together and persist
+                ``{name, agent_id: "", started_at, output_file: ""}``. This
+                records an open chain that has no live background watcher.
+              * A NON-empty ``output_file`` must still be absolute (else
+                exit 2).
+              * Mixed states (one of ``agent_id``/``output_file`` set, the
+                other empty) are ALLOWED and written verbatim. ``alive`` is
+                fail-safe: any falsy ``agent_id`` or ``output_file`` reads as
+                DEAD (exit 1), so the sentinel and mixed states never report a
+                live watcher.
       - ``clear <sid>`` -- ``os.unlink`` the state file; idempotent on missing.
       - ``read  <sid>`` -- print raw JSON or empty string when absent (exit 0).
       - ``alive <sid>`` -- FAIL-SAFE-DEAD probe of the bg watcher's heartbeat:
@@ -945,9 +960,9 @@ def cmd_open_state(args: argparse.Namespace) -> int:
     target = state_dir / sid
 
     if op == "write":
-        if not args.name or not args.agent_id:
+        if not args.name:
             print(
-                "agent2agent: write requires <name> <agent-id>",
+                "agent2agent: write requires <name>",
                 file=sys.stderr,
             )
             return 2
@@ -957,24 +972,25 @@ def cmd_open_state(args: argparse.Namespace) -> int:
                 file=sys.stderr,
             )
             return 2
-        if not args.output_file:
+        # Tier-0 no-watcher sentinel: agent_id and output_file are both
+        # optional. Empty/omitted values are coerced to "" and written as
+        # given. A NON-empty output_file must still be absolute. Mixed states
+        # (one set, the other empty) are written verbatim — alive is fail-safe
+        # and reads any falsy agent_id/output_file as DEAD (exit 1).
+        agent_id = args.agent_id or ""
+        output_file = args.output_file or ""
+        if output_file and not os.path.isabs(output_file):
             print(
-                "agent2agent: write requires --output-file <abs-path>",
-                file=sys.stderr,
-            )
-            return 2
-        if not os.path.isabs(args.output_file):
-            print(
-                f"agent2agent: --output-file must be absolute: {args.output_file}",
+                f"agent2agent: --output-file must be absolute: {output_file}",
                 file=sys.stderr,
             )
             return 2
         state_dir.mkdir(parents=True, exist_ok=True)
         payload = {
             "name": args.name,
-            "agent_id": args.agent_id,
+            "agent_id": agent_id,
             "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "output_file": args.output_file,
+            "output_file": output_file,
         }
         with tempfile.NamedTemporaryFile(
             mode="w",

@@ -203,6 +203,11 @@ substitution is performed at dispatch time:
 - `<SPELLBOOK_ABS>` → the **absolute** path of `$SPELLBOOK_DIR` (resolved
   from `~/.claude/CLAUDE.md`'s `SPELLBOOK_DIR=...` line, e.g.
   `/Users/eek/Development/spellbook` or `~/.local/spellbook/source`).
+- `<AGENT2AGENT_DIR>` → the bus directory: the value of the `$AGENT2AGENT_DIR`
+  env var if it is set, otherwise `~/.local/share/agent2agent` (expanded to an
+  absolute path). This mirrors `bus_dir()` in the helper
+  (`agent2agent.py:76-81`); the inbox for `<NAME>` lives at
+  `<AGENT2AGENT_DIR>/<NAME>/inbox` (= `inbox_dir(name)`, `agent2agent.py:92-93`).
 
 DO NOT pass the literal token `$SPELLBOOK_DIR` to the background shell —
 `$SPELLBOOK_DIR` is an unset env var there and expands to empty, producing
@@ -231,7 +236,7 @@ dispatch time, not authoring time.
 From the dispatch response, capture BOTH:
 
 - the background task id → `<agent_id>`
-- the heartbeat path `<SPELLBOOK_INBOX>/<NAME>/.watcher.heartbeat` →
+- the heartbeat path `<AGENT2AGENT_DIR>/<NAME>/inbox/.watcher.heartbeat` →
   `<output_file>` (the watcher `os.utime`s this every 30s; the liveness probe
   stats it).
 
@@ -249,13 +254,20 @@ Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \
 
 **Tier 1:** pass the captured bg task id as `<agent_id>` and the heartbeat
 path from Phase D as `<output_file>`. **Tier 0:** there is no watcher — write
-`agent_id=""` (the empty agent id tells the orphan hook this is not a live
-chain, so it stays silent; pass a heartbeat-style path or the inbox path for
-`--output-file` to satisfy the absolute-path requirement, since no watcher
-will touch it).
+the no-watcher sentinel by passing an empty `<agent_id>` (`""`) AND omitting
+`--output-file` entirely:
 
-The `_open_state write` helper requires `--output-file` and rejects relative
-paths server-side (both validations run in the helper, not the slash command).
+```
+Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \
+    _open_state write $session_id <name> ""
+```
+
+The empty agent id (and empty output_file) tells the orphan hook this is not a
+live chain, so it stays silent. The helper accepts this sentinel and exits 0.
+
+The `_open_state write` helper requires only `<name>`; `<agent_id>` and
+`--output-file` are optional (a NON-empty `--output-file` must still be an
+absolute path — both validations run in the helper, not the slash command).
 Verify exit 0; on non-zero, surface stderr and abort (the chain is
 half-built; do not run Phase F until state is durable). On Tier 0, after the
 state write, STOP — do not run Phase F.

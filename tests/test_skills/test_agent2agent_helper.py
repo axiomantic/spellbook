@@ -1547,13 +1547,15 @@ def test_open_state_write_atomic(a2a, tmp_path):
     assert set(payload.keys()) == {"name", "agent_id", "started_at", "output_file"}
 
 
-def test_open_state_write_requires_output_file(a2a):
-    """Missing --output-file fails with exit 2 + stderr mentioning the flag."""
+def test_open_state_write_requires_name(a2a):
+    """Name is still required: an empty name fails with exit 2 + stderr
+    mentioning the requirement. (agent_id and output_file are now optional —
+    the Tier-0 sentinel relaxes both; only name remains mandatory.)"""
     rc, _, stderr = _run(
-        a2a, "_open_state", "write", "sess-foo", "alice", "agent-xyz",
+        a2a, "_open_state", "write", "sess-foo", "", "",
     )
     assert rc == 2
-    assert "--output-file" in stderr
+    assert "write requires <name>" in stderr
 
 
 def test_open_state_write_rejects_relative_output_file(a2a):
@@ -1565,6 +1567,75 @@ def test_open_state_write_rejects_relative_output_file(a2a):
     )
     assert rc == 2
     assert "must be absolute" in stderr
+
+
+def test_open_state_write_tier0_sentinel(a2a):
+    """Tier-0 no-watcher sentinel: empty agent_id AND omitted --output-file are
+    VALID together. Writes {name, agent_id:"", started_at, output_file:""},
+    exit 0. Name is still required."""
+    rc, stdout, stderr = _run(a2a, "_open_state", "write", "sess-t0", "alice", "")
+    assert rc == 0
+    assert stdout == ""
+    assert stderr == ""
+
+    bus = a2a.bus_dir()
+    state_file = _open_state_path(bus, "sess-t0")
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+
+    # started_at is the only dynamic field; round-trip it from the observed value.
+    started_at = payload.get("started_at", "")
+    parsed = datetime.fromisoformat(started_at)
+    assert parsed.tzinfo is not None and parsed.utcoffset() == timedelta(0), (
+        f"started_at must be UTC ISO8601, got {started_at!r}"
+    )
+
+    expected = {
+        "name": "alice",
+        "agent_id": "",
+        "started_at": started_at,
+        "output_file": "",
+    }
+    assert payload == expected
+
+
+def test_open_state_alive_tier0_sentinel_returns_1(a2a):
+    """alive on the Tier-0 sentinel (empty agent_id + empty output_file) reads
+    DEAD via exit 1 — there is no live watcher chain. Empty stdout."""
+    rc, _, _ = _run(a2a, "_open_state", "write", "sess-t0", "alice", "")
+    assert rc == 0
+
+    rc, stdout, _ = _run(a2a, "_open_state", "alive", "sess-t0")
+    assert rc == 1
+    assert stdout == ""
+
+
+def test_open_state_write_mixed_state_allowed(a2a):
+    """Mixed state (agent_id set, output_file omitted) is ALLOWED — written as
+    given; alive remains fail-safe. Exit 0 with output_file:"" in the payload."""
+    rc, stdout, stderr = _run(
+        a2a, "_open_state", "write", "sess-mix", "alice", "agent-xyz",
+    )
+    assert rc == 0
+    assert stdout == ""
+    assert stderr == ""
+
+    bus = a2a.bus_dir()
+    state_file = _open_state_path(bus, "sess-mix")
+    payload = json.loads(state_file.read_text(encoding="utf-8"))
+
+    started_at = payload.get("started_at", "")
+    parsed = datetime.fromisoformat(started_at)
+    assert parsed.tzinfo is not None and parsed.utcoffset() == timedelta(0), (
+        f"started_at must be UTC ISO8601, got {started_at!r}"
+    )
+
+    expected = {
+        "name": "alice",
+        "agent_id": "agent-xyz",
+        "started_at": started_at,
+        "output_file": "",
+    }
+    assert payload == expected
 
 
 def test_open_state_clear_idempotent(a2a, tmp_path):
