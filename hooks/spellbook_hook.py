@@ -945,7 +945,7 @@ def _agent2agent_notify_for_prompt(data: dict) -> str | None:
 def _bg_agent_alive(agent_id, state) -> bool:
     """FAIL-SAFE-DEAD liveness probe of the bg watch-chain Task agent.
 
-    Shares the mtime+600s-window probe with
+    Shares the mtime+90s-window probe with
     ``skills/agent2agent/scripts/agent2agent.py::cmd_open_state``
     op=``alive`` (T4); differs in return contract — this hook helper
     returns a ``bool``, while the helper's CLI op returns exit codes
@@ -955,23 +955,25 @@ def _bg_agent_alive(agent_id, state) -> bool:
     considered ALIVE only when ALL of:
 
       - ``agent_id`` is non-empty
-      - ``state`` is a dict containing ``output_file`` (the absolute path
-        the slash command captured at Task dispatch time)
+      - ``state`` is a dict containing ``output_file`` (the absolute path of
+        the watcher's ``.watcher.heartbeat`` file)
       - that path exists on disk
-      - its mtime is fresh (< 600.0 seconds ago)
+      - its mtime is fresh (< 90.0 seconds ago)
 
     Any failure of those preconditions returns ``False`` (DEAD). There is
     no fail-safe-alive branch: a missing output_file, a stat error, or an
-    older-than-600s mtime are all treated as DEAD. This matches T4's exit
+    older-than-90s mtime are all treated as DEAD. This matches the exit
     1 / 2 ``not alive`` semantics from ``cmd_open_state alive``.
 
-    The 600s threshold must EXCEED the 540s WATCH_RECYCLE budget. While
-    blocked on ``watch``, the bg agent emits no stdout, so its transcript
-    mtime does not advance during idle windows (validated by the A9
-    zero-idle-tokens manual e2e). A threshold smaller than 540s would
-    false-positive ``DEAD`` mid-idle. 600s gives a 60s grace margin for
-    the inter-cycle re-dispatch (Task agent exit → main loop reads marker
-    → spawns next bg agent → first transcript write).
+    Staleness threshold is 3 × heartbeat interval (90s). A live watcher
+    os.utime's <inbox>/.watcher.heartbeat every 30s (monotonic-throttled);
+    three missed touches is unambiguous death/stall, not jitter. There is no
+    recycle budget under the immortal-watcher architecture. A wall-clock-stale
+    heartbeat after a >90s laptop sleep is an accepted one-shot false-positive
+    (the orphan hint carries the heartbeat age; re-arm reveals WATCH_LOCKED if
+    the watcher is in fact alive). This 90.0 literal mirrors
+    agent2agent.py::_HEARTBEAT_STALE_S — the two processes do not share an
+    import, so the parity test (test_bg_agent_alive_parity) keeps them in sync.
     """
     if not agent_id:
         return False
@@ -985,7 +987,7 @@ def _bg_agent_alive(agent_id, state) -> bool:
         age = time.time() - op.stat().st_mtime
     except OSError:
         return False
-    return age < 600.0
+    return age < 90.0
 
 
 def _agent2agent_check_orphaned_chain(data: dict) -> str | None:
