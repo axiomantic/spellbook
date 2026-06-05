@@ -50,7 +50,19 @@ When operating in YOLO mode or when user selected "Fully autonomous":
   it does not spawn parallel sessions or auto-invoke `forge_project_init`.)
 - **APPROVAL GATES (2.3, 3.3) ARE NEVER AUTO-PROCEEDED.** Even in
   full autonomous mode, design and plan approval gates require explicit
-  artifact verification before continuation. Before auto-proceeding:
+  artifact verification before continuation. The *surface* of these gates
+  honors `SESSION_PREFERENCES.decision_surface`: under `terminal` (default)
+  the gate uses `AskUserQuestion` as today; under `canvas`, the gate's
+  `AskUserQuestion` is replaced by the `canvas-decision` skill for forks that
+  meet the boundary in the "When to Use (testable boundary)" section of the
+  canvas-decision skill (context-heavy design/plan approval). The
+  never-auto-proceed contract is UNCHANGED by either surface — `canvas` still
+  awaits an explicit operator decision; quick yes/no acks stay terminal.
+  Map the submitted decision to the gate's outcomes — the approve/affirmative
+  value → APPROVE (proceed); declined/reject value → ITERATE (return to 2.1/2.2
+  [resp. 3.1/3.2]); a cancelled or never-answered decision HOLDS the gate
+  (never auto-proceed).
+  Before auto-proceeding:
   1. Verify the artifact exists at the expected path (`ls`)
   2. Verify section numbering is sequential and complete (no gaps like
      starting at Section 8 with Sections 1–7 missing)
@@ -788,14 +800,14 @@ Phase 1.5: Informed Discovery (if needs_research)
 Phase 2: Design (if needs_design; needs_infrastructure implies needs_design; skip if escape hatch)
   ├─ 2.1: Subagent invokes design-exploration (SYNTHESIS MODE)
   ├─ 2.2: Subagent invokes reviewing-design-docs
-  ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous)
+  ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous); surface honors decision_surface (terminal AskUserQuestion | canvas-decision for forks qualifying under the "When to Use (testable boundary)" section of the canvas-decision skill)
   ├─ 2.4: Subagent invokes executing-plans to fix
   └─ 2.5: Assumption Verification
     ↓
 Phase 3: Implementation Planning (if needs_design OR needs_infrastructure; skip if impl plan escape hatch)
   ├─ 3.1: Subagent invokes writing-plans
   ├─ 3.2: Subagent invokes reviewing-impl-plans
-  ├─ 3.3: GATE: User approval per mode
+  ├─ 3.3: GATE: User approval per mode; surface honors decision_surface (terminal AskUserQuestion | canvas-decision for forks qualifying under the "When to Use (testable boundary)" section of the canvas-decision skill)
   ├─ 3.4: Subagent invokes executing-plans to fix
   └─ 3.4.5: Execution mode analysis (direct vs delegated, by parallelization preference + size_estimate)
     ↓

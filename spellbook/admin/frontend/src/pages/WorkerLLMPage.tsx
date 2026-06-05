@@ -48,15 +48,21 @@ function formatNumber(value: number | null | undefined): number | null {
 
 const columnHelper = createColumnHelper<WorkerLLMCall>()
 
+// Compute the `since` cutoff ISO string for a window. Reads wall-clock time,
+// so it must be called from an event handler or a lazy state initializer —
+// never directly during render (react-hooks/purity).
+function computeSince(windowHours: WindowHours): string {
+  return new Date(Date.now() - windowHours * 3600 * 1000).toISOString()
+}
+
 export function WorkerLLMPage() {
   const [windowHours, setWindowHours] = useState<WindowHours>(24)
   const [task, setTask] = useState<string>('')
   const [status, setStatus] = useState<string>('')
-
-  const since = useMemo(() => {
-    const now = Date.now()
-    return new Date(now - windowHours * 3600 * 1000).toISOString()
-  }, [windowHours])
+  // `since` is captured at the moment the window changes (lazy init on mount,
+  // refreshed in handleWindowChange) rather than recomputed every render, which
+  // keeps the wall-clock read out of the render path.
+  const [since, setSince] = useState<string>(() => computeSince(24))
 
   const filters = useMemo(() => {
     const f: Record<string, string> = { since }
@@ -73,6 +79,7 @@ export function WorkerLLMPage() {
     const parsed = Number(value) as WindowHours
     if (parsed === 1 || parsed === 6 || parsed === 24) {
       setWindowHours(parsed)
+      setSince(computeSince(parsed))
     }
   }, [])
 

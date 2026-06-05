@@ -1,7 +1,8 @@
 """Tests for MCP tool registration count.
 
 Verifies that register_all_tools() results in the expected number of
-registered tools (63 after the memory-system removal in 0.68.0).
+registered tools (66 after adding the canvas decision tools; 63 after the
+memory-system removal in 0.68.0).
 """
 
 
@@ -29,8 +30,8 @@ def _get_tool_names(mcp_instance):
 class TestToolRegistrationCount:
     """Verify all MCP tools are registered after decomposition."""
 
-    def test_tool_count_is_63(self):
-        """After register_all_tools(), exactly 63 tools should be registered.
+    def test_tool_count_is_66(self):
+        """After register_all_tools(), exactly 66 tools should be registered.
 
         Target lowered from 90 after four rounds of MCP tool pruning:
           - 15 tools removed with the ``messaging`` and ``experiments`` module
@@ -43,15 +44,18 @@ class TestToolRegistrationCount:
             (memory_recall/store/forget/sync/verify/review_events and the
             memory bridge tool).
 
-        Exactly 63 tools remain. Full-equality guards against both accidental
+        Then raised by 3 with the canvas decision tools (canvas_decision_open,
+        canvas_decision_await, canvas_decision_cancel): 63 + 3 = 66.
+
+        Exactly 66 tools remain. Full-equality guards against both accidental
         tool loss and accidental tool addition.
         """
         from spellbook.mcp.server import mcp, register_all_tools
 
         register_all_tools()
         tool_names = _get_tool_names(mcp)
-        assert len(tool_names) == 63, (
-            f"Expected exactly 63 tools, got {len(tool_names)}. "
+        assert len(tool_names) == 66, (
+            f"Expected exactly 66 tools, got {len(tool_names)}. "
             f"If you added or removed a tool, update this count deliberately."
         )
 

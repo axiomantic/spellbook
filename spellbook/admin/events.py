@@ -25,6 +25,16 @@ class Subsystem(str, Enum):
     CANVAS = "canvas"
 
 
+# Canvas decision event-type strings (design §7). Canvas-keyed, set on the
+# CANVAS subsystem with neither session_id nor namespace (finding #6). These
+# name the wire strings the MCP tools and the submit route publish; the SPA
+# reacts by invalidating React Query key ['canvas', name].
+CANVAS_DECISION_OPENED = "canvas.decision.opened"
+CANVAS_DECISION_SUBMITTED = "canvas.decision.submitted"
+CANVAS_DECISION_CONSUMED = "canvas.decision.consumed"
+CANVAS_DECISION_CANCELLED = "canvas.decision.cancelled"
+
+
 @dataclass
 class Event:
     subsystem: Subsystem

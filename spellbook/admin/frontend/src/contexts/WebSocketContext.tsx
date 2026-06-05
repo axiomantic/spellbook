@@ -66,7 +66,14 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
     [queryClient],
   )
 
-  const { state } = useWebSocket({ onEvent: handleEvent })
+  // D2: on a reconnect (not the first connect), resync the canvas query so a
+  // tab that was offline during a decision/update event catches up. The hook
+  // skips the initial open, so this only fires on genuine reconnects.
+  const handleReconnect = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['canvas'] })
+  }, [queryClient])
+
+  const { state } = useWebSocket({ onEvent: handleEvent, onReconnect: handleReconnect })
 
   const value: WebSocketContextValue = {
     isConnected: state === 'connected',

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, createElement } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 interface SearchBarProps {
   value: string
@@ -46,21 +46,25 @@ export function SearchBar({ value, onChange, placeholder = 'Search...', debounce
     }
   }, [])
 
-  return createElement('div', { className: 'relative flex items-center' },
-    createElement('input', {
-      type: 'text',
-      value: localValue,
-      onChange: handleChange,
-      placeholder,
-      className: 'bg-bg-surface border border-bg-border px-3 py-1 font-mono text-xs text-text-primary placeholder:text-text-dim focus:border-accent-green outline-none w-full',
-    }),
-    value
-      ? createElement('button', {
-          type: 'button',
-          onClick: handleClear,
-          'aria-label': 'Clear search',
-          className: 'absolute right-1 px-1 font-mono text-xs text-text-dim hover:text-accent-red transition-colors',
-        }, '[x]')
-      : null,
+  return (
+    <div className="relative flex items-center">
+      <input
+        type="text"
+        value={localValue}
+        onChange={handleChange}
+        placeholder={placeholder}
+        className="bg-bg-surface border border-bg-border px-3 py-1 font-mono text-xs text-text-primary placeholder:text-text-dim focus:border-accent-green outline-none w-full"
+      />
+      {value ? (
+        <button
+          type="button"
+          onClick={handleClear}
+          aria-label="Clear search"
+          className="absolute right-1 px-1 font-mono text-xs text-text-dim hover:text-accent-red transition-colors"
+        >
+          [x]
+        </button>
+      ) : null}
+    </div>
   )
 }

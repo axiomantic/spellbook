@@ -23,9 +23,15 @@ interface SortingConfig {
   onSortChange: (columnId: string) => void
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 interface DataTableProps<T> {
   data: T[]
+  // `ColumnDef` is invariant in its value type: columns built via
+  // `createColumnHelper`/`accessorKey` yield specific value types (string,
+  // union literals, etc.) that are NOT assignable to `ColumnDef<T, unknown>[]`.
+  // `any` is the only value type that accepts a heterogeneous column array here
+  // without forcing a cast at every call site — a known tanstack-table typing
+  // limitation, so `no-explicit-any` does not apply.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   columns: ColumnDef<T, any>[]
   pagination?: PaginationConfig
   sorting?: SortingConfig

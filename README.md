@@ -193,7 +193,7 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators] *(deprecated)*, [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas], [dedupe], [estimating-tickets], [rounding-up-worktree-sessions] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas], [canvas-decision], [dedupe], [estimating-tickets], [rounding-up-worktree-sessions] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [permissions-from-transcripts] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications], [agent2agent] |
 
@@ -258,6 +258,7 @@ Reusable workflows for structured development:
 [branch-context]: https://axiomantic.github.io/spellbook/latest/skills/branch-context/
 [agent2agent]: https://axiomantic.github.io/spellbook/latest/skills/agent2agent/
 [canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
+[canvas-decision]: https://axiomantic.github.io/spellbook/latest/skills/canvas-decision/
 [dedupe]: https://axiomantic.github.io/spellbook/latest/skills/dedupe/
 [permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/

@@ -2,10 +2,14 @@ interface FetchOptions {
   method?: string
   body?: unknown
   params?: Record<string, string | number | undefined>
+  // §8.4 / finding #2: opt out of the unconditional 401 reload so a caller
+  // (the decision-submit mutation) can render an `auth_error` state and drive
+  // a controlled re-auth UX. Defaults to false → legacy reload behavior.
+  suppressAuthReload?: boolean
 }
 
 export async function fetchApi<T>(path: string, options: FetchOptions = {}): Promise<T> {
-  const { method = 'GET', body, params } = options
+  const { method = 'GET', body, params, suppressAuthReload = false } = options
 
   let url = `/admin${path}`
   if (params) {
@@ -31,9 +35,16 @@ export async function fetchApi<T>(path: string, options: FetchOptions = {}): Pro
 
   if (!response.ok) {
     if (response.status === 401) {
-      // Session expired or invalid; reload to show login page
-      window.location.reload()
-      throw new Error('Session expired')
+      if (!suppressAuthReload) {
+        // Session expired or invalid; reload to show login page
+        window.location.reload()
+        throw new Error('Session expired')
+      }
+      // Caller handles re-auth deliberately (§8.4): throw a coded error
+      // instead of reloading, so onError can render `auth_error`.
+      const authErr = new Error('Admin session expired') as Error & { code: string }
+      authErr.code = 'auth_expired'
+      throw authErr
     }
     const respBody = await response.json().catch(() => ({ error: { code: 'UNKNOWN', message: response.statusText } }))
     const err = new Error(respBody.error?.message || `HTTP ${response.status}`) as Error & { code: string; details: unknown }

@@ -328,9 +328,26 @@ Options:
 - Work-item level: Tokens gate work item start/complete only
 - Gate level (Recommended): Each quality gate requires a token
 - Every step: Every phase transition requires a token
+
+### Question 8: Decision Surface
+Header: "How should I ask you to decide?"
+Question: "When I hit a turning point that needs your direction — a design
+approval, a fork between approaches, a blocker — and there's real context to
+weigh (several options, trade-offs, a diagram that helps), where do you want to
+make the call?"
+
+Options:
+- Terminal questions (Recommended): I ask right here with a multiple-choice
+  prompt. Fast, no context-switch. Best when the choice is quick to grasp.
+- Interactive canvas page: I open a browser page that lays out the options with
+  explanations and diagrams, and you submit your decision there; it flows back
+  to me automatically. Best when a decision benefits from seeing it visually.
+  (I still ask in the terminal for quick yes/no gates regardless.)
 ```
 
-Store all preferences in `SESSION_PREFERENCES`.
+Store all preferences in `SESSION_PREFERENCES`. Question 8 stores
+`SESSION_PREFERENCES.decision_surface ∈ {"terminal", "canvas"}`, default
+`"terminal"`.
 
 **Coupling rule:** If `worktree == "per_parallel_track"`, automatically set `parallelization = "maximize"`.
 
