@@ -22,6 +22,7 @@ import argparse
 import atexit
 import errno
 import json
+import math
 import os
 import re
 import select
@@ -588,6 +589,13 @@ def _sweep_stray_fswatch(inbox: Path) -> None:
             continue
         # Split once: "<pid> <command...>"
         head, _, command = line.partition(" ")
+        # `needle` is str(inbox), i.e. the path ENDING in the literal "/inbox"
+        # segment (name_dir/<name>/inbox). That trailing segment is what makes
+        # this substring match collision-proof across sibling names: the bus
+        # path for "alice" is ".../alice/inbox" and for "alice2" is
+        # ".../alice2/inbox", so ".../alice/inbox" is NOT a substring of
+        # ".../alice2/inbox". A bare ".../alice" prefix WOULD collide; the
+        # "/inbox" suffix is load-bearing and depends on the <name>/inbox layout.
         if "fswatch" not in command or needle not in command:
             continue
         try:
@@ -1035,8 +1043,26 @@ def _max_elapsed(v: str):
     if v.lower() == "none":
         return None
     f = float(v)
+    # Reject inf/nan: inf would make `elapsed >= max_elapsed` never true (a
+    # finite-looking budget that never recycles) and nan makes every comparison
+    # False (same silent never-recycle, plus int(nan) raises OverflowError when
+    # the recycle marker is formatted). Infinite mode is the explicit 'none'
+    # sentinel only, never a non-finite float.
+    if not math.isfinite(f):
+        raise argparse.ArgumentTypeError("--max-elapsed must be finite (> 0) or 'none'")
     if f <= 0.0:
         raise argparse.ArgumentTypeError("--max-elapsed must be > 0 or 'none'")
+    return f
+
+
+def _heartbeat_interval(v: str) -> float:
+    """Parse --heartbeat-interval: a positive, finite float. Rejects <= 0 and
+    inf/nan with ArgumentTypeError, for symmetry with _max_elapsed. A
+    non-positive or non-finite cadence would wedge the monotonic-throttle
+    comparison that gates each os.utime touch (design §3.1)."""
+    f = float(v)
+    if not math.isfinite(f) or f <= 0.0:
+        raise argparse.ArgumentTypeError("--heartbeat-interval must be a finite float > 0")
     return f
 
 
@@ -1106,6 +1132,14 @@ def cmd_watcher_kill(args: argparse.Namespace) -> int:
             print("WATCHER_KILL_FAILED unknown EINVAL")
             return 1
         try:
+            # Residual race (accepted): if the holder dies AFTER the LOCK_NB
+            # failure above but BEFORE this os.kill, ESRCH (branch 6) catches
+            # the dead case. The unguarded microsecond window is recycle: the
+            # kernel could reassign `pid` to an unrelated live process between
+            # death and this call, in which case we SIGTERM a stranger. Blast
+            # radius is a single SIGTERM (no loop, no escalation), so this is
+            # accepted residual risk rather than guarded with a pidfd/cmdline
+            # recheck.
             os.kill(pid, signal.SIGTERM)
         except OSError as exc:
             # Branch 6: pid resolved but signal failed (ESRCH/EPERM).
@@ -1245,7 +1279,7 @@ def _build_parser() -> argparse.ArgumentParser:
     sp_watch.add_argument(
         "--heartbeat-interval",
         dest="heartbeat_interval",
-        type=float,
+        type=_heartbeat_interval,
         default=None,
     )
     sp_watch.set_defaults(func=cmd_watch)

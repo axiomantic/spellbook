@@ -1776,6 +1776,97 @@ def test_watcher_kill_lock_held_sends_sigterm(a2a, tmp_path):
             watcher.wait(timeout=5)
 
 
+def _hold_lockfile_flock(inbox: Path, body: bytes) -> int:
+    """Create ``inbox/.watcher.lock``, write ``body``, and hold an exclusive
+    flock on it from THIS (test) process. Returns the open fd.
+
+    cmd_watcher_kill opens the same path with ``os.open(O_RDWR)`` (no O_CREAT)
+    and attempts ``flock(LOCK_EX | LOCK_NB)``; because this fd holds LOCK_EX the
+    helper's non-blocking acquire raises BlockingIOError and falls through to
+    the kill branches (branch 2's ``lockfile.exists()`` guard is satisfied
+    because we created the file). The caller MUST ``os.close`` the returned fd
+    to release the lock.
+    """
+    inbox.mkdir(parents=True, exist_ok=True)
+    lockfile = inbox / ".watcher.lock"
+    fd = os.open(str(lockfile), os.O_CREAT | os.O_RDWR, 0o644)
+    fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    os.ftruncate(fd, 0)
+    if body:
+        os.write(fd, body)
+        os.fsync(fd)
+    return fd
+
+
+def _dead_pid() -> int:
+    """Spawn a trivial child, wait for it to exit, and return its (now
+    guaranteed-dead and fully-reaped) pid. The pid is unallocated for the brief
+    window before the kernel recycles it, so ``os.kill(pid, SIGTERM)`` raises
+    ESRCH deterministically in-test. Uses subprocess (not os.fork) so the
+    multi-threaded test process emits no fork DeprecationWarning.
+    """
+    proc = subprocess.Popen(
+        [sys.executable, "-c", ""],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    proc.wait(timeout=5)  # reap so the pid is no longer a live process.
+    return proc.pid
+
+
+def test_watcher_kill_lock_held_bad_pid_reports_einval(a2a, tmp_path):
+    """Branch 5 (design §8.1 row 5): lock HELD but the lockfile body is empty
+    / non-numeric -> WATCHER_KILL_FAILED unknown EINVAL, exit 1. No signal is
+    sent because no pid can be derived."""
+    _open_inbox(tmp_path, "alice")
+    inbox = tmp_path / "alice" / "inbox"
+    # Garbage body (non-digit) so int(raw) raises ValueError -> branch 5.
+    held_fd = _hold_lockfile_flock(inbox, b"not-a-pid")
+    try:
+        rc, stdout, stderr = _run(a2a, "_watcher_kill", "alice")
+    finally:
+        os.close(held_fd)  # release the flock.
+    assert rc == 1
+    assert stdout.strip() == "WATCHER_KILL_FAILED unknown EINVAL"
+    assert stderr == ""
+
+
+def test_watcher_kill_lock_held_empty_pid_reports_einval(a2a, tmp_path):
+    """Branch 5 (design §8.1 row 5): lock HELD with an EMPTY lockfile body
+    (the truncate/write race window on the holder side) -> the same
+    WATCHER_KILL_FAILED unknown EINVAL, exit 1."""
+    _open_inbox(tmp_path, "alice")
+    inbox = tmp_path / "alice" / "inbox"
+    held_fd = _hold_lockfile_flock(inbox, b"")  # empty body -> int("") ValueError.
+    try:
+        rc, stdout, stderr = _run(a2a, "_watcher_kill", "alice")
+    finally:
+        os.close(held_fd)
+    assert rc == 1
+    assert stdout.strip() == "WATCHER_KILL_FAILED unknown EINVAL"
+    assert stderr == ""
+
+
+def test_watcher_kill_lock_held_dead_pid_reports_esrch(a2a, tmp_path):
+    """Branch 6 (design §8.1 row 6): lock HELD + a numeric pid that names a
+    dead process -> os.kill raises ESRCH -> WATCHER_KILL_FAILED <pid> ESRCH,
+    exit 1. Guards the race where the flock holder dies between the LOCK_NB
+    failure and os.kill."""
+    _open_inbox(tmp_path, "alice")
+    inbox = tmp_path / "alice" / "inbox"
+    dead_pid = _dead_pid()
+    held_fd = _hold_lockfile_flock(inbox, str(dead_pid).encode("ascii"))
+    try:
+        rc, stdout, stderr = _run(a2a, "_watcher_kill", "alice")
+    finally:
+        os.close(held_fd)
+    assert rc == 1
+    # The marker prints the SYMBOLIC errno name (errno.errorcode.get), so the
+    # ESRCH symbol — not the integer 3. Construct the complete expected line.
+    assert stdout.strip() == f"WATCHER_KILL_FAILED {dead_pid} ESRCH"
+    assert stderr == ""
+
+
 # ---------------------------------------------------------------------------
 # Infinite-mode sentinel: _max_elapsed parser (T2)
 # ---------------------------------------------------------------------------
@@ -1796,6 +1887,38 @@ def test_max_elapsed_none_skips_recycle_branch(a2a):
 
     # Sentinel is None, never a numeric magic value.
     assert a2a._max_elapsed("none") is not float("inf")
+
+
+def test_max_elapsed_rejects_non_finite(a2a):
+    """M-2: _max_elapsed must reject 'inf' and 'nan' with ArgumentTypeError.
+
+    Without a math.isfinite guard, float('inf') parses to inf (which would make
+    ``elapsed >= max_elapsed`` never true -> a finite-looking budget that never
+    recycles) and float('nan') parses to nan (every comparison False -> same
+    silent never-recycle, plus int(nan) raises later). Both must be rejected at
+    parse time, identically to the <= 0 case."""
+    import argparse as _ap
+    for bad in ("inf", "Inf", "INF", "infinity", "+inf", "-inf", "nan", "NaN", "-nan"):
+        with pytest.raises(_ap.ArgumentTypeError):
+            a2a._max_elapsed(bad)
+
+
+def test_heartbeat_interval_parser_accepts_positive(a2a):
+    """M-3: --heartbeat-interval parser accepts positive floats unchanged."""
+    assert a2a._heartbeat_interval("1.0") == 1.0
+    assert a2a._heartbeat_interval("30") == 30.0
+    assert a2a._heartbeat_interval("0.05") == 0.05
+
+
+def test_heartbeat_interval_parser_rejects_non_positive_and_non_finite(a2a):
+    """M-3: --heartbeat-interval must be > 0 and finite, for symmetry with
+    _max_elapsed. <= 0 would make the monotonic-throttle touch on every loop
+    iteration (or never advance last_heartbeat sanely); inf/nan would wedge the
+    throttle comparison. All rejected with ArgumentTypeError."""
+    import argparse as _ap
+    for bad in ("0", "-1", "-0.5", "inf", "-inf", "nan", "NaN"):
+        with pytest.raises(_ap.ArgumentTypeError):
+            a2a._heartbeat_interval(bad)
 
 
 # ---------------------------------------------------------------------------
