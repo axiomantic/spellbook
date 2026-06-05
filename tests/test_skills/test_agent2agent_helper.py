@@ -1538,6 +1538,12 @@ def test_open_state_write_atomic(a2a, tmp_path):
     }
     assert payload == expected
 
+    # Field set is structurally unchanged under the immortal-watcher
+    # architecture (design §5.2, §12.9): agent_id now carries the bg-Bash task
+    # id (name retained for reader/back-compat stability) and output_file the
+    # .watcher.heartbeat path. The probe reads agent_id only for truthiness.
+    assert set(payload.keys()) == {"name", "agent_id", "started_at", "output_file"}
+
 
 def test_open_state_write_requires_output_file(a2a):
     """Missing --output-file fails with exit 2 + stderr mentioning the flag."""
