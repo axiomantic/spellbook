@@ -77,6 +77,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Develop wizard Q-DESIGN need-flag question reworded to decisions-to-make
+  tense.** The Q-DESIGN routing question previously asked whether a "design
+  decision exists," which read as already-decided and biased the answer toward
+  skipping the design phase. It now frames the question as whether there are
+  design decisions still to make, with concrete no-case examples (e.g., a
+  one-line copy fix, a config-value tweak, a rename with no behavioral change)
+  so the operator can recognize when design genuinely is not needed.
 - **Admin session now persists ~1 year instead of 24h.** The admin login and
   bearer-handoff flows previously issued a session cookie whose signed payload
   `exp` and `Set-Cookie` `Max-Age` were both fixed at 86400s (24h), so the
