@@ -393,12 +393,14 @@ nail down requirements before any design. Answer no only if you already understa
 exactly what is wanted.
 Suggested: `Yes — investigate first` / `No — I understand the code and the requirements`
 
-### Q-DESIGN — "Is there a real design decision to make?"
-Answer yes if this work involves an architectural choice: a new structure, picking between two valid
-approaches, or defining an interface/contract other code will depend on. Answering yes turns on the
-Design phase (a written design doc, reviewed before coding). Answer no for changes whose shape is
-obvious — there is only one sensible way to do it.
-Suggested: `Yes — a design decision exists` / `No — the shape is obvious`
+### Q-DESIGN — "Are there design decisions to make?"
+Answer yes if this work will require making an architectural choice: a new structure, picking between
+two valid approaches, defining an interface/contract other code will depend on, a data model, an API
+shape, or a UX flow. The question is whether the scope is design-worthy — whether decisions still need
+to be made — NOT whether decisions have already been made. Answering yes turns on the Design phase (a
+written design doc, reviewed before coding). Answer no when the path is already determined and the
+change is mechanical: a version bump, a copy/wording edit, a rename, or flipping a config flag.
+Suggested: `Yes — there are design decisions to make (architecture, data model, API shape, UX flows)` / `No — the path is already determined (version bump, copy edit, rename, config flip)`
 
 ### Q-INFRA — "Does this add new dependencies, infrastructure, or schema changes?"
 Answer yes if the work pulls in a new third-party dependency, stands up new infrastructure/services,
