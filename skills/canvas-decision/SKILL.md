@@ -112,14 +112,19 @@ Main context only. The loop:
 
 1. **Declare** — `canvas_decision_open(canvas, decision_id, kind, prompt,
    options?)`. `kind` is `choice` (with `options`) or `approve`. Returns an
-   `await_token`; the binding stays in the daemon.
+   `await_token` — **KEEP IT**; you pass it back in step 4. It is the robust
+   binding identity (bearer-style: only you hold it).
 2. **Render** — `canvas_write` a page body containing the live `<choice id=...>`
    or `<approve id=...>` control whose `id` matches `decision_id`. The control is
    live because the decision is declared.
 3. **Surface the URL** — give the operator the canvas URL so they can open the
    tab and submit.
-4. **Await** — loop `canvas_decision_await(canvas, decision_id, timeout_s=15)`
-   until the result is `submitted`/`consumed`. Each call bounded long-polls;
+4. **Await** — loop `canvas_decision_await(canvas, decision_id, timeout_s=15,
+   await_token=<token from step 1>)` until the result is `submitted`/`consumed`.
+   PASS THE `await_token`: under `stateless_http=True` the daemon assigns a fresh
+   `ctx.session_id` to every request, so session-id-only binding spuriously fails
+   with `binding_mismatch`. The token is stable across requests and is the
+   PRIMARY binding. Loop with the SAME token; each call bounded long-polls,
    re-issue on timeout until the operator answers (or you choose to cancel).
 5. **Proceed** — act on the returned value as plain-text data.
 

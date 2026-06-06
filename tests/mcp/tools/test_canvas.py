@@ -565,6 +565,132 @@ async def test_await_binding_mismatch_wrong_session(canvas_tmp_root, mcp_ctx_wit
 
 
 @pytest.mark.asyncio
+async def test_await_token_binds_across_changed_session_id(
+    canvas_tmp_root, mcp_ctx_with_session
+):
+    """RED-for-the-field-bug: under stateless_http=True the daemon assigns a
+    FRESH ctx.session_id to every request, so the declaring session's id at
+    declare time differs from its id at await time. Session-id equality alone
+    therefore spuriously fails. With the await_token (PRIMARY binding) passed
+    back, the await must bind regardless of the session-id churn.
+
+    Pre-fix this returned binding_mismatch (the tool ignored await_token and
+    matched only on session id). Post-fix the token match succeeds.
+    """
+    from spellbook.canvas import store
+
+    store.open_canvas("plan-x", title="Plan X")
+    # Declare under the id the transport happened to assign on THAT request.
+    declarer = mcp_ctx_with_session("ephemeral-declare-id")
+    declared = await canvas_tools.canvas_decision_open(
+        declarer, canvas="plan-x", decision_id="d1", kind="approve", prompt="Ship?"
+    )
+    token = declared["await_token"]
+
+    # The SAME logical client re-awaits, but the transport handed it a DIFFERENT
+    # per-request session id (the field-bug condition). Pass the token back.
+    later = mcp_ctx_with_session("ephemeral-await-id-DIFFERENT")
+    result = await canvas_tools.canvas_decision_await(
+        later, canvas="plan-x", decision_id="d1", timeout_s=1, await_token=token
+    )
+    # Token match wins despite mismatched session ids → reaches the long-poll,
+    # which (no submission) returns pending rather than binding_mismatch.
+    assert result == {"status": "pending"}
+
+
+@pytest.mark.asyncio
+async def test_await_wrong_token_still_mismatches(
+    canvas_tmp_root, mcp_ctx_with_session
+):
+    """A WRONG await_token (and a non-matching session id) must still be
+    rejected — the token relaxation does not weaken the mismatch guard for a
+    genuinely foreign caller."""
+    from spellbook.canvas import store
+
+    store.open_canvas("plan-x", title="Plan X")
+    declarer = mcp_ctx_with_session("sess-1")
+    await canvas_tools.canvas_decision_open(
+        declarer, canvas="plan-x", decision_id="d1", kind="approve", prompt="Ship?"
+    )
+    other = mcp_ctx_with_session("sess-2")
+    result = await canvas_tools.canvas_decision_await(
+        other, canvas="plan-x", decision_id="d1", timeout_s=1,
+        await_token="not-the-real-token",
+    )
+    assert result["code"] == "binding_mismatch"
+
+
+@pytest.mark.asyncio
+async def test_await_provided_token_is_authoritative_no_session_fallback(
+    canvas_tmp_root, mcp_ctx_with_session
+):
+    """A PROVIDED await_token is AUTHORITATIVE: a wrong token must be rejected
+    even when the awaiter's session id matches the declarer's.
+
+    This is the Gemini-HIGH bug. Pre-fix the binding guard was
+    ``token_match or session_match``, so a wrong token (token_match=False) fell
+    through to the session-id equality fallback (session_match=True) and bound —
+    a caller holding a WRONG bearer token could still bind. Correct precedence:
+    when await_token is supplied it is the sole authority (match → bind,
+    mismatch → binding_mismatch); session-id equality applies ONLY when
+    await_token is None (legacy token-less call).
+
+    The earlier ``test_await_wrong_token_still_mismatches`` does not catch this:
+    it mismatches BOTH token AND session (sess-2 vs sess-1), so the bug is
+    masked. Here the session id MATCHES, isolating the fallback.
+    """
+    from spellbook.canvas import store
+
+    store.open_canvas("plan-x", title="Plan X")
+    declarer = mcp_ctx_with_session("sess-1")
+    await canvas_tools.canvas_decision_open(
+        declarer, canvas="plan-x", decision_id="d1", kind="approve", prompt="Ship?"
+    )
+    # SAME session id as the declarer, but a WRONG token. Pre-fix the session
+    # fallback bound (→ pending); post-fix the provided token is authoritative
+    # and its mismatch is fatal (→ binding_mismatch).
+    same_session = mcp_ctx_with_session("sess-1")
+    result = await canvas_tools.canvas_decision_await(
+        same_session, canvas="plan-x", decision_id="d1", timeout_s=1,
+        await_token="not-the-real-token",
+    )
+    # BINDING_MISMATCH has no custom message in _DECISION_ERROR_MESSAGES, so
+    # _decision_error falls back to the code's wire string for the error field.
+    assert result == {
+        "error": "binding_mismatch",
+        "code": "binding_mismatch",
+    }
+
+
+@pytest.mark.asyncio
+async def test_await_token_path_delivers_submission(
+    canvas_tmp_root, mcp_ctx_with_session
+):
+    """End-to-end via the token path: a submission on disk is delivered when the
+    awaiter binds by token under a changed session id."""
+    from spellbook.canvas import store
+
+    store.open_canvas("plan-x", title="Plan X")
+    declarer = mcp_ctx_with_session("declare-id")
+    declared = await canvas_tools.canvas_decision_open(
+        declarer, canvas="plan-x", decision_id="d1", kind="approve", prompt="Ship?"
+    )
+    token = declared["await_token"]
+    store.claim_submission("plan-x", "d1", {
+        "schema_version": SUBMISSION_SCHEMA_VERSION, "decision_id": "d1",
+        "canvas": "plan-x", "kind": "approve", "value": "approved", "free_text": None,
+        "await_binding": {"session_id": "declare-id", "await_token": token},
+        "submitted_at": "2026-06-04T18:22:01.001Z", "consumed": False,
+    })
+    awaiter = mcp_ctx_with_session("await-id-DIFFERENT")
+    result = await canvas_tools.canvas_decision_await(
+        awaiter, canvas="plan-x", decision_id="d1", timeout_s=2, await_token=token
+    )
+    assert result["status"] == "submitted"
+    assert result["value"] == "approved"
+
+
+@pytest.mark.asyncio
 async def test_await_corrupt_submission_recoverable(canvas_tmp_root, mcp_ctx_with_session):
     # Stitch 1: a corrupt inbox JSON file makes claim_consume return
     # DecisionCode.CORRUPT_SUBMISSION (Track A fix 6e6569bf). await must surface

@@ -351,8 +351,9 @@ async def canvas_decision_open(
     Returns:
         - {"status": "declared", "canvas": str, "decision_id": str,
            "kind": str, "await_token": str, "url": str}
-          (await_token + session id form the binding; pass nothing back — the
-           server persisted it. Surfaced for debugging only.)
+          (KEEP this await_token and pass it to
+           canvas_decision_await(await_token=...) — it is the stable binding
+           identity (session ids are per-request under stateless HTTP).)
         - {"error": str, "code": str}; code is a DecisionCode (§3.0), in
           {"invalid_name", "invalid_decision_id", "not_found", "canvas_closed",
            "decision_exists", "invalid_kind", "invalid_options",
@@ -460,6 +461,7 @@ async def canvas_decision_await(
     canvas: str,
     decision_id: str,
     timeout_s: int = 15,
+    await_token: str | None = None,
 ) -> dict:
     """Wait up to timeout_s for the operator's submission to this decision,
     then return it — or a 'pending' sentinel if they have not answered yet.
@@ -472,11 +474,22 @@ async def canvas_decision_await(
     the harness client timeout (the daemon runs stateless_http=True; a single
     indefinite block is not viable — see design §6).
 
-    Main-context-only (DA-8): call only from the session main context that
-    declared the decision. The await matches on the GUARDED session id
-    (_get_session_id, §3.2); a mismatched caller (e.g. a subagent with a
-    different session id) gets binding_mismatch. A None caller-identity never
-    matches (the stored binding's session_id is always non-null, §4.1).
+    PASS THE await_token: canvas_decision_open returns an ``await_token``. Pass
+    it back here as the ``await_token`` argument. It is the PRIMARY, robust
+    identity binding: only the declaring caller holds it (bearer-style), and it
+    is stable across requests. Under stateless_http=True the daemon assigns a
+    FRESH ctx.session_id to every HTTP request, so the declaring session's id at
+    declare time differs from its id at await time — session-id equality alone is
+    NOT a reliable binding (it spuriously fails with binding_mismatch). The token
+    is the fix: when supplied and it matches the stored token, the await binds
+    regardless of session id. Loop with the SAME token across pending re-awaits.
+
+    Main-context-only (DA-8): still call only from the session main context that
+    declared the decision (you hold the token there). If you omit ``await_token``,
+    the binding falls back to GUARDED session-id equality (_get_session_id,
+    §3.2) — but that fallback is fragile under stateless HTTP and exists only for
+    backward compatibility; prefer the token. A None/absent token AND a session
+    id that does not match the stored binding gets binding_mismatch.
 
     Restart-safe (DA / failure mode 2): if the daemon restarted mid-wait, the
     next await reads the durable inbox file and returns the persisted submission
@@ -490,6 +503,13 @@ async def canvas_decision_await(
             conservatively below the harness HTTP-client timeout floor, which is
             empirically UNVERIFIED — see §6 escalation; 20s is the safe ceiling,
             default 15s).
+        await_token: The token returned by canvas_decision_open. PRIMARY binding
+            (bearer-style, stable across requests) and, WHEN SUPPLIED,
+            AUTHORITATIVE: an equal token binds regardless of ctx.session_id, and
+            a non-equal token yields binding_mismatch with NO session-id
+            fallback (a wrong token is fatal even from the declaring session).
+            Omit only for legacy token-less callers; the session-id equality
+            fallback applies solely when await_token is None.
 
     Returns:
         - {"status": "submitted", "value": str, "free_text": str | null,
@@ -520,9 +540,38 @@ async def canvas_decision_await(
         return _decision_error(DecisionCode.NO_SUCH_DECISION)
 
     binding = meta.decision.await_binding
-    # Binding match (§4.2 step 1): non-null sid equal to the stored session id
-    # AND a present stored await_token. A None caller never matches (DA-2/DA-8).
-    if sid is None or sid != binding.session_id or not binding.await_token:
+    # Binding precedence. The stored binding always carries a non-empty
+    # await_token (declare generates it, §4.1). The await_token, WHEN SUPPLIED,
+    # is AUTHORITATIVE — there is no session-id fallback once a caller has
+    # presented a token:
+    #
+    #   1. TOKEN SUPPLIED (await_token is not None) → the token is the sole
+    #      authority. It must equal the stored token (constant-time compare):
+    #      match → bind; mismatch → binding_mismatch with NO session fallback.
+    #      The token is a bearer secret only the declarer holds and is STABLE
+    #      across requests, so it is the robust identity. Critically, a caller
+    #      who presents a WRONG token MUST be rejected even if their per-request
+    #      ctx.session_id happens to equal the declarer's: falling back to the
+    #      session match in that case would let a wrong-token holder bind.
+    #
+    #   2. NO TOKEN (await_token is None, legacy token-less call) → fall back to
+    #      non-null session-id equality. Preserves pre-token callers and still
+    #      rejects a genuinely foreign caller. Fragile under stateless_http=True,
+    #      where ctx.session_id is a fresh uuid per HTTP request (see root
+    #      cause) — kept only for backward compatibility.
+    if await_token is not None:
+        bound = (
+            isinstance(await_token, str)
+            and isinstance(binding.await_token, str)
+            and secrets.compare_digest(await_token, binding.await_token)
+        )
+    else:
+        bound = (
+            sid is not None
+            and sid == binding.session_id
+            and bool(binding.await_token)
+        )
+    if not bound:
         return _decision_error(DecisionCode.BINDING_MISMATCH)
 
     if meta.decision.status == "consumed":
