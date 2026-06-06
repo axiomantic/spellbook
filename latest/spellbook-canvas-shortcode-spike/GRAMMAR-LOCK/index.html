@@ -8577,6 +8577,34 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#amendment-2026-06-05-added-children-content" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Amendment 2026-06-05 — added (children-content)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Amendment 2026-06-05 — added (children-content)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#status-primitives-render-layer-only-no-grammar-change" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Status primitives = render-layer only, NO grammar change
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -8635,6 +8663,41 @@ spellbook plans area; this in-repo file is the canonical, version-controlled
 record of the lock event so Track A/B/C reviewers can see it without
 chasing the out-of-tree path.)</p>
 <h2 id="tracks-a-b-c-are-unblocked">Tracks A, B, C are UNBLOCKED.<a class="headerlink" href="#tracks-a-b-c-are-unblocked" title="Permanent link">&para;</a></h2>
+<hr />
+<h2 id="amendment-2026-06-05-added-children-content">Amendment 2026-06-05 — <collapsible> added (children-content)<a class="headerlink" href="#amendment-2026-06-05-added-children-content" title="Permanent link">&para;</a></h2>
+<p><strong>Spike verdict:</strong> PASS. Verified against react-markdown@9 + remark-gfm@4 +
+rehype-raw@7. The original verification ran in an out-of-tree dev spike harness (never committed to the tree)
+(<code>spellbook/admin/frontend/spike/collapsible.spike.test.tsx</code>) on 2026-06-05; the
+durable in-repo evidence is the implementation
+(<code>spellbook/admin/frontend/src/canvas/shortcodes/Collapsible.tsx</code>) and its tracked
+test suite (<code>spellbook/admin/frontend/src/canvas/__tests__/render.test.tsx</code>):
+the four criteria below are pinned by the <code>CanvasRender — not-prose boundaries on
+shortcode content regions</code>, <code>GATE-2 raw-string shortcode children re-parse</code>, and
+<code>CanvasRender — remount-survival state cache (Collapsible + Tabs)</code> describe blocks
+(CRIT 6 nesting by the <code>GATE-2</code> block's "a <collapsible open> nests INSIDE the
+active <tab> panel" pin) (the GFM-table-in-children sub-case was exercised in the
+original spike run; the durable suite pins the bold and nested-callout re-parse
+cases).</p>
+<p>Criteria met:
+- summary attr survives onto button label; default collapsed (body absent).
+- open presence-attr toggles initial state; body renders.
+- children RE-PARSED as markdown: bold, nested <callout>, GFM table.
+- nests inside <tab> (CRIT 6).</p>
+<p>Grammar class: children-content (Callout pattern). Attributes: summary?: string,
+open?: presence-bool. Children: markdown, re-parsed recursively.</p>
+<p>Known cosmetic artifact (pre-existing, NOT introduced here): block shortcodes on
+their own line in re-parsed children get <p>-wrapped by react-markdown (block-in-p,
+browser-tolerated). Same as <callout> today. Not fixed in this run (render-engine
+change is out of scope).</p>
+<p>As of this amendment, the locked set is the eight-shortcode grammar (chart,
+diagram, callout, tabs, tab, choice, approve, collapsible).</p>
+<h3 id="status-primitives-render-layer-only-no-grammar-change">Status primitives = render-layer only, NO grammar change<a class="headerlink" href="#status-primitives-render-layer-only-no-grammar-change" title="Permanent link">&para;</a></h3>
+<p>The <code>components.input</code> task-list override is a <strong>render-layer change, NOT a
+grammar change.</strong> No new shortcode, no new tag, no lock amendment for status
+primitives. GFM <code>- [x]</code> syntax is already in the locked grammar (remark-gfm); the
+input override replaces the emitted checkbox DOM with a non-interactive status icon
+(render-layer only — no grammar change). This amendment covers <code>&lt;collapsible&gt;</code>
+ONLY.</p>
 
 
 
