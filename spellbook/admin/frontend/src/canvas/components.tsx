@@ -17,7 +17,82 @@ import { Collapsible } from './shortcodes/Collapsible'
  * Hoisted into its own module (§4.6 GATE-2) so the `renderChildren`
  * re-parse fix can import the shared map without forming an import
  * cycle through `render.tsx`.
+ *
+ * Base-HTML element overrides (a, code, pre, table, th, td) carry
+ * token-exact classNames per the §2.2 recipes. These six surfaces are
+ * owned SOLELY by this map: Task 3 nulled the @tailwindcss/typography
+ * plugin's competing rules for them (§2.1 partition), so there is no
+ * specificity fight. Every override-owned element carries `not-prose`
+ * (§2.3 belt) except `a` and the bare block `code`, which sit inside
+ * already-severed contexts.
+ *
+ * The `code`/`pre` split uses the react-markdown 9.1.0 detection pinned
+ * in Task 6's spike: the v8 `inline` boolean prop is GONE. A fenced
+ * block delivers `code` with `className="language-<lang>"`; inline code
+ * delivers `className` undefined. The hast node carries no `parent` key
+ * in 9.1.0, so `node.parent?.tagName === 'pre'` never fires here — it is
+ * retained only as the design's documented forward-compat disjunct. The
+ * reliable block predicate is `/language-/.test(className ?? '')`.
  */
+const a = ({ href, children }: { href?: string; children?: unknown }) => (
+  <a href={href} className="text-accent-cyan hover:text-accent-green underline">
+    {children as never}
+  </a>
+)
+
+const pre = ({ children }: { children?: unknown }) => (
+  <pre className="not-prose bg-bg-elevated border border-bg-border rounded p-3 overflow-x-auto text-sm">
+    {children as never}
+  </pre>
+)
+
+const code = ({
+  node,
+  className,
+  children,
+  ...props
+}: {
+  node?: { parent?: { tagName?: string } }
+  className?: string
+  children?: unknown
+}) => {
+  const parentTag = node?.parent?.tagName
+  const isBlock = /language-/.test(className ?? '') || parentTag === 'pre'
+  if (isBlock) {
+    return (
+      <code className={className} {...props}>
+        {children as never}
+      </code>
+    )
+  }
+  return (
+    <code
+      className="not-prose text-accent-cyan bg-bg-elevated px-1 py-0.5 rounded text-sm"
+      {...props}
+    >
+      {children as never}
+    </code>
+  )
+}
+
+const table = ({ children }: { children?: unknown }) => (
+  <table className="not-prose w-full border-collapse border border-bg-border my-3">
+    {children as never}
+  </table>
+)
+
+const th = ({ children }: { children?: unknown }) => (
+  <th className="border border-bg-border bg-bg-elevated px-3 py-1.5 text-left font-mono text-xs uppercase tracking-widest text-text-secondary">
+    {children as never}
+  </th>
+)
+
+const td = ({ children }: { children?: unknown }) => (
+  <td className="border border-bg-border px-3 py-1.5 text-sm text-text-primary">
+    {children as never}
+  </td>
+)
+
 export const components = {
   chart: Chart,
   diagram: Diagram,
@@ -27,4 +102,10 @@ export const components = {
   choice: Choice,
   approve: Approve,
   collapsible: Collapsible,
+  a,
+  code,
+  pre,
+  table,
+  th,
+  td,
 }

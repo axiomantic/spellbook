@@ -449,3 +449,108 @@ describe('Approve — not-prose on every render-root branch', () => {
     )
   })
 })
+
+describe('CanvasRender — element overrides (a, code, pre, table, th, td)', () => {
+  // §2.1/§2.2: these six base-HTML elements are owned SOLELY by the override
+  // map (Task 3 nulled the typography plugin's competing rules for exactly
+  // these surfaces, so no specificity fight exists). Each override emits a
+  // token-exact className set; the code/pre split uses the react-markdown 9.1.0
+  // detection pinned in Task 6 (the dead v8 `inline` prop is gone — the block
+  // predicate is /language-/.test(className), since the hast node carries no
+  // parent key in 9.1.0). Each test asserts the COMPLETE className set with
+  // { exact: true } (Level 5: fails on any dropped OR added token) plus the
+  // exact rendered text, so a broken override class string or a mis-split
+  // code branch cannot survive.
+
+  it('renders [a] (link) with the override class set and exact href/text', () => {
+    const { container } = render(
+      <CanvasRender content={'[click here](https://example.com/page)'} />,
+    )
+    const anchor = container.querySelector('a')
+    expect(anchor).not.toBeNull()
+    // Complete intended class set for the `a` override (components.tsx).
+    expect(anchor).toHaveClass(
+      'text-accent-cyan hover:text-accent-green underline',
+      { exact: true },
+    )
+    expect(anchor).toHaveAttribute('href', 'https://example.com/page')
+    expect(anchor?.textContent).toBe('click here')
+  })
+
+  it('renders [inline code] as the styled span (not bare), exact class set', () => {
+    // Inline code: className is UNDEFINED in 9.1.0 → /language-/ predicate is
+    // false → the inline (styled) branch renders, NOT the bare block branch.
+    const { container } = render(<CanvasRender content={'use `npm run`'} />)
+    const code = container.querySelector('code')
+    expect(code).not.toBeNull()
+    // Complete intended class set for the inline `code` branch (components.tsx).
+    expect(code).toHaveClass(
+      'not-prose text-accent-cyan bg-bg-elevated px-1 py-0.5 rounded text-sm',
+      { exact: true },
+    )
+    expect(code?.textContent).toBe('npm run')
+    // It is NOT wrapped in a <pre> (inline, not a fenced block).
+    expect(container.querySelector('pre')).toBeNull()
+  })
+
+  it('renders [fenced block] <pre> with override classes and a bare block <code>', () => {
+    // Fenced block with a language: react-markdown 9.1.0 hands the inner
+    // `code` override className="language-ts" → /language-/ predicate is true
+    // → the BLOCK branch renders, which keeps the bare className (no styled
+    // inline tokens) and lets the `pre` override own the container styling.
+    const { container } = render(
+      <CanvasRender content={'```ts\nconst x = 1\n```'} />,
+    )
+    const pre = container.querySelector('pre')
+    expect(pre).not.toBeNull()
+    // Complete intended class set for the `pre` override (components.tsx).
+    expect(pre).toHaveClass(
+      'not-prose bg-bg-elevated border border-bg-border rounded p-3 overflow-x-auto text-sm',
+      { exact: true },
+    )
+    const code = pre?.querySelector('code')
+    expect(code).not.toBeNull()
+    // Block branch: bare language className only — the inline styled tokens
+    // (text-accent-cyan, px-1, …) must be ABSENT here. { exact: true } fails
+    // if the inline branch leaked in.
+    expect(code).toHaveClass('language-ts', { exact: true })
+    expect(code?.textContent).toBe('const x = 1\n')
+  })
+
+  it('renders [table] <table>/<th>/<td> with the override class sets', () => {
+    // remark-gfm parses the pipe table; the override map styles the table
+    // family. Each element asserts its COMPLETE class set with { exact: true }.
+    const { container } = render(
+      <CanvasRender
+        content={'| Col A | Col B |\n| --- | --- |\n| v1 | v2 |'}
+      />,
+    )
+    const table = container.querySelector('table')
+    expect(table).not.toBeNull()
+    // Complete intended class set for the `table` override (components.tsx).
+    expect(table).toHaveClass(
+      'not-prose w-full border-collapse border border-bg-border my-3',
+      { exact: true },
+    )
+
+    const headers = container.querySelectorAll('th')
+    expect(Array.from(headers, (h) => h.textContent)).toEqual(['Col A', 'Col B'])
+    headers.forEach((th) => {
+      // Complete intended class set for the `th` override (components.tsx).
+      expect(th).toHaveClass(
+        'border border-bg-border bg-bg-elevated px-3 py-1.5 text-left font-mono text-xs uppercase tracking-widest text-text-secondary',
+        { exact: true },
+      )
+    })
+
+    const cells = container.querySelectorAll('td')
+    expect(Array.from(cells, (c) => c.textContent)).toEqual(['v1', 'v2'])
+    cells.forEach((td) => {
+      // Complete intended class set for the `td` override (components.tsx).
+      expect(td).toHaveClass(
+        'border border-bg-border px-3 py-1.5 text-sm text-text-primary',
+        { exact: true },
+      )
+    })
+  })
+})
