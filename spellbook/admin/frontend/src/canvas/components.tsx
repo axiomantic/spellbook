@@ -27,11 +27,4 @@ export const components = {
   choice: Choice,
   approve: Approve,
   collapsible: Collapsible,
-  // PROTOTYPE (spike B): competing element-override utility. Adds an
-  // element-level `mt-8` margin-top to compete with the `.prose h2` rule
-  // emitted by @tailwindcss/typography. Used to determine which wins in
-  // the BUILT css by specificity + source order.
-  h2: (props: { children?: unknown }) => (
-    <h2 className="mt-8">{props.children as never}</h2>
-  ),
 }

@@ -45,6 +45,20 @@ describe('CanvasRender — shortcode dispatch pipeline', () => {
     ).toBeInTheDocument()
   })
 
+  it('renders h2 via the plugin baseline with no override class (probe removed)', () => {
+    // The prototype `h2` override added `class="mt-8"` as a typography
+    // specificity probe. With it removed, h2 flows through the
+    // @tailwindcss/typography plugin baseline and the override map
+    // contributes no className. A classless heading renders as bare
+    // `<h2>Heading</h2>` (verified: h1, which has no override, emits
+    // `<h1>Hello</h1>` with no class attribute). Level 5: exact outerHTML.
+    const { container } = render(<CanvasRender content="## Heading" />)
+    const h2 = container.querySelector('h2')
+    expect(h2?.outerHTML).toBe('<h2>Heading</h2>')
+    // The class attribute is fully absent, not just missing the probe token.
+    expect(h2?.getAttribute('class')).toBe(null)
+  })
+
   it('dispatches <callout> to the Callout component', () => {
     render(
       <CanvasRender
