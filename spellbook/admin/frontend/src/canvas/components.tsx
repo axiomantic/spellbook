@@ -7,12 +7,12 @@ import { Approve } from './shortcodes/Approve'
 import { Collapsible } from './shortcodes/Collapsible'
 
 /**
- * Components-prop dispatch table (§8.2).
+ * Components-prop dispatch table (§2.2 override mechanism; §7.1 grammar lock).
  *
  * Keys are the lowercased HTML tag names that `rehype-raw` passes
  * through. Values are the React components defined under
- * `./shortcodes/`. The map covers all seven shortcodes from the locked
- * §9 grammar: chart, diagram, callout, tabs, tab, choice, approve.
+ * `./shortcodes/`. The map covers all eight shortcodes from the locked
+ * grammar (§7.1): chart, diagram, callout, tabs, tab, choice, approve, collapsible.
  *
  * Hoisted into its own module (§4.6 GATE-2) so the `renderChildren`
  * re-parse fix can import the shared map without forming an import
