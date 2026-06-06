@@ -629,6 +629,65 @@ describe('CanvasRender — element overrides (a, code, pre, table, th, td)', () 
   })
 })
 
+describe('CanvasRender — GFM task-list input → status icon override', () => {
+  // §5 / DA-5: remark-gfm emits `<input type="checkbox" disabled checked?>`
+  // for each `- [x]` / `- [ ]` task-list item. The `input` override
+  // (components.tsx) replaces every CHECKBOX input with a display-only
+  // status-icon span (no `<input>` in output): done → `☑`, pending → `☐`.
+  // Non-checkbox inputs (e.g. an author-written `<input type="text">` passed
+  // through by rehype-raw, or the Choice/Approve `type="radio"` controls)
+  // fall through to a real `<input>` UNCHANGED. Each test asserts the
+  // COMPLETE rendered structure (Level 5: exact outerHTML of every emitted
+  // span, exact text, and the absence of any `<input>` for the checkbox case)
+  // so a broken override — wrong icon glyph, missing data-checked, a leaked
+  // `<input>`, or a swapped done/pending state — cannot survive.
+
+  it('renders `- [x]` and `- [ ]` task-list checkboxes as status-icon spans (no <input>)', () => {
+    // remark-gfm parses the two task-list items into <li> each containing an
+    // <input type="checkbox" disabled> (checked for [x], unchecked for [ ]).
+    // The override transforms BOTH into `task-icon` spans. The done item gets
+    // data-checked="true" + ☑; the pending item gets data-checked="false" + ☐.
+    // No <input> may remain anywhere in the output.
+    const { container } = render(
+      <CanvasRender content={'- [x] done\n- [ ] pending'} />,
+    )
+
+    const icons = container.querySelectorAll('[data-testid="task-icon"]')
+    // Exactly two icons, in document order: done first, pending second.
+    // Full outerHTML equality (Level 5): pins testid, data-checked, aria-hidden,
+    // the glyph, AND that the element is a <span> with no extra attributes.
+    expect(Array.from(icons, (el) => el.outerHTML)).toEqual([
+      '<span data-testid="task-icon" data-checked="true" aria-hidden="true">☑</span>',
+      '<span data-testid="task-icon" data-checked="false" aria-hidden="true">☐</span>',
+    ])
+    // The status icons are display-only: NO checkbox <input> survives the
+    // override. A leaked disabled checkbox would fail this.
+    expect(container.querySelector('input')).toBeNull()
+  })
+
+  it('passes a non-checkbox author-written <input> through to a real <input> unchanged', () => {
+    // rehype-raw passes author-written raw HTML through; an `<input type="text">`
+    // is NOT a task-list checkbox, so the override's else-branch must emit a real
+    // `<input>` with its attributes intact. This pins that the override discriminates
+    // on type === 'checkbox' and does not swallow every input. Full outerHTML
+    // equality (Level 5): pins tag, type, value, AND the absence of any task-icon
+    // span / data-checked attribute. A `placeholder` (uncontrolled) attribute
+    // is used rather than `value` so the passthrough render stays free of
+    // React's controlled-input-without-onChange warning — keeping the output
+    // pristine while still exercising the non-checkbox else-branch.
+    const { container } = render(
+      <CanvasRender content={'<input type="text" placeholder="name">'} />,
+    )
+    const input = container.querySelector('input')
+    expect(input).not.toBeNull()
+    // Attribute order follows the DOM's serialization (alphabetical:
+    // placeholder before type), not the source order.
+    expect(input?.outerHTML).toBe('<input placeholder="name" type="text">')
+    // The non-checkbox input must NOT have been transformed into a status icon.
+    expect(container.querySelector('[data-testid="task-icon"]')).toBeNull()
+  })
+})
+
 describe('CanvasRender — GATE-2 raw-string shortcode children re-parse', () => {
   // §4.6 GATE-2: content on the line IMMEDIATELY after an opening
   // children-content shortcode tag (no blank line) is swallowed by

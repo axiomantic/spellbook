@@ -162,6 +162,34 @@ const td = ({
   </td>
 )
 
+// GFM task lists (`- [x]` / `- [ ]`) are emitted by remark-gfm as
+// `<input type="checkbox" disabled checked?>` inside each <li>. The override
+// replaces every CHECKBOX input with a display-only status-icon span — done
+// (`☑`) or pending (`☐`) — so the canvas shows read-only status, never an
+// interactive form control. The icon is aria-hidden (decorative; the list
+// item text carries the meaning). Any NON-checkbox input (an author-written
+// `<input>` passed through by rehype-raw, or a Choice/Approve `type="radio"`
+// control) falls through to a real <input> with its props intact (§5, DA-5).
+// The fall-through arm strips `node` (the react-markdown source-node prop)
+// before spreading, exactly like the other override-owned elements — `node`
+// must never reach a DOM element (React rejects the unknown prop).
+const input = (props: {
+  node?: unknown
+  type?: string
+  checked?: boolean
+}) =>
+  props.type === 'checkbox' ? (
+    <span
+      data-testid="task-icon"
+      data-checked={props.checked ? 'true' : 'false'}
+      aria-hidden="true"
+    >
+      {props.checked ? '☑' : '☐'}
+    </span>
+  ) : (
+    <input {...(omitNode(props) as Record<string, unknown>)} />
+  )
+
 export const components = {
   chart: Chart,
   diagram: Diagram,
@@ -177,4 +205,5 @@ export const components = {
   table,
   th,
   td,
+  input,
 }
