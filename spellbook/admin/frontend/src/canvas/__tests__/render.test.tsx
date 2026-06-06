@@ -953,6 +953,54 @@ describe('CanvasRender — GATE-2 raw-string shortcode children re-parse', () =>
     expect(panel?.textContent).toBe('bold')
   })
 
+  it('CRIT 6: a <collapsible open> nests INSIDE the active <tab> panel — its button + re-parsed body land within the tabpanel (grammar-lock criterion d)', async () => {
+    // §9 GRAMMAR-LOCK amendment (2026-06-05) criterion (d): the <collapsible>
+    // shortcode "nests inside <tab> (CRIT 6)". The disclosure must compose one
+    // level deeper than top level: a <collapsible open> sitting blank-line-
+    // separated inside <tab title="Alpha"> arrives at the Tab body as a parsed
+    // element (not a raw string), the active panel's renderChildren passes it
+    // through, and the Collapsible's OWN tight body ("**bold**" immediately
+    // after the opening tag) re-parses through the shared map into <strong>.
+    // This is the criterion-(d) pin the now-removed dev spike formerly held;
+    // it lives here as the durable in-repo reproducer.
+    const { container } = render(
+      <CanvasRender
+        content={
+          '<tabs>\n<tab title="Alpha">\n\n<collapsible open summary="Detail">\n**bold**\n</collapsible>\n\n</tab>\n</tabs>'
+        }
+      />,
+    )
+    await screen.findByTestId('tabs')
+    const panel = container.querySelector('[role="tabpanel"]')
+    expect(panel).not.toBeNull()
+    // The collapsible is INSIDE the active tabpanel (panel is its ancestor) —
+    // this is the CRIT-6 nesting guarantee: a regression that flattened the
+    // collapsible out of the tab body, or dropped the tab's re-parse, would
+    // leave no collapsible under the panel.
+    const collapsible = panel?.querySelector('[data-testid="collapsible"]')
+    expect(collapsible).not.toBeNull()
+    expect(collapsible?.getAttribute('data-collapsible-open')).toBe('true')
+    // summary → button label, rendered open (▾ disclosure glyph). Exact
+    // outerHTML of the two label spans pins the glyph AND the summary text.
+    const button = collapsible?.querySelector('button')
+    expect(button?.getAttribute('type')).toBe('button')
+    expect(Array.from(button?.querySelectorAll('span') ?? [], (s) => s.outerHTML)).toEqual([
+      '<span aria-hidden="true">▾</span>',
+      '<span>Detail</span>',
+    ])
+    // The collapsible body re-parsed its tight "**bold**" through the shared
+    // map into a <strong> — proving the nested re-parse fires one level inside
+    // the tab. Exact outerHTML (Level 5) pins the element and its text.
+    const body = collapsible?.querySelector('[data-testid="collapsible-body"]')
+    expect(body).not.toBeNull()
+    const strong = body?.querySelector('strong')
+    expect(strong?.outerHTML).toBe('<strong>bold</strong>')
+    expect(body?.textContent).toBe('bold')
+    // The literal markdown asterisks must NOT survive anywhere in the output:
+    // a bare (non-shared-map) re-parse at either nesting level would leak them.
+    expect(container.innerHTML).not.toContain('**bold**')
+  })
+
   it('leaves healthy blank-line-separated <collapsible> body markdown unchanged (already elements)', () => {
     // A blank line after the opening tag lets CommonMark parse the body as a
     // real paragraph BEFORE it reaches the component, so children arrive as

@@ -49,8 +49,15 @@ chasing the out-of-tree path.)
 ## Amendment 2026-06-05 — <collapsible> added (children-content)
 
 **Spike verdict:** PASS. Verified against react-markdown@9 + remark-gfm@4 +
-rehype-raw@7 via renderToStaticMarkup (spike: spellbook/admin/frontend/spike/
-collapsible.spike.test.tsx, this branch).
+rehype-raw@7. The original verification ran in a since-removed dev spike harness
+(`spellbook/admin/frontend/spike/collapsible.spike.test.tsx`) on 2026-06-05; the
+durable in-repo evidence is the implementation
+(`spellbook/admin/frontend/src/canvas/shortcodes/Collapsible.tsx`) and its tracked
+test suite (`spellbook/admin/frontend/src/canvas/__tests__/render.test.tsx`):
+the four criteria below are pinned by the `not-prose boundaries`,
+`GATE-2 raw-string shortcode children re-parse`, and `remount-survival state
+cache` describe blocks (CRIT 6 nesting by the `GATE-2` block's "a <collapsible
+open> nests INSIDE the active <tab> panel" pin).
 
 Criteria met:
 - summary attr survives onto button label; default collapsed (body absent).
@@ -66,8 +73,8 @@ their own line in re-parsed children get <p>-wrapped by react-markdown (block-in
 browser-tolerated). Same as <callout> today. Not fixed in this run (render-engine
 change is out of scope).
 
-The eight-shortcode grammar (chart, diagram, callout, tabs, tab, choice, approve,
-collapsible) is the new locked set.
+As of this amendment, the locked set is the eight-shortcode grammar (chart,
+diagram, callout, tabs, tab, choice, approve, collapsible).
 
 ### Status primitives = render-layer only, NO grammar change
 
