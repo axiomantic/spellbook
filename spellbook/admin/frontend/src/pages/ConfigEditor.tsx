@@ -187,7 +187,7 @@ function ConfigField({
  * Convert a dotted config key into a human-readable section title.
  *
  * ``security.spotlighting.tier`` -> ``Security / Spotlighting``
- * ``notify_enabled``             -> ``General``
+ * ``notify_slack_webhook``       -> ``Notifications``
  */
 function sectionTitleForKey(key: string): string {
   if (!key.includes('.')) {
