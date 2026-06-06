@@ -2,214 +2,402 @@
 
 ## Workflow Diagram
 
-## Overview: `feature-config` (Phase 0)
+## Overview: feature-config (Phase 0 of develop)
 
-High-level flow showing all sections and how they connect.
+High-level flow showing the two primary paths (continuation vs. fresh wizard) and all major sections.
 
 ```mermaid
 flowchart TD
-    classDef dispatch fill:#4a9eff,stroke:#2d7de0,color:#fff
-    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
-    classDef terminal fill:#51cf66,stroke:#3a9449,color:#000
+    START(["`**START**
+    feature-config`"]):::terminal --> S05
 
-    START(["feature-config — Phase 0 Entry"])
+    S05["**0.5** Continuation Detection
+    *(executes FIRST)*"]:::process --> CSig
 
-    START --> CD{"0.5 Continuation\nDetection\nEXECUTES FIRST"}
+    CSig{Continuation
+    signals?}:::decision
 
-    CD -->|"signals present"| RESUME["Resume Flow\n(Steps 1–5)\nsee Detail 1"]
-    CD -->|"no signals"| EH{"0.1 Detect\nEscape Hatches"}
+    CSig -->|Yes| RESUME["Resume Flow
+    Steps 1–5"]:::process
+    CSig -->|No| S01
 
-    RESUME --> JUMP(["Phase Jump\nto Target Phase"])
+    RESUME --> PJUMP[/"Phase Jump Mechanism"/]:::subagent
+    PJUMP --> DONE_RESUME(["Target Phase
+    *(skip completed phases)*"]):::success
 
-    EH -->|"escape hatch found"| EHSKIP(["Phase Skip\nsee Detail 2"])
-    EH -->|"no escape hatch"| MOT["0.2 Clarify Motivation\nWHY — AskUserQuestion"]
-    MOT --> FEAT["0.3 Clarify Feature\nWHAT — AskUserQuestion"]
-    FEAT --> WIZ["0.4 Workflow\nPreferences Wizard\n8 Questions"]
-    WIZ --> REF["0.6 Refactoring\nMode Detection\nKeyword scan"]
-    REF --> NF["0.7 Need-Flag\nClassification\n4 Questions"]
-    NF --> CHK[["Phase 0\nComplete Checklist"]]
+    S01["**0.1** Detect Escape Hatches"]:::process --> EH
 
-    CHK -->|"zero flags"| FAST(["Fast Path:\nInline plan → Implement\ndevelop resident"])
-    CHK -->|"needs_research"| RESEARCH(["/feature-research"])
-    CHK -->|"needs_design or infra\nno research"| DESIGN(["/feature-design"])
+    EH{"Escape hatch
+    in message?"}:::decision
 
-    class WIZ,NF dispatch
-    class CHK gate
-    class JUMP,EHSKIP,FAST,RESEARCH,DESIGN terminal
+    EH -->|"'using design doc'
+    'using impl plan'
+    'just implement'"| ASK_EH[/"AskUserQuestion:
+    How to handle
+    existing doc?"/]:::subagent
+    EH -->|None| S02
 
-    subgraph LEGEND [" "]
-        L1["Process"]
-        L2{Decision}
-        L3["Subagent Dispatch / AskUserQuestion"]:::dispatch
-        L4[["Quality Gate"]]:::gate
-        L5(["Terminal / Exit"]):::terminal
+    ASK_EH --> EH_ROUTE{"Route by
+    choice"}:::decision
+    EH_ROUTE -->|"Review first
+    (design doc)"| SKIP_21["Skip 2.1 →
+    load doc → 2.2"]:::process
+    EH_ROUTE -->|"Treat as ready
+    (design doc)"| SKIP_P2["Skip Phase 2 →
+    start Phase 3"]:::process
+    EH_ROUTE -->|"Review first
+    (impl plan)"| SKIP_313["Skip 2.1–3.1 →
+    load doc → 3.2"]:::process
+    EH_ROUTE -->|"Treat as ready
+    (impl plan)"| SKIP_P23["Skip Phases 2–3 →
+    start Phase 4"]:::process
+
+    SKIP_21 --> S02
+    SKIP_P2 --> S04
+    SKIP_313 --> S02
+    SKIP_P23 --> S04
+
+    S02["**0.2** Clarify Motivation (WHY)"]:::process --> MOT
+
+    MOT{"Motivation
+    clear?"}:::decision
+    MOT -->|No| ASK_MOT[/"AskUserQuestion:
+    WHY?"/]:::subagent
+    MOT -->|Yes| S03
+    ASK_MOT --> S03
+
+    S03["**0.3** Clarify Feature (WHAT)"]:::process
+    S03 --> |"AskUserQuestion:
+    core purpose + resources"| S04
+
+    S04["**0.4** Collect Workflow Preferences
+    *(8-question wizard)*"]:::process --> S06
+
+    S06["**0.6** Detect Refactoring Mode
+    *(keyword scan)*"]:::process --> S07
+
+    S07["**0.7** Need-Flag Classification
+    *(4 questions)*"]:::process --> FLAGS
+
+    FLAGS{"Flags
+    resolved"}:::decision
+    FLAGS -->|"Zero flags
+    (fast path)"| FAST[/"Announce fast path
+    inline plan ≤5 steps
+    develop stays resident"/]:::subagent
+    FLAGS -->|"Any flag set"| GATED[/"Flag-gated phases
+    full review floor"/]:::subagent
+
+    FAST --> CHECKLIST
+    GATED --> CHECKLIST
+
+    CHECKLIST{"**Phase 0
+    Complete
+    Checklist**
+    *(all 9 items)*"}:::gate
+    CHECKLIST -->|"All checked ✓"| NEXT(["Next Phase
+    (research / design / fast-impl)"]):::success
+    CHECKLIST -->|"Unchecked items"| BACK["Complete
+    Phase 0"]:::process
+    BACK --> CHECKLIST
+
+    classDef terminal fill:#2d2d2d,stroke:#888,color:#e8e8ea,rx:20
+    classDef process fill:#2d2d2d,stroke:#4a9eff,color:#e8e8ea
+    classDef decision fill:#2d2d2d,stroke:#f0a500,color:#f0a500
+    classDef subagent fill:#1a3a5c,stroke:#4a9eff,color:#4a9eff
+    classDef gate fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
+    classDef success fill:#1a3a1a,stroke:#51cf66,color:#51cf66
+
+    subgraph legend["Legend"]
+        L1["Process"]:::process
+        L2[/"Subagent Dispatch / AskUserQuestion"/]:::subagent
+        L3{"Decision"}:::decision
+        L4{"Quality Gate"}:::gate
+        L5(["Terminal"]):::success
     end
 ```
 
 ---
 
-## Detail 1: Section 0.5 — Continuation Detection
+## Detail: Section 0.5 — Continuation Detection
 
 ```mermaid
 flowchart TD
-    classDef dispatch fill:#4a9eff,stroke:#2d7de0,color:#fff
-    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
-    classDef terminal fill:#51cf66,stroke:#3a9449,color:#000
+    ENTRY(["Enter 0.5"]):::success --> SIG
 
-    ENTRY(["Continuation Signal Detected\n(any of: prompt keyword, system-reminder\nskill phase marker, or artifacts on disk)"])
+    SIG{"Any continuation
+    signal?"}:::decision
 
-    ENTRY --> S1["Step 1: Parse Recovery Context\nExtract from system-reminder:\nactive_skill · skill_phase · todos · exact_position"]
+    SIG -->|"No signals"| EXIT_NO(["→ Proceed to 0.1"]):::success
 
-    S1 --> S2["Step 2: Verify Artifact Existence\nRun bash: ls understanding/ · plans/*-design.md\nplans/*-impl.md · git worktree list"]
+    SIG -->|"Signal present:
+    - 'continue'/'resume'/'pick up'
+    - system-reminder: Skill Phase
+    - system-reminder: Active Skill
+    - artifacts on disk"| S1
 
-    S2 --> ARTCHK{"Artifacts match\nclaimed phase?"}
+    S1["**Step 1: Parse Recovery Context**
+    Extract from system-reminder:
+    active_skill, skill_phase,
+    todos, exact_position"]:::process --> S2
 
-    ARTCHK -->|"All expected found"| S3
-    ARTCHK -->|"Artifacts missing"| MISSING["Report Missing Artifacts\nList each with expected path"]
-    MISSING --> CHOICE{"User choice"}
-    CHOICE -->|"Regenerate"| S3
-    CHOICE -->|"Start fresh"| FRESH(["→ Phase 0.1\nFresh Start"])
+    S2["**Step 2: Verify Artifact Existence**
+    Run bash: list understanding/,
+    plans/*-design.md, plans/*-impl.md,
+    git worktree list"]:::process --> ART_CHECK
 
-    S3["Step 3: Quick Preferences Check\nRe-ask only 4 session preferences:\nExecution Mode · Parallelization\nWorktree · Post-Implementation"]
+    ART_CHECK{"Artifacts match
+    claimed phase?"}:::decision
 
-    S3 --> S4["Step 4: Synthesize Resume Point"]
+    ART_CHECK -->|"Yes"| S3
+    ART_CHECK -->|"Phase implies artifacts
+    that are MISSING"| MISSING_ART
 
-    S4 --> PRIORITY{"Priority\nof resume\nevidence"}
-    PRIORITY -->|"in-progress todo in restored list"| USE_TODO["Use in-progress todo\nas exact resume point\n(highest confidence)"]
-    PRIORITY -->|"no todo; skill_phase in reminder"| USE_PHASE["Use skill_phase\nfrom system-reminder"]
-    PRIORITY -->|"neither"| ARTIFACT_TABLE["Infer from\nArtifact Pattern Table\n(HIGH confidence lookups)"]
+    MISSING_ART[/"Report missing artifacts
+    AskUserQuestion:
+    1. Regenerate from context
+    2. Start fresh from Phase 0"/]:::subagent
 
-    USE_TODO --> S5
-    USE_PHASE --> S5
-    ARTIFACT_TABLE --> S5
+    MISSING_ART --> |"Option 1"| S3
+    MISSING_ART --> |"Option 2"| FRESH(["→ Proceed to 0.1
+    (fresh start)"]):::success
 
-    S5["Step 5: Confirm &amp; Resume\nDisplay: skipped phases · current resume point\nAnnounce target with SKIPPED / CURRENT labels"]
+    S3["**Step 3: Quick Preferences Check**
+    Re-ask 4 preferences only:
+    - Execution mode
+    - Parallelization
+    - Worktree
+    - Post-implementation"]:::process --> S4
 
-    S5 --> JUMP[["Phase Jump Mechanism\n1. Determine target phase\n2. Skip all prior phases by number\n3. Execute only from target forward"]]
+    S4["**Step 4: Synthesize Resume Point**"]:::process --> RP_LOGIC
 
-    JUMP --> TARGET(["Resume at\nTarget Phase"])
+    RP_LOGIC{"Resume
+    point source"}:::decision
+    RP_LOGIC -->|"In-progress todo
+    in restored list"| RP_TODO["Use todo item
+    *(most precise)*"]:::process
+    RP_LOGIC -->|"No todo, but
+    skill_phase present"| RP_PHASE["Use skill_phase
+    from system-reminder"]:::process
+    RP_LOGIC -->|"Neither"| RP_ARTIFACT["Infer from
+    artifact pattern table"]:::process
 
-    class S2 dispatch
-    class JUMP gate
-    class FRESH,TARGET terminal
+    RP_TODO --> S5
+    RP_PHASE --> S5
+    RP_ARTIFACT --> S5
 
-    subgraph ARTIFACT_REF ["Artifact → Phase Table (used by Step 4 fallback)"]
-        AT1["No artifacts → Phase 0 (fresh)"]
-        AT2["Understanding doc, no design → resume Phase 2"]
-        AT3["Design doc, no impl plan → resume Phase 3"]
-        AT4["Design + impl plan, no worktree → resume Phase 4.1"]
-        AT5["Worktree with uncommitted changes → Phase 4 in progress"]
-        AT6["PR exists → Phase 4.7 finishing"]
+    S5["**Step 5: Confirm & Resume**
+    Display: prior progress,
+    design/impl/worktree paths,
+    current task"]:::process --> JUMP
+
+    JUMP[/"Phase Jump Mechanism:
+    1. Determine target phase
+    2. Skip all prior phases
+    3. Execute from target forward"/]:::subagent
+
+    JUMP --> DONE(["Resume at
+    target phase ✓"]):::success
+
+    subgraph artifact_table["Artifact-Only Fallback (Step 4)"]
+        AT1["No artifacts → Phase 0 (HIGH)"]
+        AT2["Understanding doc only → Phase 1.5→2 (HIGH)"]
+        AT3["Design doc, no impl → Phase 2→3 (HIGH)"]
+        AT4["Design + impl, no worktree → Phase 3→4.1 (HIGH)"]
+        AT5["Worktree + uncommitted → Phase 4 in progress (MEDIUM)"]
+        AT6["Worktree + commits, no PR → Phase 4 late (MEDIUM)"]
+        AT7["PR exists → Phase 4.7 finishing (HIGH)"]
     end
 
-    subgraph LEGEND [" "]
-        L1["Process"]
-        L2{Decision}
-        L3["Subagent Dispatch / Bash"]:::dispatch
-        L4[["Quality Gate"]]:::gate
-        L5(["Terminal / Exit"]):::terminal
+    classDef terminal fill:#2d2d2d,stroke:#888,color:#e8e8ea,rx:20
+    classDef process fill:#2d2d2d,stroke:#4a9eff,color:#e8e8ea
+    classDef decision fill:#2d2d2d,stroke:#f0a500,color:#f0a500
+    classDef subagent fill:#1a3a5c,stroke:#4a9eff,color:#4a9eff
+    classDef gate fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
+    classDef success fill:#1a3a1a,stroke:#51cf66,color:#51cf66
+
+    subgraph legend["Legend"]
+        L1["Process"]:::process
+        L2[/"Subagent / AskUserQuestion"/]:::subagent
+        L3{"Decision"}:::decision
+        L5(["Terminal"]):::success
     end
 ```
 
 ---
 
-## Detail 2: Sections 0.1–0.7 — Fresh Start Wizard
+## Detail: Section 0.4 — Configuration Wizard
 
 ```mermaid
 flowchart TD
-    classDef dispatch fill:#4a9eff,stroke:#2d7de0,color:#fff
-    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
-    classDef terminal fill:#51cf66,stroke:#3a9449,color:#000
+    ENTRY(["Enter 0.4"]):::success --> Q1
 
-    ENTRY(["No Continuation Signals\nFresh Start Entry"])
+    Q1[/"**Q1** Execution mode:
+    Fully autonomous (Recommended)
+    Interactive
+    Mostly autonomous"/]:::subagent --> Q2
 
-    ENTRY --> EH{"0.1 Detect Escape Hatches\nParse initial user message"}
+    Q2[/"**Q2** Parallelization:
+    Maximize parallel (Recommended)
+    Conservative
+    Ask each time"/]:::subagent --> Q3
 
-    EH -->|"'using design doc path'"| EH_DD{"Document\nHandling?"}
-    EH -->|"'using impl plan path'"| EH_IP{"Document\nHandling?"}
-    EH -->|"'just implement no docs'"| SKIP4(["Skip to Phase 4"])
-    EH -->|"No escape hatch"| MOT
+    Q3[/"**Q3** Worktree:
+    Single (Recommended)
+    Per parallel track
+    No worktree"/]:::subagent --> COUPLE
 
-    EH_DD -->|"Review first"| SKIP22(["Skip 2.1 → Phase 2.2\n(load + review design)"])
-    EH_DD -->|"Treat as ready"| SKIP3(["Skip Phase 2 → Phase 3"])
-    EH_IP -->|"Review first"| SKIP32(["Skip 2.1-3.1 → Phase 3.2"])
-    EH_IP -->|"Treat as ready"| SKIP23(["Skip Phases 2-3 → Phase 4"])
+    COUPLE{"worktree ==
+    'per_parallel_track'?"}:::decision
+    COUPLE -->|Yes| FORCE_MAX["Auto-set
+    parallelization = maximize"]:::process
+    COUPLE -->|No| Q4
+    FORCE_MAX --> Q4
 
-    MOT["0.2 Clarify Motivation WHY\nAskUserQuestion\nSuggest 6 categories\nStore → SESSION_CONTEXT.motivation"]
+    Q4[/"**Q4** Post-implementation:
+    Offer options (Recommended)
+    Create PR automatically
+    Just stop"/]:::subagent --> Q5
 
-    MOT --> FEAT["0.3 Clarify Feature WHAT\nAskUserQuestion\n• Core purpose 1-2 sentences\n• Resources / links for research\nStore → SESSION_CONTEXT.feature_essence"]
+    Q5[/"**Q5** Dialectic mode:
+    None (Recommended)
+    Roundtable"/]:::subagent --> D5
 
-    FEAT --> WIZ_ENTRY["0.4 Workflow Preferences Wizard\nAll 8 questions in single AskUserQuestion call"]
+    D5{"dialectic_mode
+    != 'none'?"}:::decision
+    D5 -->|"Yes → show Q6"| Q6[/"**Q6** Dialectic level:
+    Planning only
+    Planning + gates (Recommended)
+    Full"/]:::subagent
+    D5 -->|"No → skip Q6"| Q7
 
-    WIZ_ENTRY --> Q1["Q1 — Execution Mode\nFully autonomous · Interactive\nMostly autonomous"]
-    Q1 --> Q2["Q2 — Parallelization\nMaximize · Conservative · Ask each time"]
-    Q2 --> Q3["Q3 — Worktree Strategy\nSingle · Per parallel track · None"]
-    Q3 --> Q4["Q4 — Post-Implementation\nOffer options · Auto PR · Just stop"]
-    Q4 --> Q5{"Q5 — Dialectic Mode\nNone · Roundtable"}
-    Q5 -->|"none"| Q7
-    Q5 -->|"roundtable"| Q6["Q6 — Dialectic Level\nPlanning only\nPlanning + gates\nFull — conditional on Q5 != none"]
-    Q6 --> Q7["Q7 — Token Enforcement\nWork-item · Gate level · Every step"]
-    Q7 --> Q8["Q8 — Decision Surface\nTerminal questions\nInteractive canvas page\nStore → SESSION_PREFERENCES.decision_surface"]
-    Q8 --> COUPLE["Coupling Rule\nworktree=per_parallel_track\n→ auto-set parallelization=maximize"]
+    Q6 --> Q7
 
-    COUPLE --> REF{"0.6 Refactoring Mode\nKeyword scan on request text"}
-    REF -->|"refactor / reorganize / extract\nmigrate / split / consolidate"| SET_REF["Set SESSION_PREFERENCES\n.refactoring_mode = true"]
-    REF -->|"no keywords"| NF_ENTRY
-    SET_REF --> NF_ENTRY
+    Q7[/"**Q7** Token enforcement:
+    Work-item level
+    Gate level (Recommended)
+    Every step"/]:::subagent --> Q8
 
-    NF_ENTRY["0.7 Need-Flag Classification\n4 self-contained AskUserQuestion items"]
+    Q8[/"**Q8** Decision surface:
+    Terminal questions (Recommended)
+    Interactive canvas page"/]:::subagent --> STORE
 
-    NF_ENTRY --> QR["Q-RESEARCH\nUnfamiliar code OR fuzzy requirements?\nYes → enables Research + Discovery phases\nneeds_research boolean"]
-    QR --> QINFRA["Q-INFRA\nNew deps / infra / schema changes?\nYes → auto-sets needs_design=true"]
-    QINFRA --> INFRA_CHK{"Q-INFRA\nanswer?"}
-    INFRA_CHK -->|"yes → auto-set needs_design=true"| SKIP_QD["Skip Q-DESIGN\nneeds_design forced true"]
-    INFRA_CHK -->|"no"| QD["Q-DESIGN\nReal architectural decision?\nYes → enables Design phase\nneeds_design boolean"]
-    QD --> QS
-    SKIP_QD --> QS["Q-SIZE\nSmall · Medium · Large\nSignal only — tunes parallelization\nnever gates phases"]
+    STORE["Store all in
+    SESSION_PREFERENCES"]:::process
 
-    QS --> STORE["Store in SESSION_PREFERENCES\nneeds_research · needs_design\nneeds_infrastructure · size_estimate"]
+    STORE --> DONE(["→ Proceed to 0.6"]):::success
 
-    STORE --> ROUTE[["Flag Routing\n(quality gate before exit)"]]
+    classDef terminal fill:#2d2d2d,stroke:#888,color:#e8e8ea,rx:20
+    classDef process fill:#2d2d2d,stroke:#4a9eff,color:#e8e8ea
+    classDef decision fill:#2d2d2d,stroke:#f0a500,color:#f0a500
+    classDef subagent fill:#1a3a5c,stroke:#4a9eff,color:#4a9eff
+    classDef gate fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
+    classDef success fill:#1a3a1a,stroke:#51cf66,color:#51cf66
 
-    ROUTE -->|"all flags false"| ANNOUNCE["Announce Fast Path\n(verbatim script required)"]
-    ANNOUNCE --> FAST(["Fast Path:\nShort inline plan confirmed\n→ Implement under lighter floor\ndevelop stays resident"])
-
-    ROUTE -->|"needs_research = true"| RPHASE(["/feature-research"])
-    ROUTE -->|"needs_design or infra\nno research"| DPHASE(["/feature-design"])
-
-    class WIZ_ENTRY,MOT,FEAT,NF_ENTRY dispatch
-    class ROUTE gate
-    class SKIP22,SKIP3,SKIP32,SKIP23,SKIP4,FAST,RPHASE,DPHASE terminal
-
-    subgraph MOTIVATION_CATS ["Motivation Categories → Key Questions (stored, used in later phases)"]
-        MC1["User Pain → current journey + failure mode"]
-        MC2["Performance → current metrics + target"]
-        MC3["Technical Debt → what breaks when touched"]
-        MC4["Business Need → deadline + priority"]
-        MC5["Security/Compliance → threat model + requirement"]
-        MC6["Developer Experience → frequency + workaround"]
-    end
-
-    subgraph LEGEND [" "]
-        L1["Process"]
-        L2{Decision}
-        L3["AskUserQuestion / Dispatch"]:::dispatch
-        L4[["Quality Gate"]]:::gate
-        L5(["Terminal / Exit"]):::terminal
+    subgraph legend["Legend"]
+        L1["Process"]:::process
+        L2[/"AskUserQuestion (wizard Q)"/]:::subagent
+        L3{"Decision / coupling rule"}:::decision
+        L5(["Terminal"]):::success
     end
 ```
 
 ---
 
-## Cross-Reference Table
+## Detail: Section 0.7 — Need-Flag Classification & Routing
 
-| Overview Node | Detail Diagram | Section |
+```mermaid
+flowchart TD
+    ENTRY(["Enter 0.7"]):::success --> QR
+
+    QR[/"**Q-RESEARCH** — Do we need to investigate?
+    'Yes — investigate first'
+    'No — I understand the code and requirements'"/]:::subagent --> QINFRA
+
+    QINFRA[/"**Q-INFRA** — New deps, infra, or schema changes?
+    'Yes — new deps/infra/schema'
+    'No — existing code only'"/]:::subagent --> INFRA_CHECK
+
+    INFRA_CHECK{"Q-INFRA = Yes?"}:::decision
+    INFRA_CHECK -->|"Yes → auto-set
+    needs_design = true
+    skip Q-DESIGN"| QSIZE
+    INFRA_CHECK -->|"No"| QDESIGN
+
+    QDESIGN[/"**Q-DESIGN** — Design decisions to make?
+    'Yes — architecture/data model/API/UX'
+    'No — mechanical change (bump/rename/config)'"/]:::subagent --> QSIZE
+
+    QSIZE[/"**Q-SIZE** — Rough scale? (signal only)
+    Small / Medium / Large"/]:::subagent --> STORE
+
+    STORE["Resolve flags:
+    needs_research ∈ {true, false}
+    needs_design ∈ {true, false}
+    needs_infrastructure ∈ {true, false}
+    size_estimate ∈ {small, medium, large}
+    → store in SESSION_PREFERENCES"]:::process --> ROUTE
+
+    ROUTE{"Any flag
+    set?"}:::decision
+
+    ROUTE -->|"ALL three = false
+    (zero flags)"| FAST_ANN
+
+    FAST_ANN["Announce fast path (verbatim):
+    'This looks like a small, well-understood
+    change... I'll take the fast path: skip
+    research/discovery/design/planning phases,
+    write a short inline plan for you to confirm,
+    then implement it with the lighter review floor.'"]:::process --> FAST_LOG
+
+    FAST_LOG["Log: 'Fast path: zero-flag change.
+    Fewer phases, lighter floor, develop resident.'"]:::process --> FAST_TERM(["Fast path active
+    develop stays resident ✓"]):::success
+
+    ROUTE -->|"needs_research = true"| RES_PATH
+    ROUTE -->|"needs_design = true
+    or needs_infrastructure = true
+    (and NOT needs_research)"| DES_PATH
+
+    RES_PATH(["→ /feature-research
+    (then design if flagged)"]):::success
+    DES_PATH(["→ /feature-design"]):::success
+
+    subgraph ortho["Orthogonality Rules"]
+        OR1["needs_research is independent of needs_design and needs_infrastructure"]
+        OR2["Q-INFRA=yes → auto needs_design=true (do NOT re-ask Q-DESIGN)"]
+        OR3["size_estimate NEVER gates a phase — tunes parallelization only"]
+    end
+
+    classDef terminal fill:#2d2d2d,stroke:#888,color:#e8e8ea,rx:20
+    classDef process fill:#2d2d2d,stroke:#4a9eff,color:#e8e8ea
+    classDef decision fill:#2d2d2d,stroke:#f0a500,color:#f0a500
+    classDef subagent fill:#1a3a5c,stroke:#4a9eff,color:#4a9eff
+    classDef gate fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
+    classDef success fill:#1a3a1a,stroke:#51cf66,color:#51cf66
+
+    subgraph legend["Legend"]
+        L1["Process"]:::process
+        L2[/"AskUserQuestion"/]:::subagent
+        L3{"Decision"}:::decision
+        L5(["Terminal / next command"]):::success
+    end
+```
+
+---
+
+## Cross-Reference: Overview → Detail Diagrams
+
+| Overview Section | Detail Diagram | Key Logic |
 |---|---|---|
-| `Resume Flow (Steps 1–5)` | Detail 1 | 0.5 Continuation Detection |
-| `Phase Skip` (escape hatches) | Detail 2, top | 0.1 Escape Hatch Detection |
-| `0.4 Workflow Preferences Wizard` | Detail 2, wizard block | Q1–Q8 including conditional Q6 |
-| `0.7 Need-Flag Classification` | Detail 2, bottom | Q-RESEARCH, Q-DESIGN, Q-INFRA, Q-SIZE |
-| `Phase 0 Complete Checklist` | Detail 2 | Flag Routing → ROUTE gate |
+| **0.5** Continuation Detection | Detail: Section 0.5 | 5-step resume flow; artifact verification table; phase jump mechanism |
+| **0.1** Escape Hatches | Overview (inline) | 3 patterns × 2 handling choices → phase skip routing |
+| **0.2** Clarify Motivation | Overview (inline) | Ask only when intent ambiguous; 6 motivation categories |
+| **0.3** Clarify Feature | Overview (inline) | Core purpose + resources; stored in SESSION_CONTEXT |
+| **0.4** Wizard | Detail: Section 0.4 | 8 questions (Q6 conditional); coupling rule: per-track → maximize |
+| **0.6** Refactoring Mode | Overview (inline) | Keyword scan only; no user interaction |
+| **0.7** Need-Flags | Detail: Section 0.7 | 4 questions; Q-INFRA auto-sets needs_design; zero-flag fast path |
 
 ## Command Content
 
@@ -605,12 +793,14 @@ nail down requirements before any design. Answer no only if you already understa
 exactly what is wanted.
 Suggested: `Yes — investigate first` / `No — I understand the code and the requirements`
 
-### Q-DESIGN — "Is there a real design decision to make?"
-Answer yes if this work involves an architectural choice: a new structure, picking between two valid
-approaches, or defining an interface/contract other code will depend on. Answering yes turns on the
-Design phase (a written design doc, reviewed before coding). Answer no for changes whose shape is
-obvious — there is only one sensible way to do it.
-Suggested: `Yes — a design decision exists` / `No — the shape is obvious`
+### Q-DESIGN — "Are there design decisions to make?"
+Answer yes if this work will require making an architectural choice: a new structure, picking between
+two valid approaches, defining an interface/contract other code will depend on, a data model, an API
+shape, or a UX flow. The question is whether the scope is design-worthy — whether decisions still need
+to be made — NOT whether decisions have already been made. Answering yes turns on the Design phase (a
+written design doc, reviewed before coding). Answer no when the path is already determined and the
+change is mechanical: a version bump, a copy/wording edit, a rename, or flipping a config flag.
+Suggested: `Yes — there are design decisions to make (architecture, data model, API shape, UX flows)` / `No — the path is already determined (version bump, copy edit, rename, config flip)`
 
 ### Q-INFRA — "Does this add new dependencies, infrastructure, or schema changes?"
 Answer yes if the work pulls in a new third-party dependency, stands up new infrastructure/services,
