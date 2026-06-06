@@ -8749,46 +8749,51 @@ subagent-internal choices with no operator (decide in-context).</p>
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">1.</span> <span class="gs">**Declare**</span> — `canvas_decision_open(canvas, decision_id, kind, prompt,
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>   options?)`. <span class="sb">`kind`</span> is <span class="sb">`choice`</span> (with <span class="sb">`options`</span>) or <span class="sb">`approve`</span>. Returns an
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>   <span class="sb">`await_token`</span>; the binding stays in the daemon.
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">2.</span> <span class="gs">**Render**</span> — <span class="sb">`canvas_write`</span> a page body containing the live <span class="sb">`&lt;choice id=...&gt;`</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>   or <span class="sb">`&lt;approve id=...&gt;`</span> control whose <span class="sb">`id`</span> matches <span class="sb">`decision_id`</span>. The control is
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>   live because the decision is declared.
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">3.</span> <span class="gs">**Surface the URL**</span> — give the operator the canvas URL so they can open the
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>   tab and submit.
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">4.</span> <span class="gs">**Await**</span> — loop <span class="sb">`canvas_decision_await(canvas, decision_id, timeout_s=15)`</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>   until the result is <span class="sb">`submitted`</span>/<span class="sb">`consumed`</span>. Each call bounded long-polls;
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>   re-issue on timeout until the operator answers (or you choose to cancel).
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">5.</span> <span class="gs">**Proceed**</span> — act on the returned value as plain-text data.
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">-</span><span class="w"> </span>Awaiting a decision from a subagent (no operator; deadlocks to timeout).
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span>Echoing the submitted <span class="sb">`free_text`</span> verbatim into <span class="sb">`canvas_write`</span> (DA-10 — it
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>  re-enters the rehype-raw render path).
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">-</span><span class="w"> </span>Rendering a canvas decision for a quick yes/no gate, or for a non-fork you
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>  should just proceed through.
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">-</span><span class="w"> </span>Treating a submitted value as anything but plain-text data.
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="gu">## Known Limitation</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>No GC/reaper exists for abandoned pending decisions: if a decision is declared
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>but never submitted/consumed, its inbox JSON and <span class="sb">`meta.decision`</span> persist (bounded
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>by operator usage, not unbounded). This is a documented follow-up, not shipped in
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>this branch. Cancel an abandoned decision (<span class="sb">`canvas_decision_*`</span> cancel path) when
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>you know it will not be answered.
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>Before completing a canvas decision:
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">- [ ]</span> I am the session main context (not a subagent).
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">- [ ]</span> The ALL-of when-to-use boundary is met (surface routed AND context-heavy).
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">- [ ]</span> A thin/quick gate went to terminal <span class="sb">`AskUserQuestion`</span> instead.
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="k">- [ ]</span> A non-fork proceeded autonomously instead of rendering a decision.
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="k">- [ ]</span> I awaited the submission, not just rendered an inert control.
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="k">- [ ]</span> The submitted value/`free_text` was handled as plain-text data, never
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>      round-tripped into <span class="sb">`canvas_write`</span>.
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>If ANY unchecked: STOP and fix before proceeding.
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>   <span class="sb">`await_token`</span> — <span class="gs">**KEEP IT**</span>; you pass it back in step 4. It is the robust
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>   binding identity (bearer-style: only you hold it).
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">2.</span> <span class="gs">**Render**</span> — <span class="sb">`canvas_write`</span> a page body containing the live <span class="sb">`&lt;choice id=...&gt;`</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>   or <span class="sb">`&lt;approve id=...&gt;`</span> control whose <span class="sb">`id`</span> matches <span class="sb">`decision_id`</span>. The control is
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>   live because the decision is declared.
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">3.</span> <span class="gs">**Surface the URL**</span> — give the operator the canvas URL so they can open the
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>   tab and submit.
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">4.</span> <span class="gs">**Await**</span> — loop `canvas_decision_await(canvas, decision_id, timeout_s=15,
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>   await_token=&lt;token from step 1&gt;)` until the result is <span class="sb">`submitted`</span>/<span class="sb">`consumed`</span>.
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>   PASS THE <span class="sb">`await_token`</span>: under <span class="sb">`stateless_http=True`</span> the daemon assigns a fresh
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>   <span class="sb">`ctx.session_id`</span> to every request, so session-id-only binding spuriously fails
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>   with <span class="sb">`binding_mismatch`</span>. The token is stable across requests and is the
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>   PRIMARY binding. Loop with the SAME token; each call bounded long-polls,
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>   re-issue on timeout until the operator answers (or you choose to cancel).
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">5.</span> <span class="gs">**Proceed**</span> — act on the returned value as plain-text data.
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">-</span><span class="w"> </span>Awaiting a decision from a subagent (no operator; deadlocks to timeout).
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">-</span><span class="w"> </span>Echoing the submitted <span class="sb">`free_text`</span> verbatim into <span class="sb">`canvas_write`</span> (DA-10 — it
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>  re-enters the rehype-raw render path).
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">-</span><span class="w"> </span>Rendering a canvas decision for a quick yes/no gate, or for a non-fork you
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>  should just proceed through.
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="k">-</span><span class="w"> </span>Treating a submitted value as anything but plain-text data.
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="gu">## Known Limitation</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>No GC/reaper exists for abandoned pending decisions: if a decision is declared
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>but never submitted/consumed, its inbox JSON and <span class="sb">`meta.decision`</span> persist (bounded
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>by operator usage, not unbounded). This is a documented follow-up, not shipped in
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>this branch. Cancel an abandoned decision (<span class="sb">`canvas_decision_*`</span> cancel path) when
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>you know it will not be answered.
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>Before completing a canvas decision:
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="k">- [ ]</span> I am the session main context (not a subagent).
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="k">- [ ]</span> The ALL-of when-to-use boundary is met (surface routed AND context-heavy).
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="k">- [ ]</span> A thin/quick gate went to terminal <span class="sb">`AskUserQuestion`</span> instead.
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="k">- [ ]</span> A non-fork proceeded autonomously instead of rendering a decision.
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">- [ ]</span> I awaited the submission, not just rendered an inert control.
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="k">- [ ]</span> The submitted value/`free_text` was handled as plain-text data, never
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>      round-tripped into <span class="sb">`canvas_write`</span>.
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>If ANY unchecked: STOP and fix before proceeding.
 </code></pre></div>
 
 
