@@ -55,12 +55,15 @@ export function Collapsible({ summary, open, node, children }: CollapsibleProps)
   const [isOpen, setIsOpen] = useState(
     () => collapsibleOpenState.get(key) ?? open !== undefined,
   )
-  const toggle = () =>
-    setIsOpen((v) => {
-      const next = !v
-      collapsibleOpenState.set(key, next)
-      return next
-    })
+  // Compute next state and write the cache OUTSIDE the state updater (matches
+  // Tabs' `select`). State updaters must be pure: StrictMode double-invokes
+  // them, which would double-write the cache. The click handler always sees
+  // committed state, so reading `isOpen` from the closure is correct here.
+  const toggle = () => {
+    const next = !isOpen
+    collapsibleOpenState.set(key, next)
+    setIsOpen(next)
+  }
 
   // Accessible name for the body region (a11y): the disclosure button labels
   // the region it controls. Stable id pair so the region is not an unnamed

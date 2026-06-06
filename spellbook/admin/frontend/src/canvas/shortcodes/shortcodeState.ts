@@ -9,6 +9,12 @@
  * The cache is bounded by:
  *   - a per-canvas eviction sweep on `CanvasDetail` unmount (`evictCanvasShortcodeState`), and
  *   - the `__resetCanvasShortcodeState` test hook cleared in `beforeEach`.
+ *
+ * Deliberately deferred: design §4.3's third bound — orphan-prune-on-write for
+ * superseded keys — is NOT implemented. Per-canvas namespacing plus the
+ * unmount sweep are the shipping bounds, so the cache grows only within one
+ * live canvas view (stale keys for an edited-away shortcode persist until that
+ * canvas unmounts).
  */
 
 /** Collapsible open/closed state, keyed by `${canvasName}::${summary}::${offset}`. */

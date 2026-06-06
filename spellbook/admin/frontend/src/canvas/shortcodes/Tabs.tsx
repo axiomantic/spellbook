@@ -62,6 +62,10 @@ export function Tabs({ node, children }: TabsProps) {
   const ctx = useCanvasDecisionOptional()
   const canvasName = ctx?.canvasName ?? ''
   const offset = node?.position?.start?.offset ?? 0
+  // Accepted ambiguity: a literal '|' in a tab title could collide with the
+  // joined form, but the trailing `::offset` segment means a real collision
+  // requires the same canvas AND the same source offset — effectively
+  // impossible for two distinct Tabs occurrences.
   const key = `${canvasName}::${tabs.map((t) => t.title).join('|')}::${offset}`
 
   const [active, setActive] = useState(() => tabsActiveState.get(key) ?? 0)
