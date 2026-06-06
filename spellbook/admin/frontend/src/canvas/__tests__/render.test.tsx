@@ -300,6 +300,17 @@ describe('CanvasRender — not-prose boundaries on shortcode content regions', (
     expect(
       screen.getByRole('region', { name: 'More' }),
     ).toBe(region)
+    // [structural] aria-expanded reflects disclosure state exactly (design §8.2).
+    // Rendered with `open`, so it starts 'true'; toggle collapses to 'false';
+    // toggle back restores 'true' (and the open render) so no state leaks.
+    expect(button.getAttribute('aria-expanded')).toBe('true')
+    fireEvent.click(button)
+    expect(button.getAttribute('aria-expanded')).toBe('false')
+    fireEvent.click(button)
+    expect(button.getAttribute('aria-expanded')).toBe('true')
+    // [structural] inside a form/fieldset context a typeless button defaults to
+    // submit; this pin prevents spurious submissions (design §8.2).
+    expect(button.getAttribute('type')).toBe('button')
   })
 
   it('renders the <chart> figure wrapper with not-prose (defensive)', async () => {
