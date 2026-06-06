@@ -15,7 +15,7 @@ interface CanvasRenderProps {
  *   raw markdown → react-markdown → remark-gfm (tables, task lists)
  *     → rehype-raw (allow raw HTML) → components-prop dispatch
  *
- * Trust boundary: §6.1 trusted-local-agent. `rehype-raw` will execute
+ * Trust boundary: trusted-local-agent (see skills/canvas/SKILL.md threat model). `rehype-raw` will execute
  * raw `<script>` tags. Do NOT pass unsanitized external content into a
  * canvas; the constraint is enforced by convention, not sanitization.
  */
