@@ -12,6 +12,7 @@ from spellbook.admin.auth import (
     create_session_cookie,
     create_ws_ticket,
     require_admin_auth,
+    session_ttl_seconds,
     validate_handoff_token,
 )
 
@@ -36,7 +37,7 @@ async def login(request: Request):
         cookie_value,
         httponly=True,
         samesite="strict",
-        max_age=86400,
+        max_age=session_ttl_seconds(),
         path="/admin",
     )
     return response
@@ -104,7 +105,7 @@ async def handoff_consume(handoff_id: str):
         cookie_value,
         httponly=True,
         samesite="strict",
-        max_age=86400,
+        max_age=session_ttl_seconds(),
         path="/admin",
     )
     return response

@@ -16,6 +16,36 @@ from typing import Optional
 from fastapi import Request, HTTPException
 
 from spellbook.core.auth import load_token
+from spellbook.core.config import get_env
+
+
+def _session_ttl_days() -> int:
+    """Admin session lifetime in days.
+
+    Read from ``SPELLBOOK_ADMIN_SESSION_TTL_DAYS`` (default 365). Governs both
+    the signed cookie's payload ``exp`` and the ``Set-Cookie`` ``Max-Age``, so
+    the session survives ~1 year and persists across browser restarts.
+
+    Unparseable values fall back to the 365-day default, and the result is
+    floored at 1 day so a misconfigured ``0``/negative value cannot mint an
+    already-expired (instant-logout) cookie.
+
+    Note on revocation: there is no server-side session store, so a session
+    cannot be revoked individually. Rotating the MCP token (``.mcp-token``)
+    invalidates *all* outstanding sessions at once, because the cookie signing
+    key is derived from that token (``sha256("admin-session:{mcp_token}")``).
+    Logout only clears the browser's copy of the cookie.
+    """
+    try:
+        days = int(get_env("ADMIN_SESSION_TTL_DAYS", "365"))
+    except (TypeError, ValueError):
+        days = 365
+    return max(1, days)
+
+
+def session_ttl_seconds() -> int:
+    """Admin session lifetime in seconds (days * 86400)."""
+    return _session_ttl_days() * 86400
 
 
 def _get_signing_key() -> bytes:
@@ -53,9 +83,12 @@ def create_session_cookie(session_id: str) -> str:
     """Create a signed session cookie value.
 
     Format: {json_payload}|{hmac_hex_signature}
-    Payload contains session ID and expiry timestamp (24h from now).
+    Payload contains session ID and expiry timestamp
+    (``SPELLBOOK_ADMIN_SESSION_TTL_DAYS`` from now, default 365 days).
     """
-    payload = json.dumps({"sid": session_id, "exp": time.time() + 86400})
+    payload = json.dumps(
+        {"sid": session_id, "exp": time.time() + session_ttl_seconds()}
+    )
     sig = hmac.new(_get_signing_key(), payload.encode(), hashlib.sha256).hexdigest()
     return f"{payload}|{sig}"
 

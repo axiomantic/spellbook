@@ -1,3 +1,4 @@
+import http.cookies
 import time
 
 import tripwire
@@ -77,6 +78,336 @@ class TestSessionCookie:
 
         assert validate_session_cookie("not-a-valid-cookie") is None
         assert validate_session_cookie("") is None
+
+
+class TestSessionTTL:
+    """Admin session lifetime: ~1 year for both payload exp and cookie Max-Age.
+
+    Bug: sessions previously expired in 24h (payload exp = now + 86400, cookie
+    Max-Age = 86400), forcing re-login on every fresh visit. The TTL is now
+    365 days by default, configurable via SPELLBOOK_ADMIN_SESSION_TTL_DAYS,
+    applied to BOTH the signed payload exp and the Set-Cookie Max-Age.
+    """
+
+    def test_default_session_ttl_seconds_is_one_year(self, mock_mcp_token):
+        """
+        ESCAPE: test_default_session_ttl_seconds_is_one_year
+          CLAIM: session_ttl_seconds() defaults to 365 days in seconds.
+          PATH:  get_env("ADMIN_SESSION_TTL_DAYS", "365") -> int -> *86400.
+          CHECK: exact equality to 31536000.
+          MUTATION: default reverted to "1"/"24h"/86400, or wrong multiplier
+                    (e.g. *3600), changes the product and fails the assert.
+          ESCAPE: A function hard-coding 31536000 and ignoring env would pass
+                  this row but fail test_env_override_changes_payload_and_cookie.
+          IMPACT: Wrong default reintroduces the 24h re-login bug.
+        """
+        from spellbook.admin.auth import session_ttl_seconds
+
+        assert session_ttl_seconds() == 31536000
+
+    def test_payload_exp_is_now_plus_ttl(self, mock_mcp_token):
+        """
+        ESCAPE: test_payload_exp_is_now_plus_ttl
+          CLAIM: create_session_cookie writes exp = now + 365*86400 into the
+                 signed JSON payload.
+          PATH:  create_session_cookie -> time.time() + session_ttl_seconds()
+                 -> json payload "exp".
+          CHECK: exact equality of decoded exp to FIXED_NOW + 31536000.
+          MUTATION: exp left at now + 86400 (the bug) yields 1717200000.0 +
+                    86400; assertion expecting +31536000 fails. A wrong sign
+                    or missing addition also diverges.
+          ESCAPE: An implementation that set exp to now + 31536000 but left
+                  the cookie Max-Age at 86400 would pass this row but fail
+                  test_login_cookie_has_one_year_max_age.
+          IMPACT: A short payload exp rejects the cookie server-side at 24h
+                  even if the browser keeps it, forcing re-login.
+        """
+        import json
+        from spellbook.admin.auth import create_session_cookie
+
+        FIXED_NOW = 1717200000.0
+        clock = tripwire.mock("spellbook.admin.auth:time.time")
+        clock.calls(lambda: FIXED_NOW)
+        with tripwire:
+            cookie = create_session_cookie("sid-abc")
+        clock.assert_call(args=(), kwargs={})
+
+        payload_str, _sig = cookie.rsplit("|", 1)
+        payload = json.loads(payload_str)
+        assert payload == {"sid": "sid-abc", "exp": FIXED_NOW + 31536000}
+
+    def test_login_cookie_has_one_year_max_age(
+        self, unauthenticated_client, mock_mcp_token
+    ):
+        """
+        ESCAPE: test_login_cookie_has_one_year_max_age
+          CLAIM: POST /api/auth/login emits Set-Cookie with Max-Age=31536000.
+          PATH:  login handler -> set_cookie(max_age=session_ttl_seconds())
+                 -> Starlette serializes "Max-Age=31536000".
+          CHECK: status 200 and the sole spellbook_admin_session Set-Cookie
+                 header parses to a max-age attribute of exactly "31536000".
+          MUTATION: max_age=86400 (the bug) emits "Max-Age=86400" and the
+                    parsed max-age != "31536000" fails. A missing max_age kwarg
+                    drops the attribute entirely (empty morsel) and fails too.
+                    A 10x value "315360000" parses to a distinct morsel and
+                    fails (the parsed form kills the substring superstring
+                    escape).
+          ESCAPE: A header carrying Max-Age=31536000 plus a stale 24h payload
+                  exp would pass this row but fail test_payload_exp_is_now_plus_ttl.
+          IMPACT: Without a 1-year Max-Age the browser drops the cookie after
+                  24h, forcing re-login on the next visit.
+        """
+        response = unauthenticated_client.post(
+            "/api/auth/login",
+            json={"password": mock_mcp_token},
+        )
+        assert response.status_code == 200
+        set_cookie_headers = [
+            v.decode() for k, v in response.headers.raw if k.lower() == b"set-cookie"
+        ]
+        session_headers = [
+            h for h in set_cookie_headers if "spellbook_admin_session=" in h
+        ]
+        assert len(session_headers) == 1, (
+            f"Expected exactly one spellbook_admin_session Set-Cookie, got: "
+            f"{set_cookie_headers!r}"
+        )
+        jar = http.cookies.SimpleCookie()
+        jar.load(session_headers[0])
+        assert jar["spellbook_admin_session"]["max-age"] == "31536000", (
+            f"Set-Cookie max-age != 31536000: {session_headers[0]!r}"
+        )
+
+    def test_handoff_cookie_has_one_year_max_age(
+        self, unauthenticated_client, mock_mcp_token
+    ):
+        """
+        ESCAPE: test_handoff_cookie_has_one_year_max_age
+          CLAIM: GET /api/auth/handoff/{id} emits Set-Cookie with
+                 Max-Age=31536000, matching the login endpoint.
+          PATH:  POST /handoff to mint -> GET /handoff/{id} ->
+                 set_cookie(max_age=session_ttl_seconds()) -> Set-Cookie header.
+          CHECK: status 302 and the sole spellbook_admin_session Set-Cookie
+                 header parses to a max-age attribute of exactly "31536000".
+          MUTATION: handoff_consume left at max_age=86400 emits "Max-Age=86400";
+                    parsed max-age != "31536000" fails. A 10x "315360000" parses
+                    to a distinct morsel and fails. Fixing only login but not
+                    handoff is the drift this test catches.
+          ESCAPE: A handler emitting Max-Age=31536000 with a stale payload exp
+                  would pass here but fail test_payload_exp_is_now_plus_ttl.
+          IMPACT: Bearer-handoff logins would still expire in 24h.
+        """
+        mint = unauthenticated_client.post(
+            "/api/auth/handoff",
+            headers={"Authorization": f"Bearer {mock_mcp_token}"},
+        )
+        assert mint.status_code == 200
+        handoff_id = mint.json()["login_url"].rsplit("/", 1)[1]
+        response = unauthenticated_client.get(
+            f"/api/auth/handoff/{handoff_id}", follow_redirects=False
+        )
+        assert response.status_code == 302
+        set_cookie_headers = [
+            v.decode() for k, v in response.headers.raw if k.lower() == b"set-cookie"
+        ]
+        session_headers = [
+            h for h in set_cookie_headers if "spellbook_admin_session=" in h
+        ]
+        assert len(session_headers) == 1, (
+            f"Expected exactly one spellbook_admin_session Set-Cookie, got: "
+            f"{set_cookie_headers!r}"
+        )
+        jar = http.cookies.SimpleCookie()
+        jar.load(session_headers[0])
+        assert jar["spellbook_admin_session"]["max-age"] == "31536000", (
+            f"Set-Cookie max-age != 31536000: {session_headers[0]!r}"
+        )
+
+    def test_env_override_changes_payload_and_cookie(
+        self, unauthenticated_client, mock_mcp_token, monkeypatch
+    ):
+        """
+        ESCAPE: test_env_override_changes_payload_and_cookie
+          CLAIM: SPELLBOOK_ADMIN_SESSION_TTL_DAYS overrides BOTH the payload
+                 exp and the cookie Max-Age. Setting it to 7 yields
+                 7*86400 = 604800 seconds in both places.
+          PATH:  monkeypatch.setenv -> get_env reads override -> *86400 feeds
+                 both create_session_cookie's exp and set_cookie's max_age.
+          CHECK: payload exp == FIXED_NOW + 604800 AND the login Set-Cookie
+                 header parses to a max-age attribute of exactly "604800".
+          MUTATION: If either the payload or the cookie hard-coded the TTL
+                    (ignoring env), one half would stay at 31536000/86400 and
+                    that half's assertion fails. This is the row that kills
+                    any "hard-code 31536000" shortcut.
+          ESCAPE: An implementation reading env for only one of the two sites
+                  fails exactly one assertion here -- there is no passing
+                  shortcut that ignores env.
+          IMPACT: A non-configurable TTL cannot be tuned per deployment.
+        """
+        import json
+        from spellbook.admin.auth import create_session_cookie
+
+        monkeypatch.setenv("SPELLBOOK_ADMIN_SESSION_TTL_DAYS", "7")
+
+        FIXED_NOW = 1717200000.0
+        clock = tripwire.mock("spellbook.admin.auth:time.time")
+        clock.calls(lambda: FIXED_NOW)
+        with tripwire:
+            cookie = create_session_cookie("sid-xyz")
+        clock.assert_call(args=(), kwargs={})
+
+        payload = json.loads(cookie.rsplit("|", 1)[0])
+        assert payload == {"sid": "sid-xyz", "exp": FIXED_NOW + 604800}
+
+        response = unauthenticated_client.post(
+            "/api/auth/login",
+            json={"password": mock_mcp_token},
+        )
+        assert response.status_code == 200
+        set_cookie_headers = [
+            v.decode() for k, v in response.headers.raw if k.lower() == b"set-cookie"
+        ]
+        session_headers = [
+            h for h in set_cookie_headers if "spellbook_admin_session=" in h
+        ]
+        assert len(session_headers) == 1, (
+            f"Expected exactly one spellbook_admin_session Set-Cookie, got: "
+            f"{set_cookie_headers!r}"
+        )
+        jar = http.cookies.SimpleCookie()
+        jar.load(session_headers[0])
+        assert jar["spellbook_admin_session"]["max-age"] == "604800", (
+            f"Set-Cookie max-age != 604800: {session_headers[0]!r}"
+        )
+
+
+class TestSessionTTLDefensiveParse:
+    """SPELLBOOK_ADMIN_SESSION_TTL_DAYS is operator-supplied and may be garbage
+    or nonsensical. _session_ttl_days() must never raise: unparseable values
+    fall back to 365, and parseable-but-nonpositive values floor to 1 day.
+    A raised exception here would 500 the login/handoff endpoints.
+    """
+
+    def test_garbage_env_falls_back_to_default(
+        self, mock_mcp_token, monkeypatch
+    ):
+        """
+        ESCAPE: test_garbage_env_falls_back_to_default
+          CLAIM: A non-integer SPELLBOOK_ADMIN_SESSION_TTL_DAYS ("abc") is
+                 ignored and the TTL is the 365-day default (31536000s), both
+                 in session_ttl_seconds() and in the cookie payload exp.
+          PATH:  get_env returns "abc" -> int("abc") raises ValueError ->
+                 except (TypeError, ValueError) -> fallback 365 -> max(1, 365).
+          CHECK: session_ttl_seconds() == 31536000 exactly, AND the frozen-clock
+                 cookie payload exp == FIXED_NOW + 31536000 exactly.
+          MUTATION: Without the try/except, int("abc") raises and the test
+                    errors (not passes). A fallback of 1 instead of 365 yields
+                    86400 and fails. A fallback that skips max(1, ...) is
+                    unaffected here but is pinned by the clamp tests below.
+          ESCAPE: An implementation that hard-coded 31536000 on any parse
+                  failure (ignoring the configured 365 default) would pass this
+                  row but fail test_default_session_ttl_seconds_is_one_year's
+                  contract once the default changed; both rows pin 365*86400.
+          IMPACT: A raised ValueError 500s POST /api/auth/login and the
+                  bearer-handoff GET, locking operators out entirely.
+        """
+        import json
+        from spellbook.admin.auth import (
+            create_session_cookie,
+            session_ttl_seconds,
+        )
+
+        monkeypatch.setenv("SPELLBOOK_ADMIN_SESSION_TTL_DAYS", "abc")
+
+        assert session_ttl_seconds() == 31536000
+
+        FIXED_NOW = 1717200000.0
+        clock = tripwire.mock("spellbook.admin.auth:time.time")
+        clock.calls(lambda: FIXED_NOW)
+        with tripwire:
+            cookie = create_session_cookie("sid-garbage")
+        clock.assert_call(args=(), kwargs={})
+
+        payload = json.loads(cookie.rsplit("|", 1)[0])
+        assert payload == {"sid": "sid-garbage", "exp": FIXED_NOW + 31536000}
+
+    def test_zero_env_clamps_to_one_day(self, mock_mcp_token, monkeypatch):
+        """
+        ESCAPE: test_zero_env_clamps_to_one_day
+          CLAIM: SPELLBOOK_ADMIN_SESSION_TTL_DAYS="0" floors to 1 day (86400s),
+                 both in session_ttl_seconds() and the cookie payload exp.
+          PATH:  get_env returns "0" -> int("0") == 0 -> max(1, 0) == 1 ->
+                 1*86400 == 86400.
+          CHECK: session_ttl_seconds() == 86400 exactly, AND the frozen-clock
+                 cookie payload exp == FIXED_NOW + 86400 exactly.
+          MUTATION: Without max(1, days), a TTL of 0 yields exp == now (instant
+                    expiry); the assert expecting +86400 fails. A floor of 0
+                    days or a wrong multiplier also diverges.
+          ESCAPE: An implementation that clamped to the 365 default instead of
+                  1 would yield 31536000 and fail this row; there is no shortcut
+                  that satisfies both the clamp rows and the default row.
+          IMPACT: TTL=0 would mint already-expired cookies, an instant logout
+                  loop; the floor guarantees at least a usable 1-day session.
+        """
+        import json
+        from spellbook.admin.auth import (
+            create_session_cookie,
+            session_ttl_seconds,
+        )
+
+        monkeypatch.setenv("SPELLBOOK_ADMIN_SESSION_TTL_DAYS", "0")
+
+        assert session_ttl_seconds() == 86400
+
+        FIXED_NOW = 1717200000.0
+        clock = tripwire.mock("spellbook.admin.auth:time.time")
+        clock.calls(lambda: FIXED_NOW)
+        with tripwire:
+            cookie = create_session_cookie("sid-zero")
+        clock.assert_call(args=(), kwargs={})
+
+        payload = json.loads(cookie.rsplit("|", 1)[0])
+        assert payload == {"sid": "sid-zero", "exp": FIXED_NOW + 86400}
+
+    def test_negative_env_clamps_to_one_day(
+        self, mock_mcp_token, monkeypatch
+    ):
+        """
+        ESCAPE: test_negative_env_clamps_to_one_day
+          CLAIM: SPELLBOOK_ADMIN_SESSION_TTL_DAYS="-5" floors to 1 day
+                 (86400s), both in session_ttl_seconds() and the cookie payload.
+          PATH:  get_env returns "-5" -> int("-5") == -5 -> max(1, -5) == 1 ->
+                 1*86400 == 86400.
+          CHECK: session_ttl_seconds() == 86400 exactly, AND the frozen-clock
+                 cookie payload exp == FIXED_NOW + 86400 exactly.
+          MUTATION: Without max(1, days), -5 days yields exp == now - 432000 (an
+                    already-expired cookie 5 days in the past); the assert
+                    expecting +86400 fails. A floor using min() instead of max()
+                    keeps the negative and also fails.
+          ESCAPE: Clamping to the 365 default rather than 1 yields 31536000 and
+                  fails; no shortcut satisfies both default and clamp rows.
+          IMPACT: A negative TTL mints cookies expired in the past, a hard
+                  lockout; the floor guarantees a usable session.
+        """
+        import json
+        from spellbook.admin.auth import (
+            create_session_cookie,
+            session_ttl_seconds,
+        )
+
+        monkeypatch.setenv("SPELLBOOK_ADMIN_SESSION_TTL_DAYS", "-5")
+
+        assert session_ttl_seconds() == 86400
+
+        FIXED_NOW = 1717200000.0
+        clock = tripwire.mock("spellbook.admin.auth:time.time")
+        clock.calls(lambda: FIXED_NOW)
+        with tripwire:
+            cookie = create_session_cookie("sid-neg")
+        clock.assert_call(args=(), kwargs={})
+
+        payload = json.loads(cookie.rsplit("|", 1)[0])
+        assert payload == {"sid": "sid-neg", "exp": FIXED_NOW + 86400}
 
 
 class TestWSTicket:
@@ -640,7 +971,8 @@ class TestLogout:
           IMPACT: Without matching Path=/admin on the deletion, /logout is
                   a no-op in browsers: the session cookie stays in the
                   cookie jar and continues to be sent to /admin until its
-                  Max-Age expires (24h). M2 fix is incomplete.
+                  Max-Age expires (up to the configured TTL, ~1 year default).
+                  M2 fix is incomplete.
         """
         # First log in to mint a session cookie (and let httpx capture it
         # in the client jar), then call logout and inspect Set-Cookie.
