@@ -26,8 +26,9 @@ function normalizeType(t: string | undefined): CalloutType {
 /**
  * Markdown aside / callout shortcode.
  *
- * Children are markdown content that has already been re-parsed by
- * `react-markdown` + `rehype-raw` upstream; render them inline.
+ * Children may arrive already parsed (blank-line case) OR as a raw unparsed
+ * string when written tight against the tag (CommonMark raw-HTML-block rule);
+ * renderChildren re-parses the raw case through the shared pipeline.
  */
 export function Callout({ type, title, children }: CalloutProps) {
   const t = normalizeType(type)

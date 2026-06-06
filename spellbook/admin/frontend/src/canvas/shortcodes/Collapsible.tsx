@@ -20,10 +20,11 @@ interface CollapsibleProps {
 }
 
 /**
- * PROTOTYPE (spike) — collapsible disclosure shortcode.
+ * Collapsible disclosure shortcode with persisted open/closed state.
  *
- * Children are markdown content already re-parsed by react-markdown +
- * rehype-raw upstream; render them inline inside the content region.
+ * Children may arrive already parsed (blank-line case) OR as a raw unparsed
+ * string when written tight against the tag (CommonMark raw-HTML-block rule);
+ * renderChildren re-parses the raw case through the shared pipeline.
  *
  * Deliberately NOT a native <details>/<summary>: we own the open/closed
  * state so future wiring (persisted-open, decision-gated reveal, scroll

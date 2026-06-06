@@ -16,7 +16,7 @@ import { extractText } from './extractText'
  *
  * This helper detects raw-string-only children and re-parses them through the
  * SAME pipeline (`remark-gfm` + `rehype-raw`) using the SHARED `components`
- * map, so the element overrides (a, code, pre, table, th, td) apply to the
+ * map, so the element overrides (a, code, pre, table, th, td, input) apply to the
  * nested content too. Element children (the healthy blank-line-separated
  * case, already parsed upstream) pass through untouched.
  *

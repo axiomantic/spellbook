@@ -18,7 +18,7 @@ import { Collapsible } from './shortcodes/Collapsible'
  * re-parse fix can import the shared map without forming an import
  * cycle through `render.tsx`.
  *
- * Base-HTML element overrides (a, code, pre, table, th, td) carry
+ * Base-HTML element overrides (a, code, pre, table, th, td, input) carry
  * token-exact classNames per the §2.2 recipes. These six surfaces are
  * owned SOLELY by this map: Task 3 nulled the @tailwindcss/typography
  * plugin's competing rules for them (§2.1 partition), so there is no
