@@ -308,8 +308,10 @@ describe('CanvasRender — not-prose boundaries on shortcode content regions', (
     expect(button.getAttribute('aria-expanded')).toBe('false')
     fireEvent.click(button)
     expect(button.getAttribute('aria-expanded')).toBe('true')
-    // [structural] inside a form/fieldset context a typeless button defaults to
-    // submit; this pin prevents spurious submissions (design §8.2).
+    // [structural] explicit type='button' pin (design §8.2): a typeless <button>
+    // is type=submit per spec, so IF a collapsible is ever composed inside a
+    // form/fieldset, an untyped toggle would fire spurious submissions — pin the
+    // explicit type defensively.
     expect(button.getAttribute('type')).toBe('button')
   })
 
