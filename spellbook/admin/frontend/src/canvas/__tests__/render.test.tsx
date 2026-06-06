@@ -686,6 +686,40 @@ describe('CanvasRender — GFM task-list input → status icon override', () => 
     // The non-checkbox input must NOT have been transformed into a status icon.
     expect(container.querySelector('[data-testid="task-icon"]')).toBeNull()
   })
+
+  it('transforms a TIGHT task list inside a <collapsible> body through the nested re-parse (no <input>)', () => {
+    // Canonical plan-approval composition: a task list nested inside a
+    // collapsible. The two task-list lines sit IMMEDIATELY after the opening
+    // <collapsible open> tag (no blank line) → CommonMark's raw-HTML-block rule
+    // swallows them as ONE raw string child. renderChildren (§4.6 GATE-2) then
+    // re-parses that string through the SHARED components map, so the SAME
+    // `input` override that iconifies top-level task lists must fire on the
+    // re-parsed checkboxes too. This pins that the icon transform survives the
+    // nested re-parse: a regression that re-parsed the nested body through a
+    // bare pipeline (without the shared map) would leak raw disabled <input>
+    // checkboxes instead. Asserts the COMPLETE rendered structure (Level 5:
+    // exact outerHTML of both emitted spans, done first / pending second, and
+    // the absence of any <input> anywhere) — identical to the top-level
+    // task-list pin, now proven to hold one parse-pass deeper.
+    const { container } = render(
+      <CanvasRender
+        content={'<collapsible open summary="Tasks">\n- [x] done\n- [ ] pending\n</collapsible>'}
+      />,
+    )
+    const body = screen.getByTestId('collapsible-body')
+    const icons = body.querySelectorAll('[data-testid="task-icon"]')
+    // Exactly two icons, in document order: done first, pending second. Full
+    // outerHTML equality pins testid, data-checked, aria-hidden, the glyph, AND
+    // that each element is a bare <span> — the same shape the top-level pass
+    // produces, now emitted by the nested re-parse.
+    expect(Array.from(icons, (el) => el.outerHTML)).toEqual([
+      '<span data-testid="task-icon" data-checked="true" aria-hidden="true">☑</span>',
+      '<span data-testid="task-icon" data-checked="false" aria-hidden="true">☐</span>',
+    ])
+    // No disabled checkbox <input> may survive the nested re-parse: a bare
+    // (non-shared-map) re-parse pipeline would leak one here.
+    expect(container.querySelector('input')).toBeNull()
+  })
 })
 
 describe('CanvasRender — GATE-2 raw-string shortcode children re-parse', () => {

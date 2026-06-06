@@ -173,6 +173,15 @@ const td = ({
 // The fall-through arm strips `node` (the react-markdown source-node prop)
 // before spreading, exactly like the other override-owned elements — `node`
 // must never reach a DOM element (React rejects the unknown prop).
+//
+// Scope note: this iconifies EVERY type=checkbox input, not only remark-gfm
+// task-list checkboxes — an author-written raw-HTML `<input type="checkbox">`
+// (passed through by rehype-raw) is iconified too. There is no reliable hast
+// marker that distinguishes a task-list checkbox from an author-written one
+// (remark-gfm leaves no discriminating attribute on the node), so a narrower
+// predicate is not available. This is acceptable under the trusted-author
+// model: an interactive checkbox is a non-goal here — operator interactivity
+// is owned by the Choice/Approve shortcodes, which carry their own controls.
 const input = (props: {
   node?: unknown
   type?: string
