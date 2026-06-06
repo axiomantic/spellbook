@@ -15,6 +15,7 @@ vi.mock('../shortcodes/ChartImpl', () => ({
 // dynamic imports.
 import { CanvasRender } from '../render'
 import { Choice } from '../shortcodes/Choice'
+import { Approve } from '../shortcodes/Approve'
 import { CanvasDecisionContext } from '../CanvasDecisionContext'
 import type { CanvasDecisionValue } from '../CanvasDecisionContext'
 import type { ReactNode } from 'react'
@@ -333,6 +334,115 @@ describe('Choice — not-prose on every render-root branch', () => {
     renderWith(baseValue)
     const root = screen.getByTestId('choice')
     // Choice.tsx:137-140 — inactive ternary arm; not-prose prepended.
+    expect(root).toHaveClass(
+      'not-prose my-3 border border-bg-border p-3 opacity-70',
+      { exact: true },
+    )
+  })
+})
+
+describe('Approve — not-prose on every render-root branch', () => {
+  // §2.4 / F1: Approve has FOUR distinct render roots (three terminal early
+  // returns + the live container whose className is itself a ternary, so it
+  // contributes TWO branches: active and inactive). Each must carry
+  // `not-prose` as its first token so a post-decision `canvas_write` never
+  // lets the prose cascade leak into terminal-state status text. Each test
+  // drives ONE branch via context state and asserts the COMPLETE className
+  // set with { exact: true } — a Level 5 assertion that fails on a missing
+  // `not-prose` token AND on any dropped/added sibling token. The frozen
+  // §6.1 testids pin which branch. Mirrors the Choice block (Task 8).
+
+  // Each branch builds on this provider value; per-test overrides set the
+  // exact state that selects the target branch (Approve.tsx §8.2 ordering).
+  const baseValue: CanvasDecisionValue = {
+    canvasName: 'plan-x',
+    decision: null,
+    submit: { mutate: () => {}, status: 'idle', error: null, lastFreeText: null },
+    reauthenticate: () => {},
+  }
+  const approveUi = (
+    <Approve id="a1" prompt="Ship it?" confirm_label="Yes" decline_label="No" />
+  )
+  function renderWith(value: CanvasDecisionValue) {
+    return render(
+      <CanvasDecisionContext.Provider value={value}>
+        {approveUi}
+      </CanvasDecisionContext.Provider>,
+    )
+  }
+
+  it('already-decided root carries not-prose (errorCode=already_decided)', () => {
+    renderWith({
+      ...baseValue,
+      submit: {
+        ...baseValue.submit,
+        status: 'error',
+        error: Object.assign(new Error('x'), { code: 'already_decided' }),
+      },
+    })
+    const root = screen.getByTestId('approve-already-decided')
+    // Approve.tsx:54-58 — not-prose prepended to the frozen class set.
+    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3 opacity-70', {
+      exact: true,
+    })
+  })
+
+  it('cancelled root carries not-prose (decision.status=cancelled)', () => {
+    renderWith({
+      ...baseValue,
+      decision: {
+        decision_id: 'a1',
+        kind: 'approve',
+        prompt: 'Ship it?',
+        options: null,
+        status: 'cancelled',
+      },
+    })
+    const root = screen.getByTestId('approve-cancelled')
+    // Approve.tsx:72-76 — not-prose prepended to the frozen class set.
+    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3 opacity-70', {
+      exact: true,
+    })
+  })
+
+  it('submitted root carries not-prose (submit.status=success)', () => {
+    renderWith({
+      ...baseValue,
+      submit: { ...baseValue.submit, status: 'success' },
+    })
+    const root = screen.getByTestId('approve-submitted')
+    // Approve.tsx:88-92 — not-prose prepended to the frozen class set.
+    expect(root).toHaveClass('not-prose my-3 border border-accent-green p-3', {
+      exact: true,
+    })
+  })
+
+  it('live (active) container root carries not-prose (matching pending decision)', () => {
+    renderWith({
+      ...baseValue,
+      decision: {
+        decision_id: 'a1',
+        kind: 'approve',
+        prompt: 'Ship it?',
+        options: null,
+        status: 'pending',
+      },
+    })
+    const root = screen.getByTestId('approve')
+    // Approve.tsx:107-115 — active ternary arm; not-prose prepended to the
+    // frozen class set (the active arm omits opacity-70).
+    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3', {
+      exact: true,
+    })
+  })
+
+  it('live (inactive) container root carries not-prose (no matching live decision)', () => {
+    // No matching pending decision → the inactive ternary arm renders
+    // (opacity-70). Pins not-prose on the OTHER arm of the live conditional,
+    // so a fix that only patches the active arm fails here.
+    renderWith(baseValue)
+    const root = screen.getByTestId('approve')
+    // Approve.tsx:107-115 — inactive ternary arm; not-prose prepended.
     expect(root).toHaveClass(
       'not-prose my-3 border border-bg-border p-3 opacity-70',
       { exact: true },

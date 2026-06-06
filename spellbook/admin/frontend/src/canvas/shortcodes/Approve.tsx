@@ -54,7 +54,7 @@ export function Approve({
     return (
       <div
         data-testid="approve-already-decided"
-        className="my-3 border border-bg-border p-3 opacity-70"
+        className="not-prose my-3 border border-bg-border p-3 opacity-70"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -72,7 +72,7 @@ export function Approve({
     return (
       <div
         data-testid="approve-cancelled"
-        className="my-3 border border-bg-border p-3 opacity-70"
+        className="not-prose my-3 border border-bg-border p-3 opacity-70"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -88,7 +88,7 @@ export function Approve({
     return (
       <div
         data-testid="approve-submitted"
-        className="my-3 border border-accent-green p-3"
+        className="not-prose my-3 border border-accent-green p-3"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -110,8 +110,8 @@ export function Approve({
       data-testid="approve"
       className={
         active
-          ? 'my-3 border border-bg-border p-3'
-          : 'my-3 border border-bg-border p-3 opacity-70'
+          ? 'not-prose my-3 border border-bg-border p-3'
+          : 'not-prose my-3 border border-bg-border p-3 opacity-70'
       }
     >
       {prompt && (
