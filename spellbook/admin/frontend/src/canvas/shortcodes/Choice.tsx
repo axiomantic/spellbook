@@ -78,7 +78,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
     return (
       <div
         data-testid="choice-already-decided"
-        className="not-prose my-3 border border-bg-border p-3 opacity-70"
+        className="not-prose my-3 rounded border border-bg-border p-4 opacity-70"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -96,7 +96,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
     return (
       <div
         data-testid="choice-cancelled"
-        className="not-prose my-3 border border-bg-border p-3 opacity-70"
+        className="not-prose my-3 rounded border border-bg-border p-4 opacity-70"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -112,7 +112,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
     return (
       <div
         data-testid="choice-submitted"
-        className="not-prose my-3 border border-accent-green p-3"
+        className="not-prose my-3 rounded border border-accent-green p-4"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -135,8 +135,8 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
       data-testid="choice"
       className={
         active
-          ? 'not-prose my-3 border border-bg-border p-3'
-          : 'not-prose my-3 border border-bg-border p-3 opacity-70'
+          ? 'not-prose my-3 rounded border border-bg-border p-4'
+          : 'not-prose my-3 rounded border border-bg-border p-4 opacity-70'
       }
     >
       {prompt && (
@@ -176,7 +176,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
             type="button"
             data-testid="choice-reauth"
             onClick={() => reauthenticate()}
-            className="mt-2 px-3 py-1 border border-accent-amber text-accent-amber font-mono text-xs uppercase tracking-widest"
+            className="mt-2 rounded px-3 py-1 border border-accent-amber text-accent-amber font-mono text-xs uppercase tracking-widest hover:bg-accent-amber/10"
           >
             Reauthenticate
           </button>
@@ -191,7 +191,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
             submit.mutate({ decision_id: id, value: selected, free_text: null })
           }
         }}
-        className="mt-2 px-3 py-1 border border-accent-green text-accent-green font-mono text-xs uppercase tracking-widest disabled:opacity-50"
+        className="mt-2 rounded px-3 py-1 border border-accent-green text-accent-green font-mono text-xs uppercase tracking-widest enabled:hover:bg-accent-green/10 disabled:opacity-50"
       >
         {isSubmitting ? 'Submitting…' : 'Submit'}
       </button>

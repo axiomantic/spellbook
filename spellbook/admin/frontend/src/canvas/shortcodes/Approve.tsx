@@ -54,7 +54,7 @@ export function Approve({
     return (
       <div
         data-testid="approve-already-decided"
-        className="not-prose my-3 border border-bg-border p-3 opacity-70"
+        className="not-prose my-3 rounded border border-bg-border p-4 opacity-70"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -72,7 +72,7 @@ export function Approve({
     return (
       <div
         data-testid="approve-cancelled"
-        className="not-prose my-3 border border-bg-border p-3 opacity-70"
+        className="not-prose my-3 rounded border border-bg-border p-4 opacity-70"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -88,7 +88,7 @@ export function Approve({
     return (
       <div
         data-testid="approve-submitted"
-        className="not-prose my-3 border border-accent-green p-3"
+        className="not-prose my-3 rounded border border-accent-green p-4"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -110,8 +110,8 @@ export function Approve({
       data-testid="approve"
       className={
         active
-          ? 'not-prose my-3 border border-bg-border p-3'
-          : 'not-prose my-3 border border-bg-border p-3 opacity-70'
+          ? 'not-prose my-3 rounded border border-bg-border p-4'
+          : 'not-prose my-3 rounded border border-bg-border p-4 opacity-70'
       }
     >
       {prompt && (
@@ -127,7 +127,7 @@ export function Approve({
           onClick={() => {
             if (id) submit.mutate({ decision_id: id, value: 'approved', free_text: null })
           }}
-          className="px-3 py-1 border border-accent-green text-accent-green font-mono text-xs uppercase tracking-widest disabled:opacity-50"
+          className="rounded px-3 py-1 border border-accent-green text-accent-green font-mono text-xs uppercase tracking-widest enabled:hover:bg-accent-green/10 disabled:opacity-50"
         >
           {confirm_label ?? 'Approve'}
         </button>
@@ -138,7 +138,7 @@ export function Approve({
           onClick={() => {
             if (id) submit.mutate({ decision_id: id, value: 'declined', free_text: null })
           }}
-          className="px-3 py-1 border border-accent-red text-accent-red font-mono text-xs uppercase tracking-widest disabled:opacity-50"
+          className="rounded px-3 py-1 border border-accent-red text-accent-red font-mono text-xs uppercase tracking-widest enabled:hover:bg-accent-red/10 disabled:opacity-50"
         >
           {decline_label ?? 'Reject'}
         </button>
@@ -158,7 +158,7 @@ export function Approve({
             type="button"
             data-testid="approve-reauth"
             onClick={() => reauthenticate()}
-            className="mt-2 px-3 py-1 border border-accent-amber text-accent-amber font-mono text-xs uppercase tracking-widest"
+            className="mt-2 rounded px-3 py-1 border border-accent-amber text-accent-amber font-mono text-xs uppercase tracking-widest hover:bg-accent-amber/10"
           >
             Reauthenticate
           </button>

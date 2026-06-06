@@ -328,7 +328,7 @@ describe('Choice — not-prose on every render-root branch', () => {
     })
     const root = screen.getByTestId('choice-already-decided')
     // Choice.tsx:78-82 — not-prose prepended to the frozen class set.
-    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3 opacity-70', {
+    expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4 opacity-70', {
       exact: true,
     })
   })
@@ -346,7 +346,7 @@ describe('Choice — not-prose on every render-root branch', () => {
     })
     const root = screen.getByTestId('choice-cancelled')
     // Choice.tsx:96-100 — not-prose prepended to the frozen class set.
-    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3 opacity-70', {
+    expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4 opacity-70', {
       exact: true,
     })
   })
@@ -358,7 +358,7 @@ describe('Choice — not-prose on every render-root branch', () => {
     })
     const root = screen.getByTestId('choice-submitted')
     // Choice.tsx:112-116 — not-prose prepended to the frozen class set.
-    expect(root).toHaveClass('not-prose my-3 border border-accent-green p-3', {
+    expect(root).toHaveClass('not-prose my-3 rounded border border-accent-green p-4', {
       exact: true,
     })
   })
@@ -377,7 +377,7 @@ describe('Choice — not-prose on every render-root branch', () => {
     const root = screen.getByTestId('choice')
     // Choice.tsx:131-141 — active ternary arm; not-prose prepended to the
     // frozen class set (the active arm omits opacity-70).
-    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3', {
+    expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4', {
       exact: true,
     })
   })
@@ -390,7 +390,7 @@ describe('Choice — not-prose on every render-root branch', () => {
     const root = screen.getByTestId('choice')
     // Choice.tsx:137-140 — inactive ternary arm; not-prose prepended.
     expect(root).toHaveClass(
-      'not-prose my-3 border border-bg-border p-3 opacity-70',
+      'not-prose my-3 rounded border border-bg-border p-4 opacity-70',
       { exact: true },
     )
   })
@@ -437,7 +437,7 @@ describe('Approve — not-prose on every render-root branch', () => {
     })
     const root = screen.getByTestId('approve-already-decided')
     // Approve.tsx:54-58 — not-prose prepended to the frozen class set.
-    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3 opacity-70', {
+    expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4 opacity-70', {
       exact: true,
     })
   })
@@ -455,7 +455,7 @@ describe('Approve — not-prose on every render-root branch', () => {
     })
     const root = screen.getByTestId('approve-cancelled')
     // Approve.tsx:72-76 — not-prose prepended to the frozen class set.
-    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3 opacity-70', {
+    expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4 opacity-70', {
       exact: true,
     })
   })
@@ -467,7 +467,7 @@ describe('Approve — not-prose on every render-root branch', () => {
     })
     const root = screen.getByTestId('approve-submitted')
     // Approve.tsx:88-92 — not-prose prepended to the frozen class set.
-    expect(root).toHaveClass('not-prose my-3 border border-accent-green p-3', {
+    expect(root).toHaveClass('not-prose my-3 rounded border border-accent-green p-4', {
       exact: true,
     })
   })
@@ -486,7 +486,7 @@ describe('Approve — not-prose on every render-root branch', () => {
     const root = screen.getByTestId('approve')
     // Approve.tsx:107-115 — active ternary arm; not-prose prepended to the
     // frozen class set (the active arm omits opacity-70).
-    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3', {
+    expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4', {
       exact: true,
     })
   })
@@ -499,7 +499,7 @@ describe('Approve — not-prose on every render-root branch', () => {
     const root = screen.getByTestId('approve')
     // Approve.tsx:107-115 — inactive ternary arm; not-prose prepended.
     expect(root).toHaveClass(
-      'not-prose my-3 border border-bg-border p-3 opacity-70',
+      'not-prose my-3 rounded border border-bg-border p-4 opacity-70',
       { exact: true },
     )
   })
