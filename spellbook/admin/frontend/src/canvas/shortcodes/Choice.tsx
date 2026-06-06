@@ -168,7 +168,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
       )}
       {isAuthError && (
         <>
-          <p className="mt-2 text-sm text-accent-yellow" data-testid="choice-auth-error">
+          <p className="mt-2 text-sm text-accent-amber" data-testid="choice-auth-error">
             Your admin session expired. Your submission was NOT lost; the decision
             is still open.
           </p>
@@ -176,7 +176,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
             type="button"
             data-testid="choice-reauth"
             onClick={() => reauthenticate()}
-            className="mt-2 px-3 py-1 border border-accent-yellow text-accent-yellow font-mono text-xs uppercase tracking-widest"
+            className="mt-2 px-3 py-1 border border-accent-amber text-accent-amber font-mono text-xs uppercase tracking-widest"
           >
             Reauthenticate
           </button>

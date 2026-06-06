@@ -57,6 +57,37 @@ describe('CanvasRender — shortcode dispatch pipeline', () => {
     expect(screen.getByText('Body text')).toBeInTheDocument()
   })
 
+  it('renders a warning callout with the accent-amber token (not undefined accent-yellow)', () => {
+    render(
+      <CanvasRender
+        content={'<callout type="warning" title="Heads up">Body text</callout>'}
+      />,
+    )
+    const callout = screen.getByTestId('callout')
+    // The warning <aside> border resolves to the defined accent-amber token.
+    // Exact class set (Level 5): every token the warning aside must carry.
+    expect(callout).toHaveClass(
+      'my-3',
+      'border-l-4',
+      'border-accent-amber',
+      'bg-bg-elevated',
+      'px-3',
+      'py-2',
+    )
+    expect(callout).not.toHaveClass('border-accent-yellow')
+    // The label row uses the same token.
+    const label = callout.querySelector('div')
+    expect(label).toHaveClass(
+      'font-mono',
+      'text-xs',
+      'uppercase',
+      'tracking-widest',
+      'mb-1',
+      'text-accent-amber',
+    )
+    expect(label).not.toHaveClass('text-accent-yellow')
+  })
+
   it('dispatches <tabs> + <tab> with active panel rendered', async () => {
     render(
       <CanvasRender

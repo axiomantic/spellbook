@@ -94,9 +94,9 @@ export function CanvasDetail() {
         {data.closed && (
           <div
             role="status"
-            className="mb-4 border-l-4 border-accent-yellow bg-bg-elevated px-3 py-2"
+            className="mb-4 border-l-4 border-accent-amber bg-bg-elevated px-3 py-2"
           >
-            <span className="font-mono text-xs uppercase tracking-widest text-accent-yellow">
+            <span className="font-mono text-xs uppercase tracking-widest text-accent-amber">
               // CLOSED
             </span>
             <p className="text-sm text-text-primary mt-1">
@@ -105,7 +105,7 @@ export function CanvasDetail() {
           </div>
         )}
 
-        <div className="text-text-primary text-sm leading-relaxed">
+        <div className="prose prose-invert max-w-none text-text-primary text-sm leading-relaxed">
           <CanvasDecisionContext.Provider value={decisionValue}>
             <CanvasRender content={data.content} />
           </CanvasDecisionContext.Provider>
@@ -118,7 +118,7 @@ export function CanvasDetail() {
           <p
             role="status"
             data-testid="decision-submitting"
-            className="mt-3 font-mono text-xs uppercase tracking-widest text-accent-yellow"
+            className="mt-3 font-mono text-xs uppercase tracking-widest text-accent-amber"
           >
             Submitting…
           </p>

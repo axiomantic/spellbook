@@ -11,7 +11,7 @@ interface CalloutProps {
 const TYPE_STYLES: Record<CalloutType, { border: string; label: string }> = {
   note: { border: 'border-accent-cyan', label: 'text-accent-cyan' },
   tip: { border: 'border-accent-green', label: 'text-accent-green' },
-  warning: { border: 'border-accent-yellow', label: 'text-accent-yellow' },
+  warning: { border: 'border-accent-amber', label: 'text-accent-amber' },
   danger: { border: 'border-accent-red', label: 'text-accent-red' },
 }
 
@@ -43,7 +43,7 @@ export function Callout({ type, title, children }: CalloutProps) {
       >
         {`// ${t.toUpperCase()}${title ? ` — ${title}` : ''}`}
       </div>
-      <div className="text-sm text-text-primary">{children}</div>
+      <div className="not-prose text-sm text-text-primary">{children}</div>
     </aside>
   )
 }
