@@ -90,27 +90,17 @@ describe('CanvasRender — shortcode dispatch pipeline', () => {
     )
     const callout = screen.getByTestId('callout')
     // The warning <aside> border resolves to the defined accent-amber token.
-    // Exact class set (Level 5): every token the warning aside must carry.
+    // Exact class set (Level 5): the warning aside must carry exactly this token set.
     expect(callout).toHaveClass(
-      'my-3',
-      'border-l-4',
-      'border-accent-amber',
-      'bg-bg-elevated',
-      'px-3',
-      'py-2',
+      'my-3 border-l-4 border-accent-amber bg-bg-elevated px-3 py-2',
+      { exact: true },
     )
-    expect(callout).not.toHaveClass('border-accent-yellow')
-    // The label row uses the same token.
+    // The label row uses the same token; pin its exact class set too.
     const label = callout.querySelector('div')
     expect(label).toHaveClass(
-      'font-mono',
-      'text-xs',
-      'uppercase',
-      'tracking-widest',
-      'mb-1',
-      'text-accent-amber',
+      'font-mono text-xs uppercase tracking-widest mb-1 text-accent-amber',
+      { exact: true },
     )
-    expect(label).not.toHaveClass('text-accent-yellow')
   })
 
   it('dispatches <tabs> + <tab> with active panel rendered', async () => {
