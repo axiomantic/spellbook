@@ -231,6 +231,48 @@ describe('CanvasRender — not-prose boundaries on shortcode content regions', (
     })
   })
 
+  it('RT-7b: a block shortcode on its own line inside a not-prose body — the injected <p>-wrap lands INSIDE the not-prose boundary', () => {
+    // §8.2 RT-7b / §4.1: a block-level shortcode (here a nested <callout>)
+    // sitting on its OWN line, blank-line-separated, inside a <collapsible open>
+    // body is parsed upstream as a real block. react-markdown then wraps that
+    // block in a paragraph — the known cosmetic `<p>`-wrap artifact. The design
+    // contract is that this `<p>` is PROSE-IMMUNE because it lands INSIDE the
+    // body's `not-prose` region (the region is the `<p>`'s ANCESTOR), so the
+    // typography plugin's `.prose p` margin rule is severed and never reaches
+    // it. This pins WHICH SIDE of the boundary the artifact lands on: a
+    // regression that put `not-prose` on a sibling (not the wrapping region)
+    // would leave the injected `<p>` outside the boundary and reintroduce prose
+    // margins.
+    render(
+      <CanvasRender
+        content={
+          '<collapsible open summary="More">\n\n<callout type="note" title="Inner">inner body</callout>\n\n</collapsible>'
+        }
+      />,
+    )
+    const body = screen.getByTestId('collapsible-body')
+    // The body region carries not-prose (the boundary).
+    expect(body).toHaveClass('not-prose px-3 py-2 text-sm text-text-primary', {
+      exact: true,
+    })
+    // The injected <p>-wrap is a DIRECT child of the not-prose body region, and
+    // it wraps the nested callout <aside>. Asserting the parent chain pins that
+    // the <p> is a descendant of the not-prose region (region is its ancestor),
+    // which is the whole RT-7b guarantee.
+    const wrappedP = body.querySelector(':scope > p')
+    expect(wrappedP).not.toBeNull()
+    // The <p> directly contains the nested callout (the block shortcode), and
+    // the closest not-prose ancestor of that <p> is the collapsible body — so
+    // the prose cascade is severed above the artifact.
+    const nestedCallout = wrappedP?.querySelector('[data-testid="callout"]')
+    expect(nestedCallout).not.toBeNull()
+    expect(nestedCallout?.getAttribute('data-callout-type')).toBe('note')
+    // The nearest ancestor carrying not-prose IS the collapsible body region
+    // (not some element below the <p>): closest('.not-prose') from the <p>
+    // resolves to the body, proving the boundary is the <p>'s ancestor.
+    expect(wrappedP?.closest('.not-prose')).toBe(body)
+  })
+
   it('gives the <collapsible> open body region an accessible name (button labels the region)', () => {
     // a11y: the disclosure button labels the region it controls, so the region
     // is not an unnamed landmark. The button's `aria-controls` points at the
@@ -287,6 +329,44 @@ describe('CanvasRender — not-prose boundaries on shortcode content regions', (
       exact: true,
     })
   })
+
+  it('prose scope: CanvasRender emits NO prose token — the `prose` wrapper is the parent (CanvasDetail) responsibility only', () => {
+    // §8.2 prose-scope `[structural]` (focused form): the `prose prose-invert`
+    // class lives ONLY on the canvas-content wrapper that CanvasDetail.tsx:122
+    // renders AROUND <CanvasRender>; PageLayout/title/banner sit OUTSIDE that
+    // wrapper and never carry it. CanvasDetail is owned by a sibling cluster
+    // (pages/CanvasDetail.tsx + its test), so this render.test.tsx pin asserts
+    // the boundary from the CanvasRender side: the rendered shortcode/markdown
+    // output itself emits ZERO `prose` tokens. The wrapper being the SOLE
+    // prose-bearing element — and PageLayout/title/banner excluded — is the
+    // structural complement, verified at the CanvasDetail level (eyeball/
+    // structural note) since this file does not mount PageLayout.
+    //
+    // Content deliberately exercises markdown blocks (heading, paragraph, list)
+    // AND a shortcode region, so a regression that injected `prose`/`prose-invert`
+    // anywhere in CanvasRender's own output (e.g. a stray wrapper added inside a
+    // shortcode) is caught. A bare-substring scan would pass on `prose-invert`
+    // appearing in a comment; here we scan the live DOM classList of every
+    // emitted element, so only a real rendered class token can trip it.
+    const { container } = render(
+      <CanvasRender
+        content={
+          '# Title\n\nIntro paragraph.\n\n- one\n- two\n\n<callout type="note" title="Note">callout body</callout>'
+        }
+      />,
+    )
+    // Collect every class token across the whole rendered subtree.
+    const allTokens = Array.from(container.querySelectorAll('*')).flatMap((el) =>
+      Array.from(el.classList),
+    )
+    // CanvasRender's output carries NEITHER `prose` NOR `prose-invert` — only
+    // the parent wrapper does. (It DOES carry `not-prose` tokens on shortcode
+    // regions; those are distinct and expected — assert they are present so this
+    // test cannot pass on an empty render.)
+    expect(allTokens.filter((t) => t === 'prose')).toEqual([])
+    expect(allTokens.filter((t) => t === 'prose-invert')).toEqual([])
+    expect(allTokens).toContain('not-prose')
+  })
 })
 
 describe('Choice — not-prose on every render-root branch', () => {
@@ -327,7 +407,7 @@ describe('Choice — not-prose on every render-root branch', () => {
       },
     })
     const root = screen.getByTestId('choice-already-decided')
-    // Choice.tsx:78-82 — not-prose prepended to the frozen class set.
+    // Choice.tsx:78-82 — not-prose prepended to the pinned class set.
     expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4 opacity-70', {
       exact: true,
     })
@@ -345,7 +425,7 @@ describe('Choice — not-prose on every render-root branch', () => {
       },
     })
     const root = screen.getByTestId('choice-cancelled')
-    // Choice.tsx:96-100 — not-prose prepended to the frozen class set.
+    // Choice.tsx:96-100 — not-prose prepended to the pinned class set.
     expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4 opacity-70', {
       exact: true,
     })
@@ -357,7 +437,7 @@ describe('Choice — not-prose on every render-root branch', () => {
       submit: { ...baseValue.submit, status: 'success' },
     })
     const root = screen.getByTestId('choice-submitted')
-    // Choice.tsx:112-116 — not-prose prepended to the frozen class set.
+    // Choice.tsx:112-116 — not-prose prepended to the pinned class set.
     expect(root).toHaveClass('not-prose my-3 rounded border border-accent-green p-4', {
       exact: true,
     })
@@ -376,7 +456,7 @@ describe('Choice — not-prose on every render-root branch', () => {
     })
     const root = screen.getByTestId('choice')
     // Choice.tsx:131-141 — active ternary arm; not-prose prepended to the
-    // frozen class set (the active arm omits opacity-70).
+    // pinned class set (the active arm omits opacity-70).
     expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4', {
       exact: true,
     })
@@ -436,7 +516,7 @@ describe('Approve — not-prose on every render-root branch', () => {
       },
     })
     const root = screen.getByTestId('approve-already-decided')
-    // Approve.tsx:54-58 — not-prose prepended to the frozen class set.
+    // Approve.tsx:54-58 — not-prose prepended to the pinned class set.
     expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4 opacity-70', {
       exact: true,
     })
@@ -454,7 +534,7 @@ describe('Approve — not-prose on every render-root branch', () => {
       },
     })
     const root = screen.getByTestId('approve-cancelled')
-    // Approve.tsx:72-76 — not-prose prepended to the frozen class set.
+    // Approve.tsx:72-76 — not-prose prepended to the pinned class set.
     expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4 opacity-70', {
       exact: true,
     })
@@ -466,7 +546,7 @@ describe('Approve — not-prose on every render-root branch', () => {
       submit: { ...baseValue.submit, status: 'success' },
     })
     const root = screen.getByTestId('approve-submitted')
-    // Approve.tsx:88-92 — not-prose prepended to the frozen class set.
+    // Approve.tsx:88-92 — not-prose prepended to the pinned class set.
     expect(root).toHaveClass('not-prose my-3 rounded border border-accent-green p-4', {
       exact: true,
     })
@@ -485,7 +565,7 @@ describe('Approve — not-prose on every render-root branch', () => {
     })
     const root = screen.getByTestId('approve')
     // Approve.tsx:107-115 — active ternary arm; not-prose prepended to the
-    // frozen class set (the active arm omits opacity-70).
+    // pinned class set (the active arm omits opacity-70).
     expect(root).toHaveClass('not-prose my-3 rounded border border-bg-border p-4', {
       exact: true,
     })
@@ -1190,5 +1270,369 @@ describe('CanvasRender — remount-survival state cache (Collapsible + Tabs)', (
     expect(Array.from(collapsibleOpenState.entries())).toEqual([
       ['::Details::0', true],
     ])
+  })
+
+  it('DOCUMENTS the duplicate-default-summary swapped-order limit: state follows occurrence-index, not instance (§4.3 accepted limitation)', () => {
+    // §8.2 / F2 / RT-2: the remount-survival guarantee is SINGLE-INSTANCE
+    // (a uniquely- or authored-summary collapsible survives a remount). The
+    // accepted limitation (§4.3) is that TWO collapsibles BOTH defaulting to
+    // the same summary ("Details") key on `canvasName::summary::sourceOffset`
+    // — and when the SAME source positions render DIFFERENT bodies (a reorder),
+    // the cached open-state follows the OFFSET (occurrence-index), not the
+    // instance content. This test pins that limitation as KNOWN rather than
+    // letting a future change silently "fix" or worsen it.
+    //
+    // Both collapsibles omit `summary`, so both default to "Details". The first
+    // opening `<collapsible>` tag starts at source offset 0; the second after
+    // the "\n\n" separator. Body "a" is at offset 0, body "b" second.
+    const contentAB =
+      '<collapsible>a</collapsible>\n\n<collapsible>b</collapsible>'
+    const first = render(<CanvasRender content={contentAB} />)
+
+    // Open the FIRST collapsible (body "a", at source offset 0).
+    fireEvent.click(screen.getAllByRole('button')[0])
+    // The cache holds exactly one entry, keyed by the offset-0 position with
+    // the default "Details" summary — NOT by the body content. Full entry-set
+    // equality (Level 5) pins that the key is occurrence-index-anchored.
+    expect(Array.from(collapsibleOpenState.entries())).toEqual([
+      ['::Details::0', true],
+    ])
+
+    // Remount with the bodies SWAPPED: "b" now occupies source offset 0, "a"
+    // occupies the second position. Same default summaries, same byte offsets.
+    first.unmount()
+    const contentBA =
+      '<collapsible>b</collapsible>\n\n<collapsible>a</collapsible>'
+    render(<CanvasRender content={contentBA} />)
+
+    const collapsibles = screen.getAllByTestId('collapsible')
+    expect(collapsibles).toHaveLength(2)
+    // The OPEN state followed the OFFSET (position 0), not the instance: the
+    // first-position collapsible is open and the second is closed — exactly the
+    // pre-swap open/closed shape, now applied to swapped content. A fix that
+    // tracked instance identity instead would invert this (second open).
+    expect(
+      collapsibles.map((c) => c.getAttribute('data-collapsible-open')),
+    ).toEqual(['true', 'false'])
+    // The single rendered body is the one now at offset 0 — body "b", the
+    // SWAPPED-IN content — proving the cached open-state stuck to the position,
+    // not to body "a" that was originally opened. This exact text is the crux
+    // of the accepted limitation: a position-anchored cache shows "b" here; an
+    // instance-anchored cache would show "a".
+    const openBodies = screen.queryAllByTestId('collapsible-body')
+    expect(openBodies.map((b) => b.textContent)).toEqual(['b'])
+  })
+})
+
+// The operator's ACTUAL offending decision page (`lfq-phase15-batch2`, §8.2):
+// the content-rich page whose styling collapse motivated this whole feature.
+// Embedded VERBATIM (rather than read from ~/.local/spellbook at test time) so
+// the pin is hermetic and deterministic — the structural contract is fixed to
+// THIS content, not to a mutable on-disk file. It exercises, in one render:
+// a context callout (note), two GFM tables, three <tabs> blocks (one per
+// operator question) each with four <tab> options, and tip/note callouts
+// NESTED inside the active tab panels — exactly the "callouts, GFM tables,
+// tabbed options with nested callouts" composition §8.2 names.
+const LFQ_FIXTURE = `# Phase 1.5 — Batch 2
+
+Three remaining operator questions for the \`elijahr/lockfree\` v0.1.0 design. Reply in the terminal with your picks (free-text caveats welcome).
+
+<callout type="note" title="Context recap">
+**Locked already (Phase 0 + Batch 1):** v0.1.0 fresh start, no tag carry-over, lockfreequeues frozen until rename, \`lockfree/smr/debra_plus\` namespace, explicit imports only, generic \`Queue[ManagedRef[X], ...]\` API shape, ManagedSlice IN scope, PR bot = gemini-code-assist + axiomantic-momus parallel.
+
+**Open:** CI matrix, Nimony cell mode + scope, Iterator/async tier 2.
+</callout>
+
+---
+
+## Q4. CI matrix scope
+
+How much should the CI matrix cover at v0.1.0?
+
+**Current source-repo matrices:**
+
+| Repo | OS rows | Nim | Sanitizers |
+|---|---|---|---|
+| lockfreequeues | ubuntu-latest, ubuntu-24.04-arm, macos-latest | stable | TSan + ASan |
+| nim-debra | ubuntu-latest, ubuntu-24.04-arm | stable | TSan + ASan |
+
+Union dedup'd is approximately 24 base cells across MM lanes (orc, c++ orc, arc, refc, atomicArc-TSAN, ASAN).
+
+<tabs>
+<tab title="A. Union + extras (Recommended)">
+
+**Comprehensive matrix.**
+
+- Base: union of both source repos' OS × MM × backend cells (about 24-28).
+- Add: Valgrind cell (Linux x86_64, single MM lane).
+- Add: Helgrind cell (Linux x86_64, single MM lane).
+- Add: Nim devel cell (catches upstream API drift; the \`=copy\`/\`=destroy\`/\`nimIncRef\` family symbols ManagedRef shims against).
+- Add: Nimony cell (continue-on-error per Q5).
+
+Total: roughly 28-32 cells. Wall-clock impact: moderate.
+
+<callout type="tip" title="Why Valgrind plus Helgrind">
+Neither source repo currently has these. Valgrind catches use-after-free in the ManagedRef destructor walk; Helgrind catches happens-before violations the C11 sanitizers miss. For a library positioning itself on lock-free correctness, both pay off.
+</callout>
+
+</tab>
+<tab title="B. Trim to core">
+
+Fastest CI; lose breadth.
+
+- ubuntu-latest + macos-latest, all MM lanes.
+- Drop: ubuntu-24.04-arm, nimony, Valgrind, Helgrind, Nim-devel.
+
+Risk: missing bugs that only surface under arm64 atomics (LSE vs LL/SC differences on RPi-class hardware), under leak detectors, or under upstream Nim API drift.
+
+</tab>
+<tab title="C. Union but defer leak detectors">
+
+Get the comprehensive build matrix; postpone Valgrind + Helgrind to v0.2.
+
+- All cells from option A except Valgrind + Helgrind.
+- Cost: misses a category of bugs in the v0.1.0 ship.
+
+</tab>
+<tab title="D. Custom">
+
+Operator-specified custom matrix. I'll write a draft markdown table; you redline it before CI work starts.
+
+</tab>
+</tabs>
+
+---
+
+## Q5. Nimony cell mode + scope expectations
+
+Nimony is Araq's next-gen Nim compiler. Per handoff research Q2/Q4: 387 stars, pre-release, daily commits, timeline slipping past autumn-2025 target. Two language modes: **compat** (Nim 2 compatible, less actively developed) and **aufbruch** (clean break, atomic-arc MM, where the active work is).
+
+<tabs>
+<tab title="A. continue-on-error + aufbruch + partial port OK (Recommended)">
+
+**Best-effort posture, documented gap.**
+
+- CI cell mode: \`continue-on-error: true\` (nimony regression doesn't block PR-dance).
+- Target mode: \`aufbruch\` (where active dev is; \`compat\` is the slower-moving fallback).
+- Acceptable v0.1.0 scope if ManagedRef/ManagedSlice prove non-portable: ship atomics + smr + queues compile-and-pass on nimony, ManagedRef + ManagedSlice marked Nim-2.x-only.
+
+<callout type="note" title="Why this is likely right">
+nimony's MM model (atomic-arc only, no cycle collector yet) means the user-side \`ref\` story is semantically safer but doesn't change the queue-as-MM-bypasser problem. ManagedRef still needed under nimony, but the compat shim is genuinely simpler (no orc cyclic variants). Trade-off: cycles through queued refs will LEAK until nimony's cycle collector ships. Document prominently in the nimony section of \`docs/guide/memory-management.md\`.
+</callout>
+
+</tab>
+<tab title="B. Hard-gate nimony">
+
+Highest bar. Risks nimony itself breaking PRs unrelated to nimony work. Not recommended given nimony's instability.
+
+</tab>
+<tab title="C. Defer nimony to v0.2">
+
+Drop nimony from v0.1.0. Cleaner v0.1.0 release; loses future-proofing signal.
+
+Cost: when nimony stabilizes (Araq targets within about a year), having NO port story means lockfree is invisible to nimony adopters until v0.2 lands.
+
+</tab>
+<tab title="D. continue-on-error + compat mode">
+
+Bets on \`compat\` rather than \`aufbruch\`. \`compat\` is the "try to be Nim 2 compatible" path; porting easier short-term but gets fewer commits than \`aufbruch\`. Likely the wrong horse.
+
+</tab>
+</tabs>
+
+---
+
+## Q6. Iterator + async integration scope
+
+The handoff defines three tiers with very different cost profiles:
+
+| Tier | What | Cost | RT-safe? |
+|---|---|---|---|
+| **Tier 1** Sync iterators | items/pairs/drain over pop() until empty | ~30 LOC per queue | yes |
+| **Tier 2** Notify primitive | Waitable handle (eventfd/kqueue/WaitOnAddress); push signals "one available" | substantial cross-platform | no (push not RT) |
+| **Tier 3** Async adapters | chronos / asyncdispatch / passive (nimony); multi-queue select | per-adapter design surface | depends |
+
+<tabs>
+<tab title="A. Tier 1 + Tier 2 Linux-only eventfd (Recommended)">
+
+**Real integration story without full cross-platform polish.**
+
+- Tier 1: in (sync iterators, trivial).
+- Tier 2: Linux-only eventfd, marked **experimental**, API frozen for v0.2 cross-platform expansion (kqueue + WaitOnAddress).
+- Tier 3: deferred to v0.2+.
+
+<callout type="tip" title="Why Linux-only is honest">
+The eventfd API shape is small enough to design fully (one-shot vs edge-triggered, fd lifecycle, fork safety). The cross-platform abstraction question — what's the right unified Nim API across eventfd / kqueue EVFILT_USER / WaitOnAddress / io_uring — needs real-use data first. Shipping Linux-only marked experimental gathers that data without painting yourself into a v0.1.0 corner.
+</callout>
+
+</tab>
+<tab title="B. Tier 1 only — defer notify primitives">
+
+Smallest surface. Users wanting async wait on v0.2.
+
+Cleanest v0.1.0 scope; loses the "real integration story" signal. Users have to roll their own notification primitive on top of the queue, which is doable (busy-poll + sleep, Nim threadpool channels) but not what a v0.1.0 "first-class lock-free umbrella" should make people do.
+
+</tab>
+<tab title="C. Tier 1 + Tier 2 cross-platform">
+
+Full eventfd + kqueue + WaitOnAddress in v0.1.0. Biggest surface; risks slipping v0.1.0.
+
+Pays off if you want a polished story at first ship. Risk: cross-platform notify primitive design is famously bikesheddable (semaphore semantics, edge vs level, fork safety, fd inheritance), and "we'll figure out the unified API as we ship" often means "we shipped the wrong API and now we're stuck."
+
+</tab>
+<tab title="D. Tier 1 + Tier 2 Linux + Tier 3 chronos">
+
+Notify primitive + the one async framework adapter most likely needed (chronos is Nim 2's de-facto async; nimbus, status, nim-libp2p all use it).
+
+Adds the chronos adapter design surface but skips asyncdispatch/passive. Reasonable if you have specific chronos users in mind. Watch for: chronos \`Future[T]\` integration needs \`await\` semantics + cancellation, and the q-empty + cancel race is non-trivial.
+
+</tab>
+</tabs>
+
+---
+
+## Reply format
+
+Type your picks back in the terminal in any format that makes the choices unambiguous:
+
+- \`A, A, A\` (one per question in order Q4/Q5/Q6)
+- \`Q4=A, Q5=A, Q6=A\`
+- Free-text with caveats: \`Q4 A but only if Valgrind doesn't blow CI time; Q5 A; Q6 A but mark eventfd experimental loudly\`
+
+Free-text caveats flow into the design doc as constraints.
+`
+
+describe('CanvasRender — full lfq decision-page fixture (§8.2 integration pin)', () => {
+  // §8.2: the integration-level pin across ALL renderer work (typography
+  // baseline, element overrides, not-prose boundaries, nested-callout re-parse,
+  // accent-token migration). It renders the operator's ACTUAL offending page
+  // (LFQ_FIXTURE above) and asserts the COMPLETE structural shape. Each
+  // assertion is tagged [structural] (jsdom proves it directly) or
+  // [readability→eyeball] (jsdom proves the precondition; legibility is the
+  // operator's §8.1/§9 gate). RT-1 BLOCKING: the module-scoped shortcode state
+  // maps are reset before each case so the tab/collapsible defaults are sound.
+  beforeEach(() => __resetCanvasShortcodeState())
+
+  it('renders the full prose + table + tabs + nested-callout hierarchy with the exact structural shape', async () => {
+    const { container } = render(<CanvasRender content={LFQ_FIXTURE} />)
+    // The async <tabs> dispatch settles before the structural assertions.
+    await screen.findAllByTestId('tabs')
+
+    // --- Prose structure [readability→eyeball] ---
+    // The plugin baseline renders the heading hierarchy and lists. jsdom proves
+    // the elements are present (the structural precondition for legibility);
+    // the rhythm itself is the eyeball step. Exact heading inventory: one page
+    // <h1> and the four section <h2>s in document order — a regression that
+    // dropped a section heading or mis-leveled one fails this exact-equality.
+    expect(Array.from(container.querySelectorAll('h1'), (h) => h.textContent)).toEqual([
+      'Phase 1.5 — Batch 2',
+    ])
+    expect(Array.from(container.querySelectorAll('h2'), (h) => h.textContent)).toEqual([
+      'Q4. CI matrix scope',
+      'Q5. Nimony cell mode + scope expectations',
+      'Q6. Iterator + async integration scope',
+      'Reply format',
+    ])
+    // Four `---` thematic breaks separate the sections.
+    expect(container.querySelectorAll('hr')).toHaveLength(4)
+
+    // --- Callouts: the context callout + 3 nested-in-tab callouts [structural] ---
+    // Exactly four callouts render, with their types in document order:
+    // top-level "Context recap" (note), then the tip/note/tip callouts nested
+    // inside the active tab panels of Q4/Q5/Q6. The nested ones prove the
+    // "tabbed options with nested callouts" composition reaches the renderer.
+    const callouts = container.querySelectorAll('[data-testid="callout"]')
+    expect(
+      Array.from(callouts, (c) => c.getAttribute('data-callout-type')),
+    ).toEqual(['note', 'tip', 'note', 'tip'])
+    // Every callout body carries not-prose (the §2.4 boundary), so the prose
+    // cascade never reaches the re-parsed callout content. Assert the COMPLETE
+    // class set on each body (Level 5, { exact: true }).
+    callouts.forEach((callout) => {
+      const body = callout.querySelectorAll('div')[1]
+      expect(body).toHaveClass('not-prose text-sm text-text-primary', {
+        exact: true,
+      })
+    })
+
+    // --- Tables: GFM pipe tables with the override class set [structural] ---
+    // Two tables (Q4 source-repo matrix, Q6 tier matrix). Each carries the
+    // complete `table` override class set; a dropped/added token fails.
+    const tables = container.querySelectorAll('table')
+    expect(tables).toHaveLength(2)
+    tables.forEach((table) => {
+      expect(table).toHaveClass(
+        'not-prose w-full border-collapse border border-bg-border my-3',
+        { exact: true },
+      )
+    })
+    // The Q4 table header row is exactly its four columns, in order — pins that
+    // the GFM parse produced the right header cells with the override styling.
+    const firstTableHeaders = tables[0].querySelectorAll('th')
+    expect(Array.from(firstTableHeaders, (h) => h.textContent)).toEqual([
+      'Repo',
+      'OS rows',
+      'Nim',
+      'Sanitizers',
+    ])
+    firstTableHeaders.forEach((th) => {
+      expect(th).toHaveClass(
+        'border border-bg-border bg-bg-elevated px-3 py-1.5 text-left font-mono text-xs uppercase tracking-widest text-text-secondary',
+        { exact: true },
+      )
+    })
+
+    // --- Tabs: one <tabs> per question, four <tab>s each, active panel rendered [structural] ---
+    // Three <tabs> blocks (Q4/Q5/Q6). Twelve tab buttons total (4 per block).
+    // Three active tab panels (one per block), each carrying the not-prose
+    // panel class set.
+    expect(container.querySelectorAll('[data-testid="tabs"]')).toHaveLength(3)
+    expect(container.querySelectorAll('[role="tab"]')).toHaveLength(12)
+    const panels = container.querySelectorAll('[role="tabpanel"]')
+    expect(panels).toHaveLength(3)
+    panels.forEach((panel) => {
+      expect(panel).toHaveClass('not-prose p-3 text-sm text-text-primary', {
+        exact: true,
+      })
+    })
+    // The Q4 tab bar's four option titles, in authored order — the recommended
+    // option is first. Pins the per-option tab buttons survive the parse.
+    const q4Tabs = container
+      .querySelectorAll('[data-testid="tabs"]')[0]
+      .querySelectorAll('[role="tab"]')
+    expect(Array.from(q4Tabs, (t) => t.textContent)).toEqual([
+      'A. Union + extras (Recommended)',
+      'B. Trim to core',
+      'C. Union but defer leak detectors',
+      'D. Custom',
+    ])
+
+    // --- Nested callout inside the active tab panel [structural] ---
+    // The Q4 active panel (option A) contains the "Why Valgrind plus Helgrind"
+    // tip callout — the canonical nested composition that the styling collapse
+    // flattened. Assert the nested callout is INSIDE the first panel and is the
+    // tip variant.
+    const nestedInFirstPanel = panels[0].querySelector('[data-testid="callout"]')
+    expect(nestedInFirstPanel).not.toBeNull()
+    expect(nestedInFirstPanel?.getAttribute('data-callout-type')).toBe('tip')
+
+    // --- accent token migration [structural] ---
+    // ZERO `accent-yellow` anywhere in the rendered output — the migration to
+    // the defined `accent-amber` token left no undefined-token reference. This
+    // scans the whole rendered subtree's classList (not a comment-tolerant
+    // substring scan), so a single leaked element class would fail.
+    const allTokens = Array.from(container.querySelectorAll('*')).flatMap((el) =>
+      Array.from(el.classList),
+    )
+    expect(allTokens.filter((t) => t === 'accent-yellow')).toEqual([])
+
+    // --- prose scope [structural] ---
+    // CanvasRender's OWN output carries no `prose`/`prose-invert` token (that
+    // wrapper is CanvasDetail's responsibility, §8.2). The shortcode regions
+    // DO carry `not-prose`, asserted present so this scan cannot pass on an
+    // empty render.
+    expect(allTokens.filter((t) => t === 'prose')).toEqual([])
+    expect(allTokens.filter((t) => t === 'prose-invert')).toEqual([])
+    expect(allTokens).toContain('not-prose')
   })
 })
