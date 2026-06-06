@@ -34,14 +34,48 @@ import { Collapsible } from './shortcodes/Collapsible'
  * retained only as the design's documented forward-compat disjunct. The
  * reliable block predicate is `/language-/.test(className ?? '')`.
  */
-const a = ({ href, children }: { href?: string; children?: unknown }) => (
-  <a href={href} className="text-accent-cyan hover:text-accent-green underline">
+/**
+ * react-markdown passes the source hast node to every component override as a
+ * `node` prop. It must NOT be spread onto a DOM element (React rejects the
+ * unknown prop), so overrides that forward author-supplied rest props strip it
+ * first. `omitNode` returns the rest props with `node` removed, preserving
+ * everything else (href, title, style, …) for faithful forwarding.
+ */
+const omitNode = <T extends { node?: unknown }>(props: T): Omit<T, 'node'> => {
+  const { node: _node, ...rest } = props
+  void _node
+  return rest
+}
+
+const a = ({
+  href,
+  children,
+  ...rest
+}: {
+  node?: unknown
+  href?: string
+  children?: unknown
+}) => (
+  <a
+    href={href}
+    className="text-accent-cyan hover:text-accent-green underline"
+    {...omitNode(rest)}
+  >
     {children as never}
   </a>
 )
 
-const pre = ({ children }: { children?: unknown }) => (
-  <pre className="not-prose bg-bg-elevated border border-bg-border rounded p-3 overflow-x-auto text-sm">
+const pre = ({
+  children,
+  ...rest
+}: {
+  node?: unknown
+  children?: unknown
+}) => (
+  <pre
+    className="not-prose bg-bg-elevated border border-bg-border rounded p-3 overflow-x-auto text-sm"
+    {...omitNode(rest)}
+  >
     {children as never}
   </pre>
 )
@@ -75,20 +109,55 @@ const code = ({
   )
 }
 
-const table = ({ children }: { children?: unknown }) => (
-  <table className="not-prose w-full border-collapse border border-bg-border my-3">
+const table = ({
+  children,
+  ...rest
+}: {
+  node?: unknown
+  children?: unknown
+}) => (
+  <table
+    className="not-prose w-full border-collapse border border-bg-border my-3"
+    {...omitNode(rest)}
+  >
     {children as never}
   </table>
 )
 
-const th = ({ children }: { children?: unknown }) => (
-  <th className="border border-bg-border bg-bg-elevated px-3 py-1.5 text-left font-mono text-xs uppercase tracking-widest text-text-secondary">
+// GFM column alignment (`| :-: |`) is emitted by mdast-util-to-hast 13.x as the
+// hast `align` property on th/td, but react-markdown's JSX runtime
+// (hast-util-to-jsx-runtime, tableCellAlignToStyle defaulting to true) converts
+// it into an inline `style={{ textAlign }}` prop rather than an `align` prop.
+// The override must forward that style (and any other rest props) so authored
+// alignment survives; an inline text-align style outranks the recipe's
+// text-left class in the cascade, so the recipe's default stays correct for
+// unaligned columns. `node` is destructured OUT — it must never reach the DOM.
+const th = ({
+  children,
+  ...rest
+}: {
+  node?: unknown
+  children?: unknown
+}) => (
+  <th
+    className="border border-bg-border bg-bg-elevated px-3 py-1.5 text-left font-mono text-xs uppercase tracking-widest text-text-secondary"
+    {...omitNode(rest)}
+  >
     {children as never}
   </th>
 )
 
-const td = ({ children }: { children?: unknown }) => (
-  <td className="border border-bg-border px-3 py-1.5 text-sm text-text-primary">
+const td = ({
+  children,
+  ...rest
+}: {
+  node?: unknown
+  children?: unknown
+}) => (
+  <td
+    className="border border-bg-border px-3 py-1.5 text-sm text-text-primary"
+    {...omitNode(rest)}
+  >
     {children as never}
   </td>
 )

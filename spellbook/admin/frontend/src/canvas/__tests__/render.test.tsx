@@ -553,4 +553,78 @@ describe('CanvasRender — element overrides (a, code, pre, table, th, td)', () 
       )
     })
   })
+
+  it('forwards GFM column alignment onto th and td (:-: → inline text-align style)', () => {
+    // remark-gfm parses the `:-:` / default delimiter row into per-column
+    // alignment; mdast-util-to-hast 13.x emits it as the hast `align` property
+    // on the th/td nodes. react-markdown's JSX runtime
+    // (hast-util-to-jsx-runtime, tableCellAlignToStyle defaults true) then
+    // converts that `align` into an inline `style={{ textAlign }}` prop — NOT
+    // an `align` prop. The override must forward rest props (which now carry
+    // `style`) so the authored alignment survives; an inline text-align outranks
+    // the recipe's text-left class in the cascade. Column A is centred (`:-:`);
+    // column B is unaligned (`---`). Each element asserts its COMPLETE class set
+    // with { exact: true } AND the exact inline style — both the presence of
+    // text-align:center on the centred column and its ABSENCE on the unaligned
+    // column (style attribute fully null), so a fix that drops the forwarded
+    // style or leaks a style onto the wrong column fails.
+    const { container } = render(
+      <CanvasRender
+        content={'| Col A | Col B |\n| :-: | --- |\n| v1 | v2 |'}
+      />,
+    )
+
+    const headers = container.querySelectorAll('th')
+    expect(Array.from(headers, (h) => h.textContent)).toEqual(['Col A', 'Col B'])
+    // Centred header: full recipe class set is unchanged; the forwarded inline
+    // style carries text-align: center (which beats the text-left class).
+    expect(headers[0]).toHaveClass(
+      'border border-bg-border bg-bg-elevated px-3 py-1.5 text-left font-mono text-xs uppercase tracking-widest text-text-secondary',
+      { exact: true },
+    )
+    expect(headers[0].getAttribute('style')).toBe('text-align: center;')
+    // Unaligned header: identical class set, and NO inline style is forwarded.
+    expect(headers[1]).toHaveClass(
+      'border border-bg-border bg-bg-elevated px-3 py-1.5 text-left font-mono text-xs uppercase tracking-widest text-text-secondary',
+      { exact: true },
+    )
+    expect(headers[1].getAttribute('style')).toBe(null)
+
+    const cells = container.querySelectorAll('td')
+    expect(Array.from(cells, (c) => c.textContent)).toEqual(['v1', 'v2'])
+    // Centred cell: full recipe class set is unchanged; the forwarded inline
+    // style carries text-align: center.
+    expect(cells[0]).toHaveClass(
+      'border border-bg-border px-3 py-1.5 text-sm text-text-primary',
+      { exact: true },
+    )
+    expect(cells[0].getAttribute('style')).toBe('text-align: center;')
+    // Unaligned cell: identical class set, and NO inline style is forwarded.
+    expect(cells[1]).toHaveClass(
+      'border border-bg-border px-3 py-1.5 text-sm text-text-primary',
+      { exact: true },
+    )
+    expect(cells[1].getAttribute('style')).toBe(null)
+  })
+
+  it('forwards a link title attribute through the [a] override (rest props)', () => {
+    // `[text](url "tip")` carries a hast `title` property; react-markdown
+    // spreads it as a `title` prop. The override must forward rest props so the
+    // author-supplied title survives, alongside the exact override class set and
+    // href. { exact: true } on the class set fails on any dropped OR added token.
+    const { container } = render(
+      <CanvasRender
+        content={'[click here](https://example.com/page "tooltip text")'}
+      />,
+    )
+    const anchor = container.querySelector('a')
+    expect(anchor).not.toBeNull()
+    expect(anchor).toHaveClass(
+      'text-accent-cyan hover:text-accent-green underline',
+      { exact: true },
+    )
+    expect(anchor).toHaveAttribute('href', 'https://example.com/page')
+    expect(anchor).toHaveAttribute('title', 'tooltip text')
+    expect(anchor?.textContent).toBe('click here')
+  })
 })
