@@ -171,8 +171,8 @@ MUST match the options declared in `canvas_decision_open`.
 a unique, descriptive `summary` string rather than relying on the default
 `"Details"`. This is not just labeling — it makes the operator's open/closed state
 survive `canvas_write` reliably (the state cache keys on the summary). Multiple
-collapsibles all defaulting to `"Details"` can swap their remembered open-state if
-the page is reordered (the accepted multi-instance limitation). Distinct summaries
+collapsibles all defaulting to `"Details"` can reset/misattribute their remembered
+open-state if the page is reordered (the accepted multi-instance limitation). Distinct summaries
 make that footgun structurally impossible.
 
 **Blank line after every opening shortcode tag and before every closing tag
@@ -208,15 +208,18 @@ discipline is the belt that keeps old bundles correct and the markdown clean.
 Apply to `<collapsible>`, `<callout>`, `<tabs>/<tab>`, and any children-content
 shortcode.
 
-**Never write a literal shortcode tag inside a shortcode body (GATE-3).** Do NOT
-write a literal `<tag ...>` — not even inside an inline code span (backticks) or
-fenced code block — within the body of another shortcode. `rehype-raw` re-parses
-the body's raw HTML and consumes the literal `<tag ...>` as a REAL tag, NOT as
-code-span text. At the live gate this clipped the operator's page at the opening
-backtick and spawned a phantom nested widget that swallowed several following
-sections. To name a shortcode in prose inside a body, use the bare prose name
-(`collapsible`, `the collapsible shortcode`) or HTML-escaped entities
-(`&lt;collapsible&gt;`) — never the raw angle-bracket form. (This is a
+**Never rely on code spans/fences to protect a literal shortcode tag inside a
+shortcode body (GATE-3).** A literal `<tag ...>` is consumed as a REAL tag (not as
+text) when the body is swallowed as a raw HTML block — the tight-line hazard, where
+content sits on the line *immediately after* the opening tag with no blank line
+between. In that path `rehype-raw` re-parses the body's raw HTML and treats the
+literal `<tag ...>` as a nested tag, NOT as code-span text. At the live gate this
+clipped the operator's page at the opening backtick and spawned a phantom nested
+widget that swallowed several following sections. Do NOT depend on an inline code
+span (backticks) or a fenced code block to protect a literal tag inside a body:
+blank-line-separate the body (GATE-2) and, to name a shortcode in prose, prefer the
+bare prose name (`collapsible`, `the collapsible shortcode`) or HTML-escaped
+entities (`&lt;collapsible&gt;`) — not the raw angle-bracket form. (This is a
 body-of-a-shortcode constraint; at the TOP level of a canvas, a code span
 containing a shortcode tag is fine because it is not being re-parsed by
 `rehype-raw` as a nested body.)
@@ -278,8 +281,12 @@ math has to be maintained by hand forever.
 
 </collapsible>
 
-<approve id="design-2.3" prompt="Approve this design?" />
+<approve id="design-approval" prompt="Approve this design?" />
 ````
+
+The control's `id` must match the declared `decision_id` and the backend pattern
+`^[a-z0-9][a-z0-9\-_]{0,63}$` — no dots (a dotted id like `design-2.3` is rejected
+by `canvas_decision_open` with `INVALID_DECISION_ID`).
 
 ### 2. Scope fork — SKETCH
 
@@ -299,7 +306,7 @@ Anatomy outline:
 - **Task list** — GFM `- [x]` / `- [ ]` of the plan steps, showing done/pending
   (renders as status icons, not interactive checkboxes).
 - **`<collapsible summary="Full step detail">`** — the ordered plan in full.
-- **Control LAST** — `<approve id="plan-3.3" prompt="Approve this plan?" />`.
+- **Control LAST** — `<approve id="plan-approval" prompt="Approve this plan?" />`.
 
 Each example demonstrates control-last, context-first, the `<collapsible>` and
 task-list primitives, and the anatomy order. Example 1 is intentionally fuller than
@@ -334,8 +341,8 @@ Before completing a canvas decision:
 - [ ] No bare control: would this lose nothing as a terminal `AskUserQuestion`? If
       so, use terminal instead.
 - [ ] Blank line after every opening shortcode tag and before every closing tag?
-- [ ] No literal shortcode tag anywhere inside a shortcode body, including in code
-      spans/fences?
+- [ ] No literal shortcode tag inside a shortcode body — use prose names or
+      `&lt;...&gt;` entities; don't rely on code spans/fences for protection?
 
 If ANY unchecked: STOP and fix before proceeding.
 ``````````
