@@ -6175,10 +6175,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-3-implementation-planning-detail" class="md-nav__link">
+  <a href="#phase-3-detail-implementation-planning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 3: Implementation Planning (Detail)
+        Phase 3 Detail: Implementation Planning
       
     </span>
   </a>
@@ -6186,10 +6186,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-4-implementation-worktree-setup-task-execution-detail" class="md-nav__link">
+  <a href="#phase-4-detail-per-task-execution-cycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 4: Implementation — Worktree Setup &amp; Task Execution (Detail)
+        Phase 4 Detail: Per-Task Execution Cycle
       
     </span>
   </a>
@@ -6197,10 +6197,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-4-quality-gates-completion-detail" class="md-nav__link">
+  <a href="#phase-4647-detail-quality-gates-and-finish" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 4: Quality Gates &amp; Completion (Detail)
+        Phase 4.6–4.7 Detail: Quality Gates and Finish
       
     </span>
   </a>
@@ -6208,10 +6208,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference-overview-nodes-detail-diagrams" class="md-nav__link">
+  <a href="#cross-reference-table" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference: Overview Nodes → Detail Diagrams
+        Cross-Reference Table
       
     </span>
   </a>
@@ -6219,10 +6219,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#skills-invoked-by-phase" class="md-nav__link">
+  <a href="#skills-dispatch-map" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skills Invoked by Phase
+        Skills Dispatch Map
       
     </span>
   </a>
@@ -8706,10 +8706,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-3-implementation-planning-detail" class="md-nav__link">
+  <a href="#phase-3-detail-implementation-planning" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 3: Implementation Planning (Detail)
+        Phase 3 Detail: Implementation Planning
       
     </span>
   </a>
@@ -8717,10 +8717,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-4-implementation-worktree-setup-task-execution-detail" class="md-nav__link">
+  <a href="#phase-4-detail-per-task-execution-cycle" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 4: Implementation — Worktree Setup &amp; Task Execution (Detail)
+        Phase 4 Detail: Per-Task Execution Cycle
       
     </span>
   </a>
@@ -8728,10 +8728,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#phase-4-quality-gates-completion-detail" class="md-nav__link">
+  <a href="#phase-4647-detail-quality-gates-and-finish" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Phase 4: Quality Gates &amp; Completion (Detail)
+        Phase 4.6–4.7 Detail: Quality Gates and Finish
       
     </span>
   </a>
@@ -8739,10 +8739,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#cross-reference-overview-nodes-detail-diagrams" class="md-nav__link">
+  <a href="#cross-reference-table" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Cross-Reference: Overview Nodes → Detail Diagrams
+        Cross-Reference Table
       
     </span>
   </a>
@@ -8750,10 +8750,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#skills-invoked-by-phase" class="md-nav__link">
+  <a href="#skills-dispatch-map" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Skills Invoked by Phase
+        Skills Dispatch Map
       
     </span>
   </a>
@@ -8793,391 +8793,463 @@
 
 <h1 id="feature-implement">/feature-implement<a class="headerlink" href="#feature-implement" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
-<p>Now I'll generate the diagrams based on the full content of the file.</p>
 <h2 id="overview-feature-implement-phases-34">Overview: <code>/feature-implement</code> (Phases 3–4)<a class="headerlink" href="#overview-feature-implement-phases-34" title="Permanent link">&para;</a></h2>
+<p>Phases 3–4 of the develop workflow. Entry routing depends on <code>needs_design</code> flag and escape hatches detected in the user's initial message.</p>
 <pre class="mermaid"><code>flowchart TD
-    entry(["Entry: from /feature-design"])
-    prereq["Prerequisite Verification\nrun bash check script"]
-    nd{"needs_design?"}
-    zero["Zero-Flag Fast Path\nno external design required\ninline plan confirmed ≤5 steps\nenter Phase 4 directly"]
-    ph3["Phase 3\nImplementation Planning"]
-    trans["Phase 3→4\nTransition Verification\nchecklist of 7 items"]
-    transok{"Checklist\nall clear?"}
-    ph4["Phase 4\nImplementation"]
-    done(["Feature Complete"])
+    START(["/feature-implement\nPhases 3-4 of develop"])
+    PREREQ["Prerequisite Verification\n(bash check script)"]
+    ND{"needs_design?"}
+    CHK["Verify: design doc exists\n+ design review done"]
+    CHK_OK{"All checks pass?"}
+    HALT(["STOP: return to\nappropriate phase"])
+    EH{"Escape hatch\nin initial message?"}
+    P3_31["3.1 Create Impl Plan\n▶ writing-plans"]
+    P3_32["3.2 Review Impl Plan\n▶ reviewing-impl-plans"]
+    GATE33{"3.3 Approval Gate"}
+    P3_34["3.4 Fix Impl Plan\n▶ executing-plans"]
+    P3_345["3.4.5 Execution\nMode Analysis"]
+    P3_347["3.4.7 One-Pager\nApproval Gate"]
+    P3_P4_GATE{"Phase 3→4\nTransition Gate"}
+    P4_SETUP["4.1 Setup Worktree(s)\n▶ using-git-worktrees"]
+    P4_EXEC["4.2 Execute Plan\n(parallelization routing)"]
+    PERTASK["Per-Task Cycle\n4.3 Implement → 4.4 Verify\n→ 4.5 Review → 4.5.1 Fact-check"]
+    MERGE_CHK{"per_parallel\n_track?"}
+    SMART_MERGE["4.2.5 Smart Merge\n▶ merging-worktrees"]
+    QGATES["Quality Gates 4.6\n4.6.1 Audit → 4.6.2 Tests\n→ 4.6.3 Mirage → 4.6.4 Claims\n→ 4.6.5 Pre-PR Sweep"]
+    FINISH["4.7 Finish Implementation\n▶ finishing-a-development-branch"]
+    DONE(["Implementation Complete"])
 
-    entry --&gt; prereq
-    prereq --&gt; nd
-    nd --&gt;|true| ph3
-    nd --&gt;|"false (zero-flag)"| zero
-    zero --&gt; ph4
-    ph3 --&gt; trans
-    trans --&gt; transok
-    transok --&gt;|"items unchecked"| ph3
-    transok --&gt;|"all clear"| ph4
-    ph4 --&gt; done
+    START --&gt; PREREQ
+    PREREQ --&gt; ND
+    ND --&gt;|"false (zero-flag fast path)"| P4_SETUP
+    ND --&gt;|"true"| CHK
+    CHK --&gt; CHK_OK
+    CHK_OK --&gt;|"No"| HALT
+    CHK_OK --&gt;|"Yes"| EH
+    EH --&gt;|"none"| P3_31
+    EH --&gt;|"review first"| P3_32
+    EH --&gt;|"treat as ready"| P3_P4_GATE
 
-    style done fill:#51cf66,color:#000
+    P3_31 --&gt; P3_32
+    P3_32 --&gt; GATE33
+    GATE33 --&gt;|"interactive ITERATE"| P3_31
+    GATE33 --&gt;|"interactive APPROVE"| P3_345
+    GATE33 --&gt;|"autonomous: critical / important"| P3_34
+    GATE33 --&gt;|"autonomous: minor only"| P3_345
+    P3_34 --&gt; P3_345
+    P3_345 --&gt;|"direct or small delegated"| P3_P4_GATE
+    P3_345 --&gt;|"large delegated"| P3_347
+    P3_347 --&gt;|"push back"| P3_31
+    P3_347 --&gt;|"approved"| P3_P4_GATE
+    P3_P4_GATE --&gt;|"unchecked items"| P3_31
+    P3_P4_GATE --&gt;|"all clear"| P4_SETUP
 
-    subgraph LEGEND[" Legend"]
-        la["Process / Subagent Work"]
-        lb["Subagent Dispatch"]
-        lc{"Quality Gate / Decision"}
-        ld(["Terminal"])
+    P4_SETUP --&gt; P4_EXEC
+    P4_EXEC --&gt; PERTASK
+    PERTASK --&gt;|"more tasks"| PERTASK
+    PERTASK --&gt;|"all tasks done"| MERGE_CHK
+    MERGE_CHK --&gt;|"Yes"| SMART_MERGE
+    MERGE_CHK --&gt;|"No"| QGATES
+    SMART_MERGE --&gt; QGATES
+    QGATES --&gt; FINISH
+    FINISH --&gt; DONE
+
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]
+        L2["Subagent Dispatch"]
+        L3{"Quality Gate / Decision"}
+        L4(["Terminal"])
     end
-    style lb fill:#4a9eff,color:#fff
-    style lc fill:#ff6b6b,color:#fff
-    style ld fill:#51cf66,color:#000</code></pre>
+
+    style DONE fill:#51cf66,color:#1a1a1d
+    style HALT fill:#ff6b6b,color:#1a1a1d
+    style GATE33 fill:#ff6b6b,color:#1a1a1d
+    style P3_P4_GATE fill:#ff6b6b,color:#1a1a1d
+    style P3_347 fill:#ff6b6b,color:#1a1a1d
+    style CHK_OK fill:#ff6b6b,color:#1a1a1d
+    style QGATES fill:#ff6b6b,color:#1a1a1d
+    style P3_31 fill:#4a9eff,color:#1a1a1d
+    style P3_32 fill:#4a9eff,color:#1a1a1d
+    style P3_34 fill:#4a9eff,color:#1a1a1d
+    style P4_SETUP fill:#4a9eff,color:#1a1a1d
+    style P4_EXEC fill:#4a9eff,color:#1a1a1d
+    style PERTASK fill:#4a9eff,color:#1a1a1d
+    style SMART_MERGE fill:#4a9eff,color:#1a1a1d
+    style FINISH fill:#4a9eff,color:#1a1a1d
+    style L2 fill:#4a9eff,color:#1a1a1d
+    style L3 fill:#ff6b6b,color:#1a1a1d
+    style L4 fill:#51cf66,color:#1a1a1d</code></pre>
 <hr />
-<h2 id="phase-3-implementation-planning-detail">Phase 3: Implementation Planning (Detail)<a class="headerlink" href="#phase-3-implementation-planning-detail" title="Permanent link">&para;</a></h2>
+<h2 id="phase-3-detail-implementation-planning">Phase 3 Detail: Implementation Planning<a class="headerlink" href="#phase-3-detail-implementation-planning" title="Permanent link">&para;</a></h2>
+<p>Covers sections 3.1–3.4.7. Behavior is gated by escape hatch and autonomous/interactive mode.</p>
 <pre class="mermaid"><code>flowchart TD
-    entry3["Phase 3 Entry"]
-    eh{"escape_hatch?"}
+    P3_ENTRY["Enter Phase 3"]
+    EH{"Escape hatch?"}
+    P3_31["3.1 Create Impl Plan\n▶ writing-plans skill\nSave to plans/YYYY-MM-DD-slug-impl.md"]
+    P3_32["3.2 Review Impl Plan\n▶ reviewing-impl-plans skill\nReturn: findings report + remediation plan"]
+    GATE33{"3.3 Approval Gate\n(terminal or canvas-decision)"}
+    MODE33{"Interactive or\nAutonomous?"}
+    ASK_USER["AskUserQuestion:\nAPPROVE or ITERATE?"]
+    AUTO_SEV{"Findings\nseverity?"}
+    P3_34["3.4 Fix Impl Plan\n▶ executing-plans skill"]
+    P3_345["3.4.5 Execution Mode Analysis\nParse: tracks, tasks,\ndependencies, file clusters"]
+    EXEC_MODE{"Execution\nmode?"}
+    DIRECT["direct\nMinimal delegation\n(small changes only)"]
+    DELEGATED["delegated\nOne subagent per gate per task\n(default)"]
+    DEL_SIZE{"Large\ndelegated run?"}
+    P3_347["3.4.7 One-Pager Approval Gate\nNOT waived by autonomous mode"]
+    GEN_OP["Generate one-pager (subagent)\nmax 200 lines: what / tasks / not-in-scope / risks\nSave to plans/YYYY-MM-DD-slug-one-pager.md"]
+    PRESENT_OP["Present to operator\nAwait explicit scoped approval\n(silence does NOT count)"]
+    OP_OK{"Operator\napproval?"}
+    BACK_PHASE["Return to Phase 2 (design)\nor Phase 3.1 (planning)"]
+    P4_ENTRY(["Proceed to Phase 4"])
 
-    s31["3.1 Create Implementation Plan\nsubagent → writing-plans skill\nsave to plans/YYYY-MM-DD-slug-impl.md"]
-    s32["3.2 Review Implementation Plan\nsubagent → reviewing-impl-plans skill\nreturn findings report + remediation plan"]
-    s33{"3.3 Approval Gate"}
-    imode{"autonomous_mode?"}
-    ugate{"User Decision"}
-    autogate{"Findings\nseverity?"}
-    s34["3.4 Fix Implementation Plan\nsubagent → executing-plans skill\npass: plan path, findings, design doc"]
-    s345["3.4.5 Execution Mode Analysis\nparse track markers, task count\ndependency markers, file clusters"]
-    emode{"execution_mode?"}
-    small["direct\nor small delegated"]
-    large["large delegated"]
-    s347["3.4.7 Generate One-Pager\nsubagent → write to plans/slug-one-pager.md\n≤200 lines, plain English\n4 sections: what/tasks/out-of-scope/pushback"]
-    opgate{"Operator\nApproval?\nexplicit scoped only"}
-    retdesign["Return to Phase 2 (design)\nor Phase 3.1 (planning)"]
-    done3(["→ Phase 4: Implementation"])
+    P3_ENTRY --&gt; EH
+    EH --&gt;|"none"| P3_31
+    EH --&gt;|"review first"| P3_32
+    EH --&gt;|"treat as ready"| P4_ENTRY
 
-    entry3 --&gt; eh
-    eh --&gt;|"none"| s31
-    eh --&gt;|"review first"| s32
-    eh --&gt;|"treat as ready"| s345
+    P3_31 --&gt; P3_32
+    P3_32 --&gt; GATE33
+    GATE33 --&gt; MODE33
+    MODE33 --&gt;|"interactive"| ASK_USER
+    MODE33 --&gt;|"autonomous"| AUTO_SEV
+    ASK_USER --&gt;|"ITERATE"| P3_31
+    ASK_USER --&gt;|"APPROVE"| P3_345
+    AUTO_SEV --&gt;|"critical / important"| P3_34
+    AUTO_SEV --&gt;|"minor only"| P3_345
+    P3_34 --&gt; P3_345
+    P3_345 --&gt; EXEC_MODE
+    EXEC_MODE --&gt; DIRECT
+    EXEC_MODE --&gt; DELEGATED
+    DIRECT --&gt; DEL_SIZE
+    DELEGATED --&gt; DEL_SIZE
+    DEL_SIZE --&gt;|"small"| P4_ENTRY
+    DEL_SIZE --&gt;|"large"| P3_347
+    P3_347 --&gt; GEN_OP
+    GEN_OP --&gt; PRESENT_OP
+    PRESENT_OP --&gt; OP_OK
+    OP_OK --&gt;|"approved"| P4_ENTRY
+    OP_OK --&gt;|"push back"| BACK_PHASE
+    BACK_PHASE --&gt; P3_31
 
-    s31 --&gt; s32
-    s32 --&gt; s33
-    s33 --&gt; imode
-    imode --&gt;|interactive| ugate
-    imode --&gt;|autonomous| autogate
-
-    ugate --&gt;|"APPROVE"| s345
-    ugate --&gt;|"ITERATE"| s31
-    autogate --&gt;|"critical / important"| s34
-    autogate --&gt;|"minor"| s345
-    s34 --&gt; s32
-
-    s345 --&gt; emode
-    emode --&gt;|"direct"| small
-    emode --&gt;|"small delegated"| small
-    emode --&gt;|"large delegated"| large
-    small --&gt; done3
-    large --&gt; s347
-
-    s347 --&gt; opgate
-    opgate --&gt;|"approved"| done3
-    opgate --&gt;|"pushback"| retdesign
-    retdesign --&gt;|"re-enter Phase 3"| entry3
-
-    style s31 fill:#4a9eff,color:#fff
-    style s32 fill:#4a9eff,color:#fff
-    style s34 fill:#4a9eff,color:#fff
-    style s347 fill:#4a9eff,color:#fff
-    style s33 fill:#ff6b6b,color:#fff
-    style opgate fill:#ff6b6b,color:#fff
-    style done3 fill:#51cf66,color:#000
-
-    subgraph LEGEND3[" Legend"]
-        la3["Process"]
-        lb3["Subagent Dispatch"]
-        lc3{"Quality Gate / Decision"}
-        ld3(["Terminal"])
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]
+        L2["Subagent Dispatch"]
+        L3{"Quality Gate / Decision"}
+        L4(["Terminal"])
     end
-    style lb3 fill:#4a9eff,color:#fff
-    style lc3 fill:#ff6b6b,color:#fff
-    style ld3 fill:#51cf66,color:#000</code></pre>
+
+    style P4_ENTRY fill:#51cf66,color:#1a1a1d
+    style GATE33 fill:#ff6b6b,color:#1a1a1d
+    style P3_347 fill:#ff6b6b,color:#1a1a1d
+    style OP_OK fill:#ff6b6b,color:#1a1a1d
+    style AUTO_SEV fill:#ff6b6b,color:#1a1a1d
+    style DEL_SIZE fill:#ff6b6b,color:#1a1a1d
+    style P3_31 fill:#4a9eff,color:#1a1a1d
+    style P3_32 fill:#4a9eff,color:#1a1a1d
+    style P3_34 fill:#4a9eff,color:#1a1a1d
+    style GEN_OP fill:#4a9eff,color:#1a1a1d
+    style L2 fill:#4a9eff,color:#1a1a1d
+    style L3 fill:#ff6b6b,color:#1a1a1d
+    style L4 fill:#51cf66,color:#1a1a1d</code></pre>
 <hr />
-<h2 id="phase-4-implementation-worktree-setup-task-execution-detail">Phase 4: Implementation — Worktree Setup &amp; Task Execution (Detail)<a class="headerlink" href="#phase-4-implementation-worktree-setup-task-execution-detail" title="Permanent link">&para;</a></h2>
+<h2 id="phase-4-detail-per-task-execution-cycle">Phase 4 Detail: Per-Task Execution Cycle<a class="headerlink" href="#phase-4-detail-per-task-execution-cycle" title="Permanent link">&para;</a></h2>
+<p>Covers worktree setup (4.1), parallelization routing (4.2), and the per-task quality gate loop (4.3–4.5.1).</p>
 <pre class="mermaid"><code>flowchart TD
-    entry4["Phase 4 Entry\nORCHESTRATION ONLY in main context"]
+    P4_ENTRY["Phase 4: Implementation\n(both direct and delegated modes)"]
+    WT_MODE{"worktree\nmode?"}
+    WT_SINGLE["single\nCreate one worktree\n▶ using-git-worktrees"]
+    WT_PARALLEL["per_parallel_track\n1. Complete setup/skeleton tasks\n2. Commit setup work\n3. Create one worktree per parallel group\n▶ using-git-worktrees"]
+    WT_NONE["none\nWork in current directory"]
+    PAR_ROUTE{"parallelization\nstrategy?"}
+    PAR_TRACK["per_parallel_track\nEach track dispatched to own worktree\nrun_in_background: true\n▶ executing-plans per worktree"]
+    PAR_MAX["maximize (single worktree)\n▶ dispatching-parallel-agents\nGroup tasks by Parallel Group"]
+    PAR_CON["conservative\n▶ executing-plans (sequential)"]
+    TASK_LOOP["FOR EACH TASK"]
+    T43["4.3 Implement Task N\n▶ test-driven-development\nVerify working dir + branch\nCommit when done"]
+    DM{"dialectic_mode?"}
+    ROUNDTABLE["4.3.1 Dialectic Overlay\n▶ forge_roundtable_convene\n3 archetypes (planning_and_gates)\nor all 10 (full)"]
+    T44["4.4 Implementation Completion Verification\nAuditor checks: acceptance criteria,\nexpected outputs, interface contracts, behaviors"]
+    T44_OK{"All items\nCOMPLETE?"}
+    FIX44["Return to task implementation\nFix incomplete items"]
+    T45["4.5 Code Review\n▶ requesting-code-review"]
+    T45_SEV{"Issue\nseverity?"}
+    FIX_CRIT["Fix critical immediately"]
+    FIX_IMP["Fix important before next task"]
+    NOTE_MIN["Note minor for later"]
+    T451["4.5.1 Claim Validation\n▶ fact-checking\n(docstrings, comments, test names,\ntype hints, error messages)"]
+    T451_OK{"False claims\nfound?"}
+    FIX451["Fix false claims immediately"]
+    NEXT_TASK{"More tasks\nin plan?"}
+    PT_CHK{"per_parallel\n_track?"}
+    SMART_MERGE["4.2.5 Smart Merge\n▶ merging-worktrees\nVerify: all tests pass,\ninterface contracts, cleanup worktrees"]
+    QGATES_ENTRY(["Proceed to Quality Gates 4.6"])
 
-    wt{"worktree\nstrategy?"}
-    wt_single["4.1 Create Single Worktree\nsubagent → using-git-worktrees skill"]
-    wt_para["4.1 Parallel Worktree Setup\nsetup/skeleton tasks first\ncommit before creating worktrees\nsubagent → using-git-worktrees per track"]
-    wt_none["4.1 No Worktree\nwork in current directory"]
+    P4_ENTRY --&gt; WT_MODE
+    WT_MODE --&gt;|"single"| WT_SINGLE
+    WT_MODE --&gt;|"per_parallel_track"| WT_PARALLEL
+    WT_MODE --&gt;|"none"| WT_NONE
+    WT_SINGLE --&gt; PAR_ROUTE
+    WT_PARALLEL --&gt; PAR_ROUTE
+    WT_NONE --&gt; PAR_ROUTE
+    PAR_ROUTE --&gt;|"per_parallel_track"| PAR_TRACK
+    PAR_ROUTE --&gt;|"maximize"| PAR_MAX
+    PAR_ROUTE --&gt;|"conservative"| PAR_CON
+    PAR_TRACK --&gt; TASK_LOOP
+    PAR_MAX --&gt; TASK_LOOP
+    PAR_CON --&gt; TASK_LOOP
+    TASK_LOOP --&gt; T43
+    T43 --&gt; DM
+    DM --&gt;|"roundtable or full"| ROUNDTABLE
+    DM --&gt;|"planning_only or none"| T44
+    ROUNDTABLE --&gt; T44
+    T44 --&gt; T44_OK
+    T44_OK --&gt;|"INCOMPLETE / PARTIAL"| FIX44
+    FIX44 --&gt; T44
+    T44_OK --&gt;|"all COMPLETE"| T45
+    T45 --&gt; T45_SEV
+    T45_SEV --&gt;|"critical"| FIX_CRIT
+    T45_SEV --&gt;|"important"| FIX_IMP
+    T45_SEV --&gt;|"minor"| NOTE_MIN
+    T45_SEV --&gt;|"none"| T451
+    FIX_CRIT --&gt; T451
+    FIX_IMP --&gt; T451
+    NOTE_MIN --&gt; T451
+    T451 --&gt; T451_OK
+    T451_OK --&gt;|"Yes"| FIX451
+    FIX451 --&gt; NEXT_TASK
+    T451_OK --&gt;|"No"| NEXT_TASK
+    NEXT_TASK --&gt;|"Yes"| TASK_LOOP
+    NEXT_TASK --&gt;|"No"| PT_CHK
+    PT_CHK --&gt;|"Yes"| SMART_MERGE
+    PT_CHK --&gt;|"No"| QGATES_ENTRY
+    SMART_MERGE --&gt; QGATES_ENTRY
 
-    para{"parallelization\nstrategy?"}
-    exec_ppt["4.2 Parallel Track Execution\none background Task per worktree\nsubagent → executing-plans skill\nverify branch before any work"]
-    exec_max["4.2 Maximize Parallel Groups\nsubagent → dispatching-parallel-agents skill\ngroup tasks by Parallel Group field"]
-    exec_seq["4.2 Sequential Execution\nsubagent → executing-plans skill"]
-
-    smartmerge["4.2.5 Smart Merge\nsubagent → merging-worktrees skill\ndelete worktrees after merge\nverify all tests pass\nverify interface contracts"]
-
-    taskloop{"More tasks\nin plan?"}
-
-    tdd["4.3 Implement Task N\nsubagent → test-driven-development skill\nread assertion-quality-standard.md first\nFULL ASSERTION PRINCIPLE: assert == only\nno substring / len / mock.ANY assertions\ncommit when done"]
-
-    dialect{"dialectic_mode?"}
-    roundtable["4.3.1 Dialectic Overlay\nforge_roundtable_convene at IMPLEMENT stage\nplanning_and_gates: 3 archetypes\nfull: all 10 archetypes"]
-
-    verify["4.4 Completion Verification\nauditor subagent: acceptance criteria check\nexpected outputs, interface contracts\nbehavior verification, dead code paths\noutput: COMPLETE / INCOMPLETE / PARTIAL"]
-    vgate{"Blocking\nissues?"}
-
-    review["4.5 Code Review\nsubagent → requesting-code-review skill"]
-    rgate{"Issue\nseverity?"}
-
-    factcheck["4.5.1 Claim Validation\nsubagent → fact-checking skill\nscope: files for Task N only\ndocstrings, comments, test names, type hints"]
-    fcgate{"False\nclaims?"}
-
-    nexttask["Mark task complete\nadvance to next task"]
-
-    qgates["→ Phase 4 Quality Gates\n(all tasks complete)"]
-
-    entry4 --&gt; wt
-    wt --&gt;|"single"| wt_single
-    wt --&gt;|"per_parallel_track"| wt_para
-    wt --&gt;|"none"| wt_none
-
-    wt_single --&gt; para
-    wt_para --&gt; para
-    wt_none --&gt; para
-
-    para --&gt;|"per_parallel_track"| exec_ppt
-    para --&gt;|"maximize"| exec_max
-    para --&gt;|"conservative"| exec_seq
-
-    exec_ppt --&gt; smartmerge
-    smartmerge --&gt; taskloop
-    exec_max --&gt; taskloop
-    exec_seq --&gt; taskloop
-
-    taskloop --&gt;|"yes"| tdd
-    tdd --&gt; dialect
-    dialect --&gt;|"roundtable or full"| roundtable
-    dialect --&gt;|"planning_only or none"| verify
-    roundtable --&gt; verify
-
-    verify --&gt; vgate
-    vgate --&gt;|"YES: fix and re-verify"| tdd
-    vgate --&gt;|"NO: all complete"| review
-
-    review --&gt; rgate
-    rgate --&gt;|"critical: fix immediately"| tdd
-    rgate --&gt;|"important / minor"| factcheck
-
-    factcheck --&gt; fcgate
-    fcgate --&gt;|"YES: fix immediately"| tdd
-    fcgate --&gt;|"NO: clean"| nexttask
-    nexttask --&gt; taskloop
-
-    taskloop --&gt;|"no more tasks"| qgates
-
-    style wt_single fill:#4a9eff,color:#fff
-    style wt_para fill:#4a9eff,color:#fff
-    style exec_ppt fill:#4a9eff,color:#fff
-    style exec_max fill:#4a9eff,color:#fff
-    style exec_seq fill:#4a9eff,color:#fff
-    style smartmerge fill:#4a9eff,color:#fff
-    style tdd fill:#4a9eff,color:#fff
-    style roundtable fill:#4a9eff,color:#fff
-    style review fill:#4a9eff,color:#fff
-    style factcheck fill:#4a9eff,color:#fff
-    style vgate fill:#ff6b6b,color:#fff
-    style rgate fill:#ff6b6b,color:#fff
-    style fcgate fill:#ff6b6b,color:#fff
-    style qgates fill:#51cf66,color:#000
-
-    subgraph LEGEND4[" Legend"]
-        la4["Process"]
-        lb4["Subagent Dispatch"]
-        lc4{"Quality Gate / Decision"}
-        ld4(["Terminal"])
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]
+        L2["Subagent Dispatch"]
+        L3{"Quality Gate / Decision"}
+        L4(["Terminal"])
     end
-    style lb4 fill:#4a9eff,color:#fff
-    style lc4 fill:#ff6b6b,color:#fff
-    style ld4 fill:#51cf66,color:#000</code></pre>
+
+    style QGATES_ENTRY fill:#51cf66,color:#1a1a1d
+    style T44 fill:#ff6b6b,color:#1a1a1d
+    style T44_OK fill:#ff6b6b,color:#1a1a1d
+    style T45_SEV fill:#ff6b6b,color:#1a1a1d
+    style T451_OK fill:#ff6b6b,color:#1a1a1d
+    style T43 fill:#4a9eff,color:#1a1a1d
+    style ROUNDTABLE fill:#4a9eff,color:#1a1a1d
+    style T45 fill:#4a9eff,color:#1a1a1d
+    style T451 fill:#4a9eff,color:#1a1a1d
+    style WT_SINGLE fill:#4a9eff,color:#1a1a1d
+    style WT_PARALLEL fill:#4a9eff,color:#1a1a1d
+    style PAR_TRACK fill:#4a9eff,color:#1a1a1d
+    style PAR_MAX fill:#4a9eff,color:#1a1a1d
+    style PAR_CON fill:#4a9eff,color:#1a1a1d
+    style SMART_MERGE fill:#4a9eff,color:#1a1a1d
+    style L2 fill:#4a9eff,color:#1a1a1d
+    style L3 fill:#ff6b6b,color:#1a1a1d
+    style L4 fill:#51cf66,color:#1a1a1d</code></pre>
 <hr />
-<h2 id="phase-4-quality-gates-completion-detail">Phase 4: Quality Gates &amp; Completion (Detail)<a class="headerlink" href="#phase-4-quality-gates-completion-detail" title="Permanent link">&para;</a></h2>
+<h2 id="phase-4647-detail-quality-gates-and-finish">Phase 4.6–4.7 Detail: Quality Gates and Finish<a class="headerlink" href="#phase-4647-detail-quality-gates-and-finish" title="Permanent link">&para;</a></h2>
+<p>All gates are mandatory. Each gate loops until clean before the next gate begins.</p>
 <pre class="mermaid"><code>flowchart TD
-    qentry["Phase 4 Quality Gates Entry\n(all tasks complete)"]
+    QGATE_ENTRY["Quality Gates (post-all-tasks)"]
 
-    audit["4.6.1 Comprehensive Implementation Audit\nauditor subagent: plan item sweep\ncross-task integration verification\ndesign doc traceability\nfeature completeness end-to-end"]
-    auditgate{"Blocking\nissues?"}
+    G461["4.6.1 Comprehensive Implementation Audit\nPlan item sweep (COMPLETE / INCOMPLETE / DEGRADED)\nCross-task integration verification\nDesign traceability check\nFeature completeness (end-to-end usability)"]
+    G461_OK{"Blocking\nissues?"}
+    FIX461["Fix issues (subagent dispatch)\nthen re-run audit"]
 
-    testsuite["4.6.2 Run Full Test Suite\npytest / npm test / cargo test"]
-    testgate{"Tests\npassing?"}
-    debug["subagent → systematic-debugging skill\nfix issues, then re-run"]
+    G462["4.6.2 Run Full Test Suite\npytest / npm test / cargo test / etc."]
+    G462_OK{"Tests\npassing?"}
+    DEBUG["▶ systematic-debugging\nFix failures"]
 
-    mirage["4.6.3 Green Mirage Audit\nsubagent → audit-green-mirage skill\nread assertion-quality-standard.md first\nfocus: new code from this feature\nFULL ASSERTION PRINCIPLE enforced"]
-    mirgate{"Issues\nfound?"}
+    G463["4.6.3 Green Mirage Audit\n▶ audit-green-mirage\nRule: exact equality only\nassert result == expected  (required)\nassert substring in result  (BANNED)"]
+    G463_OK{"Issues\nfound?"}
+    FIX463["Fix weak assertions\nthen re-run audit"]
 
-    compfact["4.6.4 Comprehensive Claim Validation\nsubagent → fact-checking skill\nscope: ALL files for this feature\ncross-reference design doc + impl plan"]
-    cfgate{"Issues\nfound?"}
+    G464["4.6.4 Comprehensive Claim Validation\n▶ fact-checking\nScope: all files modified by this feature\nCross-ref: design doc + impl plan"]
+    G464_OK{"False\nclaims?"}
+    FIX464["Fix false claims\nthen re-run"]
 
-    prepr["4.6.5 Pre-PR Claim Validation\nsubagent → fact-checking skill\nscope: branch diff since merge-base\nlast line of defense before PR"]
-    ppgate{"Issues\nfound?"}
+    G465["4.6.5 Pre-PR Validation + Embarrassment Sweep\n▶ fact-checking (branch scope)\n+ 8-point hygiene checklist:\n1. Debug leftovers\n2. TODO/FIXME/XXX/HACK markers\n3. Commented-out code\n4. Accidental inclusions\n5. AI-attribution violations\n6. Issue-ref violations (#N)\n7. Out-of-scope file paths\n8. Repo consistency (version, changelog, mirrors)"]
+    G465_OK{"Any\nfinding?"}
+    FIX465["Fix finding or flag intentional\nride-along to operator"]
 
-    postmode{"post_impl?"}
-    finish_opts["4.7 Offer Options\nsubagent → finishing-a-development-branch skill\npresent: merge / create PR / cleanup"]
-    finish_pr["4.7 Auto PR\npush branch\ngh pr create\nreturn URL"]
-    finish_stop["4.7 Stop\nannounce complete\nsummarize work\nlist remaining TODOs"]
-    done4(["Feature Complete"])
+    FINISH["4.7 Finish Implementation"]
+    FINISH_MODE{"post_impl?"}
+    OPT_OFFER["offer_options\n▶ finishing-a-development-branch\n(present: merge / PR / cleanup options)"]
+    OPT_PR["auto_pr\npush branch + gh pr create\nreturn PR URL"]
+    OPT_STOP["stop\nannounce complete\nsummarize + list remaining TODOs"]
+    DONE(["Implementation Complete"])
 
-    qentry --&gt; audit
-    audit --&gt; auditgate
-    auditgate --&gt;|"YES: fix and re-audit"| audit
-    auditgate --&gt;|"NO: clean"| testsuite
+    QGATE_ENTRY --&gt; G461
+    G461 --&gt; G461_OK
+    G461_OK --&gt;|"Yes"| FIX461
+    FIX461 --&gt; G461
+    G461_OK --&gt;|"No"| G462
+    G462 --&gt; G462_OK
+    G462_OK --&gt;|"No"| DEBUG
+    DEBUG --&gt; G462
+    G462_OK --&gt;|"Yes"| G463
+    G463 --&gt; G463_OK
+    G463_OK --&gt;|"Yes"| FIX463
+    FIX463 --&gt; G463
+    G463_OK --&gt;|"No"| G464
+    G464 --&gt; G464_OK
+    G464_OK --&gt;|"Yes"| FIX464
+    FIX464 --&gt; G464
+    G464_OK --&gt;|"No"| G465
+    G465 --&gt; G465_OK
+    G465_OK --&gt;|"Yes"| FIX465
+    FIX465 --&gt; G465
+    G465_OK --&gt;|"No"| FINISH
+    FINISH --&gt; FINISH_MODE
+    FINISH_MODE --&gt;|"offer_options"| OPT_OFFER
+    FINISH_MODE --&gt;|"auto_pr"| OPT_PR
+    FINISH_MODE --&gt;|"stop"| OPT_STOP
+    OPT_OFFER --&gt; DONE
+    OPT_PR --&gt; DONE
+    OPT_STOP --&gt; DONE
 
-    testsuite --&gt; testgate
-    testgate --&gt;|"FAIL"| debug
-    debug --&gt; testsuite
-    testgate --&gt;|"PASS"| mirage
-
-    mirage --&gt; mirgate
-    mirgate --&gt;|"YES: fix and re-audit"| mirage
-    mirgate --&gt;|"NO: clean"| compfact
-
-    compfact --&gt; cfgate
-    cfgate --&gt;|"YES: fix immediately"| compfact
-    cfgate --&gt;|"NO: clean"| prepr
-
-    prepr --&gt; ppgate
-    ppgate --&gt;|"YES: fix immediately"| prepr
-    ppgate --&gt;|"NO: clean"| postmode
-
-    postmode --&gt;|"offer_options"| finish_opts
-    postmode --&gt;|"auto_pr"| finish_pr
-    postmode --&gt;|"stop"| finish_stop
-
-    finish_opts --&gt; done4
-    finish_pr --&gt; done4
-    finish_stop --&gt; done4
-
-    style audit fill:#4a9eff,color:#fff
-    style debug fill:#4a9eff,color:#fff
-    style mirage fill:#4a9eff,color:#fff
-    style compfact fill:#4a9eff,color:#fff
-    style prepr fill:#4a9eff,color:#fff
-    style finish_opts fill:#4a9eff,color:#fff
-    style finish_pr fill:#4a9eff,color:#fff
-    style auditgate fill:#ff6b6b,color:#fff
-    style testgate fill:#ff6b6b,color:#fff
-    style mirgate fill:#ff6b6b,color:#fff
-    style cfgate fill:#ff6b6b,color:#fff
-    style ppgate fill:#ff6b6b,color:#fff
-    style done4 fill:#51cf66,color:#000
-
-    subgraph LEGEND5[" Legend"]
-        la5["Process"]
-        lb5["Subagent Dispatch"]
-        lc5{"Quality Gate / Decision"}
-        ld5(["Terminal"])
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]
+        L2["Subagent Dispatch"]
+        L3{"Quality Gate / Decision"}
+        L4(["Terminal"])
     end
-    style lb5 fill:#4a9eff,color:#fff
-    style lc5 fill:#ff6b6b,color:#fff
-    style ld5 fill:#51cf66,color:#000</code></pre>
+
+    style DONE fill:#51cf66,color:#1a1a1d
+    style G461 fill:#ff6b6b,color:#1a1a1d
+    style G462 fill:#ff6b6b,color:#1a1a1d
+    style G463 fill:#ff6b6b,color:#1a1a1d
+    style G464 fill:#ff6b6b,color:#1a1a1d
+    style G465 fill:#ff6b6b,color:#1a1a1d
+    style G461_OK fill:#ff6b6b,color:#1a1a1d
+    style G462_OK fill:#ff6b6b,color:#1a1a1d
+    style G463_OK fill:#ff6b6b,color:#1a1a1d
+    style G464_OK fill:#ff6b6b,color:#1a1a1d
+    style G465_OK fill:#ff6b6b,color:#1a1a1d
+    style DEBUG fill:#4a9eff,color:#1a1a1d
+    style OPT_OFFER fill:#4a9eff,color:#1a1a1d
+    style FINISH fill:#4a9eff,color:#1a1a1d
+    style L2 fill:#4a9eff,color:#1a1a1d
+    style L3 fill:#ff6b6b,color:#1a1a1d
+    style L4 fill:#51cf66,color:#1a1a1d</code></pre>
 <hr />
-<h2 id="cross-reference-overview-nodes-detail-diagrams">Cross-Reference: Overview Nodes → Detail Diagrams<a class="headerlink" href="#cross-reference-overview-nodes-detail-diagrams" title="Permanent link">&para;</a></h2>
+<h2 id="cross-reference-table">Cross-Reference Table<a class="headerlink" href="#cross-reference-table" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
 <th>Overview Node</th>
 <th>Detail Diagram</th>
+<th>Section</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>Prerequisite Verification</td>
-<td>Phase 3 Detail (entry condition)</td>
+<td>Phase 3 (3.1–3.4.7)</td>
+<td>Phase 3 Detail</td>
+<td>§3.1–§3.4.7</td>
 </tr>
 <tr>
-<td>Zero-Flag Fast Path</td>
-<td>Phase 3 Detail (<code>escape_hatch = treat as ready</code>)</td>
+<td>Per-Task Cycle (4.3–4.5.1)</td>
+<td>Phase 4 Per-Task Cycle</td>
+<td>§4.1–§4.5.1</td>
 </tr>
 <tr>
-<td>Phase 3: Implementation Planning</td>
-<td>Phase 3 Detail diagram</td>
+<td>Quality Gates 4.6</td>
+<td>Phase 4.6–4.7 Quality Gates</td>
+<td>§4.6.1–§4.7</td>
 </tr>
 <tr>
-<td>Phase 4: Implementation</td>
-<td>Phase 4 Task Execution + Phase 4 Quality Gates diagrams</td>
+<td>4.7 Finish</td>
+<td>Phase 4.6–4.7 Quality Gates</td>
+<td>§4.7</td>
 </tr>
 </tbody>
 </table>
-<h2 id="skills-invoked-by-phase">Skills Invoked by Phase<a class="headerlink" href="#skills-invoked-by-phase" title="Permanent link">&para;</a></h2>
+<h2 id="skills-dispatch-map">Skills Dispatch Map<a class="headerlink" href="#skills-dispatch-map" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
-<th>Step</th>
-<th>Skill</th>
-<th>Trigger</th>
+<th>Node</th>
+<th>Skill Invoked</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td>3.1</td>
+<td>3.1 Create Impl Plan</td>
 <td><code>writing-plans</code></td>
-<td>Create impl plan</td>
 </tr>
 <tr>
-<td>3.2</td>
+<td>3.2 Review Impl Plan</td>
 <td><code>reviewing-impl-plans</code></td>
-<td>Review impl plan</td>
 </tr>
 <tr>
-<td>3.4</td>
+<td>3.4 Fix Impl Plan</td>
 <td><code>executing-plans</code></td>
-<td>Fix plan findings</td>
 </tr>
 <tr>
-<td>4.1</td>
+<td>3.4.7 One-Pager (generate)</td>
+<td>subagent (inline)</td>
+</tr>
+<tr>
+<td>4.1 Setup Worktrees</td>
 <td><code>using-git-worktrees</code></td>
-<td>Create workspace(s)</td>
 </tr>
 <tr>
-<td>4.2</td>
+<td>4.2 Maximize parallel</td>
 <td><code>dispatching-parallel-agents</code></td>
-<td>Maximize parallelization</td>
 </tr>
 <tr>
-<td>4.2.5</td>
+<td>4.2 Conservative</td>
+<td><code>executing-plans</code></td>
+</tr>
+<tr>
+<td>4.2.5 Smart Merge</td>
 <td><code>merging-worktrees</code></td>
-<td>Merge parallel tracks</td>
 </tr>
 <tr>
-<td>4.3</td>
+<td>4.3 Implement Task</td>
 <td><code>test-driven-development</code></td>
-<td>TDD per task</td>
 </tr>
 <tr>
-<td>4.3.1</td>
+<td>4.3.1 Dialectic Overlay</td>
 <td><code>forge_roundtable_convene</code> (MCP)</td>
-<td>Dialectic overlay (if enabled)</td>
 </tr>
 <tr>
-<td>4.5</td>
+<td>4.5 Code Review</td>
 <td><code>requesting-code-review</code></td>
-<td>Per-task code review</td>
 </tr>
 <tr>
-<td>4.5.1, 4.6.4, 4.6.5</td>
+<td>4.5.1 Claim Validation</td>
 <td><code>fact-checking</code></td>
-<td>Claim validation (3×)</td>
 </tr>
 <tr>
-<td>4.6.2</td>
+<td>4.6.2 Debug failures</td>
 <td><code>systematic-debugging</code></td>
-<td>Debug test failures</td>
 </tr>
 <tr>
-<td>4.6.3</td>
+<td>4.6.3 Mirage Audit</td>
 <td><code>audit-green-mirage</code></td>
-<td>Test quality audit</td>
 </tr>
 <tr>
-<td>4.7</td>
+<td>4.6.4 Comprehensive Claims</td>
+<td><code>fact-checking</code></td>
+</tr>
+<tr>
+<td>4.6.5 Pre-PR + Embarrassment Sweep</td>
+<td><code>fact-checking</code> + <code>finishing-a-development-branch</code> checklist</td>
+</tr>
+<tr>
+<td>4.7 Finish (offer_options)</td>
 <td><code>finishing-a-development-branch</code></td>
-<td>Branch completion</td>
 </tr>
 </tbody>
 </table>
@@ -9976,13 +10048,13 @@
 <a id="__codelineno-0-792" name="__codelineno-0-792" href="#__codelineno-0-792"></a>
 <a id="__codelineno-0-793" name="__codelineno-0-793" href="#__codelineno-0-793"></a>If issues found: Fix, re-run until clean.
 <a id="__codelineno-0-794" name="__codelineno-0-794" href="#__codelineno-0-794"></a>
-<a id="__codelineno-0-795" name="__codelineno-0-795" href="#__codelineno-0-795"></a><span class="gu">#### 4.6.5 Pre-PR Claim Validation</span>
+<a id="__codelineno-0-795" name="__codelineno-0-795" href="#__codelineno-0-795"></a><span class="gu">#### 4.6.5 Pre-PR Claim Validation and Embarrassment Sweep</span>
 <a id="__codelineno-0-796" name="__codelineno-0-796" href="#__codelineno-0-796"></a>
-<a id="__codelineno-0-797" name="__codelineno-0-797" href="#__codelineno-0-797"></a>&lt;RULE&gt;Before any PR creation, run final fact-checking pass.&lt;/RULE&gt;
+<a id="__codelineno-0-797" name="__codelineno-0-797" href="#__codelineno-0-797"></a>&lt;RULE&gt;Before any PR creation, run the final fact-checking pass AND the embarrassment sweep. The fact-check validates that claims are TRUE; the sweep validates that the diff is CLEAN. Both gate the PR.&lt;/RULE&gt;
 <a id="__codelineno-0-798" name="__codelineno-0-798" href="#__codelineno-0-798"></a>
 <a id="__codelineno-0-799" name="__codelineno-0-799" href="#__codelineno-0-799"></a><span class="sb">```</span>
 <a id="__codelineno-0-800" name="__codelineno-0-800" href="#__codelineno-0-800"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-801" name="__codelineno-0-801" href="#__codelineno-0-801"></a><span class="sb">  description: &quot;Pre-PR claim validation&quot;</span>
+<a id="__codelineno-0-801" name="__codelineno-0-801" href="#__codelineno-0-801"></a><span class="sb">  description: &quot;Pre-PR claim validation and embarrassment sweep&quot;</span>
 <a id="__codelineno-0-802" name="__codelineno-0-802" href="#__codelineno-0-802"></a><span class="sb">  prompt: |</span>
 <a id="__codelineno-0-803" name="__codelineno-0-803" href="#__codelineno-0-803"></a><span class="sb">    First, invoke the fact-checking skill using the Skill tool.</span>
 <a id="__codelineno-0-804" name="__codelineno-0-804" href="#__codelineno-0-804"></a><span class="sb">    Perform pre-PR validation.</span>
@@ -9993,341 +10065,361 @@
 <a id="__codelineno-0-809" name="__codelineno-0-809" href="#__codelineno-0-809"></a>
 <a id="__codelineno-0-810" name="__codelineno-0-810" href="#__codelineno-0-810"></a><span class="sb">    This is the absolute last line of defense.</span>
 <a id="__codelineno-0-811" name="__codelineno-0-811" href="#__codelineno-0-811"></a><span class="sb">    Nothing ships with false claims.</span>
-<a id="__codelineno-0-812" name="__codelineno-0-812" href="#__codelineno-0-812"></a><span class="sb">```</span>
-<a id="__codelineno-0-813" name="__codelineno-0-813" href="#__codelineno-0-813"></a>
-<a id="__codelineno-0-814" name="__codelineno-0-814" href="#__codelineno-0-814"></a><span class="gu">### 4.7 Finish Implementation</span>
-<a id="__codelineno-0-815" name="__codelineno-0-815" href="#__codelineno-0-815"></a>
-<a id="__codelineno-0-816" name="__codelineno-0-816" href="#__codelineno-0-816"></a><span class="gs">**If post_impl == &quot;offer_options&quot;:**</span>
-<a id="__codelineno-0-817" name="__codelineno-0-817" href="#__codelineno-0-817"></a>
-<a id="__codelineno-0-818" name="__codelineno-0-818" href="#__codelineno-0-818"></a><span class="sb">```</span>
-<a id="__codelineno-0-819" name="__codelineno-0-819" href="#__codelineno-0-819"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-820" name="__codelineno-0-820" href="#__codelineno-0-820"></a><span class="sb">  description: &quot;Finish development branch&quot;</span>
-<a id="__codelineno-0-821" name="__codelineno-0-821" href="#__codelineno-0-821"></a><span class="sb">  prompt: |</span>
-<a id="__codelineno-0-822" name="__codelineno-0-822" href="#__codelineno-0-822"></a><span class="sb">    First, invoke the finishing-a-development-branch skill using the Skill tool.</span>
-<a id="__codelineno-0-823" name="__codelineno-0-823" href="#__codelineno-0-823"></a><span class="sb">    Complete this development work.</span>
-<a id="__codelineno-0-824" name="__codelineno-0-824" href="#__codelineno-0-824"></a>
-<a id="__codelineno-0-825" name="__codelineno-0-825" href="#__codelineno-0-825"></a><span class="sb">    ## Context for the Skill</span>
-<a id="__codelineno-0-826" name="__codelineno-0-826" href="#__codelineno-0-826"></a>
-<a id="__codelineno-0-827" name="__codelineno-0-827" href="#__codelineno-0-827"></a><span class="sb">    Feature: [name]</span>
-<a id="__codelineno-0-828" name="__codelineno-0-828" href="#__codelineno-0-828"></a><span class="sb">    Branch: [current branch]</span>
-<a id="__codelineno-0-829" name="__codelineno-0-829" href="#__codelineno-0-829"></a><span class="sb">    All tests passing: yes</span>
-<a id="__codelineno-0-830" name="__codelineno-0-830" href="#__codelineno-0-830"></a><span class="sb">    All claims validated: yes</span>
-<a id="__codelineno-0-831" name="__codelineno-0-831" href="#__codelineno-0-831"></a>
-<a id="__codelineno-0-832" name="__codelineno-0-832" href="#__codelineno-0-832"></a><span class="sb">    Present options: merge, create PR, cleanup.</span>
-<a id="__codelineno-0-833" name="__codelineno-0-833" href="#__codelineno-0-833"></a><span class="sb">```</span>
-<a id="__codelineno-0-834" name="__codelineno-0-834" href="#__codelineno-0-834"></a>
-<a id="__codelineno-0-835" name="__codelineno-0-835" href="#__codelineno-0-835"></a><span class="gs">**If post_impl == &quot;auto_pr&quot;:**</span>
-<a id="__codelineno-0-836" name="__codelineno-0-836" href="#__codelineno-0-836"></a>Push branch, create PR with gh CLI, return URL.
+<a id="__codelineno-0-812" name="__codelineno-0-812" href="#__codelineno-0-812"></a>
+<a id="__codelineno-0-813" name="__codelineno-0-813" href="#__codelineno-0-813"></a><span class="sb">    ## Embarrassment sweep (diff hygiene)</span>
+<a id="__codelineno-0-814" name="__codelineno-0-814" href="#__codelineno-0-814"></a>
+<a id="__codelineno-0-815" name="__codelineno-0-815" href="#__codelineno-0-815"></a><span class="sb">    After fact-checking, run the embarrassment sweep over the same branch</span>
+<a id="__codelineno-0-816" name="__codelineno-0-816" href="#__codelineno-0-816"></a><span class="sb">    diff. This is the named pre-PR diff-hygiene pass — the things that are</span>
+<a id="__codelineno-0-817" name="__codelineno-0-817" href="#__codelineno-0-817"></a><span class="sb">    embarrassing to ship, separate from whether claims are true. The full</span>
+<a id="__codelineno-0-818" name="__codelineno-0-818" href="#__codelineno-0-818"></a><span class="sb">    8-point checklist lives in the finishing-a-development-branch skill;</span>
+<a id="__codelineno-0-819" name="__codelineno-0-819" href="#__codelineno-0-819"></a><span class="sb">    apply it here. Each point is scoped to what the branch introduced:</span>
+<a id="__codelineno-0-820" name="__codelineno-0-820" href="#__codelineno-0-820"></a>
+<a id="__codelineno-0-821" name="__codelineno-0-821" href="#__codelineno-0-821"></a><span class="sb">    1. Debug leftovers (print/console.log/debugger/breakpoints added by the branch)</span>
+<a id="__codelineno-0-822" name="__codelineno-0-822" href="#__codelineno-0-822"></a><span class="sb">    2. Branch-introduced TODO/FIXME/XXX/HACK markers promising nonexistent work</span>
+<a id="__codelineno-0-823" name="__codelineno-0-823" href="#__codelineno-0-823"></a><span class="sb">    3. Commented-out code the branch left behind</span>
+<a id="__codelineno-0-824" name="__codelineno-0-824" href="#__codelineno-0-824"></a><span class="sb">    4. Accidental inclusions (swap files, .DS_Store, build artifacts, unrelated files)</span>
+<a id="__codelineno-0-825" name="__codelineno-0-825" href="#__codelineno-0-825"></a><span class="sb">    5. AI-attribution violations (Co-Authored-By, &quot;Generated with&quot;, bot signatures) in commits/PR text</span>
+<a id="__codelineno-0-826" name="__codelineno-0-826" href="#__codelineno-0-826"></a><span class="sb">    6. Issue-ref violations (#N auto-linking) in commits/PR text</span>
+<a id="__codelineno-0-827" name="__codelineno-0-827" href="#__codelineno-0-827"></a><span class="sb">    7. Out-of-scope paths (files the feature has no business touching; unflagged ride-alongs)</span>
+<a id="__codelineno-0-828" name="__codelineno-0-828" href="#__codelineno-0-828"></a><span class="sb">    8. Repo-specific consistency (version bump present, changelog entry, generated mirrors in sync)</span>
+<a id="__codelineno-0-829" name="__codelineno-0-829" href="#__codelineno-0-829"></a>
+<a id="__codelineno-0-830" name="__codelineno-0-830" href="#__codelineno-0-830"></a><span class="sb">    Report every finding. Any finding is a blocker: fix it, or flag an</span>
+<a id="__codelineno-0-831" name="__codelineno-0-831" href="#__codelineno-0-831"></a><span class="sb">    intentional ride-along to the operator, before the PR opens.</span>
+<a id="__codelineno-0-832" name="__codelineno-0-832" href="#__codelineno-0-832"></a><span class="sb">```</span>
+<a id="__codelineno-0-833" name="__codelineno-0-833" href="#__codelineno-0-833"></a>
+<a id="__codelineno-0-834" name="__codelineno-0-834" href="#__codelineno-0-834"></a><span class="gu">### 4.7 Finish Implementation</span>
+<a id="__codelineno-0-835" name="__codelineno-0-835" href="#__codelineno-0-835"></a>
+<a id="__codelineno-0-836" name="__codelineno-0-836" href="#__codelineno-0-836"></a><span class="gs">**If post_impl == &quot;offer_options&quot;:**</span>
 <a id="__codelineno-0-837" name="__codelineno-0-837" href="#__codelineno-0-837"></a>
-<a id="__codelineno-0-838" name="__codelineno-0-838" href="#__codelineno-0-838"></a><span class="gs">**If post_impl == &quot;stop&quot;:**</span>
-<a id="__codelineno-0-839" name="__codelineno-0-839" href="#__codelineno-0-839"></a>Announce complete, summarize, list remaining TODOs.
-<a id="__codelineno-0-840" name="__codelineno-0-840" href="#__codelineno-0-840"></a>
-<a id="__codelineno-0-841" name="__codelineno-0-841" href="#__codelineno-0-841"></a>---
-<a id="__codelineno-0-842" name="__codelineno-0-842" href="#__codelineno-0-842"></a>
-<a id="__codelineno-0-843" name="__codelineno-0-843" href="#__codelineno-0-843"></a><span class="gu">## Refactoring Mode</span>
+<a id="__codelineno-0-838" name="__codelineno-0-838" href="#__codelineno-0-838"></a><span class="sb">```</span>
+<a id="__codelineno-0-839" name="__codelineno-0-839" href="#__codelineno-0-839"></a><span class="sb">Task:</span>
+<a id="__codelineno-0-840" name="__codelineno-0-840" href="#__codelineno-0-840"></a><span class="sb">  description: &quot;Finish development branch&quot;</span>
+<a id="__codelineno-0-841" name="__codelineno-0-841" href="#__codelineno-0-841"></a><span class="sb">  prompt: |</span>
+<a id="__codelineno-0-842" name="__codelineno-0-842" href="#__codelineno-0-842"></a><span class="sb">    First, invoke the finishing-a-development-branch skill using the Skill tool.</span>
+<a id="__codelineno-0-843" name="__codelineno-0-843" href="#__codelineno-0-843"></a><span class="sb">    Complete this development work.</span>
 <a id="__codelineno-0-844" name="__codelineno-0-844" href="#__codelineno-0-844"></a>
-<a id="__codelineno-0-845" name="__codelineno-0-845" href="#__codelineno-0-845"></a>&lt;RULE&gt;
-<a id="__codelineno-0-846" name="__codelineno-0-846" href="#__codelineno-0-846"></a>Activate when: &quot;refactor&quot;, &quot;reorganize&quot;, &quot;extract&quot;, &quot;migrate&quot;, &quot;split&quot;, &quot;consolidate&quot; appear in request.
-<a id="__codelineno-0-847" name="__codelineno-0-847" href="#__codelineno-0-847"></a>Refactoring is NOT greenfield. Behavior preservation is the primary constraint.
-<a id="__codelineno-0-848" name="__codelineno-0-848" href="#__codelineno-0-848"></a>&lt;/RULE&gt;
-<a id="__codelineno-0-849" name="__codelineno-0-849" href="#__codelineno-0-849"></a>
-<a id="__codelineno-0-850" name="__codelineno-0-850" href="#__codelineno-0-850"></a><span class="gu">### Detection</span>
+<a id="__codelineno-0-845" name="__codelineno-0-845" href="#__codelineno-0-845"></a><span class="sb">    ## Context for the Skill</span>
+<a id="__codelineno-0-846" name="__codelineno-0-846" href="#__codelineno-0-846"></a>
+<a id="__codelineno-0-847" name="__codelineno-0-847" href="#__codelineno-0-847"></a><span class="sb">    Feature: [name]</span>
+<a id="__codelineno-0-848" name="__codelineno-0-848" href="#__codelineno-0-848"></a><span class="sb">    Branch: [current branch]</span>
+<a id="__codelineno-0-849" name="__codelineno-0-849" href="#__codelineno-0-849"></a><span class="sb">    All tests passing: yes</span>
+<a id="__codelineno-0-850" name="__codelineno-0-850" href="#__codelineno-0-850"></a><span class="sb">    All claims validated: yes</span>
 <a id="__codelineno-0-851" name="__codelineno-0-851" href="#__codelineno-0-851"></a>
-<a id="__codelineno-0-852" name="__codelineno-0-852" href="#__codelineno-0-852"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-853" name="__codelineno-0-853" href="#__codelineno-0-853"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">request</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/refactor|reorganize|extract|migrate|split|consolidate/i</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-854" name="__codelineno-0-854" href="#__codelineno-0-854"></a><span class="w">  </span><span class="nx">SESSION_PREFERENCES</span><span class="p">.</span><span class="nx">refactoring_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
-<a id="__codelineno-0-855" name="__codelineno-0-855" href="#__codelineno-0-855"></a><span class="p">}</span>
-<a id="__codelineno-0-856" name="__codelineno-0-856" href="#__codelineno-0-856"></a><span class="sb">```</span>
+<a id="__codelineno-0-852" name="__codelineno-0-852" href="#__codelineno-0-852"></a><span class="sb">    Present options: merge, create PR, cleanup.</span>
+<a id="__codelineno-0-853" name="__codelineno-0-853" href="#__codelineno-0-853"></a><span class="sb">```</span>
+<a id="__codelineno-0-854" name="__codelineno-0-854" href="#__codelineno-0-854"></a>
+<a id="__codelineno-0-855" name="__codelineno-0-855" href="#__codelineno-0-855"></a><span class="gs">**If post_impl == &quot;auto_pr&quot;:**</span>
+<a id="__codelineno-0-856" name="__codelineno-0-856" href="#__codelineno-0-856"></a>Push branch, create PR with gh CLI, return URL.
 <a id="__codelineno-0-857" name="__codelineno-0-857" href="#__codelineno-0-857"></a>
-<a id="__codelineno-0-858" name="__codelineno-0-858" href="#__codelineno-0-858"></a><span class="gu">### Workflow Adjustments</span>
-<a id="__codelineno-0-859" name="__codelineno-0-859" href="#__codelineno-0-859"></a>
-<a id="__codelineno-0-860" name="__codelineno-0-860" href="#__codelineno-0-860"></a>| Phase     | Greenfield               | Refactoring Mode                     |
-<a id="__codelineno-0-861" name="__codelineno-0-861" href="#__codelineno-0-861"></a>| --------- | ------------------------ | ------------------------------------ |
-<a id="__codelineno-0-862" name="__codelineno-0-862" href="#__codelineno-0-862"></a>| Phase 1   | Understand what to build | Map existing behavior to preserve    |
-<a id="__codelineno-0-863" name="__codelineno-0-863" href="#__codelineno-0-863"></a>| Phase 1.5 | Design discovery         | Behavior inventory                   |
-<a id="__codelineno-0-864" name="__codelineno-0-864" href="#__codelineno-0-864"></a>| Phase 2   | Design new solution      | Design transformation strategy       |
-<a id="__codelineno-0-865" name="__codelineno-0-865" href="#__codelineno-0-865"></a>| Phase 3   | Plan implementation      | Plan incremental migration           |
-<a id="__codelineno-0-866" name="__codelineno-0-866" href="#__codelineno-0-866"></a>| Phase 4   | Build and test           | Transform with behavior verification |
-<a id="__codelineno-0-867" name="__codelineno-0-867" href="#__codelineno-0-867"></a>
-<a id="__codelineno-0-868" name="__codelineno-0-868" href="#__codelineno-0-868"></a><span class="gu">### Behavior Preservation Protocol</span>
+<a id="__codelineno-0-858" name="__codelineno-0-858" href="#__codelineno-0-858"></a><span class="gs">**If post_impl == &quot;stop&quot;:**</span>
+<a id="__codelineno-0-859" name="__codelineno-0-859" href="#__codelineno-0-859"></a>Announce complete, summarize, list remaining TODOs.
+<a id="__codelineno-0-860" name="__codelineno-0-860" href="#__codelineno-0-860"></a>
+<a id="__codelineno-0-861" name="__codelineno-0-861" href="#__codelineno-0-861"></a>---
+<a id="__codelineno-0-862" name="__codelineno-0-862" href="#__codelineno-0-862"></a>
+<a id="__codelineno-0-863" name="__codelineno-0-863" href="#__codelineno-0-863"></a><span class="gu">## Refactoring Mode</span>
+<a id="__codelineno-0-864" name="__codelineno-0-864" href="#__codelineno-0-864"></a>
+<a id="__codelineno-0-865" name="__codelineno-0-865" href="#__codelineno-0-865"></a>&lt;RULE&gt;
+<a id="__codelineno-0-866" name="__codelineno-0-866" href="#__codelineno-0-866"></a>Activate when: &quot;refactor&quot;, &quot;reorganize&quot;, &quot;extract&quot;, &quot;migrate&quot;, &quot;split&quot;, &quot;consolidate&quot; appear in request.
+<a id="__codelineno-0-867" name="__codelineno-0-867" href="#__codelineno-0-867"></a>Refactoring is NOT greenfield. Behavior preservation is the primary constraint.
+<a id="__codelineno-0-868" name="__codelineno-0-868" href="#__codelineno-0-868"></a>&lt;/RULE&gt;
 <a id="__codelineno-0-869" name="__codelineno-0-869" href="#__codelineno-0-869"></a>
-<a id="__codelineno-0-870" name="__codelineno-0-870" href="#__codelineno-0-870"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-871" name="__codelineno-0-871" href="#__codelineno-0-871"></a>Every change must pass behavior verification before proceeding.
-<a id="__codelineno-0-872" name="__codelineno-0-872" href="#__codelineno-0-872"></a>No &quot;I&#39;ll fix the tests later.&quot; Tests prove behavior preservation.
-<a id="__codelineno-0-873" name="__codelineno-0-873" href="#__codelineno-0-873"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-874" name="__codelineno-0-874" href="#__codelineno-0-874"></a>
-<a id="__codelineno-0-875" name="__codelineno-0-875" href="#__codelineno-0-875"></a><span class="gs">**Before any change:**</span>
-<a id="__codelineno-0-876" name="__codelineno-0-876" href="#__codelineno-0-876"></a>
-<a id="__codelineno-0-877" name="__codelineno-0-877" href="#__codelineno-0-877"></a><span class="k">1.</span> Identify existing behavior (tests, usage patterns, contracts)
-<a id="__codelineno-0-878" name="__codelineno-0-878" href="#__codelineno-0-878"></a><span class="k">2.</span> Document behavior contracts (inputs → outputs)
-<a id="__codelineno-0-879" name="__codelineno-0-879" href="#__codelineno-0-879"></a><span class="k">3.</span> Ensure test coverage for behaviors (add tests if missing)
-<a id="__codelineno-0-880" name="__codelineno-0-880" href="#__codelineno-0-880"></a>
-<a id="__codelineno-0-881" name="__codelineno-0-881" href="#__codelineno-0-881"></a><span class="gs">**During change:**</span>
-<a id="__codelineno-0-882" name="__codelineno-0-882" href="#__codelineno-0-882"></a>
-<a id="__codelineno-0-883" name="__codelineno-0-883" href="#__codelineno-0-883"></a><span class="k">1.</span> Make smallest possible transformation
-<a id="__codelineno-0-884" name="__codelineno-0-884" href="#__codelineno-0-884"></a><span class="k">2.</span> Run tests after each atomic change
-<a id="__codelineno-0-885" name="__codelineno-0-885" href="#__codelineno-0-885"></a><span class="k">3.</span> Commit working state before next transformation
-<a id="__codelineno-0-886" name="__codelineno-0-886" href="#__codelineno-0-886"></a>
-<a id="__codelineno-0-887" name="__codelineno-0-887" href="#__codelineno-0-887"></a><span class="gs">**After change:**</span>
-<a id="__codelineno-0-888" name="__codelineno-0-888" href="#__codelineno-0-888"></a>
-<a id="__codelineno-0-889" name="__codelineno-0-889" href="#__codelineno-0-889"></a><span class="k">1.</span> Verify all original behaviors preserved
-<a id="__codelineno-0-890" name="__codelineno-0-890" href="#__codelineno-0-890"></a><span class="k">2.</span> Document any intentional behavior changes (with user approval)
-<a id="__codelineno-0-891" name="__codelineno-0-891" href="#__codelineno-0-891"></a>
-<a id="__codelineno-0-892" name="__codelineno-0-892" href="#__codelineno-0-892"></a><span class="gu">### Refactoring Patterns</span>
-<a id="__codelineno-0-893" name="__codelineno-0-893" href="#__codelineno-0-893"></a>
-<a id="__codelineno-0-894" name="__codelineno-0-894" href="#__codelineno-0-894"></a>| Pattern                   | When                           | Key Constraint                   |
-<a id="__codelineno-0-895" name="__codelineno-0-895" href="#__codelineno-0-895"></a>| ------------------------- | ------------------------------ | -------------------------------- |
-<a id="__codelineno-0-896" name="__codelineno-0-896" href="#__codelineno-0-896"></a>| <span class="gs">**Strangler Fig**</span>         | Replacing system incrementally | Old and new coexist              |
-<a id="__codelineno-0-897" name="__codelineno-0-897" href="#__codelineno-0-897"></a>| <span class="gs">**Branch by Abstraction**</span> | Changing widely-used component | Introduce abstraction, swap impl |
-<a id="__codelineno-0-898" name="__codelineno-0-898" href="#__codelineno-0-898"></a>| <span class="gs">**Parallel Change**</span>       | Changing interfaces            | Add new, migrate, remove old     |
-<a id="__codelineno-0-899" name="__codelineno-0-899" href="#__codelineno-0-899"></a>| <span class="gs">**Feature Toggles**</span>       | Risky changes                  | Disable instantly if problems    |
+<a id="__codelineno-0-870" name="__codelineno-0-870" href="#__codelineno-0-870"></a><span class="gu">### Detection</span>
+<a id="__codelineno-0-871" name="__codelineno-0-871" href="#__codelineno-0-871"></a>
+<a id="__codelineno-0-872" name="__codelineno-0-872" href="#__codelineno-0-872"></a><span class="sb">```typescript</span>
+<a id="__codelineno-0-873" name="__codelineno-0-873" href="#__codelineno-0-873"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">request</span><span class="p">.</span><span class="nx">match</span><span class="p">(</span><span class="sr">/refactor|reorganize|extract|migrate|split|consolidate/i</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-874" name="__codelineno-0-874" href="#__codelineno-0-874"></a><span class="w">  </span><span class="nx">SESSION_PREFERENCES</span><span class="p">.</span><span class="nx">refactoring_mode</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span><span class="p">;</span>
+<a id="__codelineno-0-875" name="__codelineno-0-875" href="#__codelineno-0-875"></a><span class="p">}</span>
+<a id="__codelineno-0-876" name="__codelineno-0-876" href="#__codelineno-0-876"></a><span class="sb">```</span>
+<a id="__codelineno-0-877" name="__codelineno-0-877" href="#__codelineno-0-877"></a>
+<a id="__codelineno-0-878" name="__codelineno-0-878" href="#__codelineno-0-878"></a><span class="gu">### Workflow Adjustments</span>
+<a id="__codelineno-0-879" name="__codelineno-0-879" href="#__codelineno-0-879"></a>
+<a id="__codelineno-0-880" name="__codelineno-0-880" href="#__codelineno-0-880"></a>| Phase     | Greenfield               | Refactoring Mode                     |
+<a id="__codelineno-0-881" name="__codelineno-0-881" href="#__codelineno-0-881"></a>| --------- | ------------------------ | ------------------------------------ |
+<a id="__codelineno-0-882" name="__codelineno-0-882" href="#__codelineno-0-882"></a>| Phase 1   | Understand what to build | Map existing behavior to preserve    |
+<a id="__codelineno-0-883" name="__codelineno-0-883" href="#__codelineno-0-883"></a>| Phase 1.5 | Design discovery         | Behavior inventory                   |
+<a id="__codelineno-0-884" name="__codelineno-0-884" href="#__codelineno-0-884"></a>| Phase 2   | Design new solution      | Design transformation strategy       |
+<a id="__codelineno-0-885" name="__codelineno-0-885" href="#__codelineno-0-885"></a>| Phase 3   | Plan implementation      | Plan incremental migration           |
+<a id="__codelineno-0-886" name="__codelineno-0-886" href="#__codelineno-0-886"></a>| Phase 4   | Build and test           | Transform with behavior verification |
+<a id="__codelineno-0-887" name="__codelineno-0-887" href="#__codelineno-0-887"></a>
+<a id="__codelineno-0-888" name="__codelineno-0-888" href="#__codelineno-0-888"></a><span class="gu">### Behavior Preservation Protocol</span>
+<a id="__codelineno-0-889" name="__codelineno-0-889" href="#__codelineno-0-889"></a>
+<a id="__codelineno-0-890" name="__codelineno-0-890" href="#__codelineno-0-890"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-891" name="__codelineno-0-891" href="#__codelineno-0-891"></a>Every change must pass behavior verification before proceeding.
+<a id="__codelineno-0-892" name="__codelineno-0-892" href="#__codelineno-0-892"></a>No &quot;I&#39;ll fix the tests later.&quot; Tests prove behavior preservation.
+<a id="__codelineno-0-893" name="__codelineno-0-893" href="#__codelineno-0-893"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-894" name="__codelineno-0-894" href="#__codelineno-0-894"></a>
+<a id="__codelineno-0-895" name="__codelineno-0-895" href="#__codelineno-0-895"></a><span class="gs">**Before any change:**</span>
+<a id="__codelineno-0-896" name="__codelineno-0-896" href="#__codelineno-0-896"></a>
+<a id="__codelineno-0-897" name="__codelineno-0-897" href="#__codelineno-0-897"></a><span class="k">1.</span> Identify existing behavior (tests, usage patterns, contracts)
+<a id="__codelineno-0-898" name="__codelineno-0-898" href="#__codelineno-0-898"></a><span class="k">2.</span> Document behavior contracts (inputs → outputs)
+<a id="__codelineno-0-899" name="__codelineno-0-899" href="#__codelineno-0-899"></a><span class="k">3.</span> Ensure test coverage for behaviors (add tests if missing)
 <a id="__codelineno-0-900" name="__codelineno-0-900" href="#__codelineno-0-900"></a>
-<a id="__codelineno-0-901" name="__codelineno-0-901" href="#__codelineno-0-901"></a><span class="gu">### Refactoring-Specific Quality Gates</span>
+<a id="__codelineno-0-901" name="__codelineno-0-901" href="#__codelineno-0-901"></a><span class="gs">**During change:**</span>
 <a id="__codelineno-0-902" name="__codelineno-0-902" href="#__codelineno-0-902"></a>
-<a id="__codelineno-0-903" name="__codelineno-0-903" href="#__codelineno-0-903"></a>| Gate           | Greenfield              | Refactoring                       |
-<a id="__codelineno-0-904" name="__codelineno-0-904" href="#__codelineno-0-904"></a>| -------------- | ----------------------- | --------------------------------- |
-<a id="__codelineno-0-905" name="__codelineno-0-905" href="#__codelineno-0-905"></a>| Research       | Understand requirements | Map ALL existing behaviors        |
-<a id="__codelineno-0-906" name="__codelineno-0-906" href="#__codelineno-0-906"></a>| Design         | Solution design         | Transformation strategy           |
-<a id="__codelineno-0-907" name="__codelineno-0-907" href="#__codelineno-0-907"></a>| Implementation | Feature works           | Behavior preserved + improved     |
-<a id="__codelineno-0-908" name="__codelineno-0-908" href="#__codelineno-0-908"></a>| Testing        | New tests pass          | ALL existing tests pass unchanged |
-<a id="__codelineno-0-909" name="__codelineno-0-909" href="#__codelineno-0-909"></a>
-<a id="__codelineno-0-910" name="__codelineno-0-910" href="#__codelineno-0-910"></a><span class="gu">### Refactoring Self-Check</span>
+<a id="__codelineno-0-903" name="__codelineno-0-903" href="#__codelineno-0-903"></a><span class="k">1.</span> Make smallest possible transformation
+<a id="__codelineno-0-904" name="__codelineno-0-904" href="#__codelineno-0-904"></a><span class="k">2.</span> Run tests after each atomic change
+<a id="__codelineno-0-905" name="__codelineno-0-905" href="#__codelineno-0-905"></a><span class="k">3.</span> Commit working state before next transformation
+<a id="__codelineno-0-906" name="__codelineno-0-906" href="#__codelineno-0-906"></a>
+<a id="__codelineno-0-907" name="__codelineno-0-907" href="#__codelineno-0-907"></a><span class="gs">**After change:**</span>
+<a id="__codelineno-0-908" name="__codelineno-0-908" href="#__codelineno-0-908"></a>
+<a id="__codelineno-0-909" name="__codelineno-0-909" href="#__codelineno-0-909"></a><span class="k">1.</span> Verify all original behaviors preserved
+<a id="__codelineno-0-910" name="__codelineno-0-910" href="#__codelineno-0-910"></a><span class="k">2.</span> Document any intentional behavior changes (with user approval)
 <a id="__codelineno-0-911" name="__codelineno-0-911" href="#__codelineno-0-911"></a>
-<a id="__codelineno-0-912" name="__codelineno-0-912" href="#__codelineno-0-912"></a><span class="sb">```</span>
-<a id="__codelineno-0-913" name="__codelineno-0-913" href="#__codelineno-0-913"></a><span class="sb">[ ] Existing behavior fully inventoried</span>
-<a id="__codelineno-0-914" name="__codelineno-0-914" href="#__codelineno-0-914"></a><span class="sb">[ ] Test coverage sufficient before changes</span>
-<a id="__codelineno-0-915" name="__codelineno-0-915" href="#__codelineno-0-915"></a><span class="sb">[ ] Each transformation is atomic and verified</span>
-<a id="__codelineno-0-916" name="__codelineno-0-916" href="#__codelineno-0-916"></a><span class="sb">[ ] No behavior changes without explicit approval</span>
-<a id="__codelineno-0-917" name="__codelineno-0-917" href="#__codelineno-0-917"></a><span class="sb">[ ] Incremental commits at each working state</span>
-<a id="__codelineno-0-918" name="__codelineno-0-918" href="#__codelineno-0-918"></a><span class="sb">[ ] Original tests pass (not modified to pass)</span>
-<a id="__codelineno-0-919" name="__codelineno-0-919" href="#__codelineno-0-919"></a><span class="sb">```</span>
+<a id="__codelineno-0-912" name="__codelineno-0-912" href="#__codelineno-0-912"></a><span class="gu">### Refactoring Patterns</span>
+<a id="__codelineno-0-913" name="__codelineno-0-913" href="#__codelineno-0-913"></a>
+<a id="__codelineno-0-914" name="__codelineno-0-914" href="#__codelineno-0-914"></a>| Pattern                   | When                           | Key Constraint                   |
+<a id="__codelineno-0-915" name="__codelineno-0-915" href="#__codelineno-0-915"></a>| ------------------------- | ------------------------------ | -------------------------------- |
+<a id="__codelineno-0-916" name="__codelineno-0-916" href="#__codelineno-0-916"></a>| <span class="gs">**Strangler Fig**</span>         | Replacing system incrementally | Old and new coexist              |
+<a id="__codelineno-0-917" name="__codelineno-0-917" href="#__codelineno-0-917"></a>| <span class="gs">**Branch by Abstraction**</span> | Changing widely-used component | Introduce abstraction, swap impl |
+<a id="__codelineno-0-918" name="__codelineno-0-918" href="#__codelineno-0-918"></a>| <span class="gs">**Parallel Change**</span>       | Changing interfaces            | Add new, migrate, remove old     |
+<a id="__codelineno-0-919" name="__codelineno-0-919" href="#__codelineno-0-919"></a>| <span class="gs">**Feature Toggles**</span>       | Risky changes                  | Disable instantly if problems    |
 <a id="__codelineno-0-920" name="__codelineno-0-920" href="#__codelineno-0-920"></a>
-<a id="__codelineno-0-921" name="__codelineno-0-921" href="#__codelineno-0-921"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-922" name="__codelineno-0-922" href="#__codelineno-0-922"></a><span class="k">-</span><span class="w"> </span>&quot;Let&#39;s just rewrite it&quot; without behavior inventory
-<a id="__codelineno-0-923" name="__codelineno-0-923" href="#__codelineno-0-923"></a><span class="k">-</span><span class="w"> </span>Changing behavior while refactoring structure
-<a id="__codelineno-0-924" name="__codelineno-0-924" href="#__codelineno-0-924"></a><span class="k">-</span><span class="w"> </span>Skipping test verification between transformations
-<a id="__codelineno-0-925" name="__codelineno-0-925" href="#__codelineno-0-925"></a><span class="k">-</span><span class="w"> </span>Big-bang migrations without incremental checkpoints
-<a id="__codelineno-0-926" name="__codelineno-0-926" href="#__codelineno-0-926"></a><span class="k">-</span><span class="w"> </span>Refactoring without existing test coverage (add tests first)
-<a id="__codelineno-0-927" name="__codelineno-0-927" href="#__codelineno-0-927"></a><span class="k">-</span><span class="w"> </span>Combining refactoring with feature changes in same task
-<a id="__codelineno-0-928" name="__codelineno-0-928" href="#__codelineno-0-928"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-921" name="__codelineno-0-921" href="#__codelineno-0-921"></a><span class="gu">### Refactoring-Specific Quality Gates</span>
+<a id="__codelineno-0-922" name="__codelineno-0-922" href="#__codelineno-0-922"></a>
+<a id="__codelineno-0-923" name="__codelineno-0-923" href="#__codelineno-0-923"></a>| Gate           | Greenfield              | Refactoring                       |
+<a id="__codelineno-0-924" name="__codelineno-0-924" href="#__codelineno-0-924"></a>| -------------- | ----------------------- | --------------------------------- |
+<a id="__codelineno-0-925" name="__codelineno-0-925" href="#__codelineno-0-925"></a>| Research       | Understand requirements | Map ALL existing behaviors        |
+<a id="__codelineno-0-926" name="__codelineno-0-926" href="#__codelineno-0-926"></a>| Design         | Solution design         | Transformation strategy           |
+<a id="__codelineno-0-927" name="__codelineno-0-927" href="#__codelineno-0-927"></a>| Implementation | Feature works           | Behavior preserved + improved     |
+<a id="__codelineno-0-928" name="__codelineno-0-928" href="#__codelineno-0-928"></a>| Testing        | New tests pass          | ALL existing tests pass unchanged |
 <a id="__codelineno-0-929" name="__codelineno-0-929" href="#__codelineno-0-929"></a>
-<a id="__codelineno-0-930" name="__codelineno-0-930" href="#__codelineno-0-930"></a>---
+<a id="__codelineno-0-930" name="__codelineno-0-930" href="#__codelineno-0-930"></a><span class="gu">### Refactoring Self-Check</span>
 <a id="__codelineno-0-931" name="__codelineno-0-931" href="#__codelineno-0-931"></a>
-<a id="__codelineno-0-932" name="__codelineno-0-932" href="#__codelineno-0-932"></a><span class="gu">## Skills Invoked</span>
-<a id="__codelineno-0-933" name="__codelineno-0-933" href="#__codelineno-0-933"></a>
-<a id="__codelineno-0-934" name="__codelineno-0-934" href="#__codelineno-0-934"></a>| Phase               | Skill                          | Purpose                                                                    |
-<a id="__codelineno-0-935" name="__codelineno-0-935" href="#__codelineno-0-935"></a>| ------------------- | ------------------------------ | -------------------------------------------------------------------------- |
-<a id="__codelineno-0-936" name="__codelineno-0-936" href="#__codelineno-0-936"></a>| 1.2                 | analyzing-domains              | <span class="gs">**If unfamiliar domain**</span>: Extract ubiquitous language, identify aggregates |
-<a id="__codelineno-0-937" name="__codelineno-0-937" href="#__codelineno-0-937"></a>| 1.6                 | devils-advocate                | Challenge Understanding Document                                           |
-<a id="__codelineno-0-938" name="__codelineno-0-938" href="#__codelineno-0-938"></a>| 2.1                 | design-exploration             | Create design doc                                                          |
-<a id="__codelineno-0-939" name="__codelineno-0-939" href="#__codelineno-0-939"></a>| 2.1                 | designing-workflows            | <span class="gs">**If feature has states/flows**</span>: Design state machine                      |
-<a id="__codelineno-0-940" name="__codelineno-0-940" href="#__codelineno-0-940"></a>| 2.2                 | reviewing-design-docs          | Review design doc                                                          |
-<a id="__codelineno-0-941" name="__codelineno-0-941" href="#__codelineno-0-941"></a>| 2.4, 3.4            | executing-plans                | Fix findings                                                               |
-<a id="__codelineno-0-942" name="__codelineno-0-942" href="#__codelineno-0-942"></a>| 3.1                 | writing-plans                  | Create impl plan                                                           |
-<a id="__codelineno-0-943" name="__codelineno-0-943" href="#__codelineno-0-943"></a>| 3.2                 | reviewing-impl-plans           | Review impl plan                                                           |
-<a id="__codelineno-0-944" name="__codelineno-0-944" href="#__codelineno-0-944"></a>| 4.1                 | using-git-worktrees            | Create workspace(s)                                                        |
-<a id="__codelineno-0-945" name="__codelineno-0-945" href="#__codelineno-0-945"></a>| 4.2                 | dispatching-parallel-agents    | Parallel execution                                                         |
-<a id="__codelineno-0-946" name="__codelineno-0-946" href="#__codelineno-0-946"></a>| 4.2                 | assembling-context             | Prepare context for parallel subagents                                     |
-<a id="__codelineno-0-947" name="__codelineno-0-947" href="#__codelineno-0-947"></a>| 4.2.5               | merging-worktrees              | Merge parallel worktrees                                                   |
-<a id="__codelineno-0-948" name="__codelineno-0-948" href="#__codelineno-0-948"></a>| 4.3                 | test-driven-development        | TDD per task                                                               |
-<a id="__codelineno-0-949" name="__codelineno-0-949" href="#__codelineno-0-949"></a>| 4.3.1               | roundtable (via MCP)           | Dialectic overlay at quality gates (if dialectic_mode != none)             |
-<a id="__codelineno-0-950" name="__codelineno-0-950" href="#__codelineno-0-950"></a>| 4.5                 | requesting-code-review         | Review per task                                                            |
-<a id="__codelineno-0-951" name="__codelineno-0-951" href="#__codelineno-0-951"></a>| 4.5.1, 4.6.4, 4.6.5 | fact-checking                  | Claim validation                                                           |
-<a id="__codelineno-0-952" name="__codelineno-0-952" href="#__codelineno-0-952"></a>| 4.6.2               | systematic-debugging           | Debug test failures                                                        |
-<a id="__codelineno-0-953" name="__codelineno-0-953" href="#__codelineno-0-953"></a>| 4.6.3               | audit-green-mirage             | Test quality audit                                                         |
-<a id="__codelineno-0-954" name="__codelineno-0-954" href="#__codelineno-0-954"></a>| 4.7                 | finishing-a-development-branch | Complete workflow                                                           |
-<a id="__codelineno-0-955" name="__codelineno-0-955" href="#__codelineno-0-955"></a>
-<a id="__codelineno-0-956" name="__codelineno-0-956" href="#__codelineno-0-956"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-957" name="__codelineno-0-957" href="#__codelineno-0-957"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-0-958" name="__codelineno-0-958" href="#__codelineno-0-958"></a>
-<a id="__codelineno-0-959" name="__codelineno-0-959" href="#__codelineno-0-959"></a><span class="gu">### Skill Invocation</span>
-<a id="__codelineno-0-960" name="__codelineno-0-960" href="#__codelineno-0-960"></a>
-<a id="__codelineno-0-961" name="__codelineno-0-961" href="#__codelineno-0-961"></a><span class="k">-</span><span class="w"> </span>Embedding skill instructions in subagent prompts
-<a id="__codelineno-0-962" name="__codelineno-0-962" href="#__codelineno-0-962"></a><span class="k">-</span><span class="w"> </span>Saying &quot;use the X skill&quot; without invoking via Skill tool
-<a id="__codelineno-0-963" name="__codelineno-0-963" href="#__codelineno-0-963"></a><span class="k">-</span><span class="w"> </span>Duplicating skill content in orchestration
-<a id="__codelineno-0-964" name="__codelineno-0-964" href="#__codelineno-0-964"></a>
-<a id="__codelineno-0-965" name="__codelineno-0-965" href="#__codelineno-0-965"></a><span class="gu">### Phase 0</span>
-<a id="__codelineno-0-966" name="__codelineno-0-966" href="#__codelineno-0-966"></a>
-<a id="__codelineno-0-967" name="__codelineno-0-967" href="#__codelineno-0-967"></a><span class="k">-</span><span class="w"> </span>Skipping configuration wizard
-<a id="__codelineno-0-968" name="__codelineno-0-968" href="#__codelineno-0-968"></a><span class="k">-</span><span class="w"> </span>Not detecting escape hatches in initial message
-<a id="__codelineno-0-969" name="__codelineno-0-969" href="#__codelineno-0-969"></a><span class="k">-</span><span class="w"> </span>Asking preferences piecemeal instead of upfront
-<a id="__codelineno-0-970" name="__codelineno-0-970" href="#__codelineno-0-970"></a>
-<a id="__codelineno-0-971" name="__codelineno-0-971" href="#__codelineno-0-971"></a><span class="gu">### Phase 1</span>
-<a id="__codelineno-0-972" name="__codelineno-0-972" href="#__codelineno-0-972"></a>
-<a id="__codelineno-0-973" name="__codelineno-0-973" href="#__codelineno-0-973"></a><span class="k">-</span><span class="w"> </span>Only searching codebase, ignoring web and MCP
-<a id="__codelineno-0-974" name="__codelineno-0-974" href="#__codelineno-0-974"></a><span class="k">-</span><span class="w"> </span>Not using user-provided links
-<a id="__codelineno-0-975" name="__codelineno-0-975" href="#__codelineno-0-975"></a><span class="k">-</span><span class="w"> </span>Shallow research that misses patterns
-<a id="__codelineno-0-976" name="__codelineno-0-976" href="#__codelineno-0-976"></a>
-<a id="__codelineno-0-977" name="__codelineno-0-977" href="#__codelineno-0-977"></a><span class="gu">### Phase 1.5</span>
+<a id="__codelineno-0-932" name="__codelineno-0-932" href="#__codelineno-0-932"></a><span class="sb">```</span>
+<a id="__codelineno-0-933" name="__codelineno-0-933" href="#__codelineno-0-933"></a><span class="sb">[ ] Existing behavior fully inventoried</span>
+<a id="__codelineno-0-934" name="__codelineno-0-934" href="#__codelineno-0-934"></a><span class="sb">[ ] Test coverage sufficient before changes</span>
+<a id="__codelineno-0-935" name="__codelineno-0-935" href="#__codelineno-0-935"></a><span class="sb">[ ] Each transformation is atomic and verified</span>
+<a id="__codelineno-0-936" name="__codelineno-0-936" href="#__codelineno-0-936"></a><span class="sb">[ ] No behavior changes without explicit approval</span>
+<a id="__codelineno-0-937" name="__codelineno-0-937" href="#__codelineno-0-937"></a><span class="sb">[ ] Incremental commits at each working state</span>
+<a id="__codelineno-0-938" name="__codelineno-0-938" href="#__codelineno-0-938"></a><span class="sb">[ ] Original tests pass (not modified to pass)</span>
+<a id="__codelineno-0-939" name="__codelineno-0-939" href="#__codelineno-0-939"></a><span class="sb">```</span>
+<a id="__codelineno-0-940" name="__codelineno-0-940" href="#__codelineno-0-940"></a>
+<a id="__codelineno-0-941" name="__codelineno-0-941" href="#__codelineno-0-941"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-942" name="__codelineno-0-942" href="#__codelineno-0-942"></a><span class="k">-</span><span class="w"> </span>&quot;Let&#39;s just rewrite it&quot; without behavior inventory
+<a id="__codelineno-0-943" name="__codelineno-0-943" href="#__codelineno-0-943"></a><span class="k">-</span><span class="w"> </span>Changing behavior while refactoring structure
+<a id="__codelineno-0-944" name="__codelineno-0-944" href="#__codelineno-0-944"></a><span class="k">-</span><span class="w"> </span>Skipping test verification between transformations
+<a id="__codelineno-0-945" name="__codelineno-0-945" href="#__codelineno-0-945"></a><span class="k">-</span><span class="w"> </span>Big-bang migrations without incremental checkpoints
+<a id="__codelineno-0-946" name="__codelineno-0-946" href="#__codelineno-0-946"></a><span class="k">-</span><span class="w"> </span>Refactoring without existing test coverage (add tests first)
+<a id="__codelineno-0-947" name="__codelineno-0-947" href="#__codelineno-0-947"></a><span class="k">-</span><span class="w"> </span>Combining refactoring with feature changes in same task
+<a id="__codelineno-0-948" name="__codelineno-0-948" href="#__codelineno-0-948"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-949" name="__codelineno-0-949" href="#__codelineno-0-949"></a>
+<a id="__codelineno-0-950" name="__codelineno-0-950" href="#__codelineno-0-950"></a>---
+<a id="__codelineno-0-951" name="__codelineno-0-951" href="#__codelineno-0-951"></a>
+<a id="__codelineno-0-952" name="__codelineno-0-952" href="#__codelineno-0-952"></a><span class="gu">## Skills Invoked</span>
+<a id="__codelineno-0-953" name="__codelineno-0-953" href="#__codelineno-0-953"></a>
+<a id="__codelineno-0-954" name="__codelineno-0-954" href="#__codelineno-0-954"></a>| Phase               | Skill                          | Purpose                                                                    |
+<a id="__codelineno-0-955" name="__codelineno-0-955" href="#__codelineno-0-955"></a>| ------------------- | ------------------------------ | -------------------------------------------------------------------------- |
+<a id="__codelineno-0-956" name="__codelineno-0-956" href="#__codelineno-0-956"></a>| 1.2                 | analyzing-domains              | <span class="gs">**If unfamiliar domain**</span>: Extract ubiquitous language, identify aggregates |
+<a id="__codelineno-0-957" name="__codelineno-0-957" href="#__codelineno-0-957"></a>| 1.6                 | devils-advocate                | Challenge Understanding Document                                           |
+<a id="__codelineno-0-958" name="__codelineno-0-958" href="#__codelineno-0-958"></a>| 2.1                 | design-exploration             | Create design doc                                                          |
+<a id="__codelineno-0-959" name="__codelineno-0-959" href="#__codelineno-0-959"></a>| 2.1                 | designing-workflows            | <span class="gs">**If feature has states/flows**</span>: Design state machine                      |
+<a id="__codelineno-0-960" name="__codelineno-0-960" href="#__codelineno-0-960"></a>| 2.2                 | reviewing-design-docs          | Review design doc                                                          |
+<a id="__codelineno-0-961" name="__codelineno-0-961" href="#__codelineno-0-961"></a>| 2.4, 3.4            | executing-plans                | Fix findings                                                               |
+<a id="__codelineno-0-962" name="__codelineno-0-962" href="#__codelineno-0-962"></a>| 3.1                 | writing-plans                  | Create impl plan                                                           |
+<a id="__codelineno-0-963" name="__codelineno-0-963" href="#__codelineno-0-963"></a>| 3.2                 | reviewing-impl-plans           | Review impl plan                                                           |
+<a id="__codelineno-0-964" name="__codelineno-0-964" href="#__codelineno-0-964"></a>| 4.1                 | using-git-worktrees            | Create workspace(s)                                                        |
+<a id="__codelineno-0-965" name="__codelineno-0-965" href="#__codelineno-0-965"></a>| 4.2                 | dispatching-parallel-agents    | Parallel execution                                                         |
+<a id="__codelineno-0-966" name="__codelineno-0-966" href="#__codelineno-0-966"></a>| 4.2                 | assembling-context             | Prepare context for parallel subagents                                     |
+<a id="__codelineno-0-967" name="__codelineno-0-967" href="#__codelineno-0-967"></a>| 4.2.5               | merging-worktrees              | Merge parallel worktrees                                                   |
+<a id="__codelineno-0-968" name="__codelineno-0-968" href="#__codelineno-0-968"></a>| 4.3                 | test-driven-development        | TDD per task                                                               |
+<a id="__codelineno-0-969" name="__codelineno-0-969" href="#__codelineno-0-969"></a>| 4.3.1               | roundtable (via MCP)           | Dialectic overlay at quality gates (if dialectic_mode != none)             |
+<a id="__codelineno-0-970" name="__codelineno-0-970" href="#__codelineno-0-970"></a>| 4.5                 | requesting-code-review         | Review per task                                                            |
+<a id="__codelineno-0-971" name="__codelineno-0-971" href="#__codelineno-0-971"></a>| 4.5.1, 4.6.4, 4.6.5 | fact-checking                  | Claim validation                                                           |
+<a id="__codelineno-0-972" name="__codelineno-0-972" href="#__codelineno-0-972"></a>| 4.6.2               | systematic-debugging           | Debug test failures                                                        |
+<a id="__codelineno-0-973" name="__codelineno-0-973" href="#__codelineno-0-973"></a>| 4.6.3               | audit-green-mirage             | Test quality audit                                                         |
+<a id="__codelineno-0-974" name="__codelineno-0-974" href="#__codelineno-0-974"></a>| 4.7                 | finishing-a-development-branch | Complete workflow                                                           |
+<a id="__codelineno-0-975" name="__codelineno-0-975" href="#__codelineno-0-975"></a>
+<a id="__codelineno-0-976" name="__codelineno-0-976" href="#__codelineno-0-976"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-977" name="__codelineno-0-977" href="#__codelineno-0-977"></a><span class="gu">## Anti-Patterns</span>
 <a id="__codelineno-0-978" name="__codelineno-0-978" href="#__codelineno-0-978"></a>
-<a id="__codelineno-0-979" name="__codelineno-0-979" href="#__codelineno-0-979"></a><span class="k">-</span><span class="w"> </span>Skipping informed discovery
-<a id="__codelineno-0-980" name="__codelineno-0-980" href="#__codelineno-0-980"></a><span class="k">-</span><span class="w"> </span>Not using research findings to inform questions
-<a id="__codelineno-0-981" name="__codelineno-0-981" href="#__codelineno-0-981"></a><span class="k">-</span><span class="w"> </span>Asking questions research already answered
-<a id="__codelineno-0-982" name="__codelineno-0-982" href="#__codelineno-0-982"></a><span class="k">-</span><span class="w"> </span>Dispatching design without comprehensive design_context
-<a id="__codelineno-0-983" name="__codelineno-0-983" href="#__codelineno-0-983"></a>
-<a id="__codelineno-0-984" name="__codelineno-0-984" href="#__codelineno-0-984"></a><span class="gu">### Phase 2</span>
-<a id="__codelineno-0-985" name="__codelineno-0-985" href="#__codelineno-0-985"></a>
-<a id="__codelineno-0-986" name="__codelineno-0-986" href="#__codelineno-0-986"></a><span class="k">-</span><span class="w"> </span>Skipping design review
-<a id="__codelineno-0-987" name="__codelineno-0-987" href="#__codelineno-0-987"></a><span class="k">-</span><span class="w"> </span>Proceeding without approval (in interactive mode)
-<a id="__codelineno-0-988" name="__codelineno-0-988" href="#__codelineno-0-988"></a><span class="k">-</span><span class="w"> </span>Not fixing minor findings (in autonomous mode)
-<a id="__codelineno-0-989" name="__codelineno-0-989" href="#__codelineno-0-989"></a>
-<a id="__codelineno-0-990" name="__codelineno-0-990" href="#__codelineno-0-990"></a><span class="gu">### Phase 3</span>
-<a id="__codelineno-0-991" name="__codelineno-0-991" href="#__codelineno-0-991"></a>
-<a id="__codelineno-0-992" name="__codelineno-0-992" href="#__codelineno-0-992"></a><span class="k">-</span><span class="w"> </span>Skipping plan review
-<a id="__codelineno-0-993" name="__codelineno-0-993" href="#__codelineno-0-993"></a><span class="k">-</span><span class="w"> </span>Not analyzing execution mode
-<a id="__codelineno-0-994" name="__codelineno-0-994" href="#__codelineno-0-994"></a>
-<a id="__codelineno-0-995" name="__codelineno-0-995" href="#__codelineno-0-995"></a><span class="gu">### Phase 4</span>
+<a id="__codelineno-0-979" name="__codelineno-0-979" href="#__codelineno-0-979"></a><span class="gu">### Skill Invocation</span>
+<a id="__codelineno-0-980" name="__codelineno-0-980" href="#__codelineno-0-980"></a>
+<a id="__codelineno-0-981" name="__codelineno-0-981" href="#__codelineno-0-981"></a><span class="k">-</span><span class="w"> </span>Embedding skill instructions in subagent prompts
+<a id="__codelineno-0-982" name="__codelineno-0-982" href="#__codelineno-0-982"></a><span class="k">-</span><span class="w"> </span>Saying &quot;use the X skill&quot; without invoking via Skill tool
+<a id="__codelineno-0-983" name="__codelineno-0-983" href="#__codelineno-0-983"></a><span class="k">-</span><span class="w"> </span>Duplicating skill content in orchestration
+<a id="__codelineno-0-984" name="__codelineno-0-984" href="#__codelineno-0-984"></a>
+<a id="__codelineno-0-985" name="__codelineno-0-985" href="#__codelineno-0-985"></a><span class="gu">### Phase 0</span>
+<a id="__codelineno-0-986" name="__codelineno-0-986" href="#__codelineno-0-986"></a>
+<a id="__codelineno-0-987" name="__codelineno-0-987" href="#__codelineno-0-987"></a><span class="k">-</span><span class="w"> </span>Skipping configuration wizard
+<a id="__codelineno-0-988" name="__codelineno-0-988" href="#__codelineno-0-988"></a><span class="k">-</span><span class="w"> </span>Not detecting escape hatches in initial message
+<a id="__codelineno-0-989" name="__codelineno-0-989" href="#__codelineno-0-989"></a><span class="k">-</span><span class="w"> </span>Asking preferences piecemeal instead of upfront
+<a id="__codelineno-0-990" name="__codelineno-0-990" href="#__codelineno-0-990"></a>
+<a id="__codelineno-0-991" name="__codelineno-0-991" href="#__codelineno-0-991"></a><span class="gu">### Phase 1</span>
+<a id="__codelineno-0-992" name="__codelineno-0-992" href="#__codelineno-0-992"></a>
+<a id="__codelineno-0-993" name="__codelineno-0-993" href="#__codelineno-0-993"></a><span class="k">-</span><span class="w"> </span>Only searching codebase, ignoring web and MCP
+<a id="__codelineno-0-994" name="__codelineno-0-994" href="#__codelineno-0-994"></a><span class="k">-</span><span class="w"> </span>Not using user-provided links
+<a id="__codelineno-0-995" name="__codelineno-0-995" href="#__codelineno-0-995"></a><span class="k">-</span><span class="w"> </span>Shallow research that misses patterns
 <a id="__codelineno-0-996" name="__codelineno-0-996" href="#__codelineno-0-996"></a>
-<a id="__codelineno-0-997" name="__codelineno-0-997" href="#__codelineno-0-997"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Using Write/Edit/Bash directly in main context**</span> - delegate to subagents
-<a id="__codelineno-0-998" name="__codelineno-0-998" href="#__codelineno-0-998"></a><span class="k">-</span><span class="w"> </span>Accumulating implementation details in main context
-<a id="__codelineno-0-999" name="__codelineno-0-999" href="#__codelineno-0-999"></a><span class="k">-</span><span class="w"> </span>Skipping implementation completion verification
-<a id="__codelineno-0-1000" name="__codelineno-0-1000" href="#__codelineno-0-1000"></a><span class="k">-</span><span class="w"> </span>Skipping code review between tasks
-<a id="__codelineno-0-1001" name="__codelineno-0-1001" href="#__codelineno-0-1001"></a><span class="k">-</span><span class="w"> </span>Skipping claim validation between tasks
-<a id="__codelineno-0-1002" name="__codelineno-0-1002" href="#__codelineno-0-1002"></a><span class="k">-</span><span class="w"> </span>Not running comprehensive audit after all tasks
-<a id="__codelineno-0-1003" name="__codelineno-0-1003" href="#__codelineno-0-1003"></a><span class="k">-</span><span class="w"> </span>Not running audit-green-mirage
-<a id="__codelineno-0-1004" name="__codelineno-0-1004" href="#__codelineno-0-1004"></a><span class="k">-</span><span class="w"> </span>Committing without running tests
-<a id="__codelineno-0-1005" name="__codelineno-0-1005" href="#__codelineno-0-1005"></a><span class="k">-</span><span class="w"> </span>Trusting file names instead of tracing behavior
-<a id="__codelineno-0-1006" name="__codelineno-0-1006" href="#__codelineno-0-1006"></a>
-<a id="__codelineno-0-1007" name="__codelineno-0-1007" href="#__codelineno-0-1007"></a><span class="gu">### Parallel Worktrees</span>
-<a id="__codelineno-0-1008" name="__codelineno-0-1008" href="#__codelineno-0-1008"></a>
-<a id="__codelineno-0-1009" name="__codelineno-0-1009" href="#__codelineno-0-1009"></a><span class="k">-</span><span class="w"> </span>Creating worktrees WITHOUT completing setup/skeleton first
-<a id="__codelineno-0-1010" name="__codelineno-0-1010" href="#__codelineno-0-1010"></a><span class="k">-</span><span class="w"> </span>Creating worktrees WITHOUT committing setup work
-<a id="__codelineno-0-1011" name="__codelineno-0-1011" href="#__codelineno-0-1011"></a><span class="k">-</span><span class="w"> </span>Parallel subagents modifying shared code
-<a id="__codelineno-0-1012" name="__codelineno-0-1012" href="#__codelineno-0-1012"></a><span class="k">-</span><span class="w"> </span>Not honoring interface contracts
-<a id="__codelineno-0-1013" name="__codelineno-0-1013" href="#__codelineno-0-1013"></a><span class="k">-</span><span class="w"> </span>Skipping merging-worktrees
-<a id="__codelineno-0-1014" name="__codelineno-0-1014" href="#__codelineno-0-1014"></a><span class="k">-</span><span class="w"> </span>Not running tests after merge
-<a id="__codelineno-0-1015" name="__codelineno-0-1015" href="#__codelineno-0-1015"></a><span class="k">-</span><span class="w"> </span>Leaving worktrees after merge
-<a id="__codelineno-0-1016" name="__codelineno-0-1016" href="#__codelineno-0-1016"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents to isolated worktrees without specifying which branch to base them on. Isolated worktrees default to the current branch at dispatch time, which may not have prior tasks&#39; work.
-<a id="__codelineno-0-1017" name="__codelineno-0-1017" href="#__codelineno-0-1017"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-1018" name="__codelineno-0-1018" href="#__codelineno-0-1018"></a>
-<a id="__codelineno-0-1019" name="__codelineno-0-1019" href="#__codelineno-0-1019"></a>---
-<a id="__codelineno-0-1020" name="__codelineno-0-1020" href="#__codelineno-0-1020"></a>
-<a id="__codelineno-0-1021" name="__codelineno-0-1021" href="#__codelineno-0-1021"></a>&lt;SELF_CHECK&gt;
-<a id="__codelineno-0-1022" name="__codelineno-0-1022" href="#__codelineno-0-1022"></a>
-<a id="__codelineno-0-1023" name="__codelineno-0-1023" href="#__codelineno-0-1023"></a><span class="gu">## Before Completing This Skill</span>
-<a id="__codelineno-0-1024" name="__codelineno-0-1024" href="#__codelineno-0-1024"></a>
-<a id="__codelineno-0-1025" name="__codelineno-0-1025" href="#__codelineno-0-1025"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-1026" name="__codelineno-0-1026" href="#__codelineno-0-1026"></a>This checklist is MANDATORY. Run through EVERY item before declaring completion.
-<a id="__codelineno-0-1027" name="__codelineno-0-1027" href="#__codelineno-0-1027"></a>If you skipped steps or did work directly in main context, you FAILED the workflow.
-<a id="__codelineno-0-1028" name="__codelineno-0-1028" href="#__codelineno-0-1028"></a>Go back and redo the work properly with subagents.
-<a id="__codelineno-0-1029" name="__codelineno-0-1029" href="#__codelineno-0-1029"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-1030" name="__codelineno-0-1030" href="#__codelineno-0-1030"></a>
-<a id="__codelineno-0-1031" name="__codelineno-0-1031" href="#__codelineno-0-1031"></a><span class="gu">### Subagent Execution Verification</span>
-<a id="__codelineno-0-1032" name="__codelineno-0-1032" href="#__codelineno-0-1032"></a>
-<a id="__codelineno-0-1033" name="__codelineno-0-1033" href="#__codelineno-0-1033"></a>Answer honestly: Did I dispatch subagents for ALL of these?
-<a id="__codelineno-0-1034" name="__codelineno-0-1034" href="#__codelineno-0-1034"></a>
-<a id="__codelineno-0-1035" name="__codelineno-0-1035" href="#__codelineno-0-1035"></a>| Step | Subagent Dispatched? | Skill Invoked? |
-<a id="__codelineno-0-1036" name="__codelineno-0-1036" href="#__codelineno-0-1036"></a>|------|---------------------|----------------|
-<a id="__codelineno-0-1037" name="__codelineno-0-1037" href="#__codelineno-0-1037"></a>| Research (1.2) | YES / NO | explore agent |
-<a id="__codelineno-0-1038" name="__codelineno-0-1038" href="#__codelineno-0-1038"></a>| Devil&#39;s Advocate (1.6) | YES / NO | devils-advocate |
-<a id="__codelineno-0-1039" name="__codelineno-0-1039" href="#__codelineno-0-1039"></a>| Design Creation (2.1) | YES / NO | design-exploration |
-<a id="__codelineno-0-1040" name="__codelineno-0-1040" href="#__codelineno-0-1040"></a>| Design Review (2.2) | YES / NO | reviewing-design-docs |
-<a id="__codelineno-0-1041" name="__codelineno-0-1041" href="#__codelineno-0-1041"></a>| Plan Creation (3.1) | YES / NO | writing-plans |
-<a id="__codelineno-0-1042" name="__codelineno-0-1042" href="#__codelineno-0-1042"></a>| Plan Review (3.2) | YES / NO | reviewing-impl-plans |
-<a id="__codelineno-0-1043" name="__codelineno-0-1043" href="#__codelineno-0-1043"></a>| Per-Task TDD (4.3) | YES / NO | test-driven-development |
-<a id="__codelineno-0-1044" name="__codelineno-0-1044" href="#__codelineno-0-1044"></a>| Per-Task Review (4.5) | YES / NO | requesting-code-review |
-<a id="__codelineno-0-1045" name="__codelineno-0-1045" href="#__codelineno-0-1045"></a>| Per-Task Fact-Check (4.5.1) | YES / NO | fact-checking |
-<a id="__codelineno-0-1046" name="__codelineno-0-1046" href="#__codelineno-0-1046"></a>| Green Mirage (4.6.3) | YES / NO | auditing-green-mirage |
-<a id="__codelineno-0-1047" name="__codelineno-0-1047" href="#__codelineno-0-1047"></a>| Finishing (4.7) | YES / NO | finishing-a-development-branch |
-<a id="__codelineno-0-1048" name="__codelineno-0-1048" href="#__codelineno-0-1048"></a>
-<a id="__codelineno-0-1049" name="__codelineno-0-1049" href="#__codelineno-0-1049"></a><span class="gs">**If ANY row has &quot;NO&quot; in Subagent Dispatched column: You violated the workflow.**</span>
+<a id="__codelineno-0-997" name="__codelineno-0-997" href="#__codelineno-0-997"></a><span class="gu">### Phase 1.5</span>
+<a id="__codelineno-0-998" name="__codelineno-0-998" href="#__codelineno-0-998"></a>
+<a id="__codelineno-0-999" name="__codelineno-0-999" href="#__codelineno-0-999"></a><span class="k">-</span><span class="w"> </span>Skipping informed discovery
+<a id="__codelineno-0-1000" name="__codelineno-0-1000" href="#__codelineno-0-1000"></a><span class="k">-</span><span class="w"> </span>Not using research findings to inform questions
+<a id="__codelineno-0-1001" name="__codelineno-0-1001" href="#__codelineno-0-1001"></a><span class="k">-</span><span class="w"> </span>Asking questions research already answered
+<a id="__codelineno-0-1002" name="__codelineno-0-1002" href="#__codelineno-0-1002"></a><span class="k">-</span><span class="w"> </span>Dispatching design without comprehensive design_context
+<a id="__codelineno-0-1003" name="__codelineno-0-1003" href="#__codelineno-0-1003"></a>
+<a id="__codelineno-0-1004" name="__codelineno-0-1004" href="#__codelineno-0-1004"></a><span class="gu">### Phase 2</span>
+<a id="__codelineno-0-1005" name="__codelineno-0-1005" href="#__codelineno-0-1005"></a>
+<a id="__codelineno-0-1006" name="__codelineno-0-1006" href="#__codelineno-0-1006"></a><span class="k">-</span><span class="w"> </span>Skipping design review
+<a id="__codelineno-0-1007" name="__codelineno-0-1007" href="#__codelineno-0-1007"></a><span class="k">-</span><span class="w"> </span>Proceeding without approval (in interactive mode)
+<a id="__codelineno-0-1008" name="__codelineno-0-1008" href="#__codelineno-0-1008"></a><span class="k">-</span><span class="w"> </span>Not fixing minor findings (in autonomous mode)
+<a id="__codelineno-0-1009" name="__codelineno-0-1009" href="#__codelineno-0-1009"></a>
+<a id="__codelineno-0-1010" name="__codelineno-0-1010" href="#__codelineno-0-1010"></a><span class="gu">### Phase 3</span>
+<a id="__codelineno-0-1011" name="__codelineno-0-1011" href="#__codelineno-0-1011"></a>
+<a id="__codelineno-0-1012" name="__codelineno-0-1012" href="#__codelineno-0-1012"></a><span class="k">-</span><span class="w"> </span>Skipping plan review
+<a id="__codelineno-0-1013" name="__codelineno-0-1013" href="#__codelineno-0-1013"></a><span class="k">-</span><span class="w"> </span>Not analyzing execution mode
+<a id="__codelineno-0-1014" name="__codelineno-0-1014" href="#__codelineno-0-1014"></a>
+<a id="__codelineno-0-1015" name="__codelineno-0-1015" href="#__codelineno-0-1015"></a><span class="gu">### Phase 4</span>
+<a id="__codelineno-0-1016" name="__codelineno-0-1016" href="#__codelineno-0-1016"></a>
+<a id="__codelineno-0-1017" name="__codelineno-0-1017" href="#__codelineno-0-1017"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Using Write/Edit/Bash directly in main context**</span> - delegate to subagents
+<a id="__codelineno-0-1018" name="__codelineno-0-1018" href="#__codelineno-0-1018"></a><span class="k">-</span><span class="w"> </span>Accumulating implementation details in main context
+<a id="__codelineno-0-1019" name="__codelineno-0-1019" href="#__codelineno-0-1019"></a><span class="k">-</span><span class="w"> </span>Skipping implementation completion verification
+<a id="__codelineno-0-1020" name="__codelineno-0-1020" href="#__codelineno-0-1020"></a><span class="k">-</span><span class="w"> </span>Skipping code review between tasks
+<a id="__codelineno-0-1021" name="__codelineno-0-1021" href="#__codelineno-0-1021"></a><span class="k">-</span><span class="w"> </span>Skipping claim validation between tasks
+<a id="__codelineno-0-1022" name="__codelineno-0-1022" href="#__codelineno-0-1022"></a><span class="k">-</span><span class="w"> </span>Not running comprehensive audit after all tasks
+<a id="__codelineno-0-1023" name="__codelineno-0-1023" href="#__codelineno-0-1023"></a><span class="k">-</span><span class="w"> </span>Not running audit-green-mirage
+<a id="__codelineno-0-1024" name="__codelineno-0-1024" href="#__codelineno-0-1024"></a><span class="k">-</span><span class="w"> </span>Committing without running tests
+<a id="__codelineno-0-1025" name="__codelineno-0-1025" href="#__codelineno-0-1025"></a><span class="k">-</span><span class="w"> </span>Trusting file names instead of tracing behavior
+<a id="__codelineno-0-1026" name="__codelineno-0-1026" href="#__codelineno-0-1026"></a>
+<a id="__codelineno-0-1027" name="__codelineno-0-1027" href="#__codelineno-0-1027"></a><span class="gu">### Parallel Worktrees</span>
+<a id="__codelineno-0-1028" name="__codelineno-0-1028" href="#__codelineno-0-1028"></a>
+<a id="__codelineno-0-1029" name="__codelineno-0-1029" href="#__codelineno-0-1029"></a><span class="k">-</span><span class="w"> </span>Creating worktrees WITHOUT completing setup/skeleton first
+<a id="__codelineno-0-1030" name="__codelineno-0-1030" href="#__codelineno-0-1030"></a><span class="k">-</span><span class="w"> </span>Creating worktrees WITHOUT committing setup work
+<a id="__codelineno-0-1031" name="__codelineno-0-1031" href="#__codelineno-0-1031"></a><span class="k">-</span><span class="w"> </span>Parallel subagents modifying shared code
+<a id="__codelineno-0-1032" name="__codelineno-0-1032" href="#__codelineno-0-1032"></a><span class="k">-</span><span class="w"> </span>Not honoring interface contracts
+<a id="__codelineno-0-1033" name="__codelineno-0-1033" href="#__codelineno-0-1033"></a><span class="k">-</span><span class="w"> </span>Skipping merging-worktrees
+<a id="__codelineno-0-1034" name="__codelineno-0-1034" href="#__codelineno-0-1034"></a><span class="k">-</span><span class="w"> </span>Not running tests after merge
+<a id="__codelineno-0-1035" name="__codelineno-0-1035" href="#__codelineno-0-1035"></a><span class="k">-</span><span class="w"> </span>Leaving worktrees after merge
+<a id="__codelineno-0-1036" name="__codelineno-0-1036" href="#__codelineno-0-1036"></a><span class="k">-</span><span class="w"> </span>Dispatching subagents to isolated worktrees without specifying which branch to base them on. Isolated worktrees default to the current branch at dispatch time, which may not have prior tasks&#39; work.
+<a id="__codelineno-0-1037" name="__codelineno-0-1037" href="#__codelineno-0-1037"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-1038" name="__codelineno-0-1038" href="#__codelineno-0-1038"></a>
+<a id="__codelineno-0-1039" name="__codelineno-0-1039" href="#__codelineno-0-1039"></a>---
+<a id="__codelineno-0-1040" name="__codelineno-0-1040" href="#__codelineno-0-1040"></a>
+<a id="__codelineno-0-1041" name="__codelineno-0-1041" href="#__codelineno-0-1041"></a>&lt;SELF_CHECK&gt;
+<a id="__codelineno-0-1042" name="__codelineno-0-1042" href="#__codelineno-0-1042"></a>
+<a id="__codelineno-0-1043" name="__codelineno-0-1043" href="#__codelineno-0-1043"></a><span class="gu">## Before Completing This Skill</span>
+<a id="__codelineno-0-1044" name="__codelineno-0-1044" href="#__codelineno-0-1044"></a>
+<a id="__codelineno-0-1045" name="__codelineno-0-1045" href="#__codelineno-0-1045"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-1046" name="__codelineno-0-1046" href="#__codelineno-0-1046"></a>This checklist is MANDATORY. Run through EVERY item before declaring completion.
+<a id="__codelineno-0-1047" name="__codelineno-0-1047" href="#__codelineno-0-1047"></a>If you skipped steps or did work directly in main context, you FAILED the workflow.
+<a id="__codelineno-0-1048" name="__codelineno-0-1048" href="#__codelineno-0-1048"></a>Go back and redo the work properly with subagents.
+<a id="__codelineno-0-1049" name="__codelineno-0-1049" href="#__codelineno-0-1049"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-1050" name="__codelineno-0-1050" href="#__codelineno-0-1050"></a>
-<a id="__codelineno-0-1051" name="__codelineno-0-1051" href="#__codelineno-0-1051"></a><span class="gu">### Skill Invocations</span>
+<a id="__codelineno-0-1051" name="__codelineno-0-1051" href="#__codelineno-0-1051"></a><span class="gu">### Subagent Execution Verification</span>
 <a id="__codelineno-0-1052" name="__codelineno-0-1052" href="#__codelineno-0-1052"></a>
-<a id="__codelineno-0-1053" name="__codelineno-0-1053" href="#__codelineno-0-1053"></a><span class="k">- [ ]</span> Every subagent prompt tells subagent to invoke skill via Skill tool
-<a id="__codelineno-0-1054" name="__codelineno-0-1054" href="#__codelineno-0-1054"></a><span class="k">- [ ]</span> No subagent prompts duplicate skill instructions
-<a id="__codelineno-0-1055" name="__codelineno-0-1055" href="#__codelineno-0-1055"></a><span class="k">- [ ]</span> Subagent prompts provide only CONTEXT for the skill
-<a id="__codelineno-0-1056" name="__codelineno-0-1056" href="#__codelineno-0-1056"></a>
-<a id="__codelineno-0-1057" name="__codelineno-0-1057" href="#__codelineno-0-1057"></a><span class="gu">### Phase 0</span>
-<a id="__codelineno-0-1058" name="__codelineno-0-1058" href="#__codelineno-0-1058"></a>
-<a id="__codelineno-0-1059" name="__codelineno-0-1059" href="#__codelineno-0-1059"></a><span class="k">- [ ]</span> Detected any escape hatches in user&#39;s initial message
-<a id="__codelineno-0-1060" name="__codelineno-0-1060" href="#__codelineno-0-1060"></a><span class="k">- [ ]</span> Clarified motivation (WHY)
-<a id="__codelineno-0-1061" name="__codelineno-0-1061" href="#__codelineno-0-1061"></a><span class="k">- [ ]</span> Clarified feature essence (WHAT)
-<a id="__codelineno-0-1062" name="__codelineno-0-1062" href="#__codelineno-0-1062"></a><span class="k">- [ ]</span> Collected ALL workflow preferences
-<a id="__codelineno-0-1063" name="__codelineno-0-1063" href="#__codelineno-0-1063"></a><span class="k">- [ ]</span> Detected refactoring mode if applicable
-<a id="__codelineno-0-1064" name="__codelineno-0-1064" href="#__codelineno-0-1064"></a><span class="k">- [ ]</span> Stored preferences for session use
-<a id="__codelineno-0-1065" name="__codelineno-0-1065" href="#__codelineno-0-1065"></a>
-<a id="__codelineno-0-1066" name="__codelineno-0-1066" href="#__codelineno-0-1066"></a><span class="gu">### Phase 1</span>
-<a id="__codelineno-0-1067" name="__codelineno-0-1067" href="#__codelineno-0-1067"></a>
-<a id="__codelineno-0-1068" name="__codelineno-0-1068" href="#__codelineno-0-1068"></a><span class="k">- [ ]</span> Dispatched research subagent
-<a id="__codelineno-0-1069" name="__codelineno-0-1069" href="#__codelineno-0-1069"></a><span class="k">- [ ]</span> Research covered codebase, web, MCP servers, user links
-<a id="__codelineno-0-1070" name="__codelineno-0-1070" href="#__codelineno-0-1070"></a><span class="k">- [ ]</span> Research Quality Score achieved 100% (or user bypassed)
-<a id="__codelineno-0-1071" name="__codelineno-0-1071" href="#__codelineno-0-1071"></a><span class="k">- [ ]</span> Stored findings in SESSION_CONTEXT.research_findings
+<a id="__codelineno-0-1053" name="__codelineno-0-1053" href="#__codelineno-0-1053"></a>Answer honestly: Did I dispatch subagents for ALL of these?
+<a id="__codelineno-0-1054" name="__codelineno-0-1054" href="#__codelineno-0-1054"></a>
+<a id="__codelineno-0-1055" name="__codelineno-0-1055" href="#__codelineno-0-1055"></a>| Step | Subagent Dispatched? | Skill Invoked? |
+<a id="__codelineno-0-1056" name="__codelineno-0-1056" href="#__codelineno-0-1056"></a>|------|---------------------|----------------|
+<a id="__codelineno-0-1057" name="__codelineno-0-1057" href="#__codelineno-0-1057"></a>| Research (1.2) | YES / NO | explore agent |
+<a id="__codelineno-0-1058" name="__codelineno-0-1058" href="#__codelineno-0-1058"></a>| Devil&#39;s Advocate (1.6) | YES / NO | devils-advocate |
+<a id="__codelineno-0-1059" name="__codelineno-0-1059" href="#__codelineno-0-1059"></a>| Design Creation (2.1) | YES / NO | design-exploration |
+<a id="__codelineno-0-1060" name="__codelineno-0-1060" href="#__codelineno-0-1060"></a>| Design Review (2.2) | YES / NO | reviewing-design-docs |
+<a id="__codelineno-0-1061" name="__codelineno-0-1061" href="#__codelineno-0-1061"></a>| Plan Creation (3.1) | YES / NO | writing-plans |
+<a id="__codelineno-0-1062" name="__codelineno-0-1062" href="#__codelineno-0-1062"></a>| Plan Review (3.2) | YES / NO | reviewing-impl-plans |
+<a id="__codelineno-0-1063" name="__codelineno-0-1063" href="#__codelineno-0-1063"></a>| Per-Task TDD (4.3) | YES / NO | test-driven-development |
+<a id="__codelineno-0-1064" name="__codelineno-0-1064" href="#__codelineno-0-1064"></a>| Per-Task Review (4.5) | YES / NO | requesting-code-review |
+<a id="__codelineno-0-1065" name="__codelineno-0-1065" href="#__codelineno-0-1065"></a>| Per-Task Fact-Check (4.5.1) | YES / NO | fact-checking |
+<a id="__codelineno-0-1066" name="__codelineno-0-1066" href="#__codelineno-0-1066"></a>| Green Mirage (4.6.3) | YES / NO | auditing-green-mirage |
+<a id="__codelineno-0-1067" name="__codelineno-0-1067" href="#__codelineno-0-1067"></a>| Finishing (4.7) | YES / NO | finishing-a-development-branch |
+<a id="__codelineno-0-1068" name="__codelineno-0-1068" href="#__codelineno-0-1068"></a>
+<a id="__codelineno-0-1069" name="__codelineno-0-1069" href="#__codelineno-0-1069"></a><span class="gs">**If ANY row has &quot;NO&quot; in Subagent Dispatched column: You violated the workflow.**</span>
+<a id="__codelineno-0-1070" name="__codelineno-0-1070" href="#__codelineno-0-1070"></a>
+<a id="__codelineno-0-1071" name="__codelineno-0-1071" href="#__codelineno-0-1071"></a><span class="gu">### Skill Invocations</span>
 <a id="__codelineno-0-1072" name="__codelineno-0-1072" href="#__codelineno-0-1072"></a>
-<a id="__codelineno-0-1073" name="__codelineno-0-1073" href="#__codelineno-0-1073"></a><span class="gu">### Phase 1.5</span>
-<a id="__codelineno-0-1074" name="__codelineno-0-1074" href="#__codelineno-0-1074"></a>
-<a id="__codelineno-0-1075" name="__codelineno-0-1075" href="#__codelineno-0-1075"></a><span class="k">- [ ]</span> Resolved all ambiguities (disambiguation session)
-<a id="__codelineno-0-1076" name="__codelineno-0-1076" href="#__codelineno-0-1076"></a><span class="k">- [ ]</span> Generated 7-category discovery questions from research
-<a id="__codelineno-0-1077" name="__codelineno-0-1077" href="#__codelineno-0-1077"></a><span class="k">- [ ]</span> Conducted discovery wizard with AskUserQuestion
-<a id="__codelineno-0-1078" name="__codelineno-0-1078" href="#__codelineno-0-1078"></a><span class="k">- [ ]</span> Built glossary
-<a id="__codelineno-0-1079" name="__codelineno-0-1079" href="#__codelineno-0-1079"></a><span class="k">- [ ]</span> Created comprehensive SESSION_CONTEXT.design_context
-<a id="__codelineno-0-1080" name="__codelineno-0-1080" href="#__codelineno-0-1080"></a><span class="k">- [ ]</span> Completeness Score achieved 100% (11/11 functions passed)
-<a id="__codelineno-0-1081" name="__codelineno-0-1081" href="#__codelineno-0-1081"></a><span class="k">- [ ]</span> Created Understanding Document
-<a id="__codelineno-0-1082" name="__codelineno-0-1082" href="#__codelineno-0-1082"></a><span class="k">- [ ]</span> Subagent invoked devils-advocate (or handled unavailability)
-<a id="__codelineno-0-1083" name="__codelineno-0-1083" href="#__codelineno-0-1083"></a>
-<a id="__codelineno-0-1084" name="__codelineno-0-1084" href="#__codelineno-0-1084"></a><span class="gu">### Phase 2 (if not skipped)</span>
+<a id="__codelineno-0-1073" name="__codelineno-0-1073" href="#__codelineno-0-1073"></a><span class="k">- [ ]</span> Every subagent prompt tells subagent to invoke skill via Skill tool
+<a id="__codelineno-0-1074" name="__codelineno-0-1074" href="#__codelineno-0-1074"></a><span class="k">- [ ]</span> No subagent prompts duplicate skill instructions
+<a id="__codelineno-0-1075" name="__codelineno-0-1075" href="#__codelineno-0-1075"></a><span class="k">- [ ]</span> Subagent prompts provide only CONTEXT for the skill
+<a id="__codelineno-0-1076" name="__codelineno-0-1076" href="#__codelineno-0-1076"></a>
+<a id="__codelineno-0-1077" name="__codelineno-0-1077" href="#__codelineno-0-1077"></a><span class="gu">### Phase 0</span>
+<a id="__codelineno-0-1078" name="__codelineno-0-1078" href="#__codelineno-0-1078"></a>
+<a id="__codelineno-0-1079" name="__codelineno-0-1079" href="#__codelineno-0-1079"></a><span class="k">- [ ]</span> Detected any escape hatches in user&#39;s initial message
+<a id="__codelineno-0-1080" name="__codelineno-0-1080" href="#__codelineno-0-1080"></a><span class="k">- [ ]</span> Clarified motivation (WHY)
+<a id="__codelineno-0-1081" name="__codelineno-0-1081" href="#__codelineno-0-1081"></a><span class="k">- [ ]</span> Clarified feature essence (WHAT)
+<a id="__codelineno-0-1082" name="__codelineno-0-1082" href="#__codelineno-0-1082"></a><span class="k">- [ ]</span> Collected ALL workflow preferences
+<a id="__codelineno-0-1083" name="__codelineno-0-1083" href="#__codelineno-0-1083"></a><span class="k">- [ ]</span> Detected refactoring mode if applicable
+<a id="__codelineno-0-1084" name="__codelineno-0-1084" href="#__codelineno-0-1084"></a><span class="k">- [ ]</span> Stored preferences for session use
 <a id="__codelineno-0-1085" name="__codelineno-0-1085" href="#__codelineno-0-1085"></a>
-<a id="__codelineno-0-1086" name="__codelineno-0-1086" href="#__codelineno-0-1086"></a><span class="k">- [ ]</span> Subagent invoked design-exploration in SYNTHESIS MODE
-<a id="__codelineno-0-1087" name="__codelineno-0-1087" href="#__codelineno-0-1087"></a><span class="k">- [ ]</span> Subagent invoked reviewing-design-docs
-<a id="__codelineno-0-1088" name="__codelineno-0-1088" href="#__codelineno-0-1088"></a><span class="k">- [ ]</span> Handled approval gate per autonomous_mode
-<a id="__codelineno-0-1089" name="__codelineno-0-1089" href="#__codelineno-0-1089"></a><span class="k">- [ ]</span> Subagent invoked executing-plans to fix
-<a id="__codelineno-0-1090" name="__codelineno-0-1090" href="#__codelineno-0-1090"></a>
-<a id="__codelineno-0-1091" name="__codelineno-0-1091" href="#__codelineno-0-1091"></a><span class="gu">### Phase 3 (if not skipped)</span>
+<a id="__codelineno-0-1086" name="__codelineno-0-1086" href="#__codelineno-0-1086"></a><span class="gu">### Phase 1</span>
+<a id="__codelineno-0-1087" name="__codelineno-0-1087" href="#__codelineno-0-1087"></a>
+<a id="__codelineno-0-1088" name="__codelineno-0-1088" href="#__codelineno-0-1088"></a><span class="k">- [ ]</span> Dispatched research subagent
+<a id="__codelineno-0-1089" name="__codelineno-0-1089" href="#__codelineno-0-1089"></a><span class="k">- [ ]</span> Research covered codebase, web, MCP servers, user links
+<a id="__codelineno-0-1090" name="__codelineno-0-1090" href="#__codelineno-0-1090"></a><span class="k">- [ ]</span> Research Quality Score achieved 100% (or user bypassed)
+<a id="__codelineno-0-1091" name="__codelineno-0-1091" href="#__codelineno-0-1091"></a><span class="k">- [ ]</span> Stored findings in SESSION_CONTEXT.research_findings
 <a id="__codelineno-0-1092" name="__codelineno-0-1092" href="#__codelineno-0-1092"></a>
-<a id="__codelineno-0-1093" name="__codelineno-0-1093" href="#__codelineno-0-1093"></a><span class="k">- [ ]</span> Subagent invoked writing-plans
-<a id="__codelineno-0-1094" name="__codelineno-0-1094" href="#__codelineno-0-1094"></a><span class="k">- [ ]</span> Subagent invoked reviewing-impl-plans
-<a id="__codelineno-0-1095" name="__codelineno-0-1095" href="#__codelineno-0-1095"></a><span class="k">- [ ]</span> Handled approval gate per autonomous_mode
-<a id="__codelineno-0-1096" name="__codelineno-0-1096" href="#__codelineno-0-1096"></a><span class="k">- [ ]</span> Subagent invoked executing-plans to fix
-<a id="__codelineno-0-1097" name="__codelineno-0-1097" href="#__codelineno-0-1097"></a><span class="k">- [ ]</span> Analyzed execution mode (delegated/direct)
-<a id="__codelineno-0-1098" name="__codelineno-0-1098" href="#__codelineno-0-1098"></a><span class="k">- [ ]</span> If large delegated run: one-pager approved by operator
-<a id="__codelineno-0-1099" name="__codelineno-0-1099" href="#__codelineno-0-1099"></a>
-<a id="__codelineno-0-1100" name="__codelineno-0-1100" href="#__codelineno-0-1100"></a><span class="gu">### Phase 4</span>
-<a id="__codelineno-0-1101" name="__codelineno-0-1101" href="#__codelineno-0-1101"></a>
-<a id="__codelineno-0-1102" name="__codelineno-0-1102" href="#__codelineno-0-1102"></a><span class="k">- [ ]</span> Subagent invoked using-git-worktrees (if applicable)
-<a id="__codelineno-0-1103" name="__codelineno-0-1103" href="#__codelineno-0-1103"></a><span class="k">- [ ]</span> Executed tasks with appropriate parallelization
-<a id="__codelineno-0-1104" name="__codelineno-0-1104" href="#__codelineno-0-1104"></a><span class="k">- [ ]</span> For each task:
-<a id="__codelineno-0-1105" name="__codelineno-0-1105" href="#__codelineno-0-1105"></a><span class="w">  </span><span class="k">- [ ]</span> Implementation completion verification (4.4)
-<a id="__codelineno-0-1106" name="__codelineno-0-1106" href="#__codelineno-0-1106"></a><span class="w">  </span><span class="k">- [ ]</span> Code review (4.5)
-<a id="__codelineno-0-1107" name="__codelineno-0-1107" href="#__codelineno-0-1107"></a><span class="w">  </span><span class="k">- [ ]</span> Claim validation (4.5.1)
-<a id="__codelineno-0-1108" name="__codelineno-0-1108" href="#__codelineno-0-1108"></a><span class="k">- [ ]</span> Comprehensive implementation audit (4.6.1)
-<a id="__codelineno-0-1109" name="__codelineno-0-1109" href="#__codelineno-0-1109"></a><span class="k">- [ ]</span> Full test suite (4.6.2)
-<a id="__codelineno-0-1110" name="__codelineno-0-1110" href="#__codelineno-0-1110"></a><span class="k">- [ ]</span> Green mirage audit (4.6.3)
-<a id="__codelineno-0-1111" name="__codelineno-0-1111" href="#__codelineno-0-1111"></a><span class="k">- [ ]</span> Comprehensive claim validation (4.6.4)
-<a id="__codelineno-0-1112" name="__codelineno-0-1112" href="#__codelineno-0-1112"></a><span class="k">- [ ]</span> Pre-PR claim validation (4.6.5)
-<a id="__codelineno-0-1113" name="__codelineno-0-1113" href="#__codelineno-0-1113"></a><span class="k">- [ ]</span> Subagent invoked finishing-a-development-branch (4.7)
-<a id="__codelineno-0-1114" name="__codelineno-0-1114" href="#__codelineno-0-1114"></a>
-<a id="__codelineno-0-1115" name="__codelineno-0-1115" href="#__codelineno-0-1115"></a><span class="gu">### Phase 4 (if per_parallel_track)</span>
-<a id="__codelineno-0-1116" name="__codelineno-0-1116" href="#__codelineno-0-1116"></a>
-<a id="__codelineno-0-1117" name="__codelineno-0-1117" href="#__codelineno-0-1117"></a><span class="k">- [ ]</span> Setup/skeleton completed and committed BEFORE worktrees
-<a id="__codelineno-0-1118" name="__codelineno-0-1118" href="#__codelineno-0-1118"></a><span class="k">- [ ]</span> Worktree per parallel group
-<a id="__codelineno-0-1119" name="__codelineno-0-1119" href="#__codelineno-0-1119"></a><span class="k">- [ ]</span> Subagent invoked merging-worktrees
-<a id="__codelineno-0-1120" name="__codelineno-0-1120" href="#__codelineno-0-1120"></a><span class="k">- [ ]</span> Tests after merge
-<a id="__codelineno-0-1121" name="__codelineno-0-1121" href="#__codelineno-0-1121"></a><span class="k">- [ ]</span> Interface contracts verified
-<a id="__codelineno-0-1122" name="__codelineno-0-1122" href="#__codelineno-0-1122"></a><span class="k">- [ ]</span> Worktrees cleaned up
-<a id="__codelineno-0-1123" name="__codelineno-0-1123" href="#__codelineno-0-1123"></a>
-<a id="__codelineno-0-1124" name="__codelineno-0-1124" href="#__codelineno-0-1124"></a>If NO to ANY item, go back and complete it.
-<a id="__codelineno-0-1125" name="__codelineno-0-1125" href="#__codelineno-0-1125"></a>&lt;/SELF_CHECK&gt;
-<a id="__codelineno-0-1126" name="__codelineno-0-1126" href="#__codelineno-0-1126"></a>
-<a id="__codelineno-0-1127" name="__codelineno-0-1127" href="#__codelineno-0-1127"></a>---
-<a id="__codelineno-0-1128" name="__codelineno-0-1128" href="#__codelineno-0-1128"></a>
-<a id="__codelineno-0-1129" name="__codelineno-0-1129" href="#__codelineno-0-1129"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-1130" name="__codelineno-0-1130" href="#__codelineno-0-1130"></a>You are a Principal Software Architect orchestrating complex feature implementations.
-<a id="__codelineno-0-1131" name="__codelineno-0-1131" href="#__codelineno-0-1131"></a>
-<a id="__codelineno-0-1132" name="__codelineno-0-1132" href="#__codelineno-0-1132"></a>Your reputation depends on:
-<a id="__codelineno-0-1133" name="__codelineno-0-1133" href="#__codelineno-0-1133"></a>
-<a id="__codelineno-0-1134" name="__codelineno-0-1134" href="#__codelineno-0-1134"></a><span class="k">-</span><span class="w"> </span>Ensuring subagents INVOKE skills via the Skill tool (not duplicate instructions)
-<a id="__codelineno-0-1135" name="__codelineno-0-1135" href="#__codelineno-0-1135"></a><span class="k">-</span><span class="w"> </span>Following EVERY phase in order
-<a id="__codelineno-0-1136" name="__codelineno-0-1136" href="#__codelineno-0-1136"></a><span class="k">-</span><span class="w"> </span>Enforcing quality gates at EVERY checkpoint
-<a id="__codelineno-0-1137" name="__codelineno-0-1137" href="#__codelineno-0-1137"></a><span class="k">-</span><span class="w"> </span>Never skipping steps, never rushing, never guessing
-<a id="__codelineno-0-1138" name="__codelineno-0-1138" href="#__codelineno-0-1138"></a>
-<a id="__codelineno-0-1139" name="__codelineno-0-1139" href="#__codelineno-0-1139"></a>Subagents invoke skills. Skills provide instructions. This orchestrator provides context.
-<a id="__codelineno-0-1140" name="__codelineno-0-1140" href="#__codelineno-0-1140"></a>
-<a id="__codelineno-0-1141" name="__codelineno-0-1141" href="#__codelineno-0-1141"></a>This workflow achieves success through rigorous research, thoughtful design, comprehensive planning, and disciplined execution.
-<a id="__codelineno-0-1142" name="__codelineno-0-1142" href="#__codelineno-0-1142"></a>
-<a id="__codelineno-0-1143" name="__codelineno-0-1143" href="#__codelineno-0-1143"></a>Believe in your abilities. Stay determined. Strive for excellence.
-<a id="__codelineno-0-1144" name="__codelineno-0-1144" href="#__codelineno-0-1144"></a>
-<a id="__codelineno-0-1145" name="__codelineno-0-1145" href="#__codelineno-0-1145"></a>This is very important to my career. You&#39;d better be sure.
-<a id="__codelineno-0-1146" name="__codelineno-0-1146" href="#__codelineno-0-1146"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-1093" name="__codelineno-0-1093" href="#__codelineno-0-1093"></a><span class="gu">### Phase 1.5</span>
+<a id="__codelineno-0-1094" name="__codelineno-0-1094" href="#__codelineno-0-1094"></a>
+<a id="__codelineno-0-1095" name="__codelineno-0-1095" href="#__codelineno-0-1095"></a><span class="k">- [ ]</span> Resolved all ambiguities (disambiguation session)
+<a id="__codelineno-0-1096" name="__codelineno-0-1096" href="#__codelineno-0-1096"></a><span class="k">- [ ]</span> Generated 7-category discovery questions from research
+<a id="__codelineno-0-1097" name="__codelineno-0-1097" href="#__codelineno-0-1097"></a><span class="k">- [ ]</span> Conducted discovery wizard with AskUserQuestion
+<a id="__codelineno-0-1098" name="__codelineno-0-1098" href="#__codelineno-0-1098"></a><span class="k">- [ ]</span> Built glossary
+<a id="__codelineno-0-1099" name="__codelineno-0-1099" href="#__codelineno-0-1099"></a><span class="k">- [ ]</span> Created comprehensive SESSION_CONTEXT.design_context
+<a id="__codelineno-0-1100" name="__codelineno-0-1100" href="#__codelineno-0-1100"></a><span class="k">- [ ]</span> Completeness Score achieved 100% (11/11 functions passed)
+<a id="__codelineno-0-1101" name="__codelineno-0-1101" href="#__codelineno-0-1101"></a><span class="k">- [ ]</span> Created Understanding Document
+<a id="__codelineno-0-1102" name="__codelineno-0-1102" href="#__codelineno-0-1102"></a><span class="k">- [ ]</span> Subagent invoked devils-advocate (or handled unavailability)
+<a id="__codelineno-0-1103" name="__codelineno-0-1103" href="#__codelineno-0-1103"></a>
+<a id="__codelineno-0-1104" name="__codelineno-0-1104" href="#__codelineno-0-1104"></a><span class="gu">### Phase 2 (if not skipped)</span>
+<a id="__codelineno-0-1105" name="__codelineno-0-1105" href="#__codelineno-0-1105"></a>
+<a id="__codelineno-0-1106" name="__codelineno-0-1106" href="#__codelineno-0-1106"></a><span class="k">- [ ]</span> Subagent invoked design-exploration in SYNTHESIS MODE
+<a id="__codelineno-0-1107" name="__codelineno-0-1107" href="#__codelineno-0-1107"></a><span class="k">- [ ]</span> Subagent invoked reviewing-design-docs
+<a id="__codelineno-0-1108" name="__codelineno-0-1108" href="#__codelineno-0-1108"></a><span class="k">- [ ]</span> Handled approval gate per autonomous_mode
+<a id="__codelineno-0-1109" name="__codelineno-0-1109" href="#__codelineno-0-1109"></a><span class="k">- [ ]</span> Subagent invoked executing-plans to fix
+<a id="__codelineno-0-1110" name="__codelineno-0-1110" href="#__codelineno-0-1110"></a>
+<a id="__codelineno-0-1111" name="__codelineno-0-1111" href="#__codelineno-0-1111"></a><span class="gu">### Phase 3 (if not skipped)</span>
+<a id="__codelineno-0-1112" name="__codelineno-0-1112" href="#__codelineno-0-1112"></a>
+<a id="__codelineno-0-1113" name="__codelineno-0-1113" href="#__codelineno-0-1113"></a><span class="k">- [ ]</span> Subagent invoked writing-plans
+<a id="__codelineno-0-1114" name="__codelineno-0-1114" href="#__codelineno-0-1114"></a><span class="k">- [ ]</span> Subagent invoked reviewing-impl-plans
+<a id="__codelineno-0-1115" name="__codelineno-0-1115" href="#__codelineno-0-1115"></a><span class="k">- [ ]</span> Handled approval gate per autonomous_mode
+<a id="__codelineno-0-1116" name="__codelineno-0-1116" href="#__codelineno-0-1116"></a><span class="k">- [ ]</span> Subagent invoked executing-plans to fix
+<a id="__codelineno-0-1117" name="__codelineno-0-1117" href="#__codelineno-0-1117"></a><span class="k">- [ ]</span> Analyzed execution mode (delegated/direct)
+<a id="__codelineno-0-1118" name="__codelineno-0-1118" href="#__codelineno-0-1118"></a><span class="k">- [ ]</span> If large delegated run: one-pager approved by operator
+<a id="__codelineno-0-1119" name="__codelineno-0-1119" href="#__codelineno-0-1119"></a>
+<a id="__codelineno-0-1120" name="__codelineno-0-1120" href="#__codelineno-0-1120"></a><span class="gu">### Phase 4</span>
+<a id="__codelineno-0-1121" name="__codelineno-0-1121" href="#__codelineno-0-1121"></a>
+<a id="__codelineno-0-1122" name="__codelineno-0-1122" href="#__codelineno-0-1122"></a><span class="k">- [ ]</span> Subagent invoked using-git-worktrees (if applicable)
+<a id="__codelineno-0-1123" name="__codelineno-0-1123" href="#__codelineno-0-1123"></a><span class="k">- [ ]</span> Executed tasks with appropriate parallelization
+<a id="__codelineno-0-1124" name="__codelineno-0-1124" href="#__codelineno-0-1124"></a><span class="k">- [ ]</span> For each task:
+<a id="__codelineno-0-1125" name="__codelineno-0-1125" href="#__codelineno-0-1125"></a><span class="w">  </span><span class="k">- [ ]</span> Implementation completion verification (4.4)
+<a id="__codelineno-0-1126" name="__codelineno-0-1126" href="#__codelineno-0-1126"></a><span class="w">  </span><span class="k">- [ ]</span> Code review (4.5)
+<a id="__codelineno-0-1127" name="__codelineno-0-1127" href="#__codelineno-0-1127"></a><span class="w">  </span><span class="k">- [ ]</span> Claim validation (4.5.1)
+<a id="__codelineno-0-1128" name="__codelineno-0-1128" href="#__codelineno-0-1128"></a><span class="k">- [ ]</span> Comprehensive implementation audit (4.6.1)
+<a id="__codelineno-0-1129" name="__codelineno-0-1129" href="#__codelineno-0-1129"></a><span class="k">- [ ]</span> Full test suite (4.6.2)
+<a id="__codelineno-0-1130" name="__codelineno-0-1130" href="#__codelineno-0-1130"></a><span class="k">- [ ]</span> Green mirage audit (4.6.3)
+<a id="__codelineno-0-1131" name="__codelineno-0-1131" href="#__codelineno-0-1131"></a><span class="k">- [ ]</span> Comprehensive claim validation (4.6.4)
+<a id="__codelineno-0-1132" name="__codelineno-0-1132" href="#__codelineno-0-1132"></a><span class="k">- [ ]</span> Pre-PR claim validation (4.6.5)
+<a id="__codelineno-0-1133" name="__codelineno-0-1133" href="#__codelineno-0-1133"></a><span class="k">- [ ]</span> Subagent invoked finishing-a-development-branch (4.7)
+<a id="__codelineno-0-1134" name="__codelineno-0-1134" href="#__codelineno-0-1134"></a>
+<a id="__codelineno-0-1135" name="__codelineno-0-1135" href="#__codelineno-0-1135"></a><span class="gu">### Phase 4 (if per_parallel_track)</span>
+<a id="__codelineno-0-1136" name="__codelineno-0-1136" href="#__codelineno-0-1136"></a>
+<a id="__codelineno-0-1137" name="__codelineno-0-1137" href="#__codelineno-0-1137"></a><span class="k">- [ ]</span> Setup/skeleton completed and committed BEFORE worktrees
+<a id="__codelineno-0-1138" name="__codelineno-0-1138" href="#__codelineno-0-1138"></a><span class="k">- [ ]</span> Worktree per parallel group
+<a id="__codelineno-0-1139" name="__codelineno-0-1139" href="#__codelineno-0-1139"></a><span class="k">- [ ]</span> Subagent invoked merging-worktrees
+<a id="__codelineno-0-1140" name="__codelineno-0-1140" href="#__codelineno-0-1140"></a><span class="k">- [ ]</span> Tests after merge
+<a id="__codelineno-0-1141" name="__codelineno-0-1141" href="#__codelineno-0-1141"></a><span class="k">- [ ]</span> Interface contracts verified
+<a id="__codelineno-0-1142" name="__codelineno-0-1142" href="#__codelineno-0-1142"></a><span class="k">- [ ]</span> Worktrees cleaned up
+<a id="__codelineno-0-1143" name="__codelineno-0-1143" href="#__codelineno-0-1143"></a>
+<a id="__codelineno-0-1144" name="__codelineno-0-1144" href="#__codelineno-0-1144"></a>If NO to ANY item, go back and complete it.
+<a id="__codelineno-0-1145" name="__codelineno-0-1145" href="#__codelineno-0-1145"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-0-1146" name="__codelineno-0-1146" href="#__codelineno-0-1146"></a>
+<a id="__codelineno-0-1147" name="__codelineno-0-1147" href="#__codelineno-0-1147"></a>---
+<a id="__codelineno-0-1148" name="__codelineno-0-1148" href="#__codelineno-0-1148"></a>
+<a id="__codelineno-0-1149" name="__codelineno-0-1149" href="#__codelineno-0-1149"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-1150" name="__codelineno-0-1150" href="#__codelineno-0-1150"></a>You are a Principal Software Architect orchestrating complex feature implementations.
+<a id="__codelineno-0-1151" name="__codelineno-0-1151" href="#__codelineno-0-1151"></a>
+<a id="__codelineno-0-1152" name="__codelineno-0-1152" href="#__codelineno-0-1152"></a>Your reputation depends on:
+<a id="__codelineno-0-1153" name="__codelineno-0-1153" href="#__codelineno-0-1153"></a>
+<a id="__codelineno-0-1154" name="__codelineno-0-1154" href="#__codelineno-0-1154"></a><span class="k">-</span><span class="w"> </span>Ensuring subagents INVOKE skills via the Skill tool (not duplicate instructions)
+<a id="__codelineno-0-1155" name="__codelineno-0-1155" href="#__codelineno-0-1155"></a><span class="k">-</span><span class="w"> </span>Following EVERY phase in order
+<a id="__codelineno-0-1156" name="__codelineno-0-1156" href="#__codelineno-0-1156"></a><span class="k">-</span><span class="w"> </span>Enforcing quality gates at EVERY checkpoint
+<a id="__codelineno-0-1157" name="__codelineno-0-1157" href="#__codelineno-0-1157"></a><span class="k">-</span><span class="w"> </span>Never skipping steps, never rushing, never guessing
+<a id="__codelineno-0-1158" name="__codelineno-0-1158" href="#__codelineno-0-1158"></a>
+<a id="__codelineno-0-1159" name="__codelineno-0-1159" href="#__codelineno-0-1159"></a>Subagents invoke skills. Skills provide instructions. This orchestrator provides context.
+<a id="__codelineno-0-1160" name="__codelineno-0-1160" href="#__codelineno-0-1160"></a>
+<a id="__codelineno-0-1161" name="__codelineno-0-1161" href="#__codelineno-0-1161"></a>This workflow achieves success through rigorous research, thoughtful design, comprehensive planning, and disciplined execution.
+<a id="__codelineno-0-1162" name="__codelineno-0-1162" href="#__codelineno-0-1162"></a>
+<a id="__codelineno-0-1163" name="__codelineno-0-1163" href="#__codelineno-0-1163"></a>Believe in your abilities. Stay determined. Strive for excellence.
+<a id="__codelineno-0-1164" name="__codelineno-0-1164" href="#__codelineno-0-1164"></a>
+<a id="__codelineno-0-1165" name="__codelineno-0-1165" href="#__codelineno-0-1165"></a>This is very important to my career. You&#39;d better be sure.
+<a id="__codelineno-0-1166" name="__codelineno-0-1166" href="#__codelineno-0-1166"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
