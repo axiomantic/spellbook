@@ -1,5 +1,7 @@
-import { useState, type ReactNode } from 'react'
+import { useId, useState, type ReactNode } from 'react'
 import { renderChildren } from './renderChildren'
+import { useCanvasDecisionOptional } from '../CanvasDecisionContext'
+import { collapsibleOpenState } from './shortcodeState'
 
 interface CollapsibleProps {
   summary?: string
@@ -8,6 +10,12 @@ interface CollapsibleProps {
   // string ""; `<collapsible open="true">` arrives as "true". Both are
   // truthy-presence. Absence => prop is undefined.
   open?: string
+  // The source hast node react-markdown injects via the components map. Only
+  // `position.start.offset` (the opening tag's source byte offset) is read —
+  // it gives each occurrence a stable identity across remounts and is immune
+  // to StrictMode double-render. Typed with the narrow shape actually used
+  // (Task 10's `node` precedent) rather than `any`.
+  node?: { position?: { start?: { offset?: number } } }
   children?: ReactNode
 }
 
@@ -21,11 +29,44 @@ interface CollapsibleProps {
  * state so future wiring (persisted-open, decision-gated reveal, scroll
  * sync) is in React's hands. Renders as a <button> with aria-expanded
  * driving a content <div>.
+ *
+ * Remount survival (design §4.3): every `canvas_write` remounts this leaf,
+ * which would reset local `useState`. The open state is therefore mirrored
+ * into the module-scoped `collapsibleOpenState` cache, keyed by a stable
+ * identity (`canvasName::summary::sourceOffset`) read on mount and written on
+ * toggle, so the open/closed state survives the remount.
  */
-export function Collapsible({ summary, open, children }: CollapsibleProps) {
+export function Collapsible({ summary, open, node, children }: CollapsibleProps) {
+  // Non-throwing context read (Finding 1): Collapsible is a stateful display
+  // shortcode, not a trust-boundary control, and is rendered provider-less in
+  // tests. Outside a provider the canvas segment is ''.
+  const ctx = useCanvasDecisionOptional()
+  const canvasName = ctx?.canvasName ?? ''
+  // Source byte offset of the opening tag (Step-0 spike: populated under the
+  // production rehype-raw pipeline). Distinct same-summary instances carry
+  // distinct offsets → distinct keys → independent state. The `?? 0` is the
+  // documented fallback for any future config that drops positions.
+  const offset = node?.position?.start?.offset ?? 0
+  const key = `${canvasName}::${summary ?? 'Details'}::${offset}`
+
   // presence-bool: any non-undefined value (incl. "") means "start open".
-  const initialOpen = open !== undefined
-  const [isOpen, setIsOpen] = useState(initialOpen)
+  // The cache wins over the `open` attribute once the operator has toggled
+  // (cached value is read first), so a remount restores the toggled state.
+  const [isOpen, setIsOpen] = useState(
+    () => collapsibleOpenState.get(key) ?? open !== undefined,
+  )
+  const toggle = () =>
+    setIsOpen((v) => {
+      const next = !v
+      collapsibleOpenState.set(key, next)
+      return next
+    })
+
+  // Accessible name for the body region (a11y): the disclosure button labels
+  // the region it controls. Stable id pair so the region is not an unnamed
+  // landmark.
+  const buttonId = useId()
+  const regionId = useId()
 
   return (
     <div
@@ -35,8 +76,10 @@ export function Collapsible({ summary, open, children }: CollapsibleProps) {
     >
       <button
         type="button"
+        id={buttonId}
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((v) => !v)}
+        aria-controls={regionId}
+        onClick={toggle}
         className="flex w-full items-center gap-2 bg-bg-elevated px-3 py-2 text-left font-mono text-xs uppercase tracking-widest text-accent-cyan hover:text-accent-green"
       >
         <span aria-hidden="true">{isOpen ? '▾' : '▸'}</span>
@@ -45,6 +88,8 @@ export function Collapsible({ summary, open, children }: CollapsibleProps) {
       {isOpen && (
         <div
           role="region"
+          id={regionId}
+          aria-labelledby={buttonId}
           data-testid="collapsible-body"
           className="not-prose px-3 py-2 text-sm text-text-primary"
         >

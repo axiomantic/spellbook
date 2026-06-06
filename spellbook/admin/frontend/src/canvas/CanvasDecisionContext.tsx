@@ -67,3 +67,16 @@ export function useCanvasDecision(): CanvasDecisionValue {
   if (!v) throw new Error('shortcode rendered outside CanvasDecisionProvider')
   return v
 }
+
+/**
+ * Non-throwing read of the canvas decision context (design §4.3 / Finding 1).
+ * Returns `null` when rendered outside `CanvasDecisionProvider` instead of
+ * throwing. Stateful DISPLAY shortcodes (`Collapsible`, `Tabs`) use this to
+ * derive their remount-survival cache's `canvasName` segment without becoming
+ * provider-bound: they are not trust-boundary controls, and many tests mount
+ * them with no provider. The throwing `useCanvasDecision()` above remains the
+ * trust-boundary read for `Choice`/`Approve`, which genuinely require a provider.
+ */
+export function useCanvasDecisionOptional(): CanvasDecisionValue | null {
+  return useContext(CanvasDecisionContext)
+}

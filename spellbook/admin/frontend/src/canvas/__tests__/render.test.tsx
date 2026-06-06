@@ -1,5 +1,8 @@
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect, vi } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import rehypeRaw from 'rehype-raw'
 
 // Mock the lazy-loaded heavy chunks so the test environment does not have
 // to evaluate `mermaid` or `react-vega` — both bring DOM-dependent setup
@@ -19,6 +22,12 @@ import { Approve } from '../shortcodes/Approve'
 import { CanvasDecisionContext } from '../CanvasDecisionContext'
 import type { CanvasDecisionValue } from '../CanvasDecisionContext'
 import type { ReactNode } from 'react'
+import {
+  collapsibleOpenState,
+  tabsActiveState,
+  evictCanvasShortcodeState,
+  __resetCanvasShortcodeState,
+} from '../shortcodes/shortcodeState'
 
 // In production `CanvasRender` is always wrapped in `CanvasDecisionProvider`
 // (CanvasDetail, §8.1). The activated <choice>/<approve> shortcodes call
@@ -125,8 +134,25 @@ describe('CanvasRender — shortcode dispatch pipeline', () => {
     // is what react-markdown does when it finds a <tab> tag at the top
     // level. Covers the named `Tab` export.
     render(<CanvasRender content={'<tab title="solo">just-content</tab>'} />)
-    expect(screen.getByTestId('tab')).toBeInTheDocument()
+    const tab = screen.getByTestId('tab')
+    expect(tab).toBeInTheDocument()
     expect(screen.getByText('just-content')).toBeInTheDocument()
+    // §2.4 belt: the standalone-Tab fallback root carries not-prose so the
+    // prose cascade does not leak into its raw body. Complete class set
+    // (Level 5: { exact: true } fails on a missing not-prose OR any added token).
+    expect(tab).toHaveClass('not-prose', { exact: true })
+  })
+
+  it('renders an empty <tabs> fallback root with not-prose (no <tab> children)', () => {
+    // A <tabs> with no <tab> children hits the empty-Tabs fallback (Tabs.tsx),
+    // which renders the raw body so the agent still sees it. §2.4 belt: that
+    // fallback root must carry not-prose too. Complete class set (Level 5:
+    // { exact: true }).
+    render(<CanvasRender content={'<tabs>loose body</tabs>'} />)
+    const empty = screen.getByTestId('tabs-empty')
+    expect(empty).toBeInTheDocument()
+    expect(empty).toHaveTextContent('loose body')
+    expect(empty).toHaveClass('not-prose', { exact: true })
   })
 
   it('dispatches <choice> to the activated control (disabled with no live decision)', () => {
@@ -203,6 +229,35 @@ describe('CanvasRender — not-prose boundaries on shortcode content regions', (
     expect(body).toHaveClass('not-prose px-3 py-2 text-sm text-text-primary', {
       exact: true,
     })
+  })
+
+  it('gives the <collapsible> open body region an accessible name (button labels the region)', () => {
+    // a11y: the disclosure button labels the region it controls, so the region
+    // is not an unnamed landmark. The button's `aria-controls` points at the
+    // region id and the region's `aria-labelledby` points back at the button id
+    // (ids are useId-generated, so assert the round-trip rather than literals).
+    // The region is also reachable by its accessible name via getByRole.
+    render(
+      <CanvasRender content={'<collapsible open summary="More">body text</collapsible>'} />,
+    )
+    const button = screen.getByRole('button')
+    const region = screen.getByTestId('collapsible-body')
+    const buttonId = button.getAttribute('id')
+    const regionId = region.getAttribute('id')
+    // Both ids are present, non-empty, and distinct.
+    expect(typeof buttonId).toBe('string')
+    expect(buttonId).not.toBe('')
+    expect(typeof regionId).toBe('string')
+    expect(regionId).not.toBe('')
+    expect(buttonId).not.toBe(regionId)
+    // The control/label relationship round-trips exactly.
+    expect(button.getAttribute('aria-controls')).toBe(regionId)
+    expect(region.getAttribute('aria-labelledby')).toBe(buttonId)
+    // The region is exposed with the button's text ("More") as its
+    // accessible name — proves the labelledby wiring is honored by ARIA.
+    expect(
+      screen.getByRole('region', { name: 'More' }),
+    ).toBe(region)
   })
 
   it('renders the <chart> figure wrapper with not-prose (defensive)', async () => {
@@ -845,5 +900,295 @@ describe('CanvasRender — GATE-2 raw-string shortcode children re-parse', () =>
     // The literal asterisks of the TIGHT portion are present as text (the
     // passthrough left them unparsed); the blank-line portion was parsed.
     expect(body.textContent).toBe('\ntight **a**\nb\n')
+  })
+})
+
+describe('Step-0 spike — node.position availability under the production pipeline', () => {
+  // Task 13 Step 0 (Finding 2): the remount-survival cache key's trailing
+  // segment is `${node?.position?.start?.offset ?? 0}`. That key is only stable
+  // (distinct same-summary instances → distinct keys) if react-markdown@9 +
+  // remark-gfm@4 + rehype-raw@7 populate `node.position.start.offset` for a
+  // custom shortcode component (rehype-raw re-parses raw HTML and CAN drop
+  // positions in some configs). This spike pins the empirical reality so the
+  // offset-key branch does not regress silently. It renders TWO same-tag
+  // shortcodes through the EXACT production plugin stack (the same plugins
+  // render.tsx wires) and captures each instance's node.position via a probe
+  // component registered under the `collapsible` tag, asserting the COMPLETE
+  // recorded position set with exact equality (Level 5).
+
+  it('pins: a <collapsible> shortcode receives a populated node.position.start.offset', () => {
+    const records: Array<{
+      summary: string | undefined
+      offset: number | undefined
+      offsetIsNumber: boolean
+    }> = []
+
+    // Two collapsibles, byte-distinct opening tags in the source. The probe
+    // records each instance's source offset. The opening `<collapsible ...>`
+    // tags begin at known byte positions in `md` below.
+    const md =
+      '<collapsible summary="First">a</collapsible>\n\n' +
+      '<collapsible summary="Second">b</collapsible>'
+
+    renderToStaticMarkupViaRender(md, records)
+
+    // The source offsets are fully determined by the markdown string above:
+    //   "<collapsible summary=\"First\">a</collapsible>\n\n" is 46 chars
+    //   ("<collapsible summary=\"First\">" = 29, "a" = 1, "</collapsible>" = 14,
+    //    "\n\n" = 2  →  29+1+14+2 = 46), so the SECOND opening tag starts at 46.
+    // GOLD (Level 5): full equality on the COMPLETE recorded set. A pipeline
+    // that dropped positions (offset undefined) or collapsed both to the same
+    // offset would fail this exact-equality assertion.
+    expect(records).toEqual([
+      { summary: 'First', offset: 0, offsetIsNumber: true },
+      { summary: 'Second', offset: 46, offsetIsNumber: true },
+    ])
+  })
+
+  // Helper kept inside the describe so the probe component is local to the spike.
+  function renderToStaticMarkupViaRender(
+    md: string,
+    records: Array<{
+      summary: string | undefined
+      offset: number | undefined
+      offsetIsNumber: boolean
+    }>,
+  ): void {
+    interface ProbeProps {
+      summary?: string
+      node?: { position?: { start?: { offset?: number } } }
+    }
+    const probe = ({ summary, node }: ProbeProps) => {
+      const offset = node?.position?.start?.offset
+      records.push({
+        summary,
+        offset,
+        offsetIsNumber: typeof offset === 'number',
+      })
+      return null
+    }
+    render(
+      <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
+        rehypePlugins={[rehypeRaw]}
+        components={{ collapsible: probe } as never}
+      >
+        {md}
+      </ReactMarkdown>,
+    )
+  }
+})
+
+describe('shortcodeState — cache module (reset + per-canvas eviction)', () => {
+  // Pure-logic pins for the module-scoped caches. These exercise the cache
+  // primitives directly (no React), so a regression in key-prefix matching or
+  // an incomplete clear is caught independent of the component wiring.
+
+  beforeEach(__resetCanvasShortcodeState)
+
+  it('__resetCanvasShortcodeState clears BOTH maps completely', () => {
+    collapsibleOpenState.set('plan-x::A::0', true)
+    collapsibleOpenState.set('plan-y::B::5', false)
+    tabsActiveState.set('plan-x::T1|T2::0', 2)
+    tabsActiveState.set('plan-y::T3|T4::9', 1)
+
+    __resetCanvasShortcodeState()
+
+    // Full-equality on the emptied maps (Level 5): a partial clear that left
+    // any entry behind fails here.
+    expect(Array.from(collapsibleOpenState.entries())).toEqual([])
+    expect(Array.from(tabsActiveState.entries())).toEqual([])
+  })
+
+  it('evictCanvasShortcodeState removes ONLY the named canvas, leaving others intact', () => {
+    collapsibleOpenState.set('plan-x::A::0', true)
+    collapsibleOpenState.set('plan-x::B::12', false)
+    collapsibleOpenState.set('plan-y::A::0', true)
+    tabsActiveState.set('plan-x::T1|T2::0', 2)
+    tabsActiveState.set('plan-y::T3|T4::0', 1)
+
+    evictCanvasShortcodeState('plan-x')
+
+    // Only plan-y survivors remain, with their exact cached values. Full
+    // entry-set equality (Level 5): an over-eager sweep that dropped plan-y, or
+    // a prefix bug that missed a plan-x key, fails here.
+    expect(Array.from(collapsibleOpenState.entries())).toEqual([
+      ['plan-y::A::0', true],
+    ])
+    expect(Array.from(tabsActiveState.entries())).toEqual([
+      ['plan-y::T3|T4::0', 1],
+    ])
+  })
+
+  it('evictCanvasShortcodeState matches on the full `name::` prefix, not a bare substring', () => {
+    // `plan-x` must NOT evict `plan-x2`'s entries: the prefix is `plan-x::`,
+    // and `plan-x2::A::0` does not start with `plan-x::`. Pins that eviction is
+    // delimiter-anchored, so a canvas whose name is a prefix of another's is
+    // not collateral damage.
+    collapsibleOpenState.set('plan-x::A::0', true)
+    collapsibleOpenState.set('plan-x2::A::0', true)
+    tabsActiveState.set('plan-x::T::0', 3)
+    tabsActiveState.set('plan-x2::T::0', 4)
+
+    evictCanvasShortcodeState('plan-x')
+
+    expect(Array.from(collapsibleOpenState.entries())).toEqual([
+      ['plan-x2::A::0', true],
+    ])
+    expect(Array.from(tabsActiveState.entries())).toEqual([
+      ['plan-x2::T::0', 4],
+    ])
+  })
+})
+
+describe('CanvasRender — remount-survival state cache (Collapsible + Tabs)', () => {
+  // Task 13 (design §4.3): every `canvas_write` remounts the shortcode leaves,
+  // so local `useState` resets. The module-scoped caches keyed by stable
+  // identity (canvas + summary/titles + source offset) restore open/active
+  // state on remount. These tests toggle state, unmount, remount with the SAME
+  // source/canvas, and assert the state survived. The Step-0 spike confirmed
+  // `node.position.start.offset` is populated, so distinct same-summary
+  // instances carry distinct keys (the multi-instance independence test pins
+  // that branch). All renders here are provider-less (canvasName segment = '')
+  // — the non-throwing `useCanvasDecisionOptional()` read keeps them working.
+
+  beforeEach(__resetCanvasShortcodeState)
+
+  it('Collapsible open state survives unmount + remount (default-closed → toggled open)', () => {
+    const content = '<collapsible summary="More">body text</collapsible>'
+
+    const first = render(<CanvasRender content={content} />)
+    // Default closed: no open attr → starts closed.
+    expect(screen.getByTestId('collapsible')).toHaveAttribute(
+      'data-collapsible-open',
+      'false',
+    )
+    // Operator opens it.
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.getByTestId('collapsible')).toHaveAttribute(
+      'data-collapsible-open',
+      'true',
+    )
+    // The cache now holds the open state under the stable key (provider-less →
+    // canvasName ''; summary 'More'; single instance at source offset 0).
+    expect(Array.from(collapsibleOpenState.entries())).toEqual([
+      ['::More::0', true],
+    ])
+
+    // canvas_write → remount: unmount, then mount the SAME content fresh.
+    first.unmount()
+    render(<CanvasRender content={content} />)
+
+    // Without the cache the fresh mount would default closed; with it, the
+    // open state is restored.
+    expect(screen.getByTestId('collapsible')).toHaveAttribute(
+      'data-collapsible-open',
+      'true',
+    )
+    expect(screen.getByTestId('collapsible-body')).toHaveTextContent('body text')
+  })
+
+  it('Collapsible toggled-closed state survives remount (open attr → toggled shut)', () => {
+    // The inverse: an `open`-attr collapsible toggled SHUT must stay shut after
+    // remount. Pins that the cache value (false) wins over the `open` initial,
+    // so a fix that only restores the true case fails here.
+    const content = '<collapsible open summary="More">body text</collapsible>'
+
+    const first = render(<CanvasRender content={content} />)
+    expect(screen.getByTestId('collapsible')).toHaveAttribute(
+      'data-collapsible-open',
+      'true',
+    )
+    fireEvent.click(screen.getByRole('button'))
+    expect(screen.getByTestId('collapsible')).toHaveAttribute(
+      'data-collapsible-open',
+      'false',
+    )
+    expect(Array.from(collapsibleOpenState.entries())).toEqual([
+      ['::More::0', false],
+    ])
+
+    first.unmount()
+    render(<CanvasRender content={content} />)
+
+    // Restored CLOSED despite the `open` attribute: cache value wins.
+    expect(screen.getByTestId('collapsible')).toHaveAttribute(
+      'data-collapsible-open',
+      'false',
+    )
+    expect(screen.queryByTestId('collapsible-body')).toBeNull()
+  })
+
+  it('Tabs active-tab selection survives unmount + remount (tab 2 stays active)', async () => {
+    const content =
+      '<tabs>\n<tab title="Alpha">aaa</tab>\n<tab title="Beta">bbb</tab>\n</tabs>'
+
+    const first = render(<CanvasRender content={content} />)
+    await screen.findByTestId('tabs')
+    // First tab active by default → its body renders.
+    expect(screen.getByText('aaa')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Alpha' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    // Select tab 2 (Beta).
+    fireEvent.click(screen.getByRole('tab', { name: 'Beta' }))
+    expect(screen.getByText('bbb')).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Beta' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    // Cache holds active index 1 under the stable key (provider-less → ''
+    // canvas; joined titles 'Alpha|Beta'; single instance at source offset 0).
+    expect(Array.from(tabsActiveState.entries())).toEqual([
+      ['::Alpha|Beta::0', 1],
+    ])
+
+    // Remount with the same content.
+    first.unmount()
+    render(<CanvasRender content={content} />)
+    await screen.findByTestId('tabs')
+
+    // Tab 2 stays active across the remount (fixes the pre-existing Tabs
+    // snap-shut bug).
+    expect(screen.getByRole('tab', { name: 'Beta' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    )
+    expect(screen.getByText('bbb')).toBeInTheDocument()
+  })
+
+  it('two same-summary collapsibles get DISTINCT keys → independent open state (offsets available)', () => {
+    // Multi-instance documentation pin (§4.3) for the POSITIONS-AVAILABLE branch
+    // the Step-0 spike selected. Two collapsibles both summarized "Details"
+    // carry DISTINCT node.position.start.offset values → distinct cache keys →
+    // independent state. Opening the FIRST must NOT open the SECOND. The first
+    // opening `<collapsible summary="Details">` tag starts at source offset 0;
+    // "<collapsible summary=\"Details\">a</collapsible>\n\n" is 48 chars, so the
+    // second starts at offset 48.
+    const content =
+      '<collapsible summary="Details">a</collapsible>\n\n' +
+      '<collapsible summary="Details">b</collapsible>'
+
+    render(<CanvasRender content={content} />)
+    const collapsibles = screen.getAllByTestId('collapsible')
+    expect(collapsibles).toHaveLength(2)
+    // Both default closed.
+    expect(collapsibles[0]).toHaveAttribute('data-collapsible-open', 'false')
+    expect(collapsibles[1]).toHaveAttribute('data-collapsible-open', 'false')
+
+    // Open the FIRST only.
+    const buttons = screen.getAllByRole('button')
+    fireEvent.click(buttons[0])
+
+    // First open, second STILL closed: distinct keys → independent state.
+    expect(collapsibles[0]).toHaveAttribute('data-collapsible-open', 'true')
+    expect(collapsibles[1]).toHaveAttribute('data-collapsible-open', 'false')
+    // The cache holds exactly the first instance's key, at offset 0, value true
+    // — the second instance (offset 48) is untouched. Full entry-set equality
+    // (Level 5) pins both the distinct offsets and the independence.
+    expect(Array.from(collapsibleOpenState.entries())).toEqual([
+      ['::Details::0', true],
+    ])
   })
 })

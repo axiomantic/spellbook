@@ -1,10 +1,11 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useCanvas } from '../hooks/useCanvases'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { PageLayout } from '../components/layout/PageLayout'
 import { CanvasRender } from '../canvas/render'
 import { CanvasDecisionContext } from '../canvas/CanvasDecisionContext'
+import { evictCanvasShortcodeState } from '../canvas/shortcodes/shortcodeState'
 import { useDecisionSubmit } from '../hooks/useDecisionSubmit'
 
 /**
@@ -49,6 +50,19 @@ export function CanvasDetail() {
     }),
     [data?.name, data?.decision, submit, reauthenticate],
   )
+
+  // Per-canvas remount-survival cache eviction (design §4.3 / F3). The
+  // module-scoped `collapsibleOpenState` / `tabsActiveState` caches intentionally
+  // survive the shortcode-leaf remount a `canvas_write` triggers — but they must
+  // NOT survive leaving the canvas entirely. On unmount (or navigation to a
+  // different canvas name) the cleanup sweeps every entry prefixed with this
+  // canvas's name, bounding the cache to the live canvas. Scoping the effect to
+  // the loaded `data?.name` keeps the cleanup keyed to the canvas actually shown.
+  const loadedName = data?.name
+  useEffect(() => {
+    if (!loadedName) return
+    return () => evictCanvasShortcodeState(loadedName)
+  }, [loadedName])
 
   if (isLoading) {
     return (
