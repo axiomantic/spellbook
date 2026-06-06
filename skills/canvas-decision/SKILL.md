@@ -159,14 +159,6 @@ context a terminal cannot.
 4. **The control LAST** — `<choice>`/`<approve>` at the bottom, after the operator
    has the context to decide. Never lead with the control.
 
-**Author distinct `<collapsible>` summaries (F2/RT-2).** Give every `<collapsible>`
-a unique, descriptive `summary` string rather than relying on the default
-`"Details"`. This is not just labeling — it makes the operator's open/closed state
-survive `canvas_write` reliably (the state cache keys on the summary). Multiple
-collapsibles all defaulting to `"Details"` can swap their remembered open-state if
-the page is reordered (the accepted multi-instance limitation). Distinct summaries
-make that footgun structurally impossible.
-
 **Use the self-closing control form (not children-content).** A `<choice>` or
 `<approve>` is an attribute-only, self-closing control. Write it as
 `<choice id="..." prompt="..." options='[...]' />` (or `<approve id="..." prompt="..." />`).
@@ -174,6 +166,14 @@ Do NOT compose it as a children-content element — `<choice id="...">...</choic
 renders an INERT control (no radio group, nothing to submit). The `id` MUST match
 the declared `decision_id`, and for `<choice>` the option `value`s in `options='[...]'`
 MUST match the options declared in `canvas_decision_open`.
+
+**Author distinct `<collapsible>` summaries (F2/RT-2).** Give every `<collapsible>`
+a unique, descriptive `summary` string rather than relying on the default
+`"Details"`. This is not just labeling — it makes the operator's open/closed state
+survive `canvas_write` reliably (the state cache keys on the summary). Multiple
+collapsibles all defaulting to `"Details"` can swap their remembered open-state if
+the page is reordered (the accepted multi-instance limitation). Distinct summaries
+make that footgun structurally impossible.
 
 **Blank line after every opening shortcode tag and before every closing tag
 (GATE-2).** Always put a blank line between a shortcode's opening tag and its body,
@@ -230,7 +230,10 @@ diagram → per-option detail with the recommended option signposted → control
 Note the blank line after every opening tag and before every closing tag (GATE-2),
 the distinct authored summaries (F2/RT-2), the GFM trade-off table inside a
 collapsible, and the self-closing `<approve>` control whose `id` matches the
-declared `decision_id`.
+declared `decision_id`. The three collapsible panels are rationale for a single
+proposed design (the recommended approach plus why the alternatives were
+rejected), not selectable options — which is why the page ends in `<approve>`,
+not `<choice>`.
 
 ````
 <callout type="note">
@@ -330,10 +333,8 @@ Before completing a canvas decision:
       `decision_id` (and `<choice>` option `value`s match the declared options)?
 - [ ] No bare control: would this lose nothing as a terminal `AskUserQuestion`? If
       so, use terminal instead.
-- [ ] Blank line after every opening shortcode tag and before every closing tag
-      (GATE-2 — body parses as markdown, not raw HTML)?
-- [ ] No literal `<tag ...>` written inside any shortcode body — not even in a code
-      span (GATE-3 — `rehype-raw` consumes it as a real tag; use prose names or
-      `&lt;...&gt;`)?
+- [ ] Blank line after every opening shortcode tag and before every closing tag?
+- [ ] No literal shortcode tag anywhere inside a shortcode body, including in code
+      spans/fences?
 
 If ANY unchecked: STOP and fix before proceeding.
