@@ -65,6 +65,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Admin session now persists ~1 year instead of 24h.** The admin login and
+  bearer-handoff flows previously issued a session cookie whose signed payload
+  `exp` and `Set-Cookie` `Max-Age` were both fixed at 86400s (24h), so the
+  browser dropped the cookie — and the server rejected it — a day after login,
+  forcing a fresh login on the next visit. The TTL is now 365 days by default,
+  configurable via `SPELLBOOK_ADMIN_SESSION_TTL_DAYS`, applied to both the
+  payload `exp` and the cookie `Max-Age` (the cookie already carried a
+  `Max-Age`, so it was a persistent cookie — just a short-lived one). Note:
+  there is no server-side session store, so rotating the MCP token
+  (`.mcp-token`) invalidates all outstanding sessions at once — the signing
+  key is derived from it; logout only clears the browser's copy of the cookie.
 - **Canvas decision await binds by token, not ephemeral session id.** Under
   stateless HTTP the session id is per-request, so awaits bound by session id
   could fail to match their own declared decision; `canvas_decision_await` now
