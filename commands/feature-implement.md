@@ -120,6 +120,14 @@ the submitted decision to the gate's outcomes — the approve/affirmative value 
 APPROVE (proceed); declined/reject value → ITERATE (return to 3.1/3.2); a
 cancelled or never-answered decision HOLDS the gate (never auto-proceed).
 
+**Canvas page CONTENT (when rendered via `canvas`):** the plan-approval page
+MUST follow the "Decision Page Anatomy" section of the canvas-decision skill —
+do NOT ship a bare approve button. Top-to-bottom: a plan-summary callout framing
+the commitment → a task-list of the plan's steps → an optional `<collapsible>`
+carrying the full plan/one-pager detail → the `<approve>`/`<choice>` control
+LAST. This is a CONTENT prescription only; it does not change the gate's
+behavior, the outcome mapping, or the never-auto-proceed contract above.
+
 **Interactive mode:** Present findings to user. Ask: APPROVE (proceed to 3.4.5) or ITERATE (return to 3.1/3.2).
 **Autonomous mode:** If findings are critical/important → fix automatically (dispatch executing-plans subagent). If minor → proceed.
 
