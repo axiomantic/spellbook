@@ -166,3 +166,68 @@ describe('CanvasRender — shortcode dispatch pipeline', () => {
     expect(screen.getByText('metrics')).toBeInTheDocument()
   })
 })
+
+describe('CanvasRender — not-prose boundaries on shortcode content regions', () => {
+  // §2.4: every shortcode region that re-parses markdown must carry
+  // `not-prose` so the @tailwindcss/typography cascade (margins, line-height)
+  // does not leak into the re-parsed body and double-space it. Each test
+  // asserts the COMPLETE className set with { exact: true } — a Level 5
+  // assertion that fails both on a missing `not-prose` token AND on any
+  // dropped/added sibling token.
+
+  it('renders the <tabs> active panel with not-prose severing the prose cascade', async () => {
+    const { container } = render(
+      <CanvasRender
+        content={
+          '<tabs>\n<tab title="Alpha">aaa</tab>\n<tab title="Beta">bbb</tab>\n</tabs>'
+        }
+      />,
+    )
+    await screen.findByTestId('tabs')
+    const panel = container.querySelector('[role="tabpanel"]')
+    expect(panel).not.toBeNull()
+    // Complete intended class set for the active tab panel (Tabs.tsx:73).
+    expect(panel).toHaveClass('not-prose p-3 text-sm text-text-primary', {
+      exact: true,
+    })
+  })
+
+  it('renders the <collapsible> open body with not-prose severing the prose cascade', () => {
+    render(
+      <CanvasRender content={'<collapsible open summary="More">body text</collapsible>'} />,
+    )
+    const body = screen.getByTestId('collapsible-body')
+    // Complete intended class set for the collapsible body (Collapsible.tsx:45-48).
+    expect(body).toHaveClass('not-prose px-3 py-2 text-sm text-text-primary', {
+      exact: true,
+    })
+  })
+
+  it('renders the <chart> figure wrapper with not-prose (defensive)', async () => {
+    const spec = '{"mark":"bar","encoding":{"x":{"field":"a"}}}'
+    render(<CanvasRender content={`<chart caption="metrics">${spec}</chart>`} />)
+    const chart = await screen.findByTestId('chart')
+    // Complete intended class set for the chart figure wrapper (Chart.tsx:65).
+    expect(chart).toHaveClass('not-prose my-3', { exact: true })
+  })
+
+  it('renders the <diagram> figure wrapper with not-prose (defensive)', async () => {
+    render(<CanvasRender content={'<diagram caption="flow">flowchart LR\nA --> B</diagram>'} />)
+    const diagram = await screen.findByTestId('diagram')
+    // Complete intended class set for the diagram figure wrapper (Diagram.tsx:35).
+    expect(diagram).toHaveClass('not-prose my-3', { exact: true })
+  })
+
+  it('PIN: <callout> body keeps not-prose severing the prose cascade', () => {
+    render(
+      <CanvasRender content={'<callout type="note" title="Heads up">Body text</callout>'} />,
+    )
+    const callout = screen.getByTestId('callout')
+    // The callout body is the second child div (the first is the label row).
+    // Callout.tsx:46 — this is a KEEP-pin; not-prose already rides on it.
+    const body = callout.querySelectorAll('div')[1]
+    expect(body).toHaveClass('not-prose text-sm text-text-primary', {
+      exact: true,
+    })
+  })
+})

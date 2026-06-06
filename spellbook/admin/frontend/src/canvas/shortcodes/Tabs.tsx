@@ -70,7 +70,7 @@ export function Tabs({ children }: TabsProps) {
           </button>
         ))}
       </div>
-      <div role="tabpanel" className="p-3 text-sm text-text-primary">
+      <div role="tabpanel" className="not-prose p-3 text-sm text-text-primary">
         {tabs[safeActive].body}
       </div>
     </div>

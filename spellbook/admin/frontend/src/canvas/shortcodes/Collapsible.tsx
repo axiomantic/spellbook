@@ -45,7 +45,7 @@ export function Collapsible({ summary, open, children }: CollapsibleProps) {
         <div
           role="region"
           data-testid="collapsible-body"
-          className="px-3 py-2 text-sm text-text-primary"
+          className="not-prose px-3 py-2 text-sm text-text-primary"
         >
           {children}
         </div>
