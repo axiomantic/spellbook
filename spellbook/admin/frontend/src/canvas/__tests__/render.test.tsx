@@ -728,4 +728,28 @@ describe('CanvasRender — GATE-2 raw-string shortcode children re-parse', () =>
     // The literal markdown asterisks must NOT survive anywhere in the output.
     expect(container.innerHTML).not.toContain('**bold**')
   })
+
+  it('passes MIXED (tight string + blank-line paragraph) children through verbatim — tight portion stays literal markdown', () => {
+    // CHARACTERIZATION PIN (not RED-first): this behavior already exists; the
+    // test pins it. §4.6's two-state model: renderChildren re-parses ONLY when
+    // EVERY child is a raw string (isRawStringChildren's .every()). When the
+    // author writes a tight line immediately after the opening tag AND a
+    // separate blank-line-separated paragraph, CommonMark delivers a MIX: a
+    // raw string sibling ("tight **a**") plus an already-parsed element sibling
+    // (the <p><strong>b</strong></p> from the blank-line-separated portion).
+    // .every() fails on the element sibling, so the array returns UNCHANGED and
+    // the tight portion stays LITERAL markdown ("**a**" as text, not <strong>).
+    // This is correct-by-design; the blank-line authoring discipline is the
+    // author-side mitigation. Level 5: exact innerHTML of the body.
+    render(
+      <CanvasRender content={'<collapsible open summary="More">\ntight **a**\n\n**b**\n</collapsible>'} />,
+    )
+    const body = screen.getByTestId('collapsible-body')
+    // Tight portion ("tight **a**") survives as literal markdown text; the
+    // blank-line-separated "**b**" was parsed upstream into <p><strong>b</strong></p>.
+    expect(body.innerHTML).toBe('\ntight **a**\n<p><strong>b</strong>\n</p>')
+    // The literal asterisks of the TIGHT portion are present as text (the
+    // passthrough left them unparsed); the blank-line portion was parsed.
+    expect(body.textContent).toBe('\ntight **a**\nb\n')
+  })
 })

@@ -27,6 +27,13 @@ import { extractText } from './extractText'
  * The shared-map import does not form a cycle: `components.tsx` was hoisted
  * out of `render.tsx` (Task 4 / §4.6) precisely so this module can import the
  * map without routing through the top-level render entry point.
+ *
+ * MIXED children (a raw-string sibling alongside an element sibling — e.g. the
+ * author wrote one line tight and another blank-line-separated) pass through
+ * VERBATIM: `isRawStringChildren`'s `.every()` fails on the element sibling, so
+ * the array is returned unchanged and the tight string portion stays literal,
+ * unparsed markdown on screen. This is correct under §4.6's two-state model;
+ * the blank-line authoring discipline is the author-side mitigation.
  */
 function isRawStringChildren(children: ReactNode): boolean {
   const arr = Children.toArray(children)
