@@ -1,4 +1,5 @@
 import { Children, isValidElement, useState, type ReactElement, type ReactNode } from 'react'
+import { renderChildren } from './renderChildren'
 
 interface TabProps {
   title: string
@@ -71,7 +72,7 @@ export function Tabs({ children }: TabsProps) {
         ))}
       </div>
       <div role="tabpanel" className="not-prose p-3 text-sm text-text-primary">
-        {tabs[safeActive].body}
+        {renderChildren(tabs[safeActive].body)}
       </div>
     </div>
   )

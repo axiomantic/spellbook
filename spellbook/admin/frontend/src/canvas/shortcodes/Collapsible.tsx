@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import { renderChildren } from './renderChildren'
 
 interface CollapsibleProps {
   summary?: string
@@ -47,7 +48,7 @@ export function Collapsible({ summary, open, children }: CollapsibleProps) {
           data-testid="collapsible-body"
           className="not-prose px-3 py-2 text-sm text-text-primary"
         >
-          {children}
+          {renderChildren(children)}
         </div>
       )}
     </div>

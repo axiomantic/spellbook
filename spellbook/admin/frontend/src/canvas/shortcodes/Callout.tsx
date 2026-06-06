@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { renderChildren } from './renderChildren'
 
 export type CalloutType = 'note' | 'tip' | 'warning' | 'danger'
 
@@ -43,7 +44,7 @@ export function Callout({ type, title, children }: CalloutProps) {
       >
         {`// ${t.toUpperCase()}${title ? ` — ${title}` : ''}`}
       </div>
-      <div className="not-prose text-sm text-text-primary">{children}</div>
+      <div className="not-prose text-sm text-text-primary">{renderChildren(children)}</div>
     </aside>
   )
 }

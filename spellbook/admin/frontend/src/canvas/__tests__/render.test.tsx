@@ -628,3 +628,104 @@ describe('CanvasRender — element overrides (a, code, pre, table, th, td)', () 
     expect(anchor?.textContent).toBe('click here')
   })
 })
+
+describe('CanvasRender — GATE-2 raw-string shortcode children re-parse', () => {
+  // §4.6 GATE-2: content on the line IMMEDIATELY after an opening
+  // children-content shortcode tag (no blank line) is swallowed by
+  // CommonMark's raw-HTML-block rule. react-markdown + rehype-raw then
+  // deliver the entire body as ONE plain string child — markdown left
+  // UNPARSED. Without the renderer-side `renderChildren` fix, `**bold**`
+  // appears as literal asterisks on screen. The fix detects raw-string-only
+  // children and re-parses them through the same pipeline using the SHARED
+  // components map, so the six element overrides (Task 10) apply to the
+  // nested content too. The hazard is shared across Collapsible, Callout,
+  // and Tabs; each gets its own pin. Healthy (blank-line / inline-element)
+  // cases must pass through UNCHANGED — the fix only fires on raw-string
+  // children.
+
+  it('re-parses tight **bold** in a <collapsible> open body to a <strong> element', () => {
+    // Body line sits immediately after the opening <collapsible open> tag,
+    // with NO blank line → CommonMark raw-HTML-block hazard. Without the
+    // fix the body is the literal string "**bold**"; with the fix it is a
+    // re-parsed <strong>bold</strong>.
+    const { container } = render(
+      <CanvasRender content={'<collapsible open summary="More">\n**bold**\n</collapsible>'} />,
+    )
+    const body = screen.getByTestId('collapsible-body')
+    const strong = body.querySelector('strong')
+    expect(strong).not.toBeNull()
+    expect(strong?.outerHTML).toBe('<strong>bold</strong>')
+    // The literal markdown asterisks must NOT survive anywhere in the body.
+    expect(body.textContent).toBe('bold')
+    expect(container.innerHTML).not.toContain('**bold**')
+  })
+
+  it('re-parses tight `inline code` in a <collapsible> body through the shared code override', () => {
+    // The nested re-parse pass uses the SAME components map, so the inline
+    // `code` override (Task 10) styles the re-parsed inline code. This pins
+    // that the re-parse routes through the shared map, not a bare pipeline.
+    const { container } = render(
+      <CanvasRender content={'<collapsible open summary="More">\nrun `npm run`\n</collapsible>'} />,
+    )
+    const body = screen.getByTestId('collapsible-body')
+    const code = body.querySelector('code')
+    expect(code).not.toBeNull()
+    // Complete intended class set for the inline `code` override
+    // (components.tsx) — proves the nested pass used the shared map.
+    expect(code).toHaveClass(
+      'not-prose text-accent-cyan bg-bg-elevated px-1 py-0.5 rounded text-sm',
+      { exact: true },
+    )
+    expect(code?.textContent).toBe('npm run')
+    expect(container.innerHTML).not.toContain('`npm run`')
+  })
+
+  it('re-parses tight **bold** in a <callout> body to a <strong> element', () => {
+    // Same raw-HTML-block hazard inside the callout body div (Callout.tsx:46).
+    render(
+      <CanvasRender content={'<callout type="note" title="Heads up">\n**bold**\n</callout>'} />,
+    )
+    const callout = screen.getByTestId('callout')
+    // The callout body is the second child div (first is the label row).
+    const body = callout.querySelectorAll('div')[1]
+    const strong = body.querySelector('strong')
+    expect(strong).not.toBeNull()
+    expect(strong?.outerHTML).toBe('<strong>bold</strong>')
+    expect(body.textContent).toBe('bold')
+  })
+
+  it('re-parses tight **bold** in the active <tab> panel body to a <strong> element', async () => {
+    // The hazard reaches the Tab body too; the active panel re-parses its
+    // raw-string body (Tabs.tsx:74).
+    const { container } = render(
+      <CanvasRender
+        content={'<tabs>\n<tab title="Alpha">\n**bold**\n</tab>\n</tabs>'}
+      />,
+    )
+    await screen.findByTestId('tabs')
+    const panel = container.querySelector('[role="tabpanel"]')
+    expect(panel).not.toBeNull()
+    const strong = panel?.querySelector('strong')
+    expect(strong).not.toBeNull()
+    expect(strong?.outerHTML).toBe('<strong>bold</strong>')
+    expect(panel?.textContent).toBe('bold')
+  })
+
+  it('leaves healthy blank-line-separated <collapsible> body markdown unchanged (already elements)', () => {
+    // A blank line after the opening tag lets CommonMark parse the body as a
+    // real paragraph BEFORE it reaches the component, so children arrive as
+    // ELEMENTS, not a raw string. renderChildren must pass these through
+    // untouched — the body is a <p> wrapping a <strong>, exactly as upstream
+    // produced it, with no double-wrapping from a spurious second parse.
+    // The surrounding "\n" text nodes are CommonMark's whitespace around the
+    // block-level paragraph; they are present upstream and must survive the
+    // pass-through verbatim. Level 5: exact innerHTML of the body.
+    const { container } = render(
+      <CanvasRender content={'<collapsible open summary="More">\n\n**bold**\n\n</collapsible>'} />,
+    )
+    const body = screen.getByTestId('collapsible-body')
+    expect(body.innerHTML).toBe('\n<p><strong>bold</strong></p>\n')
+    // The literal markdown asterisks must NOT survive anywhere in the output.
+    expect(container.innerHTML).not.toContain('**bold**')
+  })
+})
