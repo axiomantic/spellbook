@@ -796,13 +796,13 @@ Task:
 
 If issues found: Fix, re-run until clean.
 
-#### 4.6.5 Pre-PR Claim Validation
+#### 4.6.5 Pre-PR Claim Validation and Embarrassment Sweep
 
-<RULE>Before any PR creation, run final fact-checking pass.</RULE>
+<RULE>Before any PR creation, run the final fact-checking pass AND the embarrassment sweep. The fact-check validates that claims are TRUE; the sweep validates that the diff is CLEAN. Both gate the PR.</RULE>
 
 ```
 Task:
-  description: "Pre-PR claim validation"
+  description: "Pre-PR claim validation and embarrassment sweep"
   prompt: |
     First, invoke the fact-checking skill using the Skill tool.
     Perform pre-PR validation.
@@ -813,6 +813,26 @@ Task:
 
     This is the absolute last line of defense.
     Nothing ships with false claims.
+
+    ## Embarrassment sweep (diff hygiene)
+
+    After fact-checking, run the embarrassment sweep over the same branch
+    diff. This is the named pre-PR diff-hygiene pass — the things that are
+    embarrassing to ship, separate from whether claims are true. The full
+    8-point checklist lives in the finishing-a-development-branch skill;
+    apply it here. Each point is scoped to what the branch introduced:
+
+    1. Debug leftovers (print/console.log/debugger/breakpoints added by the branch)
+    2. Branch-introduced TODO/FIXME/XXX/HACK markers promising nonexistent work
+    3. Commented-out code the branch left behind
+    4. Accidental inclusions (swap files, .DS_Store, build artifacts, unrelated files)
+    5. AI-attribution violations (Co-Authored-By, "Generated with", bot signatures) in commits/PR text
+    6. Issue-ref violations (#N auto-linking) in commits/PR text
+    7. Out-of-scope paths (files the feature has no business touching; unflagged ride-alongs)
+    8. Repo-specific consistency (version bump present, changelog entry, generated mirrors in sync)
+
+    Report every finding. Any finding is a blocker: fix it, or flag an
+    intentional ride-along to the operator, before the PR opens.
 ```
 
 ### 4.7 Finish Implementation

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Embarrassment sweep — codified pre-PR diff-hygiene gate.** The develop
+  4.6.5 pre-PR gate (`commands/feature-implement.md`) previously validated only
+  that claims were true; it now also runs the named "embarrassment sweep" over
+  the branch diff to validate that the diff is clean. The full 8-point checklist
+  (debug leftovers, stray work markers, commented-out code, accidental file
+  inclusions, AI-attribution violations, issue-ref violations, out-of-scope
+  paths, repo-specific consistency) lives canonically in the
+  `finishing-a-development-branch` skill so non-develop finish flows get it too;
+  the develop gate references it. Any finding is a PR blocker.
 - **Canvas two-way decisions.** Canvas pages become a decision surface: the
   agent declares a decision (`canvas_decision_open`), the operator answers in
   the browser via activated `<choice>`/`<approve>` controls, and the answer

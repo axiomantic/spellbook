@@ -1,334 +1,406 @@
-<!-- diagram-meta: {"source": "commands/feature-implement.md", "source_hash": "sha256:bdcf8f22d27cabed5f25072a8ab04a9b4a85b1481fb4906745d31a2f19a41802", "generated_at": "2026-05-25T01:38:59Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-implement.md", "source_hash": "sha256:467d06c2e8aafda693a3928a03dd45521a5fd0db5266987d013423a4c33ab814", "generated_at": "2026-06-06T22:59:42Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-implement
-
-Now I'll generate the diagrams based on the full content of the file.
 
 ## Overview: `/feature-implement` (Phases 3–4)
 
+Phases 3–4 of the develop workflow. Entry routing depends on `needs_design` flag and escape hatches detected in the user's initial message.
+
 ```mermaid
 flowchart TD
-    entry(["Entry: from /feature-design"])
-    prereq["Prerequisite Verification\nrun bash check script"]
-    nd{"needs_design?"}
-    zero["Zero-Flag Fast Path\nno external design required\ninline plan confirmed ≤5 steps\nenter Phase 4 directly"]
-    ph3["Phase 3\nImplementation Planning"]
-    trans["Phase 3→4\nTransition Verification\nchecklist of 7 items"]
-    transok{"Checklist\nall clear?"}
-    ph4["Phase 4\nImplementation"]
-    done(["Feature Complete"])
+    START(["/feature-implement\nPhases 3-4 of develop"])
+    PREREQ["Prerequisite Verification\n(bash check script)"]
+    ND{"needs_design?"}
+    CHK["Verify: design doc exists\n+ design review done"]
+    CHK_OK{"All checks pass?"}
+    HALT(["STOP: return to\nappropriate phase"])
+    EH{"Escape hatch\nin initial message?"}
+    P3_31["3.1 Create Impl Plan\n▶ writing-plans"]
+    P3_32["3.2 Review Impl Plan\n▶ reviewing-impl-plans"]
+    GATE33{"3.3 Approval Gate"}
+    P3_34["3.4 Fix Impl Plan\n▶ executing-plans"]
+    P3_345["3.4.5 Execution\nMode Analysis"]
+    P3_347["3.4.7 One-Pager\nApproval Gate"]
+    P3_P4_GATE{"Phase 3→4\nTransition Gate"}
+    P4_SETUP["4.1 Setup Worktree(s)\n▶ using-git-worktrees"]
+    P4_EXEC["4.2 Execute Plan\n(parallelization routing)"]
+    PERTASK["Per-Task Cycle\n4.3 Implement → 4.4 Verify\n→ 4.5 Review → 4.5.1 Fact-check"]
+    MERGE_CHK{"per_parallel\n_track?"}
+    SMART_MERGE["4.2.5 Smart Merge\n▶ merging-worktrees"]
+    QGATES["Quality Gates 4.6\n4.6.1 Audit → 4.6.2 Tests\n→ 4.6.3 Mirage → 4.6.4 Claims\n→ 4.6.5 Pre-PR Sweep"]
+    FINISH["4.7 Finish Implementation\n▶ finishing-a-development-branch"]
+    DONE(["Implementation Complete"])
 
-    entry --> prereq
-    prereq --> nd
-    nd -->|true| ph3
-    nd -->|"false (zero-flag)"| zero
-    zero --> ph4
-    ph3 --> trans
-    trans --> transok
-    transok -->|"items unchecked"| ph3
-    transok -->|"all clear"| ph4
-    ph4 --> done
+    START --> PREREQ
+    PREREQ --> ND
+    ND -->|"false (zero-flag fast path)"| P4_SETUP
+    ND -->|"true"| CHK
+    CHK --> CHK_OK
+    CHK_OK -->|"No"| HALT
+    CHK_OK -->|"Yes"| EH
+    EH -->|"none"| P3_31
+    EH -->|"review first"| P3_32
+    EH -->|"treat as ready"| P3_P4_GATE
 
-    style done fill:#51cf66,color:#000
+    P3_31 --> P3_32
+    P3_32 --> GATE33
+    GATE33 -->|"interactive ITERATE"| P3_31
+    GATE33 -->|"interactive APPROVE"| P3_345
+    GATE33 -->|"autonomous: critical / important"| P3_34
+    GATE33 -->|"autonomous: minor only"| P3_345
+    P3_34 --> P3_345
+    P3_345 -->|"direct or small delegated"| P3_P4_GATE
+    P3_345 -->|"large delegated"| P3_347
+    P3_347 -->|"push back"| P3_31
+    P3_347 -->|"approved"| P3_P4_GATE
+    P3_P4_GATE -->|"unchecked items"| P3_31
+    P3_P4_GATE -->|"all clear"| P4_SETUP
 
-    subgraph LEGEND[" Legend"]
-        la["Process / Subagent Work"]
-        lb["Subagent Dispatch"]
-        lc{"Quality Gate / Decision"}
-        ld(["Terminal"])
+    P4_SETUP --> P4_EXEC
+    P4_EXEC --> PERTASK
+    PERTASK -->|"more tasks"| PERTASK
+    PERTASK -->|"all tasks done"| MERGE_CHK
+    MERGE_CHK -->|"Yes"| SMART_MERGE
+    MERGE_CHK -->|"No"| QGATES
+    SMART_MERGE --> QGATES
+    QGATES --> FINISH
+    FINISH --> DONE
+
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]
+        L2["Subagent Dispatch"]
+        L3{"Quality Gate / Decision"}
+        L4(["Terminal"])
     end
-    style lb fill:#4a9eff,color:#fff
-    style lc fill:#ff6b6b,color:#fff
-    style ld fill:#51cf66,color:#000
+
+    style DONE fill:#51cf66,color:#1a1a1d
+    style HALT fill:#ff6b6b,color:#1a1a1d
+    style GATE33 fill:#ff6b6b,color:#1a1a1d
+    style P3_P4_GATE fill:#ff6b6b,color:#1a1a1d
+    style P3_347 fill:#ff6b6b,color:#1a1a1d
+    style CHK_OK fill:#ff6b6b,color:#1a1a1d
+    style QGATES fill:#ff6b6b,color:#1a1a1d
+    style P3_31 fill:#4a9eff,color:#1a1a1d
+    style P3_32 fill:#4a9eff,color:#1a1a1d
+    style P3_34 fill:#4a9eff,color:#1a1a1d
+    style P4_SETUP fill:#4a9eff,color:#1a1a1d
+    style P4_EXEC fill:#4a9eff,color:#1a1a1d
+    style PERTASK fill:#4a9eff,color:#1a1a1d
+    style SMART_MERGE fill:#4a9eff,color:#1a1a1d
+    style FINISH fill:#4a9eff,color:#1a1a1d
+    style L2 fill:#4a9eff,color:#1a1a1d
+    style L3 fill:#ff6b6b,color:#1a1a1d
+    style L4 fill:#51cf66,color:#1a1a1d
 ```
 
 ---
 
-## Phase 3: Implementation Planning (Detail)
+## Phase 3 Detail: Implementation Planning
+
+Covers sections 3.1–3.4.7. Behavior is gated by escape hatch and autonomous/interactive mode.
 
 ```mermaid
 flowchart TD
-    entry3["Phase 3 Entry"]
-    eh{"escape_hatch?"}
+    P3_ENTRY["Enter Phase 3"]
+    EH{"Escape hatch?"}
+    P3_31["3.1 Create Impl Plan\n▶ writing-plans skill\nSave to plans/YYYY-MM-DD-slug-impl.md"]
+    P3_32["3.2 Review Impl Plan\n▶ reviewing-impl-plans skill\nReturn: findings report + remediation plan"]
+    GATE33{"3.3 Approval Gate\n(terminal or canvas-decision)"}
+    MODE33{"Interactive or\nAutonomous?"}
+    ASK_USER["AskUserQuestion:\nAPPROVE or ITERATE?"]
+    AUTO_SEV{"Findings\nseverity?"}
+    P3_34["3.4 Fix Impl Plan\n▶ executing-plans skill"]
+    P3_345["3.4.5 Execution Mode Analysis\nParse: tracks, tasks,\ndependencies, file clusters"]
+    EXEC_MODE{"Execution\nmode?"}
+    DIRECT["direct\nMinimal delegation\n(small changes only)"]
+    DELEGATED["delegated\nOne subagent per gate per task\n(default)"]
+    DEL_SIZE{"Large\ndelegated run?"}
+    P3_347["3.4.7 One-Pager Approval Gate\nNOT waived by autonomous mode"]
+    GEN_OP["Generate one-pager (subagent)\nmax 200 lines: what / tasks / not-in-scope / risks\nSave to plans/YYYY-MM-DD-slug-one-pager.md"]
+    PRESENT_OP["Present to operator\nAwait explicit scoped approval\n(silence does NOT count)"]
+    OP_OK{"Operator\napproval?"}
+    BACK_PHASE["Return to Phase 2 (design)\nor Phase 3.1 (planning)"]
+    P4_ENTRY(["Proceed to Phase 4"])
 
-    s31["3.1 Create Implementation Plan\nsubagent → writing-plans skill\nsave to plans/YYYY-MM-DD-slug-impl.md"]
-    s32["3.2 Review Implementation Plan\nsubagent → reviewing-impl-plans skill\nreturn findings report + remediation plan"]
-    s33{"3.3 Approval Gate"}
-    imode{"autonomous_mode?"}
-    ugate{"User Decision"}
-    autogate{"Findings\nseverity?"}
-    s34["3.4 Fix Implementation Plan\nsubagent → executing-plans skill\npass: plan path, findings, design doc"]
-    s345["3.4.5 Execution Mode Analysis\nparse track markers, task count\ndependency markers, file clusters"]
-    emode{"execution_mode?"}
-    small["direct\nor small delegated"]
-    large["large delegated"]
-    s347["3.4.7 Generate One-Pager\nsubagent → write to plans/slug-one-pager.md\n≤200 lines, plain English\n4 sections: what/tasks/out-of-scope/pushback"]
-    opgate{"Operator\nApproval?\nexplicit scoped only"}
-    retdesign["Return to Phase 2 (design)\nor Phase 3.1 (planning)"]
-    done3(["→ Phase 4: Implementation"])
+    P3_ENTRY --> EH
+    EH -->|"none"| P3_31
+    EH -->|"review first"| P3_32
+    EH -->|"treat as ready"| P4_ENTRY
 
-    entry3 --> eh
-    eh -->|"none"| s31
-    eh -->|"review first"| s32
-    eh -->|"treat as ready"| s345
+    P3_31 --> P3_32
+    P3_32 --> GATE33
+    GATE33 --> MODE33
+    MODE33 -->|"interactive"| ASK_USER
+    MODE33 -->|"autonomous"| AUTO_SEV
+    ASK_USER -->|"ITERATE"| P3_31
+    ASK_USER -->|"APPROVE"| P3_345
+    AUTO_SEV -->|"critical / important"| P3_34
+    AUTO_SEV -->|"minor only"| P3_345
+    P3_34 --> P3_345
+    P3_345 --> EXEC_MODE
+    EXEC_MODE --> DIRECT
+    EXEC_MODE --> DELEGATED
+    DIRECT --> DEL_SIZE
+    DELEGATED --> DEL_SIZE
+    DEL_SIZE -->|"small"| P4_ENTRY
+    DEL_SIZE -->|"large"| P3_347
+    P3_347 --> GEN_OP
+    GEN_OP --> PRESENT_OP
+    PRESENT_OP --> OP_OK
+    OP_OK -->|"approved"| P4_ENTRY
+    OP_OK -->|"push back"| BACK_PHASE
+    BACK_PHASE --> P3_31
 
-    s31 --> s32
-    s32 --> s33
-    s33 --> imode
-    imode -->|interactive| ugate
-    imode -->|autonomous| autogate
-
-    ugate -->|"APPROVE"| s345
-    ugate -->|"ITERATE"| s31
-    autogate -->|"critical / important"| s34
-    autogate -->|"minor"| s345
-    s34 --> s32
-
-    s345 --> emode
-    emode -->|"direct"| small
-    emode -->|"small delegated"| small
-    emode -->|"large delegated"| large
-    small --> done3
-    large --> s347
-
-    s347 --> opgate
-    opgate -->|"approved"| done3
-    opgate -->|"pushback"| retdesign
-    retdesign -->|"re-enter Phase 3"| entry3
-
-    style s31 fill:#4a9eff,color:#fff
-    style s32 fill:#4a9eff,color:#fff
-    style s34 fill:#4a9eff,color:#fff
-    style s347 fill:#4a9eff,color:#fff
-    style s33 fill:#ff6b6b,color:#fff
-    style opgate fill:#ff6b6b,color:#fff
-    style done3 fill:#51cf66,color:#000
-
-    subgraph LEGEND3[" Legend"]
-        la3["Process"]
-        lb3["Subagent Dispatch"]
-        lc3{"Quality Gate / Decision"}
-        ld3(["Terminal"])
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]
+        L2["Subagent Dispatch"]
+        L3{"Quality Gate / Decision"}
+        L4(["Terminal"])
     end
-    style lb3 fill:#4a9eff,color:#fff
-    style lc3 fill:#ff6b6b,color:#fff
-    style ld3 fill:#51cf66,color:#000
+
+    style P4_ENTRY fill:#51cf66,color:#1a1a1d
+    style GATE33 fill:#ff6b6b,color:#1a1a1d
+    style P3_347 fill:#ff6b6b,color:#1a1a1d
+    style OP_OK fill:#ff6b6b,color:#1a1a1d
+    style AUTO_SEV fill:#ff6b6b,color:#1a1a1d
+    style DEL_SIZE fill:#ff6b6b,color:#1a1a1d
+    style P3_31 fill:#4a9eff,color:#1a1a1d
+    style P3_32 fill:#4a9eff,color:#1a1a1d
+    style P3_34 fill:#4a9eff,color:#1a1a1d
+    style GEN_OP fill:#4a9eff,color:#1a1a1d
+    style L2 fill:#4a9eff,color:#1a1a1d
+    style L3 fill:#ff6b6b,color:#1a1a1d
+    style L4 fill:#51cf66,color:#1a1a1d
 ```
 
 ---
 
-## Phase 4: Implementation — Worktree Setup & Task Execution (Detail)
+## Phase 4 Detail: Per-Task Execution Cycle
+
+Covers worktree setup (4.1), parallelization routing (4.2), and the per-task quality gate loop (4.3–4.5.1).
 
 ```mermaid
 flowchart TD
-    entry4["Phase 4 Entry\nORCHESTRATION ONLY in main context"]
+    P4_ENTRY["Phase 4: Implementation\n(both direct and delegated modes)"]
+    WT_MODE{"worktree\nmode?"}
+    WT_SINGLE["single\nCreate one worktree\n▶ using-git-worktrees"]
+    WT_PARALLEL["per_parallel_track\n1. Complete setup/skeleton tasks\n2. Commit setup work\n3. Create one worktree per parallel group\n▶ using-git-worktrees"]
+    WT_NONE["none\nWork in current directory"]
+    PAR_ROUTE{"parallelization\nstrategy?"}
+    PAR_TRACK["per_parallel_track\nEach track dispatched to own worktree\nrun_in_background: true\n▶ executing-plans per worktree"]
+    PAR_MAX["maximize (single worktree)\n▶ dispatching-parallel-agents\nGroup tasks by Parallel Group"]
+    PAR_CON["conservative\n▶ executing-plans (sequential)"]
+    TASK_LOOP["FOR EACH TASK"]
+    T43["4.3 Implement Task N\n▶ test-driven-development\nVerify working dir + branch\nCommit when done"]
+    DM{"dialectic_mode?"}
+    ROUNDTABLE["4.3.1 Dialectic Overlay\n▶ forge_roundtable_convene\n3 archetypes (planning_and_gates)\nor all 10 (full)"]
+    T44["4.4 Implementation Completion Verification\nAuditor checks: acceptance criteria,\nexpected outputs, interface contracts, behaviors"]
+    T44_OK{"All items\nCOMPLETE?"}
+    FIX44["Return to task implementation\nFix incomplete items"]
+    T45["4.5 Code Review\n▶ requesting-code-review"]
+    T45_SEV{"Issue\nseverity?"}
+    FIX_CRIT["Fix critical immediately"]
+    FIX_IMP["Fix important before next task"]
+    NOTE_MIN["Note minor for later"]
+    T451["4.5.1 Claim Validation\n▶ fact-checking\n(docstrings, comments, test names,\ntype hints, error messages)"]
+    T451_OK{"False claims\nfound?"}
+    FIX451["Fix false claims immediately"]
+    NEXT_TASK{"More tasks\nin plan?"}
+    PT_CHK{"per_parallel\n_track?"}
+    SMART_MERGE["4.2.5 Smart Merge\n▶ merging-worktrees\nVerify: all tests pass,\ninterface contracts, cleanup worktrees"]
+    QGATES_ENTRY(["Proceed to Quality Gates 4.6"])
 
-    wt{"worktree\nstrategy?"}
-    wt_single["4.1 Create Single Worktree\nsubagent → using-git-worktrees skill"]
-    wt_para["4.1 Parallel Worktree Setup\nsetup/skeleton tasks first\ncommit before creating worktrees\nsubagent → using-git-worktrees per track"]
-    wt_none["4.1 No Worktree\nwork in current directory"]
+    P4_ENTRY --> WT_MODE
+    WT_MODE -->|"single"| WT_SINGLE
+    WT_MODE -->|"per_parallel_track"| WT_PARALLEL
+    WT_MODE -->|"none"| WT_NONE
+    WT_SINGLE --> PAR_ROUTE
+    WT_PARALLEL --> PAR_ROUTE
+    WT_NONE --> PAR_ROUTE
+    PAR_ROUTE -->|"per_parallel_track"| PAR_TRACK
+    PAR_ROUTE -->|"maximize"| PAR_MAX
+    PAR_ROUTE -->|"conservative"| PAR_CON
+    PAR_TRACK --> TASK_LOOP
+    PAR_MAX --> TASK_LOOP
+    PAR_CON --> TASK_LOOP
+    TASK_LOOP --> T43
+    T43 --> DM
+    DM -->|"roundtable or full"| ROUNDTABLE
+    DM -->|"planning_only or none"| T44
+    ROUNDTABLE --> T44
+    T44 --> T44_OK
+    T44_OK -->|"INCOMPLETE / PARTIAL"| FIX44
+    FIX44 --> T44
+    T44_OK -->|"all COMPLETE"| T45
+    T45 --> T45_SEV
+    T45_SEV -->|"critical"| FIX_CRIT
+    T45_SEV -->|"important"| FIX_IMP
+    T45_SEV -->|"minor"| NOTE_MIN
+    T45_SEV -->|"none"| T451
+    FIX_CRIT --> T451
+    FIX_IMP --> T451
+    NOTE_MIN --> T451
+    T451 --> T451_OK
+    T451_OK -->|"Yes"| FIX451
+    FIX451 --> NEXT_TASK
+    T451_OK -->|"No"| NEXT_TASK
+    NEXT_TASK -->|"Yes"| TASK_LOOP
+    NEXT_TASK -->|"No"| PT_CHK
+    PT_CHK -->|"Yes"| SMART_MERGE
+    PT_CHK -->|"No"| QGATES_ENTRY
+    SMART_MERGE --> QGATES_ENTRY
 
-    para{"parallelization\nstrategy?"}
-    exec_ppt["4.2 Parallel Track Execution\none background Task per worktree\nsubagent → executing-plans skill\nverify branch before any work"]
-    exec_max["4.2 Maximize Parallel Groups\nsubagent → dispatching-parallel-agents skill\ngroup tasks by Parallel Group field"]
-    exec_seq["4.2 Sequential Execution\nsubagent → executing-plans skill"]
-
-    smartmerge["4.2.5 Smart Merge\nsubagent → merging-worktrees skill\ndelete worktrees after merge\nverify all tests pass\nverify interface contracts"]
-
-    taskloop{"More tasks\nin plan?"}
-
-    tdd["4.3 Implement Task N\nsubagent → test-driven-development skill\nread assertion-quality-standard.md first\nFULL ASSERTION PRINCIPLE: assert == only\nno substring / len / mock.ANY assertions\ncommit when done"]
-
-    dialect{"dialectic_mode?"}
-    roundtable["4.3.1 Dialectic Overlay\nforge_roundtable_convene at IMPLEMENT stage\nplanning_and_gates: 3 archetypes\nfull: all 10 archetypes"]
-
-    verify["4.4 Completion Verification\nauditor subagent: acceptance criteria check\nexpected outputs, interface contracts\nbehavior verification, dead code paths\noutput: COMPLETE / INCOMPLETE / PARTIAL"]
-    vgate{"Blocking\nissues?"}
-
-    review["4.5 Code Review\nsubagent → requesting-code-review skill"]
-    rgate{"Issue\nseverity?"}
-
-    factcheck["4.5.1 Claim Validation\nsubagent → fact-checking skill\nscope: files for Task N only\ndocstrings, comments, test names, type hints"]
-    fcgate{"False\nclaims?"}
-
-    nexttask["Mark task complete\nadvance to next task"]
-
-    qgates["→ Phase 4 Quality Gates\n(all tasks complete)"]
-
-    entry4 --> wt
-    wt -->|"single"| wt_single
-    wt -->|"per_parallel_track"| wt_para
-    wt -->|"none"| wt_none
-
-    wt_single --> para
-    wt_para --> para
-    wt_none --> para
-
-    para -->|"per_parallel_track"| exec_ppt
-    para -->|"maximize"| exec_max
-    para -->|"conservative"| exec_seq
-
-    exec_ppt --> smartmerge
-    smartmerge --> taskloop
-    exec_max --> taskloop
-    exec_seq --> taskloop
-
-    taskloop -->|"yes"| tdd
-    tdd --> dialect
-    dialect -->|"roundtable or full"| roundtable
-    dialect -->|"planning_only or none"| verify
-    roundtable --> verify
-
-    verify --> vgate
-    vgate -->|"YES: fix and re-verify"| tdd
-    vgate -->|"NO: all complete"| review
-
-    review --> rgate
-    rgate -->|"critical: fix immediately"| tdd
-    rgate -->|"important / minor"| factcheck
-
-    factcheck --> fcgate
-    fcgate -->|"YES: fix immediately"| tdd
-    fcgate -->|"NO: clean"| nexttask
-    nexttask --> taskloop
-
-    taskloop -->|"no more tasks"| qgates
-
-    style wt_single fill:#4a9eff,color:#fff
-    style wt_para fill:#4a9eff,color:#fff
-    style exec_ppt fill:#4a9eff,color:#fff
-    style exec_max fill:#4a9eff,color:#fff
-    style exec_seq fill:#4a9eff,color:#fff
-    style smartmerge fill:#4a9eff,color:#fff
-    style tdd fill:#4a9eff,color:#fff
-    style roundtable fill:#4a9eff,color:#fff
-    style review fill:#4a9eff,color:#fff
-    style factcheck fill:#4a9eff,color:#fff
-    style vgate fill:#ff6b6b,color:#fff
-    style rgate fill:#ff6b6b,color:#fff
-    style fcgate fill:#ff6b6b,color:#fff
-    style qgates fill:#51cf66,color:#000
-
-    subgraph LEGEND4[" Legend"]
-        la4["Process"]
-        lb4["Subagent Dispatch"]
-        lc4{"Quality Gate / Decision"}
-        ld4(["Terminal"])
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]
+        L2["Subagent Dispatch"]
+        L3{"Quality Gate / Decision"}
+        L4(["Terminal"])
     end
-    style lb4 fill:#4a9eff,color:#fff
-    style lc4 fill:#ff6b6b,color:#fff
-    style ld4 fill:#51cf66,color:#000
+
+    style QGATES_ENTRY fill:#51cf66,color:#1a1a1d
+    style T44 fill:#ff6b6b,color:#1a1a1d
+    style T44_OK fill:#ff6b6b,color:#1a1a1d
+    style T45_SEV fill:#ff6b6b,color:#1a1a1d
+    style T451_OK fill:#ff6b6b,color:#1a1a1d
+    style T43 fill:#4a9eff,color:#1a1a1d
+    style ROUNDTABLE fill:#4a9eff,color:#1a1a1d
+    style T45 fill:#4a9eff,color:#1a1a1d
+    style T451 fill:#4a9eff,color:#1a1a1d
+    style WT_SINGLE fill:#4a9eff,color:#1a1a1d
+    style WT_PARALLEL fill:#4a9eff,color:#1a1a1d
+    style PAR_TRACK fill:#4a9eff,color:#1a1a1d
+    style PAR_MAX fill:#4a9eff,color:#1a1a1d
+    style PAR_CON fill:#4a9eff,color:#1a1a1d
+    style SMART_MERGE fill:#4a9eff,color:#1a1a1d
+    style L2 fill:#4a9eff,color:#1a1a1d
+    style L3 fill:#ff6b6b,color:#1a1a1d
+    style L4 fill:#51cf66,color:#1a1a1d
 ```
 
 ---
 
-## Phase 4: Quality Gates & Completion (Detail)
+## Phase 4.6–4.7 Detail: Quality Gates and Finish
+
+All gates are mandatory. Each gate loops until clean before the next gate begins.
 
 ```mermaid
 flowchart TD
-    qentry["Phase 4 Quality Gates Entry\n(all tasks complete)"]
+    QGATE_ENTRY["Quality Gates (post-all-tasks)"]
 
-    audit["4.6.1 Comprehensive Implementation Audit\nauditor subagent: plan item sweep\ncross-task integration verification\ndesign doc traceability\nfeature completeness end-to-end"]
-    auditgate{"Blocking\nissues?"}
+    G461["4.6.1 Comprehensive Implementation Audit\nPlan item sweep (COMPLETE / INCOMPLETE / DEGRADED)\nCross-task integration verification\nDesign traceability check\nFeature completeness (end-to-end usability)"]
+    G461_OK{"Blocking\nissues?"}
+    FIX461["Fix issues (subagent dispatch)\nthen re-run audit"]
 
-    testsuite["4.6.2 Run Full Test Suite\npytest / npm test / cargo test"]
-    testgate{"Tests\npassing?"}
-    debug["subagent → systematic-debugging skill\nfix issues, then re-run"]
+    G462["4.6.2 Run Full Test Suite\npytest / npm test / cargo test / etc."]
+    G462_OK{"Tests\npassing?"}
+    DEBUG["▶ systematic-debugging\nFix failures"]
 
-    mirage["4.6.3 Green Mirage Audit\nsubagent → audit-green-mirage skill\nread assertion-quality-standard.md first\nfocus: new code from this feature\nFULL ASSERTION PRINCIPLE enforced"]
-    mirgate{"Issues\nfound?"}
+    G463["4.6.3 Green Mirage Audit\n▶ audit-green-mirage\nRule: exact equality only\nassert result == expected  (required)\nassert substring in result  (BANNED)"]
+    G463_OK{"Issues\nfound?"}
+    FIX463["Fix weak assertions\nthen re-run audit"]
 
-    compfact["4.6.4 Comprehensive Claim Validation\nsubagent → fact-checking skill\nscope: ALL files for this feature\ncross-reference design doc + impl plan"]
-    cfgate{"Issues\nfound?"}
+    G464["4.6.4 Comprehensive Claim Validation\n▶ fact-checking\nScope: all files modified by this feature\nCross-ref: design doc + impl plan"]
+    G464_OK{"False\nclaims?"}
+    FIX464["Fix false claims\nthen re-run"]
 
-    prepr["4.6.5 Pre-PR Claim Validation\nsubagent → fact-checking skill\nscope: branch diff since merge-base\nlast line of defense before PR"]
-    ppgate{"Issues\nfound?"}
+    G465["4.6.5 Pre-PR Validation + Embarrassment Sweep\n▶ fact-checking (branch scope)\n+ 8-point hygiene checklist:\n1. Debug leftovers\n2. TODO/FIXME/XXX/HACK markers\n3. Commented-out code\n4. Accidental inclusions\n5. AI-attribution violations\n6. Issue-ref violations (#N)\n7. Out-of-scope file paths\n8. Repo consistency (version, changelog, mirrors)"]
+    G465_OK{"Any\nfinding?"}
+    FIX465["Fix finding or flag intentional\nride-along to operator"]
 
-    postmode{"post_impl?"}
-    finish_opts["4.7 Offer Options\nsubagent → finishing-a-development-branch skill\npresent: merge / create PR / cleanup"]
-    finish_pr["4.7 Auto PR\npush branch\ngh pr create\nreturn URL"]
-    finish_stop["4.7 Stop\nannounce complete\nsummarize work\nlist remaining TODOs"]
-    done4(["Feature Complete"])
+    FINISH["4.7 Finish Implementation"]
+    FINISH_MODE{"post_impl?"}
+    OPT_OFFER["offer_options\n▶ finishing-a-development-branch\n(present: merge / PR / cleanup options)"]
+    OPT_PR["auto_pr\npush branch + gh pr create\nreturn PR URL"]
+    OPT_STOP["stop\nannounce complete\nsummarize + list remaining TODOs"]
+    DONE(["Implementation Complete"])
 
-    qentry --> audit
-    audit --> auditgate
-    auditgate -->|"YES: fix and re-audit"| audit
-    auditgate -->|"NO: clean"| testsuite
+    QGATE_ENTRY --> G461
+    G461 --> G461_OK
+    G461_OK -->|"Yes"| FIX461
+    FIX461 --> G461
+    G461_OK -->|"No"| G462
+    G462 --> G462_OK
+    G462_OK -->|"No"| DEBUG
+    DEBUG --> G462
+    G462_OK -->|"Yes"| G463
+    G463 --> G463_OK
+    G463_OK -->|"Yes"| FIX463
+    FIX463 --> G463
+    G463_OK -->|"No"| G464
+    G464 --> G464_OK
+    G464_OK -->|"Yes"| FIX464
+    FIX464 --> G464
+    G464_OK -->|"No"| G465
+    G465 --> G465_OK
+    G465_OK -->|"Yes"| FIX465
+    FIX465 --> G465
+    G465_OK -->|"No"| FINISH
+    FINISH --> FINISH_MODE
+    FINISH_MODE -->|"offer_options"| OPT_OFFER
+    FINISH_MODE -->|"auto_pr"| OPT_PR
+    FINISH_MODE -->|"stop"| OPT_STOP
+    OPT_OFFER --> DONE
+    OPT_PR --> DONE
+    OPT_STOP --> DONE
 
-    testsuite --> testgate
-    testgate -->|"FAIL"| debug
-    debug --> testsuite
-    testgate -->|"PASS"| mirage
-
-    mirage --> mirgate
-    mirgate -->|"YES: fix and re-audit"| mirage
-    mirgate -->|"NO: clean"| compfact
-
-    compfact --> cfgate
-    cfgate -->|"YES: fix immediately"| compfact
-    cfgate -->|"NO: clean"| prepr
-
-    prepr --> ppgate
-    ppgate -->|"YES: fix immediately"| prepr
-    ppgate -->|"NO: clean"| postmode
-
-    postmode -->|"offer_options"| finish_opts
-    postmode -->|"auto_pr"| finish_pr
-    postmode -->|"stop"| finish_stop
-
-    finish_opts --> done4
-    finish_pr --> done4
-    finish_stop --> done4
-
-    style audit fill:#4a9eff,color:#fff
-    style debug fill:#4a9eff,color:#fff
-    style mirage fill:#4a9eff,color:#fff
-    style compfact fill:#4a9eff,color:#fff
-    style prepr fill:#4a9eff,color:#fff
-    style finish_opts fill:#4a9eff,color:#fff
-    style finish_pr fill:#4a9eff,color:#fff
-    style auditgate fill:#ff6b6b,color:#fff
-    style testgate fill:#ff6b6b,color:#fff
-    style mirgate fill:#ff6b6b,color:#fff
-    style cfgate fill:#ff6b6b,color:#fff
-    style ppgate fill:#ff6b6b,color:#fff
-    style done4 fill:#51cf66,color:#000
-
-    subgraph LEGEND5[" Legend"]
-        la5["Process"]
-        lb5["Subagent Dispatch"]
-        lc5{"Quality Gate / Decision"}
-        ld5(["Terminal"])
+    subgraph LEGEND["Legend"]
+        direction LR
+        L1["Process"]
+        L2["Subagent Dispatch"]
+        L3{"Quality Gate / Decision"}
+        L4(["Terminal"])
     end
-    style lb5 fill:#4a9eff,color:#fff
-    style lc5 fill:#ff6b6b,color:#fff
-    style ld5 fill:#51cf66,color:#000
+
+    style DONE fill:#51cf66,color:#1a1a1d
+    style G461 fill:#ff6b6b,color:#1a1a1d
+    style G462 fill:#ff6b6b,color:#1a1a1d
+    style G463 fill:#ff6b6b,color:#1a1a1d
+    style G464 fill:#ff6b6b,color:#1a1a1d
+    style G465 fill:#ff6b6b,color:#1a1a1d
+    style G461_OK fill:#ff6b6b,color:#1a1a1d
+    style G462_OK fill:#ff6b6b,color:#1a1a1d
+    style G463_OK fill:#ff6b6b,color:#1a1a1d
+    style G464_OK fill:#ff6b6b,color:#1a1a1d
+    style G465_OK fill:#ff6b6b,color:#1a1a1d
+    style DEBUG fill:#4a9eff,color:#1a1a1d
+    style OPT_OFFER fill:#4a9eff,color:#1a1a1d
+    style FINISH fill:#4a9eff,color:#1a1a1d
+    style L2 fill:#4a9eff,color:#1a1a1d
+    style L3 fill:#ff6b6b,color:#1a1a1d
+    style L4 fill:#51cf66,color:#1a1a1d
 ```
 
 ---
 
-## Cross-Reference: Overview Nodes → Detail Diagrams
+## Cross-Reference Table
 
-| Overview Node | Detail Diagram |
-|---|---|
-| Prerequisite Verification | Phase 3 Detail (entry condition) |
-| Zero-Flag Fast Path | Phase 3 Detail (`escape_hatch = treat as ready`) |
-| Phase 3: Implementation Planning | Phase 3 Detail diagram |
-| Phase 4: Implementation | Phase 4 Task Execution + Phase 4 Quality Gates diagrams |
-
-## Skills Invoked by Phase
-
-| Step | Skill | Trigger |
+| Overview Node | Detail Diagram | Section |
 |---|---|---|
-| 3.1 | `writing-plans` | Create impl plan |
-| 3.2 | `reviewing-impl-plans` | Review impl plan |
-| 3.4 | `executing-plans` | Fix plan findings |
-| 4.1 | `using-git-worktrees` | Create workspace(s) |
-| 4.2 | `dispatching-parallel-agents` | Maximize parallelization |
-| 4.2.5 | `merging-worktrees` | Merge parallel tracks |
-| 4.3 | `test-driven-development` | TDD per task |
-| 4.3.1 | `forge_roundtable_convene` (MCP) | Dialectic overlay (if enabled) |
-| 4.5 | `requesting-code-review` | Per-task code review |
-| 4.5.1, 4.6.4, 4.6.5 | `fact-checking` | Claim validation (3×) |
-| 4.6.2 | `systematic-debugging` | Debug test failures |
-| 4.6.3 | `audit-green-mirage` | Test quality audit |
-| 4.7 | `finishing-a-development-branch` | Branch completion |
+| Phase 3 (3.1–3.4.7) | Phase 3 Detail | §3.1–§3.4.7 |
+| Per-Task Cycle (4.3–4.5.1) | Phase 4 Per-Task Cycle | §4.1–§4.5.1 |
+| Quality Gates 4.6 | Phase 4.6–4.7 Quality Gates | §4.6.1–§4.7 |
+| 4.7 Finish | Phase 4.6–4.7 Quality Gates | §4.7 |
+
+## Skills Dispatch Map
+
+| Node | Skill Invoked |
+|---|---|
+| 3.1 Create Impl Plan | `writing-plans` |
+| 3.2 Review Impl Plan | `reviewing-impl-plans` |
+| 3.4 Fix Impl Plan | `executing-plans` |
+| 3.4.7 One-Pager (generate) | subagent (inline) |
+| 4.1 Setup Worktrees | `using-git-worktrees` |
+| 4.2 Maximize parallel | `dispatching-parallel-agents` |
+| 4.2 Conservative | `executing-plans` |
+| 4.2.5 Smart Merge | `merging-worktrees` |
+| 4.3 Implement Task | `test-driven-development` |
+| 4.3.1 Dialectic Overlay | `forge_roundtable_convene` (MCP) |
+| 4.5 Code Review | `requesting-code-review` |
+| 4.5.1 Claim Validation | `fact-checking` |
+| 4.6.2 Debug failures | `systematic-debugging` |
+| 4.6.3 Mirage Audit | `audit-green-mirage` |
+| 4.6.4 Comprehensive Claims | `fact-checking` |
+| 4.6.5 Pre-PR + Embarrassment Sweep | `fact-checking` + `finishing-a-development-branch` checklist |
+| 4.7 Finish (offer_options) | `finishing-a-development-branch` |
