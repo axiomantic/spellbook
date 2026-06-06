@@ -78,7 +78,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
     return (
       <div
         data-testid="choice-already-decided"
-        className="my-3 border border-bg-border p-3 opacity-70"
+        className="not-prose my-3 border border-bg-border p-3 opacity-70"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -96,7 +96,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
     return (
       <div
         data-testid="choice-cancelled"
-        className="my-3 border border-bg-border p-3 opacity-70"
+        className="not-prose my-3 border border-bg-border p-3 opacity-70"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -112,7 +112,7 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
     return (
       <div
         data-testid="choice-submitted"
-        className="my-3 border border-accent-green p-3"
+        className="not-prose my-3 border border-accent-green p-3"
       >
         {prompt && (
           <p className="font-mono text-xs uppercase tracking-widest text-text-secondary mb-2">
@@ -135,8 +135,8 @@ export function Choice({ id, prompt, options }: ChoiceProps) {
       data-testid="choice"
       className={
         active
-          ? 'my-3 border border-bg-border p-3'
-          : 'my-3 border border-bg-border p-3 opacity-70'
+          ? 'not-prose my-3 border border-bg-border p-3'
+          : 'not-prose my-3 border border-bg-border p-3 opacity-70'
       }
     >
       {prompt && (

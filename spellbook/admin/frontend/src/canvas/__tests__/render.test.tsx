@@ -14,6 +14,7 @@ vi.mock('../shortcodes/ChartImpl', () => ({
 // Import AFTER the mocks above so `Diagram` / `Chart` pick up the mocked
 // dynamic imports.
 import { CanvasRender } from '../render'
+import { Choice } from '../shortcodes/Choice'
 import { CanvasDecisionContext } from '../CanvasDecisionContext'
 import type { CanvasDecisionValue } from '../CanvasDecisionContext'
 import type { ReactNode } from 'react'
@@ -229,5 +230,112 @@ describe('CanvasRender — not-prose boundaries on shortcode content regions', (
     expect(body).toHaveClass('not-prose text-sm text-text-primary', {
       exact: true,
     })
+  })
+})
+
+describe('Choice — not-prose on every render-root branch', () => {
+  // §2.4 / F1: Choice has FOUR distinct render roots (three terminal early
+  // returns + the live fieldset). Each must carry `not-prose` as its first
+  // token so a post-decision `canvas_write` never lets the prose cascade leak
+  // into terminal-state status text. Each test drives ONE branch via context
+  // state and asserts the COMPLETE className set with { exact: true } — a
+  // Level 5 assertion that fails on a missing `not-prose` token AND on any
+  // dropped/added sibling token. The frozen §6.1 testids pin which branch.
+
+  // Each branch builds on this provider value; per-test overrides set the
+  // exact state that selects the target branch (Choice.tsx §8.2 ordering).
+  const baseValue: CanvasDecisionValue = {
+    canvasName: 'plan-x',
+    decision: null,
+    submit: { mutate: () => {}, status: 'idle', error: null, lastFreeText: null },
+    reauthenticate: () => {},
+  }
+  const choiceUi = (
+    <Choice id="d1" prompt="Pick" options='[{"value":"a","label":"A"}]' />
+  )
+  function renderWith(value: CanvasDecisionValue) {
+    return render(
+      <CanvasDecisionContext.Provider value={value}>
+        {choiceUi}
+      </CanvasDecisionContext.Provider>,
+    )
+  }
+
+  it('already-decided root carries not-prose (errorCode=already_decided)', () => {
+    renderWith({
+      ...baseValue,
+      submit: {
+        ...baseValue.submit,
+        status: 'error',
+        error: Object.assign(new Error('x'), { code: 'already_decided' }),
+      },
+    })
+    const root = screen.getByTestId('choice-already-decided')
+    // Choice.tsx:78-82 — not-prose prepended to the frozen class set.
+    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3 opacity-70', {
+      exact: true,
+    })
+  })
+
+  it('cancelled root carries not-prose (decision.status=cancelled)', () => {
+    renderWith({
+      ...baseValue,
+      decision: {
+        decision_id: 'd1',
+        kind: 'choice',
+        prompt: 'Pick',
+        options: [{ value: 'a', label: 'A' }],
+        status: 'cancelled',
+      },
+    })
+    const root = screen.getByTestId('choice-cancelled')
+    // Choice.tsx:96-100 — not-prose prepended to the frozen class set.
+    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3 opacity-70', {
+      exact: true,
+    })
+  })
+
+  it('submitted root carries not-prose (submit.status=success)', () => {
+    renderWith({
+      ...baseValue,
+      submit: { ...baseValue.submit, status: 'success' },
+    })
+    const root = screen.getByTestId('choice-submitted')
+    // Choice.tsx:112-116 — not-prose prepended to the frozen class set.
+    expect(root).toHaveClass('not-prose my-3 border border-accent-green p-3', {
+      exact: true,
+    })
+  })
+
+  it('live (active) fieldset root carries not-prose (matching pending decision)', () => {
+    renderWith({
+      ...baseValue,
+      decision: {
+        decision_id: 'd1',
+        kind: 'choice',
+        prompt: 'Pick',
+        options: [{ value: 'a', label: 'A' }],
+        status: 'pending',
+      },
+    })
+    const root = screen.getByTestId('choice')
+    // Choice.tsx:131-141 — active ternary arm; not-prose prepended to the
+    // frozen class set (the active arm omits opacity-70).
+    expect(root).toHaveClass('not-prose my-3 border border-bg-border p-3', {
+      exact: true,
+    })
+  })
+
+  it('live (inactive) fieldset root carries not-prose (no matching live decision)', () => {
+    // No matching pending decision → the inactive ternary arm renders
+    // (opacity-70). Pins not-prose on the OTHER arm of the live conditional,
+    // so a fix that only patches the active arm fails here.
+    renderWith(baseValue)
+    const root = screen.getByTestId('choice')
+    // Choice.tsx:137-140 — inactive ternary arm; not-prose prepended.
+    expect(root).toHaveClass(
+      'not-prose my-3 border border-bg-border p-3 opacity-70',
+      { exact: true },
+    )
   })
 })
