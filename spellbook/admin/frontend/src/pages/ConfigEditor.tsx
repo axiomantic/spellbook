@@ -35,7 +35,7 @@ function ToggleSwitch({
 
 function AdminWarning() {
   return (
-    <div className="mt-1 px-3 py-2 bg-accent-yellow/10 border border-accent-yellow/30 rounded text-xs text-accent-yellow">
+    <div className="mt-1 px-3 py-2 bg-accent-amber/10 border border-accent-amber/30 rounded text-xs text-accent-amber">
       Disabling this will prevent the admin interface from mounting on next server restart.
     </div>
   )
@@ -139,7 +139,7 @@ function ConfigField({
         <div className="font-mono text-sm text-text-primary">
           {schema.key}
           {schema.secret && (
-            <span className="ml-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wider bg-accent-yellow/10 border border-accent-yellow/30 rounded text-accent-yellow">
+            <span className="ml-2 px-1.5 py-0.5 text-[10px] uppercase tracking-wider bg-accent-amber/10 border border-accent-amber/30 rounded text-accent-amber">
               secret
             </span>
           )}
@@ -187,7 +187,7 @@ function ConfigField({
  * Convert a dotted config key into a human-readable section title.
  *
  * ``security.spotlighting.tier`` -> ``Security / Spotlighting``
- * ``notify_enabled``             -> ``General``
+ * ``notify_title``               -> ``Notifications``
  */
 function sectionTitleForKey(key: string): string {
   if (!key.includes('.')) {

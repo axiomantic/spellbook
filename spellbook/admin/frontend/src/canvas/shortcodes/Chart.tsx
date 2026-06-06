@@ -62,7 +62,7 @@ export function Chart({ caption, children }: ChartProps) {
       <Suspense
         fallback={<div className="text-text-dim text-xs">Loading chart…</div>}
       >
-        <figure data-testid="chart" className="my-3">
+        <figure data-testid="chart" className="not-prose my-3">
           <ChartImpl spec={spec!} />
           {caption && (
             <figcaption className="text-text-dim text-xs mt-1 font-mono">

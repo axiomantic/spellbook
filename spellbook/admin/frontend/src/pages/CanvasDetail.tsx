@@ -1,10 +1,11 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useCanvas } from '../hooks/useCanvases'
 import { LoadingSpinner } from '../components/shared/LoadingSpinner'
 import { PageLayout } from '../components/layout/PageLayout'
 import { CanvasRender } from '../canvas/render'
 import { CanvasDecisionContext } from '../canvas/CanvasDecisionContext'
+import { evictCanvasShortcodeState } from '../canvas/shortcodes/shortcodeState'
 import { useDecisionSubmit } from '../hooks/useDecisionSubmit'
 
 /**
@@ -50,6 +51,19 @@ export function CanvasDetail() {
     [data?.name, data?.decision, submit, reauthenticate],
   )
 
+  // Per-canvas remount-survival cache eviction (design §4.3 / F3). The
+  // module-scoped `collapsibleOpenState` / `tabsActiveState` caches intentionally
+  // survive the shortcode-leaf remount a `canvas_write` triggers — but they must
+  // NOT survive leaving the canvas entirely. On unmount (or navigation to a
+  // different canvas name) the cleanup sweeps every entry prefixed with this
+  // canvas's name, bounding the cache to the live canvas. Scoping the effect to
+  // the loaded `data?.name` keeps the cleanup keyed to the canvas actually shown.
+  const loadedName = data?.name
+  useEffect(() => {
+    if (!loadedName) return
+    return () => evictCanvasShortcodeState(loadedName)
+  }, [loadedName])
+
   if (isLoading) {
     return (
       <PageLayout segments={[{ label: 'CANVAS' }, { label: name ?? '' }]}>
@@ -94,9 +108,9 @@ export function CanvasDetail() {
         {data.closed && (
           <div
             role="status"
-            className="mb-4 border-l-4 border-accent-yellow bg-bg-elevated px-3 py-2"
+            className="mb-4 border-l-4 border-accent-amber bg-bg-elevated px-3 py-2"
           >
-            <span className="font-mono text-xs uppercase tracking-widest text-accent-yellow">
+            <span className="font-mono text-xs uppercase tracking-widest text-accent-amber">
               // CLOSED
             </span>
             <p className="text-sm text-text-primary mt-1">
@@ -105,7 +119,7 @@ export function CanvasDetail() {
           </div>
         )}
 
-        <div className="text-text-primary text-sm leading-relaxed">
+        <div className="prose prose-invert max-w-none text-text-primary text-sm leading-relaxed">
           <CanvasDecisionContext.Provider value={decisionValue}>
             <CanvasRender content={data.content} />
           </CanvasDecisionContext.Provider>
@@ -118,7 +132,7 @@ export function CanvasDetail() {
           <p
             role="status"
             data-testid="decision-submitting"
-            className="mt-3 font-mono text-xs uppercase tracking-widest text-accent-yellow"
+            className="mt-3 font-mono text-xs uppercase tracking-widest text-accent-amber"
           >
             Submitting…
           </p>

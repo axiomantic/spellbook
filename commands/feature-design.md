@@ -167,6 +167,15 @@ to the gate's outcomes — the approve/affirmative value → APPROVE (proceed);
 declined/reject value → ITERATE (return to 2.1/2.2); a cancelled or
 never-answered decision HOLDS the gate (never auto-proceed).
 
+**Canvas page CONTENT (when rendered via `canvas`):** the design-approval page
+MUST follow the "Decision Page Anatomy" section of the canvas-decision skill —
+do NOT ship a bare approve button. Top-to-bottom: a context callout framing the
+design decision → an architecture `<diagram>` when the design is structural →
+per-option detail with the recommended option signposted (`<collapsible open>`
+for it, collapsed for alternatives) → the `<approve>`/`<choice>` control LAST.
+This is a CONTENT prescription only; it does not change the gate's behavior, the
+outcome mapping, or the never-auto-proceed contract above.
+
 ```python
 def handle_review_checkpoint(findings, mode):
     if mode == "autonomous":

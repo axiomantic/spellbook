@@ -190,19 +190,30 @@ markdown bodies) goes in children.
 | `<tabs>` | — | Must contain `<tab>` elements only. `<tab>` takes `title: string`; tab children are markdown. |
 | `<choice>` | `id: string`, `prompt: string`, `options: string` (JSON-encoded `[{value, label}]`) | — (self-closing; renders a live control when a decision with this `id` is declared, disabled otherwise). |
 | `<approve>` | `id: string`, `prompt: string`, `confirm_label?: string`, `decline_label?: string` | — (self-closing; renders a live control when a decision with this `id` is declared, disabled otherwise). |
+| `<collapsible>` | `summary?: string` (default `"Details"`), `open?: presence-bool` | Markdown content (re-rendered recursively). |
 
 Nesting rules:
 
 | Container | Allowed nested shortcodes |
 |---|---|
-| `<callout>` | All. Don't abuse — a callout nested three deep is a smell. |
-| `<tabs>` / `<tab>` | All. A `<chart>` inside a `<tab>` is the canonical use case. |
+| `<callout>` | All, including `<collapsible>`. Don't abuse — a callout nested three deep is a smell. |
+| `<tabs>` / `<tab>` | All, including `<collapsible>`. A `<chart>` inside a `<tab>` is the canonical use case. |
+| `<collapsible>` | All. Don't nest 3-deep — same smell rule as `<callout>`. |
 | `<chart>`, `<diagram>` | None. Children are raw text only. |
 | `<choice>`, `<approve>` | None. Self-closing. |
 
 Block shortcodes (`<chart>`, `<diagram>`, `<tabs>`) inside markdown table
 cells are NOT supported. Inline `<callout>` and plain text are fine in
 table cells.
+
+GFM task-list items (`- [x]` / `- [ ]`) render as status icons (done /
+pending), NOT interactive checkboxes — the operator cannot toggle them.
+Use them to show completion state, not to collect input.
+
+`<collapsible>` open/closed state is cached per canvas by summary + source
+position, so it survives page rewrites. Give sibling collapsibles distinct
+summaries: collapsibles sharing the default "Details" summary can have their
+remembered open-state misattributed if the page is reordered.
 
 Example markdown an agent might emit via `canvas_write`:
 
@@ -237,6 +248,22 @@ flowchart LR
     Star schema. More flexible for analytics.
   </tab>
 </tabs>
+
+## Progress
+
+- [x] Schema drafted
+- [x] Migration written
+- [ ] Backfill verified
+
+<collapsible summary="Migration details">
+
+The migration runs in two phases to avoid a long table lock.
+
+```sql
+ALTER TABLE events ADD COLUMN region text;
+```
+
+</collapsible>
 ````
 
 ## Threat Model

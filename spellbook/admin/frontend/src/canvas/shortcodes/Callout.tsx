@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { renderChildren } from './renderChildren'
 
 export type CalloutType = 'note' | 'tip' | 'warning' | 'danger'
 
@@ -11,7 +12,7 @@ interface CalloutProps {
 const TYPE_STYLES: Record<CalloutType, { border: string; label: string }> = {
   note: { border: 'border-accent-cyan', label: 'text-accent-cyan' },
   tip: { border: 'border-accent-green', label: 'text-accent-green' },
-  warning: { border: 'border-accent-yellow', label: 'text-accent-yellow' },
+  warning: { border: 'border-accent-amber', label: 'text-accent-amber' },
   danger: { border: 'border-accent-red', label: 'text-accent-red' },
 }
 
@@ -25,8 +26,9 @@ function normalizeType(t: string | undefined): CalloutType {
 /**
  * Markdown aside / callout shortcode.
  *
- * Children are markdown content that has already been re-parsed by
- * `react-markdown` + `rehype-raw` upstream; render them inline.
+ * Children may arrive already parsed (blank-line case) OR as a raw unparsed
+ * string when written tight against the tag (CommonMark raw-HTML-block rule);
+ * renderChildren re-parses the raw case through the shared pipeline.
  */
 export function Callout({ type, title, children }: CalloutProps) {
   const t = normalizeType(type)
@@ -43,7 +45,7 @@ export function Callout({ type, title, children }: CalloutProps) {
       >
         {`// ${t.toUpperCase()}${title ? ` — ${title}` : ''}`}
       </div>
-      <div className="text-sm text-text-primary">{children}</div>
+      <div className="not-prose text-sm text-text-primary">{renderChildren(children)}</div>
     </aside>
   )
 }

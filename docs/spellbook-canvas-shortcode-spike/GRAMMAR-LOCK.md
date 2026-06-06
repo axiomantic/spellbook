@@ -43,3 +43,47 @@ record of the lock event so Track A/B/C reviewers can see it without
 chasing the out-of-tree path.)
 
 ## Tracks A, B, C are UNBLOCKED.
+
+---
+
+## Amendment 2026-06-05 — <collapsible> added (children-content)
+
+**Spike verdict:** PASS. Verified against react-markdown@9 + remark-gfm@4 +
+rehype-raw@7. The original verification ran in an out-of-tree dev spike harness (never committed to the tree)
+(`spellbook/admin/frontend/spike/collapsible.spike.test.tsx`) on 2026-06-05; the
+durable in-repo evidence is the implementation
+(`spellbook/admin/frontend/src/canvas/shortcodes/Collapsible.tsx`) and its tracked
+test suite (`spellbook/admin/frontend/src/canvas/__tests__/render.test.tsx`):
+the four criteria below are pinned by the `CanvasRender — not-prose boundaries on
+shortcode content regions`, `GATE-2 raw-string shortcode children re-parse`, and
+`CanvasRender — remount-survival state cache (Collapsible + Tabs)` describe blocks
+(CRIT 6 nesting by the `GATE-2` block's "a <collapsible open> nests INSIDE the
+active <tab> panel" pin) (the GFM-table-in-children sub-case was exercised in the
+original spike run; the durable suite pins the bold and nested-callout re-parse
+cases).
+
+Criteria met:
+- summary attr survives onto button label; default collapsed (body absent).
+- open presence-attr toggles initial state; body renders.
+- children RE-PARSED as markdown: bold, nested <callout>, GFM table.
+- nests inside <tab> (CRIT 6).
+
+Grammar class: children-content (Callout pattern). Attributes: summary?: string,
+open?: presence-bool. Children: markdown, re-parsed recursively.
+
+Known cosmetic artifact (pre-existing, NOT introduced here): block shortcodes on
+their own line in re-parsed children get <p>-wrapped by react-markdown (block-in-p,
+browser-tolerated). Same as <callout> today. Not fixed in this run (render-engine
+change is out of scope).
+
+As of this amendment, the locked set is the eight-shortcode grammar (chart,
+diagram, callout, tabs, tab, choice, approve, collapsible).
+
+### Status primitives = render-layer only, NO grammar change
+
+The `components.input` task-list override is a **render-layer change, NOT a
+grammar change.** No new shortcode, no new tag, no lock amendment for status
+primitives. GFM `- [x]` syntax is already in the locked grammar (remark-gfm); the
+input override replaces the emitted checkbox DOM with a non-interactive status icon
+(render-layer only — no grammar change). This amendment covers `<collapsible>`
+ONLY.

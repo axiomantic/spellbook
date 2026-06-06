@@ -32,7 +32,7 @@ export function Diagram({ caption, children }: DiagramProps) {
           <div className="text-text-dim text-xs">Loading diagram…</div>
         }
       >
-        <figure data-testid="diagram" className="my-3">
+        <figure data-testid="diagram" className="not-prose my-3">
           <MermaidImpl source={source} />
           {caption && (
             <figcaption className="text-text-dim text-xs mt-1 font-mono">

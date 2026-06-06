@@ -46,6 +46,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   build`) during install/update instead of shipping a pre-built bundle in the
   repo. Node and npm are now a hard requirement — a missing toolchain fails the
   install with an actionable error.
+- **Canvas decision-page styling and composition overhaul.** The canvas
+  markdown renderer gains a typography baseline with per-element overrides and
+  explicit not-prose boundaries, status icons, a collapsible `<collapsible>`
+  shortcode, and a remount-survival shortcode state cache (per-canvas
+  namespacing + unmount eviction) so collapsed/expanded and tab state persist
+  across re-renders. Control polish covers `<choice>`, `<approve>`, `<callout>`,
+  and `<tabs>`. Skill and command guidance expands to match: a `canvas-decision`
+  skill rewrite with a Decision Page Anatomy section and worked examples,
+  canvas skill guidance, a GRAMMAR-LOCK amendment, and develop feature-design
+  (2.3) / feature-implement (3.3) content prescriptions for decision pages. Test
+  coverage grows from 8 to 55 render tests, including a byte-verbatim integration
+  fixture, pinning the exact rendered class contracts.
 
 ### Changed
 
@@ -76,6 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   there is no server-side session store, so rotating the MCP token
   (`.mcp-token`) invalidates all outstanding sessions at once — the signing
   key is derived from it; logout only clears the browser's copy of the cookie.
+- **ConfigEditor accent-token rot.** Two `accent-yellow` references that
+  resolved to a dead Tailwind token are corrected to `accent-amber`, and a
+  `sectionTitleForKey` docstring example that named a nonexistent key (routing
+  to the wrong section) is fixed.
 - **Canvas decision await binds by token, not ephemeral session id.** Under
   stateless HTTP the session id is per-request, so awaits bound by session id
   could fail to match their own declared decision; `canvas_decision_await` now
