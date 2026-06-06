@@ -105,6 +105,28 @@ When the user says "update changelog", "bump version", "make sure version is cor
 
 ---
 
+## The Embarrassment Sweep
+
+Before any push or PR, run the embarrassment sweep over the branch diff
+(`git diff $(git merge-base HEAD <target>)...HEAD`). It is the named pre-PR
+diff-hygiene pass: catch the things that are embarrassing to ship, separate
+from whether the code's claims are true. Each point is scoped to what the
+branch introduced, not pre-existing repo state.
+
+1. **Debug leftovers** — `print` / `console.log` / `debugger` / breakpoints the branch added.
+2. **Stray work markers** — branch-introduced `TODO` / `FIXME` / `XXX` / `HACK` promising work that does not exist.
+3. **Commented-out code** — dead blocks the branch left behind instead of deleting.
+4. **Accidental inclusions** — editor swap files, `.DS_Store`, build artifacts, and unrelated files swept into commits.
+5. **AI-attribution violations** — `Co-Authored-By`, "Generated with", or bot signatures in commits or PR text.
+6. **Issue-ref violations** — `#N` references that auto-link in commits or PR text.
+7. **Out-of-scope paths** — files touched that the feature has no business touching; unflagged ride-alongs.
+8. **Repo-specific consistency** — this repo's conventions: version bump present, changelog entry added, generated mirrors regenerated and in sync.
+
+Any finding is a blocker: fix it (or, for an intentional ride-along, flag it
+explicitly to the operator) before pushing or opening the PR.
+
+---
+
 ## The Process
 
 ### Step 1: Verify Tests
