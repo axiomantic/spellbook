@@ -680,8 +680,9 @@ describe('CanvasRender — GFM task-list input → status icon override', () => 
     )
     const input = container.querySelector('input')
     expect(input).not.toBeNull()
-    // Attribute order follows the DOM's serialization (alphabetical:
-    // placeholder before type), not the source order.
+    // Attribute order follows the element attribute-list (insertion) order
+    // produced by React/jsdom — here that happens to be placeholder before
+    // type — not the markdown source order.
     expect(input?.outerHTML).toBe('<input placeholder="name" type="text">')
     // The non-checkbox input must NOT have been transformed into a status icon.
     expect(container.querySelector('[data-testid="task-icon"]')).toBeNull()
