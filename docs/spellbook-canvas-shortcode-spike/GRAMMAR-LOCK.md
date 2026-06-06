@@ -43,3 +43,36 @@ record of the lock event so Track A/B/C reviewers can see it without
 chasing the out-of-tree path.)
 
 ## Tracks A, B, C are UNBLOCKED.
+
+---
+
+## Amendment 2026-06-05 — <collapsible> added (children-content)
+
+**Spike verdict:** PASS. Verified against react-markdown@9 + remark-gfm@4 +
+rehype-raw@7 via renderToStaticMarkup (spike: spellbook/admin/frontend/spike/
+collapsible.spike.test.tsx, this branch).
+
+Criteria met:
+- summary attr survives onto button label; default collapsed (body absent).
+- open presence-attr toggles initial state; body renders.
+- children RE-PARSED as markdown: bold, nested <callout>, GFM table.
+- nests inside <tab> (CRIT 6).
+
+Grammar class: children-content (Callout pattern). Attributes: summary?: string,
+open?: presence-bool. Children: markdown, re-parsed recursively.
+
+Known cosmetic artifact (pre-existing, NOT introduced here): block shortcodes on
+their own line in re-parsed children get <p>-wrapped by react-markdown (block-in-p,
+browser-tolerated). Same as <callout> today. Not fixed in this run (render-engine
+change is out of scope).
+
+The eight-shortcode grammar (chart, diagram, callout, tabs, tab, choice, approve,
+collapsible) is the new locked set.
+
+### Status primitives = render-layer only, NO grammar change
+
+The `components.input` task-list override is a **render-layer change, NOT a
+grammar change.** No new shortcode, no new tag, no lock amendment for status
+primitives. GFM `- [x]` syntax is already in the locked grammar (remark-gfm); the
+override only restyles its emitted DOM. This amendment covers `<collapsible>`
+ONLY.
