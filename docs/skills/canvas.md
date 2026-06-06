@@ -213,9 +213,10 @@ GFM task-list items (`- [x]` / `- [ ]`) render as status icons (done /
 pending), NOT interactive checkboxes — the operator cannot toggle them.
 Use them to show completion state, not to collect input.
 
-`<collapsible>` open/closed state is cached per `summary` string, so give
-sibling collapsibles distinct summaries; otherwise they share one cache
-entry and toggle together.
+`<collapsible>` open/closed state is cached per canvas by summary + source
+position, so it survives page rewrites. Give sibling collapsibles distinct
+summaries: collapsibles sharing the default "Details" summary can have their
+remembered open-state misattributed if the page is reordered.
 
 Example markdown an agent might emit via `canvas_write`:
 
