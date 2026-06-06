@@ -65,6 +65,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Canvas decision await binds by token, not ephemeral session id.** Under
+  stateless HTTP the session id is per-request, so awaits bound by session id
+  could fail to match their own declared decision; `canvas_decision_await` now
+  binds on the stable `await_token` returned by `canvas_decision_open`.
 - Corrected the `[0.64.0]` cost model, which measured main-transcript activity
   only and under-counted the true per-recycle subagent cost.
 - **Installer registers/unregisters the spellbook MCP server per
