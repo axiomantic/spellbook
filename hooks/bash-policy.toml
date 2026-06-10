@@ -122,13 +122,20 @@ deny_message = "Blocked: netcat listener or reverse shell"
 
 # --- Remote transfer ---
 
-[[rules]]
-id = "SB-BASH-007"
-toolName = "Bash"
-commandRegex = "(ssh|scp|rsync)\\s+.*@"
-decision = "deny"
-priority = 85
-deny_message = "Blocked: remote transfer via SSH/SCP/rsync"
+# SB-BASH-007 (ssh/scp/rsync remote transfer) INTENTIONALLY DISABLED by operator
+# decision (2026-06-08). This machine routinely SSHes/SCPs to its own LAN devices
+# (GL.iNet routers, etc.), for which this rule is a false-positive hard-block.
+# Left commented on purpose — do NOT "fix" by re-enabling. Paired with EXF-005 in
+# spellbook/gates/rules.py (also commented): both match ssh/scp/rsync, so BOTH
+# must stay commented for that traffic to pass. To restore protection, uncomment
+# this rule AND EXF-005.
+# [[rules]]
+# id = "SB-BASH-007"
+# toolName = "Bash"
+# commandRegex = "(ssh|scp|rsync)\\s+.*@"
+# decision = "deny"
+# priority = 85
+# deny_message = "Blocked: remote transfer via SSH/SCP/rsync"
 
 # --- Data encoding for exfiltration ---
 

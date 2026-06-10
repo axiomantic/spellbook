@@ -192,12 +192,19 @@ EXFILTRATION_RULES: list[tuple[str, Severity, str, str]] = [
         "EXF-004",
         "Data encoding for exfiltration",
     ),
-    (
-        r"(?i)(ssh|scp|rsync)\s+.*@",
-        Severity.HIGH,
-        "EXF-005",
-        "Remote transfer via SSH",
-    ),
+    # EXF-005 (ssh/scp/rsync remote transfer) INTENTIONALLY DISABLED by operator
+    # decision (2026-06-08). This machine routinely SSHes/SCPs to its own LAN
+    # devices (GL.iNet routers, etc.), for which this rule is a false-positive
+    # hard-block. Left commented on purpose — do NOT "fix" by re-enabling.
+    # Paired with SB-BASH-007 in hooks/bash-policy.toml (also commented): both
+    # match ssh/scp/rsync, so BOTH must stay commented for that traffic to pass.
+    # To restore the protection later, uncomment this tuple AND SB-BASH-007.
+    # (
+    #     r"(?i)(ssh|scp|rsync)\s+.*@",
+    #     Severity.HIGH,
+    #     "EXF-005",
+    #     "Remote transfer via SSH",
+    # ),
     (
         r"(?i)nc\s+(-l|-e|--exec)",
         Severity.CRITICAL,
