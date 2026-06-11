@@ -480,7 +480,7 @@ function standards_discovered(): boolean {
   // search_globs_used populated). Does NOT require any binding rule to exist —
   // a repo may legitimately have no doctrine — only that the search demonstrably
   // happened and its result is recorded.
-  const ps = design_context.project_standards;
+  const ps = design_context?.project_standards;
   if (!ps || ps.searched !== true) return false;
   const hasSource = Array.isArray(ps.sources) && ps.sources.length > 0;
   const auditableEmpty =
