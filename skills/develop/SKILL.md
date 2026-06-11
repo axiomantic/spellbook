@@ -1027,6 +1027,14 @@ TRUTH and are referenced here, not restated row-by-row.
   change that DOES carry behavioral logic, TDD-first still applies. fact-checking
   does NOT run on the fast path — a zero-flag change produces no research/design/
   plan artifact for it to challenge.
+  **Project-standards discovery is WAIVED on the fast path** (design §5.6 / DA
+  MIN-8): neither the feature-research §1.2.5 sweep nor the feature-design §2.0.1
+  fallback runs, and the lighter-floor code review does **NOT** receive
+  `design_context.project_standards` (there is none to pass). One-line guidance in
+  lieu of the chain: *if the change touches tests, or a domain with a known
+  doctrine doc, read that doc first before editing.* This is a documented
+  limitation, not an oversight — the fast path is for trivial changes where the
+  full find→read→record→propagate→enforce chain would over-fire.
 
 The fast path is lightweight in execution (fewer, faster gates) but **never zero
 review**; develop stays resident to enforce it (§2.5).
