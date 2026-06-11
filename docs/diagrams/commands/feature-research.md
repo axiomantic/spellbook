@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-research.md", "source_hash": "sha256:2a203683983c78ebdb250868449f6776fd214cdb09e68befaf880d7cc051d1d9", "generated_at": "2026-05-25T01:39:27Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-research.md", "source_hash": "sha256:b1bac746ab7937a4031bf9454a1196ce2df0f843df4a14fb35cdbfda7b84255b", "generated_at": "2026-05-25T01:39:27Z", "generator": "generate_diagrams.py", "stamped_at": "2026-06-11T00:21:33Z"} -->
 # Diagram: feature-research
 
 ```mermaid
