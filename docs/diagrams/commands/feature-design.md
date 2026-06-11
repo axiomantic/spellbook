@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-design.md", "source_hash": "sha256:62dba6815cdef81cf81163d16493c28cca63afa0a80a958cf6c9016f29edb20c", "generated_at": "2026-05-25T01:36:10Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-design.md", "source_hash": "sha256:28704c706544431a4222b872335529e49adc72a30fa42ead1e1f5ba81d8c7d9b", "generated_at": "2026-05-25T01:36:10Z", "generator": "generate_diagrams.py", "stamped_at": "2026-06-11T00:22:05Z"} -->
 # Diagram: feature-design
 
 ## Overview: `/feature-design` Command Flow

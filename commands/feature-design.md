@@ -88,6 +88,35 @@ upstream derivatives.
 - Inferring the primary source from context instead of asking
 </FORBIDDEN>
 
+#### 2.0.1 Project-Standards Fallback Sweep (conditional)
+
+This is the **symmetric fallback** for the design-only path
+(`needs_research=false, needs_design=true`), where the feature-research §1.2.5
+primary sweep never ran.
+
+**Idempotence guard — fire ONLY when both hold:**
+1. `SESSION_CONTEXT.design_context.project_standards` is empty or absent, AND
+2. `needs_design == true`.
+
+On the research path §1.2.5 has already populated `project_standards`, so this
+step is a **no-op observer** (it does NOT re-sweep). This guarantees the sweep
+runs exactly once per run, at whichever anchor the active path reaches.
+
+When the guard fires, dispatch the **identical** two-layer sweep used by
+feature-research §1.2.5 (LAYER 1 conventional glob net of root + docs/ tree
+skipping vendored deps; LAYER 2 content classification recognizing imperative AND
+declarative-normative phrasing; bounded per the cap rules; verbatim extraction
+with `context`/`source_path`/`kind`/`severity`/`applies_to`). It returns the
+identical `project_standards` schema — this is NOT a degraded variant. Then write:
+
+```
+SESSION_CONTEXT.design_context.project_standards = <project_standards object from the fallback sweep>
+```
+
+On `none_found: true`, flag that the REQUIRED operator cross-check must run
+(carried into discovery's §1.5.2.6 cross-check, or surfaced here on the
+design-only path).
+
 ### 2.1 Create Design Document
 
 <RULE>Dispatch subagent. Do NOT do this work in main context.</RULE>
