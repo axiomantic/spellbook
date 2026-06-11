@@ -598,6 +598,11 @@ Task:
     Base SHA: [commit before task]
     Head SHA: [commit after task]
 
+    Binding project standards: [paste design_context.project_standards.binding_rules]
+    Verify the diff against each binding rule below. Surface any MUST-rule
+    violation as a finding citing the rule and its source doc. (This review
+    SURFACES violations as findings; it does not block — blocking happens at §4.6.1.)
+
     Return assessment with any issues.
 ```
 
@@ -693,6 +698,18 @@ Task:
     3. Any orphaned pieces (code exists but nothing calls it)?
     4. Does happy path work?
 
+    ### Phase 5: Standards Conformance (BLOCKING)
+
+    Re-check `design_context.project_standards.binding_rules` across the WHOLE
+    changeset (catches cross-task drift the per-task §4.5 review missed). For each
+    binding rule:
+    1. SKIP any rule whose `adjudication.status` is `rule_overridden` or
+       `rule_not_applicable` — it is NOT re-raised (operator already adjudicated it).
+    2. For each remaining MUST-severity rule, verify the changeset conforms (using
+       the rule's `context` for scope). A MUST-rule violation is added to the
+       BLOCKING ISSUES set below.
+    SHOULD-severity violations are reported as advisory notes, not blockers.
+
     ## Output Format
 
     ```
@@ -738,6 +755,16 @@ Task:
     Happy path: WORKS | BROKEN at [step]
 
     ═══════════════════════════════════════
+    STANDARDS CONFORMANCE
+    ═══════════════════════════════════════
+
+    Rule: "[verbatim rule]" ([severity], [source_path])
+    ✓ CONFORMS  |  ✗ VIOLATION (MUST → blocking)  |  ⊘ SKIPPED (adjudicated)
+
+    Adjudicated (operator-overridden):
+    - "[verbatim rule]" — [rule_overridden|rule_not_applicable]: [reason] ([ts])
+
+    ═══════════════════════════════════════
     BLOCKING ISSUES
     ═══════════════════════════════════════
 
@@ -750,6 +777,22 @@ Task:
 
 IF BLOCKING ISSUES: Fix, re-run audit, loop until clean.
 IF clean: Proceed to 4.6.2.
+
+**Standards Conformance — operator-adjudication escape valve (NET-NEW).** When the
+Phase 5 Standards Conformance check raises a MUST-rule violation into BLOCKING
+ISSUES, present a NEW `AskUserQuestion` per violated rule with options:
+- **Fix the violation** (default — re-run audit),
+- **Mark rule not applicable** (`rule_not_applicable` — prompts for a reason),
+- **Override this rule** (`rule_overridden` — prompts for a reason).
+
+Choosing either override writes an `adjudication` block onto that
+`binding_rules[]` entry: `{ status, reason (verbatim operator justification), ts
+(ISO 8601) }`. The override travels ON the rule through `design_context` so every
+downstream consumer sees it. On every SUBSEQUENT loop-until-clean pass, a rule with
+an `adjudication` block is SKIPPED by Phase 5 — it is NOT re-raised into BLOCKING
+ISSUES (without this, an overridden rule would re-block and the loop could never
+reach clean). The final report lists adjudicated rules in the "Adjudicated
+(operator-overridden)" section so the override is never silent.
 
 #### 4.6.2 Run Full Test Suite
 
