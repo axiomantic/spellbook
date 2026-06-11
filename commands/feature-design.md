@@ -88,7 +88,7 @@ upstream derivatives.
 - Inferring the primary source from context instead of asking
 </FORBIDDEN>
 
-#### 2.0.1 Project-Standards Fallback Sweep (conditional)
+### 2.0.1 Project-Standards Fallback Sweep (conditional)
 
 This is the **symmetric fallback** for the design-only path
 (`needs_research=false, needs_design=true`), where the feature-research §1.2.5

@@ -1064,6 +1064,10 @@ Task:
 
     Implementation plan: [path]
     Design document: [path]
+    Binding project standards: [paste design_context.project_standards.binding_rules, INCLUDING any adjudication blocks — or "none (sweep found none / fast path)" if empty]
+    Verify the WHOLE changeset against each binding rule below (Phase 5). On every
+    loop-until-clean re-audit the orchestrator re-pastes binding_rules here WITH
+    updated adjudication blocks, so Phase 5's skip rule has current data each pass.
 
     ## Comprehensive Verification Protocol
 
@@ -1106,6 +1110,10 @@ Task:
     4. Does happy path work?
 
     ### Phase 5: Standards Conformance (BLOCKING)
+
+    GUARD: If `design_context.project_standards` is absent or empty (fast path, or
+    the sweep recorded `none_found`), record "Standards Conformance: N/A (no
+    project_standards)" and SKIP this phase — it is NOT blocking. Otherwise:
 
     Re-check `design_context.project_standards.binding_rules` across the WHOLE
     changeset (catches cross-task drift the per-task §4.5 review missed). For each
@@ -1184,6 +1192,10 @@ Task:
 
 IF BLOCKING ISSUES: Fix, re-run audit, loop until clean.
 IF clean: Proceed to 4.6.2.
+
+On each re-audit, the orchestrator re-pastes `binding_rules` into the audit Inputs
+INCLUDING updated adjudication blocks, so Phase 5's skip rule (overridden /
+not_applicable rules are not re-raised) has its data and the loop can terminate.
 
 **Standards Conformance — operator-adjudication escape valve (NET-NEW).** When the
 Phase 5 Standards Conformance check raises a MUST-rule violation into BLOCKING

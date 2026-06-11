@@ -144,7 +144,7 @@ convention, then classifies them by content. Returns a structured object, not ra
 doc dumps.
 
 This is the **primary sweep** on the research path. It runs the generic two-layer
-discovery mechanism and produces `project_standards`. The feature-design §2.0
+discovery mechanism and produces `project_standards`. The feature-design §2.0.1
 fallback observes `project_standards` already populated on this path and does NOT
 re-sweep.
 
@@ -181,6 +181,13 @@ Task:
         "do not use X", "all assertions go through Y")
     A plain narrative README that describes the project without imposing code/test
     conventions MUST NOT classify as binding.
+
+    NON-PROSE CONFIG/CI (lint/format/type config, CI workflows, hooks netted in
+    LAYER 1): do NOT extract rules per-line from these. Record each as a `sources`
+    entry (kind: style or ci) with a one-line summary like "enforced by tooling —
+    run <tool>; do not fight its config", and emit AT MOST ONE binding_rule per
+    config of the form "code/tests MUST satisfy <tool> config (<path>)" (severity
+    MUST, applies_to code).
 
     BOUNDED SWEEP: cap candidate count at 40 (count globbed-but-unread candidates
     in candidates_considered and note them). Cap per-doc bytes; for an oversized

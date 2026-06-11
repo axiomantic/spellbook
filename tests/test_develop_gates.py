@@ -187,6 +187,11 @@ def test_standards_discovery_contract_markers_present():
     assert "Binding Project Standards" in FEATURE_DESIGN
     # Standards Conformance audit section in feature-implement §4.6.1.
     assert "Standards Conformance" in FEATURE_IMPLEMENT
+    # §4.6.1 audit Inputs block now hands the dispatched subagent the binding
+    # standards (guards C-1 — Phase 5's BLOCKING gate was a no-op without them).
+    # The "INCLUDING any adjudication blocks" phrasing is unique to the §4.6.1
+    # Inputs paste, distinct from the §4.5 per-task review paste.
+    assert "Binding project standards: [paste design_context.project_standards.binding_rules, INCLUDING any adjudication blocks" in FEATURE_IMPLEMENT
     # feature-design §2.0 fallback sweep.
     assert "Fallback Sweep" in FEATURE_DESIGN
     # operator-adjudication escape valve markers.
