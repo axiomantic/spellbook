@@ -557,6 +557,15 @@ MVP DEFINITION:
 ## Validated Assumptions
 - [assumption]: [validation]
 
+## Project Standards (Discovered Governance Docs)
+- Searched: [yes/no]
+- Globs used: [...]
+- Candidates considered: [N]
+- Sources found: [path — kind — one-line summary, per doc]
+- Binding rules: [verbatim rule — severity (MUST/SHOULD) — applies_to (code/tests/both) — source_path, per rule]
+- None found: [true/false] (if true, REQUIRED operator cross-check was run)
+- Truncated candidates: [paths classified on headings + first-N-lines only]
+
 ## Completeness Score
 Research Quality: [X]%
 Discovery Completeness: [X]%
