@@ -304,7 +304,7 @@ class TestExfiltrationRules:
                 ), f"{rid} unexpectedly matches scp remote transfer"
 
     @staticmethod
-    def _rule_by_id(rule_id):
+    def _rule_by_id(rule_id: str) -> "tuple[str, Severity, str, str]":
         """Look up an exfil rule tuple by its ID (not positional index).
 
         Index-based lookup is fragile: removing a rule (e.g. EXF-005) shifts
