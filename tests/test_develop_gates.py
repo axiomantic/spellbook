@@ -22,43 +22,38 @@ from spellbook.sessions.develop_gates import derive_remaining_gates
 
 _ROOT = Path(__file__).parent.parent
 
-# Source fixtures are read lazily (not at import/collection time) so pytest
-# collection performs no file I/O. Each reader is cached, so repeated access
-# within a run reads the file at most once. Bare-name module-level constants
-# would force collection-time reads — and a module-level __getattr__ would NOT
-# help, because __getattr__ only fires for MISSING globals accessed via
-# attribute lookup, never for bare-name references inside this same module
-# (those raise NameError directly). Hence: explicit cached reader functions.
+# Source fixtures are read lazily via cached reader functions so pytest
+# collection performs no file I/O; each file is read at most once per run.
 
 
 @lru_cache(maxsize=None)
 def FEATURE_RESEARCH() -> str:
-    return (_ROOT / "commands" / "feature-research.md").read_text()
+    return (_ROOT / "commands" / "feature-research.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
 def FEATURE_DISCOVER() -> str:
-    return (_ROOT / "commands" / "feature-discover.md").read_text()
+    return (_ROOT / "commands" / "feature-discover.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
 def FEATURE_DESIGN() -> str:
-    return (_ROOT / "commands" / "feature-design.md").read_text()
+    return (_ROOT / "commands" / "feature-design.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
 def FEATURE_IMPLEMENT() -> str:
-    return (_ROOT / "commands" / "feature-implement.md").read_text()
+    return (_ROOT / "commands" / "feature-implement.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
 def DEVELOP_SKILL() -> str:
-    return (_ROOT / "skills" / "develop" / "SKILL.md").read_text()
+    return (_ROOT / "skills" / "develop" / "SKILL.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
 def CODE_REVIEW_GIVE() -> str:
-    return (_ROOT / "commands" / "code-review-give.md").read_text()
+    return (_ROOT / "commands" / "code-review-give.md").read_text(encoding="utf-8")
 
 
 def _flags(research=False, design=False, infrastructure=False):

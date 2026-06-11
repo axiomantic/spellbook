@@ -2,8 +2,6 @@
 
 ## Workflow Diagram
 
-Now generating the diagrams. Reading is complete — producing Phase 3 (generation) and Phase 4 (verification) output now.
-
 ---
 
 ## Diagram 1: Phase 1.5 Overview

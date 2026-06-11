@@ -87,6 +87,11 @@ ALLOWLIST_TIER: tuple[AllowEntry, ...] = (
         anchor=None,
         reason="archived sub-orchestrator body (historical), path-allowlisted",
     ),
+    AllowEntry(
+        path_glob="skills/estimating-tickets/fleet-effort.md",
+        anchor="NET-NEW COMPLEX",
+        reason="estimating-tickets complexity speed-class vocabulary, not a develop tier-classifier",
+    ),
 )
 
 # --- Allowlist (b): removed-mode vocabulary that legitimately survives --------

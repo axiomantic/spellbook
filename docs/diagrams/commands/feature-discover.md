@@ -1,8 +1,6 @@
 <!-- diagram-meta: {"source": "commands/feature-discover.md", "source_hash": "sha256:e574ba39a04ec1119b5cc30fdd3110bbb243171654d01962f8d43bf0707f2998", "generated_at": "2026-06-11T01:48:52Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-discover
 
-Now generating the diagrams. Reading is complete — producing Phase 3 (generation) and Phase 4 (verification) output now.
-
 ---
 
 ## Diagram 1: Phase 1.5 Overview
