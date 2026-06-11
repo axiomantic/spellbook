@@ -136,6 +136,114 @@ Task:
 - Second failure: return all findings marked UNKNOWN; note "Research failed after 2 attempts: [error]"; do NOT block — user chooses to proceed or retry
 - **TIMEOUT:** 120 seconds per subagent
 
+### 1.2.5 Project Development-Guidance Discovery (Subagent)
+
+**SUBAGENT DISPATCH:** YES
+**REASON:** Generic governance-doc discovery. The sweep nets candidate docs by
+convention, then classifies them by content. Returns a structured object, not raw
+doc dumps.
+
+This is the **primary sweep** on the research path. It runs the generic two-layer
+discovery mechanism and produces `project_standards`. The feature-design §2.0.1
+fallback observes `project_standards` already populated on this path and does NOT
+re-sweep.
+
+```
+Task:
+  description: "Discover project development-guidance / governance docs"
+  prompt: |
+    You are a research agent discovering a repository's binding development and
+    testing standards. Discovery is GENERIC — work by convention + content
+    classification, NEVER by hardcoded filenames.
+
+    LAYER 1 — Conventional-pattern glob net (root + docs/ tree, skip vendored deps
+    node_modules/.venv/venv/vendor/.git/build/dist). Net for governance-doc
+    conventions, e.g.:
+      - Agent/assistant config: AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules,
+        .github/copilot-instructions.md
+      - Contribution/standards: CONTRIBUTING*, DEVELOPERS*, CODING_STANDARDS*,
+        CODESTYLE*, STYLE*, ARCHITECTURE*
+      - Docs trees: docs/** (esp. AI dirs like docs/ai/**),
+        docs/**/*{testing,contributing,style,conventions,guidelines,standards,architecture}*
+      - Filename-keyword: **/*test*instruction*, **/*conventions*
+      - Lint/format/type config: .editorconfig, pyproject.toml ([tool.*]),
+        ruff.toml, .flake8, .eslintrc*, .prettierrc*, tsconfig*
+      - CI/hooks: .github/workflows/**, .pre-commit-config.yaml, .circleci/config.yml
+    This taxonomy is a HEURISTIC PRIOR, not a guarantee. Record the actual globs
+    you ran in search_globs_used.
+
+    LAYER 2 — Content classification (the generalizer). Read each candidate and
+    classify BY CONTENT whether it imposes binding rules on how code/tests are
+    written. Recognize BOTH phrasings:
+      - Imperative-normative: MUST / NEVER / ALWAYS / DO NOT / REQUIRED / FORBIDDEN
+      - Declarative-normative: prose stating a binding convention without an
+        imperative verb (e.g. "we test at the view level", "tests live at…",
+        "do not use X", "all assertions go through Y")
+    A plain narrative README that describes the project without imposing code/test
+    conventions MUST NOT classify as binding.
+
+    NON-PROSE CONFIG/CI (lint/format/type config, CI workflows, hooks netted in
+    LAYER 1): do NOT extract rules per-line from these. Record each as a `sources`
+    entry (kind: style or ci) with a one-line summary like "enforced by tooling —
+    run <tool>; do not fight its config", and emit AT MOST ONE binding_rule per
+    config of the form "code/tests MUST satisfy <tool> config (<path>)" (severity
+    MUST, applies_to code).
+
+    BOUNDED SWEEP: cap candidate count at 40 (count globbed-but-unread candidates
+    in candidates_considered and note them). Cap per-doc reads at 50KB; for a doc
+    larger than that, classify on headings + the first ~200 lines only and record
+    its path in truncated_candidates. Record candidates_considered so "0 found" is
+    distinguishable from "N found, all non-binding".
+
+    EXTRACTION: for each governing doc extract binding rules VERBATIM (no
+    paraphrase). Each rule records: rule (verbatim), context (scoping prose around
+    the rule), source_path, kind (testing|style|architecture|process|ci), severity
+    (MUST|SHOULD — default SHOULD when imperativeness ambiguous; MUST only for
+    explicit imperatives), applies_to (code|tests|both).
+
+    EMPTY RESULT: if a thorough sweep finds nothing binding, set none_found: true
+    with search_globs_used and candidates_considered populated. Flag that the
+    REQUIRED operator cross-check (feature-discover §1.5.2.6) must run.
+
+    RETURN FORMAT (strict JSON — the project_standards object):
+    {
+      "searched": true,
+      "search_globs_used": ["...", "..."],
+      "candidates_considered": 0,
+      "truncated_candidates": ["..."],
+      "none_found": false,
+      "sources": [
+        { "path": "...", "kind": "testing", "summary": "..." }
+      ],
+      "binding_rules": [
+        {
+          "rule": "verbatim rule text",
+          "context": "scoping prose around the rule",
+          "source_path": "...",
+          "kind": "testing",
+          "severity": "SHOULD",
+          "applies_to": "tests"
+        }
+      ]
+    }
+```
+
+**ERROR HANDLING:** mirror §1.2 — retry once; on second failure record
+`searched: true, none_found: true` with a note "Standards sweep failed after 2
+attempts: [error]" and force the REQUIRED operator cross-check. Do NOT block.
+
+**ORCHESTRATOR BRIDGE (write the result into carried context).** After §1.2.5
+returns, the feature-research orchestrator writes the object onto the
+`design_context` carrier so it rides the existing pass-through to feature-design
+(L120) and feature-implement with no further plumbing:
+
+```
+SESSION_CONTEXT.design_context.project_standards = <project_standards object from §1.2.5 subagent>
+```
+
+Writing directly to `design_context.project_standards` (not a `research_findings`
+sub-key) lands it on the DesignContext carrier whose schema this feature extends.
+
 ### 1.3 Ambiguity Extraction
 
 **INPUT:** Research findings from subagent
@@ -258,6 +366,7 @@ Before proceeding to Phase 1.5, verify:
 - [ ] Research Quality Score = 100% (or user bypassed with consent)
 - [ ] All ambiguities extracted and categorized
 - [ ] Findings stored in SESSION_CONTEXT.research_findings
+- [ ] `SESSION_CONTEXT.design_context.project_standards` populated whenever the §1.2.5 sweep ran
 
 If ANY unchecked: Complete Phase 1. Do NOT proceed.
 

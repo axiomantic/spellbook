@@ -149,7 +149,7 @@ flowchart TD
     SCOPE_DRIFT -->|no| P153
 
     P153[1.5.3: Build Glossary] --> P154[1.5.4: Synthesize design_context]
-    P154 --> GATE_CS{GATE 1.5.5:\nCompleteness Score\n= 100% 12/12?}
+    P154 --> GATE_CS{GATE 1.5.5:\nCompleteness Score\n= 100% 13/13?}
     GATE_CS -->|fail| P152
     GATE_CS -->|pass| P156[1.5.6: Create Understanding Document\nwrite to understanding/understanding-[feature]-*.md]
 
@@ -672,7 +672,7 @@ ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 ```
 
 - [ ] Understanding document exists
-- [ ] Completeness score = 100% (12/12 validation functions)
+- [ ] Completeness score = 100% (13/13 validation functions)
 - [ ] Dehallucination gate subagent was dispatched (Phase 1.5.7)
 - [ ] Devil's advocate subagent was dispatched
 
@@ -1279,7 +1279,7 @@ Phase 1.5: Informed Discovery (if needs_research)
   ├─ 1.5.2: Conduct discovery wizard (AskUserQuestion + ARH)
   ├─ 1.5.3: Build glossary
   ├─ 1.5.4: Synthesize design_context
-  ├─ 1.5.5: GATE: Completeness Score = 100% (12 validation functions)
+  ├─ 1.5.5: GATE: Completeness Score = 100% (13 validation functions)
   ├─ 1.5.6: Create Understanding Document
   ├─ 1.5.7: Dehallucination Gate
   └─ 1.6: Invoke devils-advocate skill (if needs_design OR needs_research)
@@ -1446,6 +1446,31 @@ interface DesignContext {
     scope_gaps: string[];
     oversimplifications: string[];
   };
+  project_standards?: {
+    searched: boolean;                 // the sweep executed (false only on a path that legitimately skipped it, e.g. fast-path)
+    search_globs_used: string[];       // the actual layer-1 globs the sweep ran (auditable heuristic net)
+    candidates_considered: number;     // docs globbed + examined (distinguishes "0 found" from "N found, all non-binding")
+    truncated_candidates: string[];    // paths of docs too large to read fully (classified on headings + first-N-lines)
+    none_found: boolean;               // true ONLY after a thorough sweep finds nothing binding; pairs with REQUIRED operator cross-check
+    sources: Array<{
+      path: string;                    // never a hardcoded target — whatever the sweep found
+      kind: "testing" | "style" | "architecture" | "process" | "ci";
+      summary: string;                 // one-line summary of what this doc governs
+    }>;
+    binding_rules: Array<{
+      rule: string;                    // verbatim rule text; no paraphrase
+      context: string;                 // scoping prose around the rule — downstream enforces WITH context
+      source_path: string;
+      kind: "testing" | "style" | "architecture" | "process" | "ci";
+      severity: "MUST" | "SHOULD";     // default SHOULD when imperativeness ambiguous; MUST only for explicit imperatives
+      applies_to: "code" | "tests" | "both";
+      adjudication?: {                 // OPTIONAL — absent until operator overrides this rule at §4.6.1
+        status: "rule_overridden" | "rule_not_applicable";
+        reason: string;                // operator's recorded justification (verbatim)
+        ts: string;                    // ISO 8601 timestamp
+      };
+    }>;
+  };
 }
 ```
 
@@ -1456,7 +1481,7 @@ interface DesignContext {
 | Gate                      | Threshold          | Bypass       |
 | ------------------------- | ------------------ | ------------ |
 | Research Quality          | 100%               | User consent |
-| Completeness              | 100% (12/12)       | User consent |
+| Completeness              | 100% (13/13)       | User consent |
 | Implementation Completion | All items COMPLETE | Never        |
 | Tests                     | All passing        | Never        |
 | Green Mirage Audit        | Clean              | Never        |
@@ -1489,6 +1514,14 @@ TRUTH and are referenced here, not restated row-by-row.
   change that DOES carry behavioral logic, TDD-first still applies. fact-checking
   does NOT run on the fast path — a zero-flag change produces no research/design/
   plan artifact for it to challenge.
+  **Project-standards discovery is WAIVED on the fast path** (design §5.6 / DA
+  MIN-8): neither the feature-research §1.2.5 sweep nor the feature-design §2.0.1
+  fallback runs, and the lighter-floor code review does **NOT** receive
+  `design_context.project_standards` (there is none to pass). One-line guidance in
+  lieu of the chain: *if the change touches tests, or a domain with a known
+  doctrine doc, read that doc first before editing.* This is a documented
+  limitation, not an oversight — the fast path is for trivial changes where the
+  full find→read→record→propagate→enforce chain would over-fire.
 
 The fast path is lightweight in execution (fewer, faster gates) but **never zero
 review**; develop stays resident to enforce it (§2.5).

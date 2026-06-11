@@ -37,7 +37,7 @@ Required: Research was done by subagent (not in main context)
 ## Invariant Principles
 
 1. **Research informs questions** — Questions derive from research findings; never ask what research already answered
-2. **100% completeness required** — Proceed to design only when all 12 validation functions pass; no exceptions without explicit bypass
+2. **100% completeness required** — Proceed to design only when all 13 validation functions pass; no exceptions without explicit bypass
 3. **Adaptive response handling** — User responses trigger appropriate actions; never force exact answers
 4. **Understanding document is the gate** — Devil's advocate reviews the understanding document; approval unlocks design
 
@@ -295,6 +295,21 @@ This catches scope expansion that occurred gradually across multiple questions.
 
 Run `detect_missing_flags()`. If it returns a non-empty set, follow the "When drift detected (re-flag-and-continue)" protocol from the Scope Drift Check section above: set the implied need-flags, update the understanding document, and continue.
 
+### 1.5.2.6 Project-Standards Cross-Check (operator)
+
+Surface the discovered governance docs (`design_context.project_standards`) to the
+operator. The cross-check has two modes, keyed on `none_found`:
+
+- **Sources found** → **light** reinforcement (AskUserQuestion):
+  "I found these standards docs: [list with kind + summary]. Anything I'm missing
+  or that doesn't apply?"
+- **`none_found: true`** → **REQUIRED** cross-check (not light): the operator MUST
+  be asked to name any governance/doctrine doc the heuristic layers missed. Both
+  the conventional glob net and the content classifier can miss (doctrine buried in
+  an unconventional dir, or declarative prose under-weighted); the operator is the
+  true generalizer when both layers come up empty. Record any operator-named doc
+  back into `project_standards.sources` / `binding_rules`.
+
 ### 1.5.3 Build Glossary
 
 **Process:**
@@ -372,7 +387,7 @@ Build complete `DesignContext` object from all prior phases.
 - No "TBD" or "unknown" strings
 - All arrays with content or explicit "N/A"
 
-### 1.5.5 Completeness Checklist (12 Validation Functions)
+### 1.5.5 Completeness Checklist (13 Validation Functions)
 
 ```typescript
 // FUNCTION 1: Research quality validated
@@ -458,6 +473,22 @@ function flags_consistent_with_scope(): boolean {
   // SESSION_PREFERENCES.need_flags (re-flag-and-continue sets it immediately).
   return detect_missing_flags().length === 0;
 }
+
+// FUNCTION 13: Project standards discovered
+function standards_discovered(): boolean {
+  // Passes when the sweep RAN AND (recorded >=1 source OR none_found:true WITH
+  // search_globs_used populated). Does NOT require any binding rule to exist —
+  // a repo may legitimately have no doctrine — only that the search demonstrably
+  // happened and its result is recorded.
+  const ps = design_context?.project_standards;
+  if (!ps || ps.searched !== true) return false;
+  const hasSource = Array.isArray(ps.sources) && ps.sources.length > 0;
+  const auditableEmpty =
+    ps.none_found === true &&
+    Array.isArray(ps.search_globs_used) &&
+    ps.search_globs_used.length > 0;
+  return hasSource || auditableEmpty;
+}
 ```
 
 **SCORE CALCULATION:**
@@ -466,7 +497,7 @@ function flags_consistent_with_scope(): boolean {
 const checked_count = Object.values(validation_results).filter(
   (v) => v === true,
 ).length;
-const completeness_score = (checked_count / 12) * 100;
+const completeness_score = (checked_count / 13) * 100;
 ```
 
 **DISPLAY FORMAT:**
@@ -486,8 +517,9 @@ Completeness Checklist:
 [✓/✗] All assumptions validated with user
 [✓/✗] No "we'll figure it out later" items remain
 [✓/✗] Need-flags consistent with discovered scope (any new design/infra need re-flagged)
+[✓/✗] Project standards discovered (sweep ran; ≥1 source recorded OR none_found with globs recorded)
 
-Completeness Score: [X]% ([N]/12 items complete)
+Completeness Score: [X]% ([N]/13 items complete)
 ```
 
 **GATE BEHAVIOR:**
@@ -556,6 +588,15 @@ MVP DEFINITION:
 
 ## Validated Assumptions
 - [assumption]: [validation]
+
+## Project Standards (Discovered Governance Docs)
+- Searched: [yes/no]
+- Globs used: [...]
+- Candidates considered: [N]
+- Sources found: [path — kind — one-line summary, per doc]
+- Binding rules: [verbatim rule — severity (MUST/SHOULD) — applies_to (code/tests/both) — source_path, per rule]
+- None found: [true/false] (if true, REQUIRED operator cross-check was run)
+- Truncated candidates: [paths classified on headings + first-N-lines only]
 
 ## Completeness Score
 Research Quality: [X]%
@@ -700,7 +741,7 @@ Before proceeding to Phase 2, verify:
 - [ ] 7-category discovery questions generated and answered
 - [ ] Glossary built
 - [ ] design_context synthesized (no null values, no TBD)
-- [ ] Completeness Score = 100% (12/12 validation functions)
+- [ ] Completeness Score = 100% (13/13 validation functions)
 - [ ] Understanding Document created and saved
 - [ ] Devil's advocate subagent DISPATCHED (not done in main context)
 - [ ] User approved Understanding Document

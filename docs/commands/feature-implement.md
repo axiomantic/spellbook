@@ -824,6 +824,28 @@ Task:
     Do NOT take shortcuts on assertions. Do NOT use partial assertions
     as a substitute for computing the complete expected value.
 
+    ## Binding Project Standards
+
+    These binding standards were discovered from the repository's governance docs
+    and travel in `design_context.project_standards.binding_rules`. Each rule is
+    quoted VERBATIM with its source doc and scoping context.
+
+    [Paste, FILTERED BY applies_to:
+      - the test-writing portion receives rules where applies_to ∈ {tests, both};
+      - the implementation portion receives rules where applies_to ∈ {code, both}.
+     For each pasted rule include: rule (verbatim), context (scoping prose),
+     source_path, severity, applies_to. Honor Mandatory Summarization — do NOT
+     paste the full unfiltered set; an adjudicated rule (adjudication present) is
+     omitted.]
+
+    Your implementation AND tests MUST conform to these binding standards. If a
+    standard conflicts with the plan, STOP and surface it — do not silently follow
+    the plan over a MUST rule.
+
+    FALLBACK: If `project_standards` is empty, before writing, search the repo root
+    + docs/ for AGENTS.md, testing-instruction docs, and style guides, and record
+    what you used.
+
     ## Working Directory
 
     BEFORE ANY WORK, verify your working directory:
@@ -983,6 +1005,11 @@ Task:
     Base SHA: [commit before task]
     Head SHA: [commit after task]
 
+    Binding project standards: [paste design_context.project_standards.binding_rules]
+    Verify the diff against each binding rule below. Surface any MUST-rule
+    violation as a finding citing the rule and its source doc. (This review
+    SURFACES violations as findings; it does not block — blocking happens at §4.6.1.)
+
     Return assessment with any issues.
 ```
 
@@ -1037,6 +1064,10 @@ Task:
 
     Implementation plan: [path]
     Design document: [path]
+    Binding project standards: [paste design_context.project_standards.binding_rules, INCLUDING any adjudication blocks — or "none (sweep found none / fast path)" if empty]
+    Verify the WHOLE changeset against each binding rule below (Phase 5). On every
+    loop-until-clean re-audit the orchestrator re-pastes binding_rules here WITH
+    updated adjudication blocks, so Phase 5's skip rule has current data each pass.
 
     ## Comprehensive Verification Protocol
 
@@ -1077,6 +1108,23 @@ Task:
     2. Any dead ends (UI exists but handler missing)?
     3. Any orphaned pieces (code exists but nothing calls it)?
     4. Does happy path work?
+
+    ### Phase 5: Standards Conformance (BLOCKING)
+
+    GUARD: If `design_context.project_standards` is absent or empty, OR the sweep
+    recorded `none_found: true`, OR `binding_rules` is empty (fast path, or the
+    sweep found no standards), record "Standards Conformance: N/A (no
+    project_standards)" and SKIP this phase — it is NOT blocking. Otherwise:
+
+    Re-check `design_context.project_standards.binding_rules` across the WHOLE
+    changeset (catches cross-task drift the per-task §4.5 review missed). For each
+    binding rule:
+    1. SKIP any rule whose `adjudication.status` is `rule_overridden` or
+       `rule_not_applicable` — it is NOT re-raised (operator already adjudicated it).
+    2. For each remaining MUST-severity rule, verify the changeset conforms (using
+       the rule's `context` for scope). A MUST-rule violation is added to the
+       BLOCKING ISSUES set below.
+    SHOULD-severity violations are reported as advisory notes, not blockers.
 
     ## Output Format
 
@@ -1123,6 +1171,16 @@ Task:
     Happy path: WORKS | BROKEN at [step]
 
     ═══════════════════════════════════════
+    STANDARDS CONFORMANCE
+    ═══════════════════════════════════════
+
+    Rule: "[verbatim rule]" ([severity], [source_path])
+    ✓ CONFORMS  |  ✗ VIOLATION (MUST → blocking)  |  ⊘ SKIPPED (adjudicated)
+
+    Adjudicated (operator-overridden):
+    - "[verbatim rule]" — [rule_overridden|rule_not_applicable]: [reason] ([ts])
+
+    ═══════════════════════════════════════
     BLOCKING ISSUES
     ═══════════════════════════════════════
 
@@ -1135,6 +1193,26 @@ Task:
 
 IF BLOCKING ISSUES: Fix, re-run audit, loop until clean.
 IF clean: Proceed to 4.6.2.
+
+On each re-audit, the orchestrator re-pastes `binding_rules` into the audit Inputs
+INCLUDING updated adjudication blocks, so Phase 5's skip rule (overridden /
+not_applicable rules are not re-raised) has its data and the loop can terminate.
+
+**Standards Conformance — operator-adjudication escape valve (NET-NEW).** When the
+Phase 5 Standards Conformance check raises a MUST-rule violation into BLOCKING
+ISSUES, present a NEW `AskUserQuestion` per violated rule with options:
+- **Fix the violation** (default — re-run audit),
+- **Mark rule not applicable** (`rule_not_applicable` — prompts for a reason),
+- **Override this rule** (`rule_overridden` — prompts for a reason).
+
+Choosing either override writes an `adjudication` block onto that
+`binding_rules[]` entry: `{ status, reason (verbatim operator justification), ts
+(ISO 8601) }`. The override travels ON the rule through `design_context` so every
+downstream consumer sees it. On every SUBSEQUENT loop-until-clean pass, a rule with
+an `adjudication` block is SKIPPED by Phase 5 — it is NOT re-raised into BLOCKING
+ISSUES (without this, an overridden rule would re-block and the loop could never
+reach clean). The final report lists adjudicated rules in the "Adjudicated
+(operator-overridden)" section so the override is never silent.
 
 #### 4.6.2 Run Full Test Suite
 

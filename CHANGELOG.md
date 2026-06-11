@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Project-standards discovery and enforcement in develop.** Add generic
+  project-standards (governance-doc) discovery and enforcement to the develop
+  skill.
+
 - **Embarrassment sweep — codified pre-PR diff-hygiene gate.** The develop
   4.6.5 pre-PR gate (`commands/feature-implement.md`) previously validated only
   that claims were true; it now also runs the named "embarrassment sweep" over

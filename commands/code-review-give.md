@@ -38,9 +38,12 @@ When in doubt, treat a file as changed and use the diff.
 
 Before reviewing any code, load project context:
 
+0. If invoked within a `develop` run and `design_context.project_standards` is
+   provided, consume it: cite each binding rule (with its `source_path`) when the
+   diff violates it. This is the preferred source when available.
 1. Read `CLAUDE.md` and/or `.claude/CLAUDE.md` if present in repo root
 2. Read `pyproject.toml`, `setup.cfg`, `.eslintrc`, `biome.json`, or equivalent style config
-3. Check for `docs/code-review-instructions.md` or `.github/code-review-instructions.md`
+3. Check for `docs/code-review-instructions.md` or `.github/code-review-instructions.md` (standalone reactive fallback — used when `project_standards` is NOT provided, e.g. invoked outside a `develop` run)
 4. Sample 1-2 files adjacent to changed files to discover actual naming, style, and structural conventions — **only files NOT in the PR's changed file set**
 
 <analysis>

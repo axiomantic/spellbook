@@ -251,17 +251,16 @@ _WRAPPER_COMMANDS: frozenset[str] = frozenset(
 )
 
 
-# Wrappers that ALWAYS warrant a finding because they fetch+run untrusted
-# code: ``npx`` runs arbitrary npm packages, ``mise exec`` runs arbitrary
-# tool versions, ``docker exec`` runs arbitrary containers. We do not have
-# an allowlist for the wrapped target, so flag unconditionally.
-_WRAPPER_ALWAYS_FLAG: frozenset[str] = frozenset(
-    {
-        "npx",
-        "mise",
-        "docker",
-    }
-)
+# _WRAPPER_ALWAYS_FLAG removed (2026-06-09, operator decision).
+#
+# Blanket-blocking every npx/mise/docker invocation as "untrusted runner"
+# was arbitrary: those tools are routine on developer workstations and the
+# regex layer in hooks/bash-policy.toml + the rest of the L4 bash parser
+# already catch the genuinely dangerous patterns (rm -rf /, sudo, curl
+# --data exfil, base64 -e, etc.) regardless of whether the outer command
+# is npx, mise, docker, or anything else. The unconditional flag created
+# noise without measurably improving safety. Restore from VCS if a
+# specific incident motivates re-enabling.
 
 
 # Commands that are dangerous when surfaced anywhere (including under a
@@ -672,18 +671,6 @@ def _classify_command(node: object) -> list[dict]:
         return findings
 
     # --- Wrapper-stripping bypass --------------------------------------
-    if head_base in _WRAPPER_ALWAYS_FLAG:
-        findings.append(
-            _finding(
-                "BASH-PARSER-WRAPPER",
-                "CRITICAL",
-                f"Wrapper `{head_base}` runs untrusted code; not allowed without "
-                "explicit per-target allowlist.",
-                _node_text(node),
-            )
-        )
-        return findings
-
     if head_base in _WRAPPER_COMMANDS:
         wrapped = _strip_wrapper_args(head_base, rest)
         if wrapped:
@@ -713,18 +700,6 @@ def _classify_command(node: object) -> list[dict]:
                     )
                 )
                 return findings
-            if wrapped_head in _WRAPPER_ALWAYS_FLAG:
-                findings.append(
-                    _finding(
-                        "BASH-PARSER-WRAPPER",
-                        "CRITICAL",
-                        f"Wrapper `{head_base}` conceals untrusted-runner "
-                        f"`{wrapped_head}`; not allowed.",
-                        _node_text(node),
-                    )
-                )
-                return findings
-
     return findings
 
 

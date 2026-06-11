@@ -2,101 +2,143 @@
 
 ## Workflow Diagram
 
+## Overview: feature-research — Phase 1 of /develop
+
 ```mermaid
 flowchart TD
-    START(["/feature-research invoked"]):::terminal
+    classDef subagent fill:#4a9eff,stroke:#2e7acc,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
+    classDef terminal fill:#51cf66,stroke:#3ba84e,color:#fff
+    classDef process fill:#2d2d2d,stroke:#555,color:#e8e8ea
+    classDef stop fill:#c62828,stroke:#b71c1c,color:#fff
 
-    PRE["Prerequisite Verification\n(bash check block)"]:::process
+    START(["START: /feature-research\nPhase 1 of /develop"]):::terminal
 
-    C1{"needs_research\n== true?"}:::decision
-    C2{"Phase 0\ncomplete?"}:::decision
-    C3{"impl_plan\nescape hatch\nactive?"}:::decision
+    PREREQ["Prerequisite Check\n(1) SESSION_PREFERENCES.need_flags.needs_research == true\n(2) Phase 0 checklist 100% complete\n(3) escape_hatch.type != impl_plan"]:::gate
+    STOP_P(["STOP — return to\nappropriate phase"]):::stop
 
-    STOP_NEEDS(["STOP: needs_research is false\nReturn to Phase 0"]):::fail
-    STOP_P0(["STOP: Phase 0 incomplete\nReturn to Phase 0"]):::fail
-    STOP_ESCAPE(["STOP: Escape hatch active\nSkip to Phase 3+"]):::fail
+    S11["§1.1  Research Strategy Planning\nAnalyze feature domains\nGenerate codebase questions\nIdentify knowledge gaps"]:::process
 
-    S11["1.1 Research Strategy Planning\nAnalyze feature request\nGenerate codebase questions\nIdentify knowledge gaps"]:::process
+    SA1["§1.2  Subagent Dispatch\nResearch Agent — Codebase Patterns\nAnswers each question: HIGH / MEDIUM / LOW / UNKNOWN\nTimeout: 120s"]:::subagent
+    SA1_OK{"Subagent\nsucceeded?"}
+    SA1_R["Retry once\n(same instructions)"]:::process
+    SA1_F["Return all findings as UNKNOWN\n— do NOT block"]:::process
 
-    DISPATCH["1.2 Subagent Dispatch\nResearch Agent – Codebase Patterns"]:::subagent
+    SA2["§1.2.5  Subagent Dispatch\nGovernance Doc Discovery\nLayer 1: conventional glob net\nLayer 2: content classification\nCap: 40 candidates"]:::subagent
+    SA2_OK{"Subagent\nsucceeded?"}
+    SA2_R["Retry once\n(same instructions)"]:::process
+    SA2_F["Record none_found: true\nForce operator cross-check\n— do NOT block"]:::process
 
-    SF{"Subagent\nsucceeded?"}:::decision
-    RETRY["Retry once\n(same instructions)"]:::process
-    SF2{"Second attempt\nsucceeded?"}:::decision
-    UNKNOWN["Mark all findings UNKNOWN\nNote failure reason\nReturn to user (do not block)"]:::process
+    BRIDGE["Bridge — write onto design_context carrier\nSESSION_CONTEXT.design_context\n  .project_standards  &lt;— §1.2.5 result"]:::process
 
-    S13["1.3 Ambiguity Extraction\nExtract MEDIUM/LOW/UNKNOWN items\nExtract flagged ambiguities\nCategorize: Technical/Scope/Integration/Terminology\nPrioritize by impact"]:::process
+    S13["§1.3  Ambiguity Extraction\nExtract MEDIUM / LOW / UNKNOWN items\nExtract all flagged ambiguities\nCategorize: Technical · Scope · Integration · Terminology\nPrioritize by design impact: HIGH / MEDIUM / LOW"]:::process
 
-    S14["1.4 Research Quality Score\nCoverage Score\nAmbiguity Resolution Score\nEvidence Quality Score\nUnknown Detection Score\nOverall = min of all four"]:::process
+    S14["§1.4  Compute Research Quality Scores\nCoverage · Ambiguity Resolution\nEvidence Quality · Unknown Detection\nOverall = min of all four scores\n[see detail diagram below]"]:::process
 
-    QG{"Score\n= 100%?"}:::gate
+    QG{"Overall\n= 100%?"}:::gate
 
-    OPT{"User\nchoice"}:::decision
-    OPT_A["A: Continue anyway\n(bypass, accept risk)"]:::process
-    OPT_B["B: Iterate: add questions\nre-dispatch subagent"]:::process
-    OPT_C["C: Reduce scope\nremove low-confidence items"]:::process
+    BYPASS["A · Bypass gate\n(accept risk, proceed)"]:::process
+    ITERATE["B · Iterate\n(add questions, re-run §1.1)"]:::process
+    REDUCE["C · Reduce scope\n(remove low-confidence items)"]:::process
 
-    CHECKLIST["Phase 1 Completion Checklist\n✓ Subagent dispatched\n✓ Score 100% (or bypassed)\n✓ Ambiguities categorized\n✓ Findings stored in\n  SESSION_CONTEXT.research_findings"]:::process
+    CHECKLIST["Phase 1 Completion Checklist\n[ ] Subagent dispatched — not main-context work\n[ ] Quality score = 100% or user bypassed\n[ ] All ambiguities extracted and categorized\n[ ] Findings stored in SESSION_CONTEXT.research_findings\n[ ] design_context.project_standards populated"]:::process
+    INCOMPLETE(["STOP — complete Phase 1\nDo NOT proceed"]):::stop
+    DONE(["Phase 1 Complete\nNext: /feature-discover (Phase 1.5)"]):::terminal
 
-    DONE(["Phase 1 Complete\nProceed to /feature-discover"]):::terminal
-
-    START --> PRE
-    PRE --> C1
-    C1 -->|"false"| STOP_NEEDS
-    C1 -->|"true"| C2
-    C2 -->|"incomplete"| STOP_P0
-    C2 -->|"complete"| C3
-    C3 -->|"active"| STOP_ESCAPE
-    C3 -->|"not active"| S11
-
-    S11 --> DISPATCH
-    DISPATCH --> SF
-    SF -->|"yes"| S13
-    SF -->|"no"| RETRY
-    RETRY --> SF2
-    SF2 -->|"yes"| S13
-    SF2 -->|"no"| UNKNOWN
-    UNKNOWN --> S13
-
+    START --> PREREQ
+    PREREQ -->|"any check fails"| STOP_P
+    PREREQ -->|"all pass"| S11
+    S11 --> SA1
+    SA1 --> SA1_OK
+    SA1_OK -->|"yes"| SA2
+    SA1_OK -->|"no — first failure"| SA1_R
+    SA1_R -->|"retry succeeds"| SA2
+    SA1_R -->|"retry fails"| SA1_F
+    SA1_F --> SA2
+    SA2 --> SA2_OK
+    SA2_OK -->|"yes"| BRIDGE
+    SA2_OK -->|"no — first failure"| SA2_R
+    SA2_R -->|"retry succeeds"| BRIDGE
+    SA2_R -->|"retry fails"| SA2_F
+    SA2_F --> S13
+    BRIDGE --> S13
     S13 --> S14
     S14 --> QG
-    QG -->|"100%"| CHECKLIST
-    QG -->|"< 100%"| OPT
-    OPT --> OPT_A
-    OPT --> OPT_B
-    OPT --> OPT_C
-    OPT_A --> CHECKLIST
-    OPT_B --> S11
-    OPT_C --> S14
-
-    CHECKLIST --> DONE
+    QG -->|"= 100%"| CHECKLIST
+    QG -->|"< 100%"| BYPASS
+    QG -->|"< 100%"| ITERATE
+    QG -->|"< 100%"| REDUCE
+    BYPASS --> CHECKLIST
+    ITERATE -->|"re-plan questions"| S11
+    REDUCE -->|"re-extract"| S13
+    CHECKLIST -->|"all items checked"| DONE
+    CHECKLIST -->|"any item unchecked"| INCOMPLETE
 
     subgraph LEGEND["Legend"]
-        L1["Process"]:::process
-        L2["Subagent Dispatch"]:::subagent
-        L3["Quality Gate"]:::gate
-        L4(["Terminal"]):::terminal
-        L5{"Decision"}:::decision
-        L6(["Failure / Stop"]):::fail
+        direction LR
+        LA["Subagent Dispatch"]:::subagent
+        LB["Quality Gate / Decision"]:::gate
+        LC["Success Terminal"]:::terminal
+        LD["Process Step"]:::process
+        LE(["Stop Terminal"]):::stop
     end
-
-    classDef process fill:#2d2d2d,stroke:#888,color:#e8e8ea
-    classDef subagent fill:#1a3a5c,stroke:#4a9eff,color:#4a9eff
-    classDef gate fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
-    classDef terminal fill:#1a3a1a,stroke:#51cf66,color:#51cf66
-    classDef decision fill:#2d2d2d,stroke:#aaa,color:#e8e8ea
-    classDef fail fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
 ```
 
-**Overview:** `/feature-research` is Phase 1 of the develop skill. It runs only when `needs_research` is true, dispatches a codebase-exploration subagent, extracts and categorizes ambiguities from the findings, computes a four-component quality score, and requires 100% (or explicit user bypass) before handing off to `/feature-discover`.
+---
 
-**Quality Gate components** (all must be 100%; overall = minimum):
-| Component | Formula |
+## Detail: §1.4 Research Quality Scoring
+
+The overall score is the **weakest link** — all four component scores must reach 100% to pass the gate.
+
+```mermaid
+flowchart LR
+    classDef score fill:#1a3a5c,stroke:#4a9eff,color:#e8e8ea
+    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
+    classDef terminal fill:#51cf66,stroke:#3ba84e,color:#fff
+    classDef option fill:#2d2d2d,stroke:#666,color:#e8e8ea
+
+    INPUTS["Research findings\n+ ambiguity list\n+ question list"]
+
+    CS["Coverage Score\nHIGH-confidence answers\n— divided by —\ntotal questions × 100"]:::score
+
+    ARS["Ambiguity Resolution Score\ncategorized ambiguities\n— divided by —\ntotal ambiguities × 100"]:::score
+
+    EQS["Evidence Quality Score\nfindings with file evidence\n— divided by —\nanswerable findings × 100"]:::score
+
+    UDS["Unknown Detection Score\nexplicitly flagged unknowns\n— divided by —\nLOW + UNKNOWN findings × 100"]:::score
+
+    MIN{"Overall\n= min(CS, ARS, EQS, UDS)"}:::gate
+
+    PASS(["100%\nAll criteria met\nProceed to checklist"]):::terminal
+
+    OA["A · Bypass gate\nUser accepts risk\n-> proceed to checklist"]:::option
+    OB["B · Iterate\nAdd research questions\n-> back to §1.1"]:::option
+    OC["C · Reduce scope\nRemove low-confidence items\n-> back to §1.3"]:::option
+
+    INPUTS --> CS & ARS & EQS & UDS
+    CS & ARS & EQS & UDS --> MIN
+    MIN -->|"= 100%"| PASS
+    MIN -->|"< 100%"| OA
+    MIN -->|"< 100%"| OB
+    MIN -->|"< 100%"| OC
+
+    subgraph LEGEND["Legend"]
+        direction TB
+        LS["Score Formula Component"]:::score
+        LG["Weakest-link Gate"]:::gate
+        LT["Success Terminal"]:::terminal
+    end
+```
+
+---
+
+## Cross-Reference: Overview → Detail
+
+| Overview Node | Expands In |
 |---|---|
-| Coverage | HIGH-confidence answers ÷ total questions |
-| Ambiguity Resolution | Categorized ambiguities ÷ total ambiguities |
-| Evidence Quality | Findings with file refs ÷ answerable findings |
-| Unknown Detection | Flagged unknowns ÷ LOW/UNKNOWN findings |
+| §1.4 Compute Research Quality Scores | Detail: §1.4 Research Quality Scoring |
+| §1.2 Subagent Dispatch — Codebase Patterns | Overview (full error-handling path shown inline) |
+| §1.2.5 Subagent Dispatch — Governance Docs | Overview (full error-handling + bridge path shown inline) |
 
 ## Command Content
 
@@ -235,6 +277,114 @@ Task:
 - Second failure: return all findings marked UNKNOWN; note "Research failed after 2 attempts: [error]"; do NOT block — user chooses to proceed or retry
 - **TIMEOUT:** 120 seconds per subagent
 
+### 1.2.5 Project Development-Guidance Discovery (Subagent)
+
+**SUBAGENT DISPATCH:** YES
+**REASON:** Generic governance-doc discovery. The sweep nets candidate docs by
+convention, then classifies them by content. Returns a structured object, not raw
+doc dumps.
+
+This is the **primary sweep** on the research path. It runs the generic two-layer
+discovery mechanism and produces `project_standards`. The feature-design §2.0.1
+fallback observes `project_standards` already populated on this path and does NOT
+re-sweep.
+
+```
+Task:
+  description: "Discover project development-guidance / governance docs"
+  prompt: |
+    You are a research agent discovering a repository's binding development and
+    testing standards. Discovery is GENERIC — work by convention + content
+    classification, NEVER by hardcoded filenames.
+
+    LAYER 1 — Conventional-pattern glob net (root + docs/ tree, skip vendored deps
+    node_modules/.venv/venv/vendor/.git/build/dist). Net for governance-doc
+    conventions, e.g.:
+      - Agent/assistant config: AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules,
+        .github/copilot-instructions.md
+      - Contribution/standards: CONTRIBUTING*, DEVELOPERS*, CODING_STANDARDS*,
+        CODESTYLE*, STYLE*, ARCHITECTURE*
+      - Docs trees: docs/** (esp. AI dirs like docs/ai/**),
+        docs/**/*{testing,contributing,style,conventions,guidelines,standards,architecture}*
+      - Filename-keyword: **/*test*instruction*, **/*conventions*
+      - Lint/format/type config: .editorconfig, pyproject.toml ([tool.*]),
+        ruff.toml, .flake8, .eslintrc*, .prettierrc*, tsconfig*
+      - CI/hooks: .github/workflows/**, .pre-commit-config.yaml, .circleci/config.yml
+    This taxonomy is a HEURISTIC PRIOR, not a guarantee. Record the actual globs
+    you ran in search_globs_used.
+
+    LAYER 2 — Content classification (the generalizer). Read each candidate and
+    classify BY CONTENT whether it imposes binding rules on how code/tests are
+    written. Recognize BOTH phrasings:
+      - Imperative-normative: MUST / NEVER / ALWAYS / DO NOT / REQUIRED / FORBIDDEN
+      - Declarative-normative: prose stating a binding convention without an
+        imperative verb (e.g. "we test at the view level", "tests live at…",
+        "do not use X", "all assertions go through Y")
+    A plain narrative README that describes the project without imposing code/test
+    conventions MUST NOT classify as binding.
+
+    NON-PROSE CONFIG/CI (lint/format/type config, CI workflows, hooks netted in
+    LAYER 1): do NOT extract rules per-line from these. Record each as a `sources`
+    entry (kind: style or ci) with a one-line summary like "enforced by tooling —
+    run <tool>; do not fight its config", and emit AT MOST ONE binding_rule per
+    config of the form "code/tests MUST satisfy <tool> config (<path>)" (severity
+    MUST, applies_to code).
+
+    BOUNDED SWEEP: cap candidate count at 40 (count globbed-but-unread candidates
+    in candidates_considered and note them). Cap per-doc reads at 50KB; for a doc
+    larger than that, classify on headings + the first ~200 lines only and record
+    its path in truncated_candidates. Record candidates_considered so "0 found" is
+    distinguishable from "N found, all non-binding".
+
+    EXTRACTION: for each governing doc extract binding rules VERBATIM (no
+    paraphrase). Each rule records: rule (verbatim), context (scoping prose around
+    the rule), source_path, kind (testing|style|architecture|process|ci), severity
+    (MUST|SHOULD — default SHOULD when imperativeness ambiguous; MUST only for
+    explicit imperatives), applies_to (code|tests|both).
+
+    EMPTY RESULT: if a thorough sweep finds nothing binding, set none_found: true
+    with search_globs_used and candidates_considered populated. Flag that the
+    REQUIRED operator cross-check (feature-discover §1.5.2.6) must run.
+
+    RETURN FORMAT (strict JSON — the project_standards object):
+    {
+      "searched": true,
+      "search_globs_used": ["...", "..."],
+      "candidates_considered": 0,
+      "truncated_candidates": ["..."],
+      "none_found": false,
+      "sources": [
+        { "path": "...", "kind": "testing", "summary": "..." }
+      ],
+      "binding_rules": [
+        {
+          "rule": "verbatim rule text",
+          "context": "scoping prose around the rule",
+          "source_path": "...",
+          "kind": "testing",
+          "severity": "SHOULD",
+          "applies_to": "tests"
+        }
+      ]
+    }
+```
+
+**ERROR HANDLING:** mirror §1.2 — retry once; on second failure record
+`searched: true, none_found: true` with a note "Standards sweep failed after 2
+attempts: [error]" and force the REQUIRED operator cross-check. Do NOT block.
+
+**ORCHESTRATOR BRIDGE (write the result into carried context).** After §1.2.5
+returns, the feature-research orchestrator writes the object onto the
+`design_context` carrier so it rides the existing pass-through to feature-design
+(L120) and feature-implement with no further plumbing:
+
+```
+SESSION_CONTEXT.design_context.project_standards = <project_standards object from §1.2.5 subagent>
+```
+
+Writing directly to `design_context.project_standards` (not a `research_findings`
+sub-key) lands it on the DesignContext carrier whose schema this feature extends.
+
 ### 1.3 Ambiguity Extraction
 
 **INPUT:** Research findings from subagent
@@ -357,6 +507,7 @@ Before proceeding to Phase 1.5, verify:
 - [ ] Research Quality Score = 100% (or user bypassed with consent)
 - [ ] All ambiguities extracted and categorized
 - [ ] Findings stored in SESSION_CONTEXT.research_findings
+- [ ] `SESSION_CONTEXT.design_context.project_standards` populated whenever the §1.2.5 sweep ran
 
 If ANY unchecked: Complete Phase 1. Do NOT proceed.
 
