@@ -19,9 +19,9 @@ no complexity penalty multiplier here.
 <RULE>NO high-complexity penalty. A 13-point ticket is more complex than a 5, but agents parallelize the coding AND its review — complexity does NOT inflate Bucket A time the way it would for a serial human.</RULE>
 
 - **Parallelism is capped by operator review throughput**, NOT agent count.
-  Parameter: **REVIEW_THROUGHPUT** (default **1–2** concurrent PRs the operator
-  can actively shepherd). Spinning up ten agents does not help if the operator
-  can only review two PRs at once.
+  Parameter: **REVIEW_THROUGHPUT** (default **2**; tunable concurrent PRs the
+  operator can actively shepherd). Spinning up ten agents does not help if the
+  operator can only review two PRs at once.
 - **More agents ≠ faster past the cap.** Beyond REVIEW_THROUGHPUT, additional
   agents produce PRs that queue — that queue is Bucket B latency, not Bucket A
   effort.

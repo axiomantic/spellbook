@@ -29,10 +29,10 @@ PR is code-ready.
   - A **Thursday-before-cutoff** merge would target Friday prod → **slips to
     Monday**.
   - A **Friday** merge rides Friday staging → **Monday prod**.
-- Parameters: `DEPLOY_CUTOFF` (default 14:00), `NO_DEPLOY_DAYS` (default {Fri}).
+- Parameters: `DEPLOY_CUTOFF` (default 14:00), `NO_DEPLOY_DAYS` (default {Fri, Sat, Sun}).
 
 ### PARALLELISM
-- Multiple PRs can be in flight, **bounded by REVIEW_THROUGHPUT (1–2)**.
+- Multiple PRs can be in flight, **bounded by REVIEW_THROUGHPUT (default 2)**.
 - **Independent tickets fill the review/QA wait windows** — while PR #1 sits in
   QA, the operator shepherds PR #2. This is the main way Bucket B is hidden, but
   it does NOT shorten the critical path of a single dependent chain.

@@ -190,9 +190,9 @@ Task:
     MUST, applies_to code).
 
     BOUNDED SWEEP: cap candidate count at 40 (count globbed-but-unread candidates
-    in candidates_considered and note them). Cap per-doc bytes; for an oversized
-    doc, classify on headings + first-N-lines only and record its path in
-    truncated_candidates. Record candidates_considered so "0 found" is
+    in candidates_considered and note them). Cap per-doc reads at 50KB; for a doc
+    larger than that, classify on headings + the first ~200 lines only and record
+    its path in truncated_candidates. Record candidates_considered so "0 found" is
     distinguishable from "N found, all non-binding".
 
     EXTRACTION: for each governing doc extract binding rules VERBATIM (no
