@@ -1111,8 +1111,9 @@ Task:
 
     ### Phase 5: Standards Conformance (BLOCKING)
 
-    GUARD: If `design_context.project_standards` is absent or empty (fast path, or
-    the sweep recorded `none_found`), record "Standards Conformance: N/A (no
+    GUARD: If `design_context.project_standards` is absent or empty, OR the sweep
+    recorded `none_found: true`, OR `binding_rules` is empty (fast path, or the
+    sweep found no standards), record "Standards Conformance: N/A (no
     project_standards)" and SKIP this phase — it is NOT blocking. Otherwise:
 
     Re-check `design_context.project_standards.binding_rules` across the WHOLE

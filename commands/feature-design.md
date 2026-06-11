@@ -155,9 +155,10 @@ Task:
     SECONDARY source the design must respect — especially rules that change
     testability (e.g. "tests are view-level" reshapes the testability design).
 
-    [Paste binding_rules FILTERED BY applies_to (honor Mandatory Summarization — do
-    NOT paste the full unfiltered set), each with its context and source_path.
-    Omit any rule with an adjudication block.]
+    [Paste binding_rules (honor Mandatory Summarization — do NOT paste the full
+    unfiltered set), each with its context and source_path. Do NOT filter by
+    applies_to: the design dispatch spans both implementation AND testing, so every
+    binding rule is in scope here. Omit any rule that has an adjudication block.]
 
     ## Task
 
