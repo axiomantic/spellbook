@@ -27,32 +27,32 @@ _ROOT = Path(__file__).parent.parent
 
 
 @lru_cache(maxsize=None)
-def FEATURE_RESEARCH() -> str:
+def feature_research() -> str:
     return (_ROOT / "commands" / "feature-research.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
-def FEATURE_DISCOVER() -> str:
+def feature_discover() -> str:
     return (_ROOT / "commands" / "feature-discover.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
-def FEATURE_DESIGN() -> str:
+def feature_design() -> str:
     return (_ROOT / "commands" / "feature-design.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
-def FEATURE_IMPLEMENT() -> str:
+def feature_implement() -> str:
     return (_ROOT / "commands" / "feature-implement.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
-def DEVELOP_SKILL() -> str:
+def develop_skill() -> str:
     return (_ROOT / "skills" / "develop" / "SKILL.md").read_text(encoding="utf-8")
 
 
 @lru_cache(maxsize=None)
-def CODE_REVIEW_GIVE() -> str:
+def code_review_give() -> str:
     return (_ROOT / "commands" / "code-review-give.md").read_text(encoding="utf-8")
 
 
@@ -166,66 +166,66 @@ def test_remaining_gates_derivation_from_flags():
 
 def test_standards_discovery_divisor_bumped_to_13():
     # Post-edit denominator forms PRESENT.
-    assert "/ 13" in FEATURE_DISCOVER()                         # completeness_score divisor
-    assert "(13 Validation Functions)" in FEATURE_DISCOVER()    # §1.5.5 heading
-    assert "[N]/13 items complete" in FEATURE_DISCOVER()        # DISPLAY format
-    assert "all 13 validation functions" in FEATURE_DISCOVER()  # §invariant line
-    assert "13/13 validation functions" in FEATURE_DISCOVER()   # discover checklist
-    assert "13/13 validation functions" in DEVELOP_SKILL()      # SKILL checklist
-    assert "13 validation functions" in DEVELOP_SKILL()         # SKILL phase-map line
-    assert "100% (13/13)" in DEVELOP_SKILL()                    # SKILL quality-gate table
+    assert "/ 13" in feature_discover()                         # completeness_score divisor
+    assert "(13 Validation Functions)" in feature_discover()    # §1.5.5 heading
+    assert "[N]/13 items complete" in feature_discover()        # DISPLAY format
+    assert "all 13 validation functions" in feature_discover()  # §invariant line
+    assert "13/13 validation functions" in feature_discover()   # discover checklist
+    assert "13/13 validation functions" in develop_skill()      # SKILL checklist
+    assert "13 validation functions" in develop_skill()         # SKILL phase-map line
+    assert "100% (13/13)" in develop_skill()                    # SKILL quality-gate table
 
     # Pre-edit denominator forms ABSENT (NEW pattern — not in the presence-only precedent).
     # Each absence assertion is annotated with the EXACT denominator site it pins, so a
     # future incidental substring elsewhere in the file cannot silently satisfy/break it.
-    assert "/ 12" not in FEATURE_DISCOVER()                       # pins completeness_score divisor `(checked_count / 12)`
-    assert "(12 Validation Functions)" not in FEATURE_DISCOVER()  # pins §1.5.5 heading `(12 Validation Functions)`
-    assert "[N]/12 items complete" not in FEATURE_DISCOVER()      # pins DISPLAY-format `Completeness Score: [X]% ([N]/12 items complete)`
-    assert "all 12 validation functions" not in FEATURE_DISCOVER() # pins invariant line `Proceed to design only when all 12 validation functions pass`
-    assert "12/12 validation functions" not in FEATURE_DISCOVER() # pins discover checklist `Completeness Score = 100% (12/12 validation functions)`
-    assert "12/12 validation functions" not in DEVELOP_SKILL()    # pins SKILL checklist `Completeness score = 100% (12/12 validation functions)`
-    assert "12 validation functions" not in DEVELOP_SKILL()       # pins SKILL phase-map `1.5.5: GATE: Completeness Score = 100% (12 validation functions)`
-    assert "100% (12/12)" not in DEVELOP_SKILL()                  # pins SKILL quality-gate table cell `| 100% (12/12) | User consent |`
+    assert "/ 12" not in feature_discover()                       # pins completeness_score divisor `(checked_count / 12)`
+    assert "(12 Validation Functions)" not in feature_discover()  # pins §1.5.5 heading `(12 Validation Functions)`
+    assert "[N]/12 items complete" not in feature_discover()      # pins DISPLAY-format `Completeness Score: [X]% ([N]/12 items complete)`
+    assert "all 12 validation functions" not in feature_discover() # pins invariant line `Proceed to design only when all 12 validation functions pass`
+    assert "12/12 validation functions" not in feature_discover() # pins discover checklist `Completeness Score = 100% (12/12 validation functions)`
+    assert "12/12 validation functions" not in develop_skill()    # pins SKILL checklist `Completeness score = 100% (12/12 validation functions)`
+    assert "12 validation functions" not in develop_skill()       # pins SKILL phase-map `1.5.5: GATE: Completeness Score = 100% (12 validation functions)`
+    assert "100% (12/12)" not in develop_skill()                  # pins SKILL quality-gate table cell `| 100% (12/12) | User consent |`
 
 
 def test_function_index_comment_count_is_13():
     # 12 existing FUNCTION comments + the new // FUNCTION 13:. The // FUNCTION 12:
     # index comment is PRESERVED (deliberately NOT asserted absent).
-    assert FEATURE_DISCOVER().count("// FUNCTION ") == 13
-    assert "// FUNCTION 12: Need-flags consistent with discovered scope" in FEATURE_DISCOVER()
-    assert "// FUNCTION 13: Project standards discovered" in FEATURE_DISCOVER()
+    assert feature_discover().count("// FUNCTION ") == 13
+    assert "// FUNCTION 12: Need-flags consistent with discovered scope" in feature_discover()
+    assert "// FUNCTION 13: Project standards discovered" in feature_discover()
 
 
 def test_standards_discovery_contract_markers_present():
     # §1.2.5 heading in feature-research.
-    assert "1.2.5 Project Development-Guidance Discovery" in FEATURE_RESEARCH()
-    assert "project_standards" in FEATURE_RESEARCH()
+    assert "1.2.5 Project Development-Guidance Discovery" in feature_research()
+    assert "project_standards" in feature_research()
     # 13th validation function in feature-discover.
-    assert "standards_discovered" in FEATURE_DISCOVER()
+    assert "standards_discovered" in feature_discover()
     # 13th DISPLAY-FORMAT checklist row in feature-discover (Task 5 Step 4 — the
     # operator-visible gate row; guards F4 — the row was previously untested).
-    assert "[✓/✗] Project standards discovered" in FEATURE_DISCOVER()
+    assert "[✓/✗] Project standards discovered" in feature_discover()
     # Belt-and-suspenders: the DISPLAY-FORMAT block must carry >= 13 [✓/✗] rows
     # (12 pre-existing + the new standards row). Counts the checklist glyph directly.
-    assert FEATURE_DISCOVER().count("[✓/✗]") >= 13
+    assert feature_discover().count("[✓/✗]") >= 13
     # project_standards in the DesignContext block of SKILL.md.
-    assert "project_standards" in DEVELOP_SKILL()
+    assert "project_standards" in develop_skill()
     # Binding Project Standards block in feature-implement §4.3 AND feature-design §2.1.
-    assert "Binding Project Standards" in FEATURE_IMPLEMENT()
-    assert "Binding Project Standards" in FEATURE_DESIGN()
+    assert "Binding Project Standards" in feature_implement()
+    assert "Binding Project Standards" in feature_design()
     # Standards Conformance audit section in feature-implement §4.6.1.
-    assert "Standards Conformance" in FEATURE_IMPLEMENT()
+    assert "Standards Conformance" in feature_implement()
     # §4.6.1 audit Inputs block now hands the dispatched subagent the binding
     # standards (guards C-1 — Phase 5's BLOCKING gate was a no-op without them).
     # The "INCLUDING any adjudication blocks" phrasing is unique to the §4.6.1
     # Inputs paste, distinct from the §4.5 per-task review paste.
-    assert "Binding project standards: [paste design_context.project_standards.binding_rules, INCLUDING any adjudication blocks" in FEATURE_IMPLEMENT()
+    assert "Binding project standards: [paste design_context.project_standards.binding_rules, INCLUDING any adjudication blocks" in feature_implement()
     # feature-design §2.0 fallback sweep.
-    assert "Fallback Sweep" in FEATURE_DESIGN()
+    assert "Fallback Sweep" in feature_design()
     # operator-adjudication escape valve markers.
-    assert "rule_overridden" in FEATURE_IMPLEMENT()
-    assert "rule_not_applicable" in FEATURE_IMPLEMENT()
+    assert "rule_overridden" in feature_implement()
+    assert "rule_not_applicable" in feature_implement()
     # code-review-give consumes project_standards.
-    assert "project_standards" in CODE_REVIEW_GIVE()
+    assert "project_standards" in code_review_give()
     # fast-path WAIVER note in SKILL.md (Task 10 — design §5.6 / Acceptance #9).
-    assert "WAIVED on the fast path" in DEVELOP_SKILL()
+    assert "WAIVED on the fast path" in develop_skill()
