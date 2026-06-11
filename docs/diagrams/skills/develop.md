@@ -142,7 +142,7 @@ flowchart TD
     SCOPE_DRIFT -->|no| P153
 
     P153[1.5.3: Build Glossary] --> P154[1.5.4: Synthesize design_context]
-    P154 --> GATE_CS{GATE 1.5.5:\nCompleteness Score\n= 100% 12/12?}
+    P154 --> GATE_CS{GATE 1.5.5:\nCompleteness Score\n= 100% 13/13?}
     GATE_CS -->|fail| P152
     GATE_CS -->|pass| P156[1.5.6: Create Understanding Document\nwrite to understanding/understanding-[feature]-*.md]
 
