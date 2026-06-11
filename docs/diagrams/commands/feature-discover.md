@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-discover.md", "source_hash": "sha256:2efe36aa961079907bef80de3424ec4b37ef67d299685b46d710d424bfa71e59", "generator": "stamp", "stamped_at": "2026-06-11T00:23:34Z"} -->
+<!-- diagram-meta: {"source": "commands/feature-discover.md", "source_hash": "sha256:e574ba39a04ec1119b5cc30fdd3110bbb243171654d01962f8d43bf0707f2998", "generator": "stamp", "stamped_at": "2026-06-11T00:24:36Z"} -->
 # Feature Discovery (Phase 1.5) - Diagrams
 
 ## Overview

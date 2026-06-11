@@ -185,7 +185,7 @@ ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 ```
 
 - [ ] Understanding document exists
-- [ ] Completeness score = 100% (12/12 validation functions)
+- [ ] Completeness score = 100% (13/13 validation functions)
 - [ ] Dehallucination gate subagent was dispatched (Phase 1.5.7)
 - [ ] Devil's advocate subagent was dispatched
 
@@ -792,7 +792,7 @@ Phase 1.5: Informed Discovery (if needs_research)
   ├─ 1.5.2: Conduct discovery wizard (AskUserQuestion + ARH)
   ├─ 1.5.3: Build glossary
   ├─ 1.5.4: Synthesize design_context
-  ├─ 1.5.5: GATE: Completeness Score = 100% (12 validation functions)
+  ├─ 1.5.5: GATE: Completeness Score = 100% (13 validation functions)
   ├─ 1.5.6: Create Understanding Document
   ├─ 1.5.7: Dehallucination Gate
   └─ 1.6: Invoke devils-advocate skill (if needs_design OR needs_research)
@@ -994,7 +994,7 @@ interface DesignContext {
 | Gate                      | Threshold          | Bypass       |
 | ------------------------- | ------------------ | ------------ |
 | Research Quality          | 100%               | User consent |
-| Completeness              | 100% (12/12)       | User consent |
+| Completeness              | 100% (13/13)       | User consent |
 | Implementation Completion | All items COMPLETE | Never        |
 | Tests                     | All passing        | Never        |
 | Green Mirage Audit        | Clean              | Never        |

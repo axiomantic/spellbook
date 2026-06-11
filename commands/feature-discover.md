@@ -37,7 +37,7 @@ Required: Research was done by subagent (not in main context)
 ## Invariant Principles
 
 1. **Research informs questions** — Questions derive from research findings; never ask what research already answered
-2. **100% completeness required** — Proceed to design only when all 12 validation functions pass; no exceptions without explicit bypass
+2. **100% completeness required** — Proceed to design only when all 13 validation functions pass; no exceptions without explicit bypass
 3. **Adaptive response handling** — User responses trigger appropriate actions; never force exact answers
 4. **Understanding document is the gate** — Devil's advocate reviews the understanding document; approval unlocks design
 
@@ -387,7 +387,7 @@ Build complete `DesignContext` object from all prior phases.
 - No "TBD" or "unknown" strings
 - All arrays with content or explicit "N/A"
 
-### 1.5.5 Completeness Checklist (12 Validation Functions)
+### 1.5.5 Completeness Checklist (13 Validation Functions)
 
 ```typescript
 // FUNCTION 1: Research quality validated
@@ -497,7 +497,7 @@ function standards_discovered(): boolean {
 const checked_count = Object.values(validation_results).filter(
   (v) => v === true,
 ).length;
-const completeness_score = (checked_count / 12) * 100;
+const completeness_score = (checked_count / 13) * 100;
 ```
 
 **DISPLAY FORMAT:**
@@ -519,7 +519,7 @@ Completeness Checklist:
 [✓/✗] Need-flags consistent with discovered scope (any new design/infra need re-flagged)
 [✓/✗] Project standards discovered (sweep ran; ≥1 source recorded OR none_found with globs recorded)
 
-Completeness Score: [X]% ([N]/12 items complete)
+Completeness Score: [X]% ([N]/13 items complete)
 ```
 
 **GATE BEHAVIOR:**
@@ -741,7 +741,7 @@ Before proceeding to Phase 2, verify:
 - [ ] 7-category discovery questions generated and answered
 - [ ] Glossary built
 - [ ] design_context synthesized (no null values, no TBD)
-- [ ] Completeness Score = 100% (12/12 validation functions)
+- [ ] Completeness Score = 100% (13/13 validation functions)
 - [ ] Understanding Document created and saved
 - [ ] Devil's advocate subagent DISPATCHED (not done in main context)
 - [ ] User approved Understanding Document
