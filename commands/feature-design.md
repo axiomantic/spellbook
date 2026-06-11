@@ -148,6 +148,17 @@ Task:
 
     [Required: paste complete SESSION_CONTEXT.design_context here before dispatching]
 
+    ## Binding Project Standards (secondary source)
+
+    The PRIMARY source remains the re-anchored canonical spec above. These binding
+    standards (from `design_context.project_standards.binding_rules`) are a
+    SECONDARY source the design must respect — especially rules that change
+    testability (e.g. "tests are view-level" reshapes the testability design).
+
+    [Paste binding_rules FILTERED BY applies_to (honor Mandatory Summarization — do
+    NOT paste the full unfiltered set), each with its context and source_path.
+    Omit any rule with an adjudication block.]
+
     ## Task
 
     Using the design-exploration skill in synthesis mode:

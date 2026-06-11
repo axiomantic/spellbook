@@ -824,6 +824,28 @@ Task:
     Do NOT take shortcuts on assertions. Do NOT use partial assertions
     as a substitute for computing the complete expected value.
 
+    ## Binding Project Standards
+
+    These binding standards were discovered from the repository's governance docs
+    and travel in `design_context.project_standards.binding_rules`. Each rule is
+    quoted VERBATIM with its source doc and scoping context.
+
+    [Paste, FILTERED BY applies_to:
+      - the test-writing portion receives rules where applies_to ∈ {tests, both};
+      - the implementation portion receives rules where applies_to ∈ {code, both}.
+     For each pasted rule include: rule (verbatim), context (scoping prose),
+     source_path, severity, applies_to. Honor Mandatory Summarization — do NOT
+     paste the full unfiltered set; an adjudicated rule (adjudication present) is
+     omitted.]
+
+    Your implementation AND tests MUST conform to these binding standards. If a
+    standard conflicts with the plan, STOP and surface it — do not silently follow
+    the plan over a MUST rule.
+
+    FALLBACK: If `project_standards` is empty, before writing, search the repo root
+    + docs/ for AGENTS.md, testing-instruction docs, and style guides, and record
+    what you used.
+
     ## Working Directory
 
     BEFORE ANY WORK, verify your working directory:
