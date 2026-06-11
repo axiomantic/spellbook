@@ -6192,6 +6192,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#overview-feature-research-phase-1-of-develop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview: feature-research — Phase 1 of /develop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detail-14-research-quality-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detail: §1.4 Research Quality Scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference-overview-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference: Overview → Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#command-content" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8629,6 +8662,39 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#overview-feature-research-phase-1-of-develop" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview: feature-research — Phase 1 of /develop
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#detail-14-research-quality-scoring" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Detail: §1.4 Research Quality Scoring
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cross-reference-overview-detail" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Cross-Reference: Overview → Detail
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#command-content" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8661,97 +8727,148 @@
 
 <h1 id="feature-research">/feature-research<a class="headerlink" href="#feature-research" title="Permanent link">&para;</a></h1>
 <h2 id="workflow-diagram">Workflow Diagram<a class="headerlink" href="#workflow-diagram" title="Permanent link">&para;</a></h2>
+<h2 id="overview-feature-research-phase-1-of-develop">Overview: feature-research — Phase 1 of /develop<a class="headerlink" href="#overview-feature-research-phase-1-of-develop" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart TD
-    START(["/feature-research invoked"]):::terminal
+    classDef subagent fill:#4a9eff,stroke:#2e7acc,color:#fff
+    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
+    classDef terminal fill:#51cf66,stroke:#3ba84e,color:#fff
+    classDef process fill:#2d2d2d,stroke:#555,color:#e8e8ea
+    classDef stop fill:#c62828,stroke:#b71c1c,color:#fff
 
-    PRE["Prerequisite Verification\n(bash check block)"]:::process
+    START(["START: /feature-research\nPhase 1 of /develop"]):::terminal
 
-    C1{"needs_research\n== true?"}:::decision
-    C2{"Phase 0\ncomplete?"}:::decision
-    C3{"impl_plan\nescape hatch\nactive?"}:::decision
+    PREREQ["Prerequisite Check\n(1) SESSION_PREFERENCES.need_flags.needs_research == true\n(2) Phase 0 checklist 100% complete\n(3) escape_hatch.type != impl_plan"]:::gate
+    STOP_P(["STOP — return to\nappropriate phase"]):::stop
 
-    STOP_NEEDS(["STOP: needs_research is false\nReturn to Phase 0"]):::fail
-    STOP_P0(["STOP: Phase 0 incomplete\nReturn to Phase 0"]):::fail
-    STOP_ESCAPE(["STOP: Escape hatch active\nSkip to Phase 3+"]):::fail
+    S11["§1.1  Research Strategy Planning\nAnalyze feature domains\nGenerate codebase questions\nIdentify knowledge gaps"]:::process
 
-    S11["1.1 Research Strategy Planning\nAnalyze feature request\nGenerate codebase questions\nIdentify knowledge gaps"]:::process
+    SA1["§1.2  Subagent Dispatch\nResearch Agent — Codebase Patterns\nAnswers each question: HIGH / MEDIUM / LOW / UNKNOWN\nTimeout: 120s"]:::subagent
+    SA1_OK{"Subagent\nsucceeded?"}
+    SA1_R["Retry once\n(same instructions)"]:::process
+    SA1_F["Return all findings as UNKNOWN\n— do NOT block"]:::process
 
-    DISPATCH["1.2 Subagent Dispatch\nResearch Agent – Codebase Patterns"]:::subagent
+    SA2["§1.2.5  Subagent Dispatch\nGovernance Doc Discovery\nLayer 1: conventional glob net\nLayer 2: content classification\nCap: 40 candidates"]:::subagent
+    SA2_OK{"Subagent\nsucceeded?"}
+    SA2_R["Retry once\n(same instructions)"]:::process
+    SA2_F["Record none_found: true\nForce operator cross-check\n— do NOT block"]:::process
 
-    SF{"Subagent\nsucceeded?"}:::decision
-    RETRY["Retry once\n(same instructions)"]:::process
-    SF2{"Second attempt\nsucceeded?"}:::decision
-    UNKNOWN["Mark all findings UNKNOWN\nNote failure reason\nReturn to user (do not block)"]:::process
+    BRIDGE["Bridge — write onto design_context carrier\nSESSION_CONTEXT.design_context\n  .project_standards  &amp;lt;— §1.2.5 result"]:::process
 
-    S13["1.3 Ambiguity Extraction\nExtract MEDIUM/LOW/UNKNOWN items\nExtract flagged ambiguities\nCategorize: Technical/Scope/Integration/Terminology\nPrioritize by impact"]:::process
+    S13["§1.3  Ambiguity Extraction\nExtract MEDIUM / LOW / UNKNOWN items\nExtract all flagged ambiguities\nCategorize: Technical · Scope · Integration · Terminology\nPrioritize by design impact: HIGH / MEDIUM / LOW"]:::process
 
-    S14["1.4 Research Quality Score\nCoverage Score\nAmbiguity Resolution Score\nEvidence Quality Score\nUnknown Detection Score\nOverall = min of all four"]:::process
+    S14["§1.4  Compute Research Quality Scores\nCoverage · Ambiguity Resolution\nEvidence Quality · Unknown Detection\nOverall = min of all four scores\n[see detail diagram below]"]:::process
 
-    QG{"Score\n= 100%?"}:::gate
+    QG{"Overall\n= 100%?"}:::gate
 
-    OPT{"User\nchoice"}:::decision
-    OPT_A["A: Continue anyway\n(bypass, accept risk)"]:::process
-    OPT_B["B: Iterate: add questions\nre-dispatch subagent"]:::process
-    OPT_C["C: Reduce scope\nremove low-confidence items"]:::process
+    BYPASS["A · Bypass gate\n(accept risk, proceed)"]:::process
+    ITERATE["B · Iterate\n(add questions, re-run §1.1)"]:::process
+    REDUCE["C · Reduce scope\n(remove low-confidence items)"]:::process
 
-    CHECKLIST["Phase 1 Completion Checklist\n✓ Subagent dispatched\n✓ Score 100% (or bypassed)\n✓ Ambiguities categorized\n✓ Findings stored in\n  SESSION_CONTEXT.research_findings"]:::process
+    CHECKLIST["Phase 1 Completion Checklist\n[ ] Subagent dispatched — not main-context work\n[ ] Quality score = 100% or user bypassed\n[ ] All ambiguities extracted and categorized\n[ ] Findings stored in SESSION_CONTEXT.research_findings\n[ ] design_context.project_standards populated"]:::process
+    INCOMPLETE(["STOP — complete Phase 1\nDo NOT proceed"]):::stop
+    DONE(["Phase 1 Complete\nNext: /feature-discover (Phase 1.5)"]):::terminal
 
-    DONE(["Phase 1 Complete\nProceed to /feature-discover"]):::terminal
-
-    START --&gt; PRE
-    PRE --&gt; C1
-    C1 --&gt;|"false"| STOP_NEEDS
-    C1 --&gt;|"true"| C2
-    C2 --&gt;|"incomplete"| STOP_P0
-    C2 --&gt;|"complete"| C3
-    C3 --&gt;|"active"| STOP_ESCAPE
-    C3 --&gt;|"not active"| S11
-
-    S11 --&gt; DISPATCH
-    DISPATCH --&gt; SF
-    SF --&gt;|"yes"| S13
-    SF --&gt;|"no"| RETRY
-    RETRY --&gt; SF2
-    SF2 --&gt;|"yes"| S13
-    SF2 --&gt;|"no"| UNKNOWN
-    UNKNOWN --&gt; S13
-
+    START --&gt; PREREQ
+    PREREQ --&gt;|"any check fails"| STOP_P
+    PREREQ --&gt;|"all pass"| S11
+    S11 --&gt; SA1
+    SA1 --&gt; SA1_OK
+    SA1_OK --&gt;|"yes"| SA2
+    SA1_OK --&gt;|"no — first failure"| SA1_R
+    SA1_R --&gt;|"retry succeeds"| SA2
+    SA1_R --&gt;|"retry fails"| SA1_F
+    SA1_F --&gt; SA2
+    SA2 --&gt; SA2_OK
+    SA2_OK --&gt;|"yes"| BRIDGE
+    SA2_OK --&gt;|"no — first failure"| SA2_R
+    SA2_R --&gt;|"retry succeeds"| BRIDGE
+    SA2_R --&gt;|"retry fails"| SA2_F
+    SA2_F --&gt; S13
+    BRIDGE --&gt; S13
     S13 --&gt; S14
     S14 --&gt; QG
-    QG --&gt;|"100%"| CHECKLIST
-    QG --&gt;|"&lt; 100%"| OPT
-    OPT --&gt; OPT_A
-    OPT --&gt; OPT_B
-    OPT --&gt; OPT_C
-    OPT_A --&gt; CHECKLIST
-    OPT_B --&gt; S11
-    OPT_C --&gt; S14
-
-    CHECKLIST --&gt; DONE
+    QG --&gt;|"= 100%"| CHECKLIST
+    QG --&gt;|"&lt; 100%"| BYPASS
+    QG --&gt;|"&lt; 100%"| ITERATE
+    QG --&gt;|"&lt; 100%"| REDUCE
+    BYPASS --&gt; CHECKLIST
+    ITERATE --&gt;|"re-plan questions"| S11
+    REDUCE --&gt;|"re-extract"| S13
+    CHECKLIST --&gt;|"all items checked"| DONE
+    CHECKLIST --&gt;|"any item unchecked"| INCOMPLETE
 
     subgraph LEGEND["Legend"]
-        L1["Process"]:::process
-        L2["Subagent Dispatch"]:::subagent
-        L3["Quality Gate"]:::gate
-        L4(["Terminal"]):::terminal
-        L5{"Decision"}:::decision
-        L6(["Failure / Stop"]):::fail
-    end
+        direction LR
+        LA["Subagent Dispatch"]:::subagent
+        LB["Quality Gate / Decision"]:::gate
+        LC["Success Terminal"]:::terminal
+        LD["Process Step"]:::process
+        LE(["Stop Terminal"]):::stop
+    end</code></pre>
+<hr />
+<h2 id="detail-14-research-quality-scoring">Detail: §1.4 Research Quality Scoring<a class="headerlink" href="#detail-14-research-quality-scoring" title="Permanent link">&para;</a></h2>
+<p>The overall score is the <strong>weakest link</strong> — all four component scores must reach 100% to pass the gate.</p>
+<pre class="mermaid"><code>flowchart LR
+    classDef score fill:#1a3a5c,stroke:#4a9eff,color:#e8e8ea
+    classDef gate fill:#ff6b6b,stroke:#cc4444,color:#fff
+    classDef terminal fill:#51cf66,stroke:#3ba84e,color:#fff
+    classDef option fill:#2d2d2d,stroke:#666,color:#e8e8ea
 
-    classDef process fill:#2d2d2d,stroke:#888,color:#e8e8ea
-    classDef subagent fill:#1a3a5c,stroke:#4a9eff,color:#4a9eff
-    classDef gate fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b
-    classDef terminal fill:#1a3a1a,stroke:#51cf66,color:#51cf66
-    classDef decision fill:#2d2d2d,stroke:#aaa,color:#e8e8ea
-    classDef fail fill:#3a1a1a,stroke:#ff6b6b,color:#ff6b6b</code></pre>
-<p><strong>Overview:</strong> <code>/feature-research</code> is Phase 1 of the develop skill. It runs only when <code>needs_research</code> is true, dispatches a codebase-exploration subagent, extracts and categorizes ambiguities from the findings, computes a four-component quality score, and requires 100% (or explicit user bypass) before handing off to <code>/feature-discover</code>.</p>
-<p><strong>Quality Gate components</strong> (all must be 100%; overall = minimum):
-| Component | Formula |
-|---|---|
-| Coverage | HIGH-confidence answers ÷ total questions |
-| Ambiguity Resolution | Categorized ambiguities ÷ total ambiguities |
-| Evidence Quality | Findings with file refs ÷ answerable findings |
-| Unknown Detection | Flagged unknowns ÷ LOW/UNKNOWN findings |</p>
+    INPUTS["Research findings\n+ ambiguity list\n+ question list"]
+
+    CS["Coverage Score\nHIGH-confidence answers\n— divided by —\ntotal questions × 100"]:::score
+
+    ARS["Ambiguity Resolution Score\ncategorized ambiguities\n— divided by —\ntotal ambiguities × 100"]:::score
+
+    EQS["Evidence Quality Score\nfindings with file evidence\n— divided by —\nanswerable findings × 100"]:::score
+
+    UDS["Unknown Detection Score\nexplicitly flagged unknowns\n— divided by —\nLOW + UNKNOWN findings × 100"]:::score
+
+    MIN{"Overall\n= min(CS, ARS, EQS, UDS)"}:::gate
+
+    PASS(["100%\nAll criteria met\nProceed to checklist"]):::terminal
+
+    OA["A · Bypass gate\nUser accepts risk\n-&gt; proceed to checklist"]:::option
+    OB["B · Iterate\nAdd research questions\n-&gt; back to §1.1"]:::option
+    OC["C · Reduce scope\nRemove low-confidence items\n-&gt; back to §1.3"]:::option
+
+    INPUTS --&gt; CS &amp; ARS &amp; EQS &amp; UDS
+    CS &amp; ARS &amp; EQS &amp; UDS --&gt; MIN
+    MIN --&gt;|"= 100%"| PASS
+    MIN --&gt;|"&lt; 100%"| OA
+    MIN --&gt;|"&lt; 100%"| OB
+    MIN --&gt;|"&lt; 100%"| OC
+
+    subgraph LEGEND["Legend"]
+        direction TB
+        LS["Score Formula Component"]:::score
+        LG["Weakest-link Gate"]:::gate
+        LT["Success Terminal"]:::terminal
+    end</code></pre>
+<hr />
+<h2 id="cross-reference-overview-detail">Cross-Reference: Overview → Detail<a class="headerlink" href="#cross-reference-overview-detail" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Overview Node</th>
+<th>Expands In</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>§1.4 Compute Research Quality Scores</td>
+<td>Detail: §1.4 Research Quality Scoring</td>
+</tr>
+<tr>
+<td>§1.2 Subagent Dispatch — Codebase Patterns</td>
+<td>Overview (full error-handling path shown inline)</td>
+</tr>
+<tr>
+<td>§1.2.5 Subagent Dispatch — Governance Docs</td>
+<td>Overview (full error-handling + bridge path shown inline)</td>
+</tr>
+</tbody>
+</table>
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Feature Research (Phase 1)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
@@ -8887,136 +9004,245 @@
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">-</span><span class="w"> </span>Second failure: return all findings marked UNKNOWN; note &quot;Research failed after 2 attempts: [error]&quot;; do NOT block — user chooses to proceed or retry
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">-</span><span class="w"> </span><span class="gs">**TIMEOUT:**</span> 120 seconds per subagent
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gu">### 1.3 Ambiguity Extraction</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gu">### 1.2.5 Project Development-Guidance Discovery (Subagent)</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="gs">**INPUT:**</span> Research findings from subagent
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="gs">**OUTPUT:**</span> Categorized ambiguities
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="k">1.</span> Extract all MEDIUM/LOW/UNKNOWN confidence items
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="k">2.</span> Extract all flagged ambiguities
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="k">3.</span> Categorize by type:
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Technical:**</span> How it works (e.g., &quot;Two auth patterns found — which to use?&quot;)
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Scope:**</span> What to include (e.g., &quot;Unclear if feature includes password reset&quot;)
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Integration:**</span> How it connects (e.g., &quot;Multiple integration points — which is primary?&quot;)
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Terminology:**</span> What terms mean (e.g., &quot;&#39;Session&#39; used inconsistently&quot;)
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="k">4.</span> Prioritize by impact on design: HIGH/MEDIUM/LOW
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="gs">**Example Output:**</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="sb">```</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="sb">TECHNICAL (HIGH impact):</span>
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="sb">- Ambiguity: Two authentication patterns found (JWT in 8 files, OAuth in 5 files)</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="sb">  Source: Research finding #3 (MEDIUM confidence)</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="sb">  Impact: Determines entire auth architecture</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="sb">SCOPE (MEDIUM impact):</span>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="sb">- Ambiguity: Similar features handle password reset; unclear if in scope</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="sb">  Source: Research finding #7 (LOW confidence)</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">  Impact: Affects feature completeness</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">```</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="gu">### 1.4 Research Quality Score</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="gs">**SCORING FORMULAS:**</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="c1">// 1. COVERAGE SCORE</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="kd">function</span><span class="w"> </span><span class="nx">coverageScore</span><span class="p">(</span><span class="nx">findings</span><span class="o">:</span><span class="w"> </span><span class="kt">Finding</span><span class="p">[],</span><span class="w"> </span><span class="nx">questions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">highCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">findings</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">confidence</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;HIGH&quot;</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">questions</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="nx">highCount</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">questions</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="p">}</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="c1">// 2. AMBIGUITY RESOLUTION SCORE</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="kd">function</span><span class="w"> </span><span class="nx">ambiguityResolutionScore</span><span class="p">(</span><span class="nx">ambiguities</span><span class="o">:</span><span class="w"> </span><span class="kt">Ambiguity</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">ambiguities</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">categorized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ambiguities</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">category</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">impact</span><span class="p">);</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="nx">categorized</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">ambiguities</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="p">}</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="c1">// 3. EVIDENCE QUALITY SCORE</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="kd">function</span><span class="w"> </span><span class="nx">evidenceQualityScore</span><span class="p">(</span><span class="nx">findings</span><span class="o">:</span><span class="w"> </span><span class="kt">Finding</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">answerable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">findings</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">confidence</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s2">&quot;UNKNOWN&quot;</span><span class="p">);</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">answerable</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">withEvidence</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">answerable</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">evidence</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="nx">withEvidence</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">answerable</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="p">}</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="c1">// 4. UNKNOWN DETECTION SCORE</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="kd">function</span><span class="w"> </span><span class="nx">unknownDetectionScore</span><span class="p">(</span><span class="nx">findings</span><span class="o">:</span><span class="w"> </span><span class="kt">Finding</span><span class="p">[],</span><span class="w"> </span><span class="nx">flaggedUnknowns</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">lowOrUnknown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">findings</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="w">    </span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">confidence</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;UNKNOWN&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">confidence</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;LOW&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="w">  </span><span class="p">);</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">lowOrUnknown</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="nx">flaggedUnknowns</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">lowOrUnknown</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="p">}</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="c1">// OVERALL SCORE: Weakest link determines quality — ALL must be 100%</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="kd">function</span><span class="w"> </span><span class="nx">overallScore</span><span class="p">(</span><span class="nx">...scores</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(...</span><span class="nx">scores</span><span class="p">);</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="p">}</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="sb">```</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="gs">**DISPLAY FORMAT:**</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">```</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="sb">Research Quality Score: [X]%</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="sb">Breakdown:</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">✓/✗ Coverage: [X]% ([N]/[M] questions with HIGH confidence)</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">✓/✗ Ambiguity Resolution: [X]% ([N]/[M] ambiguities categorized)</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">✓/✗ Evidence Quality: [X]% ([N]/[M] findings have file references)</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">✓/✗ Unknown Detection: [X]% ([N]/[M] unknowns explicitly flagged)</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">Overall: [X]% (minimum of all criteria)</span>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">```</span>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="gs">**GATE BEHAVIOR:**</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>IF SCORE &lt; 100%:
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">```</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">Research Quality Score: [X]% - Below threshold</span>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="sb">OPTIONS:</span>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">A) Continue anyway (bypass gate, accept risk)</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">B) Iterate: Add more research questions and re-dispatch</span>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">C) Skip ambiguous areas (reduce scope, remove low-confidence items)</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="gs">**SUBAGENT DISPATCH:**</span> YES
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="gs">**REASON:**</span> Generic governance-doc discovery. The sweep nets candidate docs by
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>convention, then classifies them by content. Returns a structured object, not raw
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>doc dumps.
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>This is the <span class="gs">**primary sweep**</span> on the research path. It runs the generic two-layer
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>discovery mechanism and produces <span class="sb">`project_standards`</span>. The feature-design §2.0.1
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>fallback observes <span class="sb">`project_standards`</span> already populated on this path and does NOT
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>re-sweep.
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="sb">```</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="sb">Task:</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">  description: &quot;Discover project development-guidance / governance docs&quot;</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="sb">  prompt: |</span>
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="sb">    You are a research agent discovering a repository&#39;s binding development and</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="sb">    testing standards. Discovery is GENERIC — work by convention + content</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="sb">    classification, NEVER by hardcoded filenames.</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="sb">    LAYER 1 — Conventional-pattern glob net (root + docs/ tree, skip vendored deps</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="sb">    node_modules/.venv/venv/vendor/.git/build/dist). Net for governance-doc</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="sb">    conventions, e.g.:</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="sb">      - Agent/assistant config: AGENTS.md, CLAUDE.md, GEMINI.md, .cursorrules,</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="sb">        .github/copilot-instructions.md</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">      - Contribution/standards: CONTRIBUTING*, DEVELOPERS*, CODING_STANDARDS*,</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">        CODESTYLE*, STYLE*, ARCHITECTURE*</span>
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">      - Docs trees: docs/** (esp. AI dirs like docs/ai/**),</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">        docs/**/*{testing,contributing,style,conventions,guidelines,standards,architecture}*</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">      - Filename-keyword: **/*test*instruction*, **/*conventions*</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">      - Lint/format/type config: .editorconfig, pyproject.toml ([tool.*]),</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="sb">        ruff.toml, .flake8, .eslintrc*, .prettierrc*, tsconfig*</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">      - CI/hooks: .github/workflows/**, .pre-commit-config.yaml, .circleci/config.yml</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">    This taxonomy is a HEURISTIC PRIOR, not a guarantee. Record the actual globs</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">    you ran in search_globs_used.</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">    LAYER 2 — Content classification (the generalizer). Read each candidate and</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">    classify BY CONTENT whether it imposes binding rules on how code/tests are</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">    written. Recognize BOTH phrasings:</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">      - Imperative-normative: MUST / NEVER / ALWAYS / DO NOT / REQUIRED / FORBIDDEN</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">      - Declarative-normative: prose stating a binding convention without an</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">        imperative verb (e.g. &quot;we test at the view level&quot;, &quot;tests live at…&quot;,</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">        &quot;do not use X&quot;, &quot;all assertions go through Y&quot;)</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">    A plain narrative README that describes the project without imposing code/test</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">    conventions MUST NOT classify as binding.</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">    NON-PROSE CONFIG/CI (lint/format/type config, CI workflows, hooks netted in</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="sb">    LAYER 1): do NOT extract rules per-line from these. Record each as a `sources`</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="sb">    entry (kind: style or ci) with a one-line summary like &quot;enforced by tooling —</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">    run &lt;tool&gt;; do not fight its config&quot;, and emit AT MOST ONE binding_rule per</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">    config of the form &quot;code/tests MUST satisfy &lt;tool&gt; config (&lt;path&gt;)&quot; (severity</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">    MUST, applies_to code).</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">    BOUNDED SWEEP: cap candidate count at 40 (count globbed-but-unread candidates</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sb">    in candidates_considered and note them). Cap per-doc reads at 50KB; for a doc</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sb">    larger than that, classify on headings + the first ~200 lines only and record</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sb">    its path in truncated_candidates. Record candidates_considered so &quot;0 found&quot; is</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">    distinguishable from &quot;N found, all non-binding&quot;.</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">    EXTRACTION: for each governing doc extract binding rules VERBATIM (no</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sb">    paraphrase). Each rule records: rule (verbatim), context (scoping prose around</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">    the rule), source_path, kind (testing|style|architecture|process|ci), severity</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sb">    (MUST|SHOULD — default SHOULD when imperativeness ambiguous; MUST only for</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">    explicit imperatives), applies_to (code|tests|both).</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sb">    EMPTY RESULT: if a thorough sweep finds nothing binding, set none_found: true</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sb">    with search_globs_used and candidates_considered populated. Flag that the</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="sb">    REQUIRED operator cross-check (feature-discover §1.5.2.6) must run.</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="sb">    RETURN FORMAT (strict JSON — the project_standards object):</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="sb">    {</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="sb">      &quot;searched&quot;: true,</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">      &quot;search_globs_used&quot;: [&quot;...&quot;, &quot;...&quot;],</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="sb">      &quot;candidates_considered&quot;: 0,</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="sb">      &quot;truncated_candidates&quot;: [&quot;...&quot;],</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="sb">      &quot;none_found&quot;: false,</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">      &quot;sources&quot;: [</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">        { &quot;path&quot;: &quot;...&quot;, &quot;kind&quot;: &quot;testing&quot;, &quot;summary&quot;: &quot;...&quot; }</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">      ],</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">      &quot;binding_rules&quot;: [</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">        {</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">          &quot;rule&quot;: &quot;verbatim rule text&quot;,</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">          &quot;context&quot;: &quot;scoping prose around the rule&quot;,</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">          &quot;source_path&quot;: &quot;...&quot;,</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="sb">          &quot;kind&quot;: &quot;testing&quot;,</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="sb">          &quot;severity&quot;: &quot;SHOULD&quot;,</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="sb">          &quot;applies_to&quot;: &quot;tests&quot;</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="sb">        }</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">      ]</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">    }</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="sb">```</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="gs">**ERROR HANDLING:**</span> mirror §1.2 — retry once; on second failure record
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">`searched: true, none_found: true`</span> with a note &quot;Standards sweep failed after 2
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>attempts: [error]&quot; and force the REQUIRED operator cross-check. Do NOT block.
 <a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">Your choice: ___</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">```</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>IF SCORE = 100%:
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gs">**ORCHESTRATOR BRIDGE (write the result into carried context).**</span> After §1.2.5
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>returns, the feature-research orchestrator writes the object onto the
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">`design_context`</span> carrier so it rides the existing pass-through to feature-design
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>(L120) and feature-implement with no further plumbing:
 <a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="k">-</span><span class="w"> </span>Display: &quot;✓ Research Quality Score: 100% - All criteria met&quot;
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span>Proceed to Phase 1.5
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">-</span><span class="w"> </span>Doing research work in main context instead of dispatching a subagent
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="k">-</span><span class="w"> </span>Proceeding when any prerequisite check fails
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="k">-</span><span class="w"> </span>Running this phase when <span class="sb">`needs_research`</span> is false (the flag, not a phase, gates this work)
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="k">-</span><span class="w"> </span>Proceeding past the quality gate without a 100% score or explicit user bypass
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="k">-</span><span class="w"> </span>Blocking progress after two subagent failures (return UNKNOWN findings; do not halt)
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>---
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="gu">## Phase 1 Complete</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>Before proceeding to Phase 1.5, verify:
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="k">- [ ]</span> Research subagent was DISPATCHED (not done in main context)
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="k">- [ ]</span> Research Quality Score = 100% (or user bypassed with consent)
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">- [ ]</span> All ambiguities extracted and categorized
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="k">- [ ]</span> Findings stored in SESSION_CONTEXT.research_findings
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>If ANY unchecked: Complete Phase 1. Do NOT proceed.
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="gs">**Next:**</span> Run <span class="sb">`/feature-discover`</span> to begin Phase 1.5.
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>Research is the foundation every downstream decision rests on. A gap here propagates through design, implementation, and review. Surface unknowns now — not during code review. Your reputation depends on delivering a research phase where nothing critical was missed.
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">```</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">SESSION_CONTEXT.design_context.project_standards = &lt;project_standards object from §1.2.5 subagent&gt;</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">```</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>Writing directly to <span class="sb">`design_context.project_standards`</span> (not a <span class="sb">`research_findings`</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>sub-key) lands it on the DesignContext carrier whose schema this feature extends.
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="gu">### 1.3 Ambiguity Extraction</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="gs">**INPUT:**</span> Research findings from subagent
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="gs">**OUTPUT:**</span> Categorized ambiguities
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="k">1.</span> Extract all MEDIUM/LOW/UNKNOWN confidence items
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="k">2.</span> Extract all flagged ambiguities
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">3.</span> Categorize by type:
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Technical:**</span> How it works (e.g., &quot;Two auth patterns found — which to use?&quot;)
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Scope:**</span> What to include (e.g., &quot;Unclear if feature includes password reset&quot;)
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Integration:**</span> How it connects (e.g., &quot;Multiple integration points — which is primary?&quot;)
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Terminology:**</span> What terms mean (e.g., &quot;&#39;Session&#39; used inconsistently&quot;)
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">4.</span> Prioritize by impact on design: HIGH/MEDIUM/LOW
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="gs">**Example Output:**</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="sb">```</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="sb">TECHNICAL (HIGH impact):</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="sb">- Ambiguity: Two authentication patterns found (JWT in 8 files, OAuth in 5 files)</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="sb">  Source: Research finding #3 (MEDIUM confidence)</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="sb">  Impact: Determines entire auth architecture</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="sb">SCOPE (MEDIUM impact):</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="sb">- Ambiguity: Similar features handle password reset; unclear if in scope</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="sb">  Source: Research finding #7 (LOW confidence)</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="sb">  Impact: Affects feature completeness</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sb">```</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="gu">### 1.4 Research Quality Score</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="gs">**SCORING FORMULAS:**</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="sb">```typescript</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="c1">// 1. COVERAGE SCORE</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a><span class="kd">function</span><span class="w"> </span><span class="nx">coverageScore</span><span class="p">(</span><span class="nx">findings</span><span class="o">:</span><span class="w"> </span><span class="kt">Finding</span><span class="p">[],</span><span class="w"> </span><span class="nx">questions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">highCount</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">findings</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">confidence</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;HIGH&quot;</span><span class="p">).</span><span class="nx">length</span><span class="p">;</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">questions</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="nx">highCount</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">questions</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="p">}</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="c1">// 2. AMBIGUITY RESOLUTION SCORE</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="kd">function</span><span class="w"> </span><span class="nx">ambiguityResolutionScore</span><span class="p">(</span><span class="nx">ambiguities</span><span class="o">:</span><span class="w"> </span><span class="kt">Ambiguity</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">ambiguities</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">categorized</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ambiguities</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">a</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">category</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nx">a</span><span class="p">.</span><span class="nx">impact</span><span class="p">);</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="nx">categorized</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">ambiguities</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="p">}</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="c1">// 3. EVIDENCE QUALITY SCORE</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="kd">function</span><span class="w"> </span><span class="nx">evidenceQualityScore</span><span class="p">(</span><span class="nx">findings</span><span class="o">:</span><span class="w"> </span><span class="kt">Finding</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">answerable</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">findings</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">confidence</span><span class="w"> </span><span class="o">!==</span><span class="w"> </span><span class="s2">&quot;UNKNOWN&quot;</span><span class="p">);</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">answerable</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">0</span><span class="p">;</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">withEvidence</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">answerable</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">evidence</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="mf">0</span><span class="p">);</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="nx">withEvidence</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">answerable</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="p">}</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="c1">// 4. UNKNOWN DETECTION SCORE</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="kd">function</span><span class="w"> </span><span class="nx">unknownDetectionScore</span><span class="p">(</span><span class="nx">findings</span><span class="o">:</span><span class="w"> </span><span class="kt">Finding</span><span class="p">[],</span><span class="w"> </span><span class="nx">flaggedUnknowns</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">lowOrUnknown</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">findings</span><span class="p">.</span><span class="nx">filter</span><span class="p">(</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="w">    </span><span class="nx">f</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">confidence</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;UNKNOWN&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">f</span><span class="p">.</span><span class="nx">confidence</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;LOW&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="w">  </span><span class="p">);</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">lowOrUnknown</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="mf">0</span><span class="p">)</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="p">(</span><span class="nx">flaggedUnknowns</span><span class="p">.</span><span class="nx">length</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="nx">lowOrUnknown</span><span class="p">.</span><span class="nx">length</span><span class="p">)</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">100</span><span class="p">;</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="p">}</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="c1">// OVERALL SCORE: Weakest link determines quality — ALL must be 100%</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="kd">function</span><span class="w"> </span><span class="nx">overallScore</span><span class="p">(</span><span class="nx">...scores</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">[])</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(...</span><span class="nx">scores</span><span class="p">);</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="p">}</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="sb">```</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="gs">**DISPLAY FORMAT:**</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="sb">```</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="sb">Research Quality Score: [X]%</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="sb">Breakdown:</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">✓/✗ Coverage: [X]% ([N]/[M] questions with HIGH confidence)</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">✓/✗ Ambiguity Resolution: [X]% ([N]/[M] ambiguities categorized)</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="sb">✓/✗ Evidence Quality: [X]% ([N]/[M] findings have file references)</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="sb">✓/✗ Unknown Detection: [X]% ([N]/[M] unknowns explicitly flagged)</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="sb">Overall: [X]% (minimum of all criteria)</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="sb">```</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="gs">**GATE BEHAVIOR:**</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>IF SCORE &lt; 100%:
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="sb">```</span>
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="sb">Research Quality Score: [X]% - Below threshold</span>
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="sb">OPTIONS:</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="sb">A) Continue anyway (bypass gate, accept risk)</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="sb">B) Iterate: Add more research questions and re-dispatch</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="sb">C) Skip ambiguous areas (reduce scope, remove low-confidence items)</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="sb">Your choice: ___</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="sb">```</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>IF SCORE = 100%:
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">-</span><span class="w"> </span>Display: &quot;✓ Research Quality Score: 100% - All criteria met&quot;
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="k">-</span><span class="w"> </span>Proceed to Phase 1.5
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">-</span><span class="w"> </span>Doing research work in main context instead of dispatching a subagent
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="k">-</span><span class="w"> </span>Proceeding when any prerequisite check fails
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="k">-</span><span class="w"> </span>Running this phase when <span class="sb">`needs_research`</span> is false (the flag, not a phase, gates this work)
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="k">-</span><span class="w"> </span>Proceeding past the quality gate without a 100% score or explicit user bypass
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="k">-</span><span class="w"> </span>Blocking progress after two subagent failures (return UNKNOWN findings; do not halt)
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>---
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="gu">## Phase 1 Complete</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>Before proceeding to Phase 1.5, verify:
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="k">- [ ]</span> Research subagent was DISPATCHED (not done in main context)
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="k">- [ ]</span> Research Quality Score = 100% (or user bypassed with consent)
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="k">- [ ]</span> All ambiguities extracted and categorized
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="k">- [ ]</span> Findings stored in SESSION_CONTEXT.research_findings
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="k">- [ ]</span> <span class="sb">`SESSION_CONTEXT.design_context.project_standards`</span> populated whenever the §1.2.5 sweep ran
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>If ANY unchecked: Complete Phase 1. Do NOT proceed.
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="gs">**Next:**</span> Run <span class="sb">`/feature-discover`</span> to begin Phase 1.5.
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>Research is the foundation every downstream decision rests on. A gap here propagates through design, implementation, and review. Surface unknowns now — not during code review. Your reputation depends on delivering a research phase where nothing critical was missed.
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
