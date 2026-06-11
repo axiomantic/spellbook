@@ -1446,6 +1446,31 @@ interface DesignContext {
     scope_gaps: string[];
     oversimplifications: string[];
   };
+  project_standards?: {
+    searched: boolean;                 // the sweep executed (false only on a path that legitimately skipped it, e.g. fast-path)
+    search_globs_used: string[];       // the actual layer-1 globs the sweep ran (auditable heuristic net)
+    candidates_considered: number;     // docs globbed + examined (distinguishes "0 found" from "N found, all non-binding")
+    truncated_candidates: string[];    // paths of docs too large to read fully (classified on headings + first-N-lines)
+    none_found: boolean;               // true ONLY after a thorough sweep finds nothing binding; pairs with REQUIRED operator cross-check
+    sources: Array<{
+      path: string;                    // never a hardcoded target — whatever the sweep found
+      kind: "testing" | "style" | "architecture" | "process" | "ci";
+      summary: string;                 // one-line summary of what this doc governs
+    }>;
+    binding_rules: Array<{
+      rule: string;                    // verbatim rule text; no paraphrase
+      context: string;                 // scoping prose around the rule — downstream enforces WITH context
+      source_path: string;
+      kind: "testing" | "style" | "architecture" | "process" | "ci";
+      severity: "MUST" | "SHOULD";     // default SHOULD when imperativeness ambiguous; MUST only for explicit imperatives
+      applies_to: "code" | "tests" | "both";
+      adjudication?: {                 // OPTIONAL — absent until operator overrides this rule at §4.6.1
+        status: "rule_overridden" | "rule_not_applicable";
+        reason: string;                // operator's recorded justification (verbatim)
+        ts: string;                    // ISO 8601 timestamp
+      };
+    }>;
+  };
 }
 ```
 
