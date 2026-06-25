@@ -129,6 +129,34 @@ Perform multi-pass code analysis, generate findings with severity classification
 1. **Verification before assertion**: Never claim an issue exists without evidence from the actual code. Every finding must include concrete evidence.
 2. **Severity accuracy**: Match severity to actual impact. A style nit is not HIGH; a security vulnerability is not LOW.
 3. **Multi-pass thoroughness**: Each pass has a specific focus. Do not skip passes or combine them. Security issues found in Pass 3 indicate Pass 1 was incomplete.
+4. **Read every line**: Every changed hunk in every changed file in scope is read line-by-line and held to the standards. NO grep-sampling, NO skimming, NO "I reviewed the hot files." Grep LOCATES; it never substitutes for reading the diff. For a large diff, **chunk it across multiple subagents so that 100% of the diff is assigned and read** — track per-file/hunk coverage and prove no file went unread. A non-trivial diff that yields zero findings is a FAILED review, not a clean one — look harder.
+5. **Hold every line against the NAMED rule catalogue from Phase 0**: A review cannot catch violations of rules it has not read. The standards docs and operator global rules must already be loaded into a concrete, named rule catalogue (Phase 0). Each pass below checks the diff against THAT catalogue; every finding names the specific rule (document + id/name) it violates, or is a named correctness/logic bug. No vague "this seems off" — cite the standard.
+
+## 3.0 Prerequisite — The Named Rule Catalogue (from Phase 0)
+
+<CRITICAL>
+**A review cannot catch violations of rules it has not read.** This deep-review
+phase runs the diff against the concrete, NAMED rule catalogue built in Phase 0
+(load + catalogue the standards). Before starting the passes below, confirm the
+catalogue exists; if it does not, STOP and run Phase 0 first:
+
+1. **Repo standards docs discovered + read** (vary per repo — FIND them):
+   `docs/coding-standards.md`, `docs/ai/testing-instructions.md`,
+   `docs/code-review-instructions.md`, repo ROOT `AGENTS.md` AND every subdirectory
+   `AGENTS.md` covering a changed path, plus any other referenced standards.
+2. **Operator global rules read**: `~/.claude-work/CLAUDE.md`, `~/.claude/AGENTS.md`,
+   operator memory index (`~/.claude-work/projects/<project-encoded>/memory/MEMORY.md`
+   + linked files).
+3. **NAMED rule catalogue extracted** (rule IDs/names: `SEC-001`,
+   `TEST-003`/`TEST-004`, `MODEL-008`, `PY-005`, `CODE-009`, plus global rules like
+   terse-code-no-verbose-docstrings, naive-datetimes-by-design, no-PII-logging,
+   no-`mock.patch`-of-internals).
+
+Each pass below holds every changed line against THIS catalogue. Every finding names
+the specific rule (document + id/name) it violates, or is a named correctness/logic
+bug. A finding that does not reference a loaded rule by name (and is not a named bug)
+is hand-waving and must not ship.
+</CRITICAL>
 
 ## 3.1 Multi-Pass Review Order
 
@@ -366,7 +394,9 @@ cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
 
 Before proceeding to Phase 4:
 
-- [ ] All files reviewed in priority order
+- [ ] Phase 0 named rule catalogue present (standards docs + operator global rules loaded) BEFORE any pass ran
+- [ ] All in-scope files read line-by-line in priority order (100% coverage, no sampling)
+- [ ] Every finding names the specific rule (document + id/name) it violates, or is a named correctness/logic bug
 - [ ] All four passes completed per file
 - [ ] Declined items not re-raised
 - [ ] Partial items annotated correctly
@@ -379,9 +409,13 @@ Do not proceed to Phase 4 with incomplete findings. Every finding must have file
 </CRITICAL>
 
 <FORBIDDEN>
+- Running the passes WITHOUT a Phase 0 named rule catalogue (standards docs + operator global rules loaded) — you cannot flag violations of rules you never read
+- Reporting a finding as "this seems off" without naming the specific rule (document + id/name) it violates, or naming it as a correctness/logic bug
 - Re-raising declined findings
 - Classifying bugs as CRITICAL (bugs are HIGH; CRITICAL is for security vulnerabilities and data loss)
 - Raising a finding without concrete evidence from actual code
+- Grep-sampling or skimming the diff instead of reading every changed line in every in-scope file
+- Leaving any in-scope file unread (for large diffs, chunk across subagents until 100% is covered)
 - Skipping passes or combining them into a single pass
 - Omitting the `tags` field (use empty array when no tags apply)
 - Proceeding to Phase 4 when any self-check item is unchecked

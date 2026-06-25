@@ -12,32 +12,82 @@ description: "Advanced Code Review Phase 1: Strategic Planning - scope analysis,
 
 **Purpose:** Establish review scope, categorize files by risk, compute complexity estimate, and create prioritized review order.
 
+<CRITICAL>
+**Scope is the branch's GitHub-PR diff: three-dot `base...HEAD` against the DETECTED
+merge target.** Do not hardcode `main`. Detect the base, fetch it so the merge-base is
+current, and use merge-base / three-dot semantics so commits merged IN from the target
+(e.g. a `master` merge dragging in unrelated migrations) are EXCLUDED — only
+branch-authored changes are in scope. Only `--base` (operator-supplied) overrides
+detection.
+</CRITICAL>
+
+## 1.0 Phase 0 Prerequisite — Standards Must Already Be Loaded
+
+<CRITICAL>
+**A review cannot catch violations of rules it has not read.** Phase 0 (load +
+catalogue the standards) runs BEFORE this planning phase resolves any target or
+computes any diff. Confirm before proceeding:
+
+1. **The repo's standards docs were discovered + read** (they vary per repo — FIND
+   them): `docs/coding-standards.md`, `docs/ai/testing-instructions.md`,
+   `docs/code-review-instructions.md`, the repo ROOT `AGENTS.md` AND every
+   subdirectory `AGENTS.md` covering a changed path, plus any other referenced
+   standards (CONTRIBUTING, style guides, lint config). Absent doc → noted; extra
+   standards → also loaded.
+2. **The operator's global rules were read**: `~/.claude-work/CLAUDE.md`,
+   `~/.claude/AGENTS.md`, and the operator memory index
+   (`~/.claude-work/projects/<project-encoded>/memory/MEMORY.md` + linked files).
+3. **A concrete, NAMED rule catalogue was extracted** (rule IDs/names like
+   `SEC-001`, `TEST-003`/`TEST-004`, `MODEL-008`, `PY-005`, `CODE-009`, plus global
+   rules such as terse-code-no-verbose-docstrings, naive-datetimes-by-design,
+   no-PII-logging, no-`mock.patch`-of-internals). The Phase 3 deep review holds every
+   line against THIS catalogue; each finding names the specific rule (document +
+   id/name) it violates, or is a named correctness/logic bug.
+
+If Phase 0 has NOT run, STOP and run it now — do not resolve the target or compute
+the diff against an empty rule catalogue. **Canonical order:** Phase 0 (load +
+catalogue standards) → branch diff (three-dot merge-base vs DETECTED target) → read
+every line → hold each block against the named catalogue → report findings naming
+the specific rule.
+</CRITICAL>
+
 ## 1.1 Target Resolution
 
-Resolve target to concrete refs:
+Detect the merge target (don't assume), fetch it, then resolve to concrete refs:
 
 ```python
-def resolve_target(target: str, base: str = "main") -> dict:
+def detect_base(explicit_base: str | None) -> str:
+    """Detect the merge target. Explicit --base wins; else PR base; else origin/main|master."""
+    if explicit_base:
+        return explicit_base
+    pr_base = git_safe("pr", "view", "--json", "baseRefName", "--jq", ".baseRefName")  # via gh
+    if pr_base:
+        return f"origin/{pr_base}"
+    for candidate in ("origin/main", "origin/master"):
+        if ref_exists(candidate):
+            return candidate
+    raise RuntimeError("E_NO_BASE: could not detect merge target; pass --base")
+
+def resolve_target(target: str, base_arg: str | None = None) -> dict:
     """
-    Resolve target to branch/SHA info.
-    
+    Resolve target to branch/SHA info. Base is DETECTED, not assumed.
+
     Returns:
-        {
-            "branch": str,        # Branch name
-            "head_sha": str,      # HEAD commit SHA
-            "base": str,          # Base branch
-            "merge_base_sha": str # Common ancestor
-        }
+        {"branch": str, "head_sha": str, "base": str, "merge_base_sha": str}
     """
-    # For local branch
+    base = detect_base(base_arg)
+    # Fetch so the merge-base is current (strip any origin/ prefix for the remote ref)
+    remote_ref = base.split("origin/", 1)[-1]
+    git("fetch", "origin", remote_ref)
+
     head_sha = git("rev-parse", target)
-    merge_base = git("merge-base", base, target)
-    
+    merge_base = git("merge-base", base, target)   # three-dot semantics for the diff
+
     return {
         "branch": target,
         "head_sha": head_sha,
         "base": base,
-        "merge_base_sha": merge_base
+        "merge_base_sha": merge_base,
     }
 ```
 
@@ -51,7 +101,8 @@ def resolve_target(target: str, base: str = "main") -> dict:
 
 ## 1.2 Diff Acquisition
 
-Get changed files from merge base:
+Get changed files from merge base (THREE-dot — branch-authored changes only,
+merged-in target commits excluded):
 
 ```bash
 # Local mode
@@ -60,6 +111,9 @@ git diff --name-only $MERGE_BASE...$HEAD_SHA
 # PR mode (via MCP)
 pr_files(pr_result)  # Returns [{path, status}, ...]
 ```
+
+Every file listed here is in scope and MUST be read line-by-line in Phase 3 — the
+risk categorization below sets review ORDER, never license to skip or sample any file.
 
 ## 1.3 Risk Categorization
 
@@ -223,8 +277,10 @@ def priority_order(files_by_risk: dict) -> list[str]:
 
 Before proceeding to Phase 2:
 
+- [ ] Phase 0 ran: standards docs discovered + read, operator global rules read, NAMED rule catalogue extracted (review cannot flag rules it never loaded)
 - [ ] Target resolved to valid branch/SHA
-- [ ] Merge base computed (or fallback documented)
+- [ ] Merge target DETECTED (not hardcoded) and fetched; base recorded in manifest
+- [ ] Merge base computed via three-dot / merge-base (or fallback documented)
 - [ ] Files categorized by risk
 - [ ] Complexity estimate calculated
 - [ ] review-manifest.json written

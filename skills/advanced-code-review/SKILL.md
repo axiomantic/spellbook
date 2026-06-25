@@ -27,6 +27,70 @@ Before starting any review, analyze:
 - What verification approach will catch false positives?
 </analysis>
 
+## Default Scope & Method
+
+<CRITICAL>
+When the operator says "code review", "review the branch", "review this branch",
+"review the work / the changes / what's on this branch", or similar **without a
+narrower scope**, the default review is a strict quality-GATE over the **ENTIRE
+BRANCH DIFF versus its merge target** — the GitHub PR diff, the changes unique to
+this branch.
+
+**Phase 0 — Load & catalogue the standards FIRST (before computing the diff).** A
+review cannot catch violations of rules it has not read. Before scope/diff:
+1. **Discover + read the repo's standards docs** (they vary — FIND them, don't
+   assume): `docs/coding-standards.md`, `docs/ai/testing-instructions.md`,
+   `docs/code-review-instructions.md`, the repo ROOT `AGENTS.md` AND every
+   subdirectory `AGENTS.md` covering a changed path, plus any other standards the
+   repo references (CONTRIBUTING, style guides, lint config). Absent doc → note and
+   adapt; extra standards docs → load them too.
+2. **Read the operator's global rules**: `~/.claude-work/CLAUDE.md`,
+   `~/.claude/AGENTS.md`, and the operator memory index
+   (`~/.claude-work/projects/<project-encoded>/memory/MEMORY.md` + its linked files).
+3. **Extract a concrete, NAMED rule catalogue** — the actual enforceable rules with
+   their IDs/names (e.g. `SEC-001`, `TEST-003`/`TEST-004`, `MODEL-008`, `PY-005`,
+   `CODE-009`, plus global rules like terse-code-no-verbose-docstrings,
+   naive-datetimes-by-design, integration-tests-via-entry-points, no-PII-logging,
+   no-`mock.patch`-of-internals). This catalogue is the checklist the deep-review
+   passes (Phase 3) run against — you must KNOW the rules before hunting violations.
+4. **Every finding MUST name the specific rule it violates** (document + id/name) or
+   be a named correctness/logic bug. No vague "this seems off" — cite the standard. A
+   review that never references the loaded rules by name is hand-waving.
+
+**Canonical order:** Phase 0 (load + catalogue standards) → compute the correct
+branch diff (three-dot merge-base vs DETECTED target) → read every line → hold each
+block against the named catalogue → report findings naming the specific rule.
+
+**Scope = `git diff <merge-target>...HEAD` (THREE-dot)** = `git diff
+$(git merge-base origin/<merge-target> HEAD) HEAD`.
+
+- **Detect `<merge-target>`, never assume.** `gh pr view --json baseRefName --jq
+  .baseRefName`; fall back to `origin/main` / `origin/master` only when no PR exists,
+  and report which was used. The `--base` input overrides detection only when the
+  operator explicitly passes it. NEVER hardcode a base branch and NEVER use a
+  stale/hardcoded base commit.
+- **Three-dot / merge-base is REQUIRED** so commits merged IN from the target (e.g. a
+  `master` merge dragging in unrelated migrations) are EXCLUDED. Only branch-authored
+  changes are reviewed. Two-dot `target..HEAD` or raw `git diff target` is WRONG.
+- **`git fetch origin <merge-target>` first** so the merge-base is current.
+- If a change would not appear in the PR's Files-changed tab, it is **not in scope**.
+
+**Method — read EVERY line.** Every changed hunk in every changed file is read and
+held to the standards. NO grep-sampling, NO skimming, NO "I read the hot files." Grep
+LOCATES; it never substitutes for reading the diff. For a large diff, **chunk it
+across multiple subagents (see `SUBAGENT_THRESHOLD_FILES` / `LARGE_DIFF_LINES`) so
+that 100% of the diff is assigned and read line-by-line** — track per-file/hunk
+coverage and prove no file went unread.
+
+**Posture — GATE, zero tolerance.** Surface ANY deviation: rule violation, logic bug,
+design smell, untested behavior, inconsistency. Adversarial; verify (Phase 4) to
+filter false positives but default to flagging. **A review that "found nothing" on a
+non-trivial diff is a FAILED review, not a clean one.**
+
+A narrower scope the operator explicitly names (file glob via `--scope`, a PR number,
+etc.) overrides this default.
+</CRITICAL>
+
 <reflection>
 After each phase, reflect:
 - Did I verify every claim against actual code?
@@ -49,7 +113,7 @@ After each phase, reflect:
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
 | `target` | Yes | - | Branch name, PR number (#123), or PR URL |
-| `--base` | No | main/master | Custom base ref for comparison |
+| `--base` | No | detected merge target | Override base ref. Default is DETECTED via `gh pr view --json baseRefName` (fallback `origin/main`/`origin/master`); diff is three-dot `base...HEAD`. Only set this to override detection. |
 | `--scope` | No | all | Limit to specific paths (glob pattern) |
 | `--offline` | No | auto | Force offline mode (no network operations) |
 | `--continue` | No | false | Resume previous review session |
@@ -105,11 +169,41 @@ Local files may only be read in PR mode for ONE purpose: loading project convent
 
 | Phase | Name | Purpose | Command |
 |-------|------|---------|---------|
+| 0 | Load & Catalogue Standards | Discover + read repo standards docs and operator global rules; build a NAMED rule catalogue BEFORE any diff is computed | (inline; see Phase 0 below) |
 | 1 | Strategic Planning | Scope analysis, risk categorization, priority ordering | `/advanced-code-review-plan` |
 | 2 | Context Analysis | Load previous reviews, PR history, declined items | `/advanced-code-review-context` |
 | 3 | Deep Review | Multi-pass code analysis, finding generation | `/advanced-code-review-review` |
 | 4 | Verification | Fact-check findings, remove false positives | `/advanced-code-review-verify` |
 | 5 | Report Generation | Produce final deliverables | `/advanced-code-review-report` |
+
+---
+
+## Phase 0: Load & Catalogue Standards (MANDATORY, before Phase 1)
+
+<CRITICAL>
+**A review cannot catch violations of rules it has not read.** Run this BEFORE
+computing any diff (Phase 1). See **Default Scope & Method** above for the full
+statement; the concrete steps:
+
+1. **Discover + read the repo's standards docs** (vary per repo — FIND them, don't
+   assume): `docs/coding-standards.md`, `docs/ai/testing-instructions.md`,
+   `docs/code-review-instructions.md`, repo ROOT `AGENTS.md` AND every subdirectory
+   `AGENTS.md` covering a changed path, plus any other referenced standards
+   (CONTRIBUTING, style guides, lint config). Note any absent doc; load any extra
+   standards the repo has.
+2. **Read the operator's global rules**: `~/.claude-work/CLAUDE.md`,
+   `~/.claude/AGENTS.md`, and the operator memory index
+   (`~/.claude-work/projects/<project-encoded>/memory/MEMORY.md` + linked files).
+3. **Extract a concrete, NAMED rule catalogue** (rule IDs/names: `SEC-001`,
+   `TEST-003`/`TEST-004`, `MODEL-008`, `PY-005`, `CODE-009`, plus global rules like
+   terse-code-no-verbose-docstrings, naive-datetimes-by-design, no-PII-logging,
+   no-`mock.patch`-of-internals). Phase 3 holds every line against THIS catalogue.
+4. Every Phase 3 finding names the specific rule (document + id/name) it violates,
+   or is a named correctness/logic bug.
+
+**Self-Check:** Standards docs discovered + read, operator global rules read, named
+rule catalogue extracted and written down. Do not proceed to Phase 1 otherwise.
+</CRITICAL>
 
 ---
 
@@ -197,6 +291,8 @@ SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "PR
 ---
 
 <FORBIDDEN>
+- Compute the diff or start Phase 1 WITHOUT first running Phase 0 (load + catalogue the standards docs and operator global rules) — you cannot flag violations of rules you never read
+- Report a finding as "this seems off" without naming the specific rule (document + id/name) it violates, or naming it as a correctness/logic bug
 - Claim line contains X without reading line first
 - Re-raise declined items (respect previous decisions)
 - Skip verification phase (all findings must be verified)
@@ -208,6 +304,11 @@ SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "PR
 - Ignore previous review context when available
 - Skip any phase self-check
 - Proceed past failed self-check
+- Assume the merge target (e.g. hardcode `main`) instead of detecting it via `gh pr view --json baseRefName`
+- Use two-dot `base..HEAD` or `git diff base` (includes merged-in target commits) instead of three-dot `base...HEAD` / merge-base
+- Diff against a stale or hardcoded base commit instead of a freshly fetched merge target
+- Grep-sample or skim the diff; every changed line must be read (chunk across subagents for large diffs until 100% covered)
+- Declare a non-trivial branch diff "clean / nothing found" — that is a failed review, not a pass
 - **Read local files to verify or refute PR findings when local HEAD ≠ PR HEAD SHA** — this is the most dangerous error in PR reviews; it produces confidently wrong REFUTED verdicts on real bugs
 - **Declare a finding REFUTED based on local file content during a PR review** without first confirming SHA match via `git rev-parse HEAD`
 </FORBIDDEN>
@@ -231,6 +332,7 @@ SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "PR
 Before declaring review complete:
 
 ### Phase Completion
+- [ ] Phase 0: Standards docs discovered + read, operator global rules read, NAMED rule catalogue extracted
 - [ ] Phase 1: Target resolved, manifest written
 - [ ] Phase 2: Context loaded, previous items parsed
 - [ ] Phase 3: All passes complete, findings generated
