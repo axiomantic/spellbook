@@ -3297,7 +3297,7 @@ validator, and the pre-commit scanner.
 - Corrected repository URLs
 - Grammar fixes in documentation
 
-[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.9.11...HEAD
+[Unreleased]: https://github.com/axiomantic/spellbook/compare/v0.77.0...HEAD
 [0.70.0]: https://github.com/axiomantic/spellbook/compare/v0.69.0...v0.70.0
 [0.9.11]: https://github.com/axiomantic/spellbook/compare/v0.9.10...v0.9.11
 [0.9.10]: https://github.com/axiomantic/spellbook/compare/v0.9.9...v0.9.10
