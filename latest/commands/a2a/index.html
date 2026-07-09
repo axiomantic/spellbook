@@ -8801,7 +8801,7 @@
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">Bash: bash -c &#39;if [ &quot;$OPENCODE&quot; = &quot;1&quot; ]; then echo opencode;</span>
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">  elif [ -n &quot;$CODEX_SANDBOX&quot; ] || [ -n &quot;$CODEX_SANDBOX_NETWORK_DISABLED&quot; ]; then echo codex;</span>
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">  elif [ &quot;$GEMINI_CLI&quot; = &quot;1&quot; ]; then echo gemini-cli;</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">  elif [ -n &quot;$CLAUDE_PROJECT_DIR&quot; ] || [ -n &quot;$CLAUDE_ENV_FILE&quot; ]; then echo claude-code;</span>
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">  elif [ &quot;$CLAUDECODE&quot; = &quot;1&quot; ] || [ -n &quot;$CLAUDE_CODE_ENTRYPOINT&quot; ] || [ -n &quot;$CLAUDE_PROJECT_DIR&quot; ] || [ -n &quot;$CLAUDE_ENV_FILE&quot; ]; then echo claude-code;</span>
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">  else echo unknown; fi&#39;</span>
 <a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">```</span>
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
