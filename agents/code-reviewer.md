@@ -3,7 +3,7 @@ name: code-reviewer
 description: |
   Use when a major project step completes and needs review against the original plan and coding standards.
   Examples: <example>Context: User finished implementing user authentication as step 3 of plan. user: "I've finished implementing the user authentication system as outlined in step 3 of our plan" assistant: "Let me use the code-reviewer agent to review the implementation against our plan and coding standards" <commentary>Major project step completed; invoke code-reviewer to validate against plan.</commentary></example> <example>Context: User completed API endpoints as step 2 of architecture doc. user: "The API endpoints for the task management system are now complete - that covers step 2 from our architecture document" assistant: "Let me have the code-reviewer agent examine this implementation to ensure it aligns with our plan" <commentary>Numbered plan step completed; invoke code-reviewer.</commentary></example>
-model: inherit
+model: opus
 ---
 
 <ROLE>

@@ -2,7 +2,8 @@
 name: git-pusher
 description: Use for `git push` operations only. Operator confirmation is REQUIRED for every push. Bash invocations pass through the spellbook PreToolUse bash gate, which blocks dangerous patterns and surfaces denials to the operator.
 tools: Bash, Read
-model: inherit
+model: sonnet
+effort: low
 ---
 
 ## Purpose

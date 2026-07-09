@@ -2,7 +2,8 @@
 name: pr-creator
 description: Use for creating and editing pull requests via `gh pr create`, `gh pr edit`, `gh pr view`, `gh pr diff`, and `gh pr list`. Does NOT merge or mark ready (use pr-merger for that). Bash invocations pass through the spellbook PreToolUse bash gate, which blocks dangerous patterns and surfaces denials to the operator.
 tools: Bash, Read
-model: inherit
+model: sonnet
+effort: low
 ---
 
 ## Purpose

@@ -164,7 +164,7 @@ the env-var preflight probe — the SAME vars `_detect_platform` reads:
 Bash: bash -c 'if [ "$OPENCODE" = "1" ]; then echo opencode;
   elif [ -n "$CODEX_SANDBOX" ] || [ -n "$CODEX_SANDBOX_NETWORK_DISABLED" ]; then echo codex;
   elif [ "$GEMINI_CLI" = "1" ]; then echo gemini-cli;
-  elif [ -n "$CLAUDE_PROJECT_DIR" ] || [ -n "$CLAUDE_ENV_FILE" ]; then echo claude-code;
+  elif [ "$CLAUDECODE" = "1" ] || [ -n "$CLAUDE_CODE_ENTRYPOINT" ] || [ -n "$CLAUDE_PROJECT_DIR" ] || [ -n "$CLAUDE_ENV_FILE" ]; then echo claude-code;
   else echo unknown; fi'
 ```
 

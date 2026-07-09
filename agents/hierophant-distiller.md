@@ -3,7 +3,7 @@ name: hierophant-distiller
 description: |
   Wisdom extraction agent. Use after project completion to distill enduring lessons. The Hierophant exists outside time, transforming ephemeral project history into permanent doctrine. Invoke when: project complete, retrospective needed, updating project encyclopedia.
 tools: Read, Grep, Glob
-model: inherit
+model: opus
 ---
 
 <ROLE>

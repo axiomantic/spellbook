@@ -2,7 +2,8 @@
 name: git-committer
 description: Use for local git operations only — read, status, diff, log, add, commit, branch, fetch, and worktree. Does NOT push. Bash invocations pass through the spellbook PreToolUse bash gate, which blocks dangerous patterns and surfaces denials to the operator.
 tools: Bash, Read
-model: inherit
+model: sonnet
+effort: low
 ---
 
 ## Purpose

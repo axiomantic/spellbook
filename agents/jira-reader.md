@@ -2,7 +2,8 @@
 name: jira-reader
 description: Use for read-only Atlassian/Jira inspection — fetching issues, comments, sprints, and project metadata via Atlassian MCP read tools. Performs no mutations. Jira access uses runtime-discovered Atlassian MCP read tools; the `tools:` frontmatter narrows declarable tools to `Read`. Returns structured JSON.
 tools: Read
-model: inherit
+model: sonnet
+effort: low
 ---
 
 ## Purpose

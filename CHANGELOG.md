@@ -9,6 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Cognitive-load-based model and effort routing for subagents.** Dispatches
+  now match model and reasoning effort to the cognitive load of the task, not
+  its size: thinking work (planning, design, review, research, debugging) runs
+  on `opus` at inherited session effort; mechanical work (rote edits, running
+  tests, git/PR/Jira mechanics) runs on `sonnet` at `effort: low`. The
+  specialized agent types encode this in frontmatter — `implementer`,
+  `chariot-implementer`, `test-runner`, `git-committer`, `git-pusher`,
+  `pr-creator`, `pr-merger`, `jira-reader`, `jira-mutator` (sonnet/low);
+  `code-reviewer`, `justice-resolver`, `lovers-integrator`,
+  `hierophant-distiller`, `web-researcher` (opus, inherit effort);
+  `emperor-governor`, `queen-affective` (haiku/low). The general rule (with
+  override precedence and the `fork` caveat) lands in `AGENTS.spellbook.md`
+  under the Inviolable Rules so it is always in context, and
+  `dispatching-parallel-agents` points to it.
+- **`writing-copy` skill.** Voice-neutral process plus anti-slop catalog for
+  writing or de-slopping outward-facing prose (newsletters, blog posts,
+  announcements, release notes, doc intros). Composes with a personal voice
+  skill for identity and register.
+
 - **Project-standards discovery and enforcement in develop.** Add generic
   project-standards (governance-doc) discovery and enforcement to the develop
   skill.
@@ -73,6 +92,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fixture, pinning the exact rendered class contracts.
 
 ### Changed
+
+- **Platform detection recognizes more Claude Code markers.** `_detect_platform`
+  in `hooks/spellbook_hook.py` (and the matching env-var preflight probe in the
+  `a2a` command) now also treats `CLAUDECODE=1` and `CLAUDE_CODE_ENTRYPOINT` as
+  claude-code signals, alongside the existing `CLAUDE_PROJECT_DIR` /
+  `CLAUDE_ENV_FILE` checks. Adds `tests/test_hooks/test_detect_platform.py`.
 
 - **Admin bundle no longer committed.** `spellbook/admin/static/` is now
   generated locally and git-ignored; the `check-admin-build` pre-commit hash

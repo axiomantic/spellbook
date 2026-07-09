@@ -2,7 +2,8 @@
 name: implementer
 description: Use for worktree implementation work — editing source, running scoped Bash commands, and committing changes inside a parent-specified scope. Bash invocations pass through the spellbook PreToolUse bash gate, which blocks dangerous patterns and surfaces any denials to the operator.
 tools: Edit, Write, Read, Grep, Glob, Bash
-model: inherit
+model: sonnet
+effort: low
 ---
 
 ## Purpose

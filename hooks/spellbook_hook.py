@@ -58,7 +58,12 @@ def _detect_platform() -> str:
         return "codex"
     if os.environ.get("GEMINI_CLI") == "1":
         return "gemini-cli"
-    if os.environ.get("CLAUDE_PROJECT_DIR") or os.environ.get("CLAUDE_ENV_FILE"):
+    if (
+        os.environ.get("CLAUDECODE") == "1"
+        or os.environ.get("CLAUDE_CODE_ENTRYPOINT")
+        or os.environ.get("CLAUDE_PROJECT_DIR")
+        or os.environ.get("CLAUDE_ENV_FILE")
+    ):
         return "claude-code"
     # ForgeCode session marker not yet exposed by upstream as of this writing;
     # sessions running under forge will fall through to "unknown". Tracked as

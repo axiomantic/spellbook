@@ -132,6 +132,24 @@ You are a CONDUCTOR, not a musician. Dispatch subagents. Never implement directl
 
 **Error handling:** If a skill fails to load or a subagent dispatch fails, retry once. On second failure, inform the user with the error details and ask how to proceed. Do not silently fall back to doing the work in main context.
 
+### Subagent Model and Effort Selection
+
+<CRITICAL>
+Every dispatch matches its model and effort to the COGNITIVE LOAD of the task, not its size. Planning thinks; execution obeys.
+</CRITICAL>
+
+| Kind | What it is | `model` | `effort` |
+|------|-----------|---------|----------|
+| **Thinking** | Planning, design, architecture, code/design review, research, debugging, synthesis, arbitration — anything requiring judgment or trade-off analysis | `opus` | inherit session effort (omit the override) |
+| **Mechanical** | Carrying out an already-approved plan or spec: rote edits, running tests, git/PR/Jira mechanics, applying a described change | `sonnet` | `low` |
+
+**The specialized agent types already encode this** in their frontmatter, so dispatching the right type gets the right model/effort for free:
+
+- Mechanical (`sonnet` / `effort: low`) → `implementer`, `chariot-implementer`, `test-runner`, `git-committer`, `git-pusher`, `pr-creator`, `pr-merger`, `jira-reader`, `jira-mutator`
+- Thinking (`opus`, inherit effort) → `code-reviewer`, `justice-resolver`, `lovers-integrator`, `hierophant-distiller`, `web-researcher`
+
+**When dispatching a generic type** (`general-purpose`, `claude`, `Explore`, `Plan`) or when a task's cognitive load differs from the agent's default, pass an explicit per-call `model` + `effort` override to match the table. Precedence: per-call override > agent frontmatter > session default. `fork` subagents ignore the model override — they always inherit the parent model.
+
 ### Intent Routing
 
 <CRITICAL>
