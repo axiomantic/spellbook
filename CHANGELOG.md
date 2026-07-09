@@ -168,6 +168,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `CLAUDE_CONFIG_DIR` env threaded through `list_registered_mcp_servers`,
   `is_mcp_registered`, and `unregister_mcp_server` (all new params default
   to `None`, backward compatible).
+- **Installer now registers the Claude Code MCP server in the config file
+  Claude Code actually reads (`~/.claude.json`) for default installs,
+  instead of `~/.claude/.claude.json`.** The `spellbook` MCP tools (session
+  init, stints, workflow state) now appear after a default install. Multi
+  `--claude-config-dir` installs are unchanged.
 
 ### Migration
 
