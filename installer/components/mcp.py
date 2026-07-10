@@ -15,7 +15,7 @@ from typing import List, Optional, Tuple
 
 from installer.compat import Platform, get_platform
 from installer.components.source_link import get_source_link_path
-from installer.config import get_spellbook_config_dir
+from installer.config import PLATFORM_CONFIG, get_spellbook_config_dir
 
 # Daemon configuration
 # TODO: Consolidate service management with installer.compat.ServiceManager
@@ -48,19 +48,84 @@ def check_claude_cli_available() -> bool:
         return False
 
 
-def _subprocess_env(config_dir: Optional[Path]) -> Optional[dict]:
+def _default_claude_config_dir() -> Path:
+    """Return the canonical default Claude Code config dir.
+
+    Single source of truth: the value configured for the ``claude_code``
+    platform in ``installer.config`` (``Path.home() / ".claude"``). Reading it
+    here instead of re-hardcoding the path keeps the default's definition in
+    one place across the installer.
+    """
+    return PLATFORM_CONFIG["claude_code"]["default_config_dir"]
+
+
+def _config_dir_needs_override(
+    config_dir: Optional[Path],
+    default_config_dir: Path,
+) -> bool:
+    """True when a ``claude`` CLI call for ``config_dir`` must set CLAUDE_CONFIG_DIR.
+
+    False when ``config_dir`` is ``None`` (inherit ambient) or resolves to the
+    default config dir -- in which case the CLI must target the ambient home
+    dotfile (~/.claude.json), i.e. no override. Deterministic: no environment
+    reads, no subprocess. Uses ``Path.resolve()`` (which touches the
+    filesystem to resolve symlinks) for equivalence.
+    """
+    if config_dir is None:
+        return False
+    return config_dir.resolve() != default_config_dir.resolve()
+
+
+def _subprocess_env(
+    config_dir: Optional[Path],
+    default_config_dir: Optional[Path] = None,
+) -> Optional[dict]:
     """Build the subprocess environment for a ``claude mcp`` invocation.
 
-    When ``config_dir`` is given, returns a copy of ``os.environ`` with
-    ``CLAUDE_CONFIG_DIR`` set so the command targets that specific config
-    directory. Merging ``os.environ`` here (rather than at each call site)
-    keeps essential variables like ``PATH`` intact and prevents subtle
-    PATH-loss bugs. When ``config_dir`` is ``None``, returns ``None`` so the
-    subprocess inherits the ambient environment unchanged.
+    ``config_dir is None`` means no override was requested: inherit the
+    ambient environment completely unchanged (returns ``None`` immediately,
+    before any default-resolution or stray-handling logic runs).
+
+    For a NON-default ``config_dir`` (an explicit ``--claude-config-dir``),
+    returns a copy of ``os.environ`` with ``CLAUDE_CONFIG_DIR`` set so the
+    command targets that specific config directory. Merging ``os.environ``
+    keeps essential variables like ``PATH`` intact and prevents PATH-loss bugs;
+    this branch is UNCHANGED from prior behavior and preserves per-config-dir
+    registration (PR #354).
+
+    For the DEFAULT ``config_dir``, the CLI must target the ambient home
+    dotfile (~/.claude.json) the running app reads, so no override is forced.
+    Any stray ``CLAUDE_CONFIG_DIR`` in the installer's own env is handled per
+    its target: a *redirecting* stray (resolves elsewhere) is stripped so the
+    write is not silently diverted; a *confirming* stray (resolves to the
+    default) is honored by inheriting the ambient env unchanged. When no
+    ``config_dir`` override is needed and no stray is set, returns ``None``
+    so the subprocess inherits the ambient environment.
     """
     if config_dir is None:
         return None
-    return {**os.environ, "CLAUDE_CONFIG_DIR": str(config_dir)}
+
+    if default_config_dir is None:
+        default_config_dir = _default_claude_config_dir()
+
+    if _config_dir_needs_override(config_dir, default_config_dir):
+        return {**os.environ, "CLAUDE_CONFIG_DIR": str(config_dir)}
+
+    stray = os.environ.get("CLAUDE_CONFIG_DIR")
+    if not stray or not stray.strip():
+        return None
+    if Path(stray).resolve() == default_config_dir.resolve():
+        # Confirming stray: ambient CLAUDE_CONFIG_DIR already resolves to the default.
+        # Return None so the subprocess inherits it and writes to ~/.claude/.claude.json.
+        # Correct only if the app also runs with CLAUDE_CONFIG_DIR set there (assume
+        # runtime env matches install env; see design 9.4). If it does not, this user
+        # would need the home-dotfile path instead -- the unavoidable
+        # install-vs-runtime bet.
+        return None
+    # Redirecting stray: strip so the write lands in the default dotfile.
+    env = {**os.environ}
+    del env["CLAUDE_CONFIG_DIR"]
+    return env
 
 
 def list_registered_mcp_servers(config_dir: Optional[Path] = None) -> List[MCPStatus]:
