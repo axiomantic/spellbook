@@ -12,13 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Cognitive-load-based model and effort routing for subagents.** Dispatches
   now match model and reasoning effort to the cognitive load of the task, not
   its size: thinking work (planning, design, review, research, debugging) runs
-  on `opus` at inherited session effort; mechanical work (rote edits, running
+  on `fable` at inherited session effort; mechanical work (rote edits, running
   tests, git/PR/Jira mechanics) runs on `sonnet` at `effort: low`. The
   specialized agent types encode this in frontmatter — `implementer`,
   `chariot-implementer`, `test-runner`, `git-committer`, `git-pusher`,
   `pr-creator`, `pr-merger`, `jira-reader`, `jira-mutator` (sonnet/low);
   `code-reviewer`, `justice-resolver`, `lovers-integrator`,
-  `hierophant-distiller`, `web-researcher` (opus, inherit effort);
+  `hierophant-distiller`, `web-researcher` (fable, inherit effort);
   `emperor-governor`, `queen-affective` (haiku/low). The general rule (with
   override precedence and the `fork` caveat) lands in `AGENTS.spellbook.md`
   under the Inviolable Rules so it is always in context, and
@@ -93,6 +93,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Thinking-class subagents route to `fable` instead of `opus`.** Code
+  review, arbitration, synthesis, integration, and research (`code-reviewer`,
+  `justice-resolver`, `lovers-integrator`, `hierophant-distiller`,
+  `web-researcher`) now dispatch on the `fable` model.
+
 - **Platform detection recognizes more Claude Code markers.** `_detect_platform`
   in `hooks/spellbook_hook.py` (and the matching env-var preflight probe in the
   `a2a` command) now also treats `CLAUDECODE=1` and `CLAUDE_CODE_ENTRYPOINT` as
@@ -115,6 +120,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Repaired `test_agent_frontmatter` model assertions and regenerated agent
+  snapshots after the cognitive-load routing change.** The 9 new
+  narrowing-role agents were set to `sonnet`/`fable` (per cognitive load)
+  while the test still required `model: inherit` for all of them; the test
+  now asserts each agent's intended model via a new
+  `EXPECTED_NEW_AGENT_MODELS` mapping. The existing-agent byte snapshot
+  (`agent_snapshots.json`) was also stale for all 7 existing agents since an
+  earlier model-routing change updated their frontmatter without
+  regenerating it; it is regenerated here.
 - **Develop wizard Q-DESIGN need-flag question reworded to decisions-to-make
   tense.** The Q-DESIGN routing question previously asked whether a "design
   decision exists," which read as already-decided and biased the answer toward

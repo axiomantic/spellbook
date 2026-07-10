@@ -48,6 +48,23 @@ EXPECTED_NEW_AGENTS: dict[str, str] = {
     "test-runner": "Bash, Read, Grep",
 }
 
+# Intended `model:` value for each of the 9 NEW narrowing-role agents.
+# Thinking-class agents (judgment, trade-off analysis) route to `fable`;
+# mechanical agents (rote edits, git/PR/Jira mechanics, running tests)
+# route to `sonnet`. See "Subagent Model and Effort Selection" in
+# AGENTS.spellbook.md for the full routing table.
+EXPECTED_NEW_AGENT_MODELS: dict[str, str] = {
+    "web-researcher": "fable",   # Thinking-class → fable
+    "implementer": "sonnet",
+    "git-committer": "sonnet",
+    "git-pusher": "sonnet",
+    "pr-creator": "sonnet",
+    "pr-merger": "sonnet",
+    "jira-reader": "sonnet",
+    "jira-mutator": "sonnet",
+    "test-runner": "sonnet",
+}
+
 # Existing 7 agents to byte-snapshot.
 EXISTING_AGENTS: frozenset[str] = frozenset({
     "chariot-implementer",
@@ -174,11 +191,12 @@ def test_new_agent_has_required_body_sections_in_order(agent_name: str):
 
 
 @pytest.mark.parametrize("agent_name", _existing_new_agents())
-def test_new_agent_has_model_inherit(agent_name: str):
+def test_new_agent_has_expected_model(agent_name: str):
     path = AGENTS_DIR / f"{agent_name}.md"
     fm, _ = _split_frontmatter(path.read_text(encoding="utf-8"))
-    assert fm.get("model") == "inherit", (
-        f"{agent_name}: expected `model: inherit`, got {fm.get('model')!r}"
+    expected = EXPECTED_NEW_AGENT_MODELS[agent_name]
+    assert fm.get("model") == expected, (
+        f"{agent_name}: expected `model: {expected}`, got {fm.get('model')!r}"
     )
 
 
