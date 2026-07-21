@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Security gates are now opt-in, with an install-time prompt.** The
+  PreToolUse blocking gates (bash, spawn, workflow-state-sanitize) and the
+  worker-LLM tool-safety sniff are **disabled by default**. A new
+  `security_gates_enabled` config key (default `false`) controls them, and the
+  installer defaults wizard asks about it on first install — so existing
+  installs are prompted about the new setting on their next reinstall, and are
+  never re-asked once the key is set (unless `--reconfigure`). A new
+  `_gates_disabled()` resolver in `hooks/spellbook_hook.py` reads, in order:
+  the `SPELLBOOK_GATES_DISABLED` env var (authoritative in either direction —
+  `0`/`false`/`off` force the gates ON, letting CI and test suites pin
+  deterministic behavior); a `gates-disabled` flag file in the config dir
+  (`$SPELLBOOK_CONFIG_DIR` or `~/.local/spellbook`) for a quick manual
+  disable; then the `security_gates_enabled` config value; then the
+  disabled-by-default fallback. It is read live on every hook invocation, so
+  changes take effect on the next tool call with no session restart.
 - **Cognitive-load-based model and effort routing for subagents.** Dispatches
   now match model and reasoning effort to the cognitive load of the task, not
   its size: thinking work (planning, design, review, research, debugging) runs

@@ -1,9 +1,9 @@
 """Shared defaults wizard for previously never-prompted config keys.
 
-Four keys have entries in ``CONFIG_SCHEMA`` but no installer prompt:
-``notify_enabled``, ``notify_title``, ``auto_update``, ``session_mode``.
-Without a prompt users discover them only via the admin UI or by
-reading source.
+Several keys have entries in ``CONFIG_SCHEMA`` but no installer prompt:
+``security_gates_enabled``, ``notify_enabled``, ``notify_title``,
+``auto_update``, ``session_mode``. Without a prompt users discover them
+only via the admin UI or by reading source.
 
 This wizard closes the gap by walking the user through each key on
 fresh installs. It respects the idempotency rule defined in AGENTS.md:
@@ -104,7 +104,7 @@ def _write(key: str, value: Any) -> None:
 
 
 def run_defaults_wizard(args: Optional[Any] = None) -> None:
-    """Prompt the user for the five never-prompted config keys.
+    """Prompt the user for the never-prompted config keys.
 
     Skipped when stdin is not a tty or ``args.dry_run`` is True. Each key
     is skipped when already explicitly set unless ``args.reconfigure`` is
@@ -124,6 +124,7 @@ def run_defaults_wizard(args: Optional[Any] = None) -> None:
     # Decide whether to ask about anything at all. If every key is already
     # set and --reconfigure is not active, stay silent.
     candidate_keys = [
+        "security_gates_enabled",
         "notify_enabled",
         "notify_title",
         "auto_update",
@@ -134,6 +135,22 @@ def run_defaults_wizard(args: Optional[Any] = None) -> None:
 
     print()
     print("Additional defaults (press Enter to keep the current value):")
+
+    # ----- Security gates -----
+    if reconfigure or not _is_explicit("security_gates_enabled"):
+        current = bool(_config_get("security_gates_enabled", False))
+        try:
+            value = _prompt_bool(
+                "Enable the PreToolUse security gates? They block risky bash "
+                "commands (exfiltration / dangerous patterns) and sanitize "
+                "spawn/state inputs. Disabled by default",
+                current,
+            )
+        except (EOFError, KeyboardInterrupt):
+            print()
+            print("  (defaults wizard cancelled)")
+            return
+        _write("security_gates_enabled", value)
 
     # ----- Notifications -----
     if reconfigure or not _is_explicit("notify_enabled"):

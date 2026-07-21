@@ -70,6 +70,7 @@ markers = [
     "external: marks tests requiring external tools like Claude CLI (skipped locally)",
     "windows_only: test runs only on Windows (skipped on POSIX systems)",
     "posix_only: test runs only on POSIX systems (skipped on Windows)",
+    "gate_killswitch: test exercises the security-gate operator kill switch; opts out of the force-gates-on fixture",
 ]
 
 [tool.tripwire]

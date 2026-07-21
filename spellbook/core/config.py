@@ -71,6 +71,11 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     "hook_observability_retention_hours": 24,
     "hook_observability_max_rows": 50000,
     "hook_observability_purge_interval_seconds": 300,
+    # PreToolUse security gates (bash/spawn/state-sanitize + tool-safety sniff).
+    # Disabled by default (opt-in); the installer defaults wizard asks about it.
+    # Read live by hooks/spellbook_hook.py::_gates_disabled. Matches CONFIG_SCHEMA
+    # in spellbook/admin/routes/config.py.
+    "security_gates_enabled": False,
 }
 
 

@@ -719,6 +719,41 @@ def _recent_context_snippet(data: dict) -> str:
     return "\n".join(lines[-6:])[-4000:]
 
 
+def _gates_disabled() -> bool:
+    """Whether the PreToolUse security gates are disabled.
+
+    When True, the blocking gates (bash / spawn / state-sanitize) and the
+    worker-LLM tool-safety sniff are skipped. The gates are **disabled by
+    default** (opt-in); the installer defaults wizard asks about the
+    ``security_gates_enabled`` config key on first install.
+
+    Resolution order (first match wins):
+
+    1. ``SPELLBOOK_GATES_DISABLED`` env var, when set and non-empty — the
+       authoritative override in either direction. ``0``/``false``/``no``/
+       ``off`` force the gates ON; any other value forces them OFF. Lets
+       test suites and CI pin deterministic behavior regardless of host
+       state.
+    2. A ``gates-disabled`` flag file in the config dir
+       (``$SPELLBOOK_CONFIG_DIR`` or ``~/.local/spellbook``) — a quick
+       manual "disable now" override that needs no config edit.
+    3. The ``security_gates_enabled`` value in spellbook.json (set by the
+       installer wizard / admin UI). Enabled → gates run.
+    4. Default: disabled.
+
+    Read live on every hook invocation (the hook is a fresh process per
+    tool call), so any change takes effect on the next tool call with no
+    session restart.
+    """
+    raw = os.environ.get("SPELLBOOK_GATES_DISABLED")
+    if raw is not None and raw.strip() != "":
+        return raw.strip().lower() not in ("0", "false", "no", "off")
+    base = os.environ.get("SPELLBOOK_CONFIG_DIR") or str(Path.home() / ".local" / "spellbook")
+    if (Path(base) / "gates-disabled").exists():
+        return True
+    return not bool(_get_config_value("security_gates_enabled", default=False))
+
+
 def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
     """PreToolUse handlers. Return list of output strings.
 
@@ -728,22 +763,28 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
       3. Worker-LLM tool-safety sniff. Fails OPEN on any error, and is
          cache-first (consults safety_cache before calling the worker). A
          fresh BLOCK triggers a 30-second bypass window so the user can retry.
+
+    The blocking gates and the safety sniff are skipped entirely when the
+    operator kill switch is active (see :func:`_gates_disabled`).
     """
     outputs = []
 
+    gates_off = _gates_disabled()
+
     # Security gates (blocking - can exit non-zero)
-    if tool_name == "Bash":
-        _gate_bash(data)
-    elif tool_name == "spawn_claude_session":
-        _gate_spawn(data)
-    elif tool_name == "mcp__spellbook__workflow_state_save":
-        _gate_state_sanitize(data)
+    if not gates_off:
+        if tool_name == "Bash":
+            _gate_bash(data)
+        elif tool_name == "spawn_claude_session":
+            _gate_spawn(data)
+        elif tool_name == "mcp__spellbook__workflow_state_save":
+            _gate_state_sanitize(data)
 
     # Temporal tracking (catch-all, non-blocking)
     _record_tool_start(tool_name, data)
 
     # Worker-LLM tool-safety sniff (fails OPEN)
-    if tool_name in _SAFETY_APPLICABLE_TOOLS:
+    if not gates_off and tool_name in _SAFETY_APPLICABLE_TOOLS:
         _wl_tool_safety_sniff(tool_name, data, outputs)
 
     return outputs

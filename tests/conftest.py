@@ -6,6 +6,26 @@ from pathlib import Path
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def _force_gates_enabled(request, monkeypatch):
+    """Neutralize the operator gate kill switch during test runs.
+
+    ``hooks.spellbook_hook._gates_disabled`` honors a host-level
+    ``~/.local/spellbook/gates-disabled`` flag file (and the
+    ``SPELLBOOK_GATES_DISABLED`` env var). Test runs must not depend on the
+    developer's local kill-switch state, so pin the gates ON by default via
+    the authoritative env var — this also propagates into the hook
+    subprocesses spawned by ``_run_hook`` (which inherit ``os.environ``).
+
+    Tests that exercise the kill switch itself mark themselves
+    ``gate_killswitch`` and opt out, controlling the env var / flag file
+    directly.
+    """
+    if request.node.get_closest_marker("gate_killswitch"):
+        return
+    monkeypatch.setenv("SPELLBOOK_GATES_DISABLED", "0")
+
+
 @pytest.fixture(scope="session", autouse=True)
 def _ensure_worker_llm_calls_table():
     """Create the ``worker_llm_calls`` table on the real spellbook.db.

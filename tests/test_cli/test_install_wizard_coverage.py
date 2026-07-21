@@ -108,7 +108,10 @@ def stub_config_get(monkeypatch):
 
 _DEFAULTS_KEY_SCRIPT = [
     # (key, default-accept-answer, expected-value)
-    # All accept bare Enter except session_mode (needs choice index "1" -> none).
+    # Order MUST match the prompt order in run_defaults_wizard (scripted_input
+    # is a FIFO consumed per input() call). All accept bare Enter except
+    # session_mode (needs choice index "1" -> none).
+    ("security_gates_enabled", "", False),
     ("notify_enabled", "", True),
     ("notify_title", "", "Spellbook"),
     ("auto_update", "", True),

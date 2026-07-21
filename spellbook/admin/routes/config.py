@@ -60,6 +60,12 @@ CONFIG_SCHEMA = [
         "default": True,
     },
     {
+        "key": "security_gates_enabled",
+        "type": "boolean",
+        "description": "Enable the PreToolUse security gates (bash/spawn/state-sanitize command checks and the tool-safety sniff). Disabled by default; the installer asks on first install.",
+        "default": False,
+    },
+    {
         "key": "profile.default",
         "type": "string",
         "description": (
