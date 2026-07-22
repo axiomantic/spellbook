@@ -5,7 +5,7 @@ description = "Harness-augmentation layer for AI coding assistants: skills, comm
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "websockets>=16.0",
+    "websockets>=16.1.1",
     "sqlalchemy[asyncio]>=2.0.51,<2.1",
     "aiosqlite>=0.20.0,<0.23",
     "alembic>=1.18.5,<1.19",
