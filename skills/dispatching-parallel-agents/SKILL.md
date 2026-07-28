@@ -49,7 +49,7 @@ IF building on established context → main context
 
 ## Model & Effort Selection
 
-Match the subagent's model and effort to the COGNITIVE LOAD of the task, not its size: thinking work (planning, design, review, research, debugging) → `fable` at inherited effort; mechanical work (rote edits, running tests, git/PR/Jira mechanics) → `sonnet` at `effort: low`. The specialized agent types already encode this in frontmatter. See "Subagent Model and Effort Selection" in the core Inviolable Rules for the full table and override precedence.
+Match the subagent's model and effort to the COGNITIVE LOAD of the task, not its size: thinking work (planning, design, review, fact-checking, research, open-ended debugging) → `opus` at inherited effort; mechanical work (TDD implementation against a written spec, checklist verification, rote edits, running tests, git/PR/Jira mechanics) → `sonnet` at `effort: low`. Never default to `fable` — use it only when the operator explicitly asks. The specialized agent types already encode this in frontmatter. See "Subagent Model and Effort Selection" in the core Inviolable Rules for the full table and override precedence.
 
 ---
 

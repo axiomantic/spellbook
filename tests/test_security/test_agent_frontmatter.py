@@ -49,12 +49,13 @@ EXPECTED_NEW_AGENTS: dict[str, str] = {
 }
 
 # Intended `model:` value for each of the 9 NEW narrowing-role agents.
-# Thinking-class agents (judgment, trade-off analysis) route to `fable`;
+# Thinking-class agents (judgment, trade-off analysis) route to `opus`;
 # mechanical agents (rote edits, git/PR/Jira mechanics, running tests)
-# route to `sonnet`. See "Subagent Model and Effort Selection" in
-# AGENTS.spellbook.md for the full routing table.
+# route to `sonnet`. `fable` is never a default — it is used only when the
+# operator explicitly asks for it. See "Subagent Model and Effort Selection"
+# in AGENTS.spellbook.md for the full routing table.
 EXPECTED_NEW_AGENT_MODELS: dict[str, str] = {
-    "web-researcher": "fable",   # Thinking-class → fable
+    "web-researcher": "opus",   # Thinking-class → opus
     "implementer": "sonnet",
     "git-committer": "sonnet",
     "git-pusher": "sonnet",

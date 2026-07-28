@@ -108,6 +108,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Thinking-class subagents route back to `opus`; `fable` is now opt-in
+  only.** Reverses the earlier `fable` default. `fable` is expensive enough
+  that an unattended session can consume a large share of an operator's usage
+  without them noticing, and the routing table gave no signal that it was the
+  default for every review, design, and research dispatch. The rule is now
+  explicit: never default to `fable`, and never silently upgrade to it because
+  a task looks hard — say so and let the operator decide. Frontmatter for
+  `code-reviewer`, `justice-resolver`, `lovers-integrator`,
+  `hierophant-distiller`, and `web-researcher` moves `fable` → `opus`, with the
+  frontmatter test updated to match and a note that any agent still pinned to
+  `fable` must be overridden at the call site.
+  The routing table also gains two disambiguations that caused real
+  misclassification in practice: **TDD implementation against a written spec**
+  and **completion/artifact verification against a checklist** are now named
+  explicitly as Mechanical (`sonnet`/`low`), and the Thinking row's
+  "debugging" is narrowed to *open-ended debugging where the cause is
+  unknown*. Previously an orchestrator could read a spec-driven red-green
+  cycle as "debugging" and route it to the expensive model.
+
 - **Thinking-class subagents route to `fable` instead of `opus`.** Code
   review, arbitration, synthesis, integration, and research (`code-reviewer`,
   `justice-resolver`, `lovers-integrator`, `hierophant-distiller`,

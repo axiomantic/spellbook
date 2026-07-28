@@ -138,15 +138,26 @@ You are a CONDUCTOR, not a musician. Dispatch subagents. Never implement directl
 Every dispatch matches its model and effort to the COGNITIVE LOAD of the task, not its size. Planning thinks; execution obeys.
 </CRITICAL>
 
+**DO NOT USE `fable` UNLESS THE OPERATOR EXPLICITLY ASKS FOR IT.** `fable` is expensive and burns
+usage fast. The default roster is `opus` and `sonnet` only. If a task genuinely seems to warrant
+`fable`, do not silently upgrade — say so and let the operator decide. "This is hard" is not
+authorization; only the operator naming `fable` is.
+
 | Kind | What it is | `model` | `effort` |
 |------|-----------|---------|----------|
-| **Thinking** | Planning, design, architecture, code/design review, research, debugging, synthesis, arbitration — anything requiring judgment or trade-off analysis | `fable` | inherit session effort (omit the override) |
-| **Mechanical** | Carrying out an already-approved plan or spec: rote edits, running tests, git/PR/Jira mechanics, applying a described change | `sonnet` | `low` |
+| **Thinking** | Planning, design, architecture, code/design review, fact-checking, adversarial review, open-ended debugging where the cause is unknown, research, synthesis, arbitration — anything requiring judgment or trade-off analysis | `opus` | inherit session effort (omit the override) |
+| **Mechanical** | Carrying out an already-approved plan or spec: TDD implementation against a written spec, completion/artifact verification against a checklist, precisely-specified amends, rote edits, running tests, git/PR/Jira mechanics, applying a described change | `sonnet` | `low` |
+
+Debugging splits across both rows. Diagnosing an unknown failure is Thinking; working through a
+TDD red-green cycle whose test and target are already specified is Mechanical.
 
 **The specialized agent types already encode this** in their frontmatter, so dispatching the right type gets the right model/effort for free:
 
 - Mechanical (`sonnet` / `effort: low`) → `implementer`, `chariot-implementer`, `test-runner`, `git-committer`, `git-pusher`, `pr-creator`, `pr-merger`, `jira-reader`, `jira-mutator`
-- Thinking (`fable`, inherit effort) → `code-reviewer`, `justice-resolver`, `lovers-integrator`, `hierophant-distiller`, `web-researcher`
+- Thinking (`opus`, inherit effort) → `code-reviewer`, `justice-resolver`, `lovers-integrator`, `hierophant-distiller`, `web-researcher`
+
+An agent type whose frontmatter still specifies `fable` must be overridden to `opus` at the call
+site until its frontmatter is updated.
 
 **When dispatching a generic type** (`general-purpose`, `claude`, `Explore`, `Plan`) or when a task's cognitive load differs from the agent's default, pass an explicit per-call `model` + `effort` override to match the table. Precedence: per-call override > agent frontmatter > session default. `fork` subagents ignore the model override — they always inherit the parent model.
 
