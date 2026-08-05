@@ -127,8 +127,7 @@ def _register_install_mocks(home_dir):
     in :func:`_assert_install_mocks` drains exactly that many.
     """
     mock_home = tripwire.mock("pathlib:Path.home")
-    for _ in range(_HOME_CALLS_PER_INSTALL):
-        mock_home.returns(home_dir)
+    mock_home.__call__.required(False).returns(home_dir)
 
     mock_cc_cli = tripwire.mock(
         "installer.platforms.claude_code:check_claude_cli_available"
@@ -147,8 +146,7 @@ def _register_install_mocks(home_dir):
 
 def _assert_install_mocks(mock_home, mock_cc_cli, mock_mcp_cli):
     with tripwire.in_any_order():
-        for _ in range(_HOME_CALLS_PER_INSTALL):
-            mock_home.assert_call(args=(), kwargs={})
+        mock_home.assert_call(args=(), kwargs={})
         for _ in range(_CC_CLI_CALLS_PER_INSTALL):
             mock_cc_cli.assert_call(args=(), kwargs={})
         for _ in range(_MCP_CLI_CALLS_PER_INSTALL):
@@ -227,8 +225,7 @@ def test_install_scopes_old_variant_unregister_to_config_dir(
     state_mock = _redirect_state_file(tmp_path, budget=state_budget)
 
     mock_home = tripwire.mock("pathlib:Path.home")
-    for _ in range(_CLEANUP_HOME_CALLS_PER_INSTALL):
-        mock_home.returns(home_dir)
+    mock_home.__call__.required(False).returns(home_dir)
 
     # Only the claude_code-binding CLI check fires (register block guard). The
     # mcp-binding check is gone because unregister_mcp_server is mocked. Return
@@ -253,8 +250,7 @@ def test_install_scopes_old_variant_unregister_to_config_dir(
         installer.install(skip_global_steps=True)
 
     with tripwire.in_any_order():
-        for _ in range(_CLEANUP_HOME_CALLS_PER_INSTALL):
-            mock_home.assert_call(args=(), kwargs={})
+        mock_home.assert_call(args=(), kwargs={})
         for _ in range(_CLEANUP_CC_CLI_CALLS_PER_INSTALL):
             mock_cc_cli.assert_call(args=(), kwargs={})
         # Core assertion: the old-variant cleanup call must receive

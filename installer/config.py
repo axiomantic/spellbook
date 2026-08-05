@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 # This is where spellbook stores its outputs: projects, logs, distilled sessions, etc.
 SPELLBOOK_CONFIG_DIR_ENV = "SPELLBOOK_CONFIG_DIR"
 SPELLBOOK_DEFAULT_CONFIG_DIR = Path.home() / ".local" / "spellbook"
+SPELLBOOK_MACHINE_PATHS_FILE = SPELLBOOK_DEFAULT_CONFIG_DIR.parent.parent / ".config" / "spellbook" / "paths.md"
 
 
 def get_spellbook_config_dir() -> Path:
@@ -28,10 +29,9 @@ def get_spellbook_config_dir() -> Path:
     if config_dir:
         return Path(config_dir)
 
-    machine_paths = Path.home() / ".config" / "spellbook" / "paths.md"
-    if machine_paths.exists():
+    if SPELLBOOK_MACHINE_PATHS_FILE.exists():
         try:
-            for line in machine_paths.read_text(encoding="utf-8").splitlines():
+            for line in SPELLBOOK_MACHINE_PATHS_FILE.read_text(encoding="utf-8").splitlines():
                 if line.startswith("SPELLBOOK_CONFIG_DIR="):
                     val = line.split("=", 1)[1].strip()
                     if val:

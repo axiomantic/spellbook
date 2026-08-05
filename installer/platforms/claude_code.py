@@ -11,7 +11,6 @@ from ..components.agents import (
     install_agents,
     uninstall_agents,
 )
-from ..components.context_files import generate_claude_context
 from ..components.default_mode import install_default_mode, uninstall_default_mode
 from ..components.hooks import install_hooks, uninstall_hooks
 from ..components.permissions import (
@@ -35,7 +34,6 @@ from ..components.symlinks import (
 from ..demarcation import (
     get_installed_version,
     remove_demarcated_section,
-    update_demarcated_section,
 )
 from .base import PlatformInstaller, PlatformStatus
 
@@ -351,37 +349,29 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         message="CLAUDE.md: would skip update (prioritizing ~/.claude)",
                     )
                 )
-        else:
-            spellbook_content = generate_claude_context(self.spellbook_dir)
+        # Always strip legacy demarcated block from CLAUDE.md if present
+        if claude_md.exists() and not self.dry_run:
+            remove_demarcated_section(claude_md)
 
-            if spellbook_content:
-                if self.dry_run:
-                    action = "would be updated"
-                    results.append(
-                        InstallResult(
-                            component="CLAUDE.md",
-                            platform=self.platform_id,
-                            success=True,
-                            action="installed",
-                            message=f"CLAUDE.md: {action}",
-                        )
-                    )
-                else:
-                    action, backup_path = update_demarcated_section(
-                        claude_md, spellbook_content, self.version
-                    )
-                    msg = f"CLAUDE.md: {action}"
-                    if backup_path:
-                        msg += f" (backup: {backup_path.name})"
-                    results.append(
-                        InstallResult(
-                            component="CLAUDE.md",
-                            platform=self.platform_id,
-                            success=True,
-                            action=action,
-                            message=msg,
-                        )
-                    )
+        # Symlink sidecar rule file ~/.claude/rules/spellbook.md -> AGENTS.spellbook.md
+        rules_dir = self.config_dir / "rules"
+        rule_file = rules_dir / "spellbook.md"
+        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
+
+        if not rules_dir.exists() and not self.dry_run:
+            rules_dir.mkdir(parents=True, exist_ok=True)
+
+        res = create_symlink(source_agents, rule_file, dry_run=self.dry_run)
+
+        results.append(
+            InstallResult(
+                component="rules_sidecar",
+                platform=self.platform_id,
+                success=res.success,
+                action=res.action,
+                message=f"rule sidecar: {res.message}",
+            )
+        )
 
         # Register the MCP server connection in THIS config dir's .claude.json.
         # The daemon itself is global (installed once by core.py), but each Claude
@@ -724,7 +714,7 @@ class ClaudeCodeInstaller(PlatformInstaller):
 
     def get_context_files(self) -> List[Path]:
         """Get context files for this platform."""
-        return [self.config_dir / "CLAUDE.md"]
+        return [self.config_dir / "rules" / "spellbook.md"]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

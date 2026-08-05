@@ -18,7 +18,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.context_files import generate_claude_context
 from ..components.mcp import get_mcp_auth_token, get_spellbook_server_url
 from ..components.symlinks import (
     cleanup_spellbook_symlinks,
@@ -29,7 +28,6 @@ from ..components.symlinks import (
 from ..demarcation import (
     get_installed_version,
     remove_demarcated_section,
-    update_demarcated_section,
 )
 from .base import PlatformInstaller, PlatformStatus
 
@@ -372,36 +370,28 @@ class PiInstaller(PlatformInstaller):
             )
 
         # Step 3: Install AGENTS.md with demarcated section
-        self._step("Updating AGENTS.md")
-        spellbook_content = generate_claude_context(self.spellbook_dir)
+        # Strip legacy demarcated section from AGENTS.md if present
+        if self.context_file.exists() and not self.dry_run:
+            remove_demarcated_section(self.context_file)
 
-        if spellbook_content:
-            if self.dry_run:
-                results.append(
-                    InstallResult(
-                        component="AGENTS.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message="AGENTS.md: would be updated",
-                    )
-                )
-            else:
-                action, backup_path = update_demarcated_section(
-                    self.context_file, spellbook_content, self.version
-                )
-                msg = f"AGENTS.md: {action}"
-                if backup_path:
-                    msg += f" (backup: {backup_path.name})"
-                results.append(
-                    InstallResult(
-                        component="AGENTS.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action=action,
-                        message=msg,
-                    )
-                )
+        # Symlink sidecar prompt file ~/.pi/agent/prompts/spellbook.md -> AGENTS.spellbook.md
+        prompts_dir = self.config_dir / "prompts"
+        prompt_file = prompts_dir / "spellbook.md"
+        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
+
+        if not prompts_dir.exists() and not self.dry_run:
+            prompts_dir.mkdir(parents=True, exist_ok=True)
+
+        res = create_symlink(source_agents, prompt_file, dry_run=self.dry_run)
+        results.append(
+            InstallResult(
+                component="prompts_sidecar",
+                platform=self.platform_id,
+                success=res.success,
+                action=res.action,
+                message=f"prompt sidecar: {res.message}",
+            )
+        )
 
         # Step 4: Register MCP server in mcp.json
         # This is a global step: MCP registration is system-wide, not per-dir.
@@ -505,7 +495,7 @@ class PiInstaller(PlatformInstaller):
 
     def get_context_files(self) -> List[Path]:
         """Get context files managed by this platform."""
-        return [self.context_file]
+        return [self.config_dir / "prompts" / "spellbook.md"]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

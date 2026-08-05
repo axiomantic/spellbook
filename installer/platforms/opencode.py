@@ -32,10 +32,9 @@ import json
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.context_files import generate_codex_context
 from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
 from ..components.symlinks import create_symlink, remove_symlink
-from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
+from ..demarcation import get_installed_version, remove_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
@@ -379,39 +378,30 @@ class OpenCodeInstaller(PlatformInstaller):
             )
             return results
 
-        # Install AGENTS.md with demarcated section
-        self._step("Updating AGENTS.md")
+        # Always strip legacy demarcated block from AGENTS.md if present
         context_file = self.config_dir / "AGENTS.md"
-        # Reuse generate_codex_context since format is identical
-        spellbook_content = generate_codex_context(self.spellbook_dir)
+        if context_file.exists() and not self.dry_run:
+            remove_demarcated_section(context_file)
 
-        if spellbook_content:
-            if self.dry_run:
-                results.append(
-                    InstallResult(
-                        component="AGENTS.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message="AGENTS.md: would be updated",
-                    )
-                )
-            else:
-                action, backup_path = update_demarcated_section(
-                    context_file, spellbook_content, self.version
-                )
-                msg = f"AGENTS.md: {action}"
-                if backup_path:
-                    msg += f" (backup: {backup_path.name})"
-                results.append(
-                    InstallResult(
-                        component="AGENTS.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action=action,
-                        message=msg,
-                    )
-                )
+        # Symlink sidecar instruction file ~/.config/opencode/instructions/spellbook.md -> AGENTS.spellbook.md
+        instructions_dir = self.config_dir / "instructions"
+        instruction_file = instructions_dir / "spellbook.md"
+        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
+
+        if not instructions_dir.exists() and not self.dry_run:
+            instructions_dir.mkdir(parents=True, exist_ok=True)
+
+        res = create_symlink(source_agents, instruction_file, dry_run=self.dry_run)
+
+        results.append(
+            InstallResult(
+                component="instructions_sidecar",
+                platform=self.platform_id,
+                success=res.success,
+                action=res.action,
+                message=f"instruction sidecar: {res.message}",
+            )
+        )
 
         # Register MCP server in opencode.json (connects to HTTP daemon)
         self._step("Registering MCP server")
@@ -630,7 +620,7 @@ class OpenCodeInstaller(PlatformInstaller):
 
     def get_context_files(self) -> List[Path]:
         """Get context files for this platform."""
-        return [self.config_dir / "AGENTS.md"]
+        return [self.config_dir / "instructions" / "spellbook.md"]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

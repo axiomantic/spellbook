@@ -6,7 +6,6 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.context_files import generate_codex_context
 from ..components.mcp import get_mcp_auth_token, get_spellbook_server_url
 from ..components.symlinks import (
     create_symlink,
@@ -14,7 +13,7 @@ from ..components.symlinks import (
     remove_symlink,
     remove_spellbook_symlinks,
 )
-from ..demarcation import get_installed_version, remove_demarcated_section, update_demarcated_section
+from ..demarcation import get_installed_version, remove_demarcated_section
 from .base import PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
@@ -195,38 +194,29 @@ class CodexInstaller(PlatformInstaller):
             )
         )
 
-        # Install AGENTS.md with demarcated section
-        self._step("Updating AGENTS.md")
+        # Strip legacy demarcated section from AGENTS.md if present
         context_file = self.config_dir / "AGENTS.md"
-        spellbook_content = generate_codex_context(self.spellbook_dir)
+        if context_file.exists() and not self.dry_run:
+            remove_demarcated_section(context_file)
 
-        if spellbook_content:
-            if self.dry_run:
-                results.append(
-                    InstallResult(
-                        component="AGENTS.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message="AGENTS.md: would be updated",
-                    )
-                )
-            else:
-                action, backup_path = update_demarcated_section(
-                    context_file, spellbook_content, self.version
-                )
-                msg = f"AGENTS.md: {action}"
-                if backup_path:
-                    msg += f" (backup: {backup_path.name})"
-                results.append(
-                    InstallResult(
-                        component="AGENTS.md",
-                        platform=self.platform_id,
-                        success=True,
-                        action=action,
-                        message=msg,
-                    )
-                )
+        # Symlink sidecar rule file ~/.codex/AGENTS.spellbook.md -> AGENTS.spellbook.md
+        sidecar_file = self.config_dir / "AGENTS.spellbook.md"
+        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
+
+        res = create_symlink(source_agents, sidecar_file, dry_run=self.dry_run)
+        results.append(
+            InstallResult(
+                component="rules_sidecar",
+                platform=self.platform_id,
+                success=res.success,
+                action=res.action,
+                message=f"rule sidecar: {res.message}",
+            )
+        )
+
+        # If AGENTS.md does not exist, symlink AGENTS.md -> AGENTS.spellbook.md
+        if not context_file.exists():
+            create_symlink(source_agents, context_file, dry_run=self.dry_run)
 
         # Register MCP server connection (daemon is installed centrally by core.py)
         self._step("Registering MCP server")
@@ -331,7 +321,7 @@ class CodexInstaller(PlatformInstaller):
 
     def get_context_files(self) -> List[Path]:
         """Get context files for this platform."""
-        return [self.config_dir / "AGENTS.md"]
+        return [self.config_dir / "AGENTS.spellbook.md"]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

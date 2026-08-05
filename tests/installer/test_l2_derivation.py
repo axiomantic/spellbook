@@ -430,14 +430,6 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
         dry_run=False,
         version="test",
     )
-    # Stub out the CLAUDE.md generation side-effect; we only assert deny
-    # patterns reach settings.json here. The MCP block's CLI probes are
-    # mocked above (cc_cli_mock / mcp_cli_mock).
-    ctx_mock = tripwire.mock(
-        "installer.platforms.claude_code:generate_claude_context"
-    )
-    for _ in range(expected_ctx_calls):
-        ctx_mock.returns("")
 
     with tripwire:
         results = inst.install(skip_global_steps=True)
@@ -449,11 +441,7 @@ def test_claude_code_installer_uses_derived_deny(tmp_path, monkeypatch):
     assert "Bash(git push --force:*)" in deny
     assert "mcp__atlassian__delete_*" in deny
     _assert_state_path_calls(state_path_mock, expected_state_calls)
-    # ``generate_claude_context`` is called with the spellbook_dir Path; we
-    # assert the recorded call was against ``sbdir`` exactly.
-    with tripwire.in_any_order():
-        for _ in range(expected_ctx_calls):
-            ctx_mock.assert_call(args=(sbdir,))
+
     # MCP block CLI probes (ungated under skip_global_steps): each binding of
     # ``check_claude_cli_available`` is hit exactly once.
     with tripwire.in_any_order():

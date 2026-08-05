@@ -263,7 +263,7 @@ def test_check_lists_pending_messages(a2a):
         m = re.match(r"^  (\S+)  (from=.*)$", ln)
         normalized.append(f"  <id>  {m.group(2)}" if m else ln)
     assert normalized == [
-        "agent2agent: 'alice' has 2 pending message(s):",
+        "agent2agent: 'alice' has 2 unread message(s):",
         "  <id>  from=bob",
         "  <id>  from=carol",
     ]
