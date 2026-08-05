@@ -11,8 +11,8 @@ class TestPlatformConfigEntries:
     """Tests for PLATFORM_CONFIG structure and values."""
 
     def test_all_platforms_have_config_dir_env(self):
-        """All 6 platforms in PLATFORM_CONFIG have non-None config_dir_env."""
-        assert len(PLATFORM_CONFIG) == 6
+        """All 7 platforms in PLATFORM_CONFIG have non-None config_dir_env."""
+        assert len(PLATFORM_CONFIG) == 7
         for platform_id, config in PLATFORM_CONFIG.items():
             assert config["config_dir_env"] is not None, (
                 f"{platform_id} has None config_dir_env"
@@ -22,7 +22,7 @@ class TestPlatformConfigEntries:
             )
 
     def test_all_platforms_have_cli_flag_name(self):
-        """All 6 platforms have string cli_flag_name using hyphens (not underscores)."""
+        """All 7 platforms have string cli_flag_name using hyphens (not underscores)."""
         for platform_id, config in PLATFORM_CONFIG.items():
             flag = config["cli_flag_name"]
             assert isinstance(flag, str), (
