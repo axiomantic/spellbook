@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.82.1] - 2026-08-05
+
+### Fixed
+
+- **Rule Sidecar Enforcer & Legacy Demarcation Removal**: Enforced `remove_demarcated_section` across all platform installers (`claude_code`, `opencode`, `codex`, `forgecode`, `pi`, `antigravity`, `gemini`) to strip legacy `# SPELLBOOK:START ... # SPELLBOOK:END` blocks from user context files (`CLAUDE.md`, `AGENTS.md`), while establishing rule sidecar symlinks (`rules/spellbook.md`, `instructions/spellbook.md`, `AGENTS.spellbook.md`) pointing to canonical `AGENTS.spellbook.md`.
+- **Platform Status Detection**: Updated `detect()` across all platform installers to check for rule sidecar files and resolve installed versions.
+
 ## [0.82.0] - 2026-08-05
 
 ### Added
