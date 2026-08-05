@@ -98,7 +98,7 @@ class TestForgeCodeInstall:
 
         assert actual == {"mcpServers": {"spellbook": _expected_spellbook_entry()}}
 
-    def test_fresh_install_writes_AGENTS_md_with_demarcated_section(
+    def test_fresh_install_creates_sidecar_rules_and_agents_md(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
         m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
@@ -107,20 +107,11 @@ class TestForgeCodeInstall:
             installer.install()
         m_token.assert_call()
 
-        agents_md = forge_config_dir / "AGENTS.md"
-        content = agents_md.read_text(encoding="utf-8")
+        sidecar = forge_config_dir / "AGENTS.spellbook.md"
+        assert sidecar.is_symlink() or sidecar.exists()
 
-        expected_spellbook_content = generate_codex_context(spellbook_dir)
-        expected_start = f"<!-- SPELLBOOK:START version={TEST_VERSION} -->"
-        expected = (
-            expected_start
-            + "\n"
-            + expected_spellbook_content
-            + "\n"
-            + MARKER_END
-            + "\n"
-        )
-        assert content == expected
+        agents_md = forge_config_dir / "AGENTS.md"
+        assert agents_md.exists()
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file modes only")
     def test_fresh_install_chmod_0600(
@@ -257,7 +248,7 @@ class TestForgeCodeInstall:
         # MethodProxy.assert_call() asserts one interaction at a time; there
         # is no times=N parameter (verified against
         # tripwire/_mock_plugin.py:130-158).
-        EXPECTED_HOME_CALLS = 3
+        EXPECTED_HOME_CALLS = 2
         m_home = tripwire.mock("pathlib:Path.home")
         for _ in range(EXPECTED_HOME_CALLS):
             m_home.returns(tmp_path)
@@ -318,26 +309,11 @@ class TestForgeCodeInstall:
 
         new_content = agents_md.read_text(encoding="utf-8")
 
-        # User content must come first, byte-for-byte preserved.
-        assert new_content.startswith(user_content)
+        # User content is preserved byte-for-byte without mutating with a demarcated block.
+        assert new_content == user_content
 
-        # Demarcated section must follow with the correct version marker and END marker.
-        from installer.components.context_files import generate_codex_context
-
-        expected_spellbook = generate_codex_context(spellbook_dir)
-        expected_start = f"<!-- SPELLBOOK:START version={TEST_VERSION} -->"
-        # Build the expected complete file using the same logic the implementation uses.
-        expected = (
-            user_content
-            + "\n"
-            + expected_start
-            + "\n"
-            + expected_spellbook
-            + "\n"
-            + MARKER_END
-            + "\n"
-        )
-        assert new_content == expected
+        # Sidecar rule file AGENTS.spellbook.md is created
+        assert (forge_config_dir / "AGENTS.spellbook.md").exists()
 
     def test_install_warns_when_FORGE_CONFIG_unset(
         self, spellbook_dir, forge_config_dir, monkeypatch, tmp_path
@@ -352,7 +328,7 @@ class TestForgeCodeInstall:
         # test: 3 home() calls total in this install path. See the legacy
         # test for the full rationale on pinning the exact count and using
         # in_any_order() instead of draining.
-        EXPECTED_HOME_CALLS = 3
+        EXPECTED_HOME_CALLS = 2
         m_home = tripwire.mock("pathlib:Path.home")
         for _ in range(EXPECTED_HOME_CALLS):
             m_home.returns(tmp_path)

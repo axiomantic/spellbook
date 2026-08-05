@@ -215,11 +215,13 @@ class PiInstaller(PlatformInstaller):
                         except OSError:
                             pass
 
+        installed = installed_version is not None or has_mcp or has_skills or has_prompts
+
         return PlatformStatus(
             platform=self.platform_id,
             available=self.config_dir.exists(),
-            installed=installed_version is not None or has_mcp or has_skills or has_prompts,
-            version=installed_version,
+            installed=installed,
+            version=self.version if installed else None,
             details={
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,

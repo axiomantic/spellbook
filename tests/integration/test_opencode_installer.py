@@ -101,21 +101,21 @@ class TestOpenCodeInstaller:
         assert status.installed is True
         assert status.details["mcp_registered"] is True
 
-    def test_install_creates_agents_md(self, spellbook_dir, opencode_config_dir):
-        """Test that install creates AGENTS.md."""
+    def test_install_creates_instructions_sidecar(self, spellbook_dir, opencode_config_dir):
+        """Test that install creates instructions/spellbook.md sidecar file."""
         from installer.platforms.opencode import OpenCodeInstaller
 
         installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
         results = installer.install()
 
-        # Check AGENTS.md was created
-        agents_md = opencode_config_dir / "AGENTS.md"
-        assert agents_md.exists()
+        # Check instructions/spellbook.md sidecar was created
+        sidecar = opencode_config_dir / "instructions" / "spellbook.md"
+        assert sidecar.exists()
 
-        # Check results contain AGENTS.md component
-        agents_result = next((r for r in results if r.component == "AGENTS.md"), None)
-        assert agents_result is not None
-        assert agents_result.success is True
+        # Check results contain instructions_sidecar component
+        sidecar_result = next((r for r in results if r.component == "instructions_sidecar"), None)
+        assert sidecar_result is not None
+        assert sidecar_result.success is True
 
     def test_install_creates_opencode_json_with_http_mcp(self, spellbook_dir, opencode_config_dir):
         """Test that install creates opencode.json with HTTP MCP config."""
@@ -207,8 +207,8 @@ class TestOpenCodeInstaller:
         assert results[0].action == "skipped"
         assert "not found" in results[0].message
 
-    def test_uninstall_removes_agents_md_section(self, spellbook_dir, opencode_config_dir):
-        """Test that uninstall removes spellbook section from AGENTS.md."""
+    def test_uninstall_removes_instructions_sidecar(self, spellbook_dir, opencode_config_dir):
+        """Test that uninstall removes instructions/spellbook.md sidecar."""
         from installer.platforms.opencode import OpenCodeInstaller
 
         # First install
@@ -218,10 +218,10 @@ class TestOpenCodeInstaller:
         # Then uninstall
         results = installer.uninstall()
 
-        # Check AGENTS.md section removed
-        agents_result = next((r for r in results if r.component == "AGENTS.md"), None)
-        assert agents_result is not None
-        assert agents_result.success is True
+        # Check instructions_sidecar component
+        sidecar_result = next((r for r in results if r.component in ("instructions_sidecar", "context_files")), None)
+        assert sidecar_result is not None
+        assert sidecar_result.success is True
 
     def test_uninstall_removes_mcp_config(self, spellbook_dir, opencode_config_dir):
         """Test that uninstall removes spellbook MCP server from opencode.json."""
@@ -270,7 +270,7 @@ class TestOpenCodeInstaller:
         results = installer.install()
 
         # Check no files created
-        assert not (opencode_config_dir / "AGENTS.md").exists()
+        assert not (opencode_config_dir / "instructions" / "spellbook.md").exists()
         assert not (opencode_config_dir / "opencode.json").exists()
 
         # Check results show what would happen
@@ -278,14 +278,14 @@ class TestOpenCodeInstaller:
         assert all(r.success for r in results)
 
     def test_get_context_files(self, spellbook_dir, opencode_config_dir):
-        """Test get_context_files returns AGENTS.md."""
+        """Test get_context_files returns instructions/spellbook.md."""
         from installer.platforms.opencode import OpenCodeInstaller
 
         installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
         files = installer.get_context_files()
 
         assert len(files) == 1
-        assert files[0] == opencode_config_dir / "AGENTS.md"
+        assert files[0] == opencode_config_dir / "instructions" / "spellbook.md"
 
     def test_get_symlinks_returns_empty_before_install(self, spellbook_dir, opencode_config_dir):
         """Test get_symlinks returns empty list before installation."""

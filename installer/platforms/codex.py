@@ -115,10 +115,12 @@ class CodexInstaller(PlatformInstaller):
     def detect(self) -> PlatformStatus:
         """Detect Codex installation status."""
         context_file = self.config_dir / "AGENTS.md"
+        sidecar_file = self.config_dir / "AGENTS.spellbook.md"
         installed_version = get_installed_version(context_file)
 
         spellbook_link = self.config_dir / "spellbook"
         has_link = spellbook_link.is_symlink()
+        has_sidecar = sidecar_file.exists() or sidecar_file.is_symlink()
 
         # Check if MCP server is registered
         config_toml = self.config_dir / "config.toml"
@@ -127,11 +129,13 @@ class CodexInstaller(PlatformInstaller):
             content = config_toml.read_text(encoding="utf-8")
             has_mcp = TOML_START_MARKER in content
 
+        installed = installed_version is not None or has_link or has_sidecar or has_mcp
+
         return PlatformStatus(
             platform=self.platform_id,
             available=self.config_dir.exists(),
-            installed=installed_version is not None or has_link or has_mcp,
-            version=installed_version,
+            installed=installed,
+            version=self.version if installed else None,
             details={
                 "config_dir": str(self.config_dir),
                 "spellbook_link": has_link,

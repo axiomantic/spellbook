@@ -57,13 +57,15 @@ class ClaudeCodeInstaller(PlatformInstaller):
     def detect(self) -> PlatformStatus:
         """Detect Claude Code installation status."""
         claude_md = self.config_dir / "CLAUDE.md"
-        installed_version = get_installed_version(claude_md)
+        rule_file = self.config_dir / "rules" / "spellbook.md"
+        legacy_version = get_installed_version(claude_md)
+        installed = rule_file.exists() or rule_file.is_symlink() or (legacy_version is not None)
 
         return PlatformStatus(
             platform=self.platform_id,
             available=True,  # We always create .claude directory
-            installed=installed_version is not None,
-            version=installed_version,
+            installed=installed,
+            version=self.version if installed else None,
             details={
                 "config_dir": str(self.config_dir),
                 "cli_available": check_claude_cli_available(),

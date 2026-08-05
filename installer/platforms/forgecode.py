@@ -224,8 +224,6 @@ class ForgeCodeInstaller(PlatformInstaller):
         effective_context_file = effective_dir / "AGENTS.md"
         effective_mcp_config = effective_dir / ".mcp.json"
 
-        installed_version = get_installed_version(effective_context_file)
-
         has_mcp = False
         if effective_mcp_config.exists():
             cfg = _load_mcp_config_dict(effective_mcp_config)
@@ -233,10 +231,16 @@ class ForgeCodeInstaller(PlatformInstaller):
             if isinstance(servers, dict):
                 has_mcp = SPELLBOOK_SERVER_KEY in servers
 
+        sidecar_file = effective_dir / "AGENTS.spellbook.md"
+        has_sidecar = sidecar_file.exists() or sidecar_file.is_symlink()
+        legacy_version = get_installed_version(effective_context_file)
+        installed = (legacy_version is not None) or has_mcp or has_sidecar
+        installed_version = legacy_version or (self.version if has_sidecar else None)
+
         return PlatformStatus(
             platform=self.platform_id,
             available=effective_dir.exists(),
-            installed=(installed_version is not None) or has_mcp,
+            installed=installed,
             version=installed_version,
             details={
                 "config_dir": str(effective_dir),

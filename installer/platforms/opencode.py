@@ -345,11 +345,15 @@ class OpenCodeInstaller(PlatformInstaller):
         # Check for system prompt symlink
         has_system_prompt = self.system_prompt_target.is_symlink() or self.system_prompt_target.is_file()
 
+        sidecar_file = self.instructions_dir / "spellbook.md"
+        has_sidecar = sidecar_file.exists() or sidecar_file.is_symlink()
+        installed = installed_version is not None or has_mcp or has_sidecar or has_instructions
+
         return PlatformStatus(
             platform=self.platform_id,
             available=self.config_dir.exists(),
-            installed=installed_version is not None or has_mcp,
-            version=installed_version,
+            installed=installed,
+            version=self.version if installed else None,
             details={
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,
@@ -513,6 +517,20 @@ class OpenCodeInstaller(PlatformInstaller):
             return results
 
         # Remove demarcated section from AGENTS.md
+        sidecar_file = self.instructions_dir / "spellbook.md"
+        if sidecar_file.exists() or sidecar_file.is_symlink():
+            if not self.dry_run:
+                sidecar_file.unlink()
+            results.append(
+                InstallResult(
+                    component="instructions_sidecar",
+                    platform=self.platform_id,
+                    success=True,
+                    action="removed",
+                    message="instructions/spellbook.md: removed",
+                )
+            )
+
         context_file = self.config_dir / "AGENTS.md"
         if context_file.exists():
             if self.dry_run:
