@@ -5,12 +5,12 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  A harness-augmentation layer for AI coding assistants. Skills, commands, hooks, and a shared MCP server that runs across Claude Code, OpenCode, Codex, Gemini CLI, and ForgeCode.
+  A harness-augmentation layer for AI coding assistants. Skills, commands, hooks, and a shared MCP server that runs across Claude Code, Antigravity, OpenCode, Codex, Gemini CLI, ForgeCode, and Pi.
 </p>
 
 ## What is Spellbook?
 
-Spellbook is a harness-augmentation layer for AI coding assistants. The *harness* is the runtime that hosts the agent loop and executes tools (Claude Code, Codex, OpenCode, Gemini CLI, ForgeCode). Spellbook plugs into whichever harness you are running and adds skills, slash commands, hooks, profiles, and a shared MCP server (focus stints, session resume) on top.
+Spellbook is a harness-augmentation layer for AI coding assistants. The *harness* is the runtime that hosts the agent loop and executes tools (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI, ForgeCode, Pi). Spellbook plugs into whichever harness you are running and adds skills, slash commands, hooks, profiles, and a shared MCP server (focus stints, session resume) on top.
 
 Three things distinguish it from harness-native features and from other skill collections:
 

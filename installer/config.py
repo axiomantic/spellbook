@@ -21,21 +21,29 @@ def get_spellbook_config_dir() -> Path:
 
     Resolution order:
     1. SPELLBOOK_CONFIG_DIR environment variable
-    2. ~/.local/spellbook (portable default)
-
-    Note: CLAUDE_CONFIG_DIR is intentionally NOT used here. That variable
-    controls where Claude Code's own config lives (skills, commands, etc.),
-    which is a separate concern from where spellbook stores its work files.
+    2. ~/.config/spellbook/paths.md machine config file
+    3. ~/.local/spellbook (portable default)
     """
     config_dir = os.environ.get('SPELLBOOK_CONFIG_DIR')
     if config_dir:
         return Path(config_dir)
 
+    machine_paths = Path.home() / ".config" / "spellbook" / "paths.md"
+    if machine_paths.exists():
+        try:
+            for line in machine_paths.read_text(encoding="utf-8").splitlines():
+                if line.startswith("SPELLBOOK_CONFIG_DIR="):
+                    val = line.split("=", 1)[1].strip()
+                    if val:
+                        return Path(val)
+        except OSError:
+            pass
+
     return SPELLBOOK_DEFAULT_CONFIG_DIR
 
 
 # Supported platforms (AI coding assistants that can consume spellbook)
-SUPPORTED_PLATFORMS = ["claude_code", "opencode", "codex", "gemini", "forgecode", "pi"]
+SUPPORTED_PLATFORMS = ["claude_code", "antigravity", "opencode", "codex", "gemini", "forgecode", "pi"]
 
 # Platform configuration
 # NOTE: These are the AI assistant platforms that consume spellbook.
@@ -54,6 +62,16 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "patterns_subdir": "patterns",
         "docs_subdir": "docs",
         "plans_subdir": "plans",
+        "mcp_supported": True,
+        "mcp_server_name": "spellbook",
+    },
+    "antigravity": {
+        "name": "Antigravity",
+        "config_dir_env": "ANTIGRAVITY_CONFIG_DIR",
+        "default_config_dir": Path.home() / ".gemini" / "antigravity",
+        "cli_flag_name": "antigravity-config-dir",
+        "context_file": "AGENTS.md",
+        "skills_subdir": "skills",
         "mcp_supported": True,
         "mcp_server_name": "spellbook",
     },

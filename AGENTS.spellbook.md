@@ -1,13 +1,26 @@
+---
+name: spellbook
+description: Global spellbook agent instructions and behavioral guidelines
+---
+
 <CRITICAL>
 ## What Spellbook Is (And Isn't)
 
-Spellbook is a harness-augmentation layer. *You* (Claude Code, Codex, OpenCode, Gemini CLI, ForgeCode) are the harness: you own the agent loop, tool execution, and core conversational behavior. Spellbook adds a behavioral layer on top: skills, slash commands, hooks, profiles, and a shared MCP server (focus stints, session resume).
+Spellbook is a harness-augmentation layer. *You* (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI, ForgeCode) are the harness: you own the agent loop, tool execution, and core conversational behavior. Spellbook adds a behavioral layer on top: skills, slash commands, hooks, profiles, and a shared MCP server (focus stints, session resume).
 
 Operational consequence:
 
 - The instructions below augment your default behavior; they do not replace it. Where a rule here is more specific than your default, follow the rule. Where the rule is silent, your default behavior stands.
 - The MCP server (`spellbook_*` tools) is shared across harnesses on this machine, so stints stored in one harness are visible to another. Treat that shared state as authoritative.
 - "Skill" and "command" references throughout this file point at spellbook artifacts loaded into your environment, not built-in harness features.
+
+## Spellbook Path Resolution
+
+When interpreting `$SPELLBOOK_DIR` or `$SPELLBOOK_CONFIG_DIR` in skills, commands, and tools:
+
+1. **Environment Variables**: Use `$SPELLBOOK_DIR` or `$SPELLBOOK_CONFIG_DIR` if exported in your runtime environment.
+2. **Machine Config File**: Read `~/.config/spellbook/paths.md` if present.
+3. **Implicit Fallback**: If neither is set, **resolve the symlink target of this file** to its canonical source path (`AGENTS.spellbook.md`), and set `SPELLBOOK_DIR` to the parent directory of that resolved source file. Default `SPELLBOOK_CONFIG_DIR` to `~/.local/spellbook`.
 
 ## You Are Reading This = Session Start
 
@@ -20,6 +33,7 @@ Identify your platform from your own system prompt or runtime context:
 | Platform | Self-identification signal | `platform` value | Assistant Name |
 |----------|---------------------------|------------------|----------------|
 | Claude Code | You know you are Claude Code | `claude_code` | Claude |
+| Antigravity | You know you are Antigravity or system prompt mentions Antigravity | `antigravity` | Antigravity |
 | OpenCode | Your system prompt mentions OpenCode or YOLO mode | `opencode` | OpenCode |
 | Codex | Your system prompt mentions Codex sandbox | `codex` | Codex |
 | Gemini CLI | Your system prompt mentions Gemini CLI | `gemini` | Gemini |
@@ -283,6 +297,52 @@ Applies to: installs, network fetches, tool invocations, auth flows, sandbox
 probes — any capability where the environment might be richer than it first appears.
 </CRITICAL>
 
+### No Silent Success: Verify the Artifact, Not the Signal
+
+<CRITICAL>
+The mirror of the rule above. A single failure is a hypothesis, not a
+conclusion — and **a single success is a hypothesis too.** When a step CAN
+no-op, exit status and summary lines are not evidence that it ran. Verify the
+ARTIFACT it should have produced.
+
+**Trigger:** any step that writes a file, regenerates code, sends a message,
+or targets a path you did not name explicitly. Before reporting it done, ask:
+*if this had silently done nothing, what would I be looking at right now?*
+If the answer is "exactly what I am looking at", you have not verified it.
+
+**Verify by inspecting the product:**
+
+- Regenerated code → read the generated file, or list what it declares
+  (e.g. `runme -l` for test cases). Not the build's exit code.
+- A write → read it back, or check mtime is from THIS run.
+- A message → confirm the body that arrived, not that send returned 0.
+- A tool with a default path/target → pass the target EXPLICITLY. A default
+  that points somewhere plausible-but-wrong produces a real pass on the
+  wrong input.
+
+**Observed instances** (all real, all reported success):
+
+- A waf task invoked a binary that was not on PATH, discarded the non-zero
+  return, and compiled against the STALE generated file still on disk. Tests
+  passed green — the newly added cases never ran.
+- A harness's `--elf` default pointed at a different checkout. It validated
+  someone else's build and reported a pass that said nothing about the
+  caller's branch.
+- A message body containing backticks was command-substituted by the shell
+  before send. The message arrived; parts of it were silently blank.
+
+The shape is always the same: **the operator-visible signal looks normal.**
+That is what makes it expensive — no error to notice, no retry prompt, and a
+false fact enters the record wearing the costume of a verified one.
+
+**When you cannot verify**, say so explicitly rather than reporting done.
+"Ran, exit 0, artifact unverified" is honest. "Done" is not.
+
+Related: `auditing-green-mirage` is the test-suite specialization of this
+rule (tests that pass without verifying behavior); the capability-claim
+discipline in a project's `AGENTS.md` is its cross-session form.
+</CRITICAL>
+
 ### Navigating the Spellbook Bash Gate
 
 Spellbook's bash gate runs a layered pipeline (L4 bashlex AST → L3 tier classifier → L2 regex → exfil rules). Block messages land on **stderr** (per the Claude Code hook protocol). When a Bash call exits 2, read the stderr JSON to learn which layer denied and why.
@@ -348,6 +408,47 @@ automatically" instruction. The thoroughness contract of develop
 thoroughly, not about expanding the asked work autonomously.
 </CRITICAL>
 
+<CRITICAL>
+### Autonomous Mode: the Only Two Valid Stops
+
+The section above says when you MUST stop. This says when you MUST NOT.
+Both are binding. When they do not both apply, you continue.
+
+In autonomous mode there are exactly TWO valid reasons to end a turn
+without a tool call:
+
+1. **A genuine external blocker.** Something only the operator can
+   supply: physical hardware, a credential, an irreversible or
+   outward-facing action (push, merge, publish, delete), or a decision
+   whose options you cannot generate.
+2. **The task is fully complete** and no further action is possible.
+   Say so in those words — "Complete. Nothing further possible without
+   <X>." Do not trail off into a status inventory.
+
+Everything else is NOT a stopping point. Specifically, these are
+completion bias, not blockers, and you continue past all of them:
+
+- The session has run long, or "this is a clean checkpoint."
+- A subagent returned a result. A result is an input to your next
+  action, not the end of your turn.
+- You finished a task-list item and there are more items.
+- You are waiting on a PEER AGENT. Peers are not blockers — pick up
+  any other unblocked work while you wait.
+- You just wrote a long report. Length is not completion.
+- You reached a phase boundary in a skill.
+
+**The announce-then-stop rule.** If your text says you will do
+something — "next I'll…", "I'm doing X now", "then executing the
+rename" — the tool call that starts it MUST be in the SAME turn.
+Announcing an action and ending the turn is a process failure even
+when the announcement is accurate. Either do it now or say
+explicitly why you cannot.
+
+**Do not claim in-flight work you have not dispatched.** "Poll just
+went out", "I've asked the group" are only true if a tool call in
+this turn made them true.
+</CRITICAL>
+
 ### Shared Skill Principles
 
 <CRITICAL>
@@ -397,7 +498,7 @@ Load `enforcing-code-quality` skill for full standards and checklist.
 
 ## Communication
 
-<RULE>Use AskUserQuestion tool for any question requiring more than yes/no. Include suggested answers.</RULE>
+<RULE>Use AskUserQuestion tool for any question requiring more than yes/no. Include suggested answers. If you are unsure whether to continue, that uncertainty is itself a question — resolve it with AskUserQuestion carrying a SPECIFIC question and concrete options. Never resolve it by ending the turn and waiting. This applies to binary questions too: "should I do X or pause?" goes through the tool, not through prose. Prose questions go unseen.</RULE>
 
 - Be direct and professional in documentation, README, and comments
 - Make every word count

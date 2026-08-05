@@ -82,6 +82,7 @@ Claude Code is the **primary** supported platform with full support. The others 
 | Platform | Support Level | GitHub | Config Location | MCP Transport |
 |----------|---------------|--------|-----------------|---------------|
 | Claude Code | Primary, full | [anthropics/claude-code](https://github.com/anthropics/claude-code) | `~/.claude/` | HTTP daemon |
+| Antigravity | Basic | [google-deepmind/antigravity](https://github.com/google-deepmind/antigravity) | `~/.gemini/antigravity` | HTTP daemon |
 | OpenCode | Basic | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
 | Codex | Basic | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | HTTP daemon |
 | Gemini CLI | Basic | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |

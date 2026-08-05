@@ -1200,7 +1200,7 @@ Examples:
         "--platforms",
         type=str,
         default=None,
-        help="Comma-separated platforms (claude_code,opencode,codex,gemini,pi)",
+        help="Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,pi)",
     )
     parser.add_argument(
         "--force",

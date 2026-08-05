@@ -7,7 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.82.0] - 2026-08-05
+
 ### Added
+
+- **Antigravity Harness Support**: Added full support for Google Antigravity as a first-class AI coding harness (`installer/platforms/antigravity.py`), including automatic detection, rule sidecar installation (`rules/spellbook.md`), skill symlinking, security policy installation (`spellbook-security.toml`), and HTTP MCP registration (`mcp_config.json`).
+- **Static Rule Sidecars & Machine Config Resolution**: All platform installers now symlink sidecar rule files directly to `<spellbook_dir>/AGENTS.spellbook.md` with static YAML frontmatter and symlink-target path resolution. Machine-specific path configurations are written to `~/.config/spellbook/paths.md` at install time.
+- **Legacy Demarcation Cleanup**: Automatically strips legacy inline `# SPELLBOOK:START ... # SPELLBOOK:END` blocks from pre-existing context files (`CLAUDE.md`, `AGENTS.md`, `GEMINI.md`) during setup and upgrade.
+- **TUI Platform Selection Rework**: Re-engineered interactive platform selection in `install.py`, `installer/renderer.py`, and `installer/tui.py`. Features a smart auto-detect confirmation step (`Install to detected harnesses? [Y/n/c]`), robust key handling for `a` (select all), `n` (deselect all), `d` (reset default), numeric key toggling (`1`-`9`), and multi-number batch input.
 
 - **Security gates are now opt-in, with an install-time prompt.** The
   PreToolUse blocking gates (bash, spawn, workflow-state-sanitize) and the

@@ -24,6 +24,27 @@ python3 install.py
 - MCP server for skill discovery and session management
 - Full hook system (PreToolUse, PostToolUse, Stop, Notification)
 
+## Antigravity
+
+**Status:** Basic support
+
+Antigravity integration via rules sidecar (`~/.gemini/antigravity/rules/spellbook.md`), skill symlinks, and MCP server (`mcp_config.json`).
+
+### Setup
+
+1. Run the installer: `python3 install.py`
+2. The installer:
+   - Symlinks `~/.gemini/antigravity/rules/spellbook.md` -> `AGENTS.spellbook.md`
+   - Registers spellbook MCP server in `~/.gemini/antigravity/mcp_config.json`
+   - Symlinks skills to `~/.gemini/antigravity/skills/`
+
+### Features
+
+- Context and instructions via `rules/spellbook.md` sidecar
+- MCP server for spellbook tools
+- Skill discovery via `skills/` symlinks
+- Security policy via `policies/spellbook-security.toml`
+
 ## OpenCode
 
 **Status:** Basic support

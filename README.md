@@ -6,8 +6,8 @@
 <h1 align="center">Spellbook</h1>
 
 <p align="center">
-  <em>A harness-augmentation layer for AI coding assistants. Skills, commands, hooks, and a shared MCP server that runs across Claude Code, OpenCode, Codex, Gemini CLI, and ForgeCode.</em><br>
-  Primary platform: Claude Code. Basic support for OpenCode, Codex, Gemini CLI, and ForgeCode.
+  <em>A harness-augmentation layer for AI coding assistants. Skills, commands, hooks, and a shared MCP server that runs across Claude Code, Antigravity, OpenCode, Codex, Gemini CLI, ForgeCode, and Pi.</em><br>
+  Primary platform: Claude Code. Basic support for Antigravity, OpenCode, Codex, Gemini CLI, ForgeCode, and Pi.
 </p>
 
 <p align="center">
@@ -576,6 +576,7 @@ See [full citations](https://axiomantic.github.io/spellbook/reference/citations/
 | Platform | Support Level | Notes |
 |----------|---------------|-------|
 | **Claude Code** | Primary, full support | All features: skills, hooks, MCP tools, subagent orchestration |
+| **Antigravity** | Basic support | Skills, MCP server, rules sidecar (`rules/spellbook.md`). |
 | **OpenCode** | Basic support | Skills, MCP server, YOLO agents. Some hooks and MCP tools are Claude Code-specific. |
 | **Codex** | Basic support | Skills, MCP server. No subagent Task tool; skills that require it will prompt you to use Claude Code. |
 | **Gemini CLI** | Basic support | Skills via MCP, native extension. No subagent Task tool. |

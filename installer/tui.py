@@ -494,7 +494,7 @@ def render_checkbox_menu(
 
     lines.append("")
     lines.append(color(title, Colors.CYAN))
-    lines.append(color("  (use arrows to move, space to toggle, enter to confirm)", Colors.BLUE))
+    lines.append(color("  (arrows/1-9 to move, space to toggle, a=all, n=none, d=default, enter=confirm)", Colors.BLUE))
     lines.append("")
 
     for i, opt in enumerate(options):
@@ -518,7 +518,8 @@ def render_checkbox_menu(
             name = color(opt.name, Colors.YELLOW)
             status = color(f"({opt.description})", Colors.YELLOW)
 
-        lines.append(f"{prefix}{checkbox} {name} {status}")
+        num = f"{i + 1}."
+        lines.append(f"{prefix}{checkbox} {num:<3} {name:<15} {status}")
 
     lines.append("")
 
@@ -565,15 +566,23 @@ def interactive_platform_select() -> Optional[List[str]]:
             # Quit (q, Ctrl+C, Escape)
             clear_lines(rendered_lines)
             return None
-        elif key == 'a':
+        elif key in ('a', 'A'):
             # Select all available
             for opt in options:
                 if opt.available:
                     opt.selected = True
-        elif key == 'n':
+        elif key in ('n', 'N'):
             # Deselect all
             for opt in options:
                 opt.selected = False
+        elif key in ('d', 'D'):
+            # Reset to auto-detected defaults
+            for opt in options:
+                opt.selected = opt.available
+        elif key.isdigit() and 1 <= int(key) <= len(options):
+            idx = int(key) - 1
+            if options[idx].available:
+                options[idx].selected = not options[idx].selected
 
         # Re-render
         clear_lines(rendered_lines)

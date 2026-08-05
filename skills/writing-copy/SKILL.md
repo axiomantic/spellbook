@@ -2,11 +2,11 @@
 name: writing-copy
 description: >
   Use when writing or de-slopping outward-facing prose: newsletters, blog posts,
-  announcements, marketing or landing copy, emails, release notes, doc intros.
+  announcements, marketing or landing copy, emails, release notes, doc intros, cover letters, job-application answers, resume bullets and summaries, bios, personal statements.
   Triggers: 'make this sound human', 'this reads like AI', 'de-slop this',
   'remove the AI tells', 'make it less AI', 'why does this sound like ChatGPT',
   'help me draft this piece', 'write a newsletter', 'write a blog post', 'polish
-  this copy', 'tighten this'. Composes with a personal voice skill (for example
+  this copy', 'tighten this'. Fire this whenever you draft outward-facing prose on the author's behalf, even without an explicit trigger phrase. Composes with a personal voice skill (for example
   my-voice-skill) that supplies identity and register; this skill is voice-neutral
   and supplies the writing process plus the anti-slop catalog. NOT for: code logic
   or code review (use code-review), project doc structure (use documenting-projects),
@@ -92,6 +92,10 @@ observation supports. Calibrated hedges that name real uncertainty ("I think",
 - "This becomes load-bearing." -> "This is now required."
 - "Users route around the feature." -> "Users ignore the feature."
 
+**Copula displacement.** "serves as", "stands as", "acts as", "functions as" inflate a plain "is". Use "is" or the specific verb.
+- "The cache serves as the source of truth." -> "The cache is the source of truth."
+- "This acts as a fallback." -> "This is the fallback."
+
 **Formatting tells.**
 - Em-dashes (the easiest tell to leave behind). Use parentheses, comma clauses, a
   hyphen with spaces ( - ), or two sentences.
@@ -106,6 +110,12 @@ attach a number or a specific behavior, not an adjective.
 - Not "it wasn't reliable" but "scheduled jobs failed and it hallucinated URLs".
 Prefer observable behavior over abstract characterization. A coined label is fine if
 you anchor it with concrete detail in the same sentence.
+
+## Emphasis-source check
+
+When a line sounds good but says little, flatten the cadence: strip the rhythm and read
+the bare claim. If it collapses into a generality, the rhythm was carrying it, not the
+content. Rewrite around the concrete point. If it still lands flat, keep it.
 
 ## Layering with a personal voice skill
 
@@ -143,6 +153,7 @@ invent rules the author did not demonstrate.
 | "A few things to flag:" | Open with the content |
 | load-bearing, route around, unlock | Plain verb |
 | em-dash | Parens, hyphen with spaces, or split |
+| serves as / stands as / acts as | "is" or the specific verb |
 
 ## Common mistakes
 

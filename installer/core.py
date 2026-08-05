@@ -155,6 +155,7 @@ def get_platform_installer(
         context: Cross-platform context dict shared across installers
             (e.g., claude_config_dirs consumed by the Claude Code installer).
     """
+    from .platforms.antigravity import AntigravityInstaller
     from .platforms.claude_code import ClaudeCodeInstaller
     from .platforms.codex import CodexInstaller
     from .platforms.forgecode import ForgeCodeInstaller
@@ -166,6 +167,7 @@ def get_platform_installer(
 
     installers = {
         "claude_code": ClaudeCodeInstaller,
+        "antigravity": AntigravityInstaller,
         "opencode": OpenCodeInstaller,
         "codex": CodexInstaller,
         "gemini": GeminiInstaller,
@@ -257,6 +259,9 @@ class Installer:
 
         version_dir = claude_dirs[0] if claude_dirs else get_platform_config_dir("claude_code")
         previous_version = get_installed_version(version_dir / "CLAUDE.md")
+
+        from .components.context_files import ensure_machine_config_file
+        ensure_machine_config_file(self.spellbook_dir, dry_run=dry_run)
 
         session = InstallSession(
             spellbook_dir=self.spellbook_dir,

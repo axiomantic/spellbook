@@ -313,17 +313,70 @@ def cmd_bound_name(args: argparse.Namespace) -> int:
     return 0
 
 
+def _list_pending_batches(name: str) -> list[tuple[Path, list[Path]]]:
+    """Return non-empty pending/<batch-id>/ dirs (sorted oldest-first) that
+    `watch` has already claimed but nothing has drained yet, each paired
+    with its (sorted) member message files."""
+    pending_root = pending_dir(name)
+    if not pending_root.exists():
+        return []
+    out: list[tuple[Path, list[Path]]] = []
+    try:
+        batch_dirs = sorted(
+            (d for d in pending_root.iterdir() if d.is_dir()),
+            key=lambda p: p.name,
+        )
+    except FileNotFoundError:
+        return []
+    for d in batch_dirs:
+        try:
+            files = sorted(
+                (m for m in d.iterdir() if not m.name.startswith(".")),
+                key=lambda p: p.name,
+            )
+        except FileNotFoundError:
+            continue
+        if files:
+            out.append((d, files))
+    return out
+
+
 def cmd_check(args: argparse.Namespace) -> int:
+    """Report inbox state, checking BOTH the live inbox/ (unread, not yet
+    claimed by a watcher) AND pending/<batch-id>/ (already claimed by
+    `watch` on exit, but not yet consumed by `drain`). A batch dir is
+    invisible to `_list_inbox` because `watch` moves messages out of
+    inbox/ via os.replace when it stages a batch (see cmd_watch) — so
+    checking inbox/ alone under-reports mail sitting in an undrained
+    batch."""
     _validate_name(args.name)
     msgs = _list_inbox(args.name)
-    if not msgs:
+    batches = _list_pending_batches(args.name)
+
+    if not msgs and not batches:
         print(f"agent2agent: {args.name!r} inbox is empty")
         return 0
-    print(f"agent2agent: {args.name!r} has {len(msgs)} pending message(s):")
-    for m in msgs:
-        data = _read_message_file(m) or {}
-        sender = data.get("from", "?")
-        print(f"  {m.stem}  from={sender}")
+
+    if batches:
+        batch_total = sum(len(files) for _, files in batches)
+        print(
+            f"agent2agent: {args.name!r} has {len(batches)} pending "
+            f"batch(es) awaiting drain ({batch_total} message(s)):"
+        )
+        for d, files in batches:
+            print(f"  {d.name}  count={len(files)}")
+        print(
+            f"agent2agent: run `agent2agent.py drain {args.name} --all` "
+            "to consume."
+        )
+
+    if msgs:
+        print(f"agent2agent: {args.name!r} has {len(msgs)} unread message(s):")
+        for m in msgs:
+            data = _read_message_file(m) or {}
+            sender = data.get("from", "?")
+            print(f"  {m.stem}  from={sender}")
+
     return 0
 
 

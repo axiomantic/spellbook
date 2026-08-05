@@ -391,7 +391,24 @@ class RichRenderer(InstallerRenderer):
             elif context.no_interactive:
                 results.platforms = context.available_platforms
             else:
-                results.platforms = self._wizard_platform_select(console, context)
+                # Ask auto-detect confirmation first
+                from rich.prompt import Prompt
+                from installer.config import PLATFORM_CONFIG
+
+                names = [PLATFORM_CONFIG.get(p, {}).get("name", p) for p in context.available_platforms]
+                console.print(f"\n[cyan]Auto-detected active coding harnesses:[/cyan] {', '.join(names)}")
+                choice = Prompt.ask(
+                    "Install to detected harnesses? [Y/n/c(ustomize)]",
+                    default="y",
+                    console=console,
+                ).strip().lower()
+
+                if choice in ("y", "yes"):
+                    results.platforms = context.available_platforms
+                elif choice in ("n", "no"):
+                    results.platforms = []
+                else:
+                    results.platforms = self._wizard_platform_select(console, context)
 
             # --- Section 4: Profile Selection ---
             if context.available_profiles and (
@@ -409,6 +426,14 @@ class RichRenderer(InstallerRenderer):
         from rich.prompt import Prompt
         from installer.config import PLATFORM_CONFIG
 
+        from installer.tui import interactive_platform_select
+        try:
+            res = interactive_platform_select()
+            if res is not None:
+                return res
+        except Exception:
+            pass
+
         options: list[dict[str, Any]] = []
         for pid in context.available_platforms:
             name = PLATFORM_CONFIG.get(pid, {}).get("name", pid)
@@ -425,22 +450,29 @@ class RichRenderer(InstallerRenderer):
                 table.add_row(str(i + 1), opt["name"], status)
 
             console.print(table)
-            console.print("[dim]Toggle: enter number | a=all | n=none | enter=confirm[/dim]")
+            console.print("[dim]Toggle: enter number(s) | a=all | n=none | d=default | enter=confirm[/dim]")
 
             choice = Prompt.ask("", default="", console=console).strip().lower()
 
             if choice == "":
                 break
-            elif choice == "a":
+            elif choice in ("a", "all"):
                 for opt in options:
                     opt["selected"] = True
-            elif choice == "n":
+            elif choice in ("n", "none"):
                 for opt in options:
                     opt["selected"] = False
-            elif choice.isdigit():
-                idx = int(choice) - 1
-                if 0 <= idx < len(options):
-                    options[idx]["selected"] = not options[idx]["selected"]
+            elif choice in ("d", "default"):
+                for opt in options:
+                    opt["selected"] = True
+            else:
+                # Handle space/comma-separated numbers (e.g. "1 2 3" or "1,2,3")
+                tokens = choice.replace(",", " ").split()
+                for tok in tokens:
+                    if tok.isdigit():
+                        idx = int(tok) - 1
+                        if 0 <= idx < len(options):
+                            options[idx]["selected"] = not options[idx]["selected"]
 
         return [o["id"] for o in options if o["selected"]]
 
@@ -661,21 +693,27 @@ class PlainTextRenderer(InstallerRenderer):
             for i, opt in enumerate(options):
                 status = "[x]" if opt["selected"] else "[ ]"
                 print(f"  {i + 1}. {status} {opt['name']}")
-            print("  Toggle: enter number | a=all | n=none | enter=confirm")
+            print("  Toggle: enter number(s) | a=all | n=none | d=default | enter=confirm")
 
             choice = input("> ").strip().lower()
             if choice == "":
                 break
-            elif choice == "a":
+            elif choice in ("a", "all"):
                 for opt in options:
                     opt["selected"] = True
-            elif choice == "n":
+            elif choice in ("n", "none"):
                 for opt in options:
                     opt["selected"] = False
-            elif choice.isdigit():
-                idx = int(choice) - 1
-                if 0 <= idx < len(options):
-                    options[idx]["selected"] = not options[idx]["selected"]
+            elif choice in ("d", "default"):
+                for opt in options:
+                    opt["selected"] = True
+            else:
+                tokens = choice.replace(",", " ").split()
+                for tok in tokens:
+                    if tok.isdigit():
+                        idx = int(tok) - 1
+                        if 0 <= idx < len(options):
+                            options[idx]["selected"] = not options[idx]["selected"]
 
         return [o["id"] for o in options if o["selected"]]
 

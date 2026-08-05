@@ -1280,6 +1280,11 @@ session and re-elicit the need-flags.
 Each command ends with a STOP AND VERIFY section. These are checkpoints.
 Do NOT proceed to the next command until ALL items are checked.
 
+A STOP AND VERIFY block gates the NEXT PHASE, not your turn. "Do NOT
+proceed" means do not proceed to the next phase with items unchecked —
+it never means stop emitting tool calls. If items are unchecked, go fix
+them in this turn.
+
 ---
 
 ## Blockers: Option Generation and the Philosophy

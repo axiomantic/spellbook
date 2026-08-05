@@ -15,16 +15,42 @@ if str(_spellbook_dir) not in sys.path:
 
 
 def get_spellbook_config_dir() -> Path:
-    """Get the spellbook config directory (for outputs).
-
-    Note: CLAUDE_CONFIG_DIR is intentionally NOT consulted here.
-    That variable controls where Claude Code installs its own artifacts,
-    not where spellbook stores work files.
-    """
+    """Get the spellbook config directory (for outputs)."""
     config_dir = os.environ.get('SPELLBOOK_CONFIG_DIR')
     if config_dir:
         return Path(config_dir)
+
+    machine_paths = Path.home() / ".config" / "spellbook" / "paths.md"
+    if machine_paths.exists():
+        try:
+            for line in machine_paths.read_text(encoding="utf-8").splitlines():
+                if line.startswith("SPELLBOOK_CONFIG_DIR="):
+                    val = line.split("=", 1)[1].strip()
+                    if val:
+                        return Path(val)
+        except OSError:
+            pass
+
     return Path.home() / '.local' / 'spellbook'
+
+
+def ensure_machine_config_file(spellbook_dir: Path, dry_run: bool = False) -> Path:
+    """Ensure ~/.config/spellbook/paths.md exists with machine-specific path definitions."""
+    machine_config_dir = Path.home() / ".config" / "spellbook"
+    paths_file = machine_config_dir / "paths.md"
+    config_dir = get_spellbook_config_dir()
+
+    content = (
+        "# Spellbook Machine Configuration\n"
+        f"SPELLBOOK_DIR={spellbook_dir.resolve()}\n"
+        f"SPELLBOOK_CONFIG_DIR={config_dir.resolve()}\n"
+    )
+
+    if not dry_run:
+        machine_config_dir.mkdir(parents=True, exist_ok=True)
+        paths_file.write_text(content, encoding="utf-8")
+
+    return paths_file
 
 
 def generate_spellbook_config_section(spellbook_dir: Path) -> str:
