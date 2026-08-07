@@ -209,10 +209,11 @@ class TestServiceManagerAcceptsConfig:
             Path.home() / ".config" / "systemd" / "user" / "custom-svc.service"
         )
 
-    def test_is_installed_macos_plist_exists(self, tmp_path, monkeypatch):
+    def test_is_installed_macos_plist_exists(self, tmp_path):
         import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.MACOS)
+        get_platform_mock = tripwire.mock("spellbook.core.services:get_platform")
+        get_platform_mock.calls(lambda: Platform.MACOS)
 
         plist = tmp_path / "com.test.svc.plist"
         plist.write_text("<plist/>")
@@ -226,12 +227,14 @@ class TestServiceManagerAcceptsConfig:
             result = manager.is_installed()
 
         assert result is True
+        get_platform_mock.assert_call(args=(), kwargs={})
         mock_plist.assert_call(args=(), kwargs={})
 
-    def test_is_installed_macos_plist_missing(self, tmp_path, monkeypatch):
+    def test_is_installed_macos_plist_missing(self, tmp_path):
         import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.MACOS)
+        get_platform_mock = tripwire.mock("spellbook.core.services:get_platform")
+        get_platform_mock.calls(lambda: Platform.MACOS)
 
         config = _make_config()
         manager = ServiceManager(config)
@@ -243,12 +246,14 @@ class TestServiceManagerAcceptsConfig:
             result = manager.is_installed()
 
         assert result is False
+        get_platform_mock.assert_call(args=(), kwargs={})
         mock_plist.assert_call(args=(), kwargs={})
 
-    def test_is_installed_linux_service_exists(self, tmp_path, monkeypatch):
+    def test_is_installed_linux_service_exists(self, tmp_path):
         import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.LINUX)
+        get_platform_mock = tripwire.mock("spellbook.core.services:get_platform")
+        get_platform_mock.calls(lambda: Platform.LINUX)
 
         service_file = tmp_path / "test-svc.service"
         service_file.write_text("[Unit]")
@@ -262,6 +267,7 @@ class TestServiceManagerAcceptsConfig:
             result = manager.is_installed()
 
         assert result is True
+        get_platform_mock.assert_call(args=(), kwargs={})
         mock_svc.assert_call(args=(), kwargs={})
 
 
@@ -276,12 +282,13 @@ class TestServiceManagerIsRunning:
 
     @pytest.mark.allow("subprocess")
     def test_is_running_without_health_check_port_falls_back_to_platform(
-        self, monkeypatch
+        self
     ):
         """When health_check_port is None, falls back to platform checks."""
         import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.MACOS)
+        get_platform_mock = tripwire.mock("spellbook.core.services:get_platform")
+        get_platform_mock.calls(lambda: Platform.MACOS)
 
         config = _make_config(health_check_port=None)
         manager = ServiceManager(config)
@@ -295,6 +302,7 @@ class TestServiceManagerIsRunning:
             result = manager.is_running()
 
         assert result is False
+        get_platform_mock.assert_call(args=(), kwargs={})
         tripwire.subprocess.assert_run(
             command=["launchctl", "list", "com.test.svc"],
             returncode=1,
@@ -364,10 +372,11 @@ class TestServiceManagerStop:
         mock_kill.assert_call(args=(12345,), kwargs={})
 
     @pytest.mark.allow("subprocess")
-    def test_stop_without_pid_file_uses_platform(self, tmp_path, monkeypatch):
+    def test_stop_without_pid_file_uses_platform(self, tmp_path):
         import spellbook.core.services as services_mod
 
-        monkeypatch.setattr(services_mod, "get_platform", lambda: Platform.LINUX)
+        get_platform_mock = tripwire.mock("spellbook.core.services:get_platform")
+        get_platform_mock.calls(lambda: Platform.LINUX)
 
         config = _make_config(pid_file=None, service_name="my-svc")
         manager = ServiceManager(config)
@@ -381,6 +390,7 @@ class TestServiceManagerStop:
             success, msg = manager.stop()
 
         assert success is True
+        get_platform_mock.assert_call(args=(), kwargs={})
         tripwire.subprocess.assert_run(
             command=["systemctl", "--user", "stop", "my-svc"],
             returncode=0,
