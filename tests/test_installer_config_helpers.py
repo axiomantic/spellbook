@@ -1,6 +1,7 @@
 """Tests for config_is_explicitly_set and get_unset_config_keys in spellbook/core/config.py."""
 
 import json
+import tripwire
 
 
 
@@ -21,64 +22,68 @@ def _write_config(path, data):
 
 
 class TestConfigIsExplicitlySet:
-    def test_key_present(self, tmp_path, monkeypatch):
+    def test_key_present(self, tmp_path):
         """Returns True when the key exists in the flat JSON file."""
 
         config_dir = tmp_path / "spellbook_cfg"
         config_dir.mkdir()
         _write_config(config_dir / "spellbook.json", {"security.spotlighting.enabled": True})
 
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_dir", lambda: config_dir
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.core.config:get_config_dir")
+        get_config_dir_mock.calls(lambda: config_dir)
 
-        from spellbook.core.config import config_is_explicitly_set
+        with tripwire:
+            from spellbook.core.config import config_is_explicitly_set
 
-        assert config_is_explicitly_set("security.spotlighting.enabled") is True
+            assert config_is_explicitly_set("security.spotlighting.enabled") is True
+        get_config_dir_mock.assert_call(args=(), kwargs={})
 
-    def test_key_absent(self, tmp_path, monkeypatch):
+    def test_key_absent(self, tmp_path):
         """Returns False when the key is not in the file."""
         config_dir = tmp_path / "spellbook_cfg"
         config_dir.mkdir()
         _write_config(config_dir / "spellbook.json", {"other.key": "value"})
 
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_dir", lambda: config_dir
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.core.config:get_config_dir")
+        get_config_dir_mock.calls(lambda: config_dir)
 
-        from spellbook.core.config import config_is_explicitly_set
+        with tripwire:
+            from spellbook.core.config import config_is_explicitly_set
 
-        assert config_is_explicitly_set("security.spotlighting.enabled") is False
+            assert config_is_explicitly_set("security.spotlighting.enabled") is False
+        get_config_dir_mock.assert_call(args=(), kwargs={})
 
-    def test_file_missing(self, tmp_path, monkeypatch):
+    def test_file_missing(self, tmp_path):
         """Returns False when spellbook.json does not exist."""
         config_dir = tmp_path / "spellbook_cfg"
         config_dir.mkdir()
         # No spellbook.json written
 
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_dir", lambda: config_dir
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.core.config:get_config_dir")
+        get_config_dir_mock.calls(lambda: config_dir)
 
-        from spellbook.core.config import config_is_explicitly_set
+        with tripwire:
+            from spellbook.core.config import config_is_explicitly_set
 
-        assert config_is_explicitly_set("security.spotlighting.enabled") is False
+            assert config_is_explicitly_set("security.spotlighting.enabled") is False
+        get_config_dir_mock.assert_call(args=(), kwargs={})
 
-    def test_invalid_json(self, tmp_path, monkeypatch):
+    def test_invalid_json(self, tmp_path):
         """Returns False when spellbook.json contains malformed JSON."""
         config_dir = tmp_path / "spellbook_cfg"
         config_dir.mkdir()
         (config_dir / "spellbook.json").write_text("{not valid json}", encoding="utf-8")
 
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_dir", lambda: config_dir
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.core.config:get_config_dir")
+        get_config_dir_mock.calls(lambda: config_dir)
 
-        from spellbook.core.config import config_is_explicitly_set
+        with tripwire:
+            from spellbook.core.config import config_is_explicitly_set
 
-        assert config_is_explicitly_set("security.spotlighting.enabled") is False
+            assert config_is_explicitly_set("security.spotlighting.enabled") is False
+        get_config_dir_mock.assert_call(args=(), kwargs={})
 
-    def test_nested_key_not_found(self, tmp_path, monkeypatch):
+    def test_nested_key_not_found(self, tmp_path):
         """Returns False for a top-level key that is absent, even if a related dotted key exists.
 
         Config storage is flat: "security.spotlighting.enabled" is stored as a literal
@@ -92,13 +97,14 @@ class TestConfigIsExplicitlySet:
             {"security.spotlighting.enabled": True},
         )
 
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_dir", lambda: config_dir
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.core.config:get_config_dir")
+        get_config_dir_mock.calls(lambda: config_dir)
 
-        from spellbook.core.config import config_is_explicitly_set
+        with tripwire:
+            from spellbook.core.config import config_is_explicitly_set
 
-        assert config_is_explicitly_set("security") is False
+            assert config_is_explicitly_set("security") is False
+        get_config_dir_mock.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -107,40 +113,50 @@ class TestConfigIsExplicitlySet:
 
 
 class TestGetUnsetConfigKeys:
-    def test_all_unset(self, tmp_path, monkeypatch):
+    def test_all_unset(self, tmp_path):
         """Returns all keys when none are set in the config file."""
         config_dir = tmp_path / "spellbook_cfg"
         config_dir.mkdir()
         # Empty config file -- no keys set
         _write_config(config_dir / "spellbook.json", {})
 
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_dir", lambda: config_dir
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.core.config:get_config_dir")
+        get_config_dir_mock.calls(lambda: config_dir)
+        get_config_dir_mock.calls(lambda: config_dir)
+        get_config_dir_mock.calls(lambda: config_dir)
 
-        from spellbook.core.config import get_unset_config_keys
+        with tripwire:
+            from spellbook.core.config import get_unset_config_keys
 
-        keys = ["alpha", "beta", "gamma"]
-        result = get_unset_config_keys(keys)
-        assert result == keys
+            keys = ["alpha", "beta", "gamma"]
+            result = get_unset_config_keys(keys)
+            assert result == keys
+        get_config_dir_mock.assert_call(args=(), kwargs={})
+        get_config_dir_mock.assert_call(args=(), kwargs={})
+        get_config_dir_mock.assert_call(args=(), kwargs={})
 
-    def test_some_set(self, tmp_path, monkeypatch):
+    def test_some_set(self, tmp_path):
         """Returns only the unset keys, preserving input order."""
         config_dir = tmp_path / "spellbook_cfg"
         config_dir.mkdir()
         _write_config(config_dir / "spellbook.json", {"alpha": True, "gamma": False})
 
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_dir", lambda: config_dir
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.core.config:get_config_dir")
+        get_config_dir_mock.calls(lambda: config_dir)
+        get_config_dir_mock.calls(lambda: config_dir)
+        get_config_dir_mock.calls(lambda: config_dir)
 
-        from spellbook.core.config import get_unset_config_keys
+        with tripwire:
+            from spellbook.core.config import get_unset_config_keys
 
-        keys = ["alpha", "beta", "gamma"]
-        result = get_unset_config_keys(keys)
-        assert result == ["beta"]
+            keys = ["alpha", "beta", "gamma"]
+            result = get_unset_config_keys(keys)
+            assert result == ["beta"]
+        get_config_dir_mock.assert_call(args=(), kwargs={})
+        get_config_dir_mock.assert_call(args=(), kwargs={})
+        get_config_dir_mock.assert_call(args=(), kwargs={})
 
-    def test_all_set(self, tmp_path, monkeypatch):
+    def test_all_set(self, tmp_path):
         """Returns an empty list when all keys are explicitly set."""
         config_dir = tmp_path / "spellbook_cfg"
         config_dir.mkdir()
@@ -149,12 +165,17 @@ class TestGetUnsetConfigKeys:
             {"alpha": True, "beta": "value", "gamma": 0},
         )
 
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_dir", lambda: config_dir
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.core.config:get_config_dir")
+        get_config_dir_mock.calls(lambda: config_dir)
+        get_config_dir_mock.calls(lambda: config_dir)
+        get_config_dir_mock.calls(lambda: config_dir)
 
-        from spellbook.core.config import get_unset_config_keys
+        with tripwire:
+            from spellbook.core.config import get_unset_config_keys
 
-        keys = ["alpha", "beta", "gamma"]
-        result = get_unset_config_keys(keys)
-        assert result == []
+            keys = ["alpha", "beta", "gamma"]
+            result = get_unset_config_keys(keys)
+            assert result == []
+        get_config_dir_mock.assert_call(args=(), kwargs={})
+        get_config_dir_mock.assert_call(args=(), kwargs={})
+        get_config_dir_mock.assert_call(args=(), kwargs={})
