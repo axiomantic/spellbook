@@ -161,8 +161,8 @@ The system classifies your request by complexity using mechanical heuristics -- 
 
 1. **Research** -- Subagent explores your codebase. Answers come with confidence levels and `file:line` evidence. Every unknown is catalogued.
 2. **Discovery** -- Each ambiguity becomes a specific question. In autonomous mode, it answers its own questions with further research. A devil's advocate reviews the understanding document before design begins.
-3. **Design** -- Architecture design exploration with tradeoff analysis. A design doc auditor checks whether someone could implement from the doc without guessing, and flags every gap.
-4. **Planning** -- Atomic implementation plan with TDD steps. A plan auditor verifies interface contracts, behavior assumptions, and cross-task dependencies.
+3. **Design** -- Architecture design exploration with tradeoff analysis. A checkability pass runs first: it decides by machine the claims a machine can decide, so the reviewer keeps its judgment for the parts that need judgment. A design doc auditor then checks whether someone could implement from the doc without guessing, and flags every gap.
+4. **Planning** -- Atomic implementation plan with TDD steps. A checkability pass builds and runs checks for the claims the plan makes about itself -- the dependency graph is acyclic, every declared dependency exists, every cited path and symbol exists. Each check must go red on a known-bad input before its green result counts as evidence. A plan auditor then verifies interface contracts, behavior assumptions, and cross-task dependencies. If a review round mostly finds defects that the previous round's repairs caused, the loop stops and the recurring class of defect becomes a check.
 5. **Implementation** -- Test-driven execution with per-task code review, fact-checking, and completion verification. Parallel tracks can run in isolated git worktrees with dependency-ordered smart merge.
 6. **Verification** -- Green mirage audit: would these tests catch real regressions? Comprehensive claim validation against design and plan. Full test suite.
 7. **Finish** -- PR with branch-relative description, local merge, or keep the branch. Worktree cleanup.
@@ -312,7 +312,8 @@ Reusable workflows for structured development:
 | [/feature-discover] | Phase 1.5 informed discovery with disambiguation |
 | [/feature-research] | Phase 1 codebase research and ambiguity detection |
 | [/feature-design] | Phase 2 design document creation and review |
-| [/feature-implement] | Phase 4 implementation with TDD and code review |
+| [/feature-implement] | Phase 3 implementation planning, review, and approval gate |
+| [/feature-implement-execute] | Phase 4 implementation with TDD and code review |
 | [/fractal-think-seed] | Seed phase: Create graph and generate seed sub-questions |
 | [/fractal-think-work] | Phase 2: Dispatch workers for recursive fractal exploration |
 | [/fractal-think-harvest] | Phase 3: Read completed graph, verify synthesis, format result |
@@ -424,6 +425,7 @@ Reusable workflows for structured development:
 [/feature-research]: https://axiomantic.github.io/spellbook/latest/commands/feature-research/
 [/feature-design]: https://axiomantic.github.io/spellbook/latest/commands/feature-design/
 [/feature-implement]: https://axiomantic.github.io/spellbook/latest/commands/feature-implement/
+[/feature-implement-execute]: https://axiomantic.github.io/spellbook/latest/commands/feature-implement-execute/
 [/fractal-think-seed]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-seed/
 [/fractal-think-work]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-work/
 [/fractal-think-harvest]: https://axiomantic.github.io/spellbook/latest/commands/fractal-think-harvest/

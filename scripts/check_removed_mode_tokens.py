@@ -114,9 +114,10 @@ ALLOWLIST_REMOVED_MODE: tuple[AllowEntry, ...] = (
         anchor="**Execution mode (single-orchestrator only):**",
         reason="retained routing field prose (direct/delegated only)",
     ),
-    # execution_mode -- retained field name in feature-implement routing table.
+    # execution_mode -- retained field name in feature-implement-execute routing
+    # table (Phase 4 lives in the -execute half of the feature-implement split).
     AllowEntry(
-        path_glob="commands/feature-implement.md",
+        path_glob="commands/feature-implement-execute.md",
         anchor="| execution_mode | Phase 4 Path |",
         reason="retained routing field column header (direct/delegated only)",
     ),

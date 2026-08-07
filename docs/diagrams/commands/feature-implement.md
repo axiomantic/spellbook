@@ -1,4 +1,4 @@
-<!-- diagram-meta: {"source": "commands/feature-implement.md", "source_hash": "sha256:467d06c2e8aafda693a3928a03dd45521a5fd0db5266987d013423a4c33ab814", "generated_at": "2026-06-06T22:59:42Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-implement.md", "source_hash": "sha256:be5e658cb9d13bc6ea78198aab8f9208edf774ee75a950b10986bebc7cca3178", "generated_at": "2026-06-06T22:59:42Z", "generator": "generate_diagrams.py", "note": "manually patched (Tier 2) for 3.1.5 Checkability Pass insertion"} -->
 # Diagram: feature-implement
 
 ## Overview: `/feature-implement` (Phases 3–4)
@@ -15,6 +15,7 @@ flowchart TD
     HALT(["STOP: return to\nappropriate phase"])
     EH{"Escape hatch\nin initial message?"}
     P3_31["3.1 Create Impl Plan\n▶ writing-plans"]
+    P315["3.1.5 Checkability Pass\nMechanize decidable claims\nbefore review"]
     P3_32["3.2 Review Impl Plan\n▶ reviewing-impl-plans"]
     GATE33{"3.3 Approval Gate"}
     P3_34["3.4 Fix Impl Plan\n▶ executing-plans"]
@@ -41,7 +42,8 @@ flowchart TD
     EH -->|"review first"| P3_32
     EH -->|"treat as ready"| P3_P4_GATE
 
-    P3_31 --> P3_32
+    P3_31 --> P315
+    P315 --> P3_32
     P3_32 --> GATE33
     GATE33 -->|"interactive ITERATE"| P3_31
     GATE33 -->|"interactive APPROVE"| P3_345
@@ -81,6 +83,7 @@ flowchart TD
     style CHK_OK fill:#ff6b6b,color:#1a1a1d
     style QGATES fill:#ff6b6b,color:#1a1a1d
     style P3_31 fill:#4a9eff,color:#1a1a1d
+    style P315 fill:#4a9eff,color:#1a1a1d
     style P3_32 fill:#4a9eff,color:#1a1a1d
     style P3_34 fill:#4a9eff,color:#1a1a1d
     style P4_SETUP fill:#4a9eff,color:#1a1a1d
@@ -104,6 +107,7 @@ flowchart TD
     P3_ENTRY["Enter Phase 3"]
     EH{"Escape hatch?"}
     P3_31["3.1 Create Impl Plan\n▶ writing-plans skill\nSave to plans/YYYY-MM-DD-slug-impl.md"]
+    P315["3.1.5 Checkability Pass\nBuild + run checks for decidable claims\n(dep graph acyclic, tags valid, checks fail-capable)\nBuild Phase 4 verification tooling now if plan schedules it"]
     P3_32["3.2 Review Impl Plan\n▶ reviewing-impl-plans skill\nReturn: findings report + remediation plan"]
     GATE33{"3.3 Approval Gate\n(terminal or canvas-decision)"}
     MODE33{"Interactive or\nAutonomous?"}
@@ -127,7 +131,8 @@ flowchart TD
     EH -->|"review first"| P3_32
     EH -->|"treat as ready"| P4_ENTRY
 
-    P3_31 --> P3_32
+    P3_31 --> P315
+    P315 --> P3_32
     P3_32 --> GATE33
     GATE33 --> MODE33
     MODE33 -->|"interactive"| ASK_USER
@@ -166,6 +171,7 @@ flowchart TD
     style AUTO_SEV fill:#ff6b6b,color:#1a1a1d
     style DEL_SIZE fill:#ff6b6b,color:#1a1a1d
     style P3_31 fill:#4a9eff,color:#1a1a1d
+    style P315 fill:#4a9eff,color:#1a1a1d
     style P3_32 fill:#4a9eff,color:#1a1a1d
     style P3_34 fill:#4a9eff,color:#1a1a1d
     style GEN_OP fill:#4a9eff,color:#1a1a1d
@@ -388,6 +394,7 @@ flowchart TD
 | Node | Skill Invoked |
 |---|---|
 | 3.1 Create Impl Plan | `writing-plans` |
+| 3.1.5 Checkability Pass | `develop` SKILL.md "Checkability" protocol |
 | 3.2 Review Impl Plan | `reviewing-impl-plans` |
 | 3.4 Fix Impl Plan | `executing-plans` |
 | 3.4.7 One-Pager (generate) | subagent (inline) |

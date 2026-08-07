@@ -761,7 +761,7 @@ if (request.match(/refactor|reorganize|extract|migrate|split|consolidate/i)) {
 }
 ```
 
-Refactoring is NOT greenfield. Behavior preservation is the primary constraint. See Refactoring Mode section in `/feature-implement`.
+Refactoring is NOT greenfield. Behavior preservation is the primary constraint. See Refactoring Mode section in `/feature-implement-execute`.
 
 ### 0.7 Need-Flag Classification
 

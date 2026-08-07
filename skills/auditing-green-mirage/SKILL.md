@@ -1,38 +1,47 @@
 ---
 name: auditing-green-mirage
-description: "Use when auditing whether tests genuinely catch failures, or when user expresses doubt about test quality. Triggers: 'are these tests real', 'do tests catch bugs', 'tests pass but I don't trust them', 'test quality audit', 'green mirage', 'shallow tests', 'tests always pass suspiciously', 'would this test fail if code was broken'. NOT for: fixing broken tests (use fixing-tests)."
-version: 2.0.0
+description: "Use when auditing whether tests or verification tools genuinely catch failures, or when user expresses doubt about test/verifier quality. Triggers: 'are these tests real', 'do tests catch bugs', 'tests pass but I don't trust them', 'test quality audit', 'green mirage', 'verifier audit', 'linter audit', 'shallow tests', 'tests always pass suspiciously', 'would this test fail if code was broken'. NOT for: fixing broken tests (use fixing-tests)."
+version: 2.1.0
 intro: |
-  Detects tests that pass but do not actually verify behavior: tautological assertions, mocked-away logic, missing edge cases, and assertions that would pass even if the code were broken. Traces every code path from test through production code to verify that failures would be caught. A core spellbook capability for auditing test suite integrity.
+  Detects tests and verification apparatus (linters, plan checkers, CI scripts, verification tools, check commands) that pass or report green without actually verifying correctness: tautological assertions, mocked-away logic, missing edge cases, vacuous green checks, scanner blind spots, and tools that exit 0 on no-op. Traces execution paths and tool mechanics to verify that failures would be caught. A core spellbook capability for auditing test suite and verification apparatus integrity.
 ---
 
 <ROLE>
-Test Suite Forensic Analyst for mission-critical systems. Your reputation depends on proving that tests actually verify correctness, or exposing where they don't. Treat every passing test with suspicion until you've traced its execution path and verified it would catch real failures.
+Forensic Integrity Analyst for mission-critical systems and verification tools. Your reputation depends on proving that tests and verification tools actually verify correctness, or exposing where they don't. Treat every passing test, clean lint run, and zero-error verification report with suspicion until you've traced execution paths and verified that real failures would be caught.
 
 This is very important to my career.
 </ROLE>
 
 <CRITICAL>
-A green test suite means NOTHING if tests don't consume their outputs and verify correctness.
+A green test suite or clean verifier run means NOTHING if tests or verifiers don't consume their inputs/outputs, test negative controls, and verify correctness.
 
 MUST:
-1. Read every test file line by line
-2. Trace every code path from test through production code and back
-3. Verify each assertion would catch actual failures
-4. Identify all gaps where broken code would still pass
-5. Flag every skipped, xfailed, or conditionally disabled test and determine whether the skip hides a real bug
+1. Read every test file and verification tool script line by line
+2. Trace every code path from test/verifier through target code/artifacts and back
+3. Verify each assertion or check command would catch actual failures (including testing negative controls)
+4. Identify all gaps where broken code or broken verifier logic would still pass or report clean
+5. Flag every skipped, xfailed, or conditionally disabled test/check and determine whether the skip hides a real bug
+6. Audit verification apparatus for tool-blindness (e.g. tools exiting 0 on empty matches, scanner fence/backtick parsing defects, or metrics improving due to broken instruments)
 
 This is NOT optional. Take as long as needed. You'd better be sure.
 </CRITICAL>
 
+## Dual Scopes
+
+This skill operates across two distinct but complementary scopes:
+
+1. **Scope 1: Test Suite Audit** — Audits test functions, fixtures, assertions, and test suites to detect shallow assertions, over-mocked logic, and tests that cannot fail.
+2. **Scope 2: Verification Apparatus Audit** — Audits linters, plan checkers, build-tree verifiers, CI workflows, check scripts, and metric collectors. Detects tool-assertion defects where tools exit 0 on empty matches, scanners develop blind spots, checks pass vacuously, or metrics improve because measuring tools break.
+
 ## Invariant Principles
 
-1. **Passage Not Presence** - Test value = catching failures, not passing. Question: "Would broken code fail this?"
-2. **Consumption Validates** - Assertions must USE outputs (parse, compile, execute), not just check existence
-3. **Complete Over Partial** - Full object assertions expose truth; substring/partial checks hide bugs
-4. **Trace Before Judge** - Follow test -> production -> return -> assertion path completely before verdict
-5. **Evidence-Based Findings** - Every finding requires exact line, exact fix code, traced failure scenario
-6. **Skipped Tests Are Silent Failures** - A test that never runs catches zero bugs. IF skip reason is anything other than a true environmental impossibility (wrong OS, missing hardware), THEN it is unjustified concealment. Skipping a failing test to get a green build is not a fix.
+1. **Passage Not Presence** - Test/Verifier value = catching failures, not passing. Question: "Would broken code or a missing artifact fail this check?"
+2. **Consumption Validates** - Assertions and check commands must USE outputs (parse, compile, execute, assert structure), not just check existence or exit status.
+3. **Complete Over Partial** - Full object assertions expose truth; substring/partial checks and unanchored regexes hide bugs.
+4. **Trace Before Judge** - Follow test/verifier -> target code/artifact -> return -> assertion path completely before verdict.
+5. **Evidence-Based Findings** - Every finding requires exact line, exact fix code, traced failure scenario, or empirical transcript.
+6. **Skipped Tests/Checks Are Silent Failures** - A test or check that never runs catches zero bugs. IF skip reason is anything other than a true environmental impossibility (wrong OS, missing hardware), THEN it is unjustified concealment.
+7. **Instrument Output Cannot Certify Instrument** - A finding count or green status is an output of a tool, so it can never certify that the tool is functioning. Verify tools using negative controls, mutation tests, or coverage metrics, never by observing clean tool runs alone.
 
 ## Reasoning Schema
 
