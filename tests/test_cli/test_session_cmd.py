@@ -4,6 +4,7 @@ import argparse
 import json
 
 import pytest
+import tripwire
 
 from spellbook.cli.commands.session import register
 
@@ -46,27 +47,28 @@ class TestRegister:
 class TestListRun:
     """Tests for session list."""
 
-    def test_list_no_sessions_dir(self, tmp_path, monkeypatch, capsys):
+    def test_list_no_sessions_dir(self, tmp_path, capsys):
         """List with no sessions directory returns empty."""
-        monkeypatch.setattr(
-            "spellbook.cli.commands.session._get_projects_dir",
-            lambda: tmp_path / "nonexistent",
-        )
+        get_projects_dir_mock = tripwire.mock("spellbook.cli.commands.session:_get_projects_dir")
+        get_projects_dir_mock.calls(lambda: tmp_path / "nonexistent")
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--json", action="store_true", default=False)
-        subparsers = parser.add_subparsers()
-        register(subparsers)
+        with tripwire:
+            parser = argparse.ArgumentParser()
+            parser.add_argument("--json", action="store_true", default=False)
+            subparsers = parser.add_subparsers()
+            register(subparsers)
 
-        args = parser.parse_args(["--json", "session", "list"])
-        args.func(args)
+            args = parser.parse_args(["--json", "session", "list"])
+            args.func(args)
 
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert isinstance(data, list)
-        assert len(data) == 0
+            captured = capsys.readouterr()
+            data = json.loads(captured.out)
+            assert isinstance(data, list)
+            assert len(data) == 0
 
-    def test_list_with_sessions(self, tmp_path, monkeypatch, capsys):
+        get_projects_dir_mock.assert_call(args=(), kwargs={})
+
+    def test_list_with_sessions(self, tmp_path, capsys):
         """List finds session files in project dirs."""
         # Create a fake project dir with a session file
         proj_dir = tmp_path / "-Users-test-project"
@@ -77,42 +79,44 @@ class TestListRun:
             '"message": {"content": "hello"}}\n'
         )
 
-        monkeypatch.setattr(
-            "spellbook.cli.commands.session._get_projects_dir",
-            lambda: tmp_path,
-        )
+        get_projects_dir_mock = tripwire.mock("spellbook.cli.commands.session:_get_projects_dir")
+        get_projects_dir_mock.calls(lambda: tmp_path)
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--json", action="store_true", default=False)
-        subparsers = parser.add_subparsers()
-        register(subparsers)
+        with tripwire:
+            parser = argparse.ArgumentParser()
+            parser.add_argument("--json", action="store_true", default=False)
+            subparsers = parser.add_subparsers()
+            register(subparsers)
 
-        args = parser.parse_args(["--json", "session", "list"])
-        args.func(args)
+            args = parser.parse_args(["--json", "session", "list"])
+            args.func(args)
 
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert len(data) >= 1
+            captured = capsys.readouterr()
+            data = json.loads(captured.out)
+            assert len(data) >= 1
+
+        get_projects_dir_mock.assert_call(args=(), kwargs={})
 
 
 class TestExportRun:
     """Tests for session export."""
 
-    def test_export_nonexistent_session(self, tmp_path, monkeypatch, capsys):
+    def test_export_nonexistent_session(self, tmp_path, capsys):
         """Export nonexistent session shows error."""
-        monkeypatch.setattr(
-            "spellbook.cli.commands.session._get_projects_dir",
-            lambda: tmp_path,
-        )
+        get_projects_dir_mock = tripwire.mock("spellbook.cli.commands.session:_get_projects_dir")
+        get_projects_dir_mock.calls(lambda: tmp_path)
 
-        parser = argparse.ArgumentParser()
-        parser.add_argument("--json", action="store_true", default=False)
-        subparsers = parser.add_subparsers()
-        register(subparsers)
+        with tripwire:
+            parser = argparse.ArgumentParser()
+            parser.add_argument("--json", action="store_true", default=False)
+            subparsers = parser.add_subparsers()
+            register(subparsers)
 
-        args = parser.parse_args(["--json", "session", "export", "nonexistent"])
-        args.func(args)
+            args = parser.parse_args(["--json", "session", "export", "nonexistent"])
+            args.func(args)
 
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert data.get("error") is not None
+            captured = capsys.readouterr()
+            data = json.loads(captured.out)
+            assert data.get("error") is not None
+
+        get_projects_dir_mock.assert_call(args=(), kwargs={})

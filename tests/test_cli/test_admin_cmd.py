@@ -5,6 +5,7 @@ import argparse
 import pytest
 
 from spellbook.cli.commands.admin import register, run
+import tripwire
 
 
 class TestRegister:
@@ -44,24 +45,26 @@ class TestRegister:
 class TestAdminRun:
     """Tests for admin run function."""
 
-    def test_handles_missing_token_gracefully(self, capsys, monkeypatch, tmp_path):
+    def test_handles_missing_token_gracefully(self, capsys, tmp_path):
         """Should handle missing token without crashing."""
-        from spellbook.admin import cli as admin_cli
 
-        monkeypatch.setattr(admin_cli, "_find_mcp_token", lambda: None)
+        find_mcp_token_mock = tripwire.mock("spellbook.admin.cli:_find_mcp_token")
+        find_mcp_token_mock.calls(lambda: None)
 
-        args = argparse.Namespace(
-            json=False,
-            admin_command="open",
-            port=None,
-        )
-        try:
-            run(args)
-        except SystemExit as exc:
-            assert exc.code in (1, 2)  # Graceful error exit
-        captured = capsys.readouterr()
-        combined = captured.out + captured.err
-        assert "token" in combined.lower() or "error" in combined.lower()
+        with tripwire:
+            args = argparse.Namespace(
+                json=False,
+                admin_command="open",
+                port=None,
+            )
+            try:
+                run(args)
+            except SystemExit as exc:
+                assert exc.code in (1, 2)  # Graceful error exit
+            captured = capsys.readouterr()
+            combined = captured.out + captured.err
+            assert "token" in combined.lower() or "error" in combined.lower()
+        find_mcp_token_mock.assert_call(args=(), kwargs={})
 
     def test_no_subcommand_shows_usage(self, capsys):
         """admin with no subcommand should show usage."""

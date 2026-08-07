@@ -26,11 +26,10 @@ Usage:
 Options:
     --yes, -y           Accept all defaults without prompting
     --install-dir DIR   Install spellbook to DIR (default: ~/.local/share/spellbook)
-    --platforms LIST    Comma-separated platforms (claude_code,opencode,codex,gemini,pi)
+    --platforms LIST    Comma-separated platforms (claude_code,opencode,codex,gemini,pi,prime_agent)
     --force             Reinstall even if version matches
     --dry-run           Show what would be done without making changes
     --no-interactive    Skip platform selection UI
-    --no-admin          Disable the web admin interface (enabled by default)
 """
 
 from __future__ import annotations
@@ -804,22 +803,6 @@ def show_whats_new(spellbook_dir: Path, previous_version: str | None, current_ve
         print(f"\nWarning: Could not display changelog updates: {e}")
 
 
-def show_admin_info(admin_enabled: bool) -> None:
-    """Show information about the admin web interface."""
-    print()
-    if admin_enabled:
-        print(f"  {color('Admin Web Interface', Colors.BOLD)}")
-        print(f"    Status: {color('enabled', Colors.GREEN)}")
-        print("    URL:    http://localhost:8765/admin")
-        print("    Open:   spellbook admin open")
-        print("    Disable: set admin_enabled=false in spellbook.json or reinstall with --no-admin")
-    else:
-        print(f"  {color('Admin Web Interface', Colors.BOLD)}")
-        print(f"    Status: {color('disabled', Colors.YELLOW)}")
-        print("    Enable: set admin_enabled=true in spellbook.json or reinstall without --no-admin")
-    print()
-
-
 # =============================================================================
 # Rule module selection
 # =============================================================================
@@ -1044,13 +1027,11 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         try:
             from installer.wizards import (
                 run_defaults_wizard,
-                run_worker_llm_wizard,
             )
         except ImportError as _exc:
             print(f"\nWarning: Could not load installer wizards: {_exc}")
         else:
             run_defaults_wizard(args)
-            run_worker_llm_wizard(args)
 
         # Offer rule module selection during reconfigure. This is the only path
         # by which a user can re-check a module they previously declined.
@@ -1240,13 +1221,11 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         try:
             from installer.wizards import (
                 run_defaults_wizard,
-                run_worker_llm_wizard,
             )
         except ImportError as _exc:
             print(f"\nWarning: Could not load installer wizards: {_exc}")
         else:
             run_defaults_wizard(args)
-            run_worker_llm_wizard(args)
 
     # Flush remaining plain-text results (no-renderer fallback)
     _flush_results()
@@ -1256,34 +1235,6 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
     else:
         print_report(session, show_details=False, timer=_install_timer)
 
-    # Admin interface config
-    admin_enabled = True
-    if not args.dry_run:
-        try:
-            from spellbook.core.config import config_get as _cfg_get, config_set as _cfg_set
-
-            if args.no_admin:
-                # Explicit opt-out always wins
-                _cfg_set("admin_enabled", False)
-                admin_enabled = False
-            else:
-                existing = _cfg_get("admin_enabled")
-                is_upgrade = session.previous_version is not None
-                if is_upgrade and existing is False:
-                    # User previously disabled admin; respect that on upgrade
-                    admin_enabled = False
-                else:
-                    # Fresh install or upgrade with admin enabled/unset: enable
-                    _cfg_set("admin_enabled", True)
-                    admin_enabled = True
-        except (ImportError, Exception) as e:
-            print(f"\nWarning: Could not configure admin interface: {e}")
-
-    if renderer is not None:
-        admin_url = "http://localhost:8765/admin" if admin_enabled else ""
-        renderer.render_admin_info(admin_url, show_token=admin_enabled)
-    else:
-        show_admin_info(admin_enabled)
 
     # Show what's new on upgrade
     if not args.dry_run:
@@ -1305,6 +1256,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                     _post_notes.append("Claude Code: MCP server registered. Verify: /mcp")
                 elif p == "forgecode":
                     _post_notes.append("ForgeCode: Restart forge to load the spellbook MCP server")
+                elif p == "prime_agent":
+                    _post_notes.append("Prime Agent: Restart prime-agent to load skills. Use /reload in an interactive session.")
                 elif p == "pi":
                     _post_notes.append("Pi: Restart to reload skills and prompts. Verify: /reload")
             renderer.render_post_install(_post_notes)
@@ -1367,7 +1320,7 @@ Examples:
         "--platforms",
         type=str,
         default=None,
-        help="Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,pi)",
+        help="Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,pi,prime_agent)",
     )
     parser.add_argument(
         "--force",
@@ -1383,11 +1336,6 @@ Examples:
         "--no-interactive",
         action="store_true",
         help="Skip interactive platform selection",
-    )
-    parser.add_argument(
-        "--no-admin",
-        action="store_true",
-        help="Disable the web admin interface (enabled by default, persists across upgrades)",
     )
     parser.add_argument(
         "--update-only",

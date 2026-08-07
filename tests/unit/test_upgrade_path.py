@@ -10,6 +10,7 @@ if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
 from installer.components.hooks import _get_hook_path, install_hooks  # noqa: E402  (sys.path mangling above)
+import tripwire  # noqa: E402  (sys.path mangling above)
 
 
 def _expected_unified_command(prefix="$SPELLBOOK_DIR", config_prefix="$SPELLBOOK_CONFIG_DIR"):
@@ -201,7 +202,7 @@ class TestUpgradeFromShellHooks:
             )
             assert entries[0]["hooks"][0]["command"] == expected_cmd
 
-    def test_upgrade_with_expanded_paths(self, tmp_path, monkeypatch):
+    def test_upgrade_with_expanded_paths(self, tmp_path):
         """Upgrade with spellbook_dir should clean old hooks and use expanded paths."""
         settings_path = tmp_path / "settings.json"
         spellbook_dir = tmp_path / "spellbook"
@@ -211,39 +212,58 @@ class TestUpgradeFromShellHooks:
         hooks_dir.mkdir()
 
         config_dir = tmp_path / ".local" / "spellbook"
-        monkeypatch.setattr("installer.config.get_spellbook_config_dir", lambda: config_dir)
+        get_spellbook_config_dir_mock = tripwire.mock("installer.config:get_spellbook_config_dir")
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        get_spellbook_config_dir_mock.calls(lambda: config_dir)
 
-        old_settings = {
-            "hooks": {
-                "PreToolUse": [
-                    {
-                        "matcher": "Bash",
-                        "hooks": [
-                            {"type": "command", "command": f"{spellbook_dir}/hooks/bash-gate.sh"},
-                        ],
-                    },
-                ],
+        with tripwire:
+            old_settings = {
+                "hooks": {
+                    "PreToolUse": [
+                        {
+                            "matcher": "Bash",
+                            "hooks": [
+                                {"type": "command", "command": f"{spellbook_dir}/hooks/bash-gate.sh"},
+                            ],
+                        },
+                    ],
+                }
             }
-        }
-        settings_path.write_text(json.dumps(old_settings))
+            settings_path.write_text(json.dumps(old_settings))
 
-        result = install_hooks(settings_path, spellbook_dir=spellbook_dir)
-        assert result.success is True
+            result = install_hooks(settings_path, spellbook_dir=spellbook_dir)
+            assert result.success is True
 
-        updated = json.loads(settings_path.read_text())
-        content = settings_path.read_text()
+            updated = json.loads(settings_path.read_text())
+            content = settings_path.read_text()
 
-        # No $SPELLBOOK_DIR literal paths
-        assert "$SPELLBOOK_DIR" not in content
-        # No $SPELLBOOK_CONFIG_DIR literal paths
-        assert "$SPELLBOOK_CONFIG_DIR" not in content
-        # No old hook references
-        assert "bash-gate" not in content
+            # No $SPELLBOOK_DIR literal paths
+            assert "$SPELLBOOK_DIR" not in content
+            # No $SPELLBOOK_CONFIG_DIR literal paths
+            assert "$SPELLBOOK_CONFIG_DIR" not in content
+            # No old hook references
+            assert "bash-gate" not in content
 
-        # Unified hook with expanded path
-        pre_tool_use = updated["hooks"]["PreToolUse"]
-        assert len(pre_tool_use) == 1
-        assert "matcher" not in pre_tool_use[0]
-        expected_symlink = config_dir / "source"
-        expected = _expected_unified_command(str(expected_symlink), str(config_dir))
-        assert pre_tool_use[0]["hooks"][0]["command"] == expected
+            # Unified hook with expanded path
+            pre_tool_use = updated["hooks"]["PreToolUse"]
+            assert len(pre_tool_use) == 1
+            assert "matcher" not in pre_tool_use[0]
+            expected_symlink = config_dir / "source"
+            expected = _expected_unified_command(str(expected_symlink), str(config_dir))
+            assert pre_tool_use[0]["hooks"][0]["command"] == expected
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})

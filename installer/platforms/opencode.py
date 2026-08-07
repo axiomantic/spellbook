@@ -270,20 +270,9 @@ class OpenCodeInstaller(PlatformInstaller):
         """
         return self.config_dir / "plugins"
 
-    @property
-    def spellbook_forged_plugin_source(self) -> Path:
-        """Get the source path for the spellbook-forged plugin."""
-        return self.spellbook_dir / "extensions" / "opencode" / "spellbook-forged"
 
-    @property
-    def security_plugin_source(self) -> Path:
-        """Get the source path for the spellbook-security plugin."""
-        return self.spellbook_dir / "hooks" / "opencode-plugin.ts"
 
-    @property
-    def security_plugin_target(self) -> Path:
-        """Get the target path for the installed spellbook-security plugin."""
-        return self.plugins_dir / "spellbook-security.ts"
+
 
     @property
     def instructions_dir(self) -> Path:
@@ -430,12 +419,7 @@ class OpenCodeInstaller(PlatformInstaller):
             except json.JSONDecodeError:
                 pass
 
-        # Check for plugin
-        plugin_target = self.plugins_dir / "spellbook-forged"
-        has_plugin = plugin_target.is_symlink() or plugin_target.is_dir()
 
-        # Check for security plugin
-        has_security_plugin = self.security_plugin_target.is_file()
 
         # Check for system prompt symlink
         has_system_prompt = self.system_prompt_target.is_symlink() or self.system_prompt_target.is_file()
@@ -459,8 +443,7 @@ class OpenCodeInstaller(PlatformInstaller):
             details={
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,
-                "plugin_installed": has_plugin,
-                "security_plugin_installed": has_security_plugin,
+
                 "system_prompt_installed": has_system_prompt,
                 "instructions_configured": has_instructions,
             },
@@ -521,51 +504,9 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
             )
 
-        # Install spellbook-forged plugin
-        self._step("Installing plugins")
-        plugin_source = self.spellbook_forged_plugin_source
-        if plugin_source.exists():
-            # Ensure plugins directory exists
-            if not self.dry_run:
-                self.plugins_dir.mkdir(parents=True, exist_ok=True)
 
-            plugin_target = self.plugins_dir / "spellbook-forged"
-            plugin_result = create_symlink(plugin_source, plugin_target, self.dry_run)
-            results.append(
-                InstallResult(
-                    component="plugin",
-                    platform=self.platform_id,
-                    success=plugin_result.success,
-                    action=plugin_result.action,
-                    message=f"plugin (spellbook-forged): {plugin_result.action}",
-                )
-            )
 
-        # Install spellbook-security plugin (copy TypeScript file)
-        if self.security_plugin_source.exists():
-            if self.dry_run:
-                results.append(
-                    InstallResult(
-                        component="security_plugin",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message="security plugin: would be installed",
-                    )
-                )
-            else:
-                self.plugins_dir.mkdir(parents=True, exist_ok=True)
-                source_content = self.security_plugin_source.read_text(encoding="utf-8")
-                self.security_plugin_target.write_text(source_content, encoding="utf-8")
-                results.append(
-                    InstallResult(
-                        component="security_plugin",
-                        platform=self.platform_id,
-                        success=True,
-                        action="installed",
-                        message="security plugin: installed",
-                    )
-                )
+
 
         # Install Claude Code system prompt (behavioral standards)
         self._step("Installing system prompt")
@@ -668,37 +609,9 @@ class OpenCodeInstaller(PlatformInstaller):
             )
         )
 
-        # Remove spellbook-security plugin file
-        if self.security_plugin_target.exists():
-            if not self.dry_run:
-                self.security_plugin_target.unlink()
-            results.append(
-                InstallResult(
-                    component="security_plugin",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message="security plugin: removed",
-                )
-            )
 
-        # Remove spellbook-forged plugin symlink
-        plugin_target = self.plugins_dir / "spellbook-forged"
-        if plugin_target.exists() or plugin_target.is_symlink():
-            plugin_result = remove_symlink(
-                plugin_target,
-                verify_source=self.spellbook_forged_plugin_source,
-                dry_run=self.dry_run,
-            )
-            results.append(
-                InstallResult(
-                    component="plugin",
-                    platform=self.platform_id,
-                    success=plugin_result.success,
-                    action=plugin_result.action,
-                    message=f"plugin (spellbook-forged): {plugin_result.action}",
-                )
-            )
+
+
 
         # Remove system prompt symlink
         if self.system_prompt_target.exists() or self.system_prompt_target.is_symlink():
@@ -743,11 +656,6 @@ class OpenCodeInstaller(PlatformInstaller):
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""
         symlinks = []
-
-        # Plugin symlink
-        plugin_target = self.plugins_dir / "spellbook-forged"
-        if plugin_target.is_symlink():
-            symlinks.append(plugin_target)
 
         # System prompt symlink
         if self.system_prompt_target.is_symlink():

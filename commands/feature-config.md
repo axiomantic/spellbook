@@ -603,8 +603,8 @@ flag-derived set, and subtracting nothing reproduces today's run exactly.
 
 #### Step 4: Lock it into the ledger
 
-Write the choice to `develop_gate_ledger.ceremony` via `workflow_state_update`
-(MERGE-ONLY — never `workflow_state_save`). The shape and the locking rules are in the
+Write the choice to `develop_gate_ledger.ceremony` via persistent state deep-merge
+(MERGE-ONLY — never full overwrite). The shape and the locking rules are in the
 develop skill under "Ceremony Ledger". Two properties matter here:
 
 1. A declined component is RECORDED AS DECLINED, never merely absent. A resumed

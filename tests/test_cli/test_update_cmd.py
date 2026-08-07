@@ -4,6 +4,7 @@ import argparse
 import json
 
 import pytest
+import tripwire
 
 from spellbook.cli.commands.update import register, run
 
@@ -38,52 +39,50 @@ class TestRegister:
 class TestUpdateRun:
     """Tests for update run function."""
 
-    def test_check_runs_without_crashing(self, capsys, monkeypatch):
+    def test_check_runs_without_crashing(self, capsys):
         """--check should run without errors."""
-        import spellbook.cli.commands.update as update_mod
 
-        monkeypatch.setattr(update_mod, "_find_repo_dir", lambda: None)
+        find_repo_dir_mock = tripwire.mock("spellbook.cli.commands.update:_find_repo_dir")
+        find_repo_dir_mock.calls(lambda: None)
 
-        args = argparse.Namespace(
-            json=False,
-            check=True,
-        )
-        # When repo dir is None, should report error and return
-        try:
-            run(args)
-        except SystemExit:
-            pass
-        captured = capsys.readouterr()
-        combined = captured.out + captured.err
-        assert combined  # Produces some output
+        with tripwire:
+            args = argparse.Namespace(
+                json=False,
+                check=True,
+            )
+            # When repo dir is None, should report error and return
+            try:
+                run(args)
+            except SystemExit:
+                pass
+            captured = capsys.readouterr()
+            combined = captured.out + captured.err
+            assert combined  # Produces some output
 
-    def test_check_json_output(self, capsys, monkeypatch):
+        find_repo_dir_mock.assert_call(args=(), kwargs={})
+
+    def test_check_json_output(self, capsys):
         """--check --json should produce valid JSON."""
-        import spellbook.cli.commands.update as update_mod
 
-        monkeypatch.setattr(
-            update_mod,
-            "_find_repo_dir",
-            lambda: "/fake/path",
-        )
-        monkeypatch.setattr(
-            update_mod,
-            "_get_current_version",
-            lambda _dir: "0.30.0",
-        )
-        monkeypatch.setattr(
-            update_mod,
-            "_get_latest_version",
-            lambda _dir: "0.32.0",
-        )
+        find_repo_dir_mock = tripwire.mock("spellbook.cli.commands.update:_find_repo_dir")
+        find_repo_dir_mock.calls(lambda: "/fake/path")
+        get_current_version_mock = tripwire.mock("spellbook.cli.commands.update:_get_current_version")
+        get_current_version_mock.calls(lambda _dir: "0.30.0")
+        get_latest_version_mock = tripwire.mock("spellbook.cli.commands.update:_get_latest_version")
+        get_latest_version_mock.calls(lambda _dir: "0.32.0")
 
-        args = argparse.Namespace(
-            json=True,
-            check=True,
-        )
-        run(args)
-        captured = capsys.readouterr()
-        data = json.loads(captured.out)
-        assert "current_version" in data
-        assert "latest_version" in data
-        assert "update_available" in data
+        with tripwire:
+            args = argparse.Namespace(
+                json=True,
+                check=True,
+            )
+            run(args)
+            captured = capsys.readouterr()
+            data = json.loads(captured.out)
+            assert "current_version" in data
+            assert "latest_version" in data
+            assert "update_available" in data
+
+        find_repo_dir_mock.assert_call(args=(), kwargs={})
+        get_current_version_mock.assert_call(args=("/fake/path",), kwargs={})
+        get_latest_version_mock.assert_call(args=("/fake/path",), kwargs={})

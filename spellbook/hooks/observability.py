@@ -4,7 +4,7 @@ Invoked fire-and-forget from the daemon-side ``/api/hooks/record`` route
 handler (subprocess path). All failures are swallowed -- the hook must
 never be blocked by observability.
 
-Mirrors ``spellbook.worker_llm.observability`` in structure: a best-effort
+Best-effort observability: a best-effort
 synchronous writer with first-failure-warn/rest-debug log policy, plus a
 retention purge loop with time-cap and count-cap passes, each batched at
 ``LIMIT 500`` rows per transaction with a fresh
@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 _PURGE_BATCH_LIMIT: int = 500
 _PURGE_LOOP_BACKOFF_SECONDS: float = 30.0
 
-# Observability-of-observability: mirror ``worker_llm.observability`` so the
+# Observability-of-observability: module-level state so the
 # FIRST ``record_hook_event`` failure in this process is loud
 # (``log.warning``) and every subsequent failure is quiet (``log.debug``).
 # Single-writer invariant: only ``record_hook_event`` writes this counter.
@@ -104,7 +104,7 @@ def record_hook_event(
 
 
 # Cross-process purge-last-ran record. See
-# ``spellbook.worker_llm.observability`` for the design rationale: module
+# See design docs for the design rationale: module
 # variables are invisible to the ``doctor`` CLI because it runs in a
 # separate process from the daemon. Persist to disk so both can read.
 _LAST_PURGE_PATH: Path = (
@@ -115,7 +115,7 @@ _LAST_PURGE_PATH: Path = (
 def read_last_purge_ts() -> datetime | None:
     """Return the last-run timestamp written by ``_run_purge_once``, or ``None``.
 
-    Mirrors ``worker_llm.observability.read_last_purge_ts``. Corrupt or
+    Reads the last purge timestamp. Corrupt or
     missing files return ``None`` rather than raising.
     """
     try:
@@ -211,7 +211,7 @@ def _run_purge_once() -> None:
             )
 
     # --- Count cap pass ---
-    # Mirrors the rewrite in ``worker_llm.observability``. Avoid
+    # Mirrors the standard observability rewrite pattern. Avoid
     # ``DELETE WHERE id NOT IN (SELECT ... LIMIT max_rows)``: LIMIT inside
     # NOT IN subqueries is a compile-time-optional SQLite feature and
     # the pattern degrades to O(N*M). A scalar subquery returns the id of

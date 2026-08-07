@@ -14,6 +14,7 @@ from types import SimpleNamespace
 import pytest
 
 from spellbook.admin.events import Event, EventBus, Subsystem
+import tripwire
 
 
 def _async_return(value):
@@ -85,7 +86,7 @@ class _MockAsyncSession:
 
 @pytest.mark.slow
 class TestDashboardPerformance:
-    def test_dashboard_load_time(self, client, monkeypatch):
+    def test_dashboard_load_time(self, client):
         """Dashboard endpoint should respond within 1 second."""
         dashboard_data = {
             "health": {
@@ -105,17 +106,16 @@ class TestDashboardPerformance:
             },
             "recent_activity": [],
         }
-        monkeypatch.setattr(
-            "spellbook.admin.routes.dashboard.get_dashboard_data",
-            _async_return(dashboard_data),
-        )
+        get_dashboard_data_mock = tripwire.mock("spellbook.admin.routes.dashboard:get_dashboard_data")
+        get_dashboard_data_mock.calls(_async_return(dashboard_data))
 
-        start = time.monotonic()
-        response = client.get("/api/dashboard")
-        elapsed_ms = (time.monotonic() - start) * 1000
+        with tripwire:
+            start = time.monotonic()
+            response = client.get("/api/dashboard")
+            elapsed_ms = (time.monotonic() - start) * 1000
 
-        assert response.status_code == 200
-        assert elapsed_ms < 1000, f"Dashboard took {elapsed_ms:.0f}ms, budget is 1000ms"
+            assert response.status_code == 200
+            assert elapsed_ms < 1000, f"Dashboard took {elapsed_ms:.0f}ms, budget is 1000ms"
 
 
 @pytest.mark.slow

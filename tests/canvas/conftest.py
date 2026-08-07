@@ -15,19 +15,20 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+import tripwire
 
 
 @pytest.fixture
-def canvas_tmp_root(tmp_path, monkeypatch):
+def canvas_tmp_root(tmp_path):
     """Override ``spellbook.canvas.store._resolve_canvas_root`` to return a
     fresh temp directory per test. Yields the directory path as a string.
     """
     root = tmp_path / "canvas"
     root.mkdir()
-    monkeypatch.setattr(
-        "spellbook.canvas.store._resolve_canvas_root", lambda: str(root)
-    )
-    yield str(root)
+    resolve_canvas_root_mock = tripwire.mock("spellbook.canvas.store:_resolve_canvas_root")
+    resolve_canvas_root_mock.calls(lambda: str(root))
+    with tripwire:
+        yield str(root)
 
 
 class _MockContext:
@@ -83,7 +84,7 @@ def mcp_ctx_no_session() -> _NoSessionCtx:
 
 
 @pytest.fixture
-def event_subscriber(monkeypatch):
+def event_subscriber():
     """Capture every event passed to ``event_bus.publish``.
 
     Replaces the singleton's ``publish`` coroutine with one that appends
@@ -96,10 +97,11 @@ def event_subscriber(monkeypatch):
     """
     received: list[Any] = []
 
-    from spellbook.admin.events import event_bus
 
     async def _fake_publish(event):
         received.append(event)
 
-    monkeypatch.setattr(event_bus, "publish", _fake_publish)
-    yield received
+    publish_mock = tripwire.mock("spellbook.admin.events.event_bus:publish")
+    publish_mock.calls(_fake_publish)
+    with tripwire:
+        yield received

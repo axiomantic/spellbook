@@ -98,6 +98,56 @@ When suggesting a rewrite, use the real API surface. Do NOT invent names.
 
 **Do NOT write** `tripwire.database`, `tripwire.mock_patch`, `tripwire.MagicMock`, `tripwire.Mock`, `@tripwire.patch(...)` -- none of these exist.
 
+### Assertions must verify a value, not just an interaction
+
+Requiring `.assert_call(...)` is not the same as requiring it to check anything. A wildcard in an
+assertion position satisfies tripwire's machinery -- the interaction is formally asserted, teardown
+passes, no error is raised -- while the value actually passed is never examined. This degradation
+begins at the FIRST wildcard, not only when every position is one. Judge an assertion by how many
+positions carry a real value, not by whether it tripped a guard.
+
+**Flag as medium severity:**
+
+- Any `assert_call` / `assert_request` / `assert_run` position holding a wildcard when the real
+  value was knowable at write time.
+- Any use of the bare class `AnyThing` instead of the instance `AnyThing()`. `AnyThing` comes from
+  `dirty-equals`, not tripwire, and the bare-class idiom is documented upstream -- it is imitation,
+  not carelessness -- but here it has an extra cost: tripwire's all-wildcard guard checks
+  `isinstance(v, AnyThing)`, and `isinstance(AnyThing, AnyThing)` is False. The bare class compares
+  equal to everything *and* slips past the guard meant to catch exactly that. So an assertion can
+  pass tripwire's own guard and still verify nothing.
+
+**Suggest the alternatives in this order:**
+
+1. A short, portable literal -- the real value, when it is stable across machines.
+2. A type constraint, `IsInstance(SomeType)`. This is a genuine constraint, not a wildcard: it fails
+   on the wrong type, and being an instance it keeps tripwire's guards live.
+3. `AnyThing()` (instance form) with an inline comment naming why that value is incidental.
+
+**The spellings are examples, not the definition.** `mock.ANY`, `unittest.mock.ANY`, `AnyThing`,
+`AnyThing()`, and unconstrained `IsStr` / `IsInt` / `IsList` are the ones seen today; a new
+framework introduces a new spelling. Check the PROPERTY -- does this value compare equal to
+everything? -- not the name.
+
+```python
+# WRONG -- asserts the call happened, verifies nothing about it
+m.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+
+# CORRECT -- real value where knowable, type constraint where not
+m.assert_call(
+    args=("install", "claude_code"),
+    kwargs={"force": False},
+    returned=IsInstance(InstallResult),
+)
+```
+
+**Safety:** values harvested from a failing run to paste into an assertion may embed environment
+variables, credentials, absolute home paths, or hostnames. Flag credential-shaped or
+machine-specific literals in test assertions and suggest a type constraint instead.
+
+The full rule lives in `patterns/assertion-quality-standard.md`; cite it rather than restating it,
+so the two do not drift.
+
 ### The narrow, explicit allowlist for `monkeypatch`
 
 `monkeypatch` (pytest-builtin) is permitted ONLY for:

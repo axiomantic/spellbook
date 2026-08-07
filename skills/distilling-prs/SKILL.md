@@ -16,16 +16,15 @@ intro: |
 3. **Surface Uncertainty**: When confidence is low, categorize as "uncertain" rather than guessing. Humans decide ambiguous cases.
 4. **Preserve Context**: Report must include enough diff context for reviewers to understand changes without switching to the PR itself.
 
-## MCP Tools
+## Tool Integration
+
+Use `gh` CLI for PR data and `git` for local diffs. Pattern matching is done in-context by the AI against the diff output.
 
 | Tool | Purpose |
 |------|---------|
-| `pr_fetch` | Fetch PR metadata and diff from GitHub |
-| `pr_diff` | Parse unified diff into FileDiff objects |
-| `pr_files` | Extract file list from pr_fetch result |
-| `pr_match_patterns` | Match heuristic patterns against file diffs |
-| `pr_bless_pattern` | Bless a pattern for elevated precedence |
-| `pr_list_patterns` | List all available patterns (builtin and blessed) |
+| `gh pr view` | Fetch PR metadata (number, title, files, diff) |
+| `gh pr diff` | Get unified diff for the PR |
+| `git diff` | Local branch diff against merge-base |
 
 ## Execution Flow
 
@@ -42,20 +41,24 @@ When invoked with `/distilling-prs <pr>`:
 
 ### Phase 1: Fetch, Parse, Match
 
-```python
-pr_data = pr_fetch("<pr-identifier>")    # Fetch PR data
-diff_result = pr_diff(pr_data["diff"])   # Parse the diff
-match_result = pr_match_patterns(
-    files=diff_result["files"],
-    project_root="/path/to/project"
-)
+```bash
+# Fetch PR data and diff via gh CLI
+gh pr view <PR_NUMBER> --json number,title,body,files,additions,deletions
+gh pr diff <PR_NUMBER>
 ```
 
-Produces:
-- `match_result["matched"]`: Files with pattern matches (categorized)
-- `match_result["unmatched"]`: Files requiring AI analysis
+For local branches (no PR yet):
+```bash
+git diff $(git merge-base HEAD main)...HEAD
+```
 
-**On MCP tool failure**: If `pr_fetch` or `pr_match_patterns` fails, halt and surface the error to the user. Do not proceed with partial data.
+Read the diff output and apply heuristic pattern matching in-context against the known builtin patterns (see Builtin Patterns section below).
+
+Produces:
+- `matched`: Files with pattern matches (categorized as review_required / safe_to_skip / uncertain)
+- `unmatched`: Files requiring AI analysis
+
+**On tool failure**: If `gh` CLI or `git` fails, halt and surface the error to the user. Do not proceed with partial data.
 
 ### Phase 2: AI Analysis (if needed)
 
@@ -70,37 +73,33 @@ Produce a markdown report with:
 1. Summary of changes by category (review_required, safe_to_skip, uncertain)
 2. Full diffs for review_required items
 3. Pattern matches with confidence levels
-4. Discovered patterns with bless commands
+4. Discovered patterns (can be added to config for future triage)
 
 <reflection>
 After completion, verify:
 - All files categorized (no files missing from report)
 - REVIEW_REQUIRED items have full diffs
 - Pattern summary table is accurate
-- Discovered patterns listed with bless commands
+- Discovered patterns listed with config update instructions
 </reflection>
 
 ### Examples
 
-```python
+```bash
 # Analyze PR by number (uses current repo context)
-pr_data = pr_fetch("123")
+gh pr view 123 --json number,title,body,files,additions,deletions
+gh pr diff 123
 
-# Analyze PR by URL
-pr_data = pr_fetch("https://github.com/owner/repo/pull/123")
+# Analyze PR by URL (extract number and use gh)
+gh pr view 123 --json number,title,body,files
 
-# Parse and match
-diff_result = pr_diff(pr_data["diff"])
-match_result = pr_match_patterns(
-    files=diff_result["files"],
-    project_root="/Users/alice/project"
-)
+# For local branch analysis
+MERGE_BASE=$(git merge-base HEAD main)
+git diff $MERGE_BASE...HEAD
 
-# Bless a discovered pattern
-pr_bless_pattern("/Users/alice/project", "query-count-json")
-
-# List all patterns
-patterns = pr_list_patterns("/Users/alice/project")
+# Add a discovered pattern to config (manual)
+# Edit ~/.local/spellbook/docs/<project>/distilling-prs-config.json
+# and add to "blessed_patterns" array
 ```
 
 ## Configuration
@@ -120,7 +119,7 @@ Config file: `~/.local/spellbook/docs/<project-encoded>/distilling-prs-config.js
 
 ## Builtin Patterns
 
-15 builtin patterns across three confidence levels. Use `pr_list_patterns()` to see all with IDs and descriptions.
+15 builtin patterns across three confidence levels. Apply these heuristically against the diff output in Phase 1.
 
 **Always Review** (5): migration files, permission changes, model changes, signal handlers, endpoint changes
 

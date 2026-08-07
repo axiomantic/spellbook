@@ -3,6 +3,8 @@
 import argparse
 
 import pytest
+import tripwire
+from dirty_equals import IsInstance
 
 from spellbook.cli.commands.events import register
 
@@ -44,18 +46,13 @@ class TestRegister:
 class TestEventsRun:
     """Tests for events command handling no daemon."""
 
-    def test_events_no_daemon_shows_error(self, capsys, monkeypatch):
+    def test_events_no_daemon_shows_error(self, capsys):
         """Events with no daemon shows clear error message."""
-        # Patch stream_events on the daemon_client module so the lazy
+        # Mock stream_events on the daemon_client module so the lazy
         # ``from spellbook.cli.daemon_client import stream_events``
         # inside _run_events picks up the mock.
-        def _raise_connection_error(*args, **kwargs):
-            raise ConnectionError("Cannot connect")
-
-        monkeypatch.setattr(
-            "spellbook.cli.daemon_client.stream_events",
-            _raise_connection_error,
-        )
+        stream_events = tripwire.mock("spellbook.cli.daemon_client:stream_events")
+        stream_events.raises(ConnectionError("Cannot connect"))
 
         parser = argparse.ArgumentParser()
         parser.add_argument("--json", action="store_true", default=False)
@@ -63,8 +60,12 @@ class TestEventsRun:
         register(subparsers)
         args = parser.parse_args(["events"])
 
-        with pytest.raises(SystemExit) as exc_info:
+        with tripwire, pytest.raises(SystemExit) as exc_info:
             args.func(args)
+
+        stream_events.assert_call(
+            args=(), kwargs={}, raised=IsInstance(ConnectionError)
+        )
         assert exc_info.value.code == 1
 
         captured = capsys.readouterr()

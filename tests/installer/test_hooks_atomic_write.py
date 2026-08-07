@@ -140,16 +140,16 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
     # PermissionError followed by a successful return.
     with tripwire.in_any_order():
         mock_replace.assert_call(
-            args=(AnyThing, AnyThing),
+            args=(AnyThing(), AnyThing()),
             kwargs={},
-            raised=AnyThing,
+            raised=AnyThing(),
         )
         mock_replace.assert_call(
-            args=(AnyThing, AnyThing),
+            args=(AnyThing(), AnyThing()),
             kwargs={},
-            returned=AnyThing,
+            returned=AnyThing(),
         )
-        mock_sleep.assert_call(args=(AnyThing,), kwargs={})
+        mock_sleep.assert_call(args=(AnyThing(),), kwargs={})
         for _ in range(5):
             mock_system.assert_call(args=(), kwargs={})
 
@@ -217,16 +217,16 @@ def test_uninstall_hooks_retries_os_replace_permission_error_once(tmp_path):
     # uninstall path: 1 platform.system() call from atomic_replace.
     with tripwire.in_any_order():
         mock_replace.assert_call(
-            args=(AnyThing, AnyThing),
+            args=(AnyThing(), AnyThing()),
             kwargs={},
-            raised=AnyThing,
+            raised=AnyThing(),
         )
         mock_replace.assert_call(
-            args=(AnyThing, AnyThing),
+            args=(AnyThing(), AnyThing()),
             kwargs={},
-            returned=AnyThing,
+            returned=AnyThing(),
         )
-        mock_sleep.assert_call(args=(AnyThing,), kwargs={})
+        mock_sleep.assert_call(args=(AnyThing(),), kwargs={})
         mock_system.assert_call(args=(), kwargs={})
 
     written = json.loads(settings_path.read_text(encoding="utf-8"))

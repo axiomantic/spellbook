@@ -1,4 +1,6 @@
 import pytest
+import tripwire
+from dirty_equals import AnyThing
 import sqlite3
 
 
@@ -19,40 +21,48 @@ def _make_test_db(tmp_path):
 
 
 @pytest.mark.asyncio
-async def test_query_spellbook_db_returns_list(tmp_path, monkeypatch):
+async def test_query_spellbook_db_returns_list(tmp_path):
     """Test async DB query wrapper returns list of dicts."""
     from spellbook.admin.db import query_spellbook_db
 
     mock_conn = _make_test_db(tmp_path)
 
-    monkeypatch.setattr("spellbook.core.db.get_connection", lambda *a, **kw: mock_conn)
+    get_connection_mock = tripwire.mock("spellbook.core.db:get_connection")
+    get_connection_mock.calls(lambda *a, **kw: mock_conn)
 
-    results = await query_spellbook_db("SELECT id, name FROM test ORDER BY id")
+    with tripwire:
+        results = await query_spellbook_db("SELECT id, name FROM test ORDER BY id")
 
-    assert len(results) == 2
-    assert results[0] == {"id": 1, "name": "hello"}
-    assert results[1] == {"id": 2, "name": "world"}
+        assert len(results) == 2
+        assert results[0] == {"id": 1, "name": "hello"}
+        assert results[1] == {"id": 2, "name": "world"}
+
+    get_connection_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing, raised=AnyThing)
 
 
 @pytest.mark.asyncio
-async def test_query_spellbook_db_with_params(tmp_path, monkeypatch):
+async def test_query_spellbook_db_with_params(tmp_path):
     """Test that query parameters are passed correctly."""
     from spellbook.admin.db import query_spellbook_db
 
     mock_conn = _make_test_db(tmp_path)
 
-    monkeypatch.setattr("spellbook.core.db.get_connection", lambda *a, **kw: mock_conn)
+    get_connection_mock = tripwire.mock("spellbook.core.db:get_connection")
+    get_connection_mock.calls(lambda *a, **kw: mock_conn)
 
-    results = await query_spellbook_db(
-        "SELECT id, name FROM test WHERE id = ?", (2,)
-    )
+    with tripwire:
+        results = await query_spellbook_db(
+            "SELECT id, name FROM test WHERE id = ?", (2,)
+        )
 
-    assert len(results) == 1
-    assert results[0]["name"] == "world"
+        assert len(results) == 1
+        assert results[0]["name"] == "world"
+
+    get_connection_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing, raised=AnyThing)
 
 
 @pytest.mark.asyncio
-async def test_query_spellbook_db_runs_in_thread(monkeypatch):
+async def test_query_spellbook_db_runs_in_thread():
     """Verify the query runs via asyncio.to_thread (not blocking)."""
     from spellbook.admin.db import query_spellbook_db
     import threading
@@ -73,10 +83,14 @@ async def test_query_spellbook_db_runs_in_thread(monkeypatch):
 
     main_thread_id = threading.current_thread().ident
 
-    monkeypatch.setattr("spellbook.core.db.get_connection", mock_get_connection)
+    get_connection_mock = tripwire.mock("spellbook.core.db:get_connection")
+    get_connection_mock.calls(mock_get_connection)
 
-    await query_spellbook_db("SELECT 1")
+    with tripwire:
+        await query_spellbook_db("SELECT 1")
 
-    # The DB work should have run on a different thread
-    assert len(call_thread_ids) == 1
-    assert call_thread_ids[0] != main_thread_id
+        # The DB work should have run on a different thread
+        assert len(call_thread_ids) == 1
+        assert call_thread_ids[0] != main_thread_id
+
+    get_connection_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing, raised=AnyThing)

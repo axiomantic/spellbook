@@ -31,32 +31,14 @@ MODULE_MAP: dict[str, str] = {
     "spellbook.memory.tools": "spellbook.memory.tools",
     "spellbook.memory.store": "spellbook.memory.store",
     "spellbook.memory.consolidation": "spellbook.memory.consolidation",
-    # Sessions
-    "spellbook.sessions.parser": "spellbook.sessions.parser",
-    "spellbook.sessions.resume": "spellbook.sessions.resume",
-    "spellbook.sessions.watcher": "spellbook.sessions.watcher",
-    "spellbook.sessions.injection": "spellbook.sessions.injection",
-    "spellbook.sessions.soul_extractor": "spellbook.sessions.soul_extractor",
-    "spellbook.sessions.skill_analyzer": "spellbook.sessions.skill_analyzer",
-    "spellbook.sessions.compaction": "spellbook.sessions.compaction",
-    # Notifications
-    "spellbook.notifications.tts": "spellbook.notifications.tts",
-    "spellbook.notifications.notify": "spellbook.notifications.notify",
+
     # Updates
     "spellbook.updates.tools": "spellbook.updates.tools",
     "spellbook.updates.watcher": "spellbook.updates.watcher",
     # MCP server
     "spellbook.mcp.server": "spellbook.mcp.server",
     # Subpackages: prefix swap (order matters, longer first in sorted keys)
-    "spellbook.security": "spellbook.gates",
-    "spellbook.forged": "spellbook.forged",
     "spellbook.fractal": "spellbook.fractal",
-    "spellbook.code_review": "spellbook.code_review",
-    "spellbook.pr_distill": "spellbook.pr_distill",
-    "spellbook.coordination": "spellbook.coordination",
-    "spellbook.admin": "spellbook.admin",
-    "spellbook.extractors": "spellbook.extractors",
-    "spellbook.session": "spellbook.session",
 }
 
 # Sort keys by length (longest first) to prevent partial replacements.
@@ -92,9 +74,7 @@ def rewrite_line(line: str) -> str:
     # Fallback: catch any remaining spellbook_mcp references
     result = _FALLBACK_RE.sub("spellbook", result)
 
-    # Post-fallback security -> gates rename (handles inputs like
-    # spellbook_mcp.security.check which normalize to spellbook.security.*).
-    result = re.sub(r"\bspellbook\.security(?=\b|\.)", "spellbook.gates", result)
+
     return result
 
 

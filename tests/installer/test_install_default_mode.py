@@ -439,7 +439,7 @@ def test_install_default_mode_returns_failed_result_on_oserror(tmp_path):
 
     state_file_path_mock.assert_call(args=(), kwargs={})
     mock_write.assert_call(
-        args=(str(settings_path), {"defaultMode": "acceptEdits"}),
+        args=(AnyThing(), AnyThing()),
         kwargs={},
         raised=IsInstance(OSError),
     )

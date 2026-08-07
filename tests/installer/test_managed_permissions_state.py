@@ -412,7 +412,7 @@ def test_update_managed_set_acquires_lock(tmp_path, monkeypatch):
     mock_lock.assert_call(
         args=(expected_lock_path,),
         kwargs={"blocking": True},
-        returned=AnyThing,
+        returned=AnyThing(),
     )
     # The CM was entered and exited exactly once, in order.
     assert enter_exit_calls == ["enter", "exit"]

@@ -47,7 +47,7 @@ When operating in YOLO mode or when user selected "Fully autonomous":
   the plan one-pager and worktree/parallelization choices are gated by
   `feature-implement` Phase 3.4.7 (One-Pager Approval Gate). Autonomous
   mode does not waive that gate. (develop is single-orchestrator only;
-  it does not spawn parallel sessions or auto-invoke `forge_project_init`.)
+  it does not spawn parallel sessions.)
 - **APPROVAL GATES (2.3, 3.3) ARE NEVER AUTO-PROCEEDED.** Even in
   full autonomous mode, design and plan approval gates require explicit
   artifact verification before continuation. The *surface* of these gates
@@ -141,7 +141,7 @@ circuit breaker and never proceed after triggering one.
 **Tool name mapping:**
 - "Task tool" → `subagent` tool. All references to `Task()` dispatch in this skill mean `subagent()` in Pi.
 - `subagent_type` field does NOT exist in Pi. Skip `CURRENT_AGENT_TYPE` propagation entirely.
-- `forge_project_init` is NOT available. Use `subagent` with `planner` or `delegate` agent for design synthesis.
+- Project initialization is handled by `develop` directly. Use `subagent` with `planner` or `delegate` agent for design synthesis.
 - `spawn_session` is NOT available.
 
 **Skill invocation in Pi:** Pi loads skills via system-prompt auto-trigger by text patterns or via `/skill:name`. There is no "Skill tool" RPC. To verify a subagent invoked the intended skill:
@@ -733,7 +733,7 @@ If during execution the work reveals a need not captured by the Phase-0 flags (e
 3. **RUN** the phases that flag now gates (per design §2.1), and recompute `remaining_gates` (see Ledger Writes below)
 4. **CONTINUE** from the current point — do NOT restart from Phase 0
 
-There is NO tier to upgrade and NO work-item decomposition. Setting a flag turns on the phases that flag gates; develop simply runs them and proceeds. Do NOT invoke `forge_project_init` from scope drift.
+There is NO tier to upgrade and NO work-item decomposition. Setting a flag turns on the phases that flag gates; develop simply runs them and proceeds.
 
 **Detection Points:**
 - Phase 0: Initial flag elicitation (the wizard)
@@ -1333,16 +1333,16 @@ Commands share state via these session variables:
 ### Ledger Writes (workflow_state — accountability + compaction recovery)
 
 <CRITICAL>
-develop records its own phase/gate progress in `workflow_state` so the work
+develop records its own phase/gate progress in a persistent state file so the work
 survives context compaction and a resumed session can re-assert the remaining
 gates instead of declaring "done" prematurely. This is design §5 (C4).
 
-**MERGE-ONLY, NEVER overwrite.** develop writes via `workflow_state_update`
-(deep-merge) and MUST NEVER use `workflow_state_save` (overwrite). The hooks
-(`_handle_pre_compact`) write `compaction_flag` and `stint_stack` into the SAME
-workflow_state row; a `save` from develop would clobber them, and vice versa.
-`_deep_merge` preserves sibling keys, so disjoint-key writes never lose a field
-(design §5.2/§5.5). A `save` here is a Risk §13 regression — do not do it.
+**MERGE-ONLY, NEVER overwrite.** develop writes via deep-merge and MUST NEVER
+use full overwrite. The hooks (`_handle_pre_compact`) write `compaction_flag` and
+`stint_stack` into the SAME state row; an overwrite from develop would clobber
+them, and vice versa. `_deep_merge` preserves sibling keys, so disjoint-key writes
+never lose a field (design §5.2/§5.5). An overwrite here is a Risk §13 regression
+— do not do it.
 </CRITICAL>
 
 **The ledger shape (`develop_gate_ledger`, design §5.3):**
@@ -1380,7 +1380,7 @@ recorded ceremony restores a fixed referent by writing the chosen set down at Ph
 and binding every declaration to it (see Pre-Dispatch Ritual above).
 </CRITICAL>
 
-- **Written once, at Phase 0 completion**, in the same `workflow_state_update` that
+- **Written once, at Phase 0 completion**, in the same state write that
   first writes the ledger. `locked_at` is set then and NEVER rewritten.
 - **`declined` is the load-bearing field.** A gate the operator chose to skip is
   recorded as declined, not simply left out. Absence cannot distinguish "not chosen"
@@ -1428,18 +1428,18 @@ scalar with it removed).
 **Transition points where develop writes (design §5.4):**
 
 1. **At develop ENTRY (before the Phase-0 wizard):** write ONLY
-   `workflow_state_update({"active_skill": "develop", "skill_phase": "0"})`.
+   state write: `{"active_skill": "develop", "skill_phase": "0"}`.
    This marks ownership + phase. It does **NOT** write `develop_gate_ledger` yet.
    This split is load-bearing for the accountability nudge (design §6.1, IMP-1):
    writing the ledger at entry would make the nudge unfireable; not gating the
    nudge on "past Phase 0" would make it false-fire on every wizard prompt.
 2. **At Phase 0 completion (flags resolved AND ceremony locked):** write the ledger for
    the FIRST time —
-   `workflow_state_update({"develop_gate_ledger": {need_flags, current_phase: <next>, remaining_gates: <derived scalar, minus ceremony.declined>, plan_pointer: "", ceremony: {locked_at, source, assessment, core, selected, declined, promotions: ""}}, "active_skill": "develop", "skill_phase": <next>})`.
+   state write: `{"develop_gate_ledger": {need_flags, current_phase: <next>, remaining_gates: <derived scalar, minus ceremony.declined>, plan_pointer: "", ceremony: {locked_at, source, assessment, core, selected, declined, promotions: ""}}, "active_skill": "develop", "skill_phase": <next>}`.
    Advance `skill_phase` past `"0"`. This is the ONLY write that sets `locked_at`.
 3. **At each subsequent phase entry (1, 1.5, 2, 3, 4) and each in-phase gate
    completion:**
-   `workflow_state_update({"develop_gate_ledger": {current_phase: "<phase>", need_flags, remaining_gates: <re-derived scalar>, plan_pointer: <path>}, "active_skill": "develop", "skill_phase": "<phase>"})`.
+   state write: `{"develop_gate_ledger": {current_phase: "<phase>", need_flags, remaining_gates: <re-derived scalar>, plan_pointer: <path>}, "active_skill": "develop", "skill_phase": "<phase>"}`.
    Re-derive `remaining_gates` as the full scalar with completed gates pruned —
    REPLACE the whole value, never append (CRIT-1).
 4. **At fast-path entry (zero flags):** `current_phase="fast-path"`,

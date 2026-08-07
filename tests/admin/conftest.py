@@ -1,5 +1,6 @@
 import pytest
 import secrets
+import tripwire
 
 
 @pytest.fixture(autouse=True)
@@ -13,14 +14,17 @@ def clear_handoff_store():
 
 
 @pytest.fixture(autouse=True)
-def mock_mcp_token(monkeypatch):
+def mock_mcp_token():
     """Mock the MCP token for all admin tests."""
     token = secrets.token_urlsafe(32)
 
-    monkeypatch.setattr("spellbook.admin.auth.load_token", lambda: token)
-    monkeypatch.setattr("spellbook.admin.routes.auth.load_token", lambda: token)
+    load_token_mock = tripwire.mock("spellbook.admin.auth:load_token")
+    load_token_mock.calls(lambda: token)
+    load_token_mock2 = tripwire.mock("spellbook.admin.routes.auth:load_token")
+    load_token_mock2.calls(lambda: token)
 
-    yield token
+    with tripwire:
+        yield token
 
 
 @pytest.fixture
