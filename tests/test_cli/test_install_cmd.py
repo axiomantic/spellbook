@@ -5,6 +5,8 @@ import argparse
 import pytest
 
 from spellbook.cli.commands.install import register, run
+import tripwire
+from dirty_equals import AnyThing
 
 
 class TestRegister:
@@ -51,7 +53,7 @@ class TestRegister:
 class TestInstallRun:
     """Tests for install run function."""
 
-    def test_dry_run_does_not_crash(self, capsys, monkeypatch):
+    def test_dry_run_does_not_crash(self, capsys):
         """--dry-run should not crash."""
         from installer import core
 
@@ -67,15 +69,18 @@ class TestInstallRun:
             def run(self, **kw):
                 return FakeSession()
 
-        monkeypatch.setattr(core, "Installer", FakeInstaller)
+        Installer_mock = tripwire.mock("installer.core:Installer")
+        Installer_mock.calls(FakeInstaller)
 
-        args = argparse.Namespace(
-            json=False,
-            platforms=None,
-            force=False,
-            dry_run=True,
-        )
-        run(args)
-        captured = capsys.readouterr()
-        # Should produce some output
-        assert captured.out or True  # Dry run may produce minimal output
+        with tripwire:
+            args = argparse.Namespace(
+                json=False,
+                platforms=None,
+                force=False,
+                dry_run=True,
+            )
+            run(args)
+            captured = capsys.readouterr()
+            # Should produce some output
+            assert captured.out or True  # Dry run may produce minimal output
+        Installer_mock.assert_call(args=AnyThing(), kwargs={})
