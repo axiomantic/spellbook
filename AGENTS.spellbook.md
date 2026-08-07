@@ -233,10 +233,18 @@ Combining rows into a single dispatch is forbidden EVEN WHEN:
 - "It would be more efficient to combine..."
 - "We're trying to wrap up..."
 - "The user wants to pause..."
+- "The ceremony is customizable now" / "we picked a lighter ceremony"
 
 ALL of the bullets above are Pattern 6 (Phase Collapse) rationalizations.
 Recognizing the rationalization IS the signal to stop, not the signal that
 the situation is exceptional. The dispatch table has no exception column.
+
+Because the ceremony is selectable at Phase 0, the dispatch table alone is no
+longer a sufficient referent. Every Phase Declaration must ALSO cite the exact
+gate line it satisfies, copied VERBATIM from `develop_gate_ledger.ceremony`
+(`selected` or `core`). A cited line that appears in neither is an invalid
+dispatch; a line in `ceremony.declined` may be run only after being promoted
+to `selected` with a recorded reason. Nothing ever moves the other way.
 
 Each Task() dispatch inside /develop must be preceded by a Phase Declaration
 block (see `$SPELLBOOK_DIR/skills/develop/SKILL.md` "Pre-Dispatch Ritual").
@@ -256,21 +264,45 @@ The operator has stated, durably:
 > skill. If the develop skill is invoked, correctness and thoroughness
 > ALWAYS trumps speed. I HATE MOVING FAST AT THE EXPENSE OF THOROUGHNESS."
 
-Operational implications when the develop skill (or any of its sub-skills)
-is active:
+**Thoroughness is CHOSEN ONCE, then FIXED.** develop's ceremony is selectable
+— but only in a single window, and never afterward.
 
-- NO operator phrasing during develop is license to compress phases.
-  Not "wrap up", not "and pause", not "finish X items", not "save tokens",
-  not "be efficient", not standing autonomous mode, not "pre-resolved forks".
+- **The selection window is Phase 0, before any work begins.** develop assesses
+  the request across the seven cost dimensions and RECOMMENDS a ceremony; the
+  operator's answer is the SOURCE OF TRUTH and overrides the recommendation.
+  The result is written to `develop_gate_ledger.ceremony` and LOCKED
+  (`locked_at`). This is the only moment ceremony is negotiable.
+- **A non-negotiable core is never on the menu**: code review, green-mirage,
+  the test run when tests cover the touched code, TDD-first for anything
+  carrying behavioral logic, and the Iron Law (no skill written or edited
+  without a failing test first). Gates implied by high verification-difficulty
+  or high silent-failure potential are locked on and cannot be deselected.
+- **After the lock, the original contract applies UNCHANGED.** NO operator
+  phrasing during develop is license to compress phases. Not "wrap up", not
+  "and pause", not "finish X items", not "save tokens", not "be efficient",
+  not "we may have enough info now", not standing autonomous mode, not
+  "pre-resolved forks", and not "the ceremony is customizable now". A mid-run
+  request to drop a gate is REFUSED.
+- **The two honest answers to "this is taking too long" are FINISH or ABORT.**
+  Never a quiet narrowing. Aborting and re-invoking develop with a different
+  ceremony is always available and is fully legitimate — it makes re-selection
+  visible and deliberate instead of an erosion. Silently dropping gates is not
+  a third option.
+- **Escalation is always legal; de-escalation never becomes legal.** Scope
+  drift may ADD gates mid-run (a declined component may be promoted, with the
+  reason recorded); nothing may remove one. The lock is a floor, not a ceiling.
+- **A declined component is RECORDED as declined**, not merely absent, so a
+  resumed session can tell "the operator chose not to run this" from "this has
+  not run yet".
 - If the operator wants speed, they will say so AND they will not invoke
   develop. The presence of develop in the active skill list IS the contract.
 - Apparent time pressure ("pause when done", impending session end, etc.)
-  is NOT a circumstance that justifies skipping phases. The thorough path
-  is the only path inside develop. If completion does not fit, stop where
+  is NOT a circumstance that justifies skipping phases. The chosen path is
+  the only path inside develop. If completion does not fit, stop where
   thoroughness ends and report the partial state honestly.
 - The operator's prior corrections on this point ("I want the full enchilada"
-  in the April 2026 paperplanes/A4 sessions) are durable and apply to all
-  future develop invocations across all projects.
+  in the April 2026 paperplanes/A4 sessions) are durable: they govern what
+  happens AFTER the lock, on every develop invocation across all projects.
 
 ### Self-Unblocking Before Declaring Constraints
 

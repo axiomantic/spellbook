@@ -14,6 +14,7 @@ Configuration Architect for develop Phase 0. Your reputation depends on collecti
 2. **Escape hatch detection** - Existing documents bypass phases they cover; detect before asking redundant questions.
 3. **Motivation drives design** - Understanding WHY shapes every subsequent decision; never skip motivation clarification.
 4. **Continuation awareness** - Detect and honor prior session state; artifacts indicate progress, not fresh starts.
+5. **Ceremony is chosen once, then locked** - develop assesses and recommends; the operator decides; the decision is written to the ledger and is immutable for the run. Escalation stays legal; de-escalation never becomes legal.
 
 <CRITICAL>
 **Execution order matters.** Section 0.5 (Continuation Detection) MUST execute BEFORE 0.1–0.4. If continuation signals are present, skip the wizard and jump directly to the resume flow. Only when no continuation signals exist should you proceed to 0.1.
@@ -366,11 +367,16 @@ Refactoring is NOT greenfield. Behavior preservation is the primary constraint. 
 ### 0.7 Need-Flag Classification
 
 <CRITICAL>
-Classify the work by what it NEEDS, not by file counts. Ask the four questions below
+Classify the work by what it NEEDS, not by file counts. Ask the three questions below
 via AskUserQuestion (one concept per question, self-contained — each states WHY and
-defines its terms inline). The answers set three boolean need-flags plus a size estimate.
-The flags directly gate which develop phases run. There is no tier, no mechanical heuristic,
+defines its terms inline). The answers set three boolean need-flags.
+The flags directly gate which develop phases run. There is no mechanical heuristic
 and no auto-exit.
+
+`size_estimate` is NO LONGER ASKED. It is DERIVED in §0.7.5 from the cost assessment.
+Asking the operator to guess a size produced a number that predicted nothing; the
+downstream contract (`SESSION_PREFERENCES.size_estimate`, used only to tune
+parallelization and checkpoint frequency) is unchanged.
 </CRITICAL>
 
 #### Step 1: Define the flags (at point of use)
@@ -378,9 +384,9 @@ and no auto-exit.
 - **needs_research** — the work touches code, systems, or libraries you don't already understand, OR the requirements themselves are still fuzzy (what it should do, for whom, in which cases). This is a SINGLE inclusive-OR flag: yes if EITHER the code is unfamiliar OR the requirements are fuzzy (or both). It switches on BOTH the Research phase AND the Discovery phase together.
 - **needs_design** — the work involves a real architectural decision: a new structure, a choice between two valid approaches, or an interface/contract other code will depend on.
 - **needs_infrastructure** — the work adds a new third-party dependency, stands up new infrastructure/services, or changes a data schema (new tables/columns/fields or a migration). Answering yes IMPLIES `needs_design` (adding infra is itself an architectural decision); the wizard auto-sets `needs_design=true` and does NOT re-ask the design question.
-- **size_estimate** — `small` / `medium` / `large`. A token/distribution signal ONLY: it tunes parallelization and checkpoint frequency. It NEVER affects rigor or which gates run.
+- **size_estimate** — `small` / `medium` / `large`. A token/distribution signal ONLY: it tunes parallelization and checkpoint frequency. It NEVER affects rigor or which gates run. DERIVED in §0.7.5, not asked.
 
-#### Step 2: Ask the four questions (via AskUserQuestion)
+#### Step 2: Ask the three questions (via AskUserQuestion)
 
 Ask each as a separate, self-contained question. Phrasing (verbatim):
 
@@ -408,12 +414,9 @@ or changes a data schema (new tables/columns/fields or a migration). Answering y
 Design phase (if not already on) and makes the implementation plan call out migration, rollout, and
 dependency-pinning steps explicitly. Answer no if you're only changing existing code paths.
 Suggested: `Yes — new deps/infra/schema` / `No — existing code only`
-
-### Q-SIZE — "Roughly how big is this?" (signal only — does not change rigor)
-Pick the rough scale. This only tunes how aggressively I parallelize and how often I checkpoint
-progress; it never changes which review or design steps run.
-Suggested: `Small` / `Medium` / `Large`
 ```
+
+(Q-SIZE is REMOVED. Size is derived in §0.7.5, never asked.)
 
 **Orthogonality:** If Q-INFRA is answered yes, auto-set `needs_design=true` and do NOT ask Q-DESIGN separately. `needs_research` is independent of the other two (you can need design without prior research and vice versa). `size_estimate` is orthogonal to all flags and never gates a phase.
 
@@ -431,13 +434,200 @@ Resolve the three booleans, then route:
 
 The need-flag → phase mapping (§2.1) and the need-flag → depth-gate mapping (§3.3) are the single source of truth; this command references them and does not restate their rows.
 
-Store the resolved `need_flags` (`needs_research`, `needs_design`, `needs_infrastructure` booleans) and `size_estimate` in `SESSION_PREFERENCES`.
+Store the resolved `need_flags` (`needs_research`, `needs_design`, `needs_infrastructure` booleans) in `SESSION_PREFERENCES`. Then proceed to §0.7.5 — the flags decide which phases COULD run; §0.7.5 and §0.8 decide which ceremony actually runs, and that decision is what gets locked.
+
+---
+
+### 0.7.5 Cost Assessment (seven dimensions — develop's own read)
+
+<CRITICAL>
+This is develop's assessment, produced BEFORE the picker and shown TO the operator.
+It is a SUGGESTION and is labelled as one. The operator's answer in §0.8 is the
+SOURCE OF TRUTH and overrides any dimension read here.
+
+Assess ALL SEVEN dimensions. Do NOT estimate file counts — file count is not a
+dimension and never was a good one. Rate each `low` / `high` and give ONE line of
+concrete evidence (a path, a symbol, a named unknown). A dimension rated without
+evidence is rated `high` by default: an unevidenced "this is fine" is exactly the
+guess this section exists to eliminate.
+</CRITICAL>
+
+| # | Dimension | The question it answers | Rate `high` when |
+|---|-----------|------------------------|------------------|
+| D1 | **unfamiliarity** | Do we understand the code we are about to change? | The touched code has not been read this session and no one can name its invariants |
+| D2 | **fuzziness** | Do we know what "correct" means? | The requirement admits more than one reasonable reading |
+| D3 | **blast radius** | How bad is being wrong, and can we undo it? | A mistake reaches users/data/published artifacts, or is hard to reverse |
+| D4 | **coupling** | How many consumers depend on what we touch? | The thing changed is depended on by callers we will not be editing |
+| D5 | **verification difficulty** | Can correctness be PROVEN, or only asserted? | There is no command that would go red if the change were wrong |
+| D6 | **silent-failure potential** | Would breakage be LOUD or INVISIBLE? | The failure mode is "reports success, does nothing" rather than "throws" |
+| D7 | **precedent** | Is there an in-repo pattern to copy? | No existing example of this shape exists in the repo |
+
+**Why these seven, and not size.** Cost tracks these dimensions, not volume. The
+motivating case: work that was small by every size measure cost enormously because
+its defects were invisible-failure-shaped — an installer that reported success while
+writing files no harness read, tests that passed against an inert feature, a check
+that grepped for a string which did not exist. Every one of those is D5/D6 high and
+D1–D4 unremarkable. Size predicted nothing. D5 and D6 predicted all of it.
+
+<CRITICAL>
+**D5 and D6 are ESCALATION-ONLY.** If `verification_difficulty` or
+`silent_failure_potential` is `high`, the gates they imply are marked LOCKED in the
+§0.8 picker and are NOT offered for removal. The operator may still abort develop
+entirely; they may not quietly deselect the only gates that catch an invisible
+failure. Every other dimension's implied gates are freely selectable.
+</CRITICAL>
+
+**Dimension → implied gate (what a `high` rating recommends adding):**
+
+| Dimension `high` | Recommends |
+|---|---|
+| D1 unfamiliarity | Research (Phase 1) + Discovery (1.5) + dehallucination (1.5.7) |
+| D2 fuzziness | Discovery (1.5) + devil's advocate (1.6) |
+| D3 blast radius | Design review (2.2) + impl-plan review (3.2) + comprehensive audit (4.6.1) |
+| D4 coupling | Impl-plan review (3.2) + comprehensive fact-checking (4.6.4/4.6.5) |
+| D5 verification difficulty | Checkability passes (2.1.5 / 3.1.5) + green-mirage (4.6.3) — **LOCKED** |
+| D6 silent-failure potential | Completion verification (4.4) + comprehensive audit (4.6.1) + green-mirage (4.6.3) + TDD-first (4.3), waiver revoked — **LOCKED** |
+| D7 precedent absent | Research (Phase 1) + Design (Phase 2) |
+
+**Derive `size_estimate`** from the assessment instead of asking: `large` if four or
+more dimensions are `high`, `medium` if two or three, else `small`. Store in
+`SESSION_PREFERENCES.size_estimate`. Its downstream meaning is UNCHANGED — it tunes
+parallelization and checkpoint frequency and NEVER gates a review step.
+
+**Scope drift upward.** If the assessment rates D1 or D2 `high` on a change the
+operator flagged zero, say so plainly and set the corresponding need-flag before
+building the picker (Scope-Drift Protocol: Re-Flag and Continue). The assessment may
+ADD flags; it may never clear one the operator set.
+
+**Present the assessment as a suggestion, in these words:**
+
+```markdown
+## My read of this request (a suggestion — your call in the next question)
+
+| Dimension | Rating | Evidence |
+|---|---|---|
+| Unfamiliarity | low/high | ... |
+| Fuzziness | low/high | ... |
+| Blast radius | low/high | ... |
+| Coupling | low/high | ... |
+| Verification difficulty | low/high | ... |
+| Silent-failure potential | low/high | ... |
+| Precedent | present/absent | ... |
+
+Recommended ceremony: **{Core|Focused|Full}** — {one sentence naming the dimension that drove it}
+Locked by D5/D6: {list, or "nothing — no invisible-failure risk detected"}
+```
+
+---
+
+### 0.8 Ceremony Picker (the operator chooses; the choice is then LOCKED)
+
+<CRITICAL>
+The ceremony is chosen EXACTLY ONCE, here, before any work begins — and is IMMUTABLE
+for the rest of the run. This is the ONLY moment develop's ceremony is negotiable.
+After the lock, mid-run requests to drop a gate are REFUSED; the two honest answers
+to "this is taking too long" are FINISH or ABORT, never a quiet narrowing.
+Escalation (adding gates) stays legal all run; de-escalation never becomes legal.
+</CRITICAL>
+
+#### Step 1: The non-negotiable core (NEVER appears in the picker)
+
+These run on every develop path at every ceremony level. They are not options and
+MUST NOT be presented as such:
+
+- Code review (4.5)
+- Green-mirage audit (4.6.3)
+- Test-suite run (4.6.2) whenever tests cover the touched code
+- TDD-first (4.3) for any change carrying behavioral logic (the §3.4 literal/config
+  waiver survives ONLY when D6 silent-failure potential is `low`)
+- **The Iron Law** — no skill created or edited without a failing test first. This sits
+  OUTSIDE the picker at every level; see `write-skill-test` and `writing-skills`. A
+  test-first rule that can be switched off is not a rule.
+- Author ≠ Judge, the artifact-verification protocol, and the Phase Declaration ritual
+  (these are structural, not gates — nothing about them is selectable)
+
+#### Step 2: Build the menu from the assessment (do NOT show a fixed 12-item list)
+
+Offer ONLY components the assessment made relevant. A change with every dimension
+`low` gets a two-item menu or none at all; do not tax a small request with a long
+questionnaire. Candidate components, each shown only when its dimension row fired or
+its need-flag is set:
+
+| Component | Offered when |
+|---|---|
+| Research (Phase 1) | `needs_research`, or D1/D7 high |
+| Discovery + dehallucination (1.5) | `needs_research`, or D1/D2 high |
+| Devil's advocate (1.6) | `needs_design` or `needs_research`, or D2 high |
+| Design doc + design review (2.1/2.2) | `needs_design`, or D3/D7 high |
+| Assumption verification (2.5) | `needs_design` |
+| Checkability passes (2.1.5/3.1.5) | D5 high — **LOCKED, shown as already-on** |
+| Impl plan + plan review (3.1/3.2) | `needs_design` or `needs_infrastructure`, or D3/D4 high |
+| Per-task fact-checking (4.5.1) | `needs_research` or `needs_design` |
+| Completion verification (4.4) | D6 high — **LOCKED, shown as already-on** |
+| Comprehensive audit (4.6.1) | D3/D6 high |
+| Comprehensive fact-checking (4.6.4/4.6.5) | `needs_research` or `needs_design`, or D4 high |
+| Roundtable dialectic | never auto-recommended; offered only if the operator asked for it in §0.4 |
+
+LOCKED rows are DISPLAYED (so the operator can see what they are getting and why) but
+carry no deselect option. State the reason inline: "locked because silent-failure
+potential is high — this is the gate that catches a success report over a no-op."
+
+#### Step 3: Ask (via AskUserQuestion)
+
+Present ONE question with the derived menu. Recommendation and choice must be visibly
+distinct — recommend, never preselect-and-hope:
+
+```markdown
+Header: "Ceremony"
+Question: "Here's the ceremony I recommend for this work, and why. Which do you want?
+This is locked once we start — I won't renegotiate it mid-run."
+
+Options:
+- Recommended: {Core|Focused|Full} — {the derived set, named}. {One line of why.}
+- Full ceremony — every phase and gate develop has. Always available regardless of my read.
+- Customize — I'll list the {N} optional components and you pick.
+- Core only — the non-negotiable floor and nothing above it. {Name what this gives up.}
+  (Offered ONLY when no dimension is high and no need-flag is set.)
+```
+
+If the operator picks **Customize**, ask a follow-up with the derived menu as
+multi-select. LOCKED components are shown in the prompt text as already-on and are
+NOT among the selectable items.
+
+**Default path (a non-engaging operator gets today's behavior, unchanged).** If the
+operator does not answer, cancels, or picks the recommendation without customizing on
+a fully-flagged request, `source = "default_full"` and NOTHING is declined: `selected`
+is exactly the flag-derived gate set that `derive_remaining_gates` already produces
+today, and `declined` is empty. The picker can only ever SUBTRACT from the
+flag-derived set, and subtracting nothing reproduces today's run exactly.
+
+#### Step 4: Lock it into the ledger
+
+Write the choice to `develop_gate_ledger.ceremony` via `workflow_state_update`
+(MERGE-ONLY — never `workflow_state_save`). The shape and the locking rules are in the
+develop skill under "Ceremony Ledger". Two properties matter here:
+
+1. A declined component is RECORDED AS DECLINED, never merely absent. A resumed
+   session must be able to tell "the operator chose not to run this" from "this has
+   not run yet". Absence is ambiguous; `declined` is not.
+2. `locked_at` is written at this moment and never rewritten. Its presence IS the lock.
+
+<FORBIDDEN>
+- Presenting any non-negotiable core item as a selectable option
+- Offering to deselect a D5/D6-LOCKED component
+- Presenting a menu of components the assessment did not make relevant
+- Preselecting the recommendation without showing that it is develop's suggestion and the operator's call
+- Deriving ceremony from a file count
+- Re-opening the picker after `locked_at` is set (abort and re-invoke develop instead)
+</FORBIDDEN>
 
 <FORBIDDEN>
 - Proceeding past 0.4 without all preferences collected (4 base + up to 3 conditional)
 - Running wizard questions before checking 0.5 continuation signals
 - Trusting session summary without artifact verification
-- Proceeding without answering all four need-flag questions (Q-RESEARCH, Q-DESIGN, Q-INFRA, Q-SIZE; Q-DESIGN auto-resolved when Q-INFRA is yes)
+- Proceeding without answering all three need-flag questions (Q-RESEARCH, Q-DESIGN, Q-INFRA; Q-DESIGN auto-resolved when Q-INFRA is yes)
+- Asking the operator to estimate size (Q-SIZE is removed; `size_estimate` is derived in §0.7.5)
+- Proceeding past §0.8 without a locked `develop_gate_ledger.ceremony`
 - Auto-exiting develop on a zero-flag change (the fast path keeps develop resident)
 - Skipping motivation clarification when request intent is ambiguous
 - Asking wizard questions again when resuming (only re-ask the 4 preference questions)
@@ -457,7 +647,11 @@ Before proceeding, verify:
 - [ ] Dialectic mode and level selected (if dialectic != none)
 - [ ] Token enforcement level selected
 - [ ] Refactoring mode detected if applicable
-- [ ] All four need-flag questions answered; `need_flags` + `size_estimate` stored in SESSION_PREFERENCES
+- [ ] All three need-flag questions answered; `need_flags` stored in SESSION_PREFERENCES
+- [ ] All seven cost dimensions assessed with one line of evidence each (§0.7.5); `size_estimate` DERIVED, not asked
+- [ ] Assessment presented to the operator as a SUGGESTION, with D5/D6 locks named
+- [ ] Ceremony chosen by the operator (§0.8) and written to `develop_gate_ledger.ceremony` with `locked_at` set
+- [ ] Declined components recorded in `ceremony.declined` (recorded as declined, never merely absent)
 - [ ] Flag routing determined (fast path vs. flag-gated phases)
 
 If ANY unchecked: Complete Phase 0. Do NOT proceed.

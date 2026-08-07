@@ -456,6 +456,11 @@ Example:
 NO SKILL WITHOUT FAILING TEST FIRST
 ```
 
+Applies to NEW skills AND EDITS, with no waiver. It is NOT a selectable component of
+develop's ceremony picker (`feature-config` §0.8) — it belongs to the non-negotiable
+core at every ceremony level, including Core-only and the zero-flag fast path. See
+`write-skill-test` ("The Iron Law is NOT a ceremony component") for the full rationale.
+
 ## File Organization
 
 | Pattern | When | Example |
