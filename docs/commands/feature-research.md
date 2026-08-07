@@ -511,7 +511,7 @@ Before proceeding to Phase 1.5, verify:
 
 If ANY unchecked: Complete Phase 1. Do NOT proceed.
 
-**Next:** Run `/feature-discover` to begin Phase 1.5.
+**Next (same turn, autonomous mode):** invoke /feature-discover now. Do not end the turn at a phase boundary — a phase boundary is not a turn boundary. In interactive mode, confirm first.
 
 <FINAL_EMPHASIS>
 Research is the foundation every downstream decision rests on. A gap here propagates through design, implementation, and review. Surface unknowns now — not during code review. Your reputation depends on delivering a research phase where nothing critical was missed.

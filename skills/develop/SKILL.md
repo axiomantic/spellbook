@@ -305,6 +305,81 @@ If artifact missing, at wrong path, or section count wrong: re-dispatch.
 Do NOT accept "the file is there, trust me" — verify. The cost of one
 `ls` is far lower than the cost of building Phase N+1 on a missing artifact.
 
+### Checkability (before every review gate)
+
+Existence is not checkability. The checks above prove that a document is there;
+they never ask whether the document makes claims a machine can decide. A review
+that reads a machine-decidable claim spends the reviewer's judgment on
+arithmetic, and finds the defect late or not at all.
+
+Before you dispatch the reviewer at gate 2.2 or 3.2, dispatch ONE subagent to
+answer this question and act on the answer:
+
+> Which claims in this artifact are mechanically decidable, and which command
+> decides each one?
+
+Claims that are usually decidable: the dependency graph is acyclic; every
+declared dependency exists; wave and ordering assignments agree with the
+dependency graph; every tag comes from the declared vocabulary; every cited path
+and symbol exists; every declared check command goes red on a known-bad input.
+
+1. **Mechanize before you review.** Build the checks for the decidable claims,
+   run them, and repair what they find. Then dispatch the reviewer, and tell it
+   which claims the checks already decide.
+2. **Tooling the artifact specifies is built BEFORE the gate it closes.** If the
+   plan under review schedules its own lint, assertion script, or checker as a
+   later task, that is an ordering defect. Move that tooling ahead of this gate
+   and build it now. A plan that designs its own verification and then defers it
+   makes the gate weaker than the plan already knows how to be.
+3. **Prove that the check can fail.** A check is evidence only after it goes red
+   on an input you know is bad. Run it against a deliberately broken copy first.
+   A green result from a check that cannot fail is worse than no check, because
+   it looks like verification (global rule: "No Silent Success: Verify the
+   Artifact, Not the Signal").
+4. **The check reports which rule fired, not only how many.** A count alone
+   hides a check that reads only part of its input.
+
+**Scope.** This pass is proportional. If the artifact makes no mechanically
+decidable claims — for example a five-step inline plan with no dependency graph
+— record that in one line and dispatch the reviewer. Do not build tooling for an
+artifact that does not need it. This pass does not run on the zero-flag fast
+path.
+
+The auto-proceed checks in the YOLO section above (sequential sections, real
+paths, acyclic dependency graph) are instances of this rule, not a substitute
+for it.
+
+### Review-Round Convergence (gates 2.2 ↔ 2.4 and 3.2 ↔ 3.4)
+
+Number every review round of the same artifact. Record two facts per round: the
+count of blocking findings, and how many of those findings exist because the
+previous round's repairs caused them.
+
+**Divergence rule.** If the majority of round N+1's blocking findings are
+defects that round N's repairs introduced, the loop does not converge. STOP
+reviewing. More reading does not make the artifact better; it moves the defects
+around. Do this instead:
+
+1. Name the class of finding that comes back.
+2. Mechanize that class (see Checkability above). Prove that the check goes red
+   on the known-bad case.
+3. Repair against the check, not against prose.
+4. Run ONE more review round, limited to the claims the check cannot decide.
+
+This is not a round cap. A round that finds new, real defects is progress — run
+it. The trigger is regression, not repetition.
+
+**Round evidence (round 2 and later).** Each fresh reviewer starts with no
+memory, so every round re-derives the same graph and re-measures the same
+behavior. From round 2 on, carry an `ESTABLISHED FACTS` block in the review
+dispatch prompt: one line per fact, each with how it was measured (command and
+result) and the round that measured it. Add to the block after every round.
+Never delete a line without stating why the fact is now wrong.
+
+Keep this block in the dispatch prompt, not in a new file. A mandatory artifact
+would tax every small feature for a problem that appears only when a second
+round happens; a prompt block costs nothing until then.
+
 ---
 
 ## MANDATORY: Pre-Dispatch Ritual
@@ -312,7 +387,8 @@ Do NOT accept "the file is there, trust me" — verify. The cost of one
 <CRITICAL>
 Before EVERY Task() dispatch inside /develop or any of its sub-skills
 (feature-config, feature-research, feature-discover, feature-design,
-feature-implement), output the following block IN YOUR VISIBLE RESPONSE
+feature-implement, feature-implement-execute), output the following block
+IN YOUR VISIBLE RESPONSE
 (not in thinking, not summarized): the user must be able to read it.
 
 ```
@@ -379,10 +455,12 @@ If a subagent fails or returns empty results: re-dispatch with additional contex
 | 1.5.7 | Dehallucination gate     | dehallucination                  | FORBIDDEN        |
 | 1.6   | Devil's advocate         | devils-advocate                  | FORBIDDEN        |
 | 2.1   | Design creation          | design-exploration (SYNTHESIS MODE) | FORBIDDEN     |
+| 2.1.5 | Checkability pass (design) | (inline mechanization prompt, no skill) | FORBIDDEN |
 | 2.2   | Design review            | reviewing-design-docs            | FORBIDDEN        |
 | 2.5   | Assumption verification  | fact-checking                    | FORBIDDEN        |
 | 2.4   | Fix design               | executing-plans                  | FORBIDDEN        |
 | 3.1   | Plan creation            | writing-plans                    | FORBIDDEN        |
+| 3.1.5 | Checkability pass (plan) | (inline mechanization prompt, no skill) | FORBIDDEN  |
 | 3.2   | Plan review              | reviewing-impl-plans             | FORBIDDEN        |
 | 3.4   | Fix plan                 | executing-plans                  | FORBIDDEN        |
 | 4.3   | Per-task TDD             | test-driven-development          | FORBIDDEN        |
@@ -433,6 +511,29 @@ Task (or subagent in Pi):
 **OpenCode:** Always use `CURRENT_AGENT_TYPE` (detected at session start) to ensure subagents inherit YOLO permissions.
 **Pi:** Skip `subagent_type` field entirely; Pi has no agent-type permissions axis.
 </FORBIDDEN>
+
+### Author ≠ Judge
+
+<CRITICAL>
+The agent that wrote or repaired an artifact NEVER supplies the verdict on it.
+The verdict comes from a dispatch that did not touch the thing it judges.
+
+**Corollary (equally binding):** the agent that did the work IS the correct agent
+to BUILD the executable check — it holds the context. It is the wrong agent to
+run that check and pronounce the result. Split the two dispatches: one builds the
+check, a different one runs it and judges. An agent MUST NOT change a check that
+measures its own repair.
+
+Signs that you are violating this rule:
+
+- A remediation dispatch returns "implementable", "clean", or "all findings
+  addressed" as its own verdict.
+- A fix agent changes the lint, the test, or the threshold that measures its fix.
+- The next gate cites the fixer's summary as evidence that the fix is good.
+
+An artifact repaired in round N stays UNJUDGED until an independent dispatch
+judges it. Record the fixer's report as a claim, never as a result.
+</CRITICAL>
 
 ---
 
@@ -618,7 +719,7 @@ After dispatching ANY subagent that should invoke a skill:
 
 A subagent that reports "the skill is not available in this environment" without showing an attempted Skill tool call is making an untested claim. Reject it. Skills are delivered via system-reminder, NOT via the deferred-tools list, and the catalog is injected lazily after the first tool call. A subagent must attempt the call before declaring it impossible.
 
-**Exemption:** This verification does NOT apply to "inline audit prompt" gates (4.4, 4.6.1) which have no skill to invoke. For those gates, verify the audit artifact instead of skill invocation.
+**Exemption:** This verification does NOT apply to "inline audit prompt" gates (2.1.5, 3.1.5, 4.4, 4.6.1) which have no skill to invoke. For those gates, verify the audit artifact instead of skill invocation. For 2.1.5 and 3.1.5, the artifact is the check itself plus its red run on a known-bad input.
 
 Anti-rationalization #9 (Self-Review Substitution) applies here.
 </CRITICAL>
@@ -799,6 +900,7 @@ Phase 1.5: Informed Discovery (if needs_research)
     ↓
 Phase 2: Design (if needs_design; needs_infrastructure implies needs_design; skip if escape hatch)
   ├─ 2.1: Subagent invokes design-exploration (SYNTHESIS MODE)
+  ├─ 2.1.5: Checkability pass (mechanize decidable claims before the review gate)
   ├─ 2.2: Subagent invokes reviewing-design-docs
   ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous); surface honors decision_surface (terminal AskUserQuestion | canvas-decision for forks qualifying under the "When to Use (testable boundary)" section of the canvas-decision skill)
   ├─ 2.4: Subagent invokes executing-plans to fix
@@ -806,6 +908,7 @@ Phase 2: Design (if needs_design; needs_infrastructure implies needs_design; ski
     ↓
 Phase 3: Implementation Planning (if needs_design OR needs_infrastructure; skip if impl plan escape hatch)
   ├─ 3.1: Subagent invokes writing-plans
+  ├─ 3.1.5: Checkability pass (mechanize decidable claims; build plan-specified tooling FIRST)
   ├─ 3.2: Subagent invokes reviewing-impl-plans
   ├─ 3.3: GATE: User approval per mode; surface honors decision_surface (terminal AskUserQuestion | canvas-decision for forks qualifying under the "When to Use (testable boundary)" section of the canvas-decision skill)
   ├─ 3.4: Subagent invokes executing-plans to fix
@@ -1049,7 +1152,7 @@ write the test.**
 
 ## Workflow Execution
 
-This skill orchestrates feature implementation through 5 sequential commands.
+This skill orchestrates feature implementation through 6 sequential commands.
 Each command handles a specific phase and stores state for the next.
 
 ### Command Sequence
@@ -1063,7 +1166,8 @@ Runs-when predicates reference the need-flag → phase mapping in design §2.1
 | 2 | `/feature-research` | 1 | Research strategy, codebase exploration, quality scoring | `needs_research` |
 | 3 | `/feature-discover` | 1.5 | Informed discovery, disambiguation, understanding document | `needs_research` |
 | 4 | `/feature-design` | 2 | Design document creation and review | `needs_design` (implied by `needs_infrastructure`) |
-| 5 | `/feature-implement` | 3-4 | Implementation planning and execution | always (zero-flag fast path uses an inline plan, skips Phase 3 planning) |
+| 5 | `/feature-implement` | 3 | Implementation planning (plan, review, approval gate, execution-mode analysis) | always (zero-flag fast path uses an inline plan, skips Phase 3 planning) |
+| 6 | `/feature-implement-execute` | 4 | Implementation execution (per-task TDD, quality gates, finishing) | always |
 
 ### Execution Protocol
 
@@ -1076,7 +1180,8 @@ Do NOT skip commands unless escape hatches allow it.
 2. **Research:** Run `/feature-research` after config complete
 3. **Discover:** Run `/feature-discover` after research complete
 4. **Design:** Run `/feature-design` after discovery complete (unless escape hatch)
-5. **Implement:** Run `/feature-implement` after design complete (unless escape hatch)
+5. **Plan:** Run `/feature-implement` after design complete (unless escape hatch)
+6. **Execute:** Run `/feature-implement-execute` after Phase 3's STOP AND VERIFY checklist passes
 
 ### Flag-Based Routing
 
@@ -1089,7 +1194,7 @@ references it, it does not restate the rows.
 - Skip `/feature-research`, `/feature-discover`, `/feature-design`, and Phase-3 planning-as-a-phase.
 - Run lightweight research inline (explore subagent, <=5 files, 1-paragraph summary).
 - Create an inline plan (<=5 numbered steps in conversation); get user confirmation.
-- Run `/feature-implement` under the LIGHTER review floor (design §3.2): code review + green-mirage ALWAYS; test run only if tests cover the touched code; TDD-first waived for pure literal/config edits (§3.4); fact-checking does not run (no artifact to act on). NEVER zero review.
+- Run `/feature-implement-execute` (Phase 4) under the LIGHTER review floor (design §3.2): code review + green-mirage ALWAYS; test run only if tests cover the touched code; TDD-first waived for pure literal/config edits (§3.4); fact-checking does not run (no artifact to act on). NEVER zero review.
 
 **Any flag set:**
 - Run the phases that flag gates (per design §2.1) under the FULL review floor (design §3.2: TDD-first + code review + green-mirage + test suite) plus the flag-gated depth gates (design §3.3).
@@ -1117,7 +1222,7 @@ If ANY guardrail is hit, trigger the Scope-Drift Protocol: Re-Flag and Continue 
 | -------------------------------- | ---------------------------------------------------------------- |
 | Design doc with "treat as ready" | Skip `/feature-design`                                           |
 | Design doc with "review first"   | Run `/feature-design` starting at 2.2                            |
-| Impl plan with "treat as ready"  | Skip `/feature-design` AND `/feature-implement` Phase 3          |
+| Impl plan with "treat as ready"  | Skip `/feature-design` AND `/feature-implement` (Phase 3); enter at `/feature-implement-execute` |
 | Impl plan with "review first"    | Skip `/feature-design`, run `/feature-implement` starting at 3.2 |
 
 ### State Persistence

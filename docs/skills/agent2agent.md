@@ -197,6 +197,43 @@ on the `PENDING_BATCH` exit: it `drain`s the pending batch (moves
 dispatches one fresh immortal watcher. Because the watcher does not
 recycle, an idle session sees no per-cycle wake at all.
 
+**Why the dispatch must be harness-tracked.** The watcher's *exit* is the
+delivery signal. Nothing polls; the chain only advances because the harness
+notices the process ended and tells the agent. So the watcher has to be a
+process the harness owns — dispatched through the `run_in_background: true`
+tool parameter, which returns a task id. Backgrounding it inside the shell
+instead (`&`, `nohup`, `setsid`) produces a process nobody owns: it acquires
+the lock, heartbeats, and blocks on the inbox exactly as designed, and when a
+message finally arrives it exits into the void. No notification, no drain, no
+re-arm. Mail accumulates until something unrelated makes the agent look.
+
+This is the one failure mode the liveness probe cannot see. `_open_state
+alive` stats `.watcher.heartbeat`, and an untracked watcher heartbeats
+faithfully — so `alive` returns 0 while delivery is dead. The probe answers
+"is a watcher running", which is not the same question as "will a message
+reach me". The distinguishing evidence is the `agent_id` in `.open/<sid>`:
+it must be a task id the harness handed back during this session. Absent
+that, there is no delivery path regardless of what the heartbeat says.
+
+The same gap explains the other common way the chain dies: draining a
+`PENDING_BATCH` and then starting other work before re-arming. The watcher
+has already exited by definition — that exit is what delivered the batch —
+so until a fresh one is dispatched there is no chain at all, and nothing
+will say so.
+
+**Re-arm is the last tool call of the drain handler, not a follow-up
+step.** Sequence, no exceptions: drain → surface bodies → re-arm
+dispatch. Nothing goes between the drain and the re-arm — not a
+reply, not a status line, not "one quick check." The watcher has
+already exited; that exit is what delivered the batch. Until a fresh
+one is dispatched there is no chain, and nothing will tell you.
+
+Before ending ANY turn in which you drained, sent, or replied on the
+bus, verify the chain is armed with a live task id from THIS session.
+A heartbeat is not proof (see No Silent Success). If you sent a
+message expecting a reply and the chain is down, you will not receive
+it and no error will occur.
+
 **Capability ladder (the canonical mental model).** Idle delivery has
 two tiers:
 

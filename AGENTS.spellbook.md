@@ -217,7 +217,8 @@ Load `branch-context` skill for `branch-context.sh` usage, stacked branch handli
 ### Develop Skill Phase Non-Fungibility
 
 When inside /develop or any of its sub-skills (feature-config, feature-research,
-feature-discover, feature-design, feature-implement), every Task() dispatch
+feature-discover, feature-design, feature-implement,
+feature-implement-execute), every Task() dispatch
 executes EXACTLY ONE row of the dispatch table at
 `$SPELLBOOK_DIR/skills/develop/SKILL.md` "Subagent Dispatch Points" section.
 

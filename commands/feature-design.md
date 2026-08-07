@@ -172,6 +172,20 @@ Task:
 
 **Subagent failure:** If design-exploration subagent fails, HALT and report to user. Do not attempt inline design work.
 
+### 2.1.5 Checkability Pass (before the review gate)
+
+<RULE>Dispatch subagent. Do NOT do this work in main context.</RULE>
+
+Run the Checkability protocol in `develop` SKILL.md ("Checkability") against the
+design document before you dispatch 2.2. One dispatch: find the claims a machine
+can decide (cited paths and symbols exist, declared interfaces are consistent,
+declared check commands go red on a known-bad input), build and run those checks,
+and repair what they find. Then name the decided claims in the 2.2 dispatch
+prompt so the reviewer spends its judgment on judgment.
+
+If the design makes no mechanically decidable claims, record that in one line and
+proceed to 2.2. Do not build tooling a design does not need.
+
 ### 2.2 Review Design Document
 
 <RULE>Dispatch subagent. Do NOT do this work in main context.</RULE>
@@ -287,6 +301,19 @@ Task:
     - Fix underlying issues, not just surface symptoms
 ```
 
+**Round discipline for the 2.2 ↔ 2.4 loop** (full rules in `develop` SKILL.md,
+"Review-Round Convergence" and "Author ≠ Judge"):
+
+- Number each round. Record the blocking-finding count, and how many findings
+  round N's repairs caused.
+- If the majority of a round's blocking findings come from the previous round's
+  repairs, STOP reviewing. Mechanize that class of finding, repair against the
+  check, then run ONE more review round for the claims the check cannot decide.
+- From round 2 on, carry an `ESTABLISHED FACTS` block in the 2.2 dispatch prompt
+  so each fresh reviewer does not re-derive facts earlier rounds measured.
+- The 2.4 fix subagent NEVER supplies the verdict on its own repair. Round N+1's
+  review is a separate dispatch.
+
 <FORBIDDEN>
 - Performing design exploration, design review, or plan execution in main context instead of subagents
 - Asking discovery questions during the design-exploration subagent (synthesis mode is mandatory)
@@ -362,6 +389,7 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 - [ ] Primary source recorded in `SESSION_CONTEXT.primary_source` (Phase 2.0)
 - [ ] Design-exploration subagent DISPATCHED in SYNTHESIS MODE (not done in main context)
 - [ ] Design document created and saved
+- [ ] Checkability pass (2.1.5) run BEFORE the 2.2 dispatch
 - [ ] Design review subagent (reviewing-design-docs) DISPATCHED
 - [ ] Approval gate handled per autonomous_mode
 - [ ] All critical/important findings fixed (if any)

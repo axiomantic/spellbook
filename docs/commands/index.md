@@ -60,7 +60,8 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/feature-config](feature-config.md) | Phase 0 of develop: Configuration wizard, escape hatches, preferences, continuat... | spellbook |
 | [/feature-design](feature-design.md) | Phase 2 of develop: Create and review design document | spellbook |
 | [/feature-discover](feature-discover.md) | Phase 1.5 of develop: Informed discovery, disambiguation, 7-category questions, ... | spellbook |
-| [/feature-implement](feature-implement.md) | Phase 3-4 of develop: Plan and execute implementation | spellbook |
+| [/feature-implement](feature-implement.md) | Phase 3 of develop: Create, review, and approve the implementation plan (Phase 4... | spellbook |
+| [/feature-implement-execute](feature-implement-execute.md) | Phase 4 of develop: Execute the implementation plan with per-task TDD, quality g... | spellbook |
 | [/feature-research](feature-research.md) | Phase 1 of develop: Research strategy, codebase exploration, ambiguity detection... | spellbook |
 | [/finish-branch-cleanup](finish-branch-cleanup.md) | Step 5 of finishing-a-development-branch: Worktree cleanup for Options 1, 2, and... | spellbook |
 | [/finish-branch-execute](finish-branch-execute.md) | Step 4 of finishing-a-development-branch: Execute chosen integration option (mer... | spellbook |

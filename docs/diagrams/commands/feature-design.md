@@ -1,169 +1,161 @@
-<!-- diagram-meta: {"source": "commands/feature-design.md", "source_hash": "sha256:dc229ce2de60303b22929e28c928ecb8262be7af1987a9dc29fb073daf41bf74", "generated_at": "2026-06-11T00:47:53Z", "generator": "generate_diagrams.py"} -->
+<!-- diagram-meta: {"source": "commands/feature-design.md", "source_hash": "sha256:d87bdb553920e2b0cb37fbe1188358a65efae3ad72e88e7909af21d4e0376c04", "generated_at": "2026-08-05T19:20:56Z", "generator": "generate_diagrams.py"} -->
 # Diagram: feature-design
 
-## `feature-design` — Overview
+Now generating the diagrams based on the full traversal of this file.
+
+## Overview: /feature-design (Phase 2 of develop)
 
 ```mermaid
 flowchart TD
-    classDef subagentNode fill:#4a9eff,color:#fff,stroke:#2980b9,stroke-width:2px
-    classDef gateNode fill:#ff6b6b,color:#fff,stroke:#c0392b,stroke-width:2px
-    classDef successNode fill:#51cf66,color:#fff,stroke:#27ae60,stroke-width:2px
-    classDef haltNode fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px
-    classDef userInputNode fill:#9b59b6,color:#fff,stroke:#6c3483,stroke-width:2px
-    classDef phaseNode fill:#2c3e50,color:#ecf0f1,stroke:#1a252f,stroke-width:2px
+    classDef subagent fill:#4a9eff,color:#fff
+    classDef gate fill:#ff6b6b,color:#fff
+    classDef success fill:#51cf66,color:#000
+    classDef decision fill:#fff3bd,color:#000
 
-    START(["▶ /feature-design"]) --> PREREQ
+    Start([Enter /feature-design]) --> Prereq{Prerequisite<br/>checks pass?}
+    Prereq -- "No" --> HaltPrereq([HALT: return to<br/>appropriate phase]):::gate
+    Prereq -- "Yes" --> Escape{Escape hatch<br/>set?}
 
-    subgraph PREREQ_GRP["Prerequisite Verification"]
-        PREREQ["Check 1: needs_design == true"]
-        PREREQ --> C2["Check 2: Understanding doc exists"]
-        C2 --> C3["Check 3: Completeness score = 100%"]
-        C3 --> C4["Check 4: Devil's advocate completed"]
+    Escape -- "None" --> P20
+    Escape -- "review first" --> P22note[Skip 2.1, start at 2.2]
+    Escape -- "treat as ready" --> SkipAll([Skip entire Phase 2]):::success
+    Escape -- "impl plan hatch" --> SkipAll
+
+    P22note --> P22
+
+    subgraph PH2["Phase 2: Design (see Detail Diagram A)"]
+        direction TB
+        P20["2.0 Primary Source<br/>Re-Anchor"]:::gate --> P201{2.0.1 Fallback sweep<br/>guard fires?}
+        P201 -- "Yes" --> P201run["Run project-standards<br/>fallback sweep"]
+        P201 -- "No (no-op)" --> P21
+        P201run --> P21
+        P21["2.1 Create Design Doc"]:::subagent --> P215["2.1.5 Checkability Pass"]:::subagent
+        P215 --> P22["2.2 Review Design Doc"]:::subagent
+        P22 --> P23{2.3 Approval Gate<br/>(see Detail Diagram B)}:::decision
+        P23 -- "findings / ITERATE" --> P24["2.4 Fix Design Doc"]:::subagent
+        P24 -- "Round N+1 review" --> P22
+        P23 -- "no findings / APPROVE" --> P25["2.5 Scope Coherence<br/>Check"]:::subagent
     end
 
-    PREREQ -- "any check fails" --> PREREQ_FAIL(["◀ Return to prior phase"])
-    C4 -- all pass --> ESCAPE
-
-    ESCAPE{"Escape\nhatch?"}
-    ESCAPE -- "'treat as ready'\nor impl plan hatch" --> PHASE2_SKIP(["◀ Skip Phase 2 entirely"])
-    ESCAPE -- "'review first'" --> P22
-    ESCAPE -- none --> P20
-
-    P20["§2.0 Primary Source Re-Anchor\nAskUserQuestion: name canonical artifact\nrecord SESSION_CONTEXT.primary_source"]
-    P20 --> P201
-
-    P201{"§2.0.1 Guard:\nproject_standards\npopulated?"}
-    P201 -- "yes\n(research path already swept)" --> P21
-    P201 -- "no\n(design-only path)" --> P201_SWEEP["Standards fallback sweep\ntwo-layer glob + classify\n[subagent]"]
-    P201_SWEEP --> P21
-
-    P21["§2.1 Create Design Document\nSkill: design-exploration\nSYNTHESIS MODE — no discovery questions\n[subagent]"]
-    P21 -- failure --> HALT1(["✖ HALT: report to user\nno inline fallback"])
-    P21 -- success → saved to plans/ --> P22
-
-    P22["§2.2 Review Design Document\nSkill: reviewing-design-docs\n[subagent]"]
-    P22 -- failure --> HALT2(["✖ HALT: report to user\nno inline fallback"])
-    P22 -- success + findings report --> P23
-
-    P23["§2.3 Approval Gate\nmode-aware + surface-aware\nsee detail diagram"]
-    P23 -- "findings → fix" --> P24
-    P23 -- "ITERATE\n(operator wants redesign)" --> P21
-    P23 -- "HOLD\n(cancel / no answer)" --> HOLD(["⏸ HOLD: never auto-proceed"])
-    P23 -- "APPROVED\n(no findings or user accepts)" --> P25
-
-    P24["§2.4 Fix Design Document\nSkill: executing-plans\nAll items: critical + important + minor + suggestions\nfix_depth=root_cause\n[subagent]"]
-    P24 --> P22
-
-    P25["§2.5 Scope Coherence Check\nNarrow context: original_request + TOC + section openers ONLY\nQuestion: 'Faithful in 5 bullets?'\n[subagent]"]
-    P25 -- "Yes" --> TRANS
-    P25 -- "No / Unsure" --> HALT3(["✖ HALT: surface divergence\noperator decides: trim / expand / cancel"])
-
-    subgraph TRANS_GRP["Phase 2 → Phase 3 Transition Gate"]
-        TRANS["Verify 7-item checklist:\n① primary_source recorded\n② 2.1 dispatched in synthesis mode\n③ design doc saved\n④ reviewing-design-docs dispatched\n⑤ approval gate handled\n⑥ all critical/important findings fixed\n⑦ §2.5 returned Yes (or operator approved)"]
-    end
-    TRANS -- all pass --> NEXT(["▶ /feature-implement"])
-    TRANS -- any fail --> BACK(["◀ Return to Phase 2"])
-
-    class P201_SWEEP,P21,P22,P24,P25 subagentNode
-    class PREREQ,C2,C3,C4,P23,TRANS gateNode
-    class NEXT successNode
-    class HALT1,HALT2,HALT3,PREREQ_FAIL,PHASE2_SKIP haltNode
-    class P20 userInputNode
-    class P201 phaseNode
+    P25 --> ScopeQ{"Could design be<br/>described in 5 bullets<br/>matching original ask?"}:::decision
+    ScopeQ -- "No / Unsure" --> HaltScope([HALT Phase 2:<br/>surface divergence to operator]):::gate
+    ScopeQ -- "Yes" --> Transition{"STOP AND VERIFY<br/>Phase 2→3 checklist<br/>all checked?"}:::gate
+    Transition -- "Any unchecked" --> PH2
+    Transition -- "All checked" --> Next([Invoke /feature-implement<br/>same turn if autonomous]):::success
 ```
 
----
-
-## `feature-design` — §2.3 Approval Gate Detail
+## Detail Diagram A: Phase 2.0–2.4 core design loop
 
 ```mermaid
 flowchart TD
-    classDef subagentNode fill:#4a9eff,color:#fff,stroke:#2980b9,stroke-width:2px
-    classDef gateNode fill:#ff6b6b,color:#fff,stroke:#c0392b,stroke-width:2px
-    classDef successNode fill:#51cf66,color:#fff,stroke:#27ae60,stroke-width:2px
-    classDef haltNode fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px
-    classDef userInputNode fill:#9b59b6,color:#fff,stroke:#6c3483,stroke-width:2px
+    classDef subagent fill:#4a9eff,color:#fff
+    classDef gate fill:#ff6b6b,color:#fff
+    classDef success fill:#51cf66,color:#000
+    classDef decision fill:#fff3bd,color:#000
+    classDef forbidden fill:#3a1f1f,color:#ff8888,stroke:#ff6b6b
 
-    ENTRY(["§2.3 Approval Gate\n(enters with §2.2 findings)"]) --> MODE
+    A0[Enter Phase 2] --> A1{"Primary source<br/>named by operator?"}:::decision
+    A1 -- "No — must AskUserQuestion" --> A1ask[Elicit primary source<br/>via AskUserQuestion]
+    A1ask --> A1rec
+    A1 -- "Yes" --> A1rec["Record<br/>SESSION_CONTEXT.primary_source"]
+    A1rec --> AForbid1["FORBIDDEN: dispatch 2.1<br/>without primary_source set"]:::forbidden
 
-    MODE{"session mode?"}
+    A1rec --> A01{"2.0.1 Guard:<br/>project_standards empty<br/>AND needs_design=true?"}:::decision
+    A01 -- "Yes" --> A01sweep["Dispatch identical<br/>two-layer sweep<br/>(Layer 1 glob + Layer 2<br/>content classification)"]:::subagent
+    A01sweep --> A01none{"none_found?"}:::decision
+    A01none -- "true" --> A01flag["Flag REQUIRED operator<br/>cross-check"]
+    A01none -- "false" --> A01write["Write project_standards<br/>to design_context"]
+    A01 -- "No (already populated<br/>from research §1.2.5)" --> A21
+    A01flag --> A21
+    A01write --> A21
 
-    %% ─── AUTONOMOUS ──────────────────────────────────────────────
-    MODE -- autonomous --> A_FIND{"findings\nexist?"}
-    A_FIND -- no --> A_PASS(["APPROVED → §2.5"])
-    A_FIND -- yes --> A_FIX["Dispatch §2.4 fix subagent\nfix_strategy = most_complete\ntreat_suggestions = mandatory\nfix_depth = root_cause\n[subagent]"]
-    A_FIX --> A_LOOP(["→ §2.2 re-review\n(loop until clean)"])
+    A21["2.1 Dispatch: design-exploration<br/>skill in SYNTHESIS MODE<br/>(no questions, primary source +<br/>design_context + binding_rules)"]:::subagent
+    A21 --> A21fail{"Subagent<br/>fails?"}:::decision
+    A21fail -- "Yes" --> A21halt([HALT, report to user]):::gate
+    A21fail -- "No" --> A215
 
-    %% ─── INTERACTIVE ─────────────────────────────────────────────
-    MODE -- interactive --> I_FIND{"findings\nexist?"}
-    I_FIND -- no --> I_ACK["Display: 'no issues found'\nwait for user acknowledgment"]
-    I_ACK --> I_PASS(["APPROVED → §2.5"])
+    A215["2.1.5 Checkability Pass:<br/>find machine-decidable claims,<br/>build+run checks, repair"]:::subagent
+    A215 --> A215none{"No decidable<br/>claims?"}:::decision
+    A215none -- "Yes" --> A215log[Record one-line note]
+    A215none -- "No" --> A22
+    A215log --> A22
 
-    I_FIND -- yes --> I_PRESENT["Present findings summary\n'Type continue when ready'"]
-    I_PRESENT --> I_SURFACE
+    A22["2.2 Dispatch: reviewing-design-docs<br/>skill on design doc"]:::subagent
+    A22 --> A22fail{"Subagent<br/>fails?"}:::decision
+    A22fail -- "Yes" --> A22halt([HALT, report to user]):::gate
+    A22fail -- "No" --> A23
 
-    I_SURFACE{"decision_surface?"}
-    I_SURFACE -- terminal --> I_ASK["AskUserQuestion\n(approve / iterate / cancel)"]
-    I_SURFACE -- canvas --> I_HEAVY{"context-heavy?\n≥2 of: multiple options,\nexplanatory prose/diagram,\nhard-to-reverse decision"}
-    I_HEAVY -- yes --> I_CANVAS["canvas-decision skill\nopen canvas page with:\n① context callout\n② architecture diagram\n③ option detail collapsibles\n④ approve/choice control\nawait operator submit"]
-    I_HEAVY -- no --> I_ASK
-    I_ASK --> I_OUTCOME
-    I_CANVAS --> I_OUTCOME
+    A23{"2.3 Approval Gate<br/>(see Detail Diagram B)"}:::gate
+    A23 -- "findings exist" --> A24
+    A23 -- "no findings" --> A25done([Proceed to 2.5]):::success
 
-    I_OUTCOME{"operator\ndecision?"}
-    I_OUTCOME -- "APPROVE\n(accept + fix)" --> I_FIX["Dispatch §2.4 fix\n[subagent]"]
-    I_FIX --> I_LOOP(["→ §2.2 re-review"])
-    I_OUTCOME -- ITERATE --> I_ITER(["◀ Return to §2.1\n(full redesign)"])
-    I_OUTCOME -- "cancel /\nno answer" --> I_HOLD(["⏸ HOLD: gate stays open\nnever auto-proceed"])
-
-    %% ─── MOSTLY AUTONOMOUS ───────────────────────────────────────
-    MODE -- mostly_autonomous --> MA_CRIT{"critical\nfindings?"}
-    MA_CRIT -- yes --> MA_BLOCK["Present critical blockers\nwait for user input\nbefore proceeding"]
-    MA_CRIT -- no --> MA_ANY
-    MA_BLOCK --> MA_ANY
-
-    MA_ANY{"any\nfindings?"}
-    MA_ANY -- yes --> MA_FIX["Dispatch §2.4 fix\n[subagent]"]
-    MA_FIX --> MA_LOOP(["→ §2.2 re-review"])
-    MA_ANY -- no --> MA_PASS(["APPROVED → §2.5"])
-
-    class A_FIX,I_FIX,MA_FIX subagentNode
-    class MODE,I_SURFACE,I_HEAVY,I_OUTCOME,A_FIND,I_FIND,MA_CRIT,MA_ANY gateNode
-    class A_PASS,I_PASS,MA_PASS successNode
-    class I_HOLD,I_ITER haltNode
-    class I_ASK,I_ACK,I_CANVAS,MA_BLOCK,I_PRESENT userInputNode
+    A24["2.4 Dispatch: executing-plans skill<br/>fix ALL findings —<br/>most_complete, mandatory,<br/>root_cause (autonomous mode)"]:::subagent
+    A24 --> A24round["Round discipline check:<br/>count blocking findings,<br/>caused-by-repair findings"]
+    A24round --> A24maj{"Majority of round's<br/>findings caused by<br/>prior repairs?"}:::decision
+    A24maj -- "Yes" --> A24mech["STOP reviewing loop;<br/>mechanize that finding class,<br/>repair against check,<br/>run ONE more review round"]
+    A24mech --> A22
+    A24maj -- "No" --> A22
 ```
 
----
+## Detail Diagram B: 2.3 Approval Gate logic
 
-## Cross-Reference
+```mermaid
+flowchart TD
+    classDef gate fill:#ff6b6b,color:#fff
+    classDef decision fill:#fff3bd,color:#000
+    classDef success fill:#51cf66,color:#000
 
-| Overview node | Detail diagram |
-|---|---|
-| §2.3 Approval Gate | §2.3 Approval Gate Detail (above) |
-| §2.1 Create Design Doc | `design-exploration` skill — synthesis mode: skip discovery/questions, directly present design, run `/design-assessment` (completeness/clarity/accuracy ≥ 3, no CRITICAL/HIGH, verdict = READY) |
-| §2.2 Review Design Doc | `reviewing-design-docs` skill — phases: document inventory → completeness checklist → optional deep audit → interface verification → findings report with P1/P2/P3 remediation plan |
-| §2.4 Fix Design Doc | `executing-plans` skill — ALL items addressed (critical + important + minor + suggestions), root-cause fixes, consistency maintained |
+    B0[2.3 Approval Gate triggered] --> BSurface{"decision_surface?"}:::decision
+    BSurface -- "terminal (default)" --> BTerm["Present via AskUserQuestion"]
+    BSurface -- "canvas AND meets<br/>testable-boundary criteria" --> BCanvas["Invoke canvas-decision skill:<br/>render Decision Page Anatomy<br/>(context callout → diagram →<br/>per-option detail → approve control)"]
+    BSurface -- "canvas but quick yes/no" --> BTerm
+
+    BTerm --> BMode
+    BCanvas --> BMap["Map submitted decision:<br/>approve→APPROVE,<br/>decline→ITERATE,<br/>cancelled/unanswered→HOLD"]
+    BMap --> BMode
+
+    BMode{"Session mode?"}:::decision
+    BMode -- "autonomous" --> BAuto["Never pause.<br/>If findings: dispatch fix subagent<br/>fix_strategy=most_complete,<br/>suggestions=mandatory,<br/>fix_depth=root_cause"]
+    BMode -- "interactive" --> BInt{"Findings > 0?"}:::decision
+    BMode -- "mostly_autonomous" --> BMost{"Critical findings<br/>present?"}:::decision
+
+    BInt -- "Yes" --> BIntFix["Present findings,<br/>wait for 'continue',<br/>dispatch fix subagent"]
+    BInt -- "No" --> BIntAck["Display complete,<br/>wait for user<br/>acknowledgment"]
+
+    BMost -- "Yes" --> BMostPause["Present critical blockers,<br/>wait for user input"]
+    BMost -- "No" --> BMostFix
+    BMostPause --> BMostFix["If findings: dispatch<br/>fix subagent"]
+
+    BAuto --> BProceed([Return: proceed]):::success
+    BIntFix --> BProceed
+    BIntAck --> BProceed
+    BMostFix --> BProceed
+```
 
 ## Legend
 
 ```mermaid
 flowchart LR
-    classDef subagentNode fill:#4a9eff,color:#fff,stroke:#2980b9,stroke-width:2px
-    classDef gateNode fill:#ff6b6b,color:#fff,stroke:#c0392b,stroke-width:2px
-    classDef successNode fill:#51cf66,color:#fff,stroke:#27ae60,stroke-width:2px
-    classDef haltNode fill:#c0392b,color:#fff,stroke:#7b241c,stroke-width:2px
-    classDef userInputNode fill:#9b59b6,color:#fff,stroke:#6c3483,stroke-width:2px
-
-    SA["Subagent dispatch"]
-    QG["Quality gate / check"]
-    ST(["Success terminal"])
-    HT(["Halt / hold terminal"])
-    UI["User input / pause"]
-
-    class SA subagentNode
-    class QG gateNode
-    class ST successNode
-    class HT haltNode
-    class UI userInputNode
+    subgraph Legend
+        L1[Process step]
+        L2["Subagent dispatch"]:::subagent
+        L3{"Decision point"}:::decision
+        L4["Quality gate / HALT"]:::gate
+        L5(["Success terminal"]):::success
+    end
+    classDef subagent fill:#4a9eff,color:#fff
+    classDef gate fill:#ff6b6b,color:#fff
+    classDef success fill:#51cf66,color:#000
+    classDef decision fill:#fff3bd,color:#000
 ```
+
+## Cross-Reference Table
+
+| Overview Node | Detail Diagram | Notes |
+|---|---|---|
+| `Prereq` | — | 4-check prerequisite verification block (needs_design, understanding doc, completeness=100%, devil's advocate) |
+| `PH2` subgraph (2.0–2.5) | Detail Diagram A | Full 2.0 → 2.4 loop with round discipline |
+| `P23` / Approval Gate | Detail Diagram B | decision_surface routing + mode-based handling (autonomous/interactive/mostly_autonomous) |
+| `ScopeQ` (2.5) | — | Scope auditor subagent receives ONLY original_request + design doc TOC/openers |
+| `Transition` | — | 8-item Phase 2→3 checklist; any unchecked item loops back to `PH2` |
+| `Next` | — | Same-turn invocation of `/feature-implement` in autonomous mode; confirms first in interactive mode |

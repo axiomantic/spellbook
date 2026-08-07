@@ -47,6 +47,11 @@ def feature_implement() -> str:
 
 
 @lru_cache(maxsize=None)
+def feature_implement_execute() -> str:
+    return (_ROOT / "commands" / "feature-implement-execute.md").read_text(encoding="utf-8")
+
+
+@lru_cache(maxsize=None)
 def develop_skill() -> str:
     return (_ROOT / "skills" / "develop" / "SKILL.md").read_text(encoding="utf-8")
 
@@ -210,21 +215,23 @@ def test_standards_discovery_contract_markers_present():
     assert feature_discover().count("[✓/✗]") >= 13
     # project_standards in the DesignContext block of SKILL.md.
     assert "project_standards" in develop_skill()
-    # Binding Project Standards block in feature-implement §4.3 AND feature-design §2.1.
-    assert "Binding Project Standards" in feature_implement()
+    # Binding Project Standards block in feature-implement-execute §4.3 (Phase 4
+    # lives in the -execute half of the feature-implement split) AND
+    # feature-design §2.1.
+    assert "Binding Project Standards" in feature_implement_execute()
     assert "Binding Project Standards" in feature_design()
-    # Standards Conformance audit section in feature-implement §4.6.1.
-    assert "Standards Conformance" in feature_implement()
+    # Standards Conformance audit section in feature-implement-execute §4.6.1.
+    assert "Standards Conformance" in feature_implement_execute()
     # §4.6.1 audit Inputs block now hands the dispatched subagent the binding
     # standards (guards C-1 — Phase 5's BLOCKING gate was a no-op without them).
     # The "INCLUDING any adjudication blocks" phrasing is unique to the §4.6.1
     # Inputs paste, distinct from the §4.5 per-task review paste.
-    assert "Binding project standards: [paste design_context.project_standards.binding_rules, INCLUDING any adjudication blocks" in feature_implement()
+    assert "Binding project standards: [paste design_context.project_standards.binding_rules, INCLUDING any adjudication blocks" in feature_implement_execute()
     # feature-design §2.0 fallback sweep.
     assert "Fallback Sweep" in feature_design()
     # operator-adjudication escape valve markers.
-    assert "rule_overridden" in feature_implement()
-    assert "rule_not_applicable" in feature_implement()
+    assert "rule_overridden" in feature_implement_execute()
+    assert "rule_not_applicable" in feature_implement_execute()
     # code-review-give consumes project_standards.
     assert "project_standards" in code_review_give()
     # fast-path WAIVER note in SKILL.md (Task 10 — design §5.6 / Acceptance #9).

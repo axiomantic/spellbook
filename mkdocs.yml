@@ -264,6 +264,7 @@ nav:
       - commands/feature-config.md
       - commands/feature-design.md
       - commands/feature-discover.md
+      - commands/feature-implement-execute.md
       - commands/feature-implement.md
       - commands/feature-research.md
       - commands/finish-branch-cleanup.md
