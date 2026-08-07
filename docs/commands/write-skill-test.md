@@ -96,6 +96,26 @@ NO SKILL WITHOUT FAILING TEST FIRST
 
 Applies to NEW skills AND EDITS. Write skill before testing? Delete it. Start over. Edit skill without testing? Same violation.
 
+### The Iron Law is NOT a ceremony component
+
+<CRITICAL>
+develop's ceremony picker (`feature-config` §0.8) lets the operator select which
+optional gates run. The Iron Law is NOT on that menu and MUST NOT be offered on it.
+It belongs to the non-negotiable core, at every ceremony level, including the
+zero-flag fast path and including a Core-only selection.
+
+There is no waiver, and deliberately no exemption for "pure reference churn" or
+"docs-only" skill edits. Such an exemption would be self-assessed by the agent making
+the edit, and "this edit changes no behavior" is precisely the claim a baseline test
+exists to check — a skill edit that looks inert is the case most likely to be wrong,
+because skills ARE their text. A test-first rule that can be switched off is not a
+rule; it is a default.
+
+If the Iron Law is genuinely too heavy for a given change, the correct response is to
+make a SMALLER change, not to run a lighter ceremony. Record the Iron Law in
+`develop_gate_ledger.ceremony.core`, never in `selected` and never in `declined`.
+</CRITICAL>
+
 ## Phase Sequence
 
 ### RED: Write Failing Test (Baseline)

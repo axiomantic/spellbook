@@ -718,16 +718,39 @@ IN YOUR VISIBLE RESPONSE
 
 ```
 ## Phase Declaration
+- Ceremony: {ceremony.source}, locked {ceremony.locked_at} ({N} selected / {M} declined)
+- Ledger line this satisfies: {gate name copied VERBATIM from ceremony.selected or ceremony.core}
 - Dispatching for: Phase {N}, sub-step {N.M} ({step name from dispatch table below})
 - Single skill the subagent will invoke: {exact skill name}
 - Single artifact this dispatch produces: {exact path or short description}
-- This dispatch covers EXACTLY ONE row of the dispatch table below.
+- This dispatch covers EXACTLY ONE ledger line and EXACTLY ONE row of the dispatch table below.
 ```
 
-If you cannot fill all four fields with a SINGLE value (no "and", no "+",
+If you cannot fill all six fields with a SINGLE value (no "and", no "+",
 no "plus also", no comma-separated list), you are about to commit
 Pattern 6 (Phase Collapse). STOP. Decompose into N separate dispatches,
 recite a Phase Declaration for each, and dispatch them sequentially.
+
+**The declaration binds to the LEDGER, not to a remembered list.** Because the
+ceremony is now selectable, "one row of the dispatch table" is no longer a
+sufficient referent on its own — the operative set is the one recorded in
+`develop_gate_ledger.ceremony` at Phase 0. Three mechanical consequences:
+
+1. **Verbatim or invalid.** The `Ledger line` MUST appear verbatim in
+   `ceremony.selected` or `ceremony.core`. A paraphrase, a rename, or a gate that
+   appears in neither is an INVALID dispatch — that is how an ad-hoc gate, or a
+   gate quietly renamed to look completed, gets caught.
+2. **A declined gate is not silently runnable either.** Running something in
+   `ceremony.declined` is a re-selection, and re-selection after the lock is
+   forbidden. The one legal move is PROMOTION (declined → selected), which is an
+   escalation: allowed at any time, but it MUST be written to
+   `ceremony.promotions` with a reason before the dispatch that uses it.
+3. **The reverse move does not exist.** Nothing ever moves from `selected` to
+   `declined`. `selected` and `core` shrink only by completion, never by decision.
+
+If the ledger has no `ceremony` block (a pre-existing or externally-resumed
+session), treat the ceremony as `default_full`: every flag-derived gate is
+selected and nothing is declined. Absence is never read as permission to skip.
 
 ### Banned Phrasings in Dispatch Prompts (mechanical scan)
 
@@ -750,6 +773,8 @@ Operator phrasings that DO NOT authorize phase collapse (no exceptions):
 - "the architecture is settled", "forks pre-resolved", "pre-validated"
 - "no flags doesn't need all gates", "small change", "small extension"
 - "save context", "save tokens", "context efficiency"
+- "the ceremony is customizable now", "we picked a lighter ceremony", "drop that gate"
+  <-- the picker closed at Phase 0. Cite the ledger or run the gate.
 
 If you find yourself reading any of the above as license to combine rows,
 that IS the rationalization (see Anti-Rationalization Framework below,
@@ -908,9 +933,25 @@ The ONLY valid reasons to skip or shorten a phase:
 1. **Escape hatch**: Real artifact at a real path, detected in Phase 0
 2. **Zero-flag fast path**: No need-flags set (no research, no design, no infrastructure). Runs the fast path — fewer phases, lighter review floor — but develop STAYS RESIDENT and the lighter floor (code review + green-mirage + conditional test run) still runs. This is NOT an exit and NOT zero review.
 3. **Flag not set for a flag-gated phase**: A phase whose need-flag is false does not run (e.g. Research/Discovery when `needs_research` is false; Design when `needs_design` is false). The flag → phase mapping is design §2.1 (single source of truth); do not skip a phase whose flag IS set.
-4. **Explicit user skip**: User said "skip this phase" with full awareness of what is being skipped
+4. **Recorded in `ceremony.declined`**: the operator declined this component at the
+   Phase-0 ceremony lock, and it is written verbatim in
+   `develop_gate_ledger.ceremony.declined`. THE LEDGER ENTRY IS THE WHOLE REASON — a
+   remembered preference, an inference from the operator's tone, or a component that is
+   merely absent from `selected` does NOT qualify. If you cannot point at the line, the
+   gate runs. Nothing in `ceremony.core` can ever appear here.
+5. **Explicit user skip mid-run**: DELETED as a valid reason. Ceremony is chosen once,
+   at Phase 0, and locked (see the Ceremony Ledger). A mid-run "skip this phase" is
+   refused; the honest responses are FINISH or ABORT-and-re-invoke. The operator can
+   always ABORT — they cannot narrow a running ceremony.
 
 Any other reason is a rationalization. No exceptions.
+
+**The lock closes the loophole the picker opens.** A selectable ceremony would
+otherwise hand every rationalization pattern in the table above a legitimate-sounding
+new script ("the ceremony is flexible now, so..."). It does not: flexibility exists
+ONLY in the Phase-0 window, and the ledger records what was decided there. After
+`locked_at`, "the ceremony is customizable" is itself a Pattern 3 (Time Pressure)
+rationalization.
 
 ### Enforcement Rule
 
@@ -956,7 +997,11 @@ echo "Valid skip reasons (check ALL that apply):"
 echo "  [ ] Escape hatch artifact exists at specific path"
 echo "  [ ] Zero need-flags set (fast path: fewer phases, develop resident, lighter floor still runs)"
 echo "  [ ] This phase's gating need-flag is false (per design 2.1 flag->phase mapping)"
-echo "  [ ] User explicitly said 'skip this phase'"
+echo "  [ ] This gate is written VERBATIM in develop_gate_ledger.ceremony.declined"
+echo "      (quote the line. 'absent from selected' does NOT count. core is never declinable.)"
+echo ""
+echo "NOT a valid reason: 'the user just asked me to skip it'."
+echo "Ceremony was locked at Phase 0. Mid-run narrowing is refused: FINISH or ABORT."
 echo ""
 echo "If NONE checked: phase skip is a RATIONALIZATION."
 echo "Run the phase. Trust the process."
@@ -1201,7 +1246,9 @@ Phase 0: Configuration Wizard
   ├─ 0.4: Workflow preferences + store SESSION_PREFERENCES
   ├─ 0.5: Continuation detection
   ├─ 0.6: Detect refactoring mode
-  └─ 0.7: Need-flag wizard (Q-RESEARCH / Q-DESIGN / Q-INFRA / Q-SIZE -> need_flags + size_estimate)
+  ├─ 0.7: Need-flag wizard (Q-RESEARCH / Q-DESIGN / Q-INFRA -> need_flags)
+  ├─ 0.7.5: Cost assessment (7 dimensions -> ceremony recommendation + derived size_estimate)
+  └─ 0.8: Ceremony picker (operator chooses; written to ceremony ledger; LOCKED for the run)
     ↓
     ├─[zero flags]──> Direct/Lightweight Path (see below) — develop STAYS RESIDENT, lighter floor
     └─[any flag]───> run the flag-gated phases below (per design §2.1) under the full review floor
@@ -1299,7 +1346,19 @@ interface SessionPreferences {
     needs_design: boolean;            // a real architectural decision exists; gates Design (2)
     needs_infrastructure: boolean;    // new dependency/infra/schema; implies needs_design; heavier Phase-3 planning
   };
-  size_estimate: "small" | "medium" | "large";  // signal ONLY — tunes parallelization + token_enforcement; NEVER changes which gates run
+  size_estimate: "small" | "medium" | "large";  // signal ONLY — tunes parallelization + token_enforcement; NEVER changes which gates run.
+                                                // DERIVED in feature-config §0.7.5 from the cost assessment (4+ dimensions high => large,
+                                                // 2-3 => medium, else small). No longer asked; downstream meaning unchanged.
+  cost_assessment: {                  // feature-config §0.7.5 — the seven dimensions that actually predict cost.
+    unfamiliarity: "low" | "high";            // D1  is the code understood?
+    fuzziness: "low" | "high";                // D2  is "correct" defined?
+    blast_radius: "low" | "high";             // D3  how bad is wrong, and can it be undone?
+    coupling: "low" | "high";                 // D4  how many consumers depend on it?
+    verification_difficulty: "low" | "high";  // D5  provable, or only assertable?   ESCALATION-ONLY
+    silent_failure_potential: "low" | "high"; // D6  loud breakage, or invisible?     ESCALATION-ONLY
+    precedent: "present" | "absent";          // D7  is there an in-repo pattern to copy?
+    evidence: Record<string, string>;         // one line of concrete evidence per dimension; unevidenced => rated high
+  };
 }
 
 interface SessionContext {
@@ -1487,7 +1546,7 @@ Runs-when predicates reference the need-flag → phase mapping in design §2.1
 
 | Order | Command | Phase | Purpose | Runs when |
 |-------|---------|-------|---------|-----------|
-| 1 | `/feature-config` | 0 | Configuration wizard, escape hatches, preferences, **need-flag wizard** | always |
+| 1 | `/feature-config` | 0 | Configuration wizard, escape hatches, preferences, **need-flag wizard**, **cost assessment (§0.7.5)**, **ceremony picker + lock (§0.8)** | always |
 | 2 | `/feature-research` | 1 | Research strategy, codebase exploration, quality scoring | `needs_research` |
 | 3 | `/feature-discover` | 1.5 | Informed discovery, disambiguation, understanding document | `needs_research` |
 | 4 | `/feature-design` | 2 | Design document creation and review | `needs_design` (implied by `needs_infrastructure`) |
@@ -1581,8 +1640,51 @@ develop_gate_ledger: {
   remaining_gates: string;      // NEWLINE-JOINED SCALAR (NOT a list), e.g.
                                 // "design review\ncode review\ngreen-mirage\ntest suite"
   plan_pointer: string;         // absolute path to impl plan / design doc / understanding doc
+  ceremony: {                   // the ONE-TIME ceremony selection (feature-config §0.8)
+    locked_at: string;          // ISO 8601. Its PRESENCE is the lock. Never rewritten.
+    source: string;             // "operator_selected" | "recommendation_accepted" | "default_full"
+    assessment: string;         // newline-joined "D{n} {dimension}={low|high}: {evidence}" (§0.7.5)
+    core: string;               // newline-joined non-negotiable gates — never were selectable
+    selected: string;           // newline-joined optional gates chosen to RUN
+    declined: string;           // newline-joined optional gates chosen to SKIP (recorded, not absent)
+    promotions: string;         // newline-joined "{gate} <- {reason} ({ISO ts})" escalation record
+  };
 }
 ```
+
+**Every `ceremony` field is a newline-joined SCALAR, for the same CRIT-1 reason as
+`remaining_gates`: `_deep_merge` APPENDS lists but REPLACES scalars, so a list-valued
+`declined` would accumulate forever and a list-valued `selected` could never shrink.
+Write each as the authoritative full scalar; the merge replaces it wholesale.**
+
+### Ceremony Ledger
+
+<CRITICAL>
+`ceremony` is what makes a VARIABLE ceremony enforceable. The Phase Declaration's
+"one row of the table" referent only ever worked because the table was fixed; the
+recorded ceremony restores a fixed referent by writing the chosen set down at Phase 0
+and binding every declaration to it (see Pre-Dispatch Ritual above).
+</CRITICAL>
+
+- **Written once, at Phase 0 completion**, in the same `workflow_state_update` that
+  first writes the ledger. `locked_at` is set then and NEVER rewritten.
+- **`declined` is the load-bearing field.** A gate the operator chose to skip is
+  recorded as declined, not simply left out. Absence cannot distinguish "not chosen"
+  from "not yet run"; a resumed session that cannot tell those apart will either
+  re-run settled decisions or silently drop live gates. `declined` removes the
+  ambiguity.
+- **`core` records what was never on the menu**, so a resumed session can see that
+  code review, green-mirage, the conditional test run, TDD-first for behavioral
+  changes, and the Iron Law were not options that happened to be selected.
+- **`remaining_gates` stays the run-queue** and is derived exactly as today from
+  `derive_remaining_gates(need_flags, current_phase, tests_exist, completed_gates)`,
+  then filtered by removing anything in `ceremony.declined`. When `declined` is empty
+  — the default path — the filter is the identity function and `remaining_gates` is
+  byte-identical to today's scalar. The helper itself is UNCHANGED.
+- **Escalation only.** `ceremony.promotions` records every declined → selected move
+  with its reason; there is no recorded form for the reverse move because the reverse
+  move is forbidden. Scope drift (Re-Flag and Continue) may set a need-flag and thereby
+  ADD gates mid-run; it may never clear one.
 
 `remaining_gates` is a **newline-joined scalar string**, never a list. `_deep_merge`
 APPENDS lists but REPLACES scalars; a list would accumulate an append-forever
@@ -1617,9 +1719,10 @@ scalar with it removed).
    This split is load-bearing for the accountability nudge (design §6.1, IMP-1):
    writing the ledger at entry would make the nudge unfireable; not gating the
    nudge on "past Phase 0" would make it false-fire on every wizard prompt.
-2. **At Phase 0 completion (flags resolved):** write the ledger for the FIRST time —
-   `workflow_state_update({"develop_gate_ledger": {need_flags, current_phase: <next>, remaining_gates: <derived scalar>, plan_pointer: ""}, "active_skill": "develop", "skill_phase": <next>})`.
-   Advance `skill_phase` past `"0"`.
+2. **At Phase 0 completion (flags resolved AND ceremony locked):** write the ledger for
+   the FIRST time —
+   `workflow_state_update({"develop_gate_ledger": {need_flags, current_phase: <next>, remaining_gates: <derived scalar, minus ceremony.declined>, plan_pointer: "", ceremony: {locked_at, source, assessment, core, selected, declined, promotions: ""}}, "active_skill": "develop", "skill_phase": <next>})`.
+   Advance `skill_phase` past `"0"`. This is the ONLY write that sets `locked_at`.
 3. **At each subsequent phase entry (1, 1.5, 2, 3, 4) and each in-phase gate
    completion:**
    `workflow_state_update({"develop_gate_ledger": {current_phase: "<phase>", need_flags, remaining_gates: <re-derived scalar>, plan_pointer: <path>}, "active_skill": "develop", "skill_phase": "<phase>"})`.
@@ -1661,6 +1764,9 @@ Session: <session id or git branch>
 - Phase: 4.5 (per-task code review)
 - Sub-step: Wave 2, group "coordination"
 - Need-flags: needs_research=true, needs_design=true, needs_infrastructure=false (size_estimate=large)
+- Ceremony: operator_selected, locked 2026-08-05T14:02Z — 9 selected / 2 declined
+  - Declined (do NOT re-run, do NOT treat as pending): roundtable dialectic; per-task fact-checking
+  - Locked by D6 (silent-failure potential high): completion verification; green-mirage; TDD-first
 - Execution mode: delegated
 
 ## Completed
@@ -1703,7 +1809,16 @@ Phase 4.5 code-review subagent for coordination group:
 **On resume:** the next session MUST read the handoff (and the `develop_gate_ledger`
 in workflow_state) before any other action, then verify the git HEAD and test
 status still match. If the working tree diverged from the handoff, treat as a new
-session and re-elicit the need-flags.
+session and re-elicit the need-flags AND the ceremony (a new session is a new
+Phase 0, so a fresh selection window legitimately opens).
+
+If the tree still matches, the ceremony is CARRIED OVER UNCHANGED — resuming is not
+a new selection window, and the picker does NOT re-open. Read `ceremony.declined` to
+tell "the operator declined this" from "this has not run yet"; a resumed session that
+treats a declined gate as pending will re-litigate a settled decision, and one that
+treats an unrun gate as declined will silently drop it. If the ledger carries no
+`ceremony` block at all, treat it as `default_full` — everything flag-derived is
+selected, nothing is declined.
 
 ### STOP AND VERIFY Markers
 
