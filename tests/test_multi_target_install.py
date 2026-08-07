@@ -4,6 +4,7 @@ import inspect
 from pathlib import Path
 
 import pytest
+import tripwire
 
 from installer.config import resolve_config_dirs
 from installer.core import Installer, Uninstaller
@@ -40,11 +41,15 @@ class TestMultiDirOrchestration:
         default_dir = tmp_path / "default_config"
         fake_config = _fake_platform_config(default_dir)
 
-        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
         monkeypatch.delenv("FAKE_CONFIG_DIR", raising=False)
-        dirs = resolve_config_dirs("fake_platform")
+        platform_config_mock = tripwire.mock("installer.config:_platform_config")
+        platform_config_mock.always_returns(fake_config)
 
-        assert len(dirs) == 1
+        with tripwire:
+            dirs = resolve_config_dirs("fake_platform")
+
+            assert len(dirs) == 1
+        platform_config_mock.assert_call(args=(), kwargs={})
 
     def test_overrides_produce_multiple_dirs(self, tmp_path, monkeypatch):
         """CLI overrides produce multiple dirs."""
@@ -58,11 +63,15 @@ class TestMultiDirOrchestration:
             d.mkdir()
         fake_config = _fake_platform_config(default_dir)
 
-        monkeypatch.setattr(config_mod, "PLATFORM_CONFIG", fake_config)
-        dirs = resolve_config_dirs("fake_platform", cli_dirs=[dir1, dir2, dir3])
+        platform_config_mock = tripwire.mock("installer.config:_platform_config")
+        platform_config_mock.always_returns(fake_config)
 
-        assert len(dirs) == 3
-        assert dirs == [dir1, dir2, dir3]
+        with tripwire:
+            dirs = resolve_config_dirs("fake_platform", cli_dirs=[dir1, dir2, dir3])
+
+            assert len(dirs) == 3
+            assert dirs == [dir1, dir2, dir3]
+        platform_config_mock.assert_call(args=(), kwargs={})
 
     def test_skip_global_steps_on_second_dir(self, tmp_path):
         """Verify idx > 0 gets skip_global=True in the orchestration loop.
@@ -135,35 +144,43 @@ class TestOpenCodeDynamicPath:
         (ext_dir / "claude-code-system-prompt.md").write_text("# System prompt")
         return spellbook
 
-    def test_default_config_dir(self, spellbook_dir, tmp_path, monkeypatch):
+    def test_default_config_dir(self, spellbook_dir, tmp_path):
         """Default ~/.config/opencode produces expected instructions path."""
         from installer.platforms.opencode import OpenCodeInstaller
 
         # Use a fake home so the tilde path resolves predictably
         fake_home = tmp_path / "fakehome"
         fake_home.mkdir()
-        monkeypatch.setattr(Path, "home", lambda: fake_home)
+
+        path_home_mock = tripwire.mock("pathlib:Path.home")
+        path_home_mock.always_calls(lambda: fake_home)
 
         config_dir = fake_home / ".config" / "opencode"
         config_dir.mkdir(parents=True)
 
-        installer = OpenCodeInstaller(spellbook_dir, config_dir, "0.1.0")
+        with tripwire:
+            installer = OpenCodeInstaller(spellbook_dir, config_dir, "0.1.0")
 
-        expected = "~/.config/opencode/instructions/claude-code-system-prompt.md"
-        assert installer.system_prompt_config_path == expected
+            expected = "~/.config/opencode/instructions/claude-code-system-prompt.md"
+            assert installer.system_prompt_config_path == expected
+        path_home_mock.assert_call(args=(), kwargs={})
 
-    def test_custom_config_dir_under_home(self, spellbook_dir, tmp_path, monkeypatch):
+    def test_custom_config_dir_under_home(self, spellbook_dir, tmp_path):
         """Custom dir under $HOME still produces tilde path."""
         from installer.platforms.opencode import OpenCodeInstaller
 
         fake_home = tmp_path / "fakehome"
         fake_home.mkdir()
-        monkeypatch.setattr(Path, "home", lambda: fake_home)
+
+        path_home_mock = tripwire.mock("pathlib:Path.home")
+        path_home_mock.always_calls(lambda: fake_home)
 
         custom_dir = fake_home / "custom" / "opencode"
         custom_dir.mkdir(parents=True)
 
-        installer = OpenCodeInstaller(spellbook_dir, custom_dir, "0.1.0")
+        with tripwire:
+            installer = OpenCodeInstaller(spellbook_dir, custom_dir, "0.1.0")
 
-        expected = "~/custom/opencode/instructions/claude-code-system-prompt.md"
-        assert installer.system_prompt_config_path == expected
+            expected = "~/custom/opencode/instructions/claude-code-system-prompt.md"
+            assert installer.system_prompt_config_path == expected
+        path_home_mock.assert_call(args=(), kwargs={})
