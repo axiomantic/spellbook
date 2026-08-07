@@ -200,6 +200,16 @@ DEFAULT_SESSION_ID = "__default__"
 # File-level lock for thread-safe config access
 CONFIG_LOCK_PATH = get_config_dir() / "config.lock"
 
+
+def _config_lock_path() -> Path:
+    """Return the path of the config file-level lock.
+
+    Internal callers use this indirection so tests can redirect the lock path
+    via ``tripwire.mock("spellbook.core.config:_config_lock_path")`` instead of
+    monkey-patching the module-level ``CONFIG_LOCK_PATH`` constant.
+    """
+    return CONFIG_LOCK_PATH
+
 # Environment variable aliases for backward compatibility.
 # Maps short key names to their old SPELLBOOK_MCP_* env var names.
 # New canonical names use the SPELLBOOK_* prefix (e.g., SPELLBOOK_PORT).
@@ -382,7 +392,7 @@ def config_get(key: str) -> Optional[Any]:
         return default
 
     try:
-        with CrossPlatformLock(CONFIG_LOCK_PATH, shared=True, blocking=True):
+        with CrossPlatformLock(_config_lock_path(), shared=True, blocking=True):
             config = json.loads(config_path.read_text(encoding="utf-8"))
             return config.get(key, default)
     except LockHeldError:
@@ -416,7 +426,7 @@ def config_set(key: str, value: Any) -> dict:
     config_path = get_config_path()
 
     try:
-        with CrossPlatformLock(CONFIG_LOCK_PATH, blocking=True):
+        with CrossPlatformLock(_config_lock_path(), blocking=True):
             config = {}
             if config_path.exists():
                 try:
@@ -539,7 +549,7 @@ def config_set_many(updates: dict[str, Any]) -> dict:
         return {"status": "ok", "config": config}
 
     try:
-        with CrossPlatformLock(CONFIG_LOCK_PATH, blocking=True):
+        with CrossPlatformLock(_config_lock_path(), blocking=True):
             return _apply_and_write()
     except LockHeldError:
         logger.warning("Could not acquire config write lock. Falling back to unlocked write.")
