@@ -128,9 +128,19 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
 }
 
 
+def _platform_config() -> Dict[str, Dict[str, Any]]:
+    """Return the platform configuration table.
+
+    Internal callers use this indirection so tests can redirect the table via
+    ``tripwire.mock("installer.config:_platform_config")`` instead of
+    monkey-patching the module-level ``PLATFORM_CONFIG`` constant.
+    """
+    return PLATFORM_CONFIG
+
+
 def get_platform_config_dir(platform: str) -> Path:
     """Get the configuration directory for a platform."""
-    config = PLATFORM_CONFIG.get(platform)
+    config = _platform_config().get(platform)
     if not config:
         raise ValueError(f"Unknown platform: {platform}")
 
@@ -173,7 +183,7 @@ def resolve_config_dirs(
     Returns:
         List of zero or more resolved config dirs.
     """
-    config = PLATFORM_CONFIG.get(platform)
+    config = _platform_config().get(platform)
     if not config:
         raise ValueError(f"Unknown platform: {platform}")
 
@@ -227,7 +237,7 @@ def resolve_config_dirs(
 
 def get_context_file_path(platform: str) -> Optional[Path]:
     """Get the path to the context file for a platform."""
-    config = PLATFORM_CONFIG.get(platform)
+    config = _platform_config().get(platform)
     if not config:
         raise ValueError(f"Unknown platform: {platform}")
 
