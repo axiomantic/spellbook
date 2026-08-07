@@ -6,6 +6,8 @@ directly with stub Starlette Request objects.
 
 import asyncio
 import json
+import tripwire
+from dirty_equals import AnyThing
 
 import pytest
 
@@ -62,12 +64,10 @@ def _make_bad_request() -> _StubRequest:
 
 class TestApiHookLog:
     @pytest.mark.asyncio
-    async def test_accepts_valid_payload(self, tmp_path, monkeypatch):
+    async def test_accepts_valid_payload(self, tmp_path):
         """Valid payload writes to log file and returns ok."""
-        monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.mcp.routes:get_spellbook_config_dir")
+        get_config_dir_mock.always_returns(tmp_path)
         from spellbook.mcp.routes import api_hook_log
 
         request = _make_request({
@@ -76,48 +76,48 @@ class TestApiHookLog:
             "traceback": "Traceback...\nValueError: boom",
         })
 
-        resp = await api_hook_log(request)
-        body = json.loads(resp.body.decode())
-        assert body == {"ok": True}
-        assert resp.status_code == 200
+        with tripwire:
+            resp = await api_hook_log(request)
+            body = json.loads(resp.body.decode())
+            assert body == {"ok": True}
+            assert resp.status_code == 200
 
-        # Verify log file was created
-        log_file = tmp_path / "logs" / "hook-errors.log"
-        assert log_file.exists()
-        content = log_file.read_text()
-        assert "PostToolUse:Bash" in content
-        assert "ValueError: boom" in content
+            # Verify log file was created
+            log_file = tmp_path / "logs" / "hook-errors.log"
+            assert log_file.exists()
+            content = log_file.read_text()
+            assert "PostToolUse:Bash" in content
+            assert "ValueError: boom" in content
+        get_config_dir_mock.assert_call(args=(), kwargs={})
 
     @pytest.mark.asyncio
-    async def test_rejects_invalid_json(self, tmp_path, monkeypatch):
+    async def test_rejects_invalid_json(self, tmp_path):
         """Invalid JSON body returns 400."""
-        monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.mcp.routes:get_spellbook_config_dir")
+        get_config_dir_mock.always_returns(tmp_path)
         from spellbook.mcp.routes import api_hook_log
 
         request = _make_bad_request()
-        resp = await api_hook_log(request)
-        assert resp.status_code == 400
+        with tripwire:
+            resp = await api_hook_log(request)
+            assert resp.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_rejects_missing_event(self, tmp_path, monkeypatch):
+    async def test_rejects_missing_event(self, tmp_path):
         """Missing 'event' field returns 400."""
-        monkeypatch.setattr(
-            "spellbook.mcp.routes.get_spellbook_config_dir",
-            lambda: tmp_path,
-        )
+        get_config_dir_mock = tripwire.mock("spellbook.mcp.routes:get_spellbook_config_dir")
+        get_config_dir_mock.always_returns(tmp_path)
         from spellbook.mcp.routes import api_hook_log
 
         request = _make_request({
             "timestamp": "2026-04-08T12:00:00Z",
             "traceback": "something",
         })
-        resp = await api_hook_log(request)
-        body = json.loads(resp.body.decode())
-        assert resp.status_code == 400
-        assert "event" in body.get("error", "")
+        with tripwire:
+            resp = await api_hook_log(request)
+            body = json.loads(resp.body.decode())
+            assert resp.status_code == 400
+            assert "event" in body.get("error", "")
 
 
 # ---------------------------------------------------------------------------
@@ -127,17 +127,15 @@ class TestApiHookLog:
 
 class TestApiHooksRecord:
     @pytest.mark.asyncio
-    async def test_accepts_valid_payload(self, monkeypatch):
+    async def test_accepts_valid_payload(self):
         """Valid payload invokes record_hook_event with the right args."""
         calls: list[dict] = []
 
         def _fake_record(**kwargs):
             calls.append(kwargs)
 
-        monkeypatch.setattr(
-            "spellbook.hooks.observability.record_hook_event",
-            _fake_record,
-        )
+        record_mock = tripwire.mock("spellbook.hooks.observability:record_hook_event")
+        record_mock.always_calls(_fake_record)
         from spellbook.mcp.routes import api_hooks_record
 
         request = _make_request({
@@ -150,18 +148,20 @@ class TestApiHooksRecord:
             "notes": None,
         })
 
-        resp = await api_hooks_record(request)
-        assert resp.status_code == 202
-        body = json.loads(resp.body.decode())
-        assert body == {"ok": True}
+        with tripwire:
+            resp = await api_hooks_record(request)
+            assert resp.status_code == 202
+            body = json.loads(resp.body.decode())
+            assert body == {"ok": True}
 
-        await _await_len(calls, 1)
-        c = calls[0]
-        assert c["hook_name"] == "spellbook_hook"
-        assert c["event_name"] == "PreToolUse"
-        assert c["duration_ms"] == 42
-        assert c["exit_code"] == 0
-        assert c["tool_name"] == "Bash"
+            await _await_len(calls, 1)
+            c = calls[0]
+            assert c["hook_name"] == "spellbook_hook"
+            assert c["event_name"] == "PreToolUse"
+            assert c["duration_ms"] == 42
+            assert c["exit_code"] == 0
+            assert c["tool_name"] == "Bash"
+        record_mock.assert_call(args=(), kwargs=AnyThing())
 
     @pytest.mark.asyncio
     async def test_rejects_missing_hook_name(self):
@@ -211,15 +211,13 @@ class TestApiHooksRecord:
         assert resp.status_code == 400
 
     @pytest.mark.asyncio
-    async def test_record_failure_still_returns_202(self, monkeypatch):
+    async def test_record_failure_still_returns_202(self):
         """record_hook_event is best-effort; route still returns 202."""
         def _boom(**kwargs):
             raise RuntimeError("DB down")
 
-        monkeypatch.setattr(
-            "spellbook.hooks.observability.record_hook_event",
-            _boom,
-        )
+        record_mock = tripwire.mock("spellbook.hooks.observability:record_hook_event")
+        record_mock.always_calls(_boom)
         from spellbook.mcp.routes import api_hooks_record
 
         request = _make_request({
@@ -228,7 +226,9 @@ class TestApiHooksRecord:
             "duration_ms": 0,
             "exit_code": 0,
         })
-        resp = await api_hooks_record(request)
-        assert resp.status_code == 202
+        with tripwire:
+            resp = await api_hooks_record(request)
+            assert resp.status_code == 202
+        record_mock.assert_call(args=(), kwargs=AnyThing())
 
 
