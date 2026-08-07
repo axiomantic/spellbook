@@ -241,12 +241,22 @@ def pytest_addoption(parser):
     )
 
 
+def _current_platform() -> str:
+    """Return the current ``sys.platform``.
+
+    Indirection so tests can redirect the platform probe (see ``tests/installer/test_marks.py``)
+    via ``tripwire.mock("tests.conftest:_current_platform")`` instead of patching
+    the module-level ``sys.platform`` attribute.
+    """
+    return sys.platform
+
+
 def pytest_collection_modifyitems(config, items):
     skip_docker = pytest.mark.skip(reason="docker tests only run in CI (use --run-docker)")
     skip_posix_only = pytest.mark.skip(reason="POSIX only")
     skip_windows_only = pytest.mark.skip(reason="Windows only")
     run_docker = config.getoption("--run-docker")
-    is_windows = sys.platform.startswith("win")
+    is_windows = _current_platform().startswith("win")
 
     for item in items:
         if not run_docker and "docker" in item.keywords:

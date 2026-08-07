@@ -12,6 +12,7 @@ themselves (and the conftest hook that consumes them) are repo-global.
 """
 
 import sys
+import tripwire
 
 from tests.conftest import pytest_collection_modifyitems
 
@@ -65,99 +66,117 @@ class _FakeConfig:
         return None
 
 
-def _patch_platform(monkeypatch, value):
-    """Fake ``sys.platform`` so the mark-routing branches can be exercised
-    deterministically regardless of the host OS.
+def _patch_platform(value):
+    """Return a tripwire mock of ``tests.conftest._current_platform``.
+
+    Exercises the mark-routing branches deterministically regardless of the
+    host OS by redirecting the platform probe used by ``pytest_collection_modifyitems``.
     """
-    monkeypatch.setattr(sys, "platform", value)
+    platform_mock = tripwire.mock("tests.conftest:_current_platform")
+    platform_mock.always_returns(value)
+    return platform_mock
 
 
-def test_posix_only_skipped_on_windows(monkeypatch):
+def test_posix_only_skipped_on_windows():
     """An item marked ``posix_only`` gets a skip(reason='POSIX only') on Windows."""
-    _patch_platform(monkeypatch, "win32")
+    platform_mock = _patch_platform("win32")
+    with tripwire:
 
-    item = _FakeItem(marks={"posix_only"})
-    config = _FakeConfig()
+        item = _FakeItem(marks={"posix_only"})
+        config = _FakeConfig()
 
-    pytest_collection_modifyitems(config, [item])
+        pytest_collection_modifyitems(config, [item])
 
-    assert len(item.added_markers) == 1
-    marker = item.added_markers[0]
-    assert marker.name == "skip"
-    assert marker.kwargs == {"reason": "POSIX only"}
-    assert marker.args == ()
+        assert len(item.added_markers) == 1
+        marker = item.added_markers[0]
+        assert marker.name == "skip"
+        assert marker.kwargs == {"reason": "POSIX only"}
+        assert marker.args == ()
+    platform_mock.assert_call(args=(), kwargs={})
 
 
-def test_posix_only_not_skipped_on_posix(monkeypatch):
+def test_posix_only_not_skipped_on_posix():
     """An item marked ``posix_only`` is left alone on POSIX platforms."""
-    _patch_platform(monkeypatch, "linux")
+    platform_mock = _patch_platform("linux")
+    with tripwire:
 
-    item = _FakeItem(marks={"posix_only"})
-    config = _FakeConfig()
+        item = _FakeItem(marks={"posix_only"})
+        config = _FakeConfig()
 
-    pytest_collection_modifyitems(config, [item])
+        pytest_collection_modifyitems(config, [item])
 
-    assert item.added_markers == []
+        assert item.added_markers == []
+    platform_mock.assert_call(args=(), kwargs={})
 
 
-def test_windows_only_skipped_on_posix(monkeypatch):
+def test_windows_only_skipped_on_posix():
     """An item marked ``windows_only`` gets a skip(reason='Windows only') on POSIX."""
-    _patch_platform(monkeypatch, "linux")
+    platform_mock = _patch_platform("linux")
+    with tripwire:
 
-    item = _FakeItem(marks={"windows_only"})
-    config = _FakeConfig()
+        item = _FakeItem(marks={"windows_only"})
+        config = _FakeConfig()
 
-    pytest_collection_modifyitems(config, [item])
+        pytest_collection_modifyitems(config, [item])
 
-    assert len(item.added_markers) == 1
-    marker = item.added_markers[0]
-    assert marker.name == "skip"
-    assert marker.kwargs == {"reason": "Windows only"}
-    assert marker.args == ()
+        assert len(item.added_markers) == 1
+        marker = item.added_markers[0]
+        assert marker.name == "skip"
+        assert marker.kwargs == {"reason": "Windows only"}
+        assert marker.args == ()
+    platform_mock.assert_call(args=(), kwargs={})
 
 
-def test_windows_only_skipped_on_macos(monkeypatch):
+def test_windows_only_skipped_on_macos():
     """An item marked ``windows_only`` gets a skip(reason='Windows only') on macOS."""
-    _patch_platform(monkeypatch, "darwin")
+    platform_mock = _patch_platform("darwin")
+    with tripwire:
 
-    item = _FakeItem(marks={"windows_only"})
-    config = _FakeConfig()
+        item = _FakeItem(marks={"windows_only"})
+        config = _FakeConfig()
 
-    pytest_collection_modifyitems(config, [item])
+        pytest_collection_modifyitems(config, [item])
 
-    assert len(item.added_markers) == 1
-    marker = item.added_markers[0]
-    assert marker.name == "skip"
-    assert marker.kwargs == {"reason": "Windows only"}
-    assert marker.args == ()
+        assert len(item.added_markers) == 1
+        marker = item.added_markers[0]
+        assert marker.name == "skip"
+        assert marker.kwargs == {"reason": "Windows only"}
+        assert marker.args == ()
+    platform_mock.assert_call(args=(), kwargs={})
 
 
-def test_windows_only_not_skipped_on_windows(monkeypatch):
+def test_windows_only_not_skipped_on_windows():
     """An item marked ``windows_only`` is left alone on Windows."""
-    _patch_platform(monkeypatch, "win32")
+    platform_mock = _patch_platform("win32")
+    with tripwire:
 
-    item = _FakeItem(marks={"windows_only"})
-    config = _FakeConfig()
+        item = _FakeItem(marks={"windows_only"})
+        config = _FakeConfig()
 
-    pytest_collection_modifyitems(config, [item])
+        pytest_collection_modifyitems(config, [item])
 
-    assert item.added_markers == []
+        assert item.added_markers == []
+    platform_mock.assert_call(args=(), kwargs={})
 
 
-def test_unmarked_item_untouched_on_windows(monkeypatch):
+def test_unmarked_item_untouched_on_windows():
     """An item with no platform mark gets no markers added on Windows."""
-    _patch_platform(monkeypatch, "win32")
-    item = _FakeItem(marks=set())
-    pytest_collection_modifyitems(_FakeConfig(), [item])
-    assert item.added_markers == []
+    platform_mock = _patch_platform("win32")
+    with tripwire:
+        item = _FakeItem(marks=set())
+        pytest_collection_modifyitems(_FakeConfig(), [item])
+        assert item.added_markers == []
+    platform_mock.assert_call(args=(), kwargs={})
 
 
-def test_unmarked_item_untouched_on_posix(monkeypatch):
+def test_unmarked_item_untouched_on_posix():
     """An item with no platform mark gets no markers added on POSIX."""
-    _patch_platform(monkeypatch, "linux")
-    item = _FakeItem(marks=set())
-    pytest_collection_modifyitems(_FakeConfig(), [item])
-    assert item.added_markers == []
+    platform_mock = _patch_platform("linux")
+    with tripwire:
+        item = _FakeItem(marks=set())
+        pytest_collection_modifyitems(_FakeConfig(), [item])
+        assert item.added_markers == []
+    platform_mock.assert_call(args=(), kwargs={})
 
 
 def test_posix_only_mark_is_registered():
