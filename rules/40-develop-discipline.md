@@ -15,7 +15,6 @@ related:
   - skills/develop
   - commands/feature-design
   - commands/feature-implement
-  - commands/feature-implement-execute
 renamed_from: []
 superseded_by: null
 paths: []

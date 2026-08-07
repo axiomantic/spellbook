@@ -14,7 +14,6 @@ Phase non-fungibility inside the develop skill, and the thoroughness contract th
 - `skills/develop`
 - `commands/feature-design`
 - `commands/feature-implement`
-- `commands/feature-implement-execute`
 
 ## Rule Content
 
