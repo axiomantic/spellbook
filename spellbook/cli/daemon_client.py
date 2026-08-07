@@ -65,10 +65,10 @@ def daemon_request(
     from urllib.parse import urlunsplit
 
     def _build_host_url(host: str, port: int | str, path: str) -> str:
-    host_part = f"[{host}]" if ":" in host else host
-    return f"http://{host_part}:{port}{path}"
+        host_part = f"[{host}]" if ":" in host else host
+        return f"http://{host_part}:{port}{path}"
 
-url = _build_host_url(host, port, path)
+    url = _build_host_url(host, port, path)
 
     body = None
     if data is not None:

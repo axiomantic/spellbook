@@ -14,7 +14,7 @@ class TestPlatformConfigEntries:
 
     def test_all_platforms_have_config_dir_env(self):
         """All 7 platforms in PLATFORM_CONFIG have non-None config_dir_env."""
-        assert len(PLATFORM_CONFIG) == 7
+        assert len(PLATFORM_CONFIG) == 8
         for platform_id, config in PLATFORM_CONFIG.items():
             assert config["config_dir_env"] is not None, (
                 f"{platform_id} has None config_dir_env"
