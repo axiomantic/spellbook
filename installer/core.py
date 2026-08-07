@@ -581,6 +581,7 @@ class Installer:
         """
         from .components.rule_migration import detect_existing_install
         from .components.rule_modules import (
+            ModuleSelection,
             get_rules_dir,
             load_rule_modules,
             resolve_selection,
@@ -616,27 +617,30 @@ class Installer:
             logger.warning("Could not detect existing install state: %s", e)
 
         if rule_selection is not None:
-            # The user answered. Honor exactly what they chose.
-            selection = resolve_selection(modules)
+            # The user answered. Build the selection from that answer rather
+            # than patching a config-derived one, so every field agrees: an
+            # answered module is neither prechecked nor unanswered.
             chosen = set(rule_selection)
-            selection.selected_ids = [
-                m.id for m in modules if m.is_preference and m.id in chosen
-            ]
-            selection.declined_ids = [
-                m.id for m in modules if m.is_preference and m.id not in chosen
-            ]
+            preferences = [m for m in modules if m.is_preference]
+            selection = ModuleSelection(
+                modules=list(modules),
+                selected_ids=[m.id for m in preferences if m.id in chosen],
+                prechecked_ids=[],
+                declined_ids=[m.id for m in preferences if m.id not in chosen],
+                unanswered_ids=[],
+            )
             return modules, selection, detection, None
 
         # Not asked. Resolve from config plus defaults, and record nothing.
-        # A migrating user has never been asked either, so their recorded
-        # answers (there are none) are bypassed and every default-on module is
-        # installed -- honoring the upgrade path without adding a rule they
-        # never had.
+        # Legacy migration needs no special flag here: a migrating user has
+        # never been asked, so their keys are absent and every module takes its
+        # default -- honoring the upgrade path without adding a rule they never
+        # had. A recorded ``False`` must survive migration untouched, because
+        # detection is per-platform and fires for users who HAVE answered
+        # (a second harness whose legacy sidecar was never cleaned); overriding
+        # it would silently reinstall a module they declined.
         config_values = _read_rule_config()
-        force_defaults = detection is not None and detection.install_all_defaults
-        selection = resolve_selection(
-            modules, config_values, force_all_defaults=force_defaults
-        )
+        selection = resolve_selection(modules, config_values)
         return modules, selection, detection, None
 
     def _verify_rule_delivery(

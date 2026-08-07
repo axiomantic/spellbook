@@ -194,12 +194,13 @@ class TestSelection:
     ):
         """Migration installs everything the user had, and nothing they did not.
 
-        review-posture defaults off, so migrating never adds it: that would be
-        a new rule, not a preserved one. An unanswered module takes its default.
+        A migrating user has no recorded answers, so migration is expressed by
+        config-key absence alone -- no flag. review-posture defaults off, so
+        migrating never adds it: that would be a new rule, not a preserved one.
         """
         modules = load_rule_modules(rules_dir)
 
-        selection = resolve_selection(modules, {}, force_all_defaults=True)
+        selection = resolve_selection(modules, {})
 
         assert "session" in selection.selected_ids
         assert "autonomy" in selection.selected_ids
@@ -214,14 +215,18 @@ class TestSelection:
         already answered can reach -- adding a second harness whose legacy
         sidecar was never cleaned. Discarding declines here silently reinstalls
         rules the user explicitly turned off, on every platform.
+
+        There is no migration flag to pass: the recorded answer is
+        authoritative on every path, and that is what makes it survive.
         """
         modules = load_rule_modules(rules_dir)
         config = {"rules.module.session": False}
 
-        selection = resolve_selection(modules, config, force_all_defaults=True)
+        selection = resolve_selection(modules, config)
 
         assert "session" not in selection.selected_ids
         assert "session" in selection.declined_ids
+        assert "session" not in selection.unanswered_ids
 
     def test_a_renamed_module_keeps_the_answer_recorded_under_its_old_id(
         self, rules_dir: Path
@@ -1139,6 +1144,44 @@ class TestEmptyModuleSetIsAHardFailure:
         assert modules == []
         assert selection is None
         assert error, "an unresolvable module set must be reported, not swallowed"
+
+    def _answered(self, rule_selection):
+        from installer.core import Installer
+
+        installer = Installer.__new__(Installer)
+        installer.spellbook_dir = Path(__file__).resolve().parents[2]
+        installer.version = "1.2.3"
+        return installer._resolve_rule_delivery([], None, rule_selection, True)
+
+    def test_declining_everything_leaves_no_stale_precheck_state(self):
+        """The answer, not the config, defines EVERY field of the selection.
+
+        Patching only selected/declined left ``prechecked_ids`` and
+        ``unanswered_ids`` describing the pre-answer state, so the next
+        consumer would read a module the user just declined as still checked
+        and never offered.
+        """
+        modules, selection, _detection, error = self._answered([])
+
+        preference_ids = [m.id for m in modules if m.is_preference]
+        assert not error
+        assert preference_ids, "no preference modules -- the assertions below prove nothing"
+        assert selection.selected_ids == []
+        assert selection.declined_ids == preference_ids
+        assert selection.prechecked_ids == []
+        assert selection.unanswered_ids == []
+
+    def test_an_accepted_module_is_neither_prechecked_nor_unanswered(self):
+        modules, selection, _detection, error = self._answered([])
+        kept = [m.id for m in modules if m.is_preference][0]
+
+        modules, selection, _detection, error = self._answered([kept])
+
+        assert not error
+        assert selection.selected_ids == [kept]
+        assert kept not in selection.declined_ids
+        assert selection.prechecked_ids == []
+        assert selection.unanswered_ids == []
 
 
 class TestBackupIsUnconditionalBeforeSpellbookTakesAPath:

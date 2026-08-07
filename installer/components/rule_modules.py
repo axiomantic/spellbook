@@ -338,7 +338,6 @@ class ModuleSelection:
 def resolve_selection(
     modules: Sequence[RuleModule],
     config_values: Optional[Mapping[str, Any]] = None,
-    force_all_defaults: bool = False,
 ) -> ModuleSelection:
     """Resolve the effective selection from config plus per-module defaults.
 
@@ -348,13 +347,11 @@ def resolve_selection(
     - ``False`` -- the user declined it; it is never re-checked automatically.
     - absent    -- the module was never offered; it takes its ``default``.
 
-    ``force_all_defaults`` applies each module's default to modules with no
-    recorded answer. It is the legacy-migration path, where the user has never
-    been asked and the operator's instruction is to install everything they
-    had. It never overrides a recorded ``False``: migration detection is
-    per-platform and fires on states a previously-answering user can reach
-    (adding a second harness whose legacy sidecar was never cleaned), so
-    discarding declines here silently reinstalls rules the user turned off.
+    A recorded answer is authoritative on every path, including legacy
+    migration. Migration detection is per-platform and fires on states a
+    previously-answering user can reach (adding a second harness whose legacy
+    sidecar was never cleaned), so overriding a recorded ``False`` there would
+    silently reinstall rules the user turned off.
     """
     values = config_values or {}
     selected: List[str] = []
@@ -363,9 +360,6 @@ def resolve_selection(
     unanswered: List[str] = []
 
     for module in preference_modules(modules):
-        # force_all_defaults applies to absent keys only, and an absent key
-        # already takes its default -- so a recorded answer, True or False, is
-        # authoritative on every path.
         recorded = recorded_value(values, module)
 
         if recorded is None:

@@ -47,17 +47,6 @@ class DetectionResult:
         """Whether this user has legacy artifacts that must be replaced."""
         return self.state in (InstallState.SYMLINK, InstallState.LEGACY)
 
-    @property
-    def install_all_defaults(self) -> bool:
-        """Whether to ignore recorded answers and install the default set.
-
-        A migrating user has never been asked, so the operator's "symlink
-        everything" instruction applies: every module whose default is on.
-        Modules that default off are not installed, because adding a rule the
-        user never had would not preserve their behavior.
-        """
-        return self.needs_migration
-
 
 def _has_modules(rule_dir: Optional[Path]) -> bool:
     if rule_dir is None or not rule_dir.is_dir():
