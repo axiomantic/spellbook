@@ -9,6 +9,7 @@ spellbook/
 ├── skills/           # Reusable workflow definitions
 ├── commands/         # Slash commands
 ├── agents/           # Specialized agent definitions
+├── rules/            # Installable rule modules (global behavioral instructions)
 ├── spellbook/    # MCP server for skill discovery
 ├── lib/              # Shared JavaScript utilities
 ├── installer/        # Installation components
@@ -101,3 +102,26 @@ Markdown files in `commands/` are exposed as `/<filename>` slash commands.
 ### Agent Files
 
 Markdown files in `agents/` define specialized agent behaviors.
+
+### Rule Modules
+
+Markdown files in `rules/` are the global behavioral instructions the installer
+delivers to each platform. Each file is named `XX-<id>.md`, where the numeric
+prefix sets delivery order and `<id>` is a stable identifier that survives
+renumbering. YAML frontmatter declares the module's `id`, `name`, `class`
+(`mandatory` or `preference`), `default` state, `description`, `benefit`, and
+`related` artifacts.
+
+Delivery depends on what the harness can read:
+
+- **Directory-capable** platforms (Claude Code, Antigravity, OpenCode) receive
+  one symlink per selected module, named `XX-spellbook-<id>.md`, so module
+  identity survives at the destination.
+- **Flat** platforms (Codex, ForgeCode, Gemini CLI, Pi) receive a generated
+  concatenation written at the harness's real instruction path, because they
+  cannot follow a reference.
+
+Mandatory modules install unconditionally. Preference modules are offered during
+installation and recorded under `rules.module.<id>` config keys, whose tri-state
+semantics (true kept / false declined / absent never offered) let a re-install
+pre-check newly added modules without resurrecting declined ones.

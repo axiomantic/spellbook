@@ -2,6 +2,8 @@
 Integration tests for Antigravity installer.
 """
 
+import os
+
 from installer.platforms.antigravity import AntigravityInstaller
 
 
@@ -45,7 +47,10 @@ def test_antigravity_full_install_and_uninstall(tmp_path):
     (skills_dir / "test-skill").mkdir()
     (skills_dir / "test-skill" / "SKILL.md").write_text("# Test Skill")
 
-    (spellbook_dir / "AGENTS.spellbook.md").write_text("# Test Agents")
+    (spellbook_dir / "rules").mkdir(exist_ok=True)
+    (spellbook_dir / "rules" / "00-core.md").write_text(
+        """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+    )
 
     hooks_dir = spellbook_dir / "hooks"
     hooks_dir.mkdir(parents=True)
@@ -64,10 +69,16 @@ def test_antigravity_full_install_and_uninstall(tmp_path):
     results = installer.install()
     assert all(r.success for r in results)
 
-    # Verify rule symlink to AGENTS.spellbook.md
-    rule_symlink = config_dir / "rules" / "spellbook.md"
-    assert rule_symlink.is_symlink()
-    assert rule_symlink.resolve() == (spellbook_dir / "AGENTS.spellbook.md").resolve()
+    # One symlink per module, at the corrected global rules root. Antigravity
+    # reads ~/.gemini/config/rules, not <config_dir>/rules -- the latter path
+    # appears nowhere in the shipped binary, so nothing written there loaded.
+    rules_root = config_dir.parent / "config" / "rules"
+    module_link = rules_root / "00-spellbook-core.md"
+    assert module_link.is_symlink()
+    assert module_link.resolve() == (spellbook_dir / "rules" / "00-core.md").resolve()
+
+    # The retired single sidecar is not created.
+    assert not os.path.lexists(config_dir / "rules" / "spellbook.md")
 
     status = installer.detect()
     assert status.installed is True
@@ -75,3 +86,8 @@ def test_antigravity_full_install_and_uninstall(tmp_path):
     # Uninstall
     un_results = installer.uninstall()
     assert all(r.success for r in un_results)
+
+    # Uninstall is complete: every module file is gone, and detect() -- which
+    # keys on those files -- stops reporting the platform installed.
+    assert not list(rules_root.glob("??-spellbook-*.md"))
+    assert installer.detect().installed is False

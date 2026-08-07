@@ -133,6 +133,31 @@ nav:
     - Config: admin/config.md
     - Fractal: admin/fractal.md
   - Reference:
+    - Rule Modules:
+      - Overview: rules/index.md
+      - rules/00-core.md
+      - rules/10-session.md
+      - rules/20-orchestration.md
+      - rules/30-intent-routing.md
+      - rules/40-develop-discipline.md
+      - rules/45-verification.md
+      - rules/50-git-safety.md
+      - rules/51-ai-attribution.md
+      - rules/55-diff-semantics.md
+      - rules/60-autonomy.md
+      - rules/70-bash-gate.md
+      - rules/80-code-quality.md
+      - rules/81-testing.md
+      - rules/82-file-reading.md
+      - rules/83-language-python.md
+      - rules/85-review-method.md
+      - rules/86-review-posture.md
+      - rules/91-role.md
+      - rules/92-core-philosophy.md
+      - rules/93-communication.md
+      - rules/95-worktrees.md
+      - rules/96-pr-conventions.md
+      - rules/97-opportunity-awareness.md
     - Skills A-Z:
       - Overview: skills/index.md
       - skills/advanced-code-review.md

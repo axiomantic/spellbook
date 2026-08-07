@@ -4,6 +4,8 @@ OpenCode (anomalyco/opencode) uses HTTP transport to connect to the spellbook MC
 """
 
 import json
+import os
+
 import pytest
 from pathlib import Path
 
@@ -24,6 +26,10 @@ def spellbook_dir(tmp_path):
 
     # Create AGENTS.spellbook.md for context generation
     (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook Context\n\nTest content.")
+    (spellbook / "rules").mkdir(exist_ok=True)
+    (spellbook / "rules" / "00-core.md").write_text(
+        """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+    )
 
     # Create spellbook-forged plugin directory
     plugin_dir = spellbook / "extensions" / "opencode" / "spellbook-forged"
@@ -101,21 +107,43 @@ class TestOpenCodeInstaller:
         assert status.installed is True
         assert status.details["mcp_registered"] is True
 
-    def test_install_creates_instructions_sidecar(self, spellbook_dir, opencode_config_dir):
-        """Test that install creates instructions/spellbook.md sidecar file."""
+    def test_install_creates_and_registers_rule_modules(
+        self, spellbook_dir, opencode_config_dir
+    ):
+        """Every installed module file is also listed in opencode.json.
+
+        Registration is the only load mechanism: OpenCode's resolver reads the
+        instructions array and never scans the directory, so a written-but-
+        unregistered file reaches the model not at all. This is the regression
+        test for that gap.
+        """
+        import json as _json
+
         from installer.platforms.opencode import OpenCodeInstaller
 
         installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
         results = installer.install()
 
-        # Check instructions/spellbook.md sidecar was created
-        sidecar = opencode_config_dir / "instructions" / "spellbook.md"
-        assert sidecar.exists()
+        module_files = sorted(
+            (opencode_config_dir / "instructions").glob("??-spellbook-*.md")
+        )
+        assert module_files, "no rule module files were installed"
 
-        # Check results contain instructions_sidecar component
-        sidecar_result = next((r for r in results if r.component == "instructions_sidecar"), None)
-        assert sidecar_result is not None
-        assert sidecar_result.success is True
+        config = _json.loads(
+            (opencode_config_dir / "opencode.json").read_text(encoding="utf-8")
+        )
+        registered = set(config.get("instructions", []))
+        for module_file in module_files:
+            assert installer._instructions_config_path(module_file) in registered
+
+        # The retired single sidecar is not created.
+        assert not os.path.lexists(
+            opencode_config_dir / "instructions" / "spellbook.md"
+        )
+
+        module_result = next((r for r in results if r.component == "rule_modules"), None)
+        assert module_result is not None
+        assert module_result.success is True
 
     def test_install_creates_opencode_json_with_http_mcp(self, spellbook_dir, opencode_config_dir):
         """Test that install creates opencode.json with HTTP MCP config."""
@@ -207,21 +235,34 @@ class TestOpenCodeInstaller:
         assert results[0].action == "skipped"
         assert "not found" in results[0].message
 
-    def test_uninstall_removes_instructions_sidecar(self, spellbook_dir, opencode_config_dir):
-        """Test that uninstall removes instructions/spellbook.md sidecar."""
+    def test_uninstall_removes_and_deregisters_rule_modules(
+        self, spellbook_dir, opencode_config_dir
+    ):
+        """Uninstall removes each module file and its registration.
+
+        A surviving registration would point at a file that no longer exists,
+        and a surviving file would keep loading despite the uninstall.
+        """
+        import json as _json
+
         from installer.platforms.opencode import OpenCodeInstaller
 
-        # First install
         installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
         installer.install()
 
-        # Then uninstall
         results = installer.uninstall()
 
-        # Check instructions_sidecar component
-        sidecar_result = next((r for r in results if r.component in ("instructions_sidecar", "context_files")), None)
-        assert sidecar_result is not None
-        assert sidecar_result.success is True
+        module_result = next((r for r in results if r.component == "rule_modules"), None)
+        assert module_result is not None
+        assert module_result.success is True
+
+        assert not list((opencode_config_dir / "instructions").glob("??-spellbook-*.md"))
+
+        config = _json.loads(
+            (opencode_config_dir / "opencode.json").read_text(encoding="utf-8")
+        )
+        registered = config.get("instructions", [])
+        assert not [entry for entry in registered if "-spellbook-" in entry]
 
     def test_uninstall_removes_mcp_config(self, spellbook_dir, opencode_config_dir):
         """Test that uninstall removes spellbook MCP server from opencode.json."""
@@ -278,14 +319,19 @@ class TestOpenCodeInstaller:
         assert all(r.success for r in results)
 
     def test_get_context_files(self, spellbook_dir, opencode_config_dir):
-        """Test get_context_files returns instructions/spellbook.md."""
+        """get_context_files returns the installed rule module files."""
         from installer.platforms.opencode import OpenCodeInstaller
 
         installer = OpenCodeInstaller(spellbook_dir, opencode_config_dir, "0.1.0")
+        assert installer.get_context_files() == []
+
+        installer.install()
         files = installer.get_context_files()
 
-        assert len(files) == 1
-        assert files[0] == opencode_config_dir / "instructions" / "spellbook.md"
+        assert files
+        assert files == sorted(
+            (opencode_config_dir / "instructions").glob("??-spellbook-*.md")
+        )
 
     def test_get_symlinks_returns_empty_before_install(self, spellbook_dir, opencode_config_dir):
         """Test get_symlinks returns empty list before installation."""
@@ -495,6 +541,10 @@ class TestOpenCodePlugin:
         spellbook.mkdir()
         (spellbook / ".version").write_text("0.1.0")
         (spellbook / "AGENTS.spellbook.md").write_text("# Test")
+        (spellbook / "rules").mkdir(exist_ok=True)
+        (spellbook / "rules" / "00-core.md").write_text(
+            """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+        )
 
         installer = OpenCodeInstaller(spellbook, opencode_config_dir, "0.1.0")
         results = installer.install()

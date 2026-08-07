@@ -4,14 +4,34 @@
 
 ## Severity Levels
 
+<CRITICAL>
+Severity names are **UPPERCASE tokens**, not prose. The consumers that gate
+merges (`SEVERITY_ORDER` in `/advanced-code-review-report`, `determine_verdict`,
+and `spellbook.code_review.models.Severity`) match on the exact token. Emitting
+`Critical` in Title Case matched no branch of the old gate and fell through to
+APPROVE — a blocking finding merged under "No blocking issues found."
+
+The vocabulary is exactly these seven tokens. There is no eighth.
+</CRITICAL>
+
 | Severity | Definition | Action Required |
 |----------|------------|-----------------|
-| **Critical** | Bugs, security vulnerabilities, data loss risks, crashes | MUST fix before merge |
-| **High** | Architecture problems, missing required features, poor error handling, broken contracts | SHOULD fix before merge |
-| **Medium** | Code quality issues, minor test gaps, maintainability concerns | FIX or justify deferral in response |
-| **Low** | Minor improvements, edge case optimizations, nice-to-haves | OPTIONAL - fix if easy |
-| **Nit** | Style, naming, formatting preferences | OPTIONAL - use GitHub suggestion blocks |
-| **Praise** | Good patterns, clever solutions, exemplary code to acknowledge | NO action required |
+| `CRITICAL` | Security vulnerabilities, data loss, production outage | MUST fix before merge |
+| `HIGH` | **Bugs and broken functionality**, broken contracts, architecture problems, missing required features, poor error handling | MUST fix before merge (blocking) |
+| `MEDIUM` | Code quality issues, minor test gaps, maintainability concerns | FIX or justify deferral in response |
+| `LOW` | Minor improvements, edge case optimizations, nice-to-haves | OPTIONAL - fix if easy |
+| `NIT` | Style, naming, formatting preferences | OPTIONAL - use GitHub suggestion blocks |
+| `QUESTION` | Needs author input before a judgment can be made | Author answers before merge |
+| `PRAISE` | Good patterns, clever solutions, exemplary code to acknowledge | NO action required |
+
+<CRITICAL>
+**Bugs are HIGH, never CRITICAL.** `CRITICAL` is reserved for security
+vulnerabilities, data loss, and production outages. A crash or an off-by-one is
+a bug: it is `HIGH`. Both are blocking, so nothing merges that should not — but
+the distinction keeps `CRITICAL` meaningful.
+
+`IMPORTANT`, `MINOR`, and `SUGGESTION` are **RETIRED**. Do not emit them.
+</CRITICAL>
 
 ### Severity Decision Tree
 
@@ -20,12 +40,12 @@ Use this decision tree for every finding. Do not skip levels or guess severity f
 </CRITICAL>
 
 ```
-Is it a security issue, bug, or data loss risk?
+Is it a security vulnerability, data loss risk, or production outage?
   → Yes: CRITICAL
   → No: Continue
 
-Does it break contracts, architecture, or core functionality?
-  → Yes: HIGH
+Is it a BUG, or does it break contracts, architecture, or core functionality?
+  → Yes: HIGH        (bugs land HERE, not in CRITICAL)
   → No: Continue
 
 Is it a code quality or maintainability concern?
@@ -38,6 +58,10 @@ Is it a minor improvement or optimization?
 
 Is it purely stylistic?
   → Yes: NIT
+  → No: Continue
+
+Do you need the author to answer something before you can judge it?
+  → Yes: QUESTION
   → No: PRAISE (if positive) or skip comment
 ```
 
@@ -58,9 +82,9 @@ Is it purely stylistic?
 
 | State | Meaning | When to Use |
 |-------|---------|-------------|
-| **APPROVED** | Ready to merge | No Critical/High issues remain; all items addressed or justified |
-| **CHANGES_REQUESTED** | Must fix before merge | Critical or High severity issues present |
-| **COMMENTED** | Non-blocking feedback | Review complete with only Medium/Low/Nit items |
+| **APPROVED** | Ready to merge | No `CRITICAL`/`HIGH` issues remain; all items addressed or justified |
+| **CHANGES_REQUESTED** | Must fix before merge | Any `CRITICAL` or `HIGH` finding, **or any severity the gate does not recognise** |
+| **COMMENTED** | Non-blocking feedback | Review complete with only `MEDIUM`/`LOW`/`NIT`/`QUESTION` items |
 | **PENDING** | Review in progress | Partial review, more files to examine |
 | **RE_REVIEW_REQUIRED** | Substantial changes since last review | Author pushed significant changes that invalidate previous review |
 
@@ -68,10 +92,11 @@ Is it purely stylistic?
 
 | Remaining Issues | Approval State |
 |------------------|----------------|
-| Any Critical | CHANGES_REQUESTED |
-| Any High (no Critical) | CHANGES_REQUESTED |
-| Only Medium/Low/Nit | COMMENTED or APPROVED (reviewer discretion) |
-| Only Praise | APPROVED |
+| Any `CRITICAL` | CHANGES_REQUESTED |
+| Any `HIGH` (no `CRITICAL`) | CHANGES_REQUESTED |
+| Any severity outside the seven tokens | CHANGES_REQUESTED (**fail closed** — the gate cannot rank it, so it must not assume harmless) |
+| Only `MEDIUM`/`LOW`/`NIT`/`QUESTION` | COMMENTED or APPROVED (reviewer discretion) |
+| Only `PRAISE` | APPROVED |
 | None | APPROVED |
 
 ## Comment Format
@@ -93,6 +118,13 @@ improved code here
 **[CRITICAL/Security]** API key exposed in client-side code
 
 This key will be visible in the browser. Move to server-side environment variable.
+
+---
+
+**[HIGH/Logic]** Off-by-one drops the last element of the batch
+
+`range(0, len(items) - 1)` never yields the final index. This is a BUG, so it is
+HIGH — not CRITICAL.
 
 ---
 
@@ -119,4 +151,4 @@ const userAuthenticationToken = response.token;
 **[PRAISE]** Excellent use of discriminated unions here - makes the state machine crystal clear.
 ```
 
-<FINAL_EMPHASIS>This taxonomy is the authoritative reference for all code review classification. Severity determines merge gates. Inconsistent application erodes trust and lets real defects through. When uncertain, classify higher and note the ambiguity in the comment.</FINAL_EMPHASIS>
+<FINAL_EMPHASIS>This taxonomy is the authoritative reference for all code review classification. Severity determines merge gates, and the gate matches the UPPERCASE token exactly. Inconsistent application erodes trust and lets real defects through. When uncertain, classify higher and note the ambiguity in the comment.</FINAL_EMPHASIS>

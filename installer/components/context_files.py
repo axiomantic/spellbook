@@ -65,67 +65,8 @@ def generate_spellbook_config_section(spellbook_dir: Path) -> str:
     return "\n".join(lines)
 
 
-def get_spellbook_context_content(spellbook_dir: Path) -> str:
-    """
-    Get the content of AGENTS.spellbook.md from the spellbook repository.
-
-    This is the installable template content that will be placed in the
-    demarcated section of user config files. Separate from any project-specific
-    AGENTS.md that may exist for spellbook development.
-    """
-    agents_md = spellbook_dir / "AGENTS.spellbook.md"
-    if not agents_md.exists():
-        return ""
-    return agents_md.read_text(encoding="utf-8").strip()
-
-
-# Backward-compatible alias
-get_spellbook_claude_md_content = get_spellbook_context_content
-
-
-def generate_codex_context(spellbook_dir: Path, include_claude_md: bool = True) -> str:
-    """
-    Generate context content for Codex/OpenCode (AGENTS.md).
-
-    Args:
-        spellbook_dir: Path to spellbook directory
-        include_claude_md: Whether to include AGENTS.spellbook.md content
-
-    Returns complete context content for AGENTS.md demarcated section.
-    """
-    parts = []
-
-    # Add configuration section first
-    parts.append(generate_spellbook_config_section(spellbook_dir))
-
-    if include_claude_md:
-        claude_content = get_spellbook_context_content(spellbook_dir)
-        if claude_content:
-            parts.append(claude_content)
-
-    # Note: Skills are discovered via MCP server. No static skill registry needed here.
-
-    return "\n".join(parts)
-
-
-def generate_claude_context(spellbook_dir: Path) -> str:
-    """
-    Generate context content for Claude Code (CLAUDE.md).
-
-    Includes:
-    1. Spellbook configuration (SPELLBOOK_DIR, SPELLBOOK_CONFIG_DIR)
-    2. The raw AGENTS.spellbook.md content
-
-    Claude Code handles skills differently (via Skill tool).
-    """
-    parts = []
-
-    # Add configuration section first
-    parts.append(generate_spellbook_config_section(spellbook_dir))
-
-    # Add AGENTS.spellbook.md content
-    claude_content = get_spellbook_context_content(spellbook_dir)
-    if claude_content:
-        parts.append(claude_content)
-
-    return "\n".join(parts)
+# The per-platform context generators that once lived here
+# (get_spellbook_context_content, generate_codex_context,
+# generate_claude_context) are gone. They read a single monolithic template
+# that no longer exists; rule content is now assembled per platform by
+# installer/components/rule_bundle.py from the rules/ module sources.

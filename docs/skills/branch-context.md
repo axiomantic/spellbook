@@ -20,7 +20,7 @@ Did I run branch-context.sh from the correct directory (worktree path, not main 
 
 Practical guide for inspecting branch context, handling stacked branches, and
 producing branch-relative documentation. Core definitions (merge target, merge
-base, branch diff) live in AGENTS.spellbook.md; this skill covers usage details.
+base, branch diff) live in rules/55-diff-semantics.md; this skill covers usage details.
 
 ## Invariant Principles
 
@@ -41,9 +41,37 @@ branch-context.sh diff         # full diff (merge base to working tree)
 branch-context.sh diff-committed   # committed only (merge base to HEAD)
 branch-context.sh diff-uncommitted # uncommitted only (staged + unstaged vs HEAD)
 branch-context.sh log          # commit log since merge base
-branch-context.sh files        # changed file list
+branch-context.sh stat         # diffstat (merge base to working tree)
+branch-context.sh stat-committed   # diffstat, committed only (merge base to HEAD)
+branch-context.sh files        # changed file list (merge base to working tree)
+branch-context.sh files-committed  # changed file list, committed only
+branch-context.sh base         # the merge base SHA
+branch-context.sh target       # the detected merge target
+branch-context.sh resolution   # base provenance on stdout
 branch-context.sh json         # machine-readable JSON
 ```
+
+<CRITICAL>
+**ENDPOINT is a separate decision from BASE.** The `-committed` variants stop at
+HEAD; the plain ones include the working tree. Pick by TASK:
+
+| Task | Endpoint pair |
+|------|---------------|
+| Reviewing what will merge | `files-committed` + `diff-committed` |
+| Describing the branch (PR body, changelog) | `files` + `diff` |
+| Pre-commit self-review | `files` + `diff` |
+
+The file list and the diff MUST share one endpoint. Pairing `files` with
+`diff-committed` builds a coverage manifest of files the diff does not contain,
+which lets a review certify N-of-N against zero hunks.
+
+`json` reports BOTH counts: `files_changed` (working tree) and
+`files_changed_committed`. Automation deciding "is there anything to review"
+must read `files_changed_committed`.
+</CRITICAL>
+
+Run `branch-context.sh --help` for the authoritative list; this table and the
+script's own usage output are ONE contract.
 
 `$SPELLBOOK_DIR` is substituted at load time from spellbook configuration.
 

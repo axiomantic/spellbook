@@ -16,6 +16,59 @@ def read_version(version_file: Path) -> str:
     return version_file.read_text(encoding="utf-8").strip()
 
 
+# Name of the stamp recording which spellbook version last installed
+# successfully. This is code-derived state, not a user choice, so it lives
+# beside spellbook's other state rather than in the user's config.
+INSTALLED_VERSION_FILE = "installed_version"
+
+
+def _installed_version_path() -> Path:
+    from installer.config import get_spellbook_config_dir
+
+    return get_spellbook_config_dir() / INSTALLED_VERSION_FILE
+
+
+def read_installed_version(legacy_context_file: Optional[Path] = None) -> Optional[str]:
+    """Return the version that last installed, or None on a fresh machine.
+
+    Reads the install stamp first. ``legacy_context_file`` is consulted only as
+    a fallback for a user upgrading from an interpolated install, whose only
+    record is the demarcated marker.
+
+    The stamp exists because the demarcated marker is no longer a usable source:
+    the installer strips that block on every run, so reading it always yielded
+    None and every install reported itself a fresh install.
+    """
+    stamp = _installed_version_path()
+    if stamp.exists():
+        try:
+            recorded = stamp.read_text(encoding="utf-8").strip()
+        except OSError:
+            recorded = ""
+        if recorded:
+            return recorded
+
+    if legacy_context_file is not None:
+        from installer.demarcation import get_installed_version
+
+        return get_installed_version(legacy_context_file)
+
+    return None
+
+
+def write_installed_version(version: str, dry_run: bool = False) -> Optional[Path]:
+    """Record ``version`` as the installed version. No-op under dry run."""
+    if dry_run:
+        return None
+    stamp = _installed_version_path()
+    try:
+        stamp.parent.mkdir(parents=True, exist_ok=True)
+        stamp.write_text(version + "\n", encoding="utf-8")
+    except OSError:
+        return None
+    return stamp
+
+
 def check_upgrade_needed(
     installed_version: Optional[str], current_version: str, force: bool = False
 ) -> Tuple[bool, str]:

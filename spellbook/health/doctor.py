@@ -4,7 +4,7 @@ Unlike the server-side ``checker.py`` (which runs inside the daemon),
 this module performs *client-side* checks that run without a running
 daemon.  Checks cover Python version, package installation, config
 directories, database files, daemon reachability, token file, skill
-symlinks, and platform config.
+symlinks, rule-module delivery, and platform config.
 """
 
 from __future__ import annotations
@@ -173,6 +173,165 @@ def check_skills_symlinks() -> CheckResult:
     return CheckResult("skills", "pass", f"{len(skill_files)} skills found")
 
 
+def _dangling_rule_paths(installer) -> list[Path]:
+    """Return the installer's rule artifacts that exist as links but resolve nowhere.
+
+    ``os.path.lexists`` is required here, not ``Path.exists()``. ``exists()``
+    follows the symlink and reports False for a broken one -- which is exactly
+    the state being detected, so it would report the dangling link as simply
+    absent and the check would never fire.
+    """
+    # Imported inside the function, as every other installer import in this
+    # module is: doctor must still run on a partial checkout.
+    from installer.components.rule_delivery import INSTALLED_GLOB
+
+    candidates: list[Path] = []
+
+    rules_dir = installer.rule_module_dir()
+    if rules_dir is not None and rules_dir.is_dir():
+        candidates.extend(rules_dir.glob(INSTALLED_GLOB))
+
+    bundle = installer.rule_bundle_path()
+    if bundle is not None:
+        candidates.append(bundle)
+
+    candidates.extend(installer.legacy_rule_paths())
+
+    return [p for p in candidates if os.path.lexists(p) and not os.path.exists(p)]
+
+
+def _core_module_missing(installer) -> bool:
+    """Whether an installed platform is missing the mandatory core module.
+
+    "Nothing is dangling" is satisfied by delivering nothing at all, so a
+    prune-everything regression reads as healthy without this. The mandatory
+    core module is present on every correct delivery, on both mechanisms, so
+    its absence from a platform that reports itself installed is the signal.
+    """
+    from installer.components.rule_delivery import CORE_MODULE_GLOB
+
+    rules_dir = installer.rule_module_dir()
+    if rules_dir is not None:
+        if not rules_dir.is_dir():
+            return True
+        return not list(rules_dir.glob(CORE_MODULE_GLOB))
+
+    bundle = installer.rule_bundle_path()
+    if bundle is None:
+        return False
+    if not os.path.exists(bundle):
+        return True
+    from installer.components.rule_bundle import MODULE_MARKER_PREFIX
+
+    try:
+        return f"{MODULE_MARKER_PREFIX} core " not in bundle.read_text(encoding="utf-8")
+    except OSError:
+        return True
+
+
+def check_rule_modules(
+    config_dirs: dict[str, Path] | None = None,
+    spellbook_dir: Path | None = None,
+) -> CheckResult:
+    """Detect rule paths that are linked but dangling, or missing entirely.
+
+    Between a ``git pull`` that moves or deletes rule sources and the next
+    ``install.py`` run, every previously-symlinked rule path dangles. The
+    harness silently loads NO spellbook rules during that window. The window
+    cannot be closed -- the installer is not what runs on ``git pull`` -- so it
+    is instead made loud and recoverable here.
+
+    A platform that reports itself installed but has no core module delivered
+    is also a failure. Without that, a delivery that pruned everything passes
+    this check by virtue of having nothing left to dangle.
+
+    Args:
+        config_dirs: Per-platform config dir overrides. Lets a caller point the
+            check at a fixture tree instead of the real machine.
+        spellbook_dir: Checkout root override, for the same reason.
+    """
+    try:
+        from installer.config import SUPPORTED_PLATFORMS
+        from installer.core import get_platform_installer
+        from spellbook.core.config import get_spellbook_dir
+
+        root = Path(spellbook_dir) if spellbook_dir is not None else Path(get_spellbook_dir())
+    except Exception as exc:  # pragma: no cover - a partial checkout must not crash doctor
+        return CheckResult(
+            "rule_modules",
+            "warn",
+            f"Cannot inspect rule modules: {exc}",
+        )
+
+    overrides = config_dirs or {}
+    dangling: list[Path] = []
+    undelivered: list[str] = []
+    skipped: list[str] = []
+    checked = 0
+    for platform in SUPPORTED_PLATFORMS:
+        try:
+            installer = get_platform_installer(
+                platform, root, version="0", dry_run=True,
+                config_dir_override=overrides.get(platform),
+            )
+            found = _dangling_rule_paths(installer)
+            missing_core = (
+                installer.rule_delivery != "none"
+                and installer.detect().installed
+                and _core_module_missing(installer)
+            )
+        except Exception:
+            # One unreadable platform must not mask the others -- but it must
+            # not vanish either. A skipped platform used to leave a green line
+            # that read identically to a full inspection, so "pass" could mean
+            # one platform checked out of seven.
+            skipped.append(platform)
+            continue
+        checked += 1
+        dangling.extend(found)
+        if missing_core:
+            undelivered.append(platform)
+
+    if dangling:
+        shown = ", ".join(str(p) for p in sorted(dangling)[:5])
+        more = f" (+{len(dangling) - 5} more)" if len(dangling) > 5 else ""
+        return CheckResult(
+            "rule_modules",
+            "fail",
+            f"{len(dangling)} rule path(s) point at missing sources; "
+            f"no spellbook rules are loading: {shown}{more}",
+            fix="Run: uv run install.py (rule sources moved; re-link them)",
+        )
+
+    if undelivered:
+        return CheckResult(
+            "rule_modules",
+            "fail",
+            "spellbook is installed but the mandatory core rule module was not "
+            f"delivered to: {', '.join(sorted(undelivered))}",
+            fix="Run: uv run install.py (rule modules missing; re-deliver them)",
+        )
+
+    if not checked:
+        return CheckResult(
+            "rule_modules",
+            "warn",
+            "No platform could be inspected for rule modules"
+            + (f" (all failed: {', '.join(sorted(skipped))})" if skipped else ""),
+        )
+    if skipped:
+        return CheckResult(
+            "rule_modules",
+            "warn",
+            f"No dangling rule paths across {checked} platform(s), but "
+            f"{len(skipped)} could not be inspected: {', '.join(sorted(skipped))}",
+            fix="Check the config directories for the platforms named above",
+        )
+    return CheckResult(
+        "rule_modules", "pass", f"No dangling rule paths across {checked} platform(s)"
+    )
+
+
 def check_platform_config() -> CheckResult:
     """Check if platform config (e.g. .claude.json) has MCP config."""
     claude_json = Path.home() / ".claude.json"
@@ -218,5 +377,6 @@ def run_checks() -> list[CheckResult]:
         check_daemon_running(),
         check_token_file(),
         check_skills_symlinks(),
+        check_rule_modules(),
         check_platform_config(),
     ]

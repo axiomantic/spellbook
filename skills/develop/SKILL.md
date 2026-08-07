@@ -73,6 +73,45 @@ When operating in YOLO mode or when user selected "Fully autonomous":
   artifact-shaped failures are invisible without verification.
 
 If you find yourself typing "Should I proceed?" — STOP. You already have permission.
+
+### Default Behaviors in Autonomous Mode
+
+| Situation | Action | Rationale |
+|-----------|--------|-----------|
+| Ambiguous requirements | Choose simplest, document alternatives | Reversible; keeps momentum |
+| Multiple valid approaches | Follow existing codebase patterns | Consistency over novelty |
+| Minor test failures | Log, proceed unless 3+ consecutive | Flaky tests common; repeated = real |
+| Missing optional context | Sensible defaults | Optional means dispensable |
+
+### Circuit Breaker Output Format
+
+When a circuit breaker fires, emit this exact structure and wait. All eight fields are
+required; partial output is forbidden.
+
+```markdown
+## Circuit Breaker Triggered
+
+**Type:** [Security | Contradiction | Repeated Failure | Missing Context]
+**Skill:** [skill-name]
+**Phase:** [current phase/step]
+
+**Condition:** [what triggered]
+
+**Context:** [evidence that led to this point]
+
+**Options:**
+A) [option + tradeoff]
+B) [option + tradeoff]
+C) [option + tradeoff]
+
+**Recommended:** [letter] - [rationale]
+
+**Awaiting:** User decision
+```
+
+After emitting, suspend all progress until the user replies. Do not poll, retry, or act
+unilaterally. A halted agent that reports clearly is the protocol working; never suppress a
+circuit breaker and never proceed after triggering one.
 </CRITICAL>
 
 ---

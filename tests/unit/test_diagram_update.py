@@ -179,8 +179,178 @@ class TestGetSourceDiff:
 
 
 # ---------------------------------------------------------------------------
-# Tests: classify_change
+# Tests: generate_diagram (subprocess path)
 # ---------------------------------------------------------------------------
+
+
+class TestGenerateDiagramNoMermaid:
+    """Regression: when the subprocess produces no mermaid content, nothing
+    is written to disk (no scavenged/synthesized diagram file)."""
+
+    @pytest.mark.allow("subprocess")
+    def test_no_mermaid_output_writes_nothing(self) -> None:
+        import shutil
+        import tempfile
+
+        # build_prompt()/generate_diagram() call item.source_path.relative_to
+        # (module-level) REPO_ROOT, which tripwire cannot mock as a bare
+        # constant -- so the item must live under the real REPO_ROOT.
+        work_dir = Path(tempfile.mkdtemp(dir=generate_diagrams.REPO_ROOT))
+        repo_root_stray = generate_diagrams.REPO_ROOT / "DIAGRAM.md"
+        # Never clobber a real repo-root file; if one exists the plant is skipped.
+        plant_repo_root_stray = not repo_root_stray.exists()
+        try:
+            item = make_source_item(work_dir)
+            assert not item.diagram_path.exists()
+
+            # The regression this test names is a file-scavenging loop that
+            # adopted any DIAGRAM.md it found near the source. Without a stray
+            # file present, every candidate.exists() is False and the loop would
+            # be invisible -- the test could not fail.
+            #
+            # Plant EVERY candidate the removed loop probed, not just the first.
+            # Planting only `<source dir>/DIAGRAM.md` meant a partial regression
+            # that restored just the REPO_ROOT or the `<name>-DIAGRAM.md` arm
+            # stayed green.
+            stray_body = "# stray\n\n```mermaid\ngraph TD\n  X --> Y\n```\n"
+            strays = [
+                item.source_path.parent / "DIAGRAM.md",
+                item.diagram_path.parent / f"{item.name}-DIAGRAM.md",
+            ]
+            if plant_repo_root_stray:
+                strays.append(repo_root_stray)
+            for stray in strays:
+                stray.parent.mkdir(parents=True, exist_ok=True)
+                stray.write_text(stray_body, encoding="utf-8")
+
+            prompt = generate_diagrams.build_prompt(item)
+            expected_cmd = [
+                "claude",
+                "--print",
+                "--model", "haiku",
+                "--dangerously-skip-permissions",
+                "--allowedTools", "Read",
+                prompt,
+            ]
+
+            tripwire.subprocess.mock_run(
+                command=expected_cmd,
+                returncode=0,
+                stdout="I looked at the source and it seems fine, no changes needed.",
+            )
+
+            with tripwire:
+                result, content = generate_diagrams.generate_diagram(
+                    item, "newhash", provider="claude", model="haiku", write=True,
+                )
+
+            assert result.status == "failed"
+            assert content is None
+            assert not item.diagram_path.exists()
+            # No stray may be adopted as the diagram, nor consumed.
+            for stray in strays:
+                assert stray.exists(), (
+                    f"a stray {stray.name} must not be scavenged or deleted"
+                )
+                assert stray.read_text(encoding="utf-8") == stray_body
+            tripwire.subprocess.assert_run(
+                command=expected_cmd,
+                returncode=0,
+                stdout=AnyThing,
+                stderr="",
+            )
+        finally:
+            shutil.rmtree(work_dir, ignore_errors=True)
+            if plant_repo_root_stray:
+                repo_root_stray.unlink(missing_ok=True)
+
+
+class TestAgentOptionsAreLockedDown:
+    """The classifier and the patcher are text-in/text-out. They must be given
+    NO tools and a single turn.
+
+    These options are the whole of the new behavior, so asserting the call with
+    ``args=AnyThing`` would leave them unpinned: dropping ``allowed_tools=[]``
+    would silently restore tool access with every test still green. The options
+    object is therefore captured and inspected field by field.
+    """
+
+    @staticmethod
+    def _capture(client) -> tuple[list, object]:
+        """Mock ``get_agent_client`` so the AgentOptions it receives is captured.
+
+        Returns ``(captured, mock)``. The mock handle must still be asserted --
+        tripwire's strict verifier requires an assert for every interaction --
+        but the meaningful assertions run against ``captured``.
+        """
+        captured: list = []
+
+        def _get_client(provider, options):
+            captured.append((provider, options))
+            return client
+
+        client_mock = tripwire.mock("generate_diagrams:get_agent_client")
+        client_mock.calls(_get_client)
+        return captured, client_mock
+
+    def test_classify_change_gets_no_tools_and_one_turn(self, tmp_path: Path) -> None:
+        item = make_source_item(tmp_path)
+        write_diagram_with_meta(item, "oldhash")
+
+        async def _run(_prompt: str) -> str:
+            return "STAMP"
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
+        diff_mock = tripwire.mock("generate_diagrams:get_source_diff")
+        diff_mock.returns("- old\n+ new")
+        captured, client_mock = self._capture(client)
+
+        with tripwire:
+            asyncio.run(
+                generate_diagrams.classify_change(
+                    item.source_path, item.diagram_path, model="haiku"
+                )
+            )
+
+        assert len(captured) == 1
+        provider, opts = captured[0]
+        assert provider == "claude"
+        assert opts.allowed_tools == [], "the classifier must be given NO tools"
+        assert opts.max_turns == 1, "the classifier must get exactly one turn"
+        assert opts.model == "haiku"
+        diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
+        client_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
+
+    def test_patch_diagram_gets_no_tools_and_one_turn(self, tmp_path: Path) -> None:
+        item = make_source_item(tmp_path)
+        write_diagram_with_meta(item, "oldhash")
+
+        async def _run(_prompt: str) -> str:
+            return "```mermaid\ngraph TD\n  A --> B\n```"
+
+        client = ClaudeAgentClient()
+        run_mock = tripwire.mock.object(client, "run")
+        run_mock.calls(_run)
+        captured, client_mock = self._capture(client)
+
+        with tripwire:
+            asyncio.run(
+                generate_diagrams.patch_diagram(
+                    item.source_path, item.diagram_path, "- old\n+ new", model="haiku"
+                )
+            )
+
+        assert len(captured) == 1
+        provider, opts = captured[0]
+        assert provider == "claude"
+        assert opts.allowed_tools == [], "the patcher must be given NO tools"
+        assert opts.max_turns == 1, "the patcher must get exactly one turn"
+        assert opts.model == "haiku"
+        client_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
+        run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
 
 class TestClassifyChange:
@@ -267,8 +437,10 @@ class TestClassifyChange:
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
         run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
-    def test_falls_back_to_regenerate_on_sdk_error(self, tmp_path: Path) -> None:
-        """classify_change returns 'REGENERATE' when the agent raises an exception."""
+    def test_classification_unavailable_on_sdk_error(self, tmp_path: Path) -> None:
+        """classify_change returns CLASSIFICATION_UNAVAILABLE (not REGENERATE)
+        when the agent raises an exception, so a real REGENERATE verdict is
+        distinguishable from a swallowed classification failure."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
@@ -289,13 +461,15 @@ class TestClassifyChange:
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
-        assert result == "REGENERATE"
+        assert result == generate_diagrams.CLASSIFICATION_UNAVAILABLE
+        assert result != "REGENERATE"
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
         run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
 
-    def test_falls_back_to_regenerate_on_timeout(self, tmp_path: Path) -> None:
-        """classify_change returns 'REGENERATE' when the agent times out."""
+    def test_classification_unavailable_on_timeout(self, tmp_path: Path) -> None:
+        """classify_change returns CLASSIFICATION_UNAVAILABLE when the agent
+        times out (not REGENERATE, per the disguise-removal fix)."""
         item = make_source_item(tmp_path)
         write_diagram_with_meta(item, "oldhash")
 
@@ -316,7 +490,8 @@ class TestClassifyChange:
                 generate_diagrams.classify_change(item.source_path, item.diagram_path)
             )
 
-        assert result == "REGENERATE"
+        assert result == generate_diagrams.CLASSIFICATION_UNAVAILABLE
+        assert result != "REGENERATE"
         diff_mock.assert_call(args=(item.source_path,), kwargs={}, returned=AnyThing)
         client_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
         run_mock.assert_call(args=AnyThing, kwargs={}, returned=AnyThing)
@@ -774,6 +949,66 @@ class TestProcessingLoopIntegration:
             cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
             agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
+    def test_classification_unavailable_skips_the_item(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """UNAVAILABLE must change the ROUTING, not merely the tally.
+
+        A swallowed classification failure is not evidence that regeneration is
+        warranted. If UNAVAILABLE fell through to the REGENERATE branch, an SDK
+        outage would silently burn a full regeneration on every stale diagram
+        while the summary counter made it look accounted for.
+
+        The guard is BEHAVIOURAL, not incidental. Leaving generate_diagram
+        unmocked does make a regression crash, but it crashes on an unrelated
+        ``relative_to(REPO_ROOT)`` -- a red for the wrong reason, which would
+        stop being red the moment the item moved under the repo root. So the
+        assertions below name the three observable consequences directly: the
+        skip is ANNOUNCED, the diagram's recorded hash is UNCHANGED (not
+        stamped, so the next run reclassifies), and the process reports the
+        outage in its exit code.
+        """
+        item = make_source_item(tmp_path)
+        write_diagram_with_meta(item, "oldhash")
+
+        async def _classify(*a, **k):
+            return generate_diagrams.CLASSIFICATION_UNAVAILABLE
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+
+        diagram_before = item.diagram_path.read_text(encoding="utf-8")
+
+        with tripwire:
+            rc = asyncio.run(generate_diagrams.main_async(["--all"]))
+
+        out = capsys.readouterr().out
+
+        # Skipped, not regenerated and not stamped: the diagram is untouched, so
+        # the next run reclassifies it instead of treating it as fresh.
+        assert item.diagram_path.read_text(encoding="utf-8") == diagram_before
+        assert '"source_hash": "sha256:oldhash"' in diagram_before
+        # The skip is ANNOUNCED, not silent.
+        assert "SKIPPED (classification unavailable)" in out
+        # And the run-level summary surfaces it as needing attention. Deleting
+        # this line from the summary must fail here.
+        assert "classification unavailable (needs attention)" in out
+        # A total classification outage is NOT a clean run.
+        assert rc == generate_diagrams.EXIT_CLASSIFICATION_UNAVAILABLE
+        assert rc != 0
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+
     def test_patch_failure_falls_back_to_full_generation(self, tmp_path: Path) -> None:
         """When patch_diagram returns None, fall back to full generate_diagram."""
         item = make_source_item(tmp_path)
@@ -1005,3 +1240,124 @@ class TestInteractiveSmartClassification:
             agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
 
         assert captured_prompts == ["  [G]enerate (enter) / [s]kip / [q]uit: "]
+
+    def test_interactive_unavailable_prompts_instead_of_defaulting_to_regenerate(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """UNAVAILABLE must NOT be treated as a REGENERATE verdict.
+
+        The REGENERATE branch shows "[G]enerate (enter) / [s]kip / [q]uit",
+        which defaults the operator into a full regeneration on a bare Enter --
+        during an SDK outage, for every stale diagram. A classification failure
+        is the ABSENCE of a verdict, so it must fall to the unclassified prompt
+        where the operator answers explicitly.
+
+        Reverting the fix to ``classification = "REGENERATE"`` changes the
+        prompt text and fails this test.
+        """
+        item = make_source_item(tmp_path)
+        write_diagram_with_meta(item, "oldhash")
+
+        async def _classify(*a, **k):
+            return generate_diagrams.CLASSIFICATION_UNAVAILABLE
+
+        captured_prompts: list[str] = []
+
+        def _fake_input(prompt):
+            captured_prompts.append(prompt)
+            return "s"
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        show_mock = tripwire.mock("generate_diagrams:show_source_changes")
+        show_mock.returns(None)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+        input_mock = tripwire.mock("builtins:input")
+        input_mock.calls(_fake_input)
+
+        with tripwire:
+            asyncio.run(generate_diagrams.main_async(["--interactive", "--all"]))
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            show_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            input_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+
+        assert captured_prompts == ["  Generate this diagram? [y]es / [s]kip / [q]uit: "]
+        assert "Classification unavailable" in capsys.readouterr().out
+
+    def test_interactive_unavailable_decline_does_not_stamp_and_is_surfaced(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The early-return path is where an outage ACTUALLY lands, and it leaked.
+
+        During a classifier outage nothing has a verdict, so the operator
+        declines everything, ``to_generate`` and ``to_patch`` are both empty and
+        the function returns from the "Nothing to generate" branch. That branch
+        (a) never read ``classify_failed_count``, so the outage was invisible,
+        (b) called ``stamp_as_fresh`` on every declined item, marking them fresh
+        against the CURRENT hash so they were never reclassified -- a silent
+        PERMANENT drop, and (c) returned 0.
+
+        ``stamp_as_fresh`` is intentionally left UNMOCKED: it is not supposed to
+        be called at all here, and the assertion on the on-disk hash proves it
+        was not.
+        """
+        item = make_source_item(tmp_path)
+        write_diagram_with_meta(item, "oldhash")
+        diagram_before = item.diagram_path.read_text(encoding="utf-8")
+
+        async def _classify(*a, **k):
+            return generate_diagrams.CLASSIFICATION_UNAVAILABLE
+
+        def _fake_input(prompt):
+            return "s"
+
+        classify_mock = tripwire.mock("generate_diagrams:classify_change")
+        classify_mock.calls(_classify)
+        show_mock = tripwire.mock("generate_diagrams:show_source_changes")
+        show_mock.returns(None)
+        skills_mock = tripwire.mock("generate_diagrams:discover_skills")
+        skills_mock.returns([item])
+        cmds_mock = tripwire.mock("generate_diagrams:discover_commands")
+        cmds_mock.returns([])
+        agents_mock = tripwire.mock("generate_diagrams:discover_agents")
+        agents_mock.returns([])
+        input_mock = tripwire.mock("builtins:input")
+        input_mock.calls(_fake_input)
+
+        with tripwire:
+            rc = asyncio.run(generate_diagrams.main_async(["--interactive", "--all"]))
+
+        out = capsys.readouterr().out
+
+        # (b) NOT stamped: the recorded hash is still the stale one, so the next
+        # run reclassifies rather than treating the diagram as fresh.
+        assert item.diagram_path.read_text(encoding="utf-8") == diagram_before
+        assert '"source_hash": "sha256:oldhash"' in diagram_before
+        assert "UNSTAMPED" in out
+
+        # (a) The outage is surfaced on THIS return path, not only on the paths
+        # that generated something. Deleting the tally must fail here.
+        assert "classification unavailable (needs attention)" in out
+        assert "1 item(s) went unclassified" in out
+
+        # (c) A total classification outage is not a clean exit.
+        assert rc == generate_diagrams.EXIT_CLASSIFICATION_UNAVAILABLE
+        assert rc != 0
+
+        with tripwire.in_any_order():
+            classify_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            show_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            input_mock.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+            skills_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            cmds_mock.assert_call(args=(), kwargs={}, returned=AnyThing)
+            agents_mock.assert_call(args=(), kwargs={}, returned=AnyThing)

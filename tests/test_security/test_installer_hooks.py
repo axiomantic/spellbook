@@ -783,6 +783,10 @@ class TestClaudeCodeInstallerHookIntegration:
         mcp_dir.mkdir()
         (mcp_dir / "server.py").write_text("# stub")
         (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook Context\n\nTest content.")
+        (spellbook / "rules").mkdir(exist_ok=True)
+        (spellbook / "rules" / "00-core.md").write_text(
+            """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+        )
         (spellbook / "skills").mkdir()
         (spellbook / "commands").mkdir()
         hooks_dir = spellbook / "hooks"

@@ -13,7 +13,7 @@ import subprocess
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from .base import PlatformInstaller, PlatformStatus
+from .base import RULE_DELIVERY_FLAT, PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
@@ -227,6 +227,8 @@ def uninstall_extension(name: str, dry_run: bool = False) -> Tuple[bool, str]:
 class GeminiInstaller(PlatformInstaller):
     """Installer for Gemini CLI platform using native extensions."""
 
+    rule_delivery = RULE_DELIVERY_FLAT
+
     def _ensure_extension_skills_symlinks(self) -> Tuple[int, int]:
         """
         Ensure skills symlinks exist in Gemini extension.
@@ -294,6 +296,22 @@ class GeminiInstaller(PlatformInstaller):
     def linked_extension_path(self) -> Path:
         """Get the path where the extension would be linked."""
         return self.config_dir / "extensions" / "spellbook"
+
+    def rule_bundle_path(self) -> Path:
+        """The generated bundle, written inside the extension root.
+
+        Gemini's validateImportPath canonicalizes symlinks and rejects any
+        @-import that resolves outside the extension directory, which is why
+        the previous @../../ import was refused as path traversal and never
+        loaded for any user. GEMINI.md imports @./rules.spellbook.md, so the
+        artifact must live here. The extension root is itself a symlink into
+        the checkout, which makes this the one install-time output that lands
+        in a tracked directory; it is gitignored.
+        """
+        return self.extension_dir / "rules.spellbook.md"
+
+    def legacy_context_files(self) -> List[Path]:
+        return [self.config_dir / "GEMINI.md"]
 
     def detect(self) -> PlatformStatus:
         """Detect Gemini CLI installation status."""
@@ -364,6 +382,12 @@ class GeminiInstaller(PlatformInstaller):
             return results
 
         if not skip_global_steps:
+            # Generate the rule bundle inside the extension root, so
+            # GEMINI.md's @./rules.spellbook.md import resolves within the
+            # root gemini permits.
+            self._step("Installing rule modules")
+            results.extend(self.install_rule_modules())
+
             # Ensure skills symlinks exist in extension
             self._step("Linking extension skills")
             created, errors = self._ensure_extension_skills_symlinks()
@@ -425,6 +449,9 @@ class GeminiInstaller(PlatformInstaller):
         from ..core import InstallResult
 
         results = []
+
+        if not skip_global_steps:
+            results.extend(self.uninstall_rule_modules())
 
         if not skip_global_steps:
             if not check_gemini_cli_available():
@@ -514,9 +541,8 @@ class GeminiInstaller(PlatformInstaller):
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Get context files for this platform."""
-        # Context is provided via extension's GEMINI.md, not a separate file
-        return []
+        """Get the generated rule artifact imported by the extension's GEMINI.md."""
+        return [self.rule_bundle_path()]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

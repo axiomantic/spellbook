@@ -112,8 +112,13 @@ SEVERITY_ORDER = {
     "MEDIUM": 2,
     "LOW": 3,
     "NIT": 4,
-    "PRAISE": 5
+    "QUESTION": 5,
+    "PRAISE": 6
 }
+# QUESTION is a legal severity and MUST be present. Omitting it routes every
+# QUESTION finding through the .get(..., 99) fallback, where it sorts last and
+# disappears from by_severity. This dict must match the one in the
+# advanced-code-review skill key for key.
 
 def sort_by_severity(findings: list[dict]) -> list[dict]:
     """Sort findings by severity, most critical first."""
@@ -125,33 +130,62 @@ def sort_by_severity(findings: list[dict]) -> list[dict]:
 Determine overall review verdict:
 
 ```python
+BLOCKING = {"CRITICAL", "HIGH"}
+DISCUSS = {"MEDIUM"}
+NON_BLOCKING = {"LOW", "NIT", "QUESTION", "PRAISE"}
+KNOWN_SEVERITIES = BLOCKING | DISCUSS | NON_BLOCKING
+
+
 def determine_verdict(findings: list[dict]) -> str:
     """
     Determine review verdict based on findings.
-    
+
+    This is a MERGE GATE, so it FAILS CLOSED. Two ways it used to fail open:
+    exact-uppercase membership testing (a finding emitted as `Critical` matched
+    nothing and fell through to APPROVE), and treating an UNRECOGNISED severity
+    as non-blocking. Both let a blocking finding merge under
+    "No blocking issues found."
+
     Returns: "APPROVE" | "REQUEST_CHANGES" | "COMMENT"
     """
-    severities = [f["severity"] for f in findings if f.get("verification_status") != "REFUTED"]
-    
-    if "CRITICAL" in severities:
+    severities = {
+        str(f.get("severity", "")).strip().upper()
+        for f in findings
+        if f.get("verification_status") != "REFUTED"
+    }
+
+    # An unrecognised severity is NOT evidence of harmlessness. It means a
+    # producer is speaking a vocabulary this gate does not know, so the gate
+    # cannot rank it -- block and make a human look.
+    unknown = severities - KNOWN_SEVERITIES - {""}
+    if unknown:
         return "REQUEST_CHANGES"
-    
-    if "HIGH" in severities:
+
+    if severities & BLOCKING:
         return "REQUEST_CHANGES"
-    
-    if "MEDIUM" in severities:
+
+    if severities & DISCUSS:
         return "COMMENT"
-    
+
     return "APPROVE"
 
 def verdict_rationale(verdict: str, findings: list[dict]) -> str:
     """Generate rationale for verdict."""
     by_severity = {}
     for f in findings:
-        sev = f["severity"]
+        # Normalise the same way determine_verdict does. Counting raw strings
+        # here would report "0 blocking issue(s)" alongside REQUEST_CHANGES.
+        sev = str(f.get("severity", "")).strip().upper()
         by_severity[sev] = by_severity.get(sev, 0) + 1
-    
+
+    unknown = sorted(set(by_severity) - KNOWN_SEVERITIES - {""})
+
     if verdict == "REQUEST_CHANGES":
+        if unknown:
+            return (
+                f"unrecognised severity value(s) {unknown} -- the gate cannot "
+                "rank them and blocks rather than assuming they are harmless"
+            )
         critical = by_severity.get("CRITICAL", 0)
         high = by_severity.get("HIGH", 0)
         return f"{critical + high} blocking issue(s) require attention"
@@ -190,6 +224,11 @@ def render_report(manifest: dict, findings: list[dict], context: dict, snr: floa
         branch=manifest["target"]["branch"],
         base=manifest["target"]["base"],
         base_sha=manifest["target"]["merge_base_sha"][:8],
+        # Provenance is REPORTED, never dropped. A silently wrong or stale base
+        # is the failure this pipeline exists to prevent.
+        resolved_via=manifest["target"]["resolved_via"],
+        fetch_status=manifest["target"]["fetch"],
+        endpoint=manifest["target"]["endpoint"],
         timestamp=datetime.now().strftime("%Y-%m-%d %H:%M UTC"),
         file_count=manifest["files"]["total"],
         finding_count=len(findings),
@@ -287,7 +326,8 @@ The final report is rendered using `templates/report.md.tpl`:
 # Code Review Report
 
 **Branch:** feature/auth-refactor
-**Base:** main (abc12345)
+**Base:** <detected-base-branch> @ abc12345 (resolved via pr-base-ref, fetch ok)
+**Endpoint:** committed-only (reviewing what will merge)
 **Reviewed:** 2026-01-30 10:30 UTC
 **Files:** 12 | **Findings:** 6 | **Signal/Noise:** 0.75
 
@@ -348,9 +388,13 @@ cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
   "generated_at": "2026-01-30T10:30:00Z",
   "target": {
     "branch": "feature/auth-refactor",
-    "base": "main",
+    "base": "<detected-base-branch>",
+    "base_ref": "<remote>/<detected-base-branch>",
     "merge_base_sha": "abc12345",
-    "head_sha": "def67890"
+    "head_sha": "def67890",
+    "resolved_via": "pr-base-ref",
+    "fetch": "ok",
+    "endpoint": "committed-only"
   },
   "verdict": "REQUEST_CHANGES",
   "verdict_rationale": "2 blocking issue(s) require attention",
@@ -365,6 +409,7 @@ cursor.execute("SELECT * FROM users WHERE id = %s", (user_id,))
       "MEDIUM": 3,
       "LOW": 1,
       "NIT": 0,
+      "QUESTION": 0,
       "PRAISE": 0
     },
     "signal_to_noise": 0.75

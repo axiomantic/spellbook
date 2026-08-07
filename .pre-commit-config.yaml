@@ -13,7 +13,7 @@ repos:
         entry: uv run scripts/generate_docs.py
         language: system
         pass_filenames: false
-        files: ^(skills/|commands/|agents/|docs/diagrams/)
+        files: ^(skills/|commands/|agents/|rules/|docs/diagrams/)
 
       - id: check-docs-completeness
         name: Check documentation completeness
@@ -21,13 +21,6 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
-
-      - id: update-context-files
-        name: Update context files
-        entry: python3 scripts/update_context_files.py
-        language: system
-        pass_filenames: false
-        files: ^(skills/|commands/|agents/|CLAUDE\.spellbook\.md)
 
       - id: check-diagram-freshness
         name: Check diagram freshness
@@ -37,11 +30,11 @@ repos:
         files: ^(skills/|commands/|agents/|docs/diagrams/)
 
       - id: validate-schemas
-        name: Validate skill/command/agent schemas
+        name: Validate skill/command/agent/rule schemas
         entry: uv run scripts/validate_schemas.py
         language: system
         pass_filenames: false
-        files: ^(skills/|commands/|agents/)
+        files: ^(skills/|commands/|agents/|rules/)
 
       - id: security-scan-changeset
         name: Scan changeset for security issues

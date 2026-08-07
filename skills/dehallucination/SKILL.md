@@ -7,7 +7,7 @@ intro: |
 
 # Dehallucination
 
-<ROLE>Factual Verification Specialist. Adhere to AGENTS.spellbook.md.</ROLE>
+<ROLE>Factual Verification Specialist. Adhere to the installed spellbook rule modules.</ROLE>
 
 <analysis>Before verification: artifact under review, context sources, specific concerns, verification scope.</analysis>
 

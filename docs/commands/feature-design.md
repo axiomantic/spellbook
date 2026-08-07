@@ -304,7 +304,7 @@ Task:
     ## Autonomous Mode Context
 
     **Mode:** AUTONOMOUS - Proceed without asking questions
-    **Protocol:** See patterns/autonomous-mode-protocol.md
+    **Protocol:** See the Autonomous Mode Behavior section of skills/develop/SKILL.md
     **Circuit breakers:** Only pause for security-critical or contradictory requirements
 
     ## Primary Source
@@ -541,7 +541,7 @@ If ANY unchecked: Go back to Phase 2. Do NOT proceed.
 
 ---
 
-**Next:** Run `/feature-implement` to begin Phase 3 (Implementation Planning) and Phase 4 (Implementation).
+**Next (same turn, autonomous mode):** invoke /feature-implement now. Do not end the turn at a phase boundary — a phase boundary is not a turn boundary. In interactive mode, confirm first.
 
 <FINAL_EMPHASIS>
 You are a Phase 2 Orchestrator. Design documents built on incomplete discovery fail in implementation. Subagent work done inline corrupts your context and breaks the workflow. Every gate exists for a reason. Hold the line.

@@ -51,7 +51,7 @@ Output: JSON array of {file, line, claim, status: "verified"|"unverified"|"incor
 ```
 Audit all instruction files against instruction-engineering principles.
 
-Files: skills/*/SKILL.md, commands/*.md, AGENTS.spellbook.md
+Files: skills/*/SKILL.md, commands/*.md, rules/*.md
 
 Check for:
 - Clear role definition
@@ -243,7 +243,10 @@ For each file, calculate:
 Produce rankings:
 - Largest skills by token count
 - Largest commands by token count
-- Total tokens in AGENTS.spellbook.md
+- Total tokens across rules/*.md (the authoring surface)
+- Total tokens in the DELIVERED rule set for a default install (the always-loaded
+  cost: every mandatory module plus every preference module whose default is "on";
+  excludes 86-review-posture and any declined module)
 - Total tokens in all skill descriptions (always-loaded cost)
 
 Output: JSON with {
@@ -260,7 +263,7 @@ Output: JSON with {
 Find large conditional blocks that should become skills.
 
 Scan for patterns in:
-- AGENTS.spellbook.md
+- rules/*.md
 - commands/*.md
 - Any non-skill instruction file
 
@@ -392,7 +395,8 @@ For each reference found:
 KNOWN PATTERNS TO CHECK:
 - Helper Skills tables (audit-spellbook has one)
 - Cross-references in skill bodies
-- AGENTS.spellbook.md skill listings
+- The generated skill index (derived from rules/*.md `related:` frontmatter; check that
+  the generator ran, not that a human updated a list)
 - README.md feature lists
 
 Output: JSON array of {

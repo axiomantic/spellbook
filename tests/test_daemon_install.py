@@ -42,6 +42,10 @@ def spellbook_dir(tmp_path):
 
     # AGENTS.spellbook.md for context generation
     (sb / "AGENTS.spellbook.md").write_text("# Spellbook\nTest content.")
+    (sb / "rules").mkdir(exist_ok=True)
+    (sb / "rules" / "00-core.md").write_text(
+        """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+    )
 
     # Extensions dir for Gemini
     ext_dir = sb / "extensions" / "gemini"

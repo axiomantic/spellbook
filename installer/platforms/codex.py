@@ -2,6 +2,7 @@
 Codex platform installer.
 """
 
+import os
 import re
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
@@ -13,8 +14,9 @@ from ..components.symlinks import (
     remove_symlink,
     remove_spellbook_symlinks,
 )
+from ..components.rule_bundle import DELIVERY_MARKER_PREFIX
 from ..demarcation import get_installed_version, remove_demarcated_section
-from .base import PlatformInstaller, PlatformStatus
+from .base import RULE_DELIVERY_FLAT, PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
@@ -104,6 +106,8 @@ def _remove_mcp_from_config_toml(
 class CodexInstaller(PlatformInstaller):
     """Installer for Codex platform."""
 
+    rule_delivery = RULE_DELIVERY_FLAT
+
     @property
     def platform_name(self) -> str:
         return "Codex"
@@ -112,15 +116,51 @@ class CodexInstaller(PlatformInstaller):
     def platform_id(self) -> str:
         return "codex"
 
+    def rule_bundle_path(self) -> Path:
+        """Codex reads AGENTS.override.md then AGENTS.md, and nothing else.
+
+        The generated bundle is written here as a real file. The former
+        AGENTS.spellbook.md sidecar was inert -- Codex has no import directive
+        and never scanned for siblings -- so it is dropped rather than
+        repointed. The 32,768-byte project_doc_max_bytes governs project docs,
+        not this global file, so no cap applies.
+        """
+        return self.config_dir / "AGENTS.md"
+
+    def rule_bundle_preserve_existing(self) -> bool:
+        """Never clobber a user's own ``~/.codex/AGENTS.md``.
+
+        This path is the user's global Codex instruction file, not spellbook's.
+        Codex reads exactly one of AGENTS.override.md / AGENTS.md, so replacing
+        it outright does not merely add spellbook's rules -- it stops the user's
+        own instructions loading at all. Their bytes are kept first, verbatim,
+        and the bundle follows in a demarcated region later installs replace in
+        place. Same class of file, and same treatment, as ForgeCode's.
+        """
+        return True
+
+    def legacy_rule_paths(self) -> List[Path]:
+        return [self.config_dir / "AGENTS.spellbook.md"]
+
+    def legacy_context_files(self) -> List[Path]:
+        return [self.config_dir / "AGENTS.md"]
+
     def detect(self) -> PlatformStatus:
         """Detect Codex installation status."""
         context_file = self.config_dir / "AGENTS.md"
-        sidecar_file = self.config_dir / "AGENTS.spellbook.md"
         installed_version = get_installed_version(context_file)
 
         spellbook_link = self.config_dir / "spellbook"
         has_link = spellbook_link.is_symlink()
-        has_sidecar = sidecar_file.exists() or sidecar_file.is_symlink()
+        has_sidecar = any(os.path.lexists(path) for path in self.legacy_rule_paths())
+        has_bundle = False
+        if context_file.exists():
+            try:
+                has_bundle = DELIVERY_MARKER_PREFIX in context_file.read_text(
+                    encoding="utf-8"
+                )
+            except OSError:
+                has_bundle = False
 
         # Check if MCP server is registered
         config_toml = self.config_dir / "config.toml"
@@ -129,7 +169,13 @@ class CodexInstaller(PlatformInstaller):
             content = config_toml.read_text(encoding="utf-8")
             has_mcp = TOML_START_MARKER in content
 
-        installed = installed_version is not None or has_link or has_sidecar or has_mcp
+        installed = (
+            installed_version is not None
+            or has_link
+            or has_sidecar
+            or has_bundle
+            or has_mcp
+        )
 
         return PlatformStatus(
             platform=self.platform_id,
@@ -200,27 +246,22 @@ class CodexInstaller(PlatformInstaller):
 
         # Strip legacy demarcated section from AGENTS.md if present
         context_file = self.config_dir / "AGENTS.md"
-        if context_file.exists() and not self.dry_run:
+
+        # Generate the rule bundle at ~/.codex/AGENTS.md, the only global
+        # instruction path Codex reads, and drop the inert sidecar.
+        self._step("Installing rule modules")
+        rule_results = self.install_rule_modules()
+        results.extend(rule_results)
+
+        # Strip the legacy demarcated block only AFTER delivery succeeds.
+        # Stripping first would leave a user whose delivery failed with
+        # neither the old interpolated rules nor the new modules.
+        if (
+            all(r.success for r in rule_results)
+            and context_file.exists()
+            and not self.dry_run
+        ):
             remove_demarcated_section(context_file)
-
-        # Symlink sidecar rule file ~/.codex/AGENTS.spellbook.md -> AGENTS.spellbook.md
-        sidecar_file = self.config_dir / "AGENTS.spellbook.md"
-        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
-
-        res = create_symlink(source_agents, sidecar_file, dry_run=self.dry_run)
-        results.append(
-            InstallResult(
-                component="rules_sidecar",
-                platform=self.platform_id,
-                success=res.success,
-                action=res.action,
-                message=f"rule sidecar: {res.message}",
-            )
-        )
-
-        # If AGENTS.md does not exist, symlink AGENTS.md -> AGENTS.spellbook.md
-        if not context_file.exists():
-            create_symlink(source_agents, context_file, dry_run=self.dry_run)
 
         # Register MCP server connection (daemon is installed centrally by core.py)
         self._step("Registering MCP server")
@@ -275,6 +316,9 @@ class CodexInstaller(PlatformInstaller):
                     )
                 )
 
+        # Remove the generated rule bundle and any retired sidecar.
+        results.extend(self.uninstall_rule_modules())
+
         # Remove spellbook symlink
         spellbook_link = self.config_dir / "spellbook"
         if spellbook_link.is_symlink():
@@ -324,8 +368,8 @@ class CodexInstaller(PlatformInstaller):
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Get context files for this platform."""
-        return [self.config_dir / "AGENTS.spellbook.md"]
+        """Get the generated rule artifact managed by this platform."""
+        return [self.rule_bundle_path()]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

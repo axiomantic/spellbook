@@ -96,6 +96,123 @@ def _create_renderer():
         return None
 
 
+def _load_rule_modules(installer):
+    """Load the rule modules for a spellbook checkout, or [] if unavailable."""
+    from installer.components.rule_modules import get_rules_dir, load_rule_modules
+
+    try:
+        return load_rule_modules(get_rules_dir(installer.spellbook_dir))
+    except Exception as exc:
+        print(f"Warning: could not load rule modules: {exc}")
+        return []
+
+
+def _explicit_rule_config() -> dict:
+    """Read only the explicitly-set ``rules.module.*`` keys.
+
+    Absence is a value here -- it means "never offered" -- so the config file
+    is read directly rather than through ``config_get``, which would substitute
+    each key's built-in default and erase that distinction.
+    """
+    import json
+
+    from spellbook.core.compat import get_config_dir
+
+    config_path = get_config_dir() / "spellbook.json"
+    if not config_path.exists():
+        return {}
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {k: v for k, v in data.items() if k.startswith("rules.module.")}
+
+
+def _select_rule_modules(installer, renderer, args: argparse.Namespace):
+    """Prompt for rule module selection, or return None when not asked.
+
+    Returns None -- meaning "not asked, record nothing" -- under ``--dry-run``,
+    on a non-tty, under ``--yes``/``--no-interactive``, when the checkout ships
+    no modules, and when every preference module is already answered. That is
+    the branch that keeps a scripted install from writing an opt-in module to
+    True on a user's behalf.
+    """
+    import sys
+
+    from installer.components.rule_modules import preference_modules, resolve_selection
+    from spellbook.core.config import config_is_explicitly_set
+
+    if getattr(args, "dry_run", False):
+        return None
+    if getattr(args, "yes", False) or getattr(args, "no_interactive", False):
+        return None
+    if not sys.stdin.isatty():
+        return None
+
+    modules = _load_rule_modules(installer)
+    if not modules:
+        return None
+
+    # Idempotency gate (AGENTS.md "Adding Config Options"): re-prompt only while
+    # a key is unset. --reconfigure bypasses it so a declined module can be
+    # re-checked, and a newly shipped module re-opens the selector on its own.
+    if not getattr(args, "reconfigure", False):
+        prefs = preference_modules(modules)
+        if prefs and all(config_is_explicitly_set(m.config_key) for m in prefs):
+            return None
+
+    selection = resolve_selection(modules, _explicit_rule_config())
+
+    # Through the renderer, never straight to installer.tui. The renderer owns
+    # the Windows fallback (a Rich table where termios is absent), so calling
+    # the termios selector directly here meant `spellbook install` silently
+    # never offered the modules on a machine where `python3 install.py` did.
+    if renderer is None:
+        from installer.renderer import PlainTextRenderer
+
+        renderer = PlainTextRenderer()
+    try:
+        return renderer.render_rule_module_select(selection)
+    except Exception as exc:
+        print(f"Warning: rule module selector unavailable ({exc}); using defaults")
+        return None
+
+
+def _persist_rule_modules(installer, chosen: list[str]) -> None:
+    """Record each preference module as kept or declined."""
+    from installer.components.rule_modules import preference_modules
+    from spellbook.core.config import config_set_many
+
+    modules = _load_rule_modules(installer)
+    if not modules:
+        return
+
+    selected = set(chosen)
+    updates = {m.config_key: (m.id in selected) for m in preference_modules(modules)}
+    if not updates:
+        return
+
+    try:
+        config_set_many(updates)
+    except Exception as exc:
+        print(f"Warning: could not save rule module selection: {exc}")
+
+
+def _persist_rule_modules_if_answered(installer, chosen, dry_run: bool) -> None:
+    """Record the selection only when the user actually answered it.
+
+    ``None`` is the not-asked sentinel. Persisting it writes an explicit True
+    or False for EVERY preference module on the user's behalf, permanently
+    marking as declined modules that were never shown -- so the guard lives in
+    one named place rather than being re-derived at each call site.
+    """
+    if chosen is None or dry_run:
+        return
+    _persist_rule_modules(installer, chosen)
+
+
 def run(args: argparse.Namespace) -> None:
     """Execute the install command."""
     from installer.core import Installer
@@ -124,6 +241,12 @@ def run(args: argparse.Namespace) -> None:
                 run_defaults_wizard(args)
                 run_worker_llm_wizard(args)
 
+        # Offer rule module selection during reconfigure. This is the only path
+        # by which a user can re-check a module they previously declined, which
+        # is what makes "never re-check automatically" safe to be absolute.
+        rule_modules_chosen = _select_rule_modules(installer, renderer, args)
+        _persist_rule_modules_if_answered(installer, rule_modules_chosen, is_dry_run)
+
         # Offer profile selection during reconfigure
         if renderer is not None:
             profile_config = renderer.render_profile_wizard(reconfigure=True)
@@ -140,11 +263,22 @@ def run(args: argparse.Namespace) -> None:
         if getattr(args, "dry_run", False):
             renderer.render_warning("DRY RUN - no changes will be made")
 
+    # Rule module selection. Runs through the same wizard the root installer
+    # uses, so both entry points offer the modules and both honor the same
+    # tri-state config. A non-tty run skips the prompt and records nothing.
+    rule_modules_chosen = _select_rule_modules(installer, renderer, args)
+
     session = installer.run(
         platforms=getattr(args, "platforms", None),
         force=getattr(args, "force", False),
         dry_run=getattr(args, "dry_run", False),
         renderer=renderer,
+        rule_selection=rule_modules_chosen,
+    )
+
+    # Config write is last: a failed delivery leaves the prior state standing.
+    _persist_rule_modules_if_answered(
+        installer, rule_modules_chosen, getattr(args, "dry_run", False)
     )
 
     # Defaults wizard for previously never-prompted keys (notify_*,

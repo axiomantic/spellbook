@@ -1055,7 +1055,7 @@ Before proceeding to Phase 2, verify:
 
 If ANY unchecked: Complete Phase 1.5. Do NOT proceed.
 
-**Next:** Run `/feature-design` to begin Phase 2.
+**Next (same turn, autonomous mode):** invoke /feature-design now. Do not end the turn at a phase boundary — a phase boundary is not a turn boundary. In interactive mode, confirm first.
 
 <FINAL_EMPHASIS>
 Discovery quality determines design quality. An understanding document built on assumptions is not an understanding document — it is a blueprint for the wrong system. Every unanswered question here becomes a rework cycle later. Do not proceed to design until discovery is complete.

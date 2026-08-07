@@ -650,3 +650,214 @@ def show_post_install_instructions(platforms: List[str]) -> None:
         print("    MCP server registered.")
         print("    Restart forge to load the spellbook MCP server.")
         print()
+
+
+# ---------------------------------------------------------------------------
+# Rule module selection
+# ---------------------------------------------------------------------------
+
+
+@dataclass
+class ModuleOption:
+    """A rule module option for the checkbox selector.
+
+    PlatformOption is deliberately not reused: it carries ``available``, which
+    has no meaning for a module, and omits everything a module needs to explain
+    itself.
+    """
+
+    id: str
+    name: str
+    benefit: str
+    declining_means: str
+    related: List[str]
+    size_bytes: int
+    default_on: bool
+    selected: bool
+    previously_declined: bool
+
+
+def get_module_options(selection: Any) -> List[ModuleOption]:
+    """Build selector rows from a resolved ModuleSelection.
+
+    Only preference modules are rendered. The mandatory modules install
+    unconditionally, so presenting them as checkboxes would offer a choice that
+    does not exist.
+    """
+    declined = set(selection.declined_ids)
+    chosen = set(selection.selected_ids)
+
+    options: List[ModuleOption] = []
+    for module in selection.modules:
+        if not module.is_preference:
+            continue
+        options.append(ModuleOption(
+            id=module.id,
+            name=module.name,
+            benefit=module.benefit,
+            declining_means=module.declining_means,
+            related=list(module.related),
+            size_bytes=module.size_bytes,
+            default_on=module.default_on,
+            selected=module.id in chosen,
+            previously_declined=module.id in declined,
+        ))
+    return options
+
+
+def _module_row(index: int, opt: ModuleOption, cursor: int) -> str:
+    prefix = color("> ", Colors.CYAN) if index == cursor else "  "
+    checkbox = color("[x]", Colors.GREEN) if opt.selected else "[ ]"
+
+    if opt.previously_declined:
+        name = color(opt.name, Colors.YELLOW)
+        note = color(" (previously declined)", Colors.YELLOW)
+    elif not opt.default_on:
+        name = opt.name
+        note = color(" (opt-in)", Colors.BLUE)
+    else:
+        name = opt.name
+        note = ""
+
+    num = f"{index + 1}."
+    return f"{prefix}{checkbox} {num:<4}{name:<26} {opt.benefit}{note}"
+
+
+def render_module_menu(
+    options: List[ModuleOption], cursor: int, mandatory_count: int
+) -> int:
+    """Render the module checkbox menu and return the number of lines drawn."""
+    lines = [
+        "",
+        color("Spellbook rule modules:", Colors.CYAN),
+        color(
+            "  (arrows/1-9 to move, space to toggle, ? for details, "
+            "a=all, n=none, d=defaults, enter=confirm)",
+            Colors.BLUE,
+        ),
+        "",
+    ]
+
+    for i, opt in enumerate(options):
+        lines.append(_module_row(i, opt, cursor))
+
+    lines.append("")
+    lines.append(color(
+        f"  {mandatory_count} mandatory modules install unconditionally "
+        "and are not listed.",
+        Colors.BLUE,
+    ))
+    lines.append("")
+
+    for line in lines:
+        print(line)
+
+    return len(lines)
+
+
+def render_module_detail(opt: ModuleOption) -> int:
+    """Render the detail pane for one module and return lines drawn."""
+    default_label = "on" if opt.default_on else "off"
+    lines = [
+        "",
+        color(
+            f"  {opt.name}    {opt.size_bytes / 1024:.1f} KB   "
+            f"(default: {default_label})",
+            Colors.CYAN,
+        ),
+        "",
+        color("  What it does", Colors.BLUE),
+        f"    {opt.benefit}",
+        "",
+        color("  If you decline it", Colors.BLUE),
+        f"    {opt.declining_means}",
+        "",
+        color("  Related spellbook artifacts", Colors.BLUE),
+        "    " + (" - ".join(opt.related) if opt.related else "(none)"),
+        "",
+        color("  press any key to go back", Colors.BLUE),
+        "",
+    ]
+    for line in lines:
+        print(line)
+    return len(lines)
+
+
+def termios_available() -> bool:
+    """Whether raw-mode terminal control is importable on this interpreter.
+
+    A named function rather than an inline ``termios is not None`` so the
+    Windows shape is reachable from a test on a Unix host without reassigning
+    a module attribute.
+    """
+    return termios is not None
+
+
+def module_select_available() -> bool:
+    """Whether this terminal can drive the checkbox selector.
+
+    False on a non-tty, and on Windows, where ``termios`` is absent. Callers use
+    it to tell "the user cancelled" apart from "the user was never asked".
+    """
+    return sys.stdin.isatty() and termios_available()
+
+
+def interactive_module_select(selection: Any) -> Optional[List[str]]:
+    """Show the interactive rule module selection UI.
+
+    Returns the list of selected module ids, or None -- meaning "no answer, so
+    record nothing" -- when the user cancelled or when this terminal cannot
+    prompt at all.
+
+    Returning the pre-resolved selection on a non-tty was the wrong sentinel:
+    callers persist a returned list, so a scripted or Windows install recorded
+    True for every default-on module and False for every default-off one,
+    permanently marking modules declined that were never offered.
+    """
+    options = get_module_options(selection)
+    if not options:
+        return []
+
+    if not module_select_available():
+        return None
+
+    mandatory_count = sum(1 for m in selection.modules if m.is_mandatory)
+    cursor = 0
+    rendered = render_module_menu(options, cursor, mandatory_count)
+
+    while True:
+        key = read_key()
+
+        if key == 'UP' or key == 'k':
+            cursor = (cursor - 1) % len(options)
+        elif key == 'DOWN' or key == 'j':
+            cursor = (cursor + 1) % len(options)
+        elif key == ' ':
+            options[cursor].selected = not options[cursor].selected
+        elif key == '?':
+            clear_lines(rendered)
+            detail_lines = render_module_detail(options[cursor])
+            read_key()
+            clear_lines(detail_lines)
+            rendered = render_module_menu(options, cursor, mandatory_count)
+            continue
+        elif key == '\r' or key == '\n':
+            clear_lines(rendered)
+            return [o.id for o in options if o.selected]
+        elif key == 'q' or key == '\x03' or key == '\x1b':
+            clear_lines(rendered)
+            return None
+        elif key in ('a', 'A'):
+            for opt in options:
+                opt.selected = True
+        elif key in ('n', 'N'):
+            for opt in options:
+                opt.selected = False
+        elif key in ('d', 'D'):
+            for opt in options:
+                opt.selected = opt.default_on
+        elif key.isdigit() and 1 <= int(key) <= len(options):
+            options[int(key) - 1].selected = not options[int(key) - 1].selected
+
+        clear_lines(rendered)
+        rendered = render_module_menu(options, cursor, mandatory_count)

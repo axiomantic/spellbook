@@ -28,12 +28,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
-from ..components.symlinks import create_symlink
+from ..components.rule_bundle import DELIVERY_MARKER_PREFIX
 from ..demarcation import (
     get_installed_version,
     remove_demarcated_section,
 )
-from .base import PlatformInstaller, PlatformStatus
+from .base import RULE_DELIVERY_FLAT, PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
@@ -191,6 +191,11 @@ def _remove_forgecode_mcp_config(
 class ForgeCodeInstaller(PlatformInstaller):
     """Installer for ForgeCode platform (basic tier)."""
 
+    rule_delivery = RULE_DELIVERY_FLAT
+
+    # Cache for _resolve_effective_config_dir(). Set lazily on first use.
+    _effective_config_dir: Optional[Path] = None
+
     @property
     def platform_name(self) -> str:
         return "ForgeCode"
@@ -209,14 +214,52 @@ class ForgeCodeInstaller(PlatformInstaller):
         """Path to <config_dir>/AGENTS.md."""
         return self.config_dir / "AGENTS.md"
 
+    def rule_bundle_path(self) -> Path:
+        """Forge's real instruction path, under forge's own resolution order.
+
+        Resolved through resolve_forgecode_config_dir() rather than
+        self.config_dir so the artifact lands where forge will actually look:
+        $FORGE_CONFIG, else ~/forge when it exists, else ~/.forge. Forge has no
+        sidecar mechanism of any kind, so to deliver anything spellbook must own
+        this path.
+        """
+        return self._resolve_effective_config_dir() / "AGENTS.md"
+
+    def rule_bundle_preserve_existing(self) -> bool:
+        """Never clobber a user's own AGENTS.md.
+
+        Forge concatenates every AGENTS.md it discovers rather than stopping at
+        the first, so writing the global file does not suppress a project file.
+        But a user file already at this path is theirs: it is backed up, kept
+        byte-intact and first, and the bundle follows in a demarcated region
+        that later installs replace in place.
+        """
+        return True
+
+    def legacy_rule_paths(self) -> List[Path]:
+        return [
+            self._resolve_effective_config_dir() / "AGENTS.spellbook.md",
+            self.config_dir / "AGENTS.spellbook.md",
+        ]
+
+    def legacy_context_files(self) -> List[Path]:
+        return [self._resolve_effective_config_dir() / "AGENTS.md"]
+
     def _resolve_effective_config_dir(self) -> Path:
         """Return the config dir to use for all install/detect operations.
 
         Thin wrapper over the module-level ``resolve_forgecode_config_dir`` so
         the installer and the MCP health-check script share one source of truth
         for the resolution priority chain.
+
+        Memoized per instance. The resolution reads the environment and probes
+        the filesystem, and several call sites now need the effective dir
+        within a single install; resolving once keeps that a fixed cost and
+        keeps every path in one install agreeing on one answer.
         """
-        return resolve_forgecode_config_dir(self.config_dir)
+        if self._effective_config_dir is None:
+            self._effective_config_dir = resolve_forgecode_config_dir(self.config_dir)
+        return self._effective_config_dir
 
     def detect(self) -> PlatformStatus:
         """Detect ForgeCode install state via config dir and .mcp.json contents."""
@@ -231,11 +274,20 @@ class ForgeCodeInstaller(PlatformInstaller):
             if isinstance(servers, dict):
                 has_mcp = SPELLBOOK_SERVER_KEY in servers
 
-        sidecar_file = effective_dir / "AGENTS.spellbook.md"
-        has_sidecar = sidecar_file.exists() or sidecar_file.is_symlink()
+        has_sidecar = any(os.path.lexists(path) for path in self.legacy_rule_paths())
+        has_bundle = False
+        if effective_context_file.exists():
+            try:
+                has_bundle = DELIVERY_MARKER_PREFIX in effective_context_file.read_text(
+                    encoding="utf-8"
+                )
+            except OSError:
+                has_bundle = False
         legacy_version = get_installed_version(effective_context_file)
-        installed = (legacy_version is not None) or has_mcp or has_sidecar
-        installed_version = legacy_version or (self.version if has_sidecar else None)
+        installed = (legacy_version is not None) or has_mcp or has_sidecar or has_bundle
+        installed_version = legacy_version or (
+            self.version if (has_sidecar or has_bundle) else None
+        )
 
         return PlatformStatus(
             platform=self.platform_id,
@@ -271,28 +323,21 @@ class ForgeCodeInstaller(PlatformInstaller):
             )
             return results
 
-        # Strip legacy demarcated section from AGENTS.md if present
-        if effective_context_file.exists() and not self.dry_run:
+        # Generate the rule bundle at forge's real AGENTS.md, preserving any
+        # user content already there, and drop the inert sidecar.
+        self._step("Installing rule modules")
+        rule_results = self.install_rule_modules()
+        results.extend(rule_results)
+
+        # Strip the legacy demarcated block only AFTER delivery succeeds.
+        # Stripping first would leave a user whose delivery failed with
+        # neither the old interpolated rules nor the new modules.
+        if (
+            all(r.success for r in rule_results)
+            and effective_context_file.exists()
+            and not self.dry_run
+        ):
             remove_demarcated_section(effective_context_file)
-
-        # Symlink sidecar rule file ~/.forge/AGENTS.spellbook.md -> AGENTS.spellbook.md
-        sidecar_file = self.config_dir / "AGENTS.spellbook.md"
-        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
-
-        res = create_symlink(source_agents, sidecar_file, dry_run=self.dry_run)
-        results.append(
-            InstallResult(
-                component="rules_sidecar",
-                platform=self.platform_id,
-                success=res.success,
-                action=res.action,
-                message=f"rule sidecar: {res.message}",
-            )
-        )
-
-        # If AGENTS.md does not exist, symlink AGENTS.md -> AGENTS.spellbook.md
-        if not effective_context_file.exists():
-            create_symlink(source_agents, effective_context_file, dry_run=self.dry_run)
 
         # MCP server entry in .mcp.json
         self._step("Registering MCP server")
@@ -360,6 +405,8 @@ class ForgeCodeInstaller(PlatformInstaller):
                     )
                 )
 
+        results.extend(self.uninstall_rule_modules())
+
         success, msg = _remove_forgecode_mcp_config(effective_mcp_config, self.dry_run)
         results.append(
             InstallResult(
@@ -374,8 +421,8 @@ class ForgeCodeInstaller(PlatformInstaller):
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Return AGENTS.spellbook.md path managed by this installer (effective dir)."""
-        return [self._resolve_effective_config_dir() / "AGENTS.spellbook.md"]
+        """Return the generated rule artifact path (effective dir)."""
+        return [self.rule_bundle_path()]
 
     def get_symlinks(self) -> List[Path]:
         """ForgeCode installer creates no symlinks."""

@@ -134,15 +134,29 @@ For review agents:
 
 ### Severity Definitions
 
+The canonical vocabulary is the seven tokens below, defined in full by
+`patterns/code-review-taxonomy.md` and enforced by
+`spellbook.code_review.models.Severity`.
+The names `IMPORTANT`, `MINOR`, and `SUGGESTION` are retired (RETIRED):
+the consumer's `SEVERITY_ORDER` has no such keys, so a finding emitted under a
+retired name sorts through the fallback and vanishes.
+
 ```markdown
 ## Severity Levels
 
 | Level | Definition | Action |
 |-------|------------|--------|
-| CRITICAL | Blocks deployment | Must fix |
-| IMPORTANT | Should fix | Acknowledge |
-| SUGGESTION | Nice to have | Optional |
+| CRITICAL | Security vulnerability, data loss, production outage | Must fix (blocking) |
+| HIGH | Bugs and broken functionality, broken contracts | Must fix (blocking) |
+| MEDIUM | Quality concern, technical debt | Fix or justify deferral |
+| LOW | Minor improvement, optimization | Optional |
+| NIT | Purely stylistic | Optional |
+| QUESTION | Needs author input before a judgment can be made | Author answers |
+| PRAISE | Noteworthy positive | No action |
 ```
+
+Bugs are `HIGH`, never `CRITICAL`. Severity tokens are UPPERCASE; the merge gate
+matches them exactly.
 
 ## Validation Rules
 

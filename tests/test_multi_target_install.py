@@ -125,6 +125,10 @@ class TestOpenCodeDynamicPath:
         (spellbook / "spellbook").mkdir()
         (spellbook / "spellbook" / "server.py").write_text("# stub")
         (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook\n\nTest.")
+        (spellbook / "rules").mkdir(exist_ok=True)
+        (spellbook / "rules" / "00-core.md").write_text(
+            """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+        )
         # Create the extensions directory for system prompt source
         ext_dir = spellbook / "extensions" / "opencode"
         ext_dir.mkdir(parents=True)

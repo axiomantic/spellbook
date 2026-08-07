@@ -405,11 +405,248 @@ def validate_agent(path: Path) -> ValidationResult:
     )
 
 
+# --- Rule module validation -------------------------------------------------
+#
+# Rule modules (rules/*.md) are standalone instruction files. They deliberately
+# do NOT carry the skill/agent apparatus (Invariant Principles, <analysis> and
+# <reflection> tags), so validate_skill() would hard-error on every one of them.
+# validate_rule_module() therefore uses a relaxed required set and adds the
+# checks that matter for a module that must read coherently on its own.
+
+# Instruction tags that must open and close within a single module.
+_RULE_MODULE_TAGS = ("CRITICAL", "FORBIDDEN", "RULE", "ROLE", "analysis", "reflection")
+
+# Antigravity enforces a per-rule-file character cap.
+_ANTIGRAVITY_FILE_CAP = 12000
+
+# Positional language: a module must not refer to its position in a larger
+# document, because any subset of modules may be installed.
+_POSITIONAL_TOKENS = (
+    "above", "below", "here", "earlier", "later", "following section",
+    "preceding", "this section", "as noted", "see above", "see below",
+)
+
+# Non-referential uses of a positional token, enumerated by (module id, token).
+# These are sequential or temporal, not cross-references. Enumerating them
+# rather than pattern-matching keeps a NEW positional use of the same token red.
+_POSITIONAL_ALLOWED: dict[tuple[str, str], str] = {
+    ("develop-discipline", "preceding"): "'preceded by a Phase Declaration' is sequential",
+    ("core-philosophy", "later"): "'an unspecified later' is a temporal noun",
+    ("pr-conventions", "above"): "'above all user instructions' describes the harness prompt",
+}
+
+# Wording that makes a cross-module reference degrade gracefully.
+_CONDITIONAL_MARKERS = (
+    "if the", "where the", "when the", "is installed", "are installed",
+    "if present", "if installed", "if a ", "where a ",
+)
+
+_INLINE_CODE_RE = re.compile(r"`[^`\n]*`")
+_FENCE_RE = re.compile(r"^\s*```")
+_LOAD_SKILL_RE = re.compile(r"Load\s+`?[\w-]+`?\s+skill", re.IGNORECASE)
+_ID_RE = re.compile(r"^[a-z][a-z0-9-]*$")
+
+
+def _prose_lines(body: str):
+    """Yield (lineno, original, scrubbed) for lines outside code, code spans removed."""
+    in_fence = False
+    for lineno, line in enumerate(body.splitlines(), 1):
+        if _FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence:
+            continue
+        scrubbed = _LOAD_SKILL_RE.sub("", _INLINE_CODE_RE.sub("", line))
+        yield lineno, line, scrubbed
+
+
+def load_rule_modules(rules_dir: Path) -> list[tuple[Path, dict, str]]:
+    """Read every rule module as (path, frontmatter, body). Unparseable files get {}."""
+    modules = []
+    for path in sorted(rules_dir.glob("*.md")):
+        content = path.read_text(encoding="utf-8")
+        frontmatter, body = parse_frontmatter(content)
+        modules.append((path, frontmatter or {}, body))
+    return modules
+
+
+def _check_frontmatter(fm: dict, path: Path, all_ids: list[str], errors: list[str]) -> None:
+    """Section 7.2 field rules, including the quoted-`default` requirement."""
+    mid = fm.get("id")
+    if not mid:
+        errors.append("Frontmatter missing 'id' field")
+    elif not isinstance(mid, str) or not _ID_RE.match(mid):
+        errors.append(f"'id' must match ^[a-z][a-z0-9-]*$, got {mid!r}")
+    elif all_ids.count(mid) > 1:
+        errors.append(f"'id' {mid!r} is not unique across rules/")
+
+    if not fm.get("name"):
+        errors.append("Frontmatter missing 'name' field")
+    if not fm.get("description"):
+        errors.append("Frontmatter missing 'description' field")
+
+    cls = fm.get("class")
+    if cls not in ("mandatory", "preference"):
+        errors.append(f"'class' must be 'mandatory' or 'preference', got {cls!r}")
+
+    default = fm.get("default")
+    if cls == "preference":
+        # PyYAML is YAML 1.1: bare `on`/`off` parse to bool, which would make
+        # every `default == "on"` comparison silently False. Require the quoted
+        # form rather than coercing it.
+        if isinstance(default, bool):
+            errors.append(
+                f"'default' parsed as bool {default!r}; write it quoted "
+                f'(default: "on" / default: "off")'
+            )
+        elif default not in ("on", "off"):
+            errors.append(f"'default' must be \"on\" or \"off\", got {default!r}")
+        if not fm.get("benefit"):
+            errors.append("Preference module missing 'benefit' (needed for the selector row)")
+        if not fm.get("declining_means"):
+            errors.append("Preference module missing 'declining_means'")
+    elif cls == "mandatory" and default is not None:
+        errors.append("Mandatory module must not carry a 'default' field")
+
+    for field in ("related", "renamed_from", "paths"):
+        if field not in fm:
+            errors.append(f"Frontmatter missing '{field}' field (may be an empty list)")
+        elif not isinstance(fm[field], list):
+            errors.append(f"'{field}' must be a list")
+
+    if "superseded_by" not in fm:
+        errors.append("Frontmatter missing 'superseded_by' field (may be null)")
+    elif fm["superseded_by"] is not None and fm["superseded_by"] not in all_ids:
+        errors.append(f"'superseded_by' names unknown id {fm['superseded_by']!r}")
+
+    for prior in fm.get("renamed_from") or []:
+        if prior in all_ids:
+            errors.append(f"'renamed_from' entry {prior!r} collides with a live module id")
+
+
+def _check_related(fm: dict, repo_root: Path, errors: list[str]) -> None:
+    """Every related: entry resolves to a real skill, command, or agent."""
+    for entry in fm.get("related") or []:
+        if not isinstance(entry, str):
+            errors.append(f"'related' entry {entry!r} is not a string")
+            continue
+        candidates = [
+            repo_root / entry / "SKILL.md",
+            repo_root / f"{entry}.md",
+        ]
+        if not any(c.exists() for c in candidates):
+            errors.append(f"'related' entry {entry!r} does not resolve to a repo artifact")
+
+
+def validate_rule_module(
+    path: Path,
+    all_modules: list[tuple[Path, dict, str]] | None = None,
+) -> ValidationResult:
+    """Validate a rule module against the rule-module schema (design section 17)."""
+    content = path.read_text(encoding="utf-8")
+    errors: list[str] = []
+    warnings: list[str] = []
+
+    check_truncation_limits(content, errors, path)
+
+    frontmatter, body = parse_frontmatter(content)
+    repo_root = Path(__file__).parent.parent.absolute()
+    if all_modules is None:
+        all_modules = load_rule_modules(repo_root / "rules")
+
+    all_ids = [fm.get("id") for _, fm, _ in all_modules if fm.get("id")]
+
+    if not frontmatter:
+        errors.append("Missing YAML frontmatter")
+        frontmatter = {}
+    else:
+        _check_frontmatter(frontmatter, path, all_ids, errors)
+        _check_related(frontmatter, repo_root, errors)
+
+    this_id = frontmatter.get("id")
+    this_class = frontmatter.get("class")
+
+    # Check 1: tag balance. Code spans are excluded so a module may name a tag
+    # in prose (e.g. `<ROLE>`) without tripping the scan.
+    scrubbed_body = "\n".join(s for _, _, s in _prose_lines(body))
+    for tag in _RULE_MODULE_TAGS:
+        opened = len(re.findall(rf"<{tag}>", scrubbed_body))
+        closed = len(re.findall(rf"</{tag}>", scrubbed_body))
+        if opened != closed:
+            errors.append(f"Unbalanced <{tag}> tag: {opened} open, {closed} close")
+
+    # Check 2: no positional language.
+    positional_re = re.compile(
+        r"\b(" + "|".join(re.escape(t) for t in _POSITIONAL_TOKENS) + r")\b", re.IGNORECASE
+    )
+    for lineno, original, scrubbed in _prose_lines(body):
+        for match in positional_re.finditer(scrubbed):
+            token = match.group(0).lower()
+            if (this_id, token) in _POSITIONAL_ALLOWED:
+                continue
+            errors.append(
+                f"Positional language {token!r} at body line {lineno}: {original.strip()[:70]}"
+            )
+
+    # Check 3: no bare reference to another module's heading/name.
+    for _, other_fm, _ in all_modules:
+        other_id, other_name = other_fm.get("id"), other_fm.get("name")
+        if not other_id or not other_name or other_id == this_id:
+            continue
+        bare_re = re.compile(
+            rf"(`{re.escape(other_name)}`|\*\*{re.escape(other_name)}\*\*)", re.IGNORECASE
+        )
+        for lineno, original, _ in _prose_lines(body):
+            if bare_re.search(original) and f"the `{other_id}` module" not in original:
+                errors.append(
+                    f"Bare reference to module {other_name!r} at body line {lineno}; "
+                    f"qualify it as 'the `{other_id}` module'"
+                )
+
+    # Check 4: no unconditional mandatory -> preference edge.
+    if this_class == "mandatory":
+        pref_ids = {
+            fm.get("id") for _, fm, _ in all_modules if fm.get("class") == "preference"
+        }
+        for lineno, original, _ in _prose_lines(body):
+            lowered = original.lower()
+            for pref_id in pref_ids:
+                if (
+                    pref_id
+                    and f"`{pref_id}`" in original
+                    and not any(marker in lowered for marker in _CONDITIONAL_MARKERS)
+                ):
+                    errors.append(
+                        f"Unconditional mandatory->preference reference to "
+                        f"{pref_id!r} at body line {lineno}; phrase it conditionally"
+                    )
+
+    # Check 7: per-platform size cap.
+    byte_count = len(content.encode("utf-8"))
+    if byte_count > _ANTIGRAVITY_FILE_CAP:
+        errors.append(
+            f"Exceeds Antigravity per-file cap: {byte_count:,} > {_ANTIGRAVITY_FILE_CAP:,} chars"
+        )
+
+    return ValidationResult(
+        path=str(path),
+        item_type="rule",
+        name=frontmatter.get("name", path.stem),
+        passed=len(errors) == 0,
+        errors=errors,
+        warnings=warnings,
+        token_count=count_tokens(content),
+        line_count=len(content.splitlines()),
+        byte_count=byte_count,
+    )
+
+
 def main():
     repo_root = Path(__file__).parent.parent.absolute()
     skills_dir = repo_root / "skills"
     commands_dir = repo_root / "commands"
     agents_dir = repo_root / "agents"
+    rules_dir = repo_root / "rules"
 
     results: list[ValidationResult] = []
 
@@ -430,6 +667,13 @@ def main():
         for agent_file in sorted(agents_dir.glob("*.md")):
             if not agent_file.name.startswith("_") and "crystallized2" not in agent_file.name:
                 results.append(validate_agent(agent_file))
+
+    # Validate rule modules
+    if rules_dir.exists():
+        rule_modules = load_rule_modules(rules_dir)
+        for rule_file, _, _ in rule_modules:
+            if not rule_file.name.startswith("_"):
+                results.append(validate_rule_module(rule_file, rule_modules))
 
     # Print results
     passed = 0

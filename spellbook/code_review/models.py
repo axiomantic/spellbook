@@ -8,15 +8,43 @@ from typing import Any
 class Severity(Enum):
     """Severity levels for review findings.
 
-    Ordering: CRITICAL > IMPORTANT > MINOR
-    - CRITICAL: Data loss, security vulnerabilities, crashes
-    - IMPORTANT: Correctness issues, architecture problems, missing tests
-    - MINOR: Style, polish, code smell
+    Unified on the seven-level review vocabulary shared with the
+    advanced-code-review skill and its phase commands. The members here must
+    agree key for key with that skill's ``SEVERITY_ORDER`` dict; a member
+    missing here makes ``Severity(<value>)`` raise on JSON ingestion of a
+    finding the skill considers legal.
+
+    Ordering: CRITICAL > HIGH > MEDIUM > LOW > NIT > QUESTION > PRAISE
+    - CRITICAL: Data loss, security vulnerabilities, production outage
+    - HIGH: Bugs and broken functionality. Bugs are HIGH, never CRITICAL.
+    - MEDIUM: Quality concern, technical debt
+    - LOW: Minor improvement, optimization
+    - NIT: Purely stylistic
+    - QUESTION: Needs author input before a judgment can be made
+    - PRAISE: Noteworthy positive
+
+    ``QUESTION`` also exists as a :class:`FeedbackCategory` member. They are
+    distinct enums serving distinct axes (severity vs. category) and neither
+    substitutes for the other.
+
+    IMPORTANT and MINOR are retained as ALIASES of HIGH and LOW so existing
+    ``Severity.IMPORTANT`` / ``Severity.MINOR`` call sites keep working. Being
+    aliases, they resolve to the canonical member: ``Severity.MINOR.name`` is
+    ``"LOW"`` and ``Severity.MINOR.value`` is ``"low"``.
     """
 
     CRITICAL = "critical"
-    IMPORTANT = "important"
-    MINOR = "minor"
+    HIGH = "high"
+    MEDIUM = "medium"
+    LOW = "low"
+    NIT = "nit"
+    QUESTION = "question"
+    PRAISE = "praise"
+
+    # Back-compat aliases (not distinct members). The duplicate values are the
+    # mechanism that makes them aliases, so PIE796 is suppressed deliberately.
+    IMPORTANT = "high"  # noqa: PIE796
+    MINOR = "low"  # noqa: PIE796
 
 
 class FeedbackCategory(Enum):
@@ -170,9 +198,9 @@ class ReviewReport:
         summary: Executive summary
         files_reviewed: Number of files reviewed
         findings: List of individual findings
-        critical_count: Number of critical findings
-        important_count: Number of important findings
-        minor_count: Number of minor findings
+        critical_count: Number of CRITICAL findings
+        important_count: Number of HIGH findings (IMPORTANT is an alias of HIGH)
+        minor_count: Number of LOW findings (MINOR is an alias of LOW)
         action_items: Prioritized list of things to fix
     """
 

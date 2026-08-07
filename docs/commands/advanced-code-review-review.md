@@ -154,13 +154,13 @@ Perform multi-pass code analysis, generate findings with severity classification
 **Severity Decision Tree:**
 
 ```
-Is it a security issue, bug, or data loss risk?
+Is it a security vulnerability, a data loss risk, or a production outage?
   -> Yes: CRITICAL
   -> No: Continue
 
-Does it break contracts, architecture, or core functionality?
-  -> Yes: HIGH
-  -> No: Continue
+Is it a bug, or does it break contracts, architecture, or core functionality?
+  -> Yes: HIGH          # Bugs are HIGH. CRITICAL is reserved for
+  -> No: Continue       # security / data loss / outage ONLY.
 
 Is it a code quality or maintainability concern?
   -> Yes: MEDIUM
@@ -193,6 +193,11 @@ Does it require contributor input to resolve?
   "reason": "User input from request directly concatenated into SQL query without sanitization",
   "evidence": "query = f\"SELECT * FROM users WHERE id = {user_id}\"",
   "suggestion": "Use parameterized queries: cursor.execute(\"SELECT * FROM users WHERE id = %s\", (user_id,))",
+  "rule": {
+    "id": "SEC-001",
+    "name": "No unparameterized SQL",
+    "source_path": "docs/coding-standards.md"
+  },
   "verification_status": null,
   "previous_status": null,
   "tags": ["owasp-injection", "cwe-89"]
@@ -213,9 +218,28 @@ Does it require contributor input to resolve?
 | reason | No | Yes | Detailed explanation (null for NIT/PRAISE) |
 | evidence | Yes | No | Code snippet showing issue |
 | suggestion | No | Yes | Recommended fix (null if unclear) |
+| **rule** | **Yes** | **No** | Named rule from `rule-catalogue.json`, OR `{"id": "BUG", "name": "<named correctness/logic bug>", "source_path": null}` |
 | verification_status | No | Yes | Set in Phase 4 |
 | previous_status | No | Yes | From Phase 2 context |
 | tags | No | No | Always array (empty if none) |
+
+### The `rule` field
+
+<CRITICAL>
+**Every finding must name the rule it violates** — the source document plus the
+rule's id/name — **or** be a named correctness/logic bug. "This seems off" is not
+a finding. A review that cannot cite the standard it is enforcing is asserting a
+preference, not reviewing.
+
+- Rule-based finding: `rule.id` MUST exist in `rule-catalogue.json` (Phase 2.0),
+  and `rule.source_path` MUST be the document it came from.
+- Bug finding: `rule.id` is the literal `"BUG"`, `rule.name` states the specific
+  bug class (e.g. "off-by-one in slice bound", "unhandled None return"), and
+  `rule.source_path` is null.
+- If `context["standards_loaded"]` is false, **style and convention findings are
+  FORBIDDEN.** Only named bugs may be raised, and the report must disclose that
+  no standards document was found.
+</CRITICAL>
 
 ## 3.4 Previous Items Integration
 
@@ -276,6 +300,87 @@ def review_file(file_path: str, diff: str, context: dict) -> list[dict]:
     return findings
 ```
 </analysis>
+
+## 3.6.1 Coverage Reconciliation
+
+<CRITICAL>
+Phase 1 built `coverage-manifest.json` enumerating **every hunk**. Phase 3 must
+mark each unit `reviewed` as its lines are actually read, then reconcile N-of-N
+before it may finish. Coverage is **counted**, not asserted — a single
+"all files reviewed" checkbox is not evidence.
+</CRITICAL>
+
+```python
+class EmptyManifestError(RuntimeError):
+    """The manifest enumerated nothing. A review that read nothing cannot certify."""
+
+
+def reconcile_coverage(manifest: dict) -> dict:
+    """Reconcile what was read against what was enumerated. Gaps are DISCLOSED."""
+    units = manifest["units"]
+
+    # ZERO-HUNK GUARD. `complete: not gaps` is TRUE over an empty manifest:
+    # zero units means zero gaps means "complete", and the review certifies
+    # 0/0 coverage over a branch nobody read. This is not a hypothetical --
+    # a manifest built from `files` (working tree) while the diff came from
+    # `diff-committed` produces exactly this on a branch with 0 commits.
+    # An empty manifest is a HARD ERROR, never a passing verdict.
+    if not units or manifest["total_hunks"] == 0 or manifest["total_files"] == 0:
+        raise EmptyManifestError(
+            "E_EMPTY_MANIFEST: the coverage manifest enumerated 0 units "
+            f"(files={manifest['total_files']}, hunks={manifest['total_hunks']}). "
+            "A review that enumerated nothing MUST NOT report complete. "
+            "Check that Phase 1 used the committed endpoint pair "
+            "(`files-committed` + `diff-committed`) and that the branch "
+            "actually has commits ahead of the merge base."
+        )
+
+    reviewed = [u for u in units if u["reviewed"]]
+    gaps = [u for u in units if not u["reviewed"]]
+
+    return {
+        "files": f"{len({u['file'] for u in reviewed})}/{manifest['total_files']}",
+        "hunks": f"{len(reviewed)}/{manifest['total_hunks']}",
+        "lines": f"{sum(u['lines'] for u in reviewed)}/{manifest['total_lines']}",
+        "gaps": [
+            {"id": u["id"], "reason": u["skipped_reason"] or "NOT REVIEWED"}
+            for u in gaps
+        ],
+        "complete": not gaps,
+    }
+```
+
+Report it verbatim in `findings.md` and `review-report.md`:
+
+```
+## Coverage
+Files reviewed:  12/12
+Hunks reviewed:  47/47
+Lines reviewed:  450/450
+Coverage gaps:   none
+```
+
+Any gap must be listed with a reason. An unreviewed hunk with no reason is a
+**review failure**, not a footnote.
+
+<FORBIDDEN>
+- Skipping any hunk in the coverage manifest
+- Using grep/ripgrep/search **as a substitute for reading** a hunk. Grep
+  **LOCATES**; it never **COVERS**. A hunk counts as reviewed only after its
+  lines were read.
+- Sampling ("I read the hot files", "the rest is boilerplate", "the tests are
+  mechanical") and treating the remainder as covered
+- Marking a hunk reviewed because its enclosing file was opened
+- Reporting `complete: true` while `gaps` is non-empty
+- Reporting `complete: true` over an EMPTY manifest. `0/0` is not coverage, it
+  is the absence of a review. `reconcile_coverage` raises `E_EMPTY_MANIFEST`
+  rather than certifying it.
+- Declaring the review done without emitting the N/N reconciliation
+</FORBIDDEN>
+
+When Phase 1 produced a chunk plan, every chunk must return its own
+reconciliation, and the union must equal the full manifest. A chunk that was
+dispatched but returned no reconciliation is an unreviewed chunk.
 
 ## 3.7 Noteworthy Collection
 
@@ -368,9 +473,13 @@ Before proceeding to Phase 4:
 
 - [ ] All files reviewed in priority order
 - [ ] All four passes completed per file
+- [ ] **Coverage reconciled N-of-N at HUNK level; gaps listed with reasons or `complete: true`**
+- [ ] **No hunk marked reviewed on the strength of a grep hit**
+- [ ] **Every finding carries a `rule` naming a catalogued rule (with `source_path`) or a named bug**
+- [ ] **If `standards_loaded` is false: no style/convention findings, and the gap is disclosed**
 - [ ] Declined items not re-raised
 - [ ] Partial items annotated correctly
-- [ ] Each finding has required fields (file, line, evidence)
+- [ ] Each finding has required fields (file, line, evidence, rule)
 - [ ] findings.json written
 - [ ] findings.md written
 
@@ -380,7 +489,9 @@ Do not proceed to Phase 4 with incomplete findings. Every finding must have file
 
 <FORBIDDEN>
 - Re-raising declined findings
-- Classifying bugs as CRITICAL (bugs are HIGH; CRITICAL is for security vulnerabilities and data loss)
+- Classifying bugs as CRITICAL (bugs are HIGH; CRITICAL is for security vulnerabilities, data loss, and production outages) — the severity decision tree in 3.2 says the same thing; they are one rule
+- Raising a finding without a `rule` naming the standard it violates (document + id) or a named correctness/logic bug
+- Raising a style or convention finding when the standards load found nothing
 - Raising a finding without concrete evidence from actual code
 - Skipping passes or combining them into a single pass
 - Omitting the `tags` field (use empty array when no tags apply)
