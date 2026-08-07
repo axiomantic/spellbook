@@ -13,7 +13,9 @@ Covers WI-0 default mode installation:
 import json
 
 import pytest
+import tripwire
 
+from dirty_equals import AnyThing, IsInstance
 
 
 # ---------------------------------------------------------------------------
@@ -21,94 +23,112 @@ import pytest
 # ---------------------------------------------------------------------------
 
 
-def test_install_default_mode_writes_mode_to_empty_settings(tmp_path, monkeypatch):
+def test_install_default_mode_writes_mode_to_empty_settings(tmp_path):
     """install_default_mode writes defaultMode into a missing settings.json."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    assert result.component == "default_mode"
-    assert result.success is True
-    assert result.action == "installed"
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {"defaultMode": "acceptEdits"}
+        assert result.component == "default_mode"
+        assert result.success is True
+        assert result.action == "installed"
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {"defaultMode": "acceptEdits"}
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
-def test_install_default_mode_preserves_other_settings_keys(tmp_path, monkeypatch):
+def test_install_default_mode_preserves_other_settings_keys(tmp_path):
     """install_default_mode only touches defaultMode; other keys are untouched."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
-    settings_path.write_text(
-        json.dumps({"hooks": {"PreToolUse": []}, "model": "claude-sonnet-4"}),
-        encoding="utf-8",
-    )
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
+        settings_path.write_text(
+            json.dumps({"hooks": {"PreToolUse": []}, "model": "claude-sonnet-4"}),
+            encoding="utf-8",
+        )
 
-    dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {
-        "hooks": {"PreToolUse": []},
-        "model": "claude-sonnet-4",
-        "defaultMode": "acceptEdits",
-    }
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {
+            "hooks": {"PreToolUse": []},
+            "model": "claude-sonnet-4",
+            "defaultMode": "acceptEdits",
+        }
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
-def test_install_default_mode_records_managed_value_in_state_file(tmp_path, monkeypatch):
+def test_install_default_mode_records_managed_value_in_state_file(tmp_path):
     """The installed mode is recorded in the managed-permissions state file."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    state = json.loads(state_path.read_text(encoding="utf-8"))
-    assert state == {
-        "version": 1,
-        "config_dirs": {
-            str(config_dir): {
-                "allow": [],
-                "deny": [],
-                "ask": [],
-                "default_mode": "acceptEdits",
-            }
-        },
-    }
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        assert state == {
+            "version": 1,
+            "config_dirs": {
+                str(config_dir): {
+                    "allow": [],
+                    "deny": [],
+                    "ask": [],
+                    "default_mode": "acceptEdits",
+                }
+            },
+        }
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -116,37 +136,44 @@ def test_install_default_mode_records_managed_value_in_state_file(tmp_path, monk
 # ---------------------------------------------------------------------------
 
 
-def test_install_default_mode_is_idempotent(tmp_path, monkeypatch):
+def test_install_default_mode_is_idempotent(tmp_path):
     """Running install_default_mode twice produces unchanged settings.json."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
-    after_first = settings_path.read_text(encoding="utf-8")
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
+        after_first = settings_path.read_text(encoding="utf-8")
 
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
-    after_second = settings_path.read_text(encoding="utf-8")
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
+        after_second = settings_path.read_text(encoding="utf-8")
 
-    assert after_first == after_second
-    assert result.action == "unchanged"
-    assert result.success is True
+        assert after_first == after_second
+        assert result.action == "unchanged"
+        assert result.success is True
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -154,42 +181,46 @@ def test_install_default_mode_is_idempotent(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_install_default_mode_preserves_user_set_mode_not_in_state(tmp_path, monkeypatch):
+def test_install_default_mode_preserves_user_set_mode_not_in_state(tmp_path):
     """User manually set defaultMode AND it is not in our state -> leave alone, warn."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
-    settings_path.write_text(
-        json.dumps({"defaultMode": "default"}),
-        encoding="utf-8",
-    )
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
+        settings_path.write_text(
+            json.dumps({"defaultMode": "default"}),
+            encoding="utf-8",
+        )
 
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {"defaultMode": "default"}
-    assert result.component == "default_mode"
-    assert result.success is True
-    assert result.action == "skipped"
-    assert result.message == (
-        f"default_mode: user-set defaultMode='default' in "
-        f"{settings_path.name}; not overwriting with managed value 'acceptEdits'"
-    )
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {"defaultMode": "default"}
+        assert result.component == "default_mode"
+        assert result.success is True
+        assert result.action == "skipped"
+        assert result.message == (
+            f"default_mode: user-set defaultMode='default' in "
+            f"{settings_path.name}; not overwriting with managed value 'acceptEdits'"
+        )
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    tripwire.log.assert_warning(AnyThing(), "installer.components.default_mode")
 
 
 def test_install_default_mode_does_not_steal_ownership_when_user_value_matches_desired(
-    tmp_path, monkeypatch
+    tmp_path
 ):
     """Regression for BOT-A1: ownership theft when user-set value coincidentally
     matches the desired managed mode.
@@ -224,35 +255,39 @@ def test_install_default_mode_does_not_steal_ownership_when_user_value_matches_d
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    # User has changed settings.json to 'plan' (no longer matches managed).
-    settings_path = config_dir / "settings.json"
-    settings_path.write_text(json.dumps({"defaultMode": "plan"}), encoding="utf-8")
+        # User has changed settings.json to 'plan' (no longer matches managed).
+        settings_path = config_dir / "settings.json"
+        settings_path.write_text(json.dumps({"defaultMode": "plan"}), encoding="utf-8")
 
-    # New install request happens to want the same value the user picked.
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode="plan",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        # New install request happens to want the same value the user picked.
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode="plan",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    # settings.json untouched: we did not claim ownership.
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {"defaultMode": "plan"}
+        # settings.json untouched: we did not claim ownership.
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {"defaultMode": "plan"}
 
-    # State file: managed value remains 'acceptEdits' (NOT updated to 'plan').
-    state = json.loads(state_path.read_text(encoding="utf-8"))
-    assert (
-        state["config_dirs"][str(config_dir)]["default_mode"] == "acceptEdits"
-    )
+        # State file: managed value remains 'acceptEdits' (NOT updated to 'plan').
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        assert (
+            state["config_dirs"][str(config_dir)]["default_mode"] == "acceptEdits"
+        )
 
-    assert result.action == "skipped"
-    assert result.success is True
+        assert result.action == "skipped"
+        assert result.success is True
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    tripwire.log.assert_warning(AnyThing(), "installer.components.default_mode")
 
 
-def test_install_default_mode_overwrites_managed_value(tmp_path, monkeypatch):
+def test_install_default_mode_overwrites_managed_value(tmp_path):
     """If state file says we own the current mode, install overwrites it."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
@@ -277,22 +312,28 @@ def test_install_default_mode_overwrites_managed_value(tmp_path, monkeypatch):
         ),
         encoding="utf-8",
     )
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    settings_path = config_dir / "settings.json"
-    settings_path.write_text(json.dumps({"defaultMode": "plan"}), encoding="utf-8")
+        settings_path = config_dir / "settings.json"
+        settings_path.write_text(json.dumps({"defaultMode": "plan"}), encoding="utf-8")
 
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {"defaultMode": "acceptEdits"}
-    assert result.action == "installed"
-    assert result.success is True
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {"defaultMode": "acceptEdits"}
+        assert result.action == "installed"
+        assert result.success is True
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -300,31 +341,33 @@ def test_install_default_mode_overwrites_managed_value(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_install_default_mode_dry_run_makes_no_changes(tmp_path, monkeypatch):
+def test_install_default_mode_dry_run_makes_no_changes(tmp_path):
     """dry_run=True writes nothing to settings.json or the state file."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=True,
-    )
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=True,
+        )
 
-    assert settings_path.exists() is False
-    assert state_path.exists() is False
-    assert result.component == "default_mode"
-    assert result.success is True
-    assert result.action == "installed"
-    assert result.message == "default_mode: would install defaultMode='acceptEdits' (dry run)"
+        assert settings_path.exists() is False
+        assert state_path.exists() is False
+        assert result.component == "default_mode"
+        assert result.success is True
+        assert result.action == "installed"
+        assert result.message == "default_mode: would install defaultMode='acceptEdits' (dry run)"
 
 
 # ---------------------------------------------------------------------------
@@ -332,36 +375,38 @@ def test_install_default_mode_dry_run_makes_no_changes(tmp_path, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_install_default_mode_returns_failed_result_on_corrupt_settings(tmp_path, monkeypatch):
+def test_install_default_mode_returns_failed_result_on_corrupt_settings(tmp_path):
     """Corrupt settings.json -> HookResult(success=False, action='failed')."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
-    settings_path.write_text("{not valid json", encoding="utf-8")
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
+        settings_path.write_text("{not valid json", encoding="utf-8")
 
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    assert result.component == "default_mode"
-    assert result.success is False
-    assert result.action == "failed"
-    # Suffix is the json.JSONDecodeError str() (line/col details); prefix is exact.
-    assert result.message.startswith(
-        f"default_mode: failed to parse {settings_path.name} - JSON decode error:"
-    )
+        assert result.component == "default_mode"
+        assert result.success is False
+        assert result.action == "failed"
+        # Suffix is the json.JSONDecodeError str() (line/col details); prefix is exact.
+        assert result.message.startswith(
+            f"default_mode: failed to parse {settings_path.name} - JSON decode error:"
+        )
 
 
-def test_install_default_mode_returns_failed_result_on_oserror(tmp_path, monkeypatch):
+def test_install_default_mode_returns_failed_result_on_oserror(tmp_path):
     """An OSError during the write -> HookResult(success=False)."""
     import tripwire
     from dirty_equals import AnyThing, IsInstance
@@ -370,7 +415,8 @@ def test_install_default_mode_returns_failed_result_on_oserror(tmp_path, monkeyp
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
 
     config_dir = tmp_path / ".claude"
     config_dir.mkdir()
@@ -391,8 +437,9 @@ def test_install_default_mode_returns_failed_result_on_oserror(tmp_path, monkeyp
             dry_run=False,
         )
 
+    state_file_path_mock.assert_call(args=(), kwargs={})
     mock_write.assert_call(
-        args=(AnyThing, AnyThing),
+        args=(str(settings_path), {"defaultMode": "acceptEdits"}),
         kwargs={},
         raised=IsInstance(OSError),
     )
@@ -420,7 +467,7 @@ def test_install_default_mode_returns_failed_result_on_oserror(tmp_path, monkeyp
         42,
     ],
 )
-def test_install_default_mode_rejects_invalid_mode(tmp_path, monkeypatch, bad_mode):
+def test_install_default_mode_rejects_invalid_mode(tmp_path, bad_mode):
     """install_default_mode raises ValueError for any non-allowlist mode value.
 
     The Claude Code 2.1.x defaultMode allowlist is
@@ -431,23 +478,25 @@ def test_install_default_mode_rejects_invalid_mode(tmp_path, monkeypatch, bad_mo
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    with pytest.raises(ValueError, match="invalid mode"):
-        dm.install_default_mode(
-            settings_path=settings_path,
-            mode=bad_mode,
-            spellbook_dir=tmp_path / "spellbook",
-            dry_run=False,
-        )
+        with pytest.raises(ValueError, match="invalid mode"):
+            dm.install_default_mode(
+                settings_path=settings_path,
+                mode=bad_mode,
+                spellbook_dir=tmp_path / "spellbook",
+                dry_run=False,
+            )
 
-    # Validation must run BEFORE any file I/O, including in dry_run.
-    assert settings_path.exists() is False
-    assert state_path.exists() is False
+        # Validation must run BEFORE any file I/O, including in dry_run.
+        assert settings_path.exists() is False
+        assert state_path.exists() is False
 
 
 @pytest.mark.parametrize(
@@ -455,7 +504,7 @@ def test_install_default_mode_rejects_invalid_mode(tmp_path, monkeypatch, bad_mo
     ["", "invalid", "acceptedits", None, 42],
 )
 def test_install_default_mode_rejects_invalid_mode_in_dry_run(
-    tmp_path, monkeypatch, bad_mode
+    tmp_path, bad_mode
 ):
     """Validation fires even in dry_run -- callers should never see silent
     success for a typo'd mode value."""
@@ -463,19 +512,21 @@ def test_install_default_mode_rejects_invalid_mode_in_dry_run(
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    with pytest.raises(ValueError, match="invalid mode"):
-        dm.install_default_mode(
-            settings_path=settings_path,
-            mode=bad_mode,
-            spellbook_dir=tmp_path / "spellbook",
-            dry_run=True,
-        )
+        with pytest.raises(ValueError, match="invalid mode"):
+            dm.install_default_mode(
+                settings_path=settings_path,
+                mode=bad_mode,
+                spellbook_dir=tmp_path / "spellbook",
+                dry_run=True,
+            )
 
 
 @pytest.mark.parametrize(
@@ -483,30 +534,36 @@ def test_install_default_mode_rejects_invalid_mode_in_dry_run(
     ["default", "acceptEdits", "plan", "bypassPermissions"],
 )
 def test_install_default_mode_accepts_all_documented_modes(
-    tmp_path, monkeypatch, good_mode
+    tmp_path, good_mode
 ):
     """All four Claude Code 2.1.x defaultMode values must round-trip cleanly."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    result = dm.install_default_mode(
-        settings_path=settings_path,
-        mode=good_mode,
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        result = dm.install_default_mode(
+            settings_path=settings_path,
+            mode=good_mode,
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    assert result.success is True
-    assert result.action == "installed"
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {"defaultMode": good_mode}
+        assert result.success is True
+        assert result.action == "installed"
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {"defaultMode": good_mode}
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
 # ---------------------------------------------------------------------------
@@ -514,166 +571,206 @@ def test_install_default_mode_accepts_all_documented_modes(
 # ---------------------------------------------------------------------------
 
 
-def test_uninstall_default_mode_removes_managed_value(tmp_path, monkeypatch):
+def test_uninstall_default_mode_removes_managed_value(tmp_path):
     """install then uninstall on a previously-empty settings.json yields a
     file containing only an empty dict (or no defaultMode key)."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
-    assert json.loads(settings_path.read_text(encoding="utf-8")) == {
-        "defaultMode": "acceptEdits"
-    }
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
+        assert json.loads(settings_path.read_text(encoding="utf-8")) == {
+            "defaultMode": "acceptEdits"
+        }
 
-    result = dm.uninstall_default_mode(
-        settings_path=settings_path,
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        result = dm.uninstall_default_mode(
+            settings_path=settings_path,
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    assert result.component == "default_mode"
-    assert result.success is True
-    assert result.action == "removed"
+        assert result.component == "default_mode"
+        assert result.success is True
+        assert result.action == "removed"
 
-    # File contains only {} -- no managed defaultMode left behind.
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {}
+        # File contains only {} -- no managed defaultMode left behind.
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {}
 
-    # State file no longer claims ownership of the defaultMode.
-    state = json.loads(state_path.read_text(encoding="utf-8"))
-    assert "default_mode" not in state["config_dirs"][str(config_dir)]
+        # State file no longer claims ownership of the defaultMode.
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+        assert "default_mode" not in state["config_dirs"][str(config_dir)]
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
-def test_uninstall_default_mode_preserves_other_settings_keys(tmp_path, monkeypatch):
+def test_uninstall_default_mode_preserves_other_settings_keys(tmp_path):
     """Other top-level keys (e.g. 'model', 'hooks') survive uninstall."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
-    settings_path.write_text(
-        json.dumps({"model": "claude-sonnet-4", "hooks": {"PreToolUse": []}}),
-        encoding="utf-8",
-    )
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
+        settings_path.write_text(
+            json.dumps({"model": "claude-sonnet-4", "hooks": {"PreToolUse": []}}),
+            encoding="utf-8",
+        )
 
-    dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    dm.uninstall_default_mode(
-        settings_path=settings_path,
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        dm.uninstall_default_mode(
+            settings_path=settings_path,
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {"model": "claude-sonnet-4", "hooks": {"PreToolUse": []}}
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {"model": "claude-sonnet-4", "hooks": {"PreToolUse": []}}
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
-def test_uninstall_default_mode_skips_user_changed_value(tmp_path, monkeypatch):
+def test_uninstall_default_mode_skips_user_changed_value(tmp_path):
     """If the user changed defaultMode after install, uninstall leaves it alone
     but still clears the state-file claim."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
-    # User then changes mode by hand.
-    settings_path.write_text(json.dumps({"defaultMode": "plan"}), encoding="utf-8")
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
+        # User then changes mode by hand.
+        settings_path.write_text(json.dumps({"defaultMode": "plan"}), encoding="utf-8")
 
-    result = dm.uninstall_default_mode(
-        settings_path=settings_path,
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        result = dm.uninstall_default_mode(
+            settings_path=settings_path,
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    assert result.action == "skipped"
-    written = json.loads(settings_path.read_text(encoding="utf-8"))
-    assert written == {"defaultMode": "plan"}
+        assert result.action == "skipped"
+        written = json.loads(settings_path.read_text(encoding="utf-8"))
+        assert written == {"defaultMode": "plan"}
 
-    # State file no longer claims ownership.
-    assert mps.get_managed_default_mode(config_dir) is None
+        # State file no longer claims ownership.
+        assert mps.get_managed_default_mode(config_dir) is None
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
-def test_uninstall_default_mode_unchanged_when_no_managed_value(tmp_path, monkeypatch):
+def test_uninstall_default_mode_unchanged_when_no_managed_value(tmp_path):
     """Uninstall on a fresh (never-installed) state is a no-op."""
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
 
-    result = dm.uninstall_default_mode(
-        settings_path=settings_path,
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
+        result = dm.uninstall_default_mode(
+            settings_path=settings_path,
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
 
-    assert result.success is True
-    assert result.action == "unchanged"
-    assert settings_path.exists() is False
+        assert result.success is True
+        assert result.action == "unchanged"
+        assert settings_path.exists() is False
+    state_file_path_mock.assert_call(args=(), kwargs={})
 
 
-def test_uninstall_default_mode_dry_run_makes_no_changes(tmp_path, monkeypatch):
+def test_uninstall_default_mode_dry_run_makes_no_changes(tmp_path):
     from installer.components import default_mode as dm
     from installer.components import managed_permissions_state as mps
 
     state_path = tmp_path / "state" / "managed_permissions.json"
-    monkeypatch.setattr(mps, "_STATE_FILE_PATH", state_path)
+    state_file_path_mock = tripwire.mock("installer.components.managed_permissions_state:_state_file_path")
+    state_file_path_mock.always_returns(state_path)
+    with tripwire:
 
-    config_dir = tmp_path / ".claude"
-    config_dir.mkdir()
-    settings_path = config_dir / "settings.json"
-    dm.install_default_mode(
-        settings_path=settings_path,
-        mode="acceptEdits",
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=False,
-    )
-    before_settings = settings_path.read_text(encoding="utf-8")
-    before_state = state_path.read_text(encoding="utf-8")
+        config_dir = tmp_path / ".claude"
+        config_dir.mkdir()
+        settings_path = config_dir / "settings.json"
+        dm.install_default_mode(
+            settings_path=settings_path,
+            mode="acceptEdits",
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=False,
+        )
+        before_settings = settings_path.read_text(encoding="utf-8")
+        before_state = state_path.read_text(encoding="utf-8")
 
-    result = dm.uninstall_default_mode(
-        settings_path=settings_path,
-        spellbook_dir=tmp_path / "spellbook",
-        dry_run=True,
-    )
+        result = dm.uninstall_default_mode(
+            settings_path=settings_path,
+            spellbook_dir=tmp_path / "spellbook",
+            dry_run=True,
+        )
 
-    assert result.success is True
-    assert result.action == "removed"
-    assert settings_path.read_text(encoding="utf-8") == before_settings
-    assert state_path.read_text(encoding="utf-8") == before_state
+        assert result.success is True
+        assert result.action == "removed"
+        assert settings_path.read_text(encoding="utf-8") == before_settings
+        assert state_path.read_text(encoding="utf-8") == before_state
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
+    state_file_path_mock.assert_call(args=(), kwargs={})
