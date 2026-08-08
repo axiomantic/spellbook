@@ -11,8 +11,12 @@ def spellbook_dir(tmp_path):
 
     # Required files for installer
     (spellbook / ".version").write_text("0.83.0")
-    (spellbook / "AGENTS.spellbook.md").write_text(
-        "# Spellbook Behavioral Guidance\n\nTest content."
+    # BOT-D1 fix: AGENTS.spellbook.md was deleted by PR #442. The global hints
+    # symlink now points to rules/00-core.md, so the fixture must create that.
+    rules_dir = spellbook / "rules"
+    rules_dir.mkdir()
+    (rules_dir / "00-core.md").write_text(
+        "---\nid: core\n---\n# Test core rule\n"
     )
 
     # Mock MCP server path (read by core installer)
@@ -157,7 +161,7 @@ def test_goose_install_creates_global_hints_symlink(spellbook_dir, goose_env):
 
     hints = goose_env / ".agents" / "AGENTS.md"
     assert hints.is_symlink()
-    assert hints.resolve() == (spellbook_dir / "AGENTS.spellbook.md").resolve()
+    assert hints.resolve() == (spellbook_dir / "rules" / "00-core.md").resolve()
 
 
 def test_goose_install_registers_mcp_in_config_yaml(spellbook_dir, goose_env, mock_mcp_token):
@@ -486,6 +490,42 @@ def test_goose_install_inserts_when_extensions_is_inline_array(
     assert ext_count == 1, (
         f"Duplicate `extensions:` key created: {ext_count} occurrences\n{result}"
     )
+
+
+
+def test_goose_install_preserves_inline_array_with_flow_mapping_items(
+    spellbook_dir, goose_env
+):
+    """MCP block is inserted when `extensions:` is an inline array containing
+    flow-mapping items with embedded commas (e.g. {name: a, type: b}).
+
+    Regression test for BOT-D4: naive `inner.split(",")` was lossy for these
+    cases -- it would split mid-mapping and corrupt the user YAML. The fix
+    uses yaml.safe_load to parse items correctly.
+    """
+    from installer.platforms.goose import _insert_spellbook_block, _generate_mcp_yaml_list_item
+
+    # Embedded comma inside a flow mapping: the original naive split would
+    # yield 4 broken items instead of 2 mappings.
+    yaml_text = "extensions: [{name: foo, type: bar}, {name: baz, type: qux}]\n"
+    block = _generate_mcp_yaml_list_item()
+
+    result = _insert_spellbook_block(yaml_text, block)
+
+    # Both flow-mappings preserved (in block style)
+    assert "name: foo" in result
+    assert "type: bar" in result
+    assert "name: baz" in result
+    assert "type: qux" in result
+    # Spellbook block inserted
+    assert "# SPELLBOOK:START" in result
+    assert "name: spellbook" in result
+    # No duplicate extensions: key
+    ext_count = result.count("extensions:")
+    assert ext_count == 1, (
+        f"Duplicate `extensions:` key created: {ext_count} occurrences\n{result}"
+    )
+
 
 
 # ---------------------------------------------------------------------

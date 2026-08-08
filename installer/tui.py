@@ -863,9 +863,3 @@ def interactive_module_select(selection: Any) -> Optional[List[str]]:
 
         clear_lines(rendered)
         rendered = render_module_menu(options, cursor, mandatory_count)
-    if "goose" in platforms:
-        print(color("  Goose:", Colors.BLUE))
-        print("    Skills installed to ~/.agents/skills/.")
-        print("    MCP server registered in ~/.config/goose/config.yaml.")
-        print("    Restart goose to load the spellbook MCP server.")
-        print()

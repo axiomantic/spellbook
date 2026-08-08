@@ -167,22 +167,47 @@ def _insert_spellbook_block(yaml_text: str, block: str) -> str:
 
         # Case B: `extensions: [a, b, c]` -- inline flow-style list. Convert
         # to block style so the spellbook entries can join the same list.
+        # BOT-D4 fix: previous naive `inner.split(",")` was lossy for
+        # flow-mappings with embedded commas, e.g.
+        # `extensions: [{name: foo, type: bar}]` would split mid-mapping.
+        # Use the YAML parser to extract items correctly, then emit as
+        # block-style list. Falls back to a single-item list if parsing
+        # fails (the original extension was probably not parseable YAML).
         if stripped.startswith("[") and stripped.endswith("]"):
-            inner = stripped[1:-1].strip()
-            list_lines = ["extensions:"]
-            if inner:
-                for item in inner.split(","):
-                    item = item.strip()
-                    if item:
-                        list_lines.append(f"  - {item}")
-            expansion = "\n".join(list_lines) + "\n" + block
-            return re.sub(
-                r"^extensions:[^\n]*$",
-                expansion,
-                yaml_text,
-                count=1,
-                flags=re.MULTILINE,
-            )
+            try:
+                import yaml  # local import; spellbook pins pyyaml
+                parsed = yaml.safe_load(stripped)
+                list_lines = ["extensions:"]
+                if isinstance(parsed, list):
+                    for item in parsed:
+                        # Emit each item using its YAML representation;
+                        # yaml.safe_dump preserves flow-style for mappings
+                        # with their original meaning intact.
+                        dumped = yaml.safe_dump(
+                            item,
+                            default_flow_style=False,
+                            sort_keys=False,
+                        ).rstrip("\n")
+                        for ln in dumped.splitlines():
+                            list_lines.append(f"  {ln}".rstrip())
+                else:
+                    # Empty list or non-list; emit nothing
+                    pass
+                expansion = "\n".join(list_lines) + "\n" + block
+                return re.sub(
+                    r"^extensions:[^\n]*$",
+                    expansion,
+                    yaml_text,
+                    count=1,
+                    flags=re.MULTILINE,
+                )
+            except yaml.YAMLError:
+                # Could not parse -- leave the original line alone and append
+                # the block below. The user will see two `extensions:` keys
+                # but at least the existing one is preserved verbatim.
+                return yaml_text.replace(
+                    stripped, stripped + "\n" + block, 1
+                )
 
     # Path 3: no extensions: key at all -> append a new extensions list
     if not yaml_text.endswith("\n"):
@@ -405,8 +430,12 @@ class GooseInstaller(PlatformInstaller):
         )
 
         # Step 2: Global hints file at ~/.agents/AGENTS.md (goose v1.41.0+ loads it)
+        # BOT-D1 fix: AGENTS.spellbook.md was deleted by PR #442 (modular rule
+        # modules). The new canonical source for behavioral guidance is
+        # rules/00-core.md -- symlink the global hints file to that, so goose
+        # users still get the core behavioral rules in their system prompt.
         self._step("Installing global hints file")
-        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
+        source_agents = self.spellbook_dir / "rules" / "00-core.md"
         if source_agents.exists():
             hints_parent = self.global_hints_file.parent
             if not self.dry_run:
