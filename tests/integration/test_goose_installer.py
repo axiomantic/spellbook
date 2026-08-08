@@ -423,6 +423,129 @@ def test_goose_install_inserts_when_extensions_is_last_line_no_newline(
 
 
 # ---------------------------------------------------------------------
+
+# ---------------------------------------------------------------------
+# BOT-B1 regression: extensions: with trailing comment or inline array
+# ---------------------------------------------------------------------
+
+def test_goose_install_inserts_when_extensions_has_trailing_comment(
+    spellbook_dir, goose_env
+):
+    r"""MCP block is inserted when `extensions:` line has a trailing YAML comment.
+
+    Regression test for BOT-B1: Path 2's regex `^extensions:\s*$` did NOT
+    match `extensions: # comment`, so the function fell through to Path 3
+    which appended a NEW `extensions:` section. YAML allows duplicate keys
+    (last-wins), which silently DROPPED the user's existing extensions.
+    """
+    from installer.platforms.goose import _generate_mcp_yaml_list_item, _insert_spellbook_block
+
+    yaml_text = "extensions: # user extensions here\n  - type: stdio\n    name: user-tool\n"
+    block = _generate_mcp_yaml_list_item()
+
+    result = _insert_spellbook_block(yaml_text, block)
+
+    # The user's existing extension must still be present.
+    assert "name: user-tool" in result, (
+        "User's existing extensions were silently dropped (BOT-B1 regression)"
+    )
+    # The spellbook block must be inserted.
+    assert "# SPELLBOOK:START" in result
+    assert "name: spellbook" in result
+    # There must be exactly one `extensions:` key (no duplicate).
+    ext_count = result.count("extensions:")
+    assert ext_count == 1, (
+        f"Duplicate `extensions:` key created: {ext_count} occurrences\n{result}"
+    )
+
+
+def test_goose_install_inserts_when_extensions_is_inline_array(
+    spellbook_dir, goose_env
+):
+    r"""MCP block is inserted when `extensions:` is an inline flow-style list.
+
+    Regression test for BOT-B1: `extensions: [a, b]` also failed the
+    `^extensions:\s*$` regex. The fix expands inline arrays to block style
+    and then inserts the spellbook block in the same list.
+    """
+    from installer.platforms.goose import _generate_mcp_yaml_list_item, _insert_spellbook_block
+
+    yaml_text = "extensions: [type: stdio, type: http]\n"
+    block = _generate_mcp_yaml_list_item()
+
+    result = _insert_spellbook_block(yaml_text, block)
+
+    # User's extensions preserved (now in block style)
+    assert "type: stdio" in result
+    assert "type: http" in result
+    # Spellbook block inserted
+    assert "# SPELLBOOK:START" in result
+    assert "name: spellbook" in result
+    # No duplicate extensions: key
+    ext_count = result.count("extensions:")
+    assert ext_count == 1, (
+        f"Duplicate `extensions:` key created: {ext_count} occurrences\n{result}"
+    )
+
+
+# ---------------------------------------------------------------------
+# BOT-B2 regression: no double-close of fd when f.write() raises
+# ---------------------------------------------------------------------
+
+def test_goose_mcp_config_no_double_close_on_write_failure(
+    spellbook_dir, goose_env, monkeypatch
+):
+    """When f.write() raises, the file descriptor is closed exactly once.
+
+    Regression test for BOT-B2: previously, an exception in f.write() caused
+    `_os.fdopen()`'s context manager to close `fd`, AND the except handler
+    also called `_os.close(fd)`, double-closing the descriptor.
+    """
+    import os as _os
+
+    from installer.platforms import goose as goose_mod
+
+    close_calls = []
+
+    real_close = _os.close
+    real_fdopen = _os.fdopen
+
+    def tracking_close(fd):
+        close_calls.append(fd)
+        return real_close(fd)
+
+    def fake_fdopen(fd, mode, *args, **kwargs):
+        # Wrap fdopen so the resulting file object raises on .write()
+        f = real_fdopen(fd, mode, *args, **kwargs)
+        original_write = f.write
+
+        def failing_write(data):
+            original_write(data)  # write a partial buffer first
+            raise OSError("simulated write failure")
+
+        f.write = failing_write
+        return f
+
+    monkeypatch.setattr(_os, "close", tracking_close)
+    monkeypatch.setattr(_os, "fdopen", fake_fdopen)
+
+    cfg = goose_env / ".config" / "goose" / "config.yaml"
+    cfg.parent.mkdir(parents=True, exist_ok=True)
+    cfg.write_text("extensions:\n  - type: stdio\n    name: existing\n")
+
+    with pytest.raises(OSError, match="simulated write failure"):
+        goose_mod._update_goose_mcp_config(cfg, dry_run=False)
+
+    # With the BOT-B2 fix, the except handler does NOT call os.close(fd) anymore.
+    # The file object created by os.fdopen() owns the fd; its __exit__ closes
+    # the fd via the C extension (NOT via os.close), so close_calls should be 0.
+    # The buggy version would have called os.close(fd) explicitly in the except,
+    # giving close_calls == 1 (the double-close).
+    assert len(close_calls) == 0, (
+        f"os.close was called {len(close_calls)} time(s) -- except handler must NOT "
+        f"close fd that fdopen already owns (BOT-B2 regression)"
+    )
+
 # GOOSE_PATH_ROOT handling
 # ---------------------------------------------------------------------
 

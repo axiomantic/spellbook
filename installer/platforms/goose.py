@@ -137,21 +137,52 @@ def _insert_spellbook_block(yaml_text: str, block: str) -> str:
         return pattern.sub("\n" + block, yaml_text, count=1)
 
     # Path 2: extensions: exists, no markers yet -> insert block after it
-    if re.search(r"^extensions:\s*$", yaml_text, re.MULTILINE):
-        # BOT-A1 fix: the regex below requires `\n` after `extensions:`. If the
-        # file ends with `extensions:` and no trailing newline, the sub would
-        # silently no-op and the spellbook block would never be inserted.
-        # Normalize by ensuring a trailing newline before the substitution.
-        if not yaml_text.endswith("\n"):
-            yaml_text += "\n"
-        # Insert block immediately after the ``extensions:`` line, inside the list.
-        return re.sub(
-            r"^(extensions:\s*\n)",
-            lambda m: m.group(1) + block,
-            yaml_text,
-            count=1,
-            flags=re.MULTILINE,
-        )
+    # BOT-B1 fix: also match extensions: with trailing content (comments or
+    # inline arrays). The previous regex `^extensions:\s*$` only matched an
+    # empty extensions: line; if the user had `extensions: [a, b]` or
+    # `extensions: # comment`, the regex returned None and we fell through to
+    # Path 3, which appended a NEW extensions: section. YAML allows duplicate
+    # keys (last-wins), so the user's existing extensions silently vanished.
+    extensions_match = re.search(
+        r"^extensions:(\s+.*)?$", yaml_text, re.MULTILINE
+    )
+    if extensions_match:
+        inline_content = extensions_match.group(1) or ""
+        stripped = inline_content.strip()
+
+        # Case A: `extensions:` alone, or `extensions: # comment`.
+        if not stripped or stripped.startswith("#"):
+            # BOT-A1 fix: ensure a trailing newline before substitution so
+            # a file ending with bare `extensions:` does not silently no-op.
+            if not yaml_text.endswith("\n"):
+                yaml_text += "\n"
+            # Insert block immediately after the `extensions:` line, inside the list.
+            return re.sub(
+                r"^(extensions:[^\n]*\n)",
+                lambda m: m.group(1) + block,
+                yaml_text,
+                count=1,
+                flags=re.MULTILINE,
+            )
+
+        # Case B: `extensions: [a, b, c]` -- inline flow-style list. Convert
+        # to block style so the spellbook entries can join the same list.
+        if stripped.startswith("[") and stripped.endswith("]"):
+            inner = stripped[1:-1].strip()
+            list_lines = ["extensions:"]
+            if inner:
+                for item in inner.split(","):
+                    item = item.strip()
+                    if item:
+                        list_lines.append(f"  - {item}")
+            expansion = "\n".join(list_lines) + "\n" + block
+            return re.sub(
+                r"^extensions:[^\n]*$",
+                expansion,
+                yaml_text,
+                count=1,
+                flags=re.MULTILINE,
+            )
 
     # Path 3: no extensions: key at all -> append a new extensions list
     if not yaml_text.endswith("\n"):
@@ -197,22 +228,26 @@ def _update_goose_mcp_config(
     new_text = _insert_spellbook_block(existing, _generate_mcp_yaml_list_item())
 
     # Atomic write with mode 0600 (config.yaml contains a plaintext bearer token)
+    # BOT-B2 fix: `os.fdopen()` returns a file object that OWNS the fd. When
+    # `with os.fdopen(...)` exits (whether normally or via exception inside the
+    # block), the file object closes the fd. The previous code then called
+    # `os.close(fd)` in the except handler, which double-closed the same fd.
+    # On POSIX this is UB (can close a different fd acquired in the race
+    # window). Just let the context manager own the fd; if `f.write()` raises,
+    # the `with` block already closed fd before re-raising.
     fd = os.open(
         os.fspath(config_path),
         os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
         0o600,
     )
-    try:
-        if hasattr(os, "fchmod"):
-            os.fchmod(fd, 0o600)
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(new_text)
-    except BaseException:
-        try:
-            os.close(fd)
-        except OSError:
-            pass
-        raise
+    # BOT-B2 fix: os.fdopen() owns fd. Its context manager closes fd (via the C
+    # extension) on either normal exit OR exception -- including f.write()
+    # raising. No explicit try/except / os.close needed; the original exception
+    # propagates automatically, and we never double-close.
+    if hasattr(os, "fchmod"):
+        os.fchmod(fd, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(new_text)
 
     return (True, action)
 
@@ -231,22 +266,18 @@ def _remove_goose_mcp_config(
         return (True, "MCP server was not configured")
 
     new_text = _strip_spellbook_block(existing)
+    # BOT-B2 fix: see _update_goose_mcp_config. fdopen() owns the fd; the
+    # except handler must NOT close fd again.
+    # BOT-B2 fix: see _update_goose_mcp_config. fdopen() owns the fd.
     fd = os.open(
         os.fspath(config_path),
         os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
         0o600,
     )
-    try:
-        if hasattr(os, "fchmod"):
-            os.fchmod(fd, 0o600)
-        with os.fdopen(fd, "w", encoding="utf-8") as f:
-            f.write(new_text)
-    except BaseException:
-        try:
-            os.close(fd)
-        except OSError:
-            pass
-        raise
+    if hasattr(os, "fchmod"):
+        os.fchmod(fd, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(new_text)
 
     return (True, "removed MCP server config")
 
