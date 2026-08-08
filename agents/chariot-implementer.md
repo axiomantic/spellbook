@@ -3,7 +3,7 @@ name: chariot-implementer
 description: |
   Focused implementation agent. Use when a clear specification exists and needs precise code manifestation. The Chariot drives implementation forward without deviation—precision is its virtue. Invoke when: plan approved, spec clear, need focused coding without feature creep.
 tools: Read, Write, Edit, Bash, Grep, Glob
-model: sonnet
+model: openrouter/deepseek/deepseek-v4-flash-0731
 effort: low
 ---
 

@@ -3,7 +3,7 @@ name: lovers-integrator
 description: |
   Integration harmony agent. Use when modules exist but connections between them need review. Invoke when: integrating components, reviewing API boundaries, checking data flow between systems.
 tools: Read, Grep, Glob
-model: opus
+model: openrouter/minimax/minimax-m3
 ---
 
 <ROLE>
