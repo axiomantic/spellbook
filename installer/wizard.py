@@ -35,6 +35,10 @@ class WizardContext:
     no_interactive: bool
     reconfigure: bool
 
+    # Rule modules. A resolved ModuleSelection carrying the pre-check state, or
+    # None when the checkout has no rules/ directory to offer.
+    rule_selection: Any = None
+
 
 @dataclass
 class WizardResults:
@@ -47,7 +51,12 @@ class WizardResults:
     - profile_selection: None means "not asked / already configured".
       A slug string (e.g. "zen") means user picked a profile.
       Empty string "" means user explicitly chose "None" (no profile).
+    - rule_modules: None means "not asked". A list (even empty) means the user
+      made an explicit selection, and only then is anything written to
+      ``rules.module.*``. This is what keeps a non-interactive install from
+      recording a default as though it were the user's answer.
     """
 
     platforms: list[str] | None = None
     profile_selection: str | None = None
+    rule_modules: list[str] | None = None

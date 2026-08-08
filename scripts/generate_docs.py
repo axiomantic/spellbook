@@ -4,7 +4,7 @@
 # dependencies = ["pyyaml"]
 # ///
 """
-Generate documentation pages from SKILL.md, command, and agent files.
+Generate documentation pages from SKILL.md, command, agent, and rule files.
 """
 from pathlib import Path
 
@@ -20,6 +20,7 @@ REPO_ROOT = Path(__file__).parent.parent
 SKILLS_DIR = REPO_ROOT / "skills"
 COMMANDS_DIR = REPO_ROOT / "commands"
 AGENTS_DIR = REPO_ROOT / "agents"
+RULES_DIR = REPO_ROOT / "rules"
 DOCS_DIR = REPO_ROOT / "docs"
 DIAGRAMS_DIR = DOCS_DIR / "diagrams"
 
@@ -228,11 +229,67 @@ def generate_agent_doc(agent_file: Path) -> str:
     return "".join(parts)
 
 
+def generate_rule_doc(rule_file: Path) -> str:
+    """Generate documentation page for a rule module."""
+    content = rule_file.read_text(encoding="utf-8")
+    frontmatter, body = extract_frontmatter(content)
+
+    name = frontmatter.get("name", rule_file.stem)
+    module_class = frontmatter.get("class", "preference")
+    description = frontmatter.get("description", "")
+    benefit = frontmatter.get("benefit", "")
+    declining_means = frontmatter.get("declining_means", "")
+    related = frontmatter.get("related") or []
+
+    parts = [f"# {name}\n"]
+
+    if module_class == "mandatory":
+        parts.append(
+            '\n!!! warning "Mandatory module"\n'
+            "    This module installs on every platform and cannot be declined.\n\n"
+        )
+    else:
+        default_state = str(frontmatter.get("default", "off"))
+        pre_checked = "pre-checked" if default_state == "on" else "unchecked"
+        parts.append(
+            '\n!!! info "Optional module"\n'
+            f"    The installer offers this module {pre_checked}. "
+            f"Config key: `rules.module.{frontmatter.get('id', rule_file.stem)}`.\n\n"
+        )
+
+    if description:
+        parts.append(f"{' '.join(str(description).split())}\n\n")
+
+    if benefit:
+        parts.append(f"**Why keep it:** {' '.join(str(benefit).split())}\n\n")
+
+    if declining_means:
+        parts.append(f"**If you decline:** {' '.join(str(declining_means).split())}\n\n")
+
+    if related:
+        parts.append("**Related artifacts:**\n\n")
+        for ref in related:
+            parts.append(f"- `{ref}`\n")
+        parts.append("\n")
+
+    # Wrap body in a markdown code block to prevent XML-style tags (<CRITICAL>,
+    # <RULE>) from being swallowed as HTML, as the other generators do.
+    parts.append("## Rule Content\n\n")
+    parts.append("``````````markdown\n")
+    parts.append(body)
+    if not body.endswith("\n"):
+        parts.append("\n")
+    parts.append("``````````\n")
+
+    return "".join(parts)
+
+
 def main():
     # Create output directories
     (DOCS_DIR / "skills").mkdir(parents=True, exist_ok=True)
     (DOCS_DIR / "commands").mkdir(parents=True, exist_ok=True)
     (DOCS_DIR / "agents").mkdir(parents=True, exist_ok=True)
+    (DOCS_DIR / "rules").mkdir(parents=True, exist_ok=True)
 
     # Generate skill docs
     skill_count = 0
@@ -291,6 +348,17 @@ def main():
                 print(f"Generated: agents/{agent_file.name}")
             agent_count += 1
 
+    # Generate rule module docs
+    rule_count = 0
+    for rule_file in sorted(RULES_DIR.glob("*.md")):
+        doc = generate_rule_doc(rule_file)
+        if doc:
+            output_file = DOCS_DIR / "rules" / rule_file.name
+            if write_if_changed(output_file, doc):
+                files_changed += 1
+                print(f"Generated: rules/{rule_file.name}")
+            rule_count += 1
+
     # Generate commands index
     commands_index = """# Commands Overview
 
@@ -346,7 +414,41 @@ Agents are specialized reviewers that can be invoked for specific tasks.
         files_changed += 1
         print("Generated: agents/index.md")
 
-    print(f"\nProcessed {skill_count} skills, {command_count} commands, {agent_count} agents")
+    # Generate rules index
+    rules_index = """# Rule Modules Overview
+
+Rule modules are the behavioral instructions spellbook installs into your coding
+assistant. Each module is a separate file under `rules/`, delivered as a symlink
+on harnesses that read a rules directory and as a generated bundle on harnesses
+that read a single instruction file.
+
+Mandatory modules install on every platform. Optional modules are offered during
+installation and recorded under the `rules.module.<id>` config keys, so a module
+you decline is never reinstalled and a module added later is offered once.
+
+## Available Rule Modules
+
+| Module | Class | Description |
+|--------|-------|-------------|
+"""
+    for rule_file in sorted(RULES_DIR.glob("*.md")):
+        content = rule_file.read_text(encoding="utf-8")
+        frontmatter, _ = extract_frontmatter(content)
+        name = frontmatter.get("name", rule_file.stem)
+        module_class = frontmatter.get("class", "preference")
+        if module_class == "mandatory":
+            class_label = "mandatory"
+        else:
+            default_state = str(frontmatter.get("default", "off"))
+            class_label = f"optional (default {default_state})"
+        desc = " ".join(str(frontmatter.get("description", "")).split())
+        rules_index += f"| [{name}]({rule_file.name}) | {class_label} | {desc} |\n"
+
+    if write_if_changed(DOCS_DIR / "rules" / "index.md", rules_index):
+        files_changed += 1
+        print("Generated: rules/index.md")
+
+    print(f"\nProcessed {skill_count} skills, {command_count} commands, {agent_count} agents, {rule_count} rule modules")
     if files_changed > 0:
         print(f"Updated {files_changed} file(s)")
     else:

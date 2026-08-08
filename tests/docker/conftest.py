@@ -36,13 +36,13 @@ ESSENTIAL_DIRS = [
     "skills",
     "commands",
     "agents",
+    "rules",
     "lib",
 ]
 ESSENTIAL_FILES = [
     "install.py",
     "pyproject.toml",
     ".version",
-    "AGENTS.spellbook.md",
     "bootstrap.sh",
 ]
 

@@ -44,6 +44,10 @@ def _make_spellbook_dir(base: Path) -> Path:
     (spellbook / "AGENTS.spellbook.md").write_text(
         "# Spellbook\n\nTest spellbook context content.\n"
     )
+    (spellbook / "rules").mkdir(exist_ok=True)
+    (spellbook / "rules" / "00-core.md").write_text(
+        """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+    )
 
     # Skills
     skills_dir = spellbook / "skills"
@@ -357,12 +361,21 @@ class TestClaudeCode:
 
         # Override the private property for global claude md to use our temp dir
         # by testing the content generation separately.
-        from installer.components.context_files import generate_claude_context
+        from installer.components.rule_bundle import (
+            generate_bundle,
+            parse_bundle_module_ids,
+        )
+        from installer.components.rule_modules import get_rules_dir, load_rule_modules
         from installer.demarcation import update_demarcated_section
 
         claude_md_path = config_dir / "CLAUDE.md"
-        content = generate_claude_context(spellbook_dir)
-        assert len(content) > 0, "Generated context should not be empty"
+        modules = load_rule_modules(get_rules_dir(spellbook_dir))
+        content = generate_bundle(modules, "1.0.0", "claude_code").content
+
+        # Assert the exact module set and order via the per-module markers.
+        # A length check would pass on any non-empty string, including one
+        # that lost every module it was supposed to carry.
+        assert parse_bundle_module_ids(content) == [m.id for m in modules]
 
         action, backup = update_demarcated_section(claude_md_path, content, "1.0.0")
         assert action == "created"

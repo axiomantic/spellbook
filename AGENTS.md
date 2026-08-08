@@ -19,7 +19,7 @@ uv run pytest tests/ -x --override-ini="addopts=" -m "not docker"
 uv run ruff check .
 
 # Generate documentation (auto-runs via pre-commit hook)
-uv run python scripts/update_context_files.py
+uv run scripts/generate_docs.py
 ```
 
 ## Session Start: Pre-release Check
@@ -35,7 +35,7 @@ If a pre-release exists that is newer than the last actual release, ask: "There'
 ## Key Conventions
 
 - **AGENTS.md** (this file) is for working **on the spellbook repo itself**. Only update it when changing the development workflow for this specific project (build commands, test conventions, architecture notes). It is NOT installed anywhere.
-- **AGENTS.spellbook.md** is the **global user-facing template** that gets installed into `~/.claude/CLAUDE.md` (or equivalent) via the spellbook installer. It contains global directives, instructions, skill references, and behavioral rules that apply to ALL projects. This is where cross-project instructions belong.
+- **`rules/*.md`** are the **global user-facing rule modules** that the spellbook installer ships. Directory-capable platforms receive one symlink per selected module in the platform's rules directory (`~/.claude/rules/` for Claude Code); flat platforms receive a generated concatenation at their real instruction path. Each module carries YAML frontmatter (`id`, `class`, `default`, `benefit`) and holds global directives, instructions, and behavioral rules that apply to ALL projects. This is where cross-project instructions belong.
 - **Skills** go in `skills/<name>/SKILL.md` with YAML frontmatter
 - **Commands** go in `commands/<name>.md` with YAML frontmatter
 - **Hooks** go in `hooks/` and must be registered in `installer/components/hooks.py`
@@ -45,10 +45,9 @@ If a pre-release exists that is newer than the last actual release, ask: "There'
 
 Pre-commit hooks auto-generate documentation files. If a hook fails:
 - `doctoc` failures: Table of contents in markdown files needs regeneration. Usually fixes itself on re-commit.
-- `Generate documentation`: Runs `scripts/update_context_files.py` to regenerate `docs/` from skills/commands. Stage the generated files and re-commit.
+- `Generate documentation`: Runs `scripts/generate_docs.py` to regenerate `docs/` from skills/commands/agents/rules. Stage the generated files and re-commit.
 - `Check documentation completeness`: Ensures every skill/command has a generated doc page. If you added a new skill/command, the hook generates it automatically.
-- `Update context files`: Regenerates context files. Stage and re-commit.
-- `Validate skill/command/agent schemas`: Checks YAML frontmatter in skills and commands. Fix the frontmatter.
+- `Validate skill/command/agent/rule schemas`: Checks YAML frontmatter in skills, commands, agents, and rule modules. Fix the frontmatter.
 - `Scan changeset for security issues`: Security scanner on staged diffs. Fix the flagged issue.
 
 When a pre-commit hook fails, it often generates or modifies files. Stage those files (`git add`) and commit again.
@@ -73,7 +72,7 @@ To switch which worktree the installed spellbook runs from, always run `uv run i
 Spellbook Contributor. Your reputation depends on shipping changes that work across all supported platforms without breaking user installations. Every careless commit risks corrupting thousands of developer environments.
 </ROLE>
 
-Development instructions for spellbook codebase. User-facing template: `AGENTS.spellbook.md`.
+Development instructions for spellbook codebase. User-facing rule modules: `rules/*.md`.
 
 ## Supported Platforms
 
@@ -100,7 +99,7 @@ Claude Code is the **primary** supported platform with full support. The others 
 | Library skill | `skills/*/SKILL.md` | Yes | CHANGELOG, README, docs |
 | Library command | `commands/*.md` | Yes | CHANGELOG, README, docs |
 | Repo skill | `.claude/skills/*/SKILL.md` | No | None |
-| Installable template | `AGENTS.spellbook.md` | Yes | N/A |
+| Rule module | `rules/*.md` | Yes | CHANGELOG, docs |
 
 ## Structure
 
@@ -134,7 +133,7 @@ spellbook/
 
 | File | Purpose |
 |------|---------|
-| `AGENTS.spellbook.md` | User-facing installable template |
+| `rules/` | User-facing rule modules (installed per-module) |
 | `extensions/gemini/` | Gemini extension (linked via `gemini extensions link`) |
 | `install.py` | Installer entry |
 | `spellbook/mcp/server.py` | MCP server entry point |
@@ -188,7 +187,7 @@ A "user-facing config" is anything that governs behavior the user cares about (f
 | Where | What to add |
 |-------|-------------|
 | `spellbook/admin/routes/config.py` | `CONFIG_SCHEMA` entry (key/type/description/default) |
-| `spellbook/core/config.py` | `CONFIG_DEFAULTS` entry (matching key) |
+| `spellbook/core/config.py` | `CONFIG_DEFAULTS` entry (matching key) — or, for a lazily-resolved key family, a `config_default_for()` resolver instead; see "Sanctioned exception" below |
 | Installer (BOTH entry points — see below) | Prompt gated by `config_is_explicitly_set(key)` or equivalent `config_get(key) is None` check |
 | Relevant wizard | Default surfaced to the user so they see what "don't change" means |
 
@@ -308,6 +307,20 @@ A wizard that lives in only one entry path is a bug. `--reconfigure` must bypass
 Register every new key in:
 - `spellbook/core/config.py::CONFIG_DEFAULTS` (runtime default).
 - `spellbook/admin/routes/config.py::CONFIG_SCHEMA` (admin UI visibility, validator dispatch).
+
+**Sanctioned exception — lazily-resolved default families.** A key whose default
+cannot be computed without doing real work at import time MUST NOT go in
+`CONFIG_DEFAULTS`. `spellbook/core/config.py` is imported by the PreToolUse bash
+gate, which runs on **every single Bash call**, so an import-time computation is
+paid on every tool invocation in every session. Register such families through
+`config_default_for()` instead, backed by a memoized resolver, and keep the
+`CONFIG_SCHEMA` entry as normal so admin-UI visibility is unchanged.
+
+The one family using this today is `rules.module.*`
+(`rule_module_config_defaults()`): resolving it means globbing and parsing every
+file in `rules/`. `config_default_for()` is the single read path, so callers see
+no difference; only the timing moves. A test pins the keys OUT of
+`CONFIG_DEFAULTS` so the import-time cost cannot come back by accident.
 
 Tests live in `tests/test_cli/test_install_wizard_coverage.py` and must cover each new key: fresh-install prompt fires, re-install skip, `--reconfigure` bypass, non-tty noop, and presence in both install entry paths.
 </CRITICAL>

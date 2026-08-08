@@ -3,6 +3,7 @@ Claude Code platform installer.
 """
 
 import logging
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List
 
@@ -12,6 +13,7 @@ from ..components.agents import (
     uninstall_agents,
 )
 from ..components.default_mode import install_default_mode, uninstall_default_mode
+from ..components.rule_delivery import INSTALLED_GLOB
 from ..components.hooks import install_hooks, uninstall_hooks
 from ..components.permissions import (
     derive_managed_deny,
@@ -35,7 +37,7 @@ from ..demarcation import (
     get_installed_version,
     remove_demarcated_section,
 )
-from .base import PlatformInstaller, PlatformStatus
+from .base import RULE_DELIVERY_DIRECTORY, PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
@@ -46,6 +48,8 @@ logger = logging.getLogger(__name__)
 class ClaudeCodeInstaller(PlatformInstaller):
     """Installer for Claude Code platform."""
 
+    rule_delivery = RULE_DELIVERY_DIRECTORY
+
     @property
     def platform_name(self) -> str:
         return "Claude Code"
@@ -54,12 +58,31 @@ class ClaudeCodeInstaller(PlatformInstaller):
     def platform_id(self) -> str:
         return "claude_code"
 
+    def rule_module_dir(self) -> Path:
+        """Claude Code discovers rule files recursively and resolves symlinks."""
+        return self.config_dir / "rules"
+
+    def legacy_rule_paths(self) -> List[Path]:
+        return [self.config_dir / "rules" / "spellbook.md"]
+
+    def legacy_context_files(self) -> List[Path]:
+        return [self.config_dir / "CLAUDE.md"]
+
     def detect(self) -> PlatformStatus:
-        """Detect Claude Code installation status."""
+        """Detect Claude Code installation status.
+
+        Keyed on the delivered module files rather than the retired sidecar, so
+        an uninstalled platform reports not-installed. ``lexists`` is used for
+        the sidecar because an upgrading user's link is dangling.
+        """
         claude_md = self.config_dir / "CLAUDE.md"
-        rule_file = self.config_dir / "rules" / "spellbook.md"
+        rules_dir = self.rule_module_dir()
+        has_modules = rules_dir.is_dir() and any(rules_dir.glob(INSTALLED_GLOB))
+        legacy_sidecar = any(
+            os.path.lexists(path) for path in self.legacy_rule_paths()
+        )
         legacy_version = get_installed_version(claude_md)
-        installed = rule_file.exists() or rule_file.is_symlink() or (legacy_version is not None)
+        installed = has_modules or legacy_sidecar or (legacy_version is not None)
 
         return PlatformStatus(
             platform=self.platform_id,
@@ -351,29 +374,16 @@ class ClaudeCodeInstaller(PlatformInstaller):
                         message="CLAUDE.md: would skip update (prioritizing ~/.claude)",
                     )
                 )
-        # Always strip legacy demarcated block from CLAUDE.md if present
-        if claude_md.exists() and not self.dry_run:
+        # One symlink per selected module into ~/.claude/rules/.
+        self._step("Installing rule modules")
+        rule_results = self.install_rule_modules()
+        results.extend(rule_results)
+
+        # Strip the legacy demarcated block only AFTER delivery succeeds.
+        # Stripping first would leave a user whose delivery failed with
+        # neither the old interpolated rules nor the new modules.
+        if all(r.success for r in rule_results) and claude_md.exists() and not self.dry_run:
             remove_demarcated_section(claude_md)
-
-        # Symlink sidecar rule file ~/.claude/rules/spellbook.md -> AGENTS.spellbook.md
-        rules_dir = self.config_dir / "rules"
-        rule_file = rules_dir / "spellbook.md"
-        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
-
-        if not rules_dir.exists() and not self.dry_run:
-            rules_dir.mkdir(parents=True, exist_ok=True)
-
-        res = create_symlink(source_agents, rule_file, dry_run=self.dry_run)
-
-        results.append(
-            InstallResult(
-                component="rules_sidecar",
-                platform=self.platform_id,
-                success=res.success,
-                action=res.action,
-                message=f"rule sidecar: {res.message}",
-            )
-        )
 
         # Register the MCP server connection in THIS config dir's .claude.json.
         # The daemon itself is global (installed once by core.py), but each Claude
@@ -489,6 +499,10 @@ class ClaudeCodeInstaller(PlatformInstaller):
         from ..core import InstallResult
 
         results = []
+
+        # Remove delivered rule modules and any retired sidecar. Without this
+        # detect() keeps reporting the platform installed after an uninstall.
+        results.extend(self.uninstall_rule_modules())
 
         # Remove demarcated section from CLAUDE.md (per-dir).
         claude_md = self.config_dir / "CLAUDE.md"
@@ -715,8 +729,11 @@ class ClaudeCodeInstaller(PlatformInstaller):
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Get context files for this platform."""
-        return [self.config_dir / "rules" / "spellbook.md"]
+        """Get rule module files managed by this platform."""
+        rules_dir = self.rule_module_dir()
+        if not rules_dir.is_dir():
+            return []
+        return sorted(rules_dir.glob(INSTALLED_GLOB))
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

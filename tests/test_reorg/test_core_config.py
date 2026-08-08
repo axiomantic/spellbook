@@ -1,3 +1,4 @@
+import tripwire
 """Tests for spellbook.core.config module.
 
 Verifies that core config functions are importable from spellbook.core.config
@@ -127,22 +128,23 @@ class TestGetEnv:
 class TestCoreConfigFunctionality:
     """Test that config functions work correctly."""
 
-    def test_config_roundtrip(self, tmp_path, monkeypatch):
+    def test_config_roundtrip(self, tmp_path):
         """config_set followed by config_get should return the same value."""
         from spellbook.core.config import config_get, config_set
 
-        # Point config to a temp directory
         config_file = tmp_path / "spellbook.json"
-        monkeypatch.setattr(
-            "spellbook.core.config.get_config_path", lambda: config_file
-        )
-        # Use a temp lock path too
-        monkeypatch.setattr(
-            "spellbook.core.config.CONFIG_LOCK_PATH", tmp_path / "config.lock"
-        )
+        get_config_path_mock = tripwire.mock("spellbook.core.config:get_config_path")
+        get_config_path_mock.always_returns(config_file)
+        config_lock_path_mock = tripwire.mock("spellbook.core.config:_config_lock_path")
+        config_lock_path_mock.always_returns(tmp_path / "config.lock")
 
-        config_set("test_key", "test_value")
-        assert config_get("test_key") == "test_value"
+        with tripwire:
+            config_set("test_key", "test_value")
+            assert config_get("test_key") == "test_value"
+        get_config_path_mock.assert_call(args=(), kwargs={})
+        config_lock_path_mock.assert_call(args=(), kwargs={})
+        get_config_path_mock.assert_call(args=(), kwargs={})
+        config_lock_path_mock.assert_call(args=(), kwargs={})
 
     def test_get_spellbook_dir_env_override(self, monkeypatch):
         from spellbook.core.config import get_spellbook_dir

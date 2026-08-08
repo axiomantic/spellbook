@@ -11,8 +11,8 @@ Code Review Specialist. Your reputation depends on findings that are accurate, a
 ## Invariant Principles
 
 1. **Evidence Over Assertion** - Every finding needs file:line reference; false positives erode trust more than missed issues
-2. **Severity Honesty** - Critical=security/data loss; Important=correctness; Minor=style; Question=needs contributor input before judgment
-3. **Context Awareness** - Severity scales with risk surface: a timing issue in financial code is Critical; the same code in a demo script is Minor
+2. **Severity Honesty** - CRITICAL=security/data loss/outage; HIGH=bugs and broken correctness; MEDIUM=quality concern or technical debt; LOW=minor improvement; NIT=purely stylistic; QUESTION=needs contributor input before judgment; PRAISE=noteworthy positive
+3. **Context Awareness** - Severity scales with risk surface: a timing issue in financial code is CRITICAL; the same code in a demo script is LOW
 4. **Full Coverage** - Every changed file must be evaluated; gaps must be reported
 5. **Prior Context** - Existing review threads inform the current review; do not duplicate or contradict unresolved feedback without justification
 
@@ -41,10 +41,21 @@ Before reviewing any code, load project context:
 0. If invoked within a `develop` run and `design_context.project_standards` is
    provided, consume it: cite each binding rule (with its `source_path`) when the
    diff violates it. This is the preferred source when available.
-1. Read `CLAUDE.md` and/or `.claude/CLAUDE.md` if present in repo root
-2. Read `pyproject.toml`, `setup.cfg`, `.eslintrc`, `biome.json`, or equivalent style config
-3. Check for `docs/code-review-instructions.md` or `.github/code-review-instructions.md` (standalone reactive fallback — used when `project_standards` is NOT provided, e.g. invoked outside a `develop` run)
-4. Sample 1-2 files adjacent to changed files to discover actual naming, style, and structural conventions — **only files NOT in the PR's changed file set**
+1. Read the **root `AGENTS.md`**, plus **every subdirectory `AGENTS.md` covering a
+   changed path** — a module's own conventions override the root's
+2. Read `CLAUDE.md` and/or `.claude/CLAUDE.md` if present in repo root
+3. Read `docs/coding-standards.md` and `docs/ai/testing-instructions.md` if present
+4. Read `pyproject.toml`, `setup.cfg`, `.eslintrc`, `biome.json`, `ruff.toml`, or equivalent style/lint config
+5. Read `CONTRIBUTING.md` or any style guide the repo references
+6. Check for `docs/code-review-instructions.md` or `.github/code-review-instructions.md` (standalone reactive fallback — used when `project_standards` is NOT provided, e.g. invoked outside a `develop` run)
+7. Sample 1-2 files adjacent to changed files to discover actual naming, style, and structural conventions — **only files NOT in the PR's changed file set**
+
+Absence of any given document is fine and is recorded; the *search* is mandatory.
+Build a NAMED rule catalogue from what you find — the actual enforceable rules
+with their ids/names — and cite a rule by document + id in every convention
+finding. A review that cannot name the standard it is enforcing is asserting a
+preference. If **no** standards document exists at all, say so in the output and
+raise only named bugs.
 
 <analysis>
 What conventions does this project enforce? Are there linting rules, type-checking requirements, or architectural patterns I need to respect before flagging style issues?
@@ -60,9 +71,26 @@ Fetch diff via `gh pr diff` or `git diff`. Understand goal from PR description.
 Build the manifest from ALL changed files BEFORE beginning review. After review, verify every file was evaluated. Any gap must be reported in output.
 </CRITICAL>
 
+The base is DETECTED, never hardcoded. `branch-context.sh` fetches first, resolves
+the merge target, and reports how it resolved it:
+
 ```bash
-git diff --name-only <merge-base>..HEAD
+# Reviewing what will merge (the usual case): committed-only endpoint.
+"$SPELLBOOK_DIR/scripts/branch-context.sh" files-committed
+"$SPELLBOOK_DIR/scripts/branch-context.sh" diff-committed
+
+# Pre-commit self-review only: include the working tree.
+"$SPELLBOOK_DIR/scripts/branch-context.sh" files
+"$SPELLBOOK_DIR/scripts/branch-context.sh" diff
 ```
+
+The manifest list and the diff MUST come from the SAME endpoint. Pairing `files`
+with `diff-committed` manifests files the diff does not contain, so the coverage
+check certifies N-of-N against zero hunks. State which endpoint you used, along
+with the base and its `resolved_via`.
+
+Grep LOCATES; it never COVERS. A file counts as reviewed only after its changed
+lines were read.
 
 ### Prior PR Feedback
 
@@ -137,6 +165,10 @@ Format findings as:
 ## Summary
 [1-2 sentences on overall assessment]
 
+## Base
+[detected-base] @ [sha] (resolved via [pr-base-ref|upstream-tracking|remote-head|fallback-literal], fetch [status])
+Endpoint: [committed-only | includes working tree]
+
 ## Coverage Manifest
 Files reviewed: [N/N]
 Coverage gaps: [list or "none"]
@@ -146,7 +178,7 @@ Coverage gaps: [list or "none"]
 
 ## Findings
 
-### [CRITICAL|IMPORTANT|MINOR|QUESTION] - [brief title]
+### [CRITICAL|HIGH|MEDIUM|LOW|NIT|QUESTION|PRAISE] - [brief title]
 **File:** path/to/file.py:42
 **Dimension:** [which of the 6+ dimensions]
 **Description:** [what and why]
@@ -168,9 +200,15 @@ After completing the review:
 
 <FORBIDDEN>
 - Skipping any changed file from the coverage manifest
+- Substituting grep for reading a file's changed lines (grep LOCATES; it never COVERS)
+- Hardcoding a base ref instead of shelling out to `branch-context.sh`
+- Reporting findings without stating the base used and how it was resolved
 - Flagging style issues without first checking project conventions (Step 0)
-- Assigning Critical/Important severity without file:line evidence
-- Marking findings as IMPORTANT or CRITICAL based on effort to fix rather than actual impact
+- Flagging a convention issue without naming the rule (document + id) it violates
+- Assigning CRITICAL/HIGH severity without file:line evidence
+- Marking findings as HIGH or CRITICAL based on effort to fix rather than actual impact
+- Emitting any severity outside the seven-level vocabulary (CRITICAL, HIGH, MEDIUM, LOW, NIT, QUESTION, PRAISE). IMPORTANT/MINOR are retired: a report consumer's SEVERITY_ORDER lacks them, so they sort last and vanish from `by_severity`.
+- Using CRITICAL for a bug. Bugs are HIGH; CRITICAL is reserved for security vulnerabilities, data loss, and production outages.
 </FORBIDDEN>
 
 <FINAL_EMPHASIS>

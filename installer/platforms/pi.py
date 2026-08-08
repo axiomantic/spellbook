@@ -29,7 +29,8 @@ from ..demarcation import (
     get_installed_version,
     remove_demarcated_section,
 )
-from .base import PlatformInstaller, PlatformStatus
+from ..components.rule_bundle import DELIVERY_MARKER_PREFIX
+from .base import RULE_DELIVERY_FLAT, PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
@@ -142,6 +143,8 @@ def _remove_pi_mcp_config(
 class PiInstaller(PlatformInstaller):
     """Installer for Pi platform."""
 
+    rule_delivery = RULE_DELIVERY_FLAT
+
     @property
     def platform_name(self) -> str:
         return "Pi"
@@ -169,6 +172,30 @@ class PiInstaller(PlatformInstaller):
     def prompts_dir(self) -> Path:
         """Path to ~/.pi/agent/prompts/."""
         return self.config_dir / "prompts"
+
+    def rule_bundle_path(self) -> Path:
+        """Pi's ambient instruction file, ~/.pi/agent/AGENTS.md.
+
+        Not prompts/. Pi's prompts/*.md are slash-command templates --
+        expandPromptTemplate returns early unless the text starts with "/" --
+        so the file spellbook used to write there was never ambient context.
+        """
+        return self.context_file
+
+    def rule_bundle_preserve_existing(self) -> bool:
+        """Never clobber a user's own ``~/.pi/agent/AGENTS.md``.
+
+        Pi's ambient instruction file belongs to the user, exactly as Codex's
+        and ForgeCode's do. Their content is preserved first and the bundle
+        follows in a demarcated region.
+        """
+        return True
+
+    def legacy_rule_paths(self) -> List[Path]:
+        return [self.prompts_dir / "spellbook.md"]
+
+    def legacy_context_files(self) -> List[Path]:
+        return [self.context_file]
 
     def detect(self) -> PlatformStatus:
         """Detect Pi installation status."""
@@ -215,7 +242,22 @@ class PiInstaller(PlatformInstaller):
                         except OSError:
                             pass
 
-        installed = installed_version is not None or has_mcp or has_skills or has_prompts
+        has_bundle = False
+        if self.context_file.exists():
+            try:
+                has_bundle = DELIVERY_MARKER_PREFIX in self.context_file.read_text(
+                    encoding="utf-8"
+                )
+            except OSError:
+                has_bundle = False
+
+        installed = (
+            installed_version is not None
+            or has_mcp
+            or has_skills
+            or has_prompts
+            or has_bundle
+        )
 
         return PlatformStatus(
             platform=self.platform_id,
@@ -372,28 +414,21 @@ class PiInstaller(PlatformInstaller):
             )
 
         # Step 3: Install AGENTS.md with demarcated section
-        # Strip legacy demarcated section from AGENTS.md if present
-        if self.context_file.exists() and not self.dry_run:
+        # Generate the rule bundle at ~/.pi/agent/AGENTS.md and drop the
+        # prompts/ sidecar, which pi only ever read as a slash command.
+        self._step("Installing rule modules")
+        rule_results = self.install_rule_modules()
+        results.extend(rule_results)
+
+        # Strip the legacy demarcated block only AFTER delivery succeeds.
+        # Stripping first would leave a user whose delivery failed with
+        # neither the old interpolated rules nor the new modules.
+        if (
+            all(r.success for r in rule_results)
+            and self.context_file.exists()
+            and not self.dry_run
+        ):
             remove_demarcated_section(self.context_file)
-
-        # Symlink sidecar prompt file ~/.pi/agent/prompts/spellbook.md -> AGENTS.spellbook.md
-        prompts_dir = self.config_dir / "prompts"
-        prompt_file = prompts_dir / "spellbook.md"
-        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
-
-        if not prompts_dir.exists() and not self.dry_run:
-            prompts_dir.mkdir(parents=True, exist_ok=True)
-
-        res = create_symlink(source_agents, prompt_file, dry_run=self.dry_run)
-        results.append(
-            InstallResult(
-                component="prompts_sidecar",
-                platform=self.platform_id,
-                success=res.success,
-                action=res.action,
-                message=f"prompt sidecar: {res.message}",
-            )
-        )
 
         # Step 4: Register MCP server in mcp.json
         # This is a global step: MCP registration is system-wide, not per-dir.
@@ -420,6 +455,9 @@ class PiInstaller(PlatformInstaller):
 
         if not self.config_dir.exists():
             return results
+
+        # Remove the generated rule bundle and the retired prompts/ sidecar.
+        results.extend(self.uninstall_rule_modules())
 
         # Remove demarcated section from AGENTS.md
         if self.context_file.exists():
@@ -496,8 +534,8 @@ class PiInstaller(PlatformInstaller):
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Get context files managed by this platform."""
-        return [self.config_dir / "prompts" / "spellbook.md"]
+        """Get the generated rule artifact managed by this platform."""
+        return [self.rule_bundle_path()]
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

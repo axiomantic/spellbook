@@ -19,6 +19,10 @@ def spellbook_dir(tmp_path):
 
     # Create AGENTS.spellbook.md for context generation
     (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook Context\n\nTest content.")
+    (spellbook / "rules").mkdir(exist_ok=True)
+    (spellbook / "rules" / "00-core.md").write_text(
+        """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+    )
 
     # Create test skills
     skills_dir = spellbook / "skills"

@@ -55,6 +55,67 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (worktree setup, per-task TDD and gates, end-of-phase audits, finishing).
   All content preserved; no rules, gates, or dispatch templates were removed.
 
+## [0.84.0] - 2026-08-06
+
+### Added
+
+- **Modular rule modules replace the monolithic template.** The shipped ruleset is now 23 hand-authored files at `rules/XX-<id>.md` (9 mandatory, 14 user-selectable) instead of a single `AGENTS.spellbook.md`. Each carries YAML frontmatter with a stable opaque `id` that survives renumbering, a `class` of `mandatory` or `preference`, a quoted `default` state, plus `description`, `benefit`, `declining_means`, and `related`. `installer/components/rule_modules.py` parses and orders them with a hand-rolled frontmatter reader rather than PyYAML, because the installer must import on a bare interpreter and because YAML 1.1 would coerce `default: on` to a boolean. `installer/components/rule_delivery.py` delivers them two ways: one symlink per selected module on directory-capable harnesses (Claude Code, Antigravity, OpenCode), and a generated concatenation at the real instruction path on flat harnesses (Codex, ForgeCode, Gemini CLI, Pi).
+- **Interactive rule-module selection in the installer TUI.** `installer/tui.py` and `installer/wizard.py` present the preference modules with their per-module benefit text and related skills and commands; mandatory modules install silently and are never offered. `installer/components/rule_migration.py` carries an existing install across the transition.
+- **Per-module config keys with tri-state semantics.** Each preference module owns a `rules.module.<id>` key, generated from the module set in `spellbook/core/config.py` and `spellbook/admin/routes/config.py` rather than typed by hand, so a new module cannot ship with an unregistered key. True means kept, false means declined, and absence means never offered — which is what lets a re-install pre-check newly added modules without resurrecting ones the user already declined.
+- **Flat-harness bundle generator with per-platform cap handling.** `installer/components/rule_bundle.py` concatenates the selected modules in delivery order and, where a harness declares a byte cap, drops largest-first and reports every dropped module by name. A mandatory set that alone exceeds the cap raises rather than silently truncating.
+- **Post-install delivery tripwire.** `installer/components/rule_tripwire.py` verifies that rules actually LOAD rather than that a symlink exists, probing the harness's own assembled prompt for a delivery marker. A harness whose prompt cannot be dumped without an interactive login is recorded as unverified, never as verified.
+- **`RULES_MISSING` health check.** `check_rule_modules()` in `spellbook/health/doctor.py` detects the window between a `git pull` that moves rule sources and the next installer run, during which every previously-symlinked rule path dangles and the harness silently loads no rules at all. The window cannot be closed, so it is made loud: the check fails and tells the user to re-run the installer. Probing uses `os.path.lexists`, because `Path.exists()` follows the link and reports a broken one as merely absent.
+- **Rule module schema validation.** `validate_rule_module()` in `scripts/validate_schemas.py` enforces the frontmatter schema, the quoted `default`, and the per-file byte cap; `rules/` is wired into `.pre-commit-config.yaml` alongside `skills/`, `commands/`, and `agents/`.
+- **Rule module documentation.** `scripts/generate_docs.py` gains a rules pass producing `docs/rules/XX-<id>.md` and `docs/rules/index.md`, and `mkdocs.yml` gains the corresponding `nav` section. `docs/reference/architecture.md` documents the artifact type and both delivery mechanisms.
+- **Branch-context base resolution regression tests.** `tests/test_scripts/test_branch_context.py` covers a 7-row matrix of base-detection cases and asserts parity between `scripts/branch-context.sh` and `scripts/branch-context.py`.
+- **Committed-only branch-context subcommands.** `files-committed` and `stat-committed` report the changed-file list and the diffstat from the merge base to `HEAD`, excluding working-tree state. The existing subcommands answer "what have I changed", which is the wrong question when reviewing what will actually merge; these answer that one.
+- **`--base <ref>` override for branch-context.** Supplying it skips merge-target detection entirely, reports the resolution method as `explicit-override`, and skips the fetch. For the cases where detection cannot be right: a base that is not the PR base, a detached or unpushed branch, or a deliberate comparison against an arbitrary ref.
+- **Rule-module set pinning test.** `tests/installer/test_rule_modules.py` pins the shipped modules by stable `id` and by class, and asserts that every `rules/*.md` on disk is tracked by git. A module authored but never staged previously passed every check — the schema validator reads the working tree and saw it, CI reads the committed tree and did not, and nothing compared the two.
+
+### New Normative Content
+
+The rule modules are a refactor of `AGENTS.spellbook.md` and preserve its behavior, with these deliberate exceptions. Each is a new rule, not a restatement:
+
+- **Subagent dispatch is capped at one level.** Mandatory module `rules/20-orchestration.md` states that a dispatched subagent must not fan out further unless its own dispatch prompt explicitly instructs it to. Dispatch is one level, not a tree.
+- **`rules/85-review-method.md`** (preference, default ON). The read-every-line method for code review: full-diff coverage, chunking a large diff across subagents so no hunk goes unread, and no grep-sampling in place of reading.
+- **`rules/86-review-posture.md`** (preference, default OFF — opt-in). The zero-tolerance gate posture, under which a review that found nothing on a non-trivial diff is a failed review rather than a clean one. Off by default because it is a deliberately adversarial stance that not every user wants applied to every review.
+- **`rules/45-verification.md`** (mandatory). Verification discipline: a step that can silently no-op is verified by inspecting the artifact it should have produced, never by its exit status or summary line.
+- **Destructive tree-wide git operations** are newly covered in `rules/50-git-safety.md`; see the Changed section below.
+
+### Fixed
+
+- **OpenCode never loaded spellbook rules at all.** The sidecar was created on disk but never registered in `opencode.json`'s `instructions` array, and OpenCode's resolver loads only the paths that array lists. `installer/platforms/opencode.py` now registers every delivered module through the `on_rule_modules_installed` hook, which exists for exactly this case.
+- **Antigravity rules were written to a path the product never reads.** `installer/platforms/antigravity.py` wrote to `~/.gemini/antigravity/rules/`, a string that appears zero times in the shipped harness; corrected to the documented global root `~/.gemini/config/rules/`.
+- **Pi rules were written to `prompts/`, which is not ambient context.** Pi's `prompts/*.md` are slash-command templates — `expandPromptTemplate` returns early unless the text starts with `/` — so the file spellbook wrote there was never loaded. `installer/platforms/pi.py` now writes `~/.pi/agent/AGENTS.md`.
+- **Gemini's rule import was rejected as path traversal.** The `@../../AGENTS.spellbook.md` directive in `extensions/gemini/GEMINI.md` resolved outside the extension directory and was refused.
+- **Codex and ForgeCode sidecars were inert.** Both harnesses read only `AGENTS.md`, so the separate sidecar files `installer/platforms/codex.py` and `installer/platforms/forgecode.py` wrote were never consulted.
+- **Rule sidecars were not removed on uninstall.** The leftover files kept `detect()` reporting platforms as permanently installed across every platform installer.
+- **Upgrades always reported themselves as fresh installs.** `previous_version` was read from the demarcation marker that the installer strips on every run, so it always resolved to None and release notes never displayed. `installer/version.py` adds an `installed_version` stamp in the config dir, with the demarcation marker retained only as a fallback for users upgrading from an interpolated install.
+- **Antigravity truthiness bugs made errors uncountable.** Dataclass and tuple return values in `installer/platforms/antigravity.py` were always truthy, so the error counters could never increment.
+- **ForgeCode bundle path escaped the config-dir resolver.** `installer/platforms/forgecode.py` bypassed `_resolve_effective_config_dir()` when computing the bundle destination.
+- **The bundle writer backed up its own prior output.** Every reinstall produced a backup of the file the previous reinstall had generated, accumulating indefinitely.
+- **`generate_diagrams` smart classification raised and swallowed a `TypeError`.** `AgentOptions.allowed_tools=None` was forwarded straight into the SDK, producing `'NoneType' object is not iterable`, which was then caught and converted into a fake `REGENERATE` verdict — a real failure wearing the costume of a decision. `spellbook/sdk/unified.py` now coalesces `allowed_tools` and `disallowed_tools` to empty lists; `invoke_skill` shared the same defect and is fixed with it.
+- **`generate_diagrams` generation produced no mermaid.** The subprocess ran with full tool access, so it wrote files instead of emitting the diagram to stdout. `scripts/generate_diagrams.py` now passes `allowed_tools=[]`.
+- **Review skills hardcoded `origin/main` as the diff base.** There was no `master` fallback and no fetch, so the merge base could be stale or nonexistent. The base is now detected in `skills/code-review/SKILL.md`, `skills/advanced-code-review/SKILL.md`, and `skills/distilling-prs/SKILL.md`.
+- **Three review skills declared identical triggers.** `code-review`, `advanced-code-review`, and `distilling-prs` shared trigger phrases and carried a mutual disambiguation mandate, which guaranteed a round-trip question on every unspecified-scope branch review.
+- **`QUESTION` findings vanished from summaries.** It was a legal severity absent from both `SEVERITY_ORDER` maps in `spellbook/code_review/models.py` and `spellbook/code_review/deduplication.py`, so such findings sorted into a fallback bucket and never appeared in the report.
+- **`advanced-code-review` contradicted itself on bug severity.** The decision tree and the FORBIDDEN block disagreed on whether a bug is CRITICAL or HIGH.
+- **Declined findings could silently re-raise.** `commands/advanced-code-review-context.md` documented uppercase statuses in `previous-items.json` while the filter compared lowercase, so no previously-declined item ever matched.
+
+### Changed
+
+- **Severity unified on six levels.** `CRITICAL`, `HIGH`, `MEDIUM`, `LOW`, `NIT`, `PRAISE` in `spellbook/code_review/models.py`, with `IMPORTANT` and `MINOR` retained as aliases of `HIGH` and `LOW` so existing call sites keep working; being aliases, they resolve to the canonical member.
+- **`advanced-code-review` is now the default for unspecified-scope branch review.** `code-review` becomes the explicit lightweight opt-in and is used only when the user asks for a lighter pass by name.
+- **Standards loading and per-hunk coverage manifests added to the advanced review pipeline.** `commands/advanced-code-review-plan.md` builds a coverage manifest from ALL changed hunks before review begins, and standards loading in `commands/advanced-code-review-context.md` is blocking, so a review cannot proceed without the named rule catalogue it is meant to enforce.
+- **Diff semantics consolidated.** The base is always the detected merge target rather than a literal branch name, and the endpoint is task-dependent; captured in `rules/55-diff-semantics.md` and applied across the review skills and commands.
+- **Git-safety rules extended to destructive tree-wide operations.** `rules/50-git-safety.md` forbids `git stash`, `git checkout .`, `git restore .`, `git clean -fd`, and `git reset --hard` in any checkout that may hold uncommitted work the agent did not author, and prescribes `git show HEAD:<path>` for comparing against HEAD without mutating the tree. It also prescribes a post-operation truncation sweep covering modified, staged, and untracked files while skipping deleted paths, and states that `--force-with-lease` is the safe variant of `--force` — it refuses when the remote has moved — rather than an equivalent of it.
+
+### Removed
+
+- **`AGENTS.spellbook.md`**, superseded by the `rules/` modules. `spellbook/core/config.py` and `install.py` still accept it when detecting a spellbook checkout, retained for one minor release so an in-flight upgrade resolves.
+- **`patterns/autonomous-mode-protocol.md`, `patterns/git-safety-protocol.md`, and `patterns/subagent-dispatch.md`**, after migrating their unique content into the corresponding rule modules.
+- **`scripts/update_context_files.py` and `scripts/generate_context.py`**, obsolete now that rules are delivered as modules rather than interpolated into context files.
+
 ## [0.82.1] - 2026-08-05
 
 ### Fixed

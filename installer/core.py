@@ -2,6 +2,7 @@
 Core orchestrator for spellbook installation.
 """
 
+import json
 import logging
 import shutil
 from dataclasses import dataclass, field
@@ -216,6 +217,7 @@ class Installer:
         on_progress=None,
         config_dir_overrides: Optional[Dict[str, List[Path]]] = None,
         renderer=None,
+        rule_selection: Optional[List[str]] = None,
     ) -> InstallSession:
         """
         Execute installation workflow.
@@ -235,6 +237,9 @@ class Installer:
             renderer: InstallerRenderer instance for progress rendering.
                 If None, auto-detects: RichRenderer when stdout is a TTY,
                 PlainTextRenderer otherwise.
+            rule_selection: Explicit rule module ids the user chose. None means
+                "not asked", in which case the selection is resolved from
+                config plus each module's default and nothing is recorded.
 
         Returns InstallSession with all results.
         """
@@ -254,11 +259,18 @@ class Installer:
             cli_dirs=(config_dir_overrides or {}).get("claude_code"),
         )
 
-        # Determine previous version from first Claude Code config dir
-        from .demarcation import get_installed_version
+        # Determine the previously installed version from the install stamp.
+        #
+        # This used to read the demarcated marker in CLAUDE.md, which the
+        # installer strips on every run -- so it was permanently None, every
+        # install reported itself a fresh install, and show_whats_new() always
+        # returned early. The stamp is written at the end of a successful
+        # install; the CLAUDE.md marker is kept only as a fallback for users
+        # upgrading from an interpolated install that predates the stamp.
+        from .version import read_installed_version, write_installed_version
 
         version_dir = claude_dirs[0] if claude_dirs else get_platform_config_dir("claude_code")
-        previous_version = get_installed_version(version_dir / "CLAUDE.md")
+        previous_version = read_installed_version(version_dir / "CLAUDE.md")
 
         from .components.context_files import ensure_machine_config_file
         ensure_machine_config_file(self.spellbook_dir, dry_run=dry_run)
@@ -283,6 +295,41 @@ class Installer:
         shared_context: Dict[str, Any] = {
             "claude_config_dirs": claude_dirs,
         }
+
+        # Resolve which rule modules this install delivers, before any platform
+        # installer runs, so every platform delivers the same set.
+        (
+            rule_modules,
+            resolved_selection,
+            detection,
+            rule_error,
+        ) = self._resolve_rule_delivery(
+            platforms, config_dir_overrides, rule_selection, dry_run
+        )
+        shared_context["rule_modules"] = rule_modules
+        shared_context["rule_selection"] = resolved_selection
+        shared_context["rule_install_state"] = detection
+        shared_context["rule_delivery_error"] = rule_error
+
+        if rule_error:
+            # Not a delivery of nothing. Every platform installer refuses to
+            # touch its delivered rules while this is set, and the session is
+            # unsuccessful so no install stamp is written.
+            session.results.append(
+                InstallResult(
+                    component="rule_modules",
+                    platform="system",
+                    success=False,
+                    action="failed",
+                    message=f"rule modules: {rule_error}",
+                )
+            )
+
+        if detection is not None and detection.needs_migration:
+            _on_step(
+                f"Detected a {detection.state.value} install on "
+                f"{detection.platform}; migrating to rule modules"
+            )
 
         # Pre-resolve all dirs to compute accurate total count and
         # initialize the progress display before the daemon install so
@@ -489,8 +536,246 @@ class Installer:
             if on_progress:
                 on_progress("result", {"result": health_result})
 
+        # Post-install delivery verification. A symlink existing is not
+        # evidence of delivery, so this looks for the marker in the harness's
+        # assembled prompt where that is obtainable and reports an honest
+        # degradation where it is not.
+        if not dry_run:
+            _on_step("Verifying rule delivery")
+            for tripwire_result in self._verify_rule_delivery(
+                platform_dirs, resolved_selection, session.results
+            ):
+                session.results.append(tripwire_result)
+                renderer.render_step("result", {"result": tripwire_result})
+                if on_progress:
+                    on_progress("result", {"result": tripwire_result})
+
+        # The stamp records that this version's rules were delivered, so it is
+        # gated on rule delivery rather than on every component. Gating on the
+        # whole session meant one unrelated failure (a daemon health blip) left
+        # the stamp unwritten and the next install reporting itself fresh.
+        rule_delivery_ok = not rule_error and all(
+            r.success
+            for r in session.results
+            if r.component in ("rule_modules", "rule_modules_config", "rule_delivery")
+        )
+        if not dry_run and rule_delivery_ok:
+            write_installed_version(self.version, dry_run=dry_run)
+
         renderer.render_progress_end()
         return session
+
+    def _resolve_rule_delivery(
+        self,
+        platforms: List[str],
+        config_dir_overrides: Optional[Dict[str, List[Path]]],
+        rule_selection: Optional[List[str]],
+        dry_run: bool,
+    ):
+        """Load the rule modules and decide which ones this install delivers.
+
+        Returns ``(modules, selection, detection, error)``. ``error`` is a
+        non-empty string when the module set could not be resolved, which is a
+        hard failure rather than a delivery of nothing: delivering an empty set
+        to a directory-capable harness prunes every rule already installed.
+        """
+        from .components.rule_migration import detect_existing_install
+        from .components.rule_modules import (
+            ModuleSelection,
+            get_rules_dir,
+            load_rule_modules,
+            resolve_selection,
+        )
+
+        rules_dir = get_rules_dir(self.spellbook_dir)
+        try:
+            modules = load_rule_modules(rules_dir)
+        except Exception as e:
+            logger.error("Could not load rule modules from %s: %s", rules_dir, e)
+            return [], None, None, f"could not load rule modules from {rules_dir}: {e}"
+
+        if not modules:
+            logger.error("No rule modules found in %s", rules_dir)
+            return [], None, None, f"no rule modules found in {rules_dir}"
+
+        detection = None
+        try:
+            overrides = config_dir_overrides or {}
+            probes = []
+            for platform in SUPPORTED_PLATFORMS:
+                if platform not in platforms:
+                    continue
+                dirs = overrides.get(platform) or []
+                probes.append(
+                    get_platform_installer(
+                        platform, self.spellbook_dir, self.version, dry_run=True,
+                        config_dir_override=dirs[0] if dirs else None,
+                    )
+                )
+            detection = detect_existing_install(probes)
+        except Exception as e:  # pragma: no cover - defensive
+            logger.warning("Could not detect existing install state: %s", e)
+
+        if rule_selection is not None:
+            # The user answered. Build the selection from that answer rather
+            # than patching a config-derived one, so every field agrees: an
+            # answered module is neither prechecked nor unanswered.
+            chosen = set(rule_selection)
+            preferences = [m for m in modules if m.is_preference]
+            selection = ModuleSelection(
+                modules=list(modules),
+                selected_ids=[m.id for m in preferences if m.id in chosen],
+                prechecked_ids=[],
+                declined_ids=[m.id for m in preferences if m.id not in chosen],
+                unanswered_ids=[],
+            )
+            return modules, selection, detection, None
+
+        # Not asked. Resolve from config plus defaults, and record nothing.
+        # Legacy migration needs no special flag here: a migrating user has
+        # never been asked, so their keys are absent and every module takes its
+        # default -- honoring the upgrade path without adding a rule they never
+        # had. A recorded ``False`` must survive migration untouched, because
+        # detection is per-platform and fires for users who HAVE answered
+        # (a second harness whose legacy sidecar was never cleaned); overriding
+        # it would silently reinstall a module they declined.
+        config_values = _read_rule_config()
+        selection = resolve_selection(modules, config_values)
+        return modules, selection, detection, None
+
+    def _verify_rule_delivery(
+        self, platform_dirs, selection, install_results
+    ) -> List[InstallResult]:
+        """Run the delivery tripwire for each platform that delivered rules.
+
+        Scoped to platforms whose rule delivery reported success. A platform
+        that was skipped -- an absent config dir, a missing harness CLI --
+        delivered nothing on purpose, and reporting that as a delivery failure
+        would be a false alarm in exactly the report whose value is that its
+        alarms are real.
+        """
+        from .components.rule_tripwire import (
+            TripwireStatus,
+            verify_platform,
+        )
+
+        if selection is None:
+            return []
+
+        delivered = {
+            r.platform
+            for r in install_results
+            if r.component == "rule_modules" and r.success
+        }
+
+        results: List[InstallResult] = []
+        for platform, dirs in platform_dirs:
+            if not dirs or platform not in delivered:
+                continue
+            try:
+                probe = get_platform_installer(
+                    platform, self.spellbook_dir, self.version, dry_run=True,
+                    config_dir_override=dirs[0],
+                )
+                if probe.rule_delivery == "none":
+                    continue
+                module_dir = probe.rule_module_dir()
+                outcome = verify_platform(
+                    platform,
+                    self.version,
+                    module_dir=module_dir,
+                    bundle_path=probe.rule_bundle_path(),
+                    config_dir=dirs[0],
+                    registered=_modules_registered(platform, probe, module_dir),
+                )
+            except Exception as e:
+                # A probe that raises produced no verdict, and silence here read
+                # exactly like a pass: the platform delivered rules and then
+                # neither passed nor failed verification. Report the failure.
+                logger.warning("Tripwire probe failed for %s: %s", platform, e)
+                results.append(
+                    InstallResult(
+                        component="rule_delivery",
+                        platform=platform,
+                        success=False,
+                        action="failed",
+                        message=f"rule delivery: verification probe failed - {e}",
+                    )
+                )
+                continue
+
+            results.append(
+                InstallResult(
+                    component="rule_delivery",
+                    platform=platform,
+                    success=outcome.status is not TripwireStatus.FAILED,
+                    action=outcome.status.value,
+                    message=f"rule delivery: {outcome.method} - {outcome.message}",
+                )
+            )
+        return results
+
+
+def _modules_registered(
+    platform: str, probe: PlatformInstaller, module_dir: Optional[Path]
+) -> Optional[bool]:
+    """Whether every installed module is registered where the harness reads it.
+
+    OpenCode is the only harness with a registration step: its resolver loads
+    exactly the paths listed in ``opencode.json``'s ``instructions`` array, so a
+    module file on disk that is not listed there does not load at all. Returns
+    None for every other platform, which the tripwire reads as "registration is
+    not a load mechanism here".
+    """
+    if platform != "opencode" or module_dir is None:
+        return None
+
+    from .components.rule_delivery import INSTALLED_GLOB
+
+    config_path = getattr(probe, "opencode_config_file", None)
+    if config_path is None or not config_path.exists():
+        return False
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return False
+    if not isinstance(data, dict):
+        return False
+
+    entries = data.get("instructions", [])
+    if not isinstance(entries, list):
+        entries = [entries]
+    listed = {str(entry) for entry in entries}
+
+    installed = sorted(module_dir.glob(INSTALLED_GLOB)) if module_dir.is_dir() else []
+    if not installed:
+        return False
+    return all(probe._instructions_config_path(path) in listed for path in installed)
+
+
+def _read_rule_config() -> Dict[str, Any]:
+    """Read only the explicitly-set ``rules.module.*`` keys.
+
+    Reads the config file directly rather than through ``config_get``, because
+    absence is a value here: a key that has a built-in default but was never
+    written means "never offered", and applying the default at read time would
+    erase that distinction.
+    """
+    try:
+        from spellbook.core.compat import get_config_dir
+    except ImportError:
+        return {}
+
+    config_path = get_config_dir() / "spellbook.json"
+    if not config_path.exists():
+        return {}
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {k: v for k, v in data.items() if k.startswith("rules.module.")}
 
 
 class Uninstaller:

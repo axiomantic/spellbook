@@ -17,9 +17,14 @@ consistent across the test suite.
 
 from __future__ import annotations
 
+import argparse
+import json
+import sys
+from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+import tripwire
 
 
 # ---------------------------------------------------------------------------
@@ -466,3 +471,488 @@ class TestEntryPointsShareWizards:
             f"{path} does not invoke run_worker_llm_wizard; "
             "shared wizard coverage contract broken"
         )
+
+
+# ---------------------------------------------------------------------------
+# Rule module selection: rules.module.* key coverage
+# ---------------------------------------------------------------------------
+#
+# These use a REAL config file under a tmp SPELLBOOK_CONFIG_DIR rather than
+# substituting ``config_is_explicitly_set``. The answered/unanswered state is
+# the thing under test, and reading it from disk is what the installer actually
+# does -- so the test exercises the same tri-state the product does.
+
+
+def _repo_root():
+    return Path(__file__).resolve().parents[2]
+
+
+def _shipped_preference_keys():
+    from installer.components.rule_modules import (
+        get_rules_dir,
+        load_rule_modules,
+        preference_modules,
+    )
+
+    modules = load_rule_modules(get_rules_dir(_repo_root()))
+    assert modules, "the checkout must ship rule modules in rules/"
+    # Derived, never counted. The module set changes as rules are split.
+    return [m.config_key for m in preference_modules(modules)]
+
+
+def _config_path(home: Path) -> Path:
+    """Where ``get_config_dir()`` resolves to for a given HOME.
+
+    HOME, not SPELLBOOK_CONFIG_DIR: ``spellbook.core.compat.get_config_dir`` --
+    the resolver the installer's config reads and writes go through -- does not
+    consult SPELLBOOK_CONFIG_DIR at all, so setting it redirects nothing.
+    """
+    return home / ".config" / "spellbook" / "spellbook.json"
+
+
+def _write_answers(home: Path, keys) -> None:
+    """Write real answers for ``keys``, the way ``config_set_many`` would."""
+    path = _config_path(home)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({key: True for key in keys}), encoding="utf-8")
+
+
+class _StubInstaller:
+    def __init__(self):
+        self.spellbook_dir = _repo_root()
+
+
+@pytest.fixture
+def cli_install_module():
+    """The ``spellbook install`` entry path."""
+    import spellbook.cli.commands.install as mod
+
+    return mod
+
+
+@pytest.fixture
+def root_install_module():
+    """The curl-pipe root ``install.py``, loaded by path.
+
+    Loaded as a throwaway module name so importing it cannot shadow the
+    ``install`` package name for other tests.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "_root_install_wizard_coverage", _repo_root() / "install.py"
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+        yield module
+    finally:
+        sys.modules.pop(spec.name, None)
+
+
+class TestRuleModuleKeyCoverage:
+    """The three-point contract of AGENTS.md "Adding Config Options", applied
+    to every shipped ``rules.module.*`` key.
+
+    Counts are derived from ``rules/`` rather than hardcoded, so splitting a
+    module out does not turn this into a false failure -- or a false pass.
+    """
+
+    def test_every_shipped_module_registers_a_config_key(self):
+        from spellbook.admin.routes.config import KNOWN_KEYS
+        from spellbook.core.config import rule_module_config_defaults
+
+        keys = _shipped_preference_keys()
+        assert keys
+        defaults = rule_module_config_defaults()
+        for key in keys:
+            assert key in defaults, f"{key} has no runtime default"
+            assert key in KNOWN_KEYS, f"{key} is invisible to the admin UI"
+
+    def test_fresh_install_opens_the_selector(
+        self, monkeypatch, tmp_path, root_install_module
+    ):
+        """Point 1: unanswered keys must produce a prompt."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        selection = root_install_module._resolve_rule_precheck(_StubInstaller())
+
+        assert selection is not None, "a fresh install must offer the selector"
+        assert selection.unanswered_ids
+
+    def test_reinstall_skips_the_selector_once_every_key_is_answered(
+        self, monkeypatch, tmp_path, root_install_module
+    ):
+        """Point 3: an answered key is never re-prompted."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        _write_answers(tmp_path, _shipped_preference_keys())
+
+        assert root_install_module._resolve_rule_precheck(_StubInstaller()) is None
+
+    def test_a_newly_shipped_module_reopens_the_selector(
+        self, monkeypatch, tmp_path, root_install_module
+    ):
+        """Point 2: still unset means still asked, per key.
+
+        A module split out of an existing one arrives with its key absent, so
+        the selector must offer that module even though every other key is
+        answered.
+        """
+        monkeypatch.setenv("HOME", str(tmp_path))
+        keys = _shipped_preference_keys()
+        _write_answers(tmp_path, keys[1:])  # the first module is "new"
+
+        selection = root_install_module._resolve_rule_precheck(_StubInstaller())
+
+        assert selection is not None
+        assert keys[0].split(".")[-1] in selection.unanswered_ids
+
+    def test_reconfigure_bypasses_the_idempotency_gate(
+        self, monkeypatch, tmp_path, root_install_module
+    ):
+        """--reconfigure is the only way back to a module the user declined."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+        _write_answers(tmp_path, _shipped_preference_keys())
+
+        assert (
+            root_install_module._resolve_rule_precheck(
+                _StubInstaller(), reconfigure=True
+            )
+            is not None
+        )
+
+    def test_non_tty_is_a_noop_in_the_cli_entry_path(
+        self, monkeypatch, tmp_path, cli_install_module
+    ):
+        """Point 4: a scripted install records nothing.
+
+        pytest's stdin is genuinely not a tty, so the gate is exercised for
+        real rather than through a substituted ``isatty``.
+        """
+        monkeypatch.setenv("HOME", str(tmp_path))
+        assert not sys.stdin.isatty(), "precondition: pytest stdin is not a tty"
+
+        args = argparse.Namespace(
+            dry_run=False, yes=False, no_interactive=False, reconfigure=False
+        )
+        assert (
+            cli_install_module._select_rule_modules(_StubInstaller(), None, args)
+            is None
+        )
+        assert not list(tmp_path.rglob("*.json"))
+
+    def test_cli_entry_path_honors_the_idempotency_gate(
+        self, monkeypatch, tmp_path, capsys, cli_install_module
+    ):
+        """Answered keys, a real tty, and still no screen.
+
+        Asserted on the ARTIFACT -- what reached the terminal -- because the
+        return value alone cannot tell "skipped" from "opened and failed":
+        both are None.
+        """
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setenv("HOME", str(tmp_path))
+        _write_answers(tmp_path, _shipped_preference_keys())
+
+        isatty = tripwire.mock.object(sys.stdin, "isatty")
+        isatty.returns(True)
+
+        args = argparse.Namespace(
+            dry_run=False, yes=False, no_interactive=False, reconfigure=False
+        )
+        with tripwire:
+            result = cli_install_module._select_rule_modules(
+                _StubInstaller(), PlainTextRenderer(), args
+            )
+
+        isatty.assert_call(args=(), kwargs={})
+
+        assert result is None
+        out = capsys.readouterr().out
+        assert "Spellbook rule modules" not in out, (
+            "the selector screen was drawn for keys that were already answered"
+        )
+        assert "selector unavailable" not in out
+
+    def test_cli_reconfigure_bypasses_the_idempotency_gate(
+        self, monkeypatch, tmp_path, cli_install_module
+    ):
+        """The one path back to a declined module, on the ``spellbook install``
+        entry point. Without the bypass a decline is permanent."""
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setenv("HOME", str(tmp_path))
+        _write_answers(tmp_path, _shipped_preference_keys())
+
+        renderer = PlainTextRenderer()
+        isatty = tripwire.mock.object(sys.stdin, "isatty")
+        isatty.returns(True)
+        seen = []
+        screen = tripwire.mock.object(renderer, "render_rule_module_select")
+        screen.calls(lambda *a: (seen.append(a), ["core-philosophy"])[1])
+
+        args = argparse.Namespace(
+            dry_run=False, yes=False, no_interactive=False, reconfigure=True
+        )
+        with tripwire:
+            result = cli_install_module._select_rule_modules(
+                _StubInstaller(), renderer, args
+            )
+
+        isatty.assert_call(args=(), kwargs={})
+        screen.assert_call(args=seen[0], kwargs={})
+
+        assert result == ["core-philosophy"], (
+            "--reconfigure did not reopen the selector"
+        )
+
+    def test_the_cli_entry_path_routes_through_the_renderer(
+        self, monkeypatch, tmp_path, cli_install_module
+    ):
+        """AGENTS.md "Divergent install entry points": parity is the contract.
+
+        The renderer owns the Windows fallback (a Rich table where termios is
+        absent). Calling ``installer.tui.interactive_module_select`` directly
+        from here meant a Windows user running ``spellbook install`` was never
+        offered the modules while the same user running ``python3 install.py``
+        was.
+        """
+        from installer.renderer import PlainTextRenderer
+
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        renderer = PlainTextRenderer()
+        isatty = tripwire.mock.object(sys.stdin, "isatty")
+        isatty.returns(True)
+        seen = []
+        screen = tripwire.mock.object(renderer, "render_rule_module_select")
+        screen.calls(lambda *a: (seen.append(a), ["session"])[1])
+
+        args = argparse.Namespace(
+            dry_run=False, yes=False, no_interactive=False, reconfigure=False
+        )
+        with tripwire:
+            result = cli_install_module._select_rule_modules(
+                _StubInstaller(), renderer, args
+            )
+
+        isatty.assert_call(args=(), kwargs={})
+        screen.assert_call(args=seen[0], kwargs={})
+
+        assert result == ["session"]
+
+    def test_the_renderer_module_screen_survives_a_missing_renderer(
+        self, monkeypatch, tmp_path, cli_install_module
+    ):
+        """``_create_renderer`` can return None. That must not resurrect the
+        direct-to-tui call the parity fix removed."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        isatty = tripwire.mock.object(sys.stdin, "isatty")
+        isatty.returns(True)
+        seen = []
+        screen = tripwire.mock(
+            "installer.renderer:PlainTextRenderer.render_rule_module_select"
+        )
+        screen.calls(lambda *a: (seen.append(a), [])[1])
+
+        args = argparse.Namespace(
+            dry_run=False, yes=False, no_interactive=False, reconfigure=False
+        )
+        with tripwire:
+            result = cli_install_module._select_rule_modules(
+                _StubInstaller(), None, args
+            )
+
+        isatty.assert_call(args=(), kwargs={})
+        screen.assert_call(args=seen[0], kwargs={})
+
+        assert result == []
+
+
+class TestNotAskedIsNeverPersisted:
+    """The not-asked sentinel, at BOTH entry points.
+
+    ``None`` means the user was never shown the screen. Persisting it writes an
+    explicit True or False for every preference module on their behalf, which
+    permanently marks as declined modules they never saw. Each entry point owns
+    its own copy of this guard, so each is tested.
+    """
+
+    def test_the_root_entry_point_persists_nothing_for_a_non_answer(
+        self, monkeypatch, tmp_path, root_install_module
+    ):
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        root_install_module._persist_rule_selection_if_answered(_StubInstaller(), None)
+
+        assert not list(tmp_path.rglob("*.json")), "a non-answer was recorded"
+
+    def test_the_cli_entry_point_persists_nothing_for_a_non_answer(
+        self, monkeypatch, tmp_path, cli_install_module
+    ):
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        cli_install_module._persist_rule_modules_if_answered(
+            _StubInstaller(), None, False
+        )
+
+        assert not list(tmp_path.rglob("*.json")), "a non-answer was recorded"
+
+    def test_a_dry_run_persists_nothing_at_either_entry_point(
+        self, monkeypatch, tmp_path, root_install_module, cli_install_module
+    ):
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        root_install_module._persist_rule_selection_if_answered(
+            _StubInstaller(), ["session"], True
+        )
+        cli_install_module._persist_rule_modules_if_answered(
+            _StubInstaller(), ["session"], True
+        )
+
+        assert not list(tmp_path.rglob("*.json"))
+
+    @pytest.mark.parametrize("entry", ["root", "cli"])
+    def test_a_real_answer_is_recorded_at_both_entry_points(
+        self, monkeypatch, tmp_path, root_install_module, cli_install_module, entry
+    ):
+        """The positive half. Without it the guards above are satisfied by a
+        function that never writes anything at all."""
+        monkeypatch.setenv("HOME", str(tmp_path))
+
+        keys = _shipped_preference_keys()
+        kept = keys[0].split(".")[-1]
+
+        if entry == "root":
+            root_install_module._persist_rule_selection_if_answered(
+                _StubInstaller(), [kept]
+            )
+        else:
+            cli_install_module._persist_rule_modules_if_answered(
+                _StubInstaller(), [kept], False
+            )
+
+        written = json.loads(_config_path(tmp_path).read_text(encoding="utf-8"))
+        assert written[keys[0]] is True
+        assert all(written[key] is False for key in keys[1:])
+
+
+class TestRendererModuleScreenParity:
+    """Both renderers gate the module screen identically, and both offer it at
+    the same point in the flow.
+
+    The plain renderer nested the screen inside its "no --platforms flag"
+    branch, so ``install.py --platforms claude_code`` on a real terminal was
+    never offered the modules while the same run under Rich was.
+    """
+
+    def _context(self, selection, **overrides):
+        from installer.wizard import WizardContext
+
+        kwargs = dict(
+            available_platforms=["claude_code"],
+            cli_platforms=["claude_code"],
+            profile_already_configured=True,
+            available_profiles=[],
+            is_upgrade=False,
+            is_interactive=True,
+            auto_yes=False,
+            no_interactive=False,
+            reconfigure=False,
+            rule_selection=selection,
+        )
+        kwargs.update(overrides)
+        return WizardContext(**kwargs)
+
+    @pytest.fixture
+    def selection(self):
+        from installer.components.rule_modules import (
+            get_rules_dir,
+            load_rule_modules,
+            resolve_selection,
+        )
+
+        return resolve_selection(load_rule_modules(get_rules_dir(_repo_root())))
+
+    @pytest.mark.parametrize("renderer_name", ["rich", "plain"])
+    def test_platforms_flag_does_not_suppress_the_module_screen(
+        self, selection, renderer_name
+    ):
+        from installer.renderer import PlainTextRenderer, RichRenderer
+
+        renderer = RichRenderer() if renderer_name == "rich" else PlainTextRenderer()
+        hook = (
+            "_wizard_module_select"
+            if renderer_name == "rich"
+            else "_wizard_module_select_plain"
+        )
+
+        isatty = tripwire.mock.object(sys.stdin, "isatty")
+        isatty.returns(True)
+        seen = []
+        screen = tripwire.mock.object(renderer, hook)
+        screen.calls(lambda *a: (seen.append(a), ["session"])[1])
+
+        with tripwire:
+            results = renderer.render_upfront_wizard(self._context(selection))
+
+        isatty.assert_call(args=(), kwargs={})
+        screen.assert_call(args=seen[0], kwargs={})
+
+        assert results is not None
+        assert results.rule_modules == ["session"], (
+            f"{renderer_name} skipped the module screen when --platforms was passed"
+        )
+
+    @pytest.mark.parametrize("renderer_name", ["rich", "plain"])
+    def test_a_screen_that_cannot_be_answered_is_never_shown(
+        self, selection, renderer_name
+    ):
+        """The gate is on a REAL stdin, not on --no-interactive alone.
+
+        pytest's stdin is not a tty, so dropping the isatty term from the gate
+        makes this go red: the screen is reached and something is recorded.
+        """
+        from installer.renderer import PlainTextRenderer, RichRenderer
+
+        renderer = RichRenderer() if renderer_name == "rich" else PlainTextRenderer()
+
+        assert (
+            renderer._should_offer_module_select(self._context(selection)) is False
+        ), "a screen the user cannot answer was offered"
+
+    def test_the_gate_is_open_on_a_real_terminal(self, selection):
+        """The positive half: the gate is not simply always closed."""
+        from installer.renderer import PlainTextRenderer
+
+        renderer = PlainTextRenderer()
+        isatty = tripwire.mock.object(sys.stdin, "isatty")
+        isatty.returns(True)
+
+        with tripwire:
+            opened = renderer._should_offer_module_select(self._context(selection))
+
+        isatty.assert_call(args=(), kwargs={})
+        assert opened is True
+
+    @pytest.mark.parametrize(
+        "overrides",
+        [
+            {"rule_selection": None},
+            {"no_interactive": True},
+            {"is_interactive": False},
+        ],
+        ids=["no-modules", "no-interactive-flag", "not-interactive"],
+    )
+    def test_every_other_gate_term_also_closes_the_screen(self, selection, overrides):
+        from installer.renderer import PlainTextRenderer
+
+        renderer = PlainTextRenderer()
+        context = self._context(selection, **overrides)
+
+        # No isatty mock: each of these must close the gate on its own, and a
+        # term that short-circuits before isatty never reaches it.
+        assert renderer._should_offer_module_select(context) is False

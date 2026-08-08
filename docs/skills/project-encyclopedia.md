@@ -85,7 +85,7 @@ flowchart TD
 ## Skill Content
 
 ``````````markdown
-> **DEPRECATED (v0.23.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in AGENTS.spellbook.md. This skill will be removed in a future version.
+> **DEPRECATED (v0.23.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in the spellbook rule modules. This skill will be removed in a future version.
 
 # Project Encyclopedia
 
@@ -123,10 +123,10 @@ Project Cartographer whose reputation depends on creating maps that remain usefu
 ## Session Integration
 
 <CRITICAL>
-This section defines how AGENTS.spellbook.md should integrate encyclopedia checks.
+This section defines how the spellbook rule modules should integrate encyclopedia checks.
 </CRITICAL>
 
-Add to AGENTS.spellbook.md under Session Start:
+Add to the spellbook rule modules under Session Start:
 
 ```markdown
 ## Encyclopedia Check

@@ -29,13 +29,15 @@ Reference: https://opencode.ai/docs/mcp-servers
 """
 
 import json
+import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
 from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
+from ..components.rule_delivery import INSTALLED_GLOB
 from ..components.symlinks import create_symlink, remove_symlink
 from ..demarcation import get_installed_version, remove_demarcated_section
-from .base import PlatformInstaller, PlatformStatus
+from .base import RULE_DELIVERY_DIRECTORY, PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
@@ -234,6 +236,8 @@ def _remove_opencode_mcp_config(
 class OpenCodeInstaller(PlatformInstaller):
     """Installer for OpenCode platform."""
 
+    rule_delivery = RULE_DELIVERY_DIRECTORY
+
     @property
     def platform_name(self) -> str:
         return "OpenCode"
@@ -290,6 +294,97 @@ class OpenCodeInstaller(PlatformInstaller):
         """
         return self.config_dir / "instructions"
 
+    def rule_module_dir(self) -> Path:
+        return self.instructions_dir
+
+    def legacy_rule_paths(self) -> List[Path]:
+        return [self.instructions_dir / "spellbook.md"]
+
+    def legacy_context_files(self) -> List[Path]:
+        return [self.config_dir / "AGENTS.md"]
+
+    def _instructions_config_path(self, path: Path) -> str:
+        """Render a path the way the instructions array expects it.
+
+        Uses ``~`` for the home directory so the entry is portable across
+        machines, matching the convention the system prompt entry already uses.
+        """
+        try:
+            return f"~/{path.relative_to(Path.home()).as_posix()}"
+        except ValueError:
+            return str(path)
+
+    def on_rule_modules_installed(
+        self, installed: List[Path], removed: List[Path]
+    ) -> List["InstallResult"]:
+        """Register every delivered module in ``opencode.json``.
+
+        Deregistration of removed modules happens in the same pass, because
+        registration and deregistration are one mechanism: a deselected module
+        whose entry survives keeps loading despite its file being gone.
+        """
+        from ..core import InstallResult
+
+        config_path = self.opencode_config_file
+        if config_path.exists() and not self.dry_run:
+            try:
+                json.loads(config_path.read_text(encoding="utf-8"))
+            except json.JSONDecodeError:
+                # Never rewrite a config we cannot parse. An unregistered
+                # module does not load, so this is a delivery failure, not a
+                # warning to skip past.
+                return [
+                    InstallResult(
+                        component="rule_modules_config",
+                        platform=self.platform_id,
+                        success=False,
+                        action="failed",
+                        message=(
+                            f"instructions config: {config_path} is not valid JSON; "
+                            "rule modules were written but cannot be registered"
+                        ),
+                    )
+                ]
+
+        failures: List[str] = []
+        for path in removed:
+            ok, _msg = _remove_opencode_instructions(
+                config_path, self._instructions_config_path(path), self.dry_run
+            )
+            if not ok:
+                failures.append(path.name)
+
+        registered = 0
+        for path in installed:
+            ok, _msg = _update_opencode_instructions(
+                config_path, self._instructions_config_path(path), self.dry_run
+            )
+            if ok:
+                registered += 1
+            else:
+                failures.append(path.name)
+
+        if failures:
+            return [
+                InstallResult(
+                    component="rule_modules_config",
+                    platform=self.platform_id,
+                    success=False,
+                    action="failed",
+                    message=f"instructions config: {len(failures)} path(s) failed",
+                )
+            ]
+
+        return [
+            InstallResult(
+                component="rule_modules_config",
+                platform=self.platform_id,
+                success=True,
+                action="installed",
+                message=f"instructions config: {registered} rule module(s) registered",
+            )
+        ]
+
     @property
     def system_prompt_source(self) -> Path:
         """Get the source path for the Claude Code system prompt."""
@@ -345,9 +440,16 @@ class OpenCodeInstaller(PlatformInstaller):
         # Check for system prompt symlink
         has_system_prompt = self.system_prompt_target.is_symlink() or self.system_prompt_target.is_file()
 
-        sidecar_file = self.instructions_dir / "spellbook.md"
-        has_sidecar = sidecar_file.exists() or sidecar_file.is_symlink()
-        installed = installed_version is not None or has_mcp or has_sidecar or has_instructions
+        rules_dir = self.rule_module_dir()
+        has_modules = rules_dir.is_dir() and any(rules_dir.glob(INSTALLED_GLOB))
+        has_sidecar = any(os.path.lexists(path) for path in self.legacy_rule_paths())
+        installed = (
+            installed_version is not None
+            or has_mcp
+            or has_modules
+            or has_sidecar
+            or has_instructions
+        )
 
         return PlatformStatus(
             platform=self.platform_id,
@@ -384,28 +486,24 @@ class OpenCodeInstaller(PlatformInstaller):
 
         # Always strip legacy demarcated block from AGENTS.md if present
         context_file = self.config_dir / "AGENTS.md"
-        if context_file.exists() and not self.dry_run:
+
+        # One instruction file per selected module, each registered in
+        # opencode.json. Registration is not an optimization: OpenCode's
+        # resolver reads only the paths in that array and never scans the
+        # instructions directory, so an unregistered file does not load.
+        self._step("Installing rule modules")
+        rule_results = self.install_rule_modules()
+        results.extend(rule_results)
+
+        # Strip the legacy demarcated block only AFTER delivery succeeds.
+        # Stripping first would leave a user whose delivery failed with
+        # neither the old interpolated rules nor the new modules.
+        if (
+            all(r.success for r in rule_results)
+            and context_file.exists()
+            and not self.dry_run
+        ):
             remove_demarcated_section(context_file)
-
-        # Symlink sidecar instruction file ~/.config/opencode/instructions/spellbook.md -> AGENTS.spellbook.md
-        instructions_dir = self.config_dir / "instructions"
-        instruction_file = instructions_dir / "spellbook.md"
-        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
-
-        if not instructions_dir.exists() and not self.dry_run:
-            instructions_dir.mkdir(parents=True, exist_ok=True)
-
-        res = create_symlink(source_agents, instruction_file, dry_run=self.dry_run)
-
-        results.append(
-            InstallResult(
-                component="instructions_sidecar",
-                platform=self.platform_id,
-                success=res.success,
-                action=res.action,
-                message=f"instruction sidecar: {res.message}",
-            )
-        )
 
         # Register MCP server in opencode.json (connects to HTTP daemon)
         self._step("Registering MCP server")
@@ -516,20 +614,20 @@ class OpenCodeInstaller(PlatformInstaller):
         if not self.config_dir.exists():
             return results
 
-        # Remove demarcated section from AGENTS.md
-        sidecar_file = self.instructions_dir / "spellbook.md"
-        if sidecar_file.exists() or sidecar_file.is_symlink():
-            if not self.dry_run:
-                sidecar_file.unlink()
-            results.append(
-                InstallResult(
-                    component="instructions_sidecar",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message="instructions/spellbook.md: removed",
-                )
+        # Remove rule module files and deregister each one. A surviving
+        # registration keeps a removed file's absence from being noticed.
+        module_paths = (
+            sorted(self.instructions_dir.glob(INSTALLED_GLOB))
+            if self.instructions_dir.is_dir()
+            else []
+        )
+        for module_path in module_paths:
+            _remove_opencode_instructions(
+                self.opencode_config_file,
+                self._instructions_config_path(module_path),
+                self.dry_run,
             )
+        results.extend(self.uninstall_rule_modules())
 
         context_file = self.config_dir / "AGENTS.md"
         if context_file.exists():
@@ -637,8 +735,10 @@ class OpenCodeInstaller(PlatformInstaller):
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Get context files for this platform."""
-        return [self.config_dir / "instructions" / "spellbook.md"]
+        """Get rule module files managed by this platform."""
+        if not self.instructions_dir.is_dir():
+            return []
+        return sorted(self.instructions_dir.glob(INSTALLED_GLOB))
 
     def get_symlinks(self) -> List[Path]:
         """Get all symlinks created by this platform."""

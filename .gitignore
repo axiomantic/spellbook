@@ -181,3 +181,7 @@ mise.toml
 
 # Machine-local Claude Code permission allowlist
 .claude/settings.local.json
+
+# Install-time gemini rule bundle. Written inside the extension directory
+# because gemini rejects @-imports resolving outside the extension root.
+extensions/gemini/rules.spellbook.md

@@ -6,12 +6,18 @@ and concatenating descriptions.
 
 from .models import Finding, Severity
 
-
-# Severity ordering: CRITICAL > IMPORTANT > MINOR
+# Severity ordering: CRITICAL > HIGH > MEDIUM > LOW > NIT > QUESTION > PRAISE.
+# IMPORTANT and MINOR are aliases of HIGH and LOW, so they resolve to those keys.
+# Every Severity member MUST appear here; a missing member would fall out of the
+# ordering the same way a missing SEVERITY_ORDER key does in the skill.
 _SEVERITY_ORDER = {
     Severity.CRITICAL: 0,
-    Severity.IMPORTANT: 1,
-    Severity.MINOR: 2,
+    Severity.HIGH: 1,
+    Severity.MEDIUM: 2,
+    Severity.LOW: 3,
+    Severity.NIT: 4,
+    Severity.QUESTION: 5,
+    Severity.PRAISE: 6,
 }
 
 

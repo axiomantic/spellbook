@@ -93,6 +93,40 @@ Link to file for heavy reference
 What goes wrong + fixes
 ```
 
+## Reasoning Schema
+
+Skills that reason before acting declare the shape of that reasoning inline, so the steps are
+inspectable rather than implicit:
+
+```
+<analysis>
+- Current state: [what is being attempted]
+- Context available: [relevant info]
+- Decision space: [options with tradeoffs]
+</analysis>
+
+<reflection>
+- Circuit breaker check: [pass/fail + why]
+- Confidence: [high/medium/low]
+- Action: [proceed/pause]
+</reflection>
+```
+
+## Autonomous Mode Authoring Contract
+
+<CRITICAL>
+A skill that may run in autonomous mode MUST define all three of the following. A skill missing
+any one MUST NOT be used in autonomous mode.
+</CRITICAL>
+
+1. `### Autonomous Mode Behavior` — what changes when running autonomously
+2. `### Circuit Breakers (Still Pause For)` — the skill-specific halt conditions
+3. The circuit-breaker output format it emits when halting, or an explicit reference to the
+   `develop` skill's Circuit Breaker Output Format
+
+The governing principle: autonomous mode eliminates unnecessary interruption, not judgment.
+When a circuit breaker fires, halt completely, report fully, and wait.
+
 ## Naming Conventions
 
 | Asset | Pattern | Examples |

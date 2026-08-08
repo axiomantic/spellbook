@@ -430,6 +430,34 @@ CONFIG_SCHEMA = [
     },
 ]
 
+
+def _rule_module_schema_entries() -> list[dict[str, Any]]:
+    """One boolean schema entry per preference rule module, read from ``rules/``.
+
+    CONFIG_SCHEMA supports exactly boolean, number, and string -- there is no
+    object or map type -- so a single per-module map is not expressible here.
+    One boolean key per preference module is, and it is generated rather than
+    typed so a new module cannot ship without an admin entry.
+
+    The description reuses the module's ``benefit`` text, which is the same
+    string the installer TUI shows: one source, two surfaces.
+    """
+    try:
+        from installer.components.rule_modules import (
+            config_schema_entries,
+            get_rules_dir,
+            load_rule_modules,
+        )
+        from spellbook.core.config import get_spellbook_dir
+
+        return config_schema_entries(load_rule_modules(get_rules_dir(get_spellbook_dir())))
+    except Exception:  # pragma: no cover - a partial checkout must not break admin
+        logger.debug("Rule modules unavailable; no rules.module.* schema entries")
+        return []
+
+
+CONFIG_SCHEMA.extend(_rule_module_schema_entries())
+
 CONFIG_DEFAULTS = {entry["key"]: entry["default"] for entry in CONFIG_SCHEMA}
 
 KNOWN_KEYS = {entry["key"] for entry in CONFIG_SCHEMA}

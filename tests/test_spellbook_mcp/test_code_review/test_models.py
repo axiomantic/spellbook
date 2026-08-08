@@ -1,16 +1,15 @@
 """Tests for code_review data models."""
 
-
 from spellbook.code_review.models import (
-    Severity,
-    FileDiff,
-    PRData,
-    Finding,
     FeedbackCategory,
-    FeedbackUrgency,
     FeedbackItem,
-    ReviewStatus,
+    FeedbackUrgency,
+    FileDiff,
+    Finding,
+    PRData,
     ReviewReport,
+    ReviewStatus,
+    Severity,
 )
 
 
@@ -18,22 +17,89 @@ class TestSeverity:
     """Tests for Severity enum."""
 
     def test_severity_values(self):
-        """Severity should have critical, important, and minor levels."""
+        """Severity carries the unified seven-level review vocabulary."""
         assert Severity.CRITICAL.value == "critical"
-        assert Severity.IMPORTANT.value == "important"
-        assert Severity.MINOR.value == "minor"
+        assert Severity.HIGH.value == "high"
+        assert Severity.MEDIUM.value == "medium"
+        assert Severity.LOW.value == "low"
+        assert Severity.NIT.value == "nit"
+        assert Severity.QUESTION.value == "question"
+        assert Severity.PRAISE.value == "praise"
+
+    def test_question_is_a_constructible_severity(self):
+        """The skill declares QUESTION a legal severity, so ingestion must build it.
+
+        Without a QUESTION member, ``Severity("question")`` raises ValueError and
+        any JSON -> model ingestion of a QUESTION finding crashes or drops it --
+        the same disappearance the skill's SEVERITY_ORDER contract exists to stop.
+        """
+        assert Severity("question") is Severity.QUESTION
+        # QUESTION also exists on FeedbackCategory. They are distinct enums on
+        # distinct axes; neither substitutes for the other.
+        assert Severity.QUESTION is not FeedbackCategory.QUESTION
+
+    def test_legacy_names_are_aliases(self):
+        """IMPORTANT and MINOR resolve to HIGH and LOW, not to distinct members."""
+        assert Severity.IMPORTANT is Severity.HIGH
+        assert Severity.MINOR is Severity.LOW
+        assert Severity.IMPORTANT.name == "HIGH"
+        assert Severity.MINOR.name == "LOW"
+        # Aliases do not add members to the enum.
+        assert [s.name for s in Severity] == [
+            "CRITICAL",
+            "HIGH",
+            "MEDIUM",
+            "LOW",
+            "NIT",
+            "QUESTION",
+            "PRAISE",
+        ]
 
     def test_severity_ordering(self):
-        """Critical > Important > Minor for sorting purposes."""
-        # We can compare by using a custom ordering or just verify they exist
-        severities = [Severity.MINOR, Severity.CRITICAL, Severity.IMPORTANT]
-        # Sort by the natural order we want: CRITICAL first, then IMPORTANT, then MINOR
-        sorted_severities = sorted(severities, key=lambda s: {
+        """CRITICAL > HIGH > MEDIUM > LOW > NIT > QUESTION > PRAISE for sorting."""
+        order = {
             Severity.CRITICAL: 0,
-            Severity.IMPORTANT: 1,
-            Severity.MINOR: 2,
-        }[s])
-        assert sorted_severities == [Severity.CRITICAL, Severity.IMPORTANT, Severity.MINOR]
+            Severity.HIGH: 1,
+            Severity.MEDIUM: 2,
+            Severity.LOW: 3,
+            Severity.NIT: 4,
+            Severity.QUESTION: 5,
+            Severity.PRAISE: 6,
+        }
+        severities = [
+            Severity.NIT,
+            Severity.LOW,
+            Severity.CRITICAL,
+            Severity.PRAISE,
+            Severity.QUESTION,
+            Severity.HIGH,
+            Severity.MEDIUM,
+        ]
+        assert sorted(severities, key=lambda s: order[s]) == [
+            Severity.CRITICAL,
+            Severity.HIGH,
+            Severity.MEDIUM,
+            Severity.LOW,
+            Severity.NIT,
+            Severity.QUESTION,
+            Severity.PRAISE,
+        ]
+
+    def test_dedup_severity_order_covers_every_member(self):
+        """The dedup ranking must not silently omit a Severity member."""
+        from spellbook.code_review.deduplication import _SEVERITY_ORDER
+
+        assert set(_SEVERITY_ORDER) == set(Severity)
+
+    def test_legacy_names_sort_via_aliases(self):
+        """Legacy call sites still sort correctly through the alias members."""
+        order = {Severity.CRITICAL: 0, Severity.HIGH: 1, Severity.LOW: 2}
+        severities = [Severity.MINOR, Severity.CRITICAL, Severity.IMPORTANT]
+        assert sorted(severities, key=lambda s: order[s]) == [
+            Severity.CRITICAL,
+            Severity.IMPORTANT,
+            Severity.MINOR,
+        ]
 
 
 class TestFileDiff:

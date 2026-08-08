@@ -18,8 +18,9 @@ import tripwire
 import pytest
 
 import installer.platforms.forgecode as fc_mod
-from installer.components.context_files import generate_codex_context
 from installer.components.mcp import DEFAULT_HOST, DEFAULT_PORT
+from installer.components.rule_bundle import DELIVERY_MARKER_PREFIX
+from installer.components.rule_delivery import MERGE_END, MERGE_START
 from installer.demarcation import MARKER_END
 from installer.platforms.forgecode import ForgeCodeInstaller
 
@@ -37,6 +38,10 @@ def _make_spellbook_dir(tmp_path: Path) -> Path:
     spellbook.mkdir()
     (spellbook / ".version").write_text(TEST_VERSION)
     (spellbook / "AGENTS.spellbook.md").write_text("# Spellbook Context\n\nTest content.\n")
+    (spellbook / "rules").mkdir(exist_ok=True)
+    (spellbook / "rules" / "00-core.md").write_text(
+        """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+    )
     return spellbook
 
 
@@ -98,7 +103,7 @@ class TestForgeCodeInstall:
 
         assert actual == {"mcpServers": {"spellbook": _expected_spellbook_entry()}}
 
-    def test_fresh_install_creates_sidecar_rules_and_agents_md(
+    def test_fresh_install_writes_bundle_and_drops_sidecar(
         self, spellbook_dir, forge_config_dir, forge_env
     ):
         m_token = tripwire.mock(f"{FC_MOD}:get_mcp_auth_token").returns(TEST_TOKEN)
@@ -107,11 +112,15 @@ class TestForgeCodeInstall:
             installer.install()
         m_token.assert_call()
 
+        # The retired sidecar is inert -- forge has no import directive and
+        # reads only AGENTS.md -- so it must not be created.
         sidecar = forge_config_dir / "AGENTS.spellbook.md"
-        assert sidecar.is_symlink() or sidecar.exists()
+        assert not os.path.lexists(sidecar)
 
         agents_md = forge_config_dir / "AGENTS.md"
         assert agents_md.exists()
+        assert not agents_md.is_symlink(), "the bundle is a real file, not a link"
+        assert DELIVERY_MARKER_PREFIX in agents_md.read_text(encoding="utf-8")
 
     @pytest.mark.skipif(sys.platform == "win32", reason="POSIX file modes only")
     def test_fresh_install_chmod_0600(
@@ -309,11 +318,17 @@ class TestForgeCodeInstall:
 
         new_content = agents_md.read_text(encoding="utf-8")
 
-        # User content is preserved byte-for-byte without mutating with a demarcated block.
-        assert new_content == user_content
+        # The user's bytes survive verbatim and come first. Spellbook must own
+        # this path to deliver anything, but owning it never means clobbering.
+        assert new_content.startswith(user_content.rstrip())
 
-        # Sidecar rule file AGENTS.spellbook.md is created
-        assert (forge_config_dir / "AGENTS.spellbook.md").exists()
+        # Spellbook's content follows inside its own demarcated region.
+        assert MERGE_START in new_content
+        assert MERGE_END in new_content
+        assert DELIVERY_MARKER_PREFIX in new_content
+
+        # The retired sidecar is not created.
+        assert not os.path.lexists(forge_config_dir / "AGENTS.spellbook.md")
 
     def test_install_warns_when_FORGE_CONFIG_unset(
         self, spellbook_dir, forge_config_dir, monkeypatch, tmp_path

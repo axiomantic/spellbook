@@ -183,6 +183,30 @@ def test_get_agent_client_factory(monkeypatch):
     assert isinstance(client, OpencodeAgentClient)
 
 
+def test_make_claude_options_defaults_none_tool_lists_to_empty():
+    """Regression: AgentOptions.allowed_tools/disallowed_tools default to
+    None, but the downstream SDK does list(self._options.allowed_tools) in
+    SubprocessCLITransport._apply_skills_defaults(), which raises
+    TypeError: 'NoneType' object is not iterable if that isn't a list.
+
+    _make_claude_options() must adapt None -> [] at the boundary.
+    """
+    from claude_agent_sdk._internal.transport.subprocess_cli import (
+        SubprocessCLITransport,
+    )
+
+    client = ClaudeAgentClient(AgentOptions(model="haiku"))
+    opts = client._make_claude_options()
+
+    assert opts.allowed_tools == []
+    assert opts.disallowed_tools == []
+
+    # Load-bearing half: verify the downstream SDK actually accepts these
+    # values (this raised TypeError before the fix).
+    transport = SubprocessCLITransport(prompt="x", options=opts)
+    assert transport._apply_skills_defaults() == ([], None)
+
+
 def test_gemini_spawn_session():
     client = GeminiAgentClient()
 

@@ -1,6 +1,6 @@
 ---
 name: advanced-code-review
-description: "Use when performing thorough code review with historical context tracking. Triggers: 'thorough review', 'deep review', 'review this branch in detail', 'full code review with report', 'branch code review', 'review this branch', 'review the changes', 'review what's on this branch', 'do a code review of the branch'. More heavyweight than code-review; for quick review, use code-review instead. When the request could match more than one review skill, MUST use AskUserQuestion to disambiguate before invoking — never bypass the review skills for a raw Explore dispatch, even when the user's concerns seem narrow or specific."
+description: "Use for branch code review whenever the user does not explicitly ask for a lightweight pass — this is the DEFAULT for unspecified-scope review. Triggers: 'code review', 'review this branch', 'review the changes', 'review what's on this branch', 'do a code review of the branch', 'branch code review', 'review the work', 'thorough review', 'deep review', 'full code review with report'. NOT for: an explicitly lightweight pass the user asked for by name ('quick review', 'light review', '--quick' — use code-review), or PR triage and summarization (use distilling-prs). Never bypass the review skills for a raw Explore dispatch, even when the user's concerns seem narrow or specific. Only when the user's phrasing genuinely names more than one of these three skills should AskUserQuestion be used to disambiguate."
 intro: |
   Multi-phase deep code review with historical context analysis, fact-checked findings, and tiered severity reporting. Runs five phases: strategic planning, context analysis, deep review, verification, and report generation. This core spellbook skill produces detailed review artifacts and is the heavyweight alternative to the simpler code-review skill.
 ---
@@ -49,7 +49,7 @@ After each phase, reflect:
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
 | `target` | Yes | - | Branch name, PR number (#123), or PR URL |
-| `--base` | No | main/master | Custom base ref for comparison |
+| `--base` | No | *detected* | Override the base ref. When omitted, the base is DETECTED by `branch-context.sh` (never assumed) — see Diff Acquisition. |
 | `--scope` | No | all | Limit to specific paths (glob pattern) |
 | `--offline` | No | auto | Force offline mode (no network operations) |
 | `--continue` | No | false | Resume previous review session |
@@ -61,6 +61,8 @@ After each phase, reflect:
 |--------|----------|-------------|
 | review-manifest.json | reviews/<key>/ | Review metadata and configuration |
 | review-plan.md | reviews/<key>/ | Phase 1 strategy document |
+| coverage-manifest.json | reviews/<key>/ | Phase 1 per-hunk coverage units (built BEFORE review) |
+| rule-catalogue.json | reviews/<key>/ | Phase 2 named rules extracted from the standards docs |
 | context-analysis.md | reviews/<key>/ | Phase 2 historical context |
 | previous-items.json | reviews/<key>/ | Declined/partial/alternative tracking |
 | findings.md | reviews/<key>/ | Phase 3 findings (human-readable) |
@@ -101,6 +103,73 @@ Local files may only be read in PR mode for ONE purpose: loading project convent
 
 ---
 
+## Diff Acquisition
+
+<CRITICAL>
+Never hand-roll the merge base. `scripts/branch-context.sh` (POSIX) and
+`scripts/branch-context.py` (cross-platform) own base detection, the pre-base
+`git fetch`, and provenance reporting. Shell out to one of them.
+
+**No base literal appears in this skill or its phase commands.** Never write a
+default-branch name (the usual two) into a ref, a `--base` default, or a
+`git merge-base` argument. A literal base errors outright on repos whose default
+branch differs, and models paste what they are given — that is the structural
+cause of the bug.
+</CRITICAL>
+
+Two independent axes. Decide each one explicitly.
+
+### Axis 1 — BASE (invariant)
+
+The merge base against the **detected** merge target. The script fetches first,
+then resolves in this order, and reports which rung it landed on:
+
+| Order | Method | `resolved_via` |
+|-------|--------|----------------|
+| 1 | PR base ref (`gh pr view --json baseRefName`, head-ref validated) | `pr-base-ref` |
+| 2 | Upstream tracking branch | `upstream-tracking` |
+| 3 | Remote HEAD | `remote-head` |
+| 4 | Last-ditch literal — **a guess, and reported as one** | `fallback-literal` |
+
+A `--base` override skips detection. When overridden, report `resolved_via` as
+`explicit-override` and name who supplied it.
+
+```bash
+# Machine-readable provenance for the manifest
+"$SPELLBOOK_DIR/scripts/branch-context.sh" json
+```
+
+### Axis 2 — ENDPOINT (task-dependent)
+
+| Task | Endpoint | Subcommand |
+|------|----------|------------|
+| Reviewing what will merge (**the default for this skill**) | committed only | `diff-committed` |
+| Describing what the branch does (changelog, PR body) | include working tree | `diff` |
+| Pre-commit self-review | include working tree | `diff` |
+
+This skill reviews what will merge, so `diff-committed` is the default. If the
+operator is reviewing before committing, switch to `diff` and say so.
+"Branch diff" is **not** a name for both endpoints.
+
+### Reporting requirement
+
+<CRITICAL>
+Every review MUST report the base it used AND how that base was resolved. Carry
+`merge_target`, `merge_base`, `base_ref`, `resolved_via`, and `fetch` into
+`review-manifest.json`, and surface them in `review-report.md`:
+
+```
+Base: <merge_target> @ <merge_base[:12]> (resolved via <resolved_via>, fetch <fetch>)
+Endpoint: <committed-only | includes working tree>
+```
+
+If `resolved_via` is `fallback-literal`, or `fetch` is not `ok`, flag it
+prominently — the base may be wrong or stale. Silent fallback is the exact
+failure this procedure exists to prevent.
+</CRITICAL>
+
+---
+
 ## Phase Overview
 
 | Phase | Name | Purpose | Command |
@@ -117,9 +186,9 @@ Local files may only be read in PR mode for ONE purpose: loading project convent
 
 **Execute:** `/advanced-code-review-plan`
 
-**Outputs:** `review-manifest.json`, `review-plan.md`
+**Outputs:** `review-manifest.json`, `review-plan.md`, `coverage-manifest.json`
 
-**Self-Check:** Target resolved, files categorized, complexity estimated, artifacts written.
+**Self-Check:** Base DETECTED (no literal) with `resolved_via` and fetch status recorded, endpoint chosen, files categorized, per-hunk coverage manifest built BEFORE review, complexity estimated, artifacts written.
 
 ---
 
@@ -127,11 +196,20 @@ Local files may only be read in PR mode for ONE purpose: loading project convent
 
 **Execute:** `/advanced-code-review-context`
 
-**Outputs:** `context-analysis.md`, `previous-items.json`
+**Outputs:** `rule-catalogue.json`, `context-analysis.md`, `previous-items.json`
 
-**Self-Check:** Previous items loaded, PR context fetched (if online), re-check requests extracted.
+**Self-Check:** Standards loaded across the full document net (root AND subdirectory `AGENTS.md`, coding standards, testing instructions, lint config), rule catalogue emitted, previous items loaded, PR context fetched (if online), re-check requests extracted.
 
-**Note:** Phase 2 failures are non-blocking. Proceed with empty context if necessary.
+<CRITICAL>
+**Phase 2 is split on blocking behavior.**
+
+- **Standards load (2.0) BLOCKS.** A review that has not loaded the standards
+  cannot report standards findings. A read failure on a discovered standards
+  document stops the phase. Finding *no* standards document is not a failure —
+  record it, proceed, and forbid style findings downstream.
+- **History (previous reviews, PR context) is non-blocking.** Proceed with empty
+  history and a logged warning if it cannot be loaded.
+</CRITICAL>
 
 ---
 
@@ -143,7 +221,7 @@ Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
 
 **Outputs:** `findings.json`, `findings.md`
 
-**Self-Check:** All files reviewed, all passes complete, declined items respected, required fields present.
+**Self-Check:** Coverage reconciled N-of-N at hunk level with gaps disclosed, all passes complete, declined items respected, required fields present including `rule`.
 
 ---
 
@@ -172,17 +250,37 @@ Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
 ### Severity Order
 
 ```python
-SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "PRAISE": 5}
+SEVERITY_ORDER = {
+    "CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "QUESTION": 5, "PRAISE": 6
+}
 ```
+
+<CRITICAL>
+`QUESTION` is a legal severity and **must** appear in this dict. Omitting it
+sends every QUESTION finding to the `.get(..., 99)` fallback, where it sorts
+last and vanishes from `review-summary.json`'s `by_severity`. This dict, the one
+in `/advanced-code-review-report`, and the `by_severity` examples in
+`/advanced-code-review-review` are ONE contract — they must agree key for key.
+</CRITICAL>
+
+`CRITICAL` is reserved for security vulnerabilities, data loss, and production
+outages. **Bugs are HIGH**, never CRITICAL.
 
 ### Configurable Thresholds
 
-| Threshold | Default | Description |
-|-----------|---------|-------------|
-| `STALENESS_DAYS` | 30 | Max age of previous review before ignored |
-| `LARGE_DIFF_LINES` | 10000 | Lines threshold for chunked processing |
-| `SUBAGENT_THRESHOLD_FILES` | 20 | Files threshold for parallel subagent dispatch |
-| `VERIFICATION_TIMEOUT_SEC` | 60 | Max time for verification phase |
+| Threshold | Default | Consumer |
+|-----------|---------|----------|
+| `STALENESS_DAYS` | 30 | `/advanced-code-review-context` 2.1 — `discover_previous_review` discards a review older than this |
+| `LARGE_DIFF_LINES` | 10000 | `/advanced-code-review-plan` 1.6.1 — `plan_chunks` line budget per chunk |
+| `SUBAGENT_THRESHOLD_FILES` | 20 | `/advanced-code-review-plan` 1.6.1 — `plan_chunks` file count that triggers chunked dispatch |
+| `VERIFICATION_TIMEOUT_SEC` | 60 | Phase 4 circuit breaker — verification exceeding this stops the run |
+
+<CRITICAL>
+Each threshold names its consumer. A threshold with no consumer is dead
+configuration that invites false confidence: `LARGE_DIFF_LINES` and
+`SUBAGENT_THRESHOLD_FILES` previously advertised chunked processing that did not
+exist. If a future edit removes a consumer, remove the row.
+</CRITICAL>
 
 ---
 
@@ -202,7 +300,14 @@ SEVERITY_ORDER = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "PR
 - Skip verification phase (all findings must be verified)
 - Mark finding as VERIFIED without actual verification
 - Include REFUTED findings in final report
-- Generate findings without file/line/evidence
+- Generate findings without file/line/evidence/rule
+- Hardcode a base ref instead of shelling out to `branch-context.sh` / `branch-context.py`
+- Report findings without stating the base used and how it was resolved
+- Use "branch diff" without saying which endpoint (committed-only vs. working tree)
+- Substitute grep for reading a hunk (grep LOCATES; it never COVERS)
+- Sample the diff and treat the remainder as covered
+- Report a style or convention finding when the standards load found nothing
+- Classify a bug as CRITICAL (bugs are HIGH)
 - Guess at severity (use decision tree)
 - Skip multi-pass review order
 - Ignore previous review context when available
@@ -238,14 +343,19 @@ Before declaring review complete:
 - [ ] Phase 5: Report rendered, artifacts written
 
 ### Quality Gates
-- [ ] Every finding has: id, severity, category, file, line, evidence
+- [ ] Every finding has: id, severity, category, file, line, evidence, **rule**
+- [ ] **Every `rule` names a catalogued rule (document + id) or a named correctness/logic bug**
+- [ ] **Base was DETECTED (no hardcoded literal), and base + `resolved_via` + fetch status are reported**
+- [ ] **Endpoint (committed-only vs. working tree) chosen deliberately and stated**
+- [ ] **Standards load completed; `rule-catalogue.json` written; if nothing was found, disclosed**
+- [ ] **Coverage reconciled N-of-N at hunk level; gaps listed with reasons**
 - [ ] No REFUTED findings in final report
 - [ ] INCONCLUSIVE findings flagged with [NEEDS VERIFICATION]
 - [ ] Declined items from previous review not re-raised
 - [ ] Signal-to-noise ratio calculated and reported
 
 ### Output Verification
-- [ ] All 8 artifact files exist and are valid
+- [ ] All 10 artifact files exist and are valid
 
 <CRITICAL>
 If ANY self-check item fails, STOP and fix before declaring complete.
@@ -268,10 +378,24 @@ If ANY self-check item fails, STOP and fix before declaring complete.
 
 | Command | Phase | Usage |
 |---------|-------|-------|
-| `git merge-base` | 1 | Find common ancestor with base |
-| `git diff --name-only` | 1 | List changed files |
-| `git diff` | 3 | Get full diff content |
+| `branch-context.sh json` | 1 | Detect base, fetch, compute merge base, report provenance |
+| `branch-context.sh files-committed` | 1 | Coverage-manifest file list, committed-only endpoint |
+| `branch-context.sh diff-committed` | 1, 3 | Diff content, committed-only endpoint |
+| `branch-context.sh files` | 1 | Coverage-manifest file list including working tree (pre-commit review only) |
+| `branch-context.sh diff` | 1, 3 | Diff content including working tree (pre-commit review only) |
 | `git show` | 4 | Verify file contents at SHA |
+
+<CRITICAL>
+`git merge-base` and bare `git diff <base>` are NOT invoked directly. The script
+owns base detection, the pre-base `git fetch`, and provenance reporting;
+re-implementing that chain is how hardcoded literals get reintroduced.
+
+The file list and the diff MUST come from the SAME endpoint:
+`files-committed` pairs with `diff-committed`, and `files` pairs with `diff`.
+Mixing them builds a coverage manifest of files the diff does not contain, so
+coverage reconciliation reports complete against zero hunks — a review that read
+nothing and certified N-of-N.
+</CRITICAL>
 
 ### Fallback Chain
 

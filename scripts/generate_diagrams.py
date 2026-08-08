@@ -391,6 +391,7 @@ def generate_diagram(
             "--print",
             "--model", model,
             "--dangerously-skip-permissions",
+            "--allowedTools", "Read",
         ]
         if provider_args:
             cmd.extend(provider_args)
@@ -449,25 +450,6 @@ def generate_diagram(
         ), None
 
     diagram_content = result.stdout.strip()
-
-    # Check if Claude wrote to a DIAGRAM.md file instead of stdout.
-    # Common locations: source directory, repo root, or diagrams dir.
-    diagram_file_candidates = [
-        item.source_path.parent / "DIAGRAM.md",
-        REPO_ROOT / "DIAGRAM.md",
-        item.diagram_path.parent / f"{item.name}-DIAGRAM.md",
-    ]
-    for candidate in diagram_file_candidates:
-        if candidate.exists():
-            file_content = candidate.read_text(encoding="utf-8").strip()
-            if file_content:
-                if verbose:
-                    print(f"  Found LLM-written file: {candidate}")
-                if not diagram_content or "mermaid" not in diagram_content:
-                    diagram_content = file_content
-                candidate.unlink()
-            else:
-                candidate.unlink()
 
     if not diagram_content:
         print(" failed")
@@ -659,6 +641,39 @@ def get_source_diff(source_path: Path) -> str:
 
 _VALID_CLASSIFICATIONS = ("STAMP", "PATCH", "REGENERATE")
 
+CLASSIFICATION_UNAVAILABLE = "UNAVAILABLE"
+
+# Distinct from 1 (generation failure). A classification outage leaves diagrams
+# STALE but otherwise untouched -- a different condition from a diagram that
+# failed to generate, and one a caller may reasonably want to retry rather than
+# treat as a hard error. Exiting 0 made an outage indistinguishable from a clean
+# run in CI, which is how the whole class of failure stayed invisible.
+EXIT_CLASSIFICATION_UNAVAILABLE = 2
+
+
+def outage_exit_code(classify_failed_count: int) -> int:
+    """0 when every item got a verdict, EXIT_CLASSIFICATION_UNAVAILABLE otherwise."""
+    return EXIT_CLASSIFICATION_UNAVAILABLE if classify_failed_count else 0
+
+
+def print_classification_outage(classify_failed_count: int, deferred_count: int = 0) -> None:
+    """Surface a classification outage. MUST be called on EVERY return path.
+
+    The tally previously existed only on the paths that generated something, so
+    the one path an outage reliably takes -- operator declines everything, early
+    return -- printed "Nothing to generate" and exited 0.
+    """
+    if not classify_failed_count:
+        return
+    print(
+        f"WARNING: {classify_failed_count} item(s) went unclassified - "
+        "classification unavailable (needs attention)"
+    )
+    if deferred_count:
+        print(
+            f"         {deferred_count} left UNSTAMPED so the next run reclassifies them"
+        )
+
 
 def _normalize_classification(raw: str | None) -> str:
     """Normalize a raw classifier response into a valid classification.
@@ -699,7 +714,9 @@ async def classify_change(
     options = AgentOptions(
         cwd=REPO_ROOT,
         model=model,
-        extra_args=provider_args or []
+        extra_args=provider_args or [],
+        allowed_tools=[],
+        max_turns=1,
     )
     client = get_agent_client(provider, options)
 
@@ -708,8 +725,8 @@ async def classify_change(
     try:
         raw = await client.run(prompt)
     except Exception as e:
-        print(f"  -> REGENERATE ({type(e).__name__}: {e})")
-        return "REGENERATE"
+        print(f"  -> classification FAILED ({type(e).__name__}: {e})", file=sys.stderr)
+        return CLASSIFICATION_UNAVAILABLE
 
     classification = _normalize_classification(raw)
     print(f" {classification}")
@@ -735,7 +752,9 @@ async def patch_diagram(
     options = AgentOptions(
         cwd=REPO_ROOT,
         model=model,
-        extra_args=provider_args or []
+        extra_args=provider_args or [],
+        allowed_tools=[],
+        max_turns=1,
     )
     client = get_agent_client(provider, options)
 
@@ -1164,6 +1183,14 @@ async def main_async(argv: list[str] | None = None) -> int:
         to_patch: list[tuple[SourceItem, str, str]] = []  # (item, hash, diff)
         stamped: list[tuple[SourceItem, str]] = []
         skipped: list[tuple[SourceItem, str]] = []
+        # Items the operator declined AFTER the classifier failed on them. These
+        # must NOT be stamped: stamping records the CURRENT source hash, so the
+        # item reads as fresh forever and is never reclassified. That is a silent
+        # permanent drop -- exactly the outcome the UNAVAILABLE verdict exists to
+        # prevent. Leaving them unstamped means the next run tries again.
+        deferred: list[SourceItem] = []
+        classify_failed_count = 0
+        classify_failed_ids: set[int] = set()
 
         for i, (item, current_hash) in enumerate(work_items, 1):
             reason = is_stale(item)[2]
@@ -1171,6 +1198,7 @@ async def main_async(argv: list[str] | None = None) -> int:
             show_source_changes(item)
 
             # Smart classification for interactive mode
+            classification = None
             if use_smart and item.diagram_path.exists():
                 classification = await classify_change(
                     item.source_path, item.diagram_path,
@@ -1178,7 +1206,17 @@ async def main_async(argv: list[str] | None = None) -> int:
                     provider_args=args.provider_args,
                 )
                 print(f"  Smart classification: {classification}")
+                if classification == CLASSIFICATION_UNAVAILABLE:
+                    # A classification failure is not a REGENERATE verdict.
+                    # Drop to the unclassified prompt so the operator decides,
+                    # rather than defaulting them into a full regeneration.
+                    classify_failed_count += 1
+                    classify_failed_ids.add(id(item))
+                    print("  Classification unavailable - no verdict; you decide.")
+                    print("  (declining leaves it UNSTAMPED so the next run retries)")
+                    classification = None
 
+            if classification is not None:
                 if classification == "STAMP":
                     while True:
                         answer = input("  [S]tamp (enter) / [g]enerate / [q]uit: ").strip().lower()
@@ -1222,15 +1260,22 @@ async def main_async(argv: list[str] | None = None) -> int:
                             return 0
                         print("  Please enter 'g', 's', or 'q'.")
             else:
-                # No smart classification (force, force-regen, or missing diagram)
+                # No classification available: --force, --force-regen, a missing
+                # diagram, or a classifier outage. No verdict to act on, so the
+                # operator answers explicitly.
                 while True:
                     answer = input("  Generate this diagram? [y]es / [s]kip / [q]uit: ").strip().lower()
                     if answer in ("y", "yes"):
                         to_generate.append((item, current_hash))
                         break
                     if answer in ("s", "skip"):
-                        skipped.append((item, current_hash))
-                        print("  -> Will skip (stamp on completion)")
+                        if id(item) in classify_failed_ids:
+                            # Never stamp an item whose classification failed.
+                            deferred.append(item)
+                            print("  -> Deferred (left UNSTAMPED; next run reclassifies)")
+                        else:
+                            skipped.append((item, current_hash))
+                            print("  -> Will skip (stamp on completion)")
                         break
                     if answer in ("q", "quit"):
                         print("\nAborted. No changes made.")
@@ -1238,14 +1283,19 @@ async def main_async(argv: list[str] | None = None) -> int:
                     print("  Please enter 'y', 's', or 'q'.")
 
         if not to_generate and not to_patch:
-            # Apply stamps and skips
+            # Apply stamps and skips. `deferred` is deliberately NOT stamped.
             for item, current_hash in stamped:
                 stamp_as_fresh(item, current_hash)
             for item, current_hash in skipped:
                 stamp_as_fresh(item, current_hash)
             total = len(stamped) + len(skipped)
             print(f"\nNothing to generate. {total} stamped/skipped.")
-            return 0
+            # This early return is the OVERWHELMINGLY LIKELY path during a
+            # classifier outage: nothing has a verdict, so the operator declines
+            # everything. Omitting the tally here made the outage invisible on
+            # the one path where it always happens.
+            print_classification_outage(classify_failed_count, len(deferred))
+            return outage_exit_code(classify_failed_count)
 
         total_work = len(to_generate) + len(to_patch)
         print(f"\n{'=' * 60}")
@@ -1322,7 +1372,7 @@ async def main_async(argv: list[str] | None = None) -> int:
             else:
                 print(f" {result.status}: {result.message}")
 
-        # Apply stamps and skips
+        # Apply stamps and skips. `deferred` is deliberately NOT stamped.
         for item, current_hash in stamped:
             stamp_as_fresh(item, current_hash)
         for item, current_hash in skipped:
@@ -1338,19 +1388,30 @@ async def main_async(argv: list[str] | None = None) -> int:
             parts.append(f"{len(stamped)} stamped")
         if skipped:
             parts.append(f"{len(skipped)} skipped")
+        if deferred:
+            parts.append(f"{len(deferred)} deferred (unstamped)")
         if failed_count:
             parts.append(f"{failed_count} failed")
+        if classify_failed_count:
+            # In interactive mode "SKIPPED" is a FALSE label: the operator may
+            # well have generated the item after the classifier failed on it.
+            # What is true of every one of them is that they went UNCLASSIFIED.
+            parts.append(
+                f"{classify_failed_count} unclassified - classification "
+                "unavailable (needs attention)"
+            )
         print(f"Done: {', '.join(parts)}")
 
         if failed_count > 0:
             return 1
-        return 0
+        return outage_exit_code(classify_failed_count)
 
     # ----- Non-interactive: smart classification or direct generation -----
     generated_count = 0
     patched_count = 0
     stamped_count = 0
     failed_count = 0
+    classify_failed_count = 0
 
     for i, (item, current_hash) in enumerate(work_items, 1):
         # Smart classification (if enabled and diagram exists)
@@ -1360,6 +1421,18 @@ async def main_async(argv: list[str] | None = None) -> int:
                 provider=provider, model=fast_model,
                 provider_args=args.provider_args,
             )
+            if classification == CLASSIFICATION_UNAVAILABLE:
+                # A classification failure is NOT evidence that regeneration is
+                # warranted. Falling through here would silently burn a full
+                # regeneration per stale diagram on every SDK outage, which is
+                # exactly the disguise the UNAVAILABLE verdict exists to remove.
+                # Skip the item and surface it; the next run reclassifies it.
+                classify_failed_count += 1
+                print(
+                    f"[{i}/{len(work_items)}] SKIPPED (classification unavailable): "
+                    f"{item_label(item)} - left stale, rerun to reclassify"
+                )
+                continue
 
             if classification == "STAMP":
                 stamp_as_fresh(item, current_hash)
@@ -1397,7 +1470,9 @@ async def main_async(argv: list[str] | None = None) -> int:
                     # Fall through to full generation below
                     pass
 
-            # classification == "REGENERATE" or patch failed: fall through
+            # classification == "REGENERATE" (a real verdict, never a swallowed
+            # failure -- UNAVAILABLE was routed away above) or patch failed:
+            # fall through to full generation.
 
         result, output_content = await asyncio.to_thread(
             generate_diagram,
@@ -1429,13 +1504,17 @@ async def main_async(argv: list[str] | None = None) -> int:
         parts.append(f"{stamped_count} stamped")
     if failed_count:
         parts.append(f"{failed_count} failed")
+    if classify_failed_count:
+        parts.append(
+            f"{classify_failed_count} SKIPPED - classification unavailable (needs attention)"
+        )
     if not parts:
         parts.append("0 generated")
     print(f"Done: {', '.join(parts)}")
 
     if failed_count > 0:
         return 1
-    return 0
+    return outage_exit_code(classify_failed_count)
 
 
 if __name__ == "__main__":

@@ -107,8 +107,8 @@ class ClaudeAgentClient(AgentClient):
             model=self.options.model,
             max_turns=self.options.max_turns,
             permission_mode=self.options.permission_mode,
-            allowed_tools=self.options.allowed_tools,
-            disallowed_tools=self.options.disallowed_tools,
+            allowed_tools=self.options.allowed_tools or [],
+            disallowed_tools=self.options.disallowed_tools or [],
             # Pass stderr through so CLI errors are visible
             stderr=_stderr_printer,
         )

@@ -11,6 +11,7 @@ import random
 import tempfile
 import warnings
 from datetime import datetime, timedelta
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
@@ -27,6 +28,10 @@ logger = logging.getLogger(__name__)
 # cannot drift apart on spelling or membership. Ordering is not significant to
 # validation; the installer wizard presents its own display order.
 SESSION_MODES: tuple[str, ...] = ("fun", "tarot", "none")
+
+# Prefix for the per-rule-module opt-in keys. Their defaults are resolved
+# lazily (see rule_module_config_defaults) rather than registered at import.
+RULE_MODULE_KEY_PREFIX = "rules.module."
 
 
 CONFIG_DEFAULTS: dict[str, Any] = {
@@ -77,6 +82,65 @@ CONFIG_DEFAULTS: dict[str, Any] = {
     # in spellbook/admin/routes/config.py.
     "security_gates_enabled": False,
 }
+
+
+def _rule_module_defaults() -> dict[str, Any]:
+    """One boolean default per preference rule module, read from ``rules/``.
+
+    Generated rather than typed, so adding a module cannot leave a key
+    unregistered. Mandatory modules get no key: they install unconditionally
+    and are never consulted against config.
+
+    A key's *absence* from the user's config file remains meaningful (it means
+    "never offered"), so these entries are defaults for ``config_get`` only --
+    ``config_is_explicitly_set`` still distinguishes an answered module from an
+    unanswered one.
+    """
+    try:
+        from installer.components.rule_modules import (
+            get_rules_dir,
+            load_rule_modules,
+            preference_modules,
+        )
+
+        modules = load_rule_modules(get_rules_dir(get_spellbook_dir()))
+    except Exception:  # pragma: no cover - a partial checkout must not break config
+        logger.debug("Rule modules unavailable; no rules.module.* defaults registered")
+        return {}
+
+    return {module.config_key: module.default_on for module in preference_modules(modules)}
+
+
+@lru_cache(maxsize=4)
+def _rule_module_defaults_for_dir(spellbook_dir: str) -> dict[str, Any]:
+    return _rule_module_defaults()
+
+
+def rule_module_config_defaults() -> dict[str, Any]:
+    """Memoized ``rules.module.*`` defaults, resolved on first use.
+
+    Deliberately NOT folded into ``CONFIG_DEFAULTS`` at import time. Doing that
+    globbed and parsed every file in ``rules/`` on every import of this module
+    -- including from the PreToolUse bash gate, which runs on every single Bash
+    call. Resolution now happens only when a ``rules.module.*`` default is
+    actually requested, and only once per checkout.
+
+    Keyed on the resolved checkout path rather than memoized outright. The MCP
+    server is a long-lived process; a ``SPELLBOOK_DIR`` change under it left a
+    single-slot cache serving the defaults of the previous checkout forever,
+    and a ``cache_clear`` nobody called cannot fix that. Keying makes the stale
+    read impossible instead of merely recoverable.
+    """
+    return _rule_module_defaults_for_dir(str(get_spellbook_dir()))
+
+
+def config_default_for(key: str) -> Any:
+    """Built-in default for a config key, including the lazy rule-module keys."""
+    if key in CONFIG_DEFAULTS:
+        return CONFIG_DEFAULTS[key]
+    if key.startswith(RULE_MODULE_KEY_PREFIX):
+        return rule_module_config_defaults().get(key)
+    return None
 
 
 def config_is_explicitly_set(key: str) -> bool:
@@ -135,6 +199,16 @@ DEFAULT_SESSION_ID = "__default__"
 
 # File-level lock for thread-safe config access
 CONFIG_LOCK_PATH = get_config_dir() / "config.lock"
+
+
+def _config_lock_path() -> Path:
+    """Return the path of the config file-level lock.
+
+    Internal callers use this indirection so tests can redirect the lock path
+    via ``tripwire.mock("spellbook.core.config:_config_lock_path")`` instead of
+    monkey-patching the module-level ``CONFIG_LOCK_PATH`` constant.
+    """
+    return CONFIG_LOCK_PATH
 
 # Environment variable aliases for backward compatibility.
 # Maps short key names to their old SPELLBOOK_MCP_* env var names.
@@ -241,10 +315,14 @@ def _is_spellbook_root(path: Path) -> bool:
     Returns:
         True if the directory contains spellbook indicators
     """
-    # Key indicators: skills/ directory and AGENTS.spellbook.md file
+    # Key indicators: skills/ directory and the rules/ module directory.
+    # The AGENTS.spellbook.md alternative is retained for one minor release so a
+    # checkout predating the rules/ split is still recognized. This predicate must
+    # stay byte-equivalent to install.py::is_spellbook_repo.
     skills_dir = path / "skills"
-    spellbook_md = path / "AGENTS.spellbook.md"
-    return skills_dir.is_dir() and spellbook_md.is_file()
+    rules_dir = path / "rules"
+    legacy_md = path / "AGENTS.spellbook.md"
+    return skills_dir.is_dir() and (rules_dir.is_dir() or legacy_md.is_file())
 
 
 def _find_spellbook_root_from_file() -> Optional[Path]:
@@ -308,13 +386,13 @@ def config_get(key: str) -> Optional[Any]:
     Returns:
         The value for the key, built-in default from CONFIG_DEFAULTS, or None
     """
-    default = CONFIG_DEFAULTS.get(key)
+    default = config_default_for(key)
     config_path = get_config_path()
     if not config_path.exists():
         return default
 
     try:
-        with CrossPlatformLock(CONFIG_LOCK_PATH, shared=True, blocking=True):
+        with CrossPlatformLock(_config_lock_path(), shared=True, blocking=True):
             config = json.loads(config_path.read_text(encoding="utf-8"))
             return config.get(key, default)
     except LockHeldError:
@@ -348,7 +426,7 @@ def config_set(key: str, value: Any) -> dict:
     config_path = get_config_path()
 
     try:
-        with CrossPlatformLock(CONFIG_LOCK_PATH, blocking=True):
+        with CrossPlatformLock(_config_lock_path(), blocking=True):
             config = {}
             if config_path.exists():
                 try:
@@ -471,7 +549,7 @@ def config_set_many(updates: dict[str, Any]) -> dict:
         return {"status": "ok", "config": config}
 
     try:
-        with CrossPlatformLock(CONFIG_LOCK_PATH, blocking=True):
+        with CrossPlatformLock(_config_lock_path(), blocking=True):
             return _apply_and_write()
     except LockHeldError:
         logger.warning("Could not acquire config write lock. Falling back to unlocked write.")
@@ -1034,3 +1112,10 @@ def telemetry_status(db_path: str = None) -> dict:
         "endpoint_url": row.endpoint_url,
         "last_sync": row.last_sync,
     }
+
+
+# NOTE: rules.module.* defaults are intentionally NOT merged into
+# CONFIG_DEFAULTS here. See rule_module_config_defaults() -- an import-time
+# merge globbed and parsed all of rules/ on every import of this module, which
+# the bash gate performs on every Bash call. config_default_for() resolves them
+# on demand instead.

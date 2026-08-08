@@ -16,6 +16,7 @@ SD-1: ``render_admin_info`` accepts ``admin_url: str`` and ``show_token: bool``
 
 from __future__ import annotations
 
+import sys
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -36,6 +37,60 @@ class InstallerRenderer(ABC):
 
     def __init__(self, auto_yes: bool = False) -> None:
         self.auto_yes = auto_yes
+
+    # ------------------------------------------------------------------
+    # Rule module selection (shared by every renderer and both entry points)
+    # ------------------------------------------------------------------
+
+    def _should_offer_module_select(self, context: WizardContext) -> bool:
+        """Whether the rule module screen may be shown at all.
+
+        One predicate for every renderer. The Rich and plain wizards diverged
+        once -- the plain one nested the screen inside its "no ``--platforms``
+        flag" branch, so ``install.py --platforms claude_code`` on a real
+        terminal was never offered the modules while the same run under Rich
+        was. Renderer parity is the contract, so the gate is defined once.
+
+        Gated on a REAL stdin, not on ``--no-interactive`` alone: the caller
+        persists whatever comes back, so a screen that could not be answered
+        must never be shown.
+        """
+        return (
+            context.rule_selection is not None
+            and not context.no_interactive
+            and context.is_interactive
+            and sys.stdin.isatty()
+        )
+
+    def render_rule_module_select(self, selection: Any) -> list[str] | None:
+        """Offer the rule module selector outside the upfront wizard.
+
+        The ``spellbook install`` entry point calls this rather than reaching
+        for ``installer.tui.interactive_module_select`` itself. Calling the tui
+        directly skipped the renderer's Windows fallback, so a user with no
+        ``termios`` was offered the modules by ``python3 install.py`` and never
+        by ``spellbook install`` -- the entry-point divergence AGENTS.md
+        "Divergent install entry points" forbids.
+
+        Returns None for "not asked", which persists nothing.
+        """
+        context = WizardContext(
+            available_platforms=[],
+            cli_platforms=None,
+            profile_already_configured=True,
+            available_profiles=[],
+            is_upgrade=False,
+            is_interactive=True,
+            auto_yes=False,
+            no_interactive=False,
+            reconfigure=True,
+            rule_selection=selection,
+        )
+        return self._module_select(context)
+
+    def _module_select(self, context: WizardContext) -> list[str] | None:
+        """Renderer-specific module screen. Default: cannot prompt, so no answer."""
+        return None
 
     # ------------------------------------------------------------------
     # Welcome and configuration wizard
@@ -410,6 +465,13 @@ class RichRenderer(InstallerRenderer):
                 else:
                     results.platforms = self._wizard_platform_select(console, context)
 
+            # --- Section 2: Rule Module Selection ---
+            # Runs after platform selection and before delivery. Skipped
+            # entirely when non-interactive, so nothing is recorded that the
+            # user did not actually answer.
+            if self._should_offer_module_select(context):
+                results.rule_modules = self._wizard_module_select(console, context)
+
             # --- Section 4: Profile Selection ---
             if context.available_profiles and (
                 not context.profile_already_configured or context.reconfigure
@@ -475,6 +537,130 @@ class RichRenderer(InstallerRenderer):
                             options[idx]["selected"] = not options[idx]["selected"]
 
         return [o["id"] for o in options if o["selected"]]
+
+    def _module_select(self, context: WizardContext) -> list[str] | None:
+        return self._wizard_module_select(self._get_console(), context)
+
+    def _wizard_module_select(
+        self, console: Any, context: WizardContext
+    ) -> list[str] | None:
+        """Rule module selector.
+
+        Tries the termios checkbox selector first, then falls back to a Rich
+        table where termios is unavailable but a terminal is (Windows). The
+        fallback is a complete second implementation, not a wrapper, so it must
+        carry the same benefit and related-artifact information -- updating only
+        the termios path would leave this screen featureless.
+
+        Returns None for "not asked", which keeps ``WizardResults.rule_modules``
+        at its not-asked sentinel and persists nothing. Cancelling must be a
+        real option: falling through to the Rich table on cancel re-prompted
+        with a different UI and recorded whatever that returned, so there was no
+        way to decline to answer.
+        """
+        from rich.table import Table
+        from rich.prompt import Prompt
+
+        from installer.tui import (
+            get_module_options,
+            interactive_module_select,
+            module_select_available,
+        )
+
+        selection = context.rule_selection
+        if selection is None:
+            return None
+
+        can_prompt = module_select_available()
+        try:
+            res = interactive_module_select(selection)
+        except Exception as exc:
+            # Never swallowed into the fallback: a broken selector re-prompting
+            # through a second UI hides the failure and persists an answer the
+            # user gave to a screen that should not have been shown.
+            console.print(f"[yellow]Rule module selector failed: {exc}[/yellow]")
+            return None
+
+        if res is not None:
+            return res
+        if can_prompt:
+            # The selector ran and the user cancelled. Honor that.
+            return None
+        if not sys.stdin.isatty():
+            return None
+
+        options = get_module_options(selection)
+        if not options:
+            return []
+
+        mandatory_count = sum(1 for m in selection.modules if m.is_mandatory)
+
+        while True:
+            table = Table(title="Spellbook Rule Modules", show_header=True)
+            table.add_column("#", width=3, justify="right")
+            table.add_column("Module")
+            table.add_column("Benefit")
+            table.add_column("Related")
+            table.add_column("Status", justify="center")
+
+            for i, opt in enumerate(options):
+                if opt.selected:
+                    status = "[green]selected[/green]"
+                elif opt.previously_declined:
+                    status = "[yellow]previously declined[/yellow]"
+                elif not opt.default_on:
+                    status = "[dim]opt-in, skipped[/dim]"
+                else:
+                    status = "[dim]skipped[/dim]"
+                related = ", ".join(r.split("/")[-1] for r in opt.related) or "-"
+                table.add_row(str(i + 1), opt.name, opt.benefit, related, status)
+
+            console.print(table)
+            console.print(
+                f"[dim]{mandatory_count} mandatory modules install "
+                "unconditionally and are not listed.[/dim]"
+            )
+            console.print(
+                "[dim]Toggle: enter number(s) | a=all | n=none | d=defaults "
+                "| ?N=details | enter=confirm[/dim]"
+            )
+
+            choice = Prompt.ask("", default="", console=console).strip().lower()
+
+            if choice == "":
+                break
+            elif choice in ("a", "all"):
+                for opt in options:
+                    opt.selected = True
+            elif choice in ("n", "none"):
+                for opt in options:
+                    opt.selected = False
+            elif choice in ("d", "default", "defaults"):
+                for opt in options:
+                    opt.selected = opt.default_on
+            elif choice.startswith("?"):
+                token = choice[1:].strip()
+                if token.isdigit() and 1 <= int(token) <= len(options):
+                    opt = options[int(token) - 1]
+                    console.print(f"\n[cyan]{opt.name}[/cyan] "
+                                  f"({opt.size_bytes / 1024:.1f} KB, "
+                                  f"default: {'on' if opt.default_on else 'off'})")
+                    console.print(f"  What it does: {opt.benefit}")
+                    console.print(f"  If you decline it: {opt.declining_means}")
+                    console.print(
+                        "  Related: "
+                        + (", ".join(opt.related) if opt.related else "(none)")
+                        + "\n"
+                    )
+            else:
+                tokens = choice.replace(",", " ").split()
+                for tok in tokens:
+                    if tok.isdigit():
+                        idx = int(tok) - 1
+                        if 0 <= idx < len(options):
+                            options[idx].selected = not options[idx].selected
+
+        return [o.id for o in options if o.selected]
 
     def _wizard_profile(self, console: Any, context: WizardContext) -> str | None:
         """Collect profile selection by delegating to render_profile_wizard().
@@ -669,6 +855,13 @@ class PlainTextRenderer(InstallerRenderer):
             else:
                 results.platforms = self._wizard_platform_select_plain(context)
 
+            # --- Section 2: Rule Module Selection ---
+            # At the OUTER level, matching the Rich renderer. Nested inside the
+            # platform branch above, a run that passed --platforms skipped the
+            # module screen entirely on this renderer and not on the other one.
+            if self._should_offer_module_select(context):
+                results.rule_modules = self._wizard_module_select_plain(context)
+
             # --- Section 4: Profile Selection ---
             if context.available_profiles and (
                 not context.profile_already_configured or context.reconfigure
@@ -678,6 +871,84 @@ class PlainTextRenderer(InstallerRenderer):
             return results
         except (KeyboardInterrupt, EOFError):
             return None
+
+    def _module_select(self, context: WizardContext) -> list[str] | None:
+        try:
+            return self._wizard_module_select_plain(context)
+        except (KeyboardInterrupt, EOFError):
+            # Cancelled, or no stdin to read. Neither is an answer.
+            return None
+
+    def _wizard_module_select_plain(self, context: WizardContext) -> list[str]:
+        """Plain-text rule module selector using numbered toggle.
+
+        Carries the same benefit text and related-artifact pointers the Rich
+        and termios selectors show, so a plain-text install is not asked to
+        choose between modules it cannot tell apart.
+        """
+        from installer.tui import get_module_options
+
+        selection = context.rule_selection
+        if selection is None:
+            return []
+
+        options = get_module_options(selection)
+        if not options:
+            return []
+
+        mandatory_count = sum(1 for m in selection.modules if m.is_mandatory)
+
+        while True:
+            print("\nSpellbook rule modules:")
+            for i, opt in enumerate(options):
+                mark = "x" if opt.selected else " "
+                note = ""
+                if opt.previously_declined:
+                    note = " (previously declined)"
+                elif not opt.default_on:
+                    note = " (opt-in)"
+                print(f"  [{mark}] {i + 1:<3} {opt.name:<26} {opt.benefit}{note}")
+            print(
+                f"\n  {mandatory_count} mandatory modules install "
+                "unconditionally and are not listed."
+            )
+            print(
+                "  Toggle: number(s) | a=all | n=none | d=defaults "
+                "| ?N=details | enter=confirm"
+            )
+
+            choice = input("> ").strip().lower()
+
+            if choice == "":
+                break
+            elif choice in ("a", "all"):
+                for opt in options:
+                    opt.selected = True
+            elif choice in ("n", "none"):
+                for opt in options:
+                    opt.selected = False
+            elif choice in ("d", "default", "defaults"):
+                for opt in options:
+                    opt.selected = opt.default_on
+            elif choice.startswith("?"):
+                token = choice[1:].strip()
+                if token.isdigit() and 1 <= int(token) <= len(options):
+                    opt = options[int(token) - 1]
+                    print(f"\n{opt.name} "
+                          f"({opt.size_bytes / 1024:.1f} KB, "
+                          f"default: {'on' if opt.default_on else 'off'})")
+                    print(f"  What it does: {opt.benefit}")
+                    print(f"  If you decline it: {opt.declining_means}")
+                    print("  Related: "
+                          + (", ".join(opt.related) if opt.related else "(none)"))
+            else:
+                for tok in choice.replace(",", " ").split():
+                    if tok.isdigit():
+                        idx = int(tok) - 1
+                        if 0 <= idx < len(options):
+                            options[idx].selected = not options[idx].selected
+
+        return [o.id for o in options if o.selected]
 
     def _wizard_platform_select_plain(self, context: WizardContext) -> list[str]:
         """Plain-text platform selector using numbered toggle."""

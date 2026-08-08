@@ -10,14 +10,17 @@ Supports Google Antigravity agentic platform:
 
 import json
 import logging
+import os
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Tuple
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
+from ..components.rule_delivery import INSTALLED_GLOB
+from ..components.rule_modules import PER_FILE_CAP_BYTES
 from ..components.symlinks import create_symlink, remove_symlink
 from ..demarcation import get_installed_version, remove_demarcated_section
-from .base import PlatformInstaller, PlatformStatus
+from .base import RULE_DELIVERY_DIRECTORY, PlatformInstaller, PlatformStatus
 
 if TYPE_CHECKING:
     from ..core import InstallResult
@@ -30,6 +33,8 @@ POLICY_SOURCE = "hooks/bash-policy.toml"
 
 class AntigravityInstaller(PlatformInstaller):
     """Installer for the Antigravity coding harness."""
+
+    rule_delivery = RULE_DELIVERY_DIRECTORY
 
     @property
     def platform_name(self) -> str:
@@ -44,13 +49,44 @@ class AntigravityInstaller(PlatformInstaller):
         """Path to Antigravity's mcp_config.json."""
         return self.config_dir / "mcp_config.json"
 
+    def rule_module_dir(self) -> Path:
+        """Antigravity's global rules root.
+
+        This is ``~/.gemini/config/rules``, a sibling of the harness config
+        dir, not ``<config_dir>/rules``. The bundled product guide names
+        ``~/.gemini/config`` as the only global root, and the previously used
+        ``~/.gemini/antigravity/rules`` appears zero times in the shipped
+        binary -- which is why nothing spellbook wrote there ever loaded.
+        """
+        return self.config_dir.parent / "config" / "rules"
+
+    def legacy_rule_paths(self) -> List[Path]:
+        return [
+            self.config_dir / "rules" / "spellbook.md",
+            self.rule_module_dir() / "spellbook.md",
+        ]
+
+    def legacy_context_files(self) -> List[Path]:
+        return [self.config_dir / "AGENTS.md", self.config_dir / "GEMINI.md"]
+
+    def rule_bundle_cap(self) -> Optional[int]:
+        """Antigravity documents a 12,000-character cap per rule file."""
+        return PER_FILE_CAP_BYTES
+
     def detect(self) -> PlatformStatus:
         """Detect Antigravity status."""
         available = self.config_dir.exists() or self.ensure_config_dir()
         installed = False
         installed_version = None
 
-        if available:
+        rules_dir = self.rule_module_dir()
+        if rules_dir.is_dir() and any(rules_dir.glob(INSTALLED_GLOB)):
+            installed = True
+            installed_version = self.version
+        elif any(os.path.lexists(path) for path in self.legacy_rule_paths()):
+            installed = True
+
+        if available and not installed:
             # Check context file
             context_path = self.config_dir / "AGENTS.md"
             if context_path.exists():
@@ -137,38 +173,31 @@ class AntigravityInstaller(PlatformInstaller):
                 continue
 
             target_link = target_skills / skill_dir.name
-            if create_symlink(skill_dir, target_link, dry_run=self.dry_run):
+            # create_symlink returns a SymlinkResult dataclass, which is always
+            # truthy. Testing the object rather than its .success meant errors
+            # were never counted and a failed install reported zero errors.
+            if create_symlink(skill_dir, target_link, dry_run=self.dry_run).success:
                 created += 1
             else:
                 errors += 1
 
         return (created, errors)
 
-    def _install_context(self) -> "InstallResult":
-        """Symlink sidecar rule file rules/spellbook.md -> AGENTS.spellbook.md and strip legacy demarcated context."""
-        from ..core import InstallResult
+    def _install_context(self) -> List["InstallResult"]:
+        """Deliver per-module rule symlinks, then strip legacy demarcated context.
 
-        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
-        rules_dir = self.config_dir / "rules"
-        rule_file = rules_dir / "spellbook.md"
+        The strip runs only after delivery succeeds. The reverse order leaves a
+        user whose delivery failed with neither the old interpolated rules nor
+        the new modules.
+        """
+        results = self.install_rule_modules()
 
-        # Legacy cleanup on AGENTS.md / GEMINI.md
-        for legacy_file in (self.config_dir / "AGENTS.md", self.config_dir / "GEMINI.md"):
-            if legacy_file.exists() and not self.dry_run:
-                remove_demarcated_section(legacy_file)
+        if all(r.success for r in results) and not self.dry_run:
+            for legacy_file in self.legacy_context_files():
+                if legacy_file.exists():
+                    remove_demarcated_section(legacy_file)
 
-        if not rules_dir.exists() and not self.dry_run:
-            rules_dir.mkdir(parents=True, exist_ok=True)
-
-        res = create_symlink(source_agents, rule_file, dry_run=self.dry_run)
-
-        return InstallResult(
-            component="rules_sidecar",
-            platform=self.platform_id,
-            success=res.success,
-            action=res.action,
-            message=f"rule symlink: {res.message}",
-        )
+        return results
 
     def _install_security_policy(self) -> "InstallResult":
         """Install security policy for Antigravity."""
@@ -232,8 +261,9 @@ class AntigravityInstaller(PlatformInstaller):
                 )
             ]
 
-        # Context file
-        results.append(self._install_context())
+        # Rule modules at the corrected global rules root
+        self._step("Installing rule modules")
+        results.extend(self._install_context())
 
         # MCP Registration
         mcp_ok, mcp_msg = self._update_mcp_config()
@@ -270,6 +300,9 @@ class AntigravityInstaller(PlatformInstaller):
 
         results = []
 
+        # Remove delivered rule modules and any retired sidecar.
+        results.extend(self.uninstall_rule_modules())
+
         # Remove demarcated context section
         context_file = self.config_dir / "AGENTS.md"
         if context_file.exists():
@@ -284,14 +317,22 @@ class AntigravityInstaller(PlatformInstaller):
                     )
                 )
             else:
-                removed = remove_demarcated_section(context_file)
+                # remove_demarcated_section returns (action, backup_path).
+                # Testing the tuple rather than the action meant every run
+                # reported "removed", including runs that found nothing.
+                action, _backup = remove_demarcated_section(context_file)
+                was_removed = action == "removed"
                 results.append(
                     InstallResult(
                         component="context_file",
                         platform=self.platform_id,
-                        success=removed,
-                        action="removed" if removed else "skipped",
-                        message=f"removed demarcated section from {context_file}" if removed else f"no demarcated section in {context_file}",
+                        success=True,
+                        action="removed" if was_removed else "skipped",
+                        message=(
+                            f"removed demarcated section from {context_file}"
+                            if was_removed
+                            else f"no demarcated section in {context_file}"
+                        ),
                     )
                 )
 
@@ -343,8 +384,8 @@ class AntigravityInstaller(PlatformInstaller):
                     try:
                         resolved = item.resolve()
                         if str(resolved).startswith(str(self.spellbook_dir)):
-                            remove_symlink(item, dry_run=self.dry_run)
-                            removed_links += 1
+                            if remove_symlink(item, dry_run=self.dry_run).success:
+                                removed_links += 1
                     except OSError:
                         pass
             results.append(
@@ -360,8 +401,11 @@ class AntigravityInstaller(PlatformInstaller):
         return results
 
     def get_context_files(self) -> List[Path]:
-        """Get paths to context files managed by Antigravity."""
-        return [self.config_dir / "rules" / "spellbook.md"]
+        """Get rule module files managed by Antigravity."""
+        rules_dir = self.rule_module_dir()
+        if not rules_dir.is_dir():
+            return []
+        return sorted(rules_dir.glob(INSTALLED_GLOB))
 
     def get_symlinks(self) -> List[Path]:
         """Get paths to symlinks created by Antigravity."""

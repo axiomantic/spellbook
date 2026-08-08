@@ -262,6 +262,20 @@ def get_config_dir(app_name: str = "spellbook") -> Path:
     Linux:   ~/.config/{app_name}
     Windows: %APPDATA%/{app_name}
 
+    .. warning::
+       This resolver does **not** consult ``$SPELLBOOK_CONFIG_DIR``. Other
+       components do (``installer/config.py::get_spellbook_config_dir``,
+       ``spellbook/core/path_utils.py``, ``spellbook/health/*``,
+       ``hooks/spellbook_hook.py``), which makes it easy to assume wrongly
+       that setting that env var isolates *everything*.
+
+       Consequence for tests: setting ``SPELLBOOK_CONFIG_DIR`` isolates
+       nothing routed through ``spellbook.core.config`` (``config_get``,
+       ``config_set``, ``config_set_many``, ``config_is_explicitly_set``,
+       ``get_config_path``). Such a test reads and writes the developer's
+       real ``~/.config/spellbook/spellbook.json``. Redirect ``HOME`` instead.
+       ``tests/conftest.py::_guard_real_user_config`` enforces this.
+
     Args:
         app_name: Application name for the config subdirectory.
 

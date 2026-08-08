@@ -36,6 +36,7 @@ Options:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import platform
 import shutil
@@ -445,10 +446,12 @@ def check_repo_needs_update(repo_dir: Path, timeout: int = 30) -> tuple[bool | N
 
 def is_spellbook_repo(path: Path) -> bool:
     """Check if a path is a spellbook repository."""
-    # Key indicators of spellbook repo
-    return (
-        (path / "skills").is_dir()
-        and (path / "AGENTS.spellbook.md").is_file()
+    # Key indicators: skills/ directory plus the rules/ module directory.
+    # The AGENTS.spellbook.md alternative is retained for one minor release so a
+    # curl-fetched install.py from a new release still recognizes an older
+    # checkout that predates the rules/ split. Drop it after that window.
+    return (path / "skills").is_dir() and (
+        (path / "rules").is_dir() or (path / "AGENTS.spellbook.md").is_file()
     )
 
 
@@ -818,6 +821,154 @@ def show_admin_info(admin_enabled: bool) -> None:
 
 
 # =============================================================================
+# Rule module selection
+# =============================================================================
+
+
+def _read_explicit_rule_config() -> dict:
+    """Read only the explicitly-set ``rules.module.*`` keys from spellbook.json.
+
+    Read directly rather than through ``config_get`` because absence is a
+    value: a key that has a built-in default but was never written means "never
+    offered", and applying the default at read time would erase that.
+    """
+    try:
+        from spellbook.core.compat import get_config_dir
+    except ImportError:
+        return {}
+
+    config_path = get_config_dir() / "spellbook.json"
+    if not config_path.exists():
+        return {}
+    try:
+        data = json.loads(config_path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    if not isinstance(data, dict):
+        return {}
+    return {k: v for k, v in data.items() if k.startswith("rules.module.")}
+
+
+def _rule_modules_all_answered(modules) -> bool:
+    """Whether every preference module already has an explicit recorded answer.
+
+    This is the idempotency gate AGENTS.md requires of every config key
+    (``config_is_explicitly_set``): prompt on a fresh install, prompt again
+    while the key is unset, never re-prompt once answered. Derived per module
+    rather than counted, so adding a module re-opens the selector for that
+    module alone and ``--reconfigure`` remains the way to revisit the rest.
+    """
+    try:
+        from installer.components.rule_modules import preference_modules
+        from spellbook.core.config import config_is_explicitly_set
+    except Exception:
+        return False
+
+    prefs = preference_modules(modules)
+    if not prefs:
+        return True
+    return all(config_is_explicitly_set(m.config_key) for m in prefs)
+
+
+def _resolve_rule_precheck(installer, reconfigure: bool = False) -> object | None:
+    """Build the pre-check state the module selector opens with.
+
+    Returns None when the checkout ships no rule modules, which makes the
+    wizard skip the screen rather than present an empty one, and None when
+    every preference module is already answered and ``reconfigure`` is False.
+    """
+    try:
+        from installer.components.rule_modules import (
+            get_rules_dir,
+            load_rule_modules,
+            resolve_selection,
+        )
+
+        modules = load_rule_modules(get_rules_dir(installer.spellbook_dir))
+    except Exception as exc:
+        print_warning(f"Could not load rule modules: {exc}")
+        return None
+
+    if not modules:
+        return None
+    if not reconfigure and _rule_modules_all_answered(modules):
+        return None
+
+    return resolve_selection(modules, _read_explicit_rule_config())
+
+
+def _persist_rule_selection(installer, chosen: list[str]) -> None:
+    """Record each preference module as kept or declined.
+
+    Every preference module gets an explicit ``True``/``False``: the tri-state
+    only works if an answered module stops being absent. A declined module is
+    never re-checked by the installer's default logic afterwards; the only way
+    back is ``--reconfigure``.
+    """
+    try:
+        from installer.components.rule_modules import (
+            get_rules_dir,
+            load_rule_modules,
+            preference_modules,
+        )
+        from spellbook.core.config import config_set_many
+
+        modules = load_rule_modules(get_rules_dir(installer.spellbook_dir))
+    except Exception as exc:
+        print_warning(f"Could not save rule module selection: {exc}")
+        return
+
+    selected = set(chosen)
+    updates = {m.config_key: (m.id in selected) for m in preference_modules(modules)}
+    if not updates:
+        return
+
+    try:
+        config_set_many(updates)
+    except Exception as exc:
+        print_warning(f"Could not save rule module selection: {exc}")
+
+
+def _persist_rule_selection_if_answered(installer, chosen, dry_run: bool = False) -> None:
+    """Record the selection only when the user actually answered it.
+
+    ``None`` is the not-asked sentinel. Persisting it writes an explicit True
+    or False for EVERY preference module on the user's behalf, permanently
+    marking as declined modules that were never shown -- so the guard lives in
+    one named place rather than being re-derived at each call site.
+    """
+    if chosen is None or dry_run:
+        return
+    _persist_rule_selection(installer, chosen)
+
+
+def _reconfigure_rule_selection(installer, args: argparse.Namespace) -> None:
+    """Re-run the module selector under ``--reconfigure``.
+
+    Skipped on a non-tty and under ``--yes``: neither can answer, and a
+    non-answer must never be recorded as one.
+    """
+    if getattr(args, "dry_run", False) or getattr(args, "yes", False):
+        return
+    if not is_interactive():
+        return
+
+    selection = _resolve_rule_precheck(installer, reconfigure=True)
+    if selection is None:
+        return
+
+    try:
+        from installer.tui import interactive_module_select
+
+        chosen = interactive_module_select(selection)
+    except Exception as exc:
+        print_warning(f"Rule module selector unavailable: {exc}")
+        return
+
+    _persist_rule_selection_if_answered(installer, chosen)
+
+
+# =============================================================================
 # Main Installation Logic
 # =============================================================================
 
@@ -901,6 +1052,10 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             run_defaults_wizard(args)
             run_worker_llm_wizard(args)
 
+        # Offer rule module selection during reconfigure. This is the only path
+        # by which a user can re-check a module they previously declined.
+        _reconfigure_rule_selection(installer, args)
+
         # Offer profile selection during reconfigure
         if renderer is not None:
             profile_config = renderer.render_profile_wizard(reconfigure=True)
@@ -961,6 +1116,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             auto_yes=args.yes,
             no_interactive=args.no_interactive,
             reconfigure=False,
+            rule_selection=_resolve_rule_precheck(installer),
         )
 
         wizard_results = renderer.render_upfront_wizard(wizard_ctx)
@@ -1057,6 +1213,10 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
             result = data["result"]
             _pending_results.append(result)
 
+    rule_modules_chosen = (
+        wizard_results.rule_modules if wizard_results is not None else None
+    )
+
     session = installer.run(
         platforms=platforms,
         force=args.force,
@@ -1064,7 +1224,14 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
         on_progress=_on_progress,
         config_dir_overrides=config_dir_overrides if config_dir_overrides else None,
         renderer=renderer,
+        rule_selection=rule_modules_chosen,
     )
+
+    # Record rule module answers LAST, and only when the user actually answered.
+    # Writing after delivery means a failed install leaves the prior state
+    # standing and the next run reconciles, rather than recording a decline
+    # that was never delivered.
+    _persist_rule_selection_if_answered(installer, rule_modules_chosen, args.dry_run)
 
     # Shared installer wizards. Must run on BOTH install entry paths per
     # the "Adding Config Options" contract in AGENTS.md. Each wizard is

@@ -31,7 +31,7 @@ dev = [
     "pytest-cov>=7.1.0",
     "pytest-timeout>=2.4.0",
     "httpx>=0.28.1",
-    "pytest-tripwire[http]>=0.21.0",
+    "pytest-tripwire[http]>=0.21.1",
     "dirty-equals>=0.11",
     "fastmcp>=3.3.1",
     "fastapi>=0.136.1",
@@ -71,6 +71,7 @@ markers = [
     "windows_only: test runs only on Windows (skipped on POSIX systems)",
     "posix_only: test runs only on POSIX systems (skipped on Windows)",
     "gate_killswitch: test exercises the security-gate operator kill switch; opts out of the force-gates-on fixture",
+    "allow_real_config_write: test deliberately writes the real user config; opts out of the real-config isolation guard",
 ]
 
 [tool.tripwire]

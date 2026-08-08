@@ -28,19 +28,19 @@ python3 install.py
 
 **Status:** Basic support
 
-Antigravity integration via rules sidecar (`~/.gemini/antigravity/rules/spellbook.md`), skill symlinks, and MCP server (`mcp_config.json`).
+Antigravity integration via per-module rule symlinks (`~/.gemini/config/rules/`), skill symlinks, and MCP server (`mcp_config.json`).
 
 ### Setup
 
 1. Run the installer: `python3 install.py`
 2. The installer:
-   - Symlinks `~/.gemini/antigravity/rules/spellbook.md` -> `AGENTS.spellbook.md`
+   - Symlinks each selected rule module into `~/.gemini/config/rules/` as `XX-spellbook-<id>.md` -> `rules/XX-<id>.md`
    - Registers spellbook MCP server in `~/.gemini/antigravity/mcp_config.json`
    - Symlinks skills to `~/.gemini/antigravity/skills/`
 
 ### Features
 
-- Context and instructions via `rules/spellbook.md` sidecar
+- Context and instructions via per-module files in `~/.gemini/config/rules/`
 - MCP server for spellbook tools
 - Skill discovery via `skills/` symlinks
 - Security policy via `policies/spellbook-security.toml`

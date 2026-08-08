@@ -54,6 +54,10 @@ def _make_opencode_installer(tmp_path, dry_run=False):
     # Create minimal required structure
     (spellbook_dir / ".version").write_text("1.0.0")
     (spellbook_dir / "AGENTS.spellbook.md").write_text("# Spellbook")
+    (spellbook_dir / "rules").mkdir(exist_ok=True)
+    (spellbook_dir / "rules" / "00-core.md").write_text(
+        """---\nid: core\nname: Spellbook Core\nclass: mandatory\ndescription: Test module.\nrelated: []\nrenamed_from: []\nsuperseded_by: null\npaths: []\n---\n\nTest rule module body.\n"""
+    )
     (spellbook_dir / "skills").mkdir()
     (spellbook_dir / "commands").mkdir()
 
