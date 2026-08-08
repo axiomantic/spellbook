@@ -9207,132 +9207,137 @@
 <a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="sb">NO SKILL WITHOUT FAILING TEST FIRST</span>
 <a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="sb">```</span>
 <a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="gu">## File Organization</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>| Pattern | When | Example |
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>|---------|------|---------|
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>| Self-contained | All content fits | <span class="sb">`defense-in-depth/SKILL.md`</span> |
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>| With tool | Reusable code needed | <span class="sb">`condition-based-waiting/SKILL.md`</span> + <span class="sb">`example.ts`</span> |
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>| Heavy reference | Reference 100+ lines | <span class="sb">`pptx/SKILL.md`</span> + <span class="sb">`pptxgenjs.md`</span> + <span class="sb">`ooxml.md`</span> |
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="gu">## Code Examples</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>One excellent example beats many mediocre ones. Choose most relevant language: testing techniques (TypeScript/JavaScript), system debugging (Shell/Python), data processing (Python).
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="gs">**Good example:**</span> Complete, runnable, well-commented explaining WHY, from real scenario, ready to adapt.
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="gs">**Don&#39;t:**</span> Implement in 5+ languages, create fill-in-the-blank templates, write contrived examples.
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="gu">## Flowchart Usage</span>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="gs">**Use ONLY for:**</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="k">-</span><span class="w"> </span>Non-obvious decision points
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="k">-</span><span class="w"> </span>Process loops where you might stop too early
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="k">-</span><span class="w"> </span>&quot;When to use A vs B&quot; decisions
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>Applies to NEW skills AND EDITS, with no waiver. It is NOT a selectable component of
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>develop&#39;s ceremony picker (<span class="sb">`feature-config`</span> §0.8) — it belongs to the non-negotiable
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>core at every ceremony level, including Core-only and the zero-flag fast path. See
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sb">`write-skill-test`</span> (&quot;The Iron Law is NOT a ceremony component&quot;) for the full rationale.
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="gu">## File Organization</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>| Pattern | When | Example |
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>|---------|------|---------|
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>| Self-contained | All content fits | <span class="sb">`defense-in-depth/SKILL.md`</span> |
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>| With tool | Reusable code needed | <span class="sb">`condition-based-waiting/SKILL.md`</span> + <span class="sb">`example.ts`</span> |
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>| Heavy reference | Reference 100+ lines | <span class="sb">`pptx/SKILL.md`</span> + <span class="sb">`pptxgenjs.md`</span> + <span class="sb">`ooxml.md`</span> |
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="gu">## Code Examples</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>One excellent example beats many mediocre ones. Choose most relevant language: testing techniques (TypeScript/JavaScript), system debugging (Shell/Python), data processing (Python).
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="gs">**Good example:**</span> Complete, runnable, well-commented explaining WHY, from real scenario, ready to adapt.
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="gs">**Don&#39;t:**</span> Implement in 5+ languages, create fill-in-the-blank templates, write contrived examples.
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="gu">## Flowchart Usage</span>
 <a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="gs">**Never use for:**</span> Reference material (use tables), Code examples (use markdown), Linear instructions (use numbered lists).
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="gu">## Anti-Patterns</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>| Pattern | Why Bad |
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>|---------|---------|
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>| Narrative (&quot;In session 2025-10-03, we found...&quot;) | Too specific, not reusable |
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>| Multi-language dilution | Mediocre quality, maintenance burden |
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>| Code in flowcharts | Can&#39;t copy-paste, hard to read |
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>| Generic labels (helper1, step3) | Labels need semantic meaning |
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="gu">## Discovery Workflow</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">1.</span> Encounters problem (&quot;tests are flaky&quot;)
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">2.</span> Finds SKILL (description matches)
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="k">3.</span> Scans overview (is this relevant?)
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="k">4.</span> Reads patterns (quick reference table)
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">5.</span> Loads example (only when implementing)
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>Optimize for this flow - searchable terms early and often.
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="k">-</span><span class="w"> </span>Writing skill without documenting baseline failure first (RED phase skipped)
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="k">-</span><span class="w"> </span>Summarizing workflow in description (causes agents to skip body)
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="k">-</span><span class="w"> </span>Multiple examples when one excellent example suffices
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="k">-</span><span class="w"> </span>Deploying without verification run (GREEN phase skipped)
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="k">-</span><span class="w"> </span>Ignoring new rationalizations discovered during testing
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="k">-</span><span class="w"> </span>Creating multiple skills in batch without testing each
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="k">-</span><span class="w"> </span>Keeping untested changes as &quot;reference&quot;
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`@`</span> links that force-load and burn context
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="k">-</span><span class="w"> </span>Generic labels without semantic meaning
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="k">-</span><span class="w"> </span>Narrative storytelling about specific sessions
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="gu">## Multi-Phase Skill Architecture</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>| Phase Count | Requirement |
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>|-------------|-------------|
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>| 1 phase | Exempt. Self-contained SKILL.md is fine. |
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>| 2 phases | SHOULD separate into orchestrator + commands. |
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>| 3+ phases | MUST separate. Orchestrator dispatches, commands implement. |
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="gs">**The Core Rule:**</span> The orchestrator dispatches subagents (Task tool). Subagents invoke phase commands (Skill tool). The orchestrator NEVER invokes phase commands directly into its own context.
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="gs">**Content Split:**</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>| Orchestrator SKILL.md | Phase Commands |
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>|----------------------|----------------|
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>| Phase sequence and transitions | All phase implementation logic |
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a>| Dispatch templates per phase | Scoring formulas and rubrics |
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>| Shared data structures (referenced by 2+ phases) | Discovery wizards and prompts |
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>| Quality gate thresholds | Detailed checklists and protocols |
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>| Anti-patterns / FORBIDDEN section | Review and verification steps |
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="gs">**Data structure placement:**</span> If referenced by 2+ phases, define in orchestrator. If referenced by 1 phase only, define in that phase&#39;s command.
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="gs">**Soft target:**</span> ~300 lines for orchestrator SKILL.md. The hard rule is about content types: orchestrators contain coordination logic, never implementation logic.
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="gs">**Exceptions:**</span>
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">-</span><span class="w"> </span>Config/setup phases requiring direct user interaction MAY run in orchestrator context
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="k">-</span><span class="w"> </span>Error recovery MAY load phase context temporarily to diagnose failures
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="gs">**Canonical example:**</span> develop uses 5 commands across 6+ phases. The orchestrator defines phase sequence, dispatch templates, and shared data structures. Each phase command (discover, design, execute-plan, etc.) contains its own implementation logic.
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="gs">**Anti-Patterns:**</span>
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>| Anti-Pattern | Why It Fails |
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>|-------------|-------------|
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>| Orchestrator invokes Skill tool for a phase command | Loads phase logic into orchestrator context, defeating separation |
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>| Orchestrator embeds phase logic directly | Monolithic file; orchestrator context bloats with implementation detail |
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>| Subagent prompt duplicates command instructions | Drift between prompt and command; maintenance burden doubles |
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>| Monolithic SKILL.md exceeding 500 lines with phase implementation | Signal that phase logic should be extracted to commands |
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="gu">## Assessment Framework Integration</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>For skills producing evaluative output (verdicts, findings, scores, pass/fail):
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="k">1.</span> Run <span class="sb">`/design-assessment`</span> with the target type being evaluated
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="k">2.</span> Copy into the skill: <span class="gs">**Dimensions table**</span>, <span class="gs">**Severity levels**</span>, <span class="gs">**Finding schema**</span>, <span class="gs">**Verdict logic**</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="k">3.</span> Use vocabulary consistently throughout (CRITICAL/HIGH/MEDIUM/LOW/NIT)
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="gs">**Example skills:**</span> code-review, auditing-green-mirage, fact-checking, reviewing-design-docs
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>Before completing:
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="k">- [ ]</span> RED phase documented: baseline agent behavior captured verbatim
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="k">- [ ]</span> GREEN phase verified: skill changes behavior in re-run
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; and contains only triggers
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="k">- [ ]</span> YAML frontmatter has <span class="sb">`name`</span> and <span class="sb">`description`</span>
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="k">- [ ]</span> Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="k">- [ ]</span> Token budget met: &lt;500 words core instructions (&lt;200 words for frequently-loaded skills)
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="k">- [ ]</span> Multi-phase architecture: 3+ phase skills separate orchestrator from phase commands
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="k">- [ ]</span> No workflow summary in description
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">- [ ]</span> Rationalization table built (for discipline skills)
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>If ANY unchecked: STOP and fix before declaring complete.
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>Creating skills IS TDD for process documentation. Same Iron Law: No skill without failing test first. Same cycle: RED (baseline) → GREEN (write skill) → REFACTOR (close loopholes). If you follow TDD for code, follow it for skills. Untested skills are untested code - they will break in production.
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="gs">**Use ONLY for:**</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="k">-</span><span class="w"> </span>Non-obvious decision points
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">-</span><span class="w"> </span>Process loops where you might stop too early
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">-</span><span class="w"> </span>&quot;When to use A vs B&quot; decisions
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="gs">**Never use for:**</span> Reference material (use tables), Code examples (use markdown), Linear instructions (use numbered lists).
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="gu">## Anti-Patterns</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>| Pattern | Why Bad |
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>|---------|---------|
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>| Narrative (&quot;In session 2025-10-03, we found...&quot;) | Too specific, not reusable |
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>| Multi-language dilution | Mediocre quality, maintenance burden |
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>| Code in flowcharts | Can&#39;t copy-paste, hard to read |
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>| Generic labels (helper1, step3) | Labels need semantic meaning |
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="gu">## Discovery Workflow</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">1.</span> Encounters problem (&quot;tests are flaky&quot;)
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">2.</span> Finds SKILL (description matches)
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">3.</span> Scans overview (is this relevant?)
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">4.</span> Reads patterns (quick reference table)
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="k">5.</span> Loads example (only when implementing)
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>Optimize for this flow - searchable terms early and often.
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="k">-</span><span class="w"> </span>Writing skill without documenting baseline failure first (RED phase skipped)
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="k">-</span><span class="w"> </span>Summarizing workflow in description (causes agents to skip body)
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">-</span><span class="w"> </span>Multiple examples when one excellent example suffices
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="k">-</span><span class="w"> </span>Deploying without verification run (GREEN phase skipped)
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="k">-</span><span class="w"> </span>Ignoring new rationalizations discovered during testing
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="k">-</span><span class="w"> </span>Creating multiple skills in batch without testing each
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="k">-</span><span class="w"> </span>Keeping untested changes as &quot;reference&quot;
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`@`</span> links that force-load and burn context
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="k">-</span><span class="w"> </span>Generic labels without semantic meaning
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">-</span><span class="w"> </span>Narrative storytelling about specific sessions
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="gu">## Multi-Phase Skill Architecture</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>| Phase Count | Requirement |
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>|-------------|-------------|
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>| 1 phase | Exempt. Self-contained SKILL.md is fine. |
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>| 2 phases | SHOULD separate into orchestrator + commands. |
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>| 3+ phases | MUST separate. Orchestrator dispatches, commands implement. |
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="gs">**The Core Rule:**</span> The orchestrator dispatches subagents (Task tool). Subagents invoke phase commands (Skill tool). The orchestrator NEVER invokes phase commands directly into its own context.
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="gs">**Content Split:**</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>| Orchestrator SKILL.md | Phase Commands |
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a>|----------------------|----------------|
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a>| Phase sequence and transitions | All phase implementation logic |
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>| Dispatch templates per phase | Scoring formulas and rubrics |
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>| Shared data structures (referenced by 2+ phases) | Discovery wizards and prompts |
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>| Quality gate thresholds | Detailed checklists and protocols |
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>| Anti-patterns / FORBIDDEN section | Review and verification steps |
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="gs">**Data structure placement:**</span> If referenced by 2+ phases, define in orchestrator. If referenced by 1 phase only, define in that phase&#39;s command.
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="gs">**Soft target:**</span> ~300 lines for orchestrator SKILL.md. The hard rule is about content types: orchestrators contain coordination logic, never implementation logic.
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="gs">**Exceptions:**</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="k">-</span><span class="w"> </span>Config/setup phases requiring direct user interaction MAY run in orchestrator context
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="k">-</span><span class="w"> </span>Error recovery MAY load phase context temporarily to diagnose failures
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="gs">**Canonical example:**</span> develop uses 5 commands across 6+ phases. The orchestrator defines phase sequence, dispatch templates, and shared data structures. Each phase command (discover, design, execute-plan, etc.) contains its own implementation logic.
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="gs">**Anti-Patterns:**</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>| Anti-Pattern | Why It Fails |
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>|-------------|-------------|
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>| Orchestrator invokes Skill tool for a phase command | Loads phase logic into orchestrator context, defeating separation |
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>| Orchestrator embeds phase logic directly | Monolithic file; orchestrator context bloats with implementation detail |
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>| Subagent prompt duplicates command instructions | Drift between prompt and command; maintenance burden doubles |
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>| Monolithic SKILL.md exceeding 500 lines with phase implementation | Signal that phase logic should be extracted to commands |
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="gu">## Assessment Framework Integration</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>For skills producing evaluative output (verdicts, findings, scores, pass/fail):
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="k">1.</span> Run <span class="sb">`/design-assessment`</span> with the target type being evaluated
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="k">2.</span> Copy into the skill: <span class="gs">**Dimensions table**</span>, <span class="gs">**Severity levels**</span>, <span class="gs">**Finding schema**</span>, <span class="gs">**Verdict logic**</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="k">3.</span> Use vocabulary consistently throughout (CRITICAL/HIGH/MEDIUM/LOW/NIT)
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="gs">**Example skills:**</span> code-review, auditing-green-mirage, fact-checking, reviewing-design-docs
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>Before completing:
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="k">- [ ]</span> RED phase documented: baseline agent behavior captured verbatim
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="k">- [ ]</span> GREEN phase verified: skill changes behavior in re-run
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; and contains only triggers
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">- [ ]</span> YAML frontmatter has <span class="sb">`name`</span> and <span class="sb">`description`</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="k">- [ ]</span> Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="k">- [ ]</span> Token budget met: &lt;500 words core instructions (&lt;200 words for frequently-loaded skills)
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="k">- [ ]</span> Multi-phase architecture: 3+ phase skills separate orchestrator from phase commands
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="k">- [ ]</span> No workflow summary in description
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="k">- [ ]</span> Rationalization table built (for discipline skills)
 <a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="gs">**REQUIRED BACKGROUND:**</span> Understand test-driven-development skill before using this skill.
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>If ANY unchecked: STOP and fix before declaring complete.
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>Creating skills IS TDD for process documentation. Same Iron Law: No skill without failing test first. Same cycle: RED (baseline) → GREEN (write skill) → REFACTOR (close loopholes). If you follow TDD for code, follow it for skills. Untested skills are untested code - they will break in production.
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="gs">**REQUIRED BACKGROUND:**</span> Understand test-driven-development skill before using this skill.
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
