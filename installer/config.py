@@ -43,7 +43,7 @@ def get_spellbook_config_dir() -> Path:
 
 
 # Supported platforms (AI coding assistants that can consume spellbook)
-SUPPORTED_PLATFORMS = ["claude_code", "antigravity", "opencode", "codex", "gemini", "forgecode", "pi", "prime_agent"]
+SUPPORTED_PLATFORMS = ['claude_code', 'antigravity', 'opencode', 'codex', 'gemini', 'forgecode', 'pi', 'prime_agent', 'goose']
 
 # Platform configuration
 # NOTE: These are the AI assistant platforms that consume spellbook.
@@ -133,6 +133,21 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "context_file": None,  # Uses skills for behavioral guidance, not context files
         "skills_subdir": "skills",
         "mcp_supported": False,  # prime-agent has no MCP client
+    "goose": {
+        "name": "Goose",
+        "config_dir_env": "GOOSE_CONFIG_DIR",
+        "default_config_dir": Path.home() / ".config" / "goose",
+        "cli_flag_name": "goose-config-dir",
+        # Goose natively loads AGENTS.md and .goosehints from CWD; we install
+        # a global hints file at ~/.agents/AGENTS.md (goose v1.41.0+ feature).
+        "context_file": None,
+        # Agent Skills standard: ~/.agents/skills/ (shared across Claude Code,
+        # Codex, OpenCode, Cursor, VS Code). Goose v1.18.0+ discovers this path.
+        "skills_subdir": "skills",
+        # MCP server registered as an extension in config.yaml (streamable_http).
+        # Honors $GOOSE_PATH_ROOT at runtime for non-default config dirs.
+        "mcp_supported": True,
+        "mcp_server_name": "spellbook",
     },
 }
 

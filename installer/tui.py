@@ -401,6 +401,8 @@ def render_post_install_notes(
         lines.append("[cyan]ForgeCode[/cyan]: Restart forge to load the spellbook MCP server")
     if "pi" in platforms:
         lines.append("[cyan]Pi[/cyan]: Restart to reload skills and prompts. Verify: /reload")
+    if "goose" in platforms:
+        lines.append("[cyan]Goose[/cyan]: Restart to load the spellbook MCP server. Skills in ~/.agents/skills/")
 
     if lines:
         body = "\n".join(lines)
@@ -861,3 +863,9 @@ def interactive_module_select(selection: Any) -> Optional[List[str]]:
 
         clear_lines(rendered)
         rendered = render_module_menu(options, cursor, mandatory_count)
+    if "goose" in platforms:
+        print(color("  Goose:", Colors.BLUE))
+        print("    Skills installed to ~/.agents/skills/.")
+        print("    MCP server registered in ~/.config/goose/config.yaml.")
+        print("    Restart goose to load the spellbook MCP server.")
+        print()

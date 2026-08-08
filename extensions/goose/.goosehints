@@ -1,0 +1,60 @@
+# Goose Hints — Spellbook
+
+This file is the project-level `.goosehints` template that ships with Spellbook.
+Copy it to your project root (where goose runs) to load spellbook's behavioral
+guidance per-project. Goose natively loads files named `AGENTS.md` or
+`.goosehints` from the current working directory.
+
+To enable for a project:
+
+    cp $SPELLBOOK_DIR/extensions/goose/.goosehints ./.goosehints
+
+Or symlink it so it stays in sync:
+
+    ln -s $SPELLBOOK_DIR/extensions/goose/.goosehints ./.goosehints
+
+The full behavioral guidance lives in AGENTS.spellbook.md (loaded globally via
+`~/.agents/AGENTS.md`, set up by the installer). This file is a thin pointer.
+
+---
+
+## Project-Level Pointers
+
+Spellbook-specific guidance for this project:
+
+- Skills discovered from `~/.agents/skills/` (Agent Skills standard).
+- The spellbook MCP server is registered in `~/.config/goose/config.yaml`.
+- Global hints come from `~/.agents/AGENTS.md` (symlink to `AGENTS.spellbook.md`).
+
+## Available Tools (Goose equivalents)
+
+Spellbook skills reference tools by the Claude Code names. When a skill
+references a tool that goose does not have natively, substitute the goose
+equivalent or run a shell command.
+
+| Spellbook tool | Goose equivalent |
+|----------------|------------------|
+| `Read` | File reading extension |
+| `Write` | Developer extension (text_editor) |
+| `Edit` | Developer extension (text_editor) |
+| `Bash` | Shell extension / `computercontroller` |
+| `Grep` | `rg` via shell |
+| `Glob` | `find` via shell |
+| `TodoWrite` | goose session task tracker |
+
+## Subagent Dispatch
+
+Spellbook orchestrates subagents. Goose does not have a `Task` tool that
+matches Claude Code's subagent dispatch. For delegation-style work, run a
+nested goose session via the shell or use the recipe system.
+
+## MCP Server
+
+The spellbook MCP server is registered as the `spellbook` extension. Verify
+with:
+
+    goose info
+
+If unavailable, restart goose. To re-register, run:
+
+    spellbook install --platforms goose
