@@ -138,6 +138,12 @@ def _insert_spellbook_block(yaml_text: str, block: str) -> str:
 
     # Path 2: extensions: exists, no markers yet -> insert block after it
     if re.search(r"^extensions:\s*$", yaml_text, re.MULTILINE):
+        # BOT-A1 fix: the regex below requires `\n` after `extensions:`. If the
+        # file ends with `extensions:` and no trailing newline, the sub would
+        # silently no-op and the spellbook block would never be inserted.
+        # Normalize by ensuring a trailing newline before the substitution.
+        if not yaml_text.endswith("\n"):
+            yaml_text += "\n"
         # Insert block immediately after the ``extensions:`` line, inside the list.
         return re.sub(
             r"^(extensions:\s*\n)",
@@ -301,11 +307,12 @@ class GooseInstaller(PlatformInstaller):
             has_mcp = SPELLBOOK_START_MARKER in content
 
         hints_target = self.global_hints_file
-        has_hints = (
-            hints_target.exists()
-            and hints_target.is_symlink()
-            or hints_target.exists()
-        )
+        # BOT-A2 fix: the previous expression was `(exists() and is_symlink())
+        # or exists()` which simplifies to just `exists()` due to `and` binding
+        # tighter than `or`, making the `is_symlink()` check dead code. A regular
+        # file at ~/.agents/AGENTS.md (not a spellbook symlink) would cause detect()
+        # to report hints as installed. Use the tighter predicate.
+        has_hints = hints_target.exists() and hints_target.is_symlink()
 
         installed = skills_installed or has_mcp or has_hints
 

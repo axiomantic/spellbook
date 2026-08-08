@@ -382,6 +382,47 @@ def test_goose_uninstall_preserves_user_skills(spellbook_dir, goose_env):
 
 
 # ---------------------------------------------------------------------
+# BOT-A3 regression: extensions: as last line with no trailing newline
+# ---------------------------------------------------------------------
+
+def test_goose_install_inserts_when_extensions_is_last_line_no_newline(
+    spellbook_dir, goose_env, mock_mcp_token
+):
+    """MCP block is inserted even when extensions: is the last line without \n.
+
+    Regression test for BOT-A1: Path 2 of _insert_spellbook_block requires a
+    trailing newline after the ``extensions:`` line for its regex to match.
+    If a user's config.yaml ends with bare ``extensions:`` and no newline,
+    the installer used to silently fail to register the MCP server.
+    """
+    import tripwire
+
+    from installer.platforms.goose import GooseInstaller
+
+    (goose_env / ".config" / "goose").mkdir(parents=True, exist_ok=True)
+    cfg = goose_env / ".config" / "goose" / "config.yaml"
+    # No trailing newline after extensions: -- the edge case.
+    cfg.write_text("key: value\nextensions:")
+
+    installer = GooseInstaller(
+        spellbook_dir=spellbook_dir,
+        config_dir=goose_env / ".config" / "goose",
+        version="0.83.0",
+        dry_run=False,
+    )
+
+    with tripwire:
+        installer.install()
+    mock_mcp_token.assert_call()
+
+    content = cfg.read_text()
+    assert "# SPELLBOOK:START" in content, (
+        "MCP block not inserted -- BOT-A1 regression"
+    )
+    assert "name: spellbook" in content
+
+
+# ---------------------------------------------------------------------
 # GOOSE_PATH_ROOT handling
 # ---------------------------------------------------------------------
 
