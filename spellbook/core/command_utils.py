@@ -123,39 +123,6 @@ def read_json_safe(path: str) -> dict:
             time.sleep(0.1)
     raise ValueError(f"Could not read valid JSON from {path}")
 
-from spellbook.sdk.unified import AgentOptions, get_agent_client  # noqa: E402  (avoid circular import at top)
-
-def invoke_skill(skill_name: str, context: dict = None) -> dict:
-    """
-    Invoke a skill via the Unified Agent SDK.
-
-    In the spellbook system, skills are invoked via an assistant's
-    Skill tool. This function programmatically triggers that by
-    sending a directive to the agent.
-
-    Args:
-        skill_name: Name of the skill to invoke (e.g., 'test-driven-development')
-        context: Optional context dictionary to pass to the skill
-
-    Returns:
-        dict: Result from skill execution (wrapped in a status dict)
-    """
-    import asyncio
-    
-    async def _invoke():
-        options = AgentOptions()
-        client = get_agent_client(options=options)
-        
-        ctx_str = f" with context: {json.dumps(context)}" if context else ""
-        prompt = f"Invoke the skill '{skill_name}'{ctx_str}. Follow its instructions to completion."
-        
-        try:
-            result = await client.run(prompt)
-            return {"status": "success", "output": result}
-        except Exception as e:
-            return {"status": "error", "message": str(e)}
-
-    return asyncio.run(_invoke())
 
 def parse_packet_file(packet_file: Path) -> dict:
     """Parse packet markdown file with YAML frontmatter."""

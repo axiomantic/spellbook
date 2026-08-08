@@ -153,7 +153,7 @@ class InstallerRenderer(ABC):
         """Run the session profile selection wizard.
 
         Presents available profiles (from ``discover_profiles()``) and lets
-        the user pick one. Called post-install (after TTS wizard) and during
+        the user pick one. Called post-install and during
         ``--reconfigure``.
 
         When ``self.auto_yes`` is ``True``, no profiles are available, or

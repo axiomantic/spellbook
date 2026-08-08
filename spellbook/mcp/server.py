@@ -14,7 +14,6 @@ from typing import Any, Dict
 import fastmcp as _fastmcp_module
 from fastmcp import FastMCP
 
-from starlette.routing import Mount
 
 from spellbook.mcp import state
 
@@ -78,48 +77,14 @@ def register_all_tools() -> None:
         logger.debug("spellbook.mcp.routes not yet available")
 
 
-async def _cleanup_forged() -> None:
-    """Clean up old forged workflow data (>90 days) using ORM."""
-    try:
-        from datetime import datetime, timedelta, timezone
-
-        from sqlalchemy import delete
-        from spellbook.db import get_forged_session
-        from spellbook.db.forged_models import ForgeToken, ToolAnalytic, ForgeReflection
-
-        cutoff_90d = (datetime.now(timezone.utc) - timedelta(days=90)).isoformat()
-
-        async with get_forged_session() as session:
-            for stmt in [
-                delete(ForgeToken).where(
-                    ForgeToken.invalidated_at.isnot(None),
-                    ForgeToken.invalidated_at < cutoff_90d,
-                ),
-                delete(ToolAnalytic).where(ToolAnalytic.called_at < cutoff_90d),
-                delete(ForgeReflection).where(
-                    ForgeReflection.created_at < cutoff_90d,
-                    ForgeReflection.status == "RESOLVED",
-                ),
-            ]:
-                try:
-                    await session.execute(stmt)
-                except Exception:
-                    pass
-    except Exception:
-        pass
-
-
 def startup() -> None:
-    """Initialize server state: DB schemas, watchers, admin app.
+    """Initialize server state: DB schemas, watchers.
 
     Called from the daemon entry point before mcp.run().
     """
     from spellbook.core.config import config_get, get_spellbook_dir
     from spellbook.core.db import get_db_path, init_db
-    from spellbook.sessions.watcher import SessionWatcher
     from spellbook.updates.watcher import UpdateWatcher
-    from spellbook.forged.schema import init_forged_schema
-    from spellbook.fractal.schema import init_fractal_schema
 
     timings: dict[str, float] = {}
 
@@ -129,16 +94,9 @@ def startup() -> None:
         timings[label] = time.monotonic() - t0
         return result
 
-    # Initialize databases
+    # Initialize database
     db_path = str(get_db_path())
     _timed("init_db", init_db, db_path)
-    _timed("init_forged_schema", init_forged_schema)
-    _timed("init_fractal_schema", init_fractal_schema)
-
-    # Start session watcher with cross-domain cleanup hooks
-    watcher = _timed("session_watcher_init", SessionWatcher, db_path)
-    _timed("session_watcher_start", watcher.start)
-    state.watcher = watcher
 
     # Start update watcher if auto-update is not explicitly disabled
     auto_update_enabled = config_get("auto_update")
@@ -154,16 +112,11 @@ def startup() -> None:
         _timed("update_watcher_start", update_watcher.start)
         state.update_watcher = update_watcher
 
-    # Mount admin web interface
-    _timed("mount_admin", _mount_admin_app)
-
     logger.info("startup timings: %s", {k: f"{v:.3f}s" for k, v in timings.items()})
 
 
 def shutdown() -> None:
     """Stop watcher threads and close database connections on exit."""
-    if state.watcher is not None:
-        state.watcher.stop()
     if state.update_watcher is not None:
         state.update_watcher.stop()
 
@@ -173,48 +126,9 @@ def shutdown() -> None:
         close_all_connections()
     except Exception:
         pass
-    try:
-        from spellbook.forged.schema import close_forged_connections
-
-        close_forged_connections()
-    except Exception:
-        pass
-    try:
-        from spellbook.fractal.schema import close_all_fractal_connections
-
-        close_all_fractal_connections()
-    except Exception:
-        pass
-    try:
-        from spellbook.worker_llm.client import close_all_shared_clients_sync
-
-        close_all_shared_clients_sync()
-    except Exception:
-        pass
-
 
 atexit.register(shutdown)
 
-
-def _mount_admin_app() -> None:
-    """Mount the admin web interface if admin_enabled config is true."""
-    try:
-        from spellbook.core.config import config_get
-
-        admin_enabled = config_get("admin_enabled")
-        if admin_enabled is not None and not admin_enabled:
-            logger.debug("Admin interface disabled via admin_enabled config")
-            return
-
-        from spellbook.admin.app import create_admin_app
-
-        admin_app = create_admin_app()
-        mcp._additional_http_routes.append(Mount("/admin", app=admin_app))
-        logger.info("Admin web interface mounted at /admin")
-    except ImportError:
-        logger.debug("Admin package not available, skipping mount")
-    except Exception:
-        logger.warning("Failed to mount admin interface", exc_info=True)
 
 
 def build_http_run_kwargs() -> Dict[str, Any]:

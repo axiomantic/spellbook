@@ -148,12 +148,97 @@ For EACH test function (no skipping, no "looks fine"):
 3. Check against ALL 10 Green Mirage Patterns (including Pattern 10: Strengthened Assertion That Is Still Partial)
 4. Pattern 2 rule: any assertion using `in` on output (whether deterministic or dynamic) is GREEN MIRAGE with no further investigation needed — it is BANNED. Dynamic content is no excuse for partial assertion.
 5. Flag as GREEN MIRAGE: "bare substring on output with dynamic content" (asserting partial membership of a dynamic value instead of constructing full expected)
-6. Flag as GREEN MIRAGE: "mock.ANY used in call assertions" (proves nothing about actual arguments)
+6. Flag as GREEN MIRAGE: "wildcard matcher used in call assertions" -- `mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any equivalent under another name (proves nothing about actual arguments). See the "Assertion That Matches Everything" named shape for the detection recipe, including the tripwire bare-class trap.
 7. Flag as GREEN MIRAGE: "not all mock calls asserted" (unverified calls hide behavior gaps)
 8. Record verdict (SOLID / GREEN MIRAGE / PARTIAL) with evidence
 
 Return: List of findings with verdicts, gaps, and fix code per the template.
 ```
+
+### Named Shape: Assertion That Matches Everything
+
+<CRITICAL>
+An assertion built entirely from wildcard matchers cannot fail. It is the purest green
+mirage: it occupies the line where verification belongs, reads as coverage, and certifies
+nothing. Flag it on the PROPERTY -- "does this matcher compare equal to every possible
+value?" -- never on the library-specific name.
+
+**Detection recipe:**
+
+1. Grep for known wildcard spellings across the test tree:
+   ```bash
+   rg -n 'mock\.ANY|unittest\.mock\.ANY|\bANY\b|\bAnyThing\b|IsAnything|anything\(\)' tests/
+   ```
+2. Flag any assertion where EVERY matcher position is a wildcard. Those assert literally
+   nothing and are unconditionally GREEN MIRAGE.
+3. Flag any wildcard in a non-incidental position (a value the test could have captured).
+4. **For tripwire specifically, check CLASS versus INSTANCE.** `AnyThing` comes from
+   `dirty-equals`, which deliberately documents bare-class comparison
+   (`assert 1 == IsPositive`), so authors imitate the upstream idiom in good faith. Inside
+   a tripwire assertion that idiom is a trap: the all-wildcard guard tests
+   `isinstance(v, AnyThing)`, so a bare class evades it while still comparing equal to
+   everything. Count them separately:
+   ```bash
+   rg -c 'AnyThing\(\)' tests/   # instances: guard can see these
+   rg -c 'AnyThing(?!\()' -P tests/   # bare classes: guard is blind to these
+   ```
+   A high bare-class count with a zero instance count means the framework's guard has
+   never fired in this repo. Report that as a finding in its own right.
+5. Do not stop at the names in the grep. A wildcard is defined by its equality behavior;
+   a new framework introduces a new spelling that no existing grep covers.
+
+**Worked example (this repo):** the standard banned `mock.ANY` by name. The repo migrated
+to tripwire, whose wildcard is `AnyThing`. The ban survived in letter and died in effect:
+129 `AnyThing` usages accumulated, including 38 assertions of the exact form
+`assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)` in a single file --
+assertions that pass against any implementation whatsoever. Tripwire ships a guard
+against exactly this at `_verifier.py:223,261`, but with 229 bare-class uses and 0
+instance uses, `isinstance(AnyThing, AnyThing)` was always False and the guard never
+fired once. The wildcard matched everything AND evaded the check built to catch it.
+
+**Note on framing:** a wildcard ANYWHERE in a tripwire assertion is the finding. The
+all-wildcard form is the degenerate limit, not the definition. Bare-class use is a SECOND,
+separate defect layered on top (it disables the guard); fixing class to instance does not
+resolve the first.
+
+**Verdict:** GREEN MIRAGE, critical. Fix: capture the real values and assert them exactly
+(tripwire's `format_assert_hint` emits the actual args/kwargs/returned reprs; a `.calls()`
+side effect can capture the object). Reserve a wildcard for genuinely incidental values,
+as an INSTANCE, with an inline comment naming why the value is incidental.
+</CRITICAL>
+
+### Named Shape: Assertion Pinned From Harvested Output
+
+<CRITICAL>
+The standard fix for a wildcard is to pin the real value, and that fix has its own hazard.
+Values harvested from diagnostic output (tripwire failure hints, captured `repr`s, debugger
+dumps) reflect the LIVE process and can embed environment variables, credentials, absolute
+home paths, and hostnames. Pasted verbatim, they commit secrets and make the test
+machine-specific.
+
+Audit for this wherever assertions carry large or environment-derived literals:
+
+```bash
+rg -n '(TOKEN|SECRET|API_KEY|PASSWORD|_KEY)["\x27]?\s*[:=]|/Users/|/home/|os\.environ' tests/
+```
+
+Flag as a finding when a test assertion contains:
+- a credential-shaped literal (`*_TOKEN`, `*_SECRET`, `*_KEY`, `*_PASSWORD`, bearer/JWT-ish blobs)
+- an absolute user path (`/Users/<name>`, `/home/<name>`) or a hostname
+- a wholesale environment dump embedded in an expected object
+
+Two distinct impacts: **secret exposure** (critical, report immediately and do not reproduce
+the value in the audit report) and **non-portability** (the test passes only on the author's
+machine). Fix: reduce to the strongest portable form -- a short literal of the fields the
+behavior depends on, else a type constraint like `IsInstance(Type)` (a genuine constraint,
+not a wildcard, and an instance so framework guards stay live), else `AnyThing()` with a
+comment naming why the value is incidental.
+
+**Worked example (real):** an agent remediating wildcard assertions harvested a mock's
+reported value from a tripwire hint. It was a full `AgentOptions` whose repr carried the
+entire `os.environ`, including `TWILIO_AUTH_TOKEN` and `TWILIO_ACCOUNT_SID`. Caught in
+review before it landed.
+</CRITICAL>
 
 ### Phase 4: Cross-Test Analysis
 
@@ -243,7 +328,11 @@ Dynamic content is no excuse for partial assertion -- construct the full expecte
 Multiple substring checks are STILL BANNED. They are not an improvement.
 
 For mock calls: every call must be asserted with ALL args; call count must be verified;
-mock.ANY is BANNED -- construct expected arguments dynamically if needed.
+wildcard matchers are BANNED (`mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any
+matcher that compares equal to every value, whatever the library calls it) --
+construct or capture expected arguments instead. An assertion whose every position is
+a wildcard asserts nothing; a bare wildcard CLASS additionally evades the framework's
+own all-wildcard guard.
 
 If a fix replaced one BANNED pattern (e.g., assert len(x) > 0) with another
 BANNED pattern (e.g., assert "keyword" in result), this is Pattern 10:
@@ -342,6 +431,7 @@ Before completing audit, verify:
 - [ ] Did I identify untested functions/methods?
 - [ ] Did I identify untested error paths?
 - [ ] Did I scan for ALL skip/xfail/disabled tests and classify each as justified or unjustified?
+- [ ] Did I scan assertion literals for credential-shaped or machine-specific values pinned from harvested output?
 
 **Finding Quality:**
 - [ ] Does every finding include exact line numbers?

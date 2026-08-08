@@ -212,7 +212,8 @@ After verification: Verify that the skill actually changes agent behavior in the
 3. **One Excellent Example Beats Many**: Single complete, runnable example in relevant language.
 4. **Keywords Enable Discovery**: Error messages, symptoms, synonyms throughout. Future Claude must FIND this.
 5. **Close Every Loophole Explicitly**: Agents rationalize under pressure. Each excuse needs explicit counter.
-6. **Model Versioning Strategy**: Prefer general model aliases (e.g. `sonnet`, `flash`, `pro`) over hardcoded version numbers (e.g. `claude-3-5-sonnet`, `gemini-2.5-flash`). Hardcoded versions are permitted ONLY when a specific behavior is required that differs between versions.
+6. **Rules Bind to Properties, Not Names**: State what makes a thing wrong, then list library-specific spellings as non-exhaustive examples. A rule naming only one library's API voids itself at the next migration. (See: Express Rules Against Properties, Not Library Names.)
+7. **Model Versioning Strategy**: Prefer general model aliases (e.g. `sonnet`, `flash`, `pro`) over hardcoded version numbers (e.g. `claude-3-5-sonnet`, `gemini-2.5-flash`). Hardcoded versions are permitted ONLY when a specific behavior is required that differs between versions.
 
 ## Inputs
 
@@ -494,6 +495,33 @@ Applies to NEW skills AND EDITS, with no waiver. It is NOT a selectable componen
 develop's ceremony picker (`feature-config` §0.8) — it belongs to the non-negotiable
 core at every ceremony level, including Core-only and the zero-flag fast path. See
 `write-skill-test` ("The Iron Law is NOT a ceremony component") for the full rationale.
+
+## Express Rules Against Properties, Not Library Names
+
+<CRITICAL>
+A rule written in one library's vocabulary dies at the next migration. When a skill or
+standard forbids or requires something, state the PROPERTY that makes it wrong or right,
+then list library-specific spellings as NON-EXHAUSTIVE examples.
+
+```markdown
+# BAD: the rule is the name. Rename the library and the rule silently voids itself.
+Never use `mock.ANY`.
+
+# GOOD: the rule is the property. New spellings are covered the day they appear.
+Never use a wildcard matcher -- any value that compares equal to every possible value,
+because an assertion built from one cannot fail. Known spellings (not exhaustive):
+`mock.ANY`, `unittest.mock.ANY`, tripwire's `AnyThing`/`AnyThing()`.
+```
+
+**Migration obligation:** when a project changes frameworks, every standard that names the
+OLD framework must be RE-EXPRESSED, not left in place. A rename does not violate such a
+rule -- it voids it, silently, with no failing check and no diff to notice.
+
+**Worked example:** the assertion standard banned `mock.ANY` by name in six places. The
+repo migrated to tripwire, whose wildcard is `AnyThing`. The ban survived in letter and
+died in effect: 129 wildcard usages accumulated, 38 of them assertions that assert
+literally nothing. Nothing failed. Nothing warned. The rule was still on the page.
+</CRITICAL>
 
 ## File Organization
 

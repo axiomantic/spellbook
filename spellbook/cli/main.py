@@ -15,11 +15,7 @@ _COMMAND_MODULES = (
     "server",
     "install",
     "update",
-    "admin",
     "config",
-    "session",
-    "events",
-    "worker_llm",
 )
 
 

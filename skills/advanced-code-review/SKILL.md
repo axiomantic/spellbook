@@ -365,16 +365,7 @@ If ANY self-check item fails, STOP and fix before declaring complete.
 
 ## Integration Points
 
-### MCP Tools
-
-| Tool | Phase | Usage |
-|------|-------|-------|
-| `pr_fetch` | 1, 2 | Fetch PR metadata for remote reviews |
-| `pr_diff` | 3 | Parse unified diff into structured format |
-| `pr_files` | 1 | Extract file list from PR |
-| `pr_match_patterns` | 1 | Categorize files by risk patterns |
-
-### Git Commands
+### Git Commands (also used for PR analysis via `gh` CLI)
 
 | Command | Phase | Usage |
 |---------|-------|-------|
@@ -400,7 +391,7 @@ nothing and certified N-of-N.
 ### Fallback Chain
 
 ```
-MCP pr_fetch -> gh pr view -> git diff (local only)
+gh pr view (remote PR) -> git diff (local branch only)
 ```
 
 ---

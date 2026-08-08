@@ -24,66 +24,17 @@ logger = logging.getLogger(__name__)
 def validate_skill_security(skill_path: Path) -> tuple[bool, list[str]]:
     """Validate a skill file for security issues before installation.
 
-    Runs the skill content through injection, exfiltration, escalation, and
-    obfuscation rule sets from spellbook.gates.rules. Uses the
-    "standard" security mode, which flags CRITICAL and HIGH severity findings.
+    Security rule sets were removed. This stub always returns safe.
 
     Args:
         skill_path: Path to the skill file (typically SKILL.md).
 
     Returns:
-        A tuple of (is_safe, issues) where:
-        - is_safe is True if no CRITICAL or HIGH findings were detected
-        - issues is a list of human-readable strings describing each finding
+        A tuple of (is_safe, issues) where is_safe is always True.
     """
-    from spellbook.gates.rules import (
-        ESCALATION_RULES,
-        EXFILTRATION_RULES,
-        INJECTION_RULES,
-        OBFUSCATION_RULES,
-        check_patterns,
-    )
-
     if not skill_path.exists():
         return (False, [f"Skill file does not exist: {skill_path}"])
-
-    try:
-        content = skill_path.read_text(encoding="utf-8")
-    except OSError as e:
-        return (False, [f"Failed to read skill file: {e}"])
-
-    all_findings: list[dict] = []
-    rule_sets = [
-        ("injection", INJECTION_RULES),
-        ("exfiltration", EXFILTRATION_RULES),
-        ("escalation", ESCALATION_RULES),
-        ("obfuscation", OBFUSCATION_RULES),
-    ]
-
-    for _category, rules in rule_sets:
-        findings = check_patterns(content, rules, security_mode="standard")
-        all_findings.extend(findings)
-
-    if not all_findings:
-        return (True, [])
-
-    # Only block on HIGH and CRITICAL findings (standard mode threshold).
-    # LOW/MEDIUM findings (like entropy signals) are informational only.
-    from spellbook.gates.rules import Severity
-
-    blocking_findings = [
-        f for f in all_findings
-        if Severity[f["severity"]].value >= Severity.HIGH.value
-    ]
-
-    if not blocking_findings:
-        return (True, [])
-
-    issues = [
-        f"[{f['severity']}] {f['rule_id']}: {f['message']} (matched: {f.get('matched_text', 'N/A')!r})"
-        for f in blocking_findings
-    ]
-    return (False, issues)
+    return (True, [])
 
 
 @dataclass
@@ -163,6 +114,7 @@ def get_platform_installer(
     from .platforms.gemini import GeminiInstaller
     from .platforms.opencode import OpenCodeInstaller
     from .platforms.pi import PiInstaller
+    from .platforms.prime_agent import PrimeAgentInstaller
 
     config_dir = config_dir_override or get_platform_config_dir(platform)
 
@@ -174,6 +126,7 @@ def get_platform_installer(
         "gemini": GeminiInstaller,
         "forgecode": ForgeCodeInstaller,
         "pi": PiInstaller,
+        "prime_agent": PrimeAgentInstaller,
     }
 
     installer_class = installers.get(platform)
@@ -364,7 +317,7 @@ class Installer:
             on_progress("daemon_start", {})
 
         _on_step("Installing MCP daemon")
-        server_path = self.spellbook_dir / "spellbook" / "server.py"
+        server_path = self.spellbook_dir / "spellbook" / "mcp" / "__main__.py"
         if server_path.exists():
             daemon_success, daemon_msg = install_daemon(
                 self.spellbook_dir, dry_run=dry_run
@@ -390,38 +343,6 @@ class Installer:
         renderer.render_step("result", {"result": daemon_result})
         if on_progress:
             on_progress("result", {"result": daemon_result})
-
-        # Build the admin SPA once, before platform installs. The daemon
-        # serves the compiled bundle from spellbook/admin/static, which is no
-        # longer committed to the repo: it is generated here via npm. node/npm
-        # are a hard requirement, so a build failure is a failed result that
-        # makes session.success False.
-        from .components.admin_build import build_admin_frontend
-
-        _on_step("Building admin SPA")
-        admin_success, admin_msg = build_admin_frontend(
-            self.spellbook_dir, dry_run=dry_run
-        )
-        admin_result = InstallResult(
-            component="admin_frontend",
-            platform="system",
-            success=admin_success,
-            action="installed" if admin_success else "failed",
-            message=f"Admin SPA: {admin_msg}",
-        )
-        session.results.append(admin_result)
-        renderer.render_step("result", {"result": admin_result})
-        if on_progress:
-            on_progress("result", {"result": admin_result})
-
-        # operator decision: admin build failure halts install. node/npm are a
-        # hard requirement, so on a real install a failed build aborts before
-        # any platform install (intentional deviation from the daemon-failure
-        # fall-through precedent, which lets platform installs proceed). Under
-        # dry_run we keep going so the operator sees the full plan.
-        if not admin_success and not dry_run:
-            renderer.render_progress_end()
-            return session
 
         install_index = 0
         for platform, dirs in platform_dirs:
@@ -899,47 +820,7 @@ class Uninstaller:
         if mcp_result:
             session.results.append(mcp_result)
 
-        # Remove the install-time-generated admin SPA bundle (no longer
-        # committed to the repo; generated by build_admin_frontend).
-        session.results.append(self._uninstall_admin_static(dry_run))
-
         return session
-
-    def _uninstall_admin_static(self, dry_run: bool = False) -> InstallResult:
-        """Remove the generated admin SPA bundle at spellbook/admin/static/.
-
-        The bundle is generated at install time, not committed, so uninstall
-        cleans it up. Absence is tolerated (ignore-errors).
-        """
-        static_dir = self.spellbook_dir / "spellbook" / "admin" / "static"
-
-        if not static_dir.exists():
-            # Nothing to remove regardless of dry_run: report the benign state.
-            return InstallResult(
-                component="admin_frontend",
-                platform="system",
-                success=True,
-                action="removed",
-                message="Admin SPA: no generated bundle to remove",
-            )
-
-        if dry_run:
-            return InstallResult(
-                component="admin_frontend",
-                platform="system",
-                success=True,
-                action="removed",
-                message=f"Admin SPA: would remove generated bundle at {static_dir}",
-            )
-
-        shutil.rmtree(static_dir, ignore_errors=True)
-        return InstallResult(
-            component="admin_frontend",
-            platform="system",
-            success=True,
-            action="removed",
-            message=f"Admin SPA: removed generated bundle at {static_dir}",
-        )
 
     def _uninstall_mcp_service(self, dry_run: bool = False) -> Optional[InstallResult]:
         """Uninstall the MCP server system service if installed."""

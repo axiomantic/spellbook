@@ -2,7 +2,7 @@
 name: test-runner
 description: Use for running test commands (pytest, npm test, etc.) and reading test files via Bash, Read, and Grep. Performs no source edits and no git side effects. Bash invocations pass through the spellbook PreToolUse bash gate, which blocks dangerous patterns and surfaces denials to the operator.
 tools: Bash, Read, Grep
-model: sonnet
+model: openrouter/deepseek/deepseek-v4-flash-0731
 effort: low
 ---
 

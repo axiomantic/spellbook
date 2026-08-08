@@ -43,7 +43,7 @@ def get_spellbook_config_dir() -> Path:
 
 
 # Supported platforms (AI coding assistants that can consume spellbook)
-SUPPORTED_PLATFORMS = ["claude_code", "antigravity", "opencode", "codex", "gemini", "forgecode", "pi"]
+SUPPORTED_PLATFORMS = ["claude_code", "antigravity", "opencode", "codex", "gemini", "forgecode", "pi", "prime_agent"]
 
 # Platform configuration
 # NOTE: These are the AI assistant platforms that consume spellbook.
@@ -124,6 +124,15 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "prompts_subdir": "prompts",
         "mcp_supported": True,
         "mcp_server_name": "spellbook",
+    },
+    "prime_agent": {
+        "name": "Prime Agent",
+        "config_dir_env": "PRIME_AGENT_CONFIG_DIR",
+        "default_config_dir": Path.home() / ".prime" / "agent",
+        "cli_flag_name": "prime-agent-config-dir",
+        "context_file": None,  # Uses skills for behavioral guidance, not context files
+        "skills_subdir": "skills",
+        "mcp_supported": False,  # prime-agent has no MCP client
     },
 }
 

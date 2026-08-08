@@ -3,14 +3,14 @@ Claude Code hook registration for the unified spellbook hook.
 
 Manages hook entries in Claude Code settings files that point to
 the unified Python hook entrypoint (spellbook_hook.py), which handles
-all security, TTS, notification, memory, and compaction hooks internally.
+all security, notification, memory, and compaction hooks internally.
 
 All four phases use a single hook command:
   $SPELLBOOK_DIR/hooks/spellbook_hook.py
 
 The unified hook dispatches internally based on event type and tool name:
-  PreToolUse: bash-gate, spawn-guard, state-sanitize, tts-timer-start
-  PostToolUse: audit-log, canary-check, memory-inject, notify, tts, capture
+  PreToolUse: bash-gate, spawn-guard, state-sanitize
+  PostToolUse: audit-log, canary-check, memory-inject, notify, capture
   PreCompact: workflow state save
   SessionStart: post-compaction recovery
 
@@ -43,13 +43,13 @@ logger = logging.getLogger(__name__)
 # The unified hook (spellbook_hook.py) handles ALL hook logic internally,
 # dispatching to handler functions based on event type and tool name.
 # NO async: security gates in PreToolUse must block to reject dangerous commands.
-# PostToolUse handlers that don't need to block (audit, notify, tts, capture)
+# PostToolUse handlers that don't need to block (audit, notify, capture)
 # use internal daemon threads via _fire_and_forget().
 HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
     "PreToolUse": [
         {
             # Unified hook handles: bash-gate, spawn-guard, state-sanitize,
-            # tts-timer-start, and stint auto-push.
+            # and state-sanitize.
             # NO async: security gates must block to reject dangerous commands.
             "hooks": [
                 {
@@ -63,10 +63,10 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
     "PostToolUse": [
         {
             # Unified hook handles: audit-log, canary-check, memory-inject,
-            # notify-on-complete, tts-notify, memory-capture, and depth reminder.
+            # notify-on-complete, memory-capture, and depth reminder.
             # NO async: canary-check and memory-inject are synchronous (inject
             # content into LLM context via stdout). Fire-and-forget handlers
-            # (audit, notify, tts, capture) use internal daemon threads.
+            # (audit, notify, capture) use internal daemon threads.
             "hooks": [
                 {
                     "type": "command",

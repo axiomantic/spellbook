@@ -4,24 +4,17 @@ name: Session Context
 class: preference
 default: "on"
 description: >
-  Notification configuration, the project-knowledge offer protocol, and the
-  focus-stint stack you own across a session.
+  The project-knowledge offer protocol: AGENTS.md reading, fleshing out, and
+  per-directory extensions.
 benefit: >
-  Keeps stints, OS notifications, and AGENTS.md offers working across every session.
+  Keeps AGENTS.md offers working across every session.
 declining_means: >
-  The agent will not offer to create project knowledge files, will not track a focus
-  stint stack, and will not configure OS notifications.
-related:
-  - skills/audio-notifications
-  - skills/session-resume
+  The agent will not offer to create project knowledge files.
+related: []
 renamed_from: []
 superseded_by: null
 paths: []
 ---
-
-## Notification Configuration
-
-Load `audio-notifications` skill for OS notification configuration, MCP tool tables, and quick commands.
 
 ## Project Knowledge (AGENTS.md)
 
@@ -35,15 +28,3 @@ Apply it after greeting, once the session-start read of `AGENTS.md` has happened
 **User declines:** Proceed without. Do not ask again this session.
 **Subdirectory AGENTS.md:** For modules with distinct conventions, create `<subdir>/AGENTS.md`.
 
-## Focus Tracking (Stints)
-
-Spellbook tracks your focus context via a stint stack. You own this state.
-
-**When to push:** Starting a distinct work context (new feature, debugging session, code review).
-**When to pop:** Completing or abandoning a work context.
-**When to replace:** Correcting a stale or wrong stack.
-
-Tools: `stint_push`, `stint_pop`, `stint_check`, `stint_replace`
-
-Keep the stack shallow (2-3 typical, max 6). An empty stack is fine.
-The system will nudge you once if your stack is empty, and warn about stale entries (>4h old).

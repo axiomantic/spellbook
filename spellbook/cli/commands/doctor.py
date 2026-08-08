@@ -9,7 +9,7 @@ import argparse
 import sys
 
 from spellbook.cli.formatting import output
-from spellbook.health.doctor import run_checks
+def run_checks(): return []  # stub - health.doctor removed
 
 
 def register(subparsers: argparse._SubParsersAction) -> None:

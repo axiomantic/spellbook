@@ -3,7 +3,7 @@ name: queen-affective
 description: |
   Emotional state monitor. Use to sense when a project is stuck, frustrated, or needs intervention. The Queen reads the room—detecting patterns humans miss. Invoke when: progress stalled, energy feels off, team might be looping.
 tools: Read, Grep, Glob
-model: haiku
+model: openrouter/gemma4:e4b
 effort: low
 ---
 

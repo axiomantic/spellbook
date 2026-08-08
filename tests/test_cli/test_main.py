@@ -5,6 +5,7 @@ import sys
 import tempfile
 
 import pytest
+import tripwire
 
 from spellbook.cli.main import create_parser, main
 
@@ -61,7 +62,7 @@ class TestMain:
             main(["nonexistent-command"])
         assert exc_info.value.code == 2
 
-    def test_keyboard_interrupt_exits_130(self, monkeypatch):
+    def test_keyboard_interrupt_exits_130(self):
         """KeyboardInterrupt during command execution should exit 130."""
 
         def fake_func(args):
@@ -86,13 +87,17 @@ class TestMain:
                 test_parser.set_defaults(func=fake_func)
             return parser
 
-        monkeypatch.setattr(cli_module, "create_parser", patched_create_parser)
+        create_parser_mock = tripwire.mock("spellbook.cli.main:create_parser")
+        create_parser_mock.calls(patched_create_parser)
 
-        with pytest.raises(SystemExit) as exc_info:
-            main(["_test_interrupt"])
-        assert exc_info.value.code == 130
+        with tripwire:
+            with pytest.raises(SystemExit) as exc_info:
+                main(["_test_interrupt"])
+            assert exc_info.value.code == 130
 
-    def test_exception_prints_to_stderr_exits_one(self, monkeypatch):
+        create_parser_mock.assert_call(args=(), kwargs={})
+
+    def test_exception_prints_to_stderr_exits_one(self):
         """Unhandled exceptions should print to stderr and exit 1."""
 
         def fake_func(args):
@@ -115,11 +120,15 @@ class TestMain:
                 test_parser.set_defaults(func=fake_func)
             return parser
 
-        monkeypatch.setattr(cli_module, "create_parser", patched_create_parser)
+        create_parser_mock = tripwire.mock("spellbook.cli.main:create_parser")
+        create_parser_mock.calls(patched_create_parser)
 
-        with pytest.raises(SystemExit) as exc_info:
-            main(["_test_error"])
-        assert exc_info.value.code == 1
+        with tripwire:
+            with pytest.raises(SystemExit) as exc_info:
+                main(["_test_error"])
+            assert exc_info.value.code == 1
+
+        create_parser_mock.assert_call(args=(), kwargs={})
 
 
 class TestEntryPoint:

@@ -78,7 +78,6 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/merge-worktree-execute](merge-worktree-execute.md) | Phase 2: Sequential Round Merging - merge worktrees in dependency order with tes... | spellbook |
 | [/merge-worktree-resolve](merge-worktree-resolve.md) | Phase 3: Conflict Resolution - delegate to resolving-merge-conflicts with interf... | spellbook |
 | [/merge-worktree-verify](merge-worktree-verify.md) | Phases 4-5: Final Verification and Cleanup — run full test suite, verify contrac... | spellbook |
-| [/mode](mode.md) | Switch session mode between fun, tarot, or off | spellbook |
 | [/move-project](move-project.md) | Move project: relocate directory and update Claude Code session references safel... | spellbook |
 | [/polish-repo-audit](polish-repo-audit.md) | Phases 0-1 of polish-repo: Reconnaissance gathering and audit scorecard generati... | spellbook |
 | [/polish-repo-community](polish-repo-community.md) | Phase 3 of polish-repo: Community infrastructure, issue templates, roadmap, cont... | spellbook |

@@ -88,7 +88,7 @@ def get_platform() -> str:
 
 def get_server_script() -> Path:
     """Get path to the server script."""
-    return get_spellbook_dir() / "spellbook" / "server.py"
+    return get_spellbook_dir() / "spellbook" / "mcp" / "__main__.py"
 
 
 def get_uv_path() -> str | None:

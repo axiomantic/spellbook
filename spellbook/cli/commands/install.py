@@ -231,15 +231,11 @@ def run(args: argparse.Namespace) -> None:
 
         if not is_dry_run:
             try:
-                from installer.wizards import (
-                    run_defaults_wizard,
-                    run_worker_llm_wizard,
-                )
+                from installer.wizards import run_defaults_wizard
             except ImportError as _exc:
                 print(f"Warning: Could not load installer wizards: {_exc}")
             else:
                 run_defaults_wizard(args)
-                run_worker_llm_wizard(args)
 
         # Offer rule module selection during reconfigure. This is the only path
         # by which a user can re-check a module they previously declined, which
@@ -287,13 +283,6 @@ def run(args: argparse.Namespace) -> None:
     if not getattr(args, "dry_run", False):
         from installer.wizards import run_defaults_wizard
         run_defaults_wizard(args)
-
-    # Worker LLM endpoint wizard (optional; default OFF so existing users
-    # see zero behavior change). Skipped under --dry-run and on non-tty stdin
-    # (CI, piped installs) so the installer never blocks.
-    if not getattr(args, "dry_run", False):
-        from installer.wizards import run_worker_llm_wizard
-        run_worker_llm_wizard(args)
 
     # Profile selection
     if not getattr(args, "dry_run", False):
@@ -348,17 +337,6 @@ def run(args: argparse.Namespace) -> None:
             sys.exit(1)
 
 
-# ---------------------------------------------------------------------------
-# Worker LLM wizard -- thin shim preserved for backward compatibility with
-# tests and external callers. Logic lives in installer.wizards.worker_llm
-# so both this entry path and the root install.py share a single prompt
-# implementation.
-# ---------------------------------------------------------------------------
 
-
-def _run_worker_llm_wizard() -> None:
-    """Backward-compat wrapper delegating to the shared wizard."""
-    from installer.wizards import run_worker_llm_wizard
-    run_worker_llm_wizard(None)
 
 

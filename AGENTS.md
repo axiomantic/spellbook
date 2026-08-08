@@ -405,6 +405,36 @@ def test_example():
     config.assert_call(args=("key",), kwargs={})
 ```
 
+#### The assertion must be meaningful
+
+<CRITICAL>
+Tripwire enforces that you assert; it does not enforce that the assertion says anything.
+Assert the REAL values. A wildcard matcher (`AnyThing`, `mock.ANY`, or any equivalent)
+proves nothing and defeats the entire reason this project uses tripwire — an assertion
+built from wildcards passes against any implementation whatsoever.
+
+This applies to EVERY position, not just the all-wildcard case. One wildcard where a real
+value was knowable is already a weakened assertion.
+
+```python
+# WRONG: passes against any implementation
+config.assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)
+
+# CORRECT: real values
+config.assert_call(args=("key",), kwargs={}, returned="value")
+```
+
+If a value is genuinely incidental (wall-clock timestamp, tmp path, object identity), use
+the INSTANCE `AnyThing()` — never the bare class, which silently evades tripwire's own
+all-wildcard guard — and say in a comment why the value is incidental. Prefer a type
+constraint (`IsInstance(Type)`) over a wildcard where the type is knowable.
+
+When harvesting real values from tripwire's failure hints, READ them before pasting:
+hint reprs can contain `os.environ`, credentials, and absolute home paths.
+
+Full rule: `patterns/assertion-quality-standard.md`.
+</CRITICAL>
+
 #### Common Patterns
 
 | Need | Pattern |

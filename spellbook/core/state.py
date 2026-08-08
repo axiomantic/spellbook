@@ -113,8 +113,6 @@ def set_state(key: str, value: Any) -> None:
 # Keys that reference subsystems removed from spellbook. Stripped unconditionally
 # -- they are never re-added, and any value they held was dead weight.
 _DEAD_CONFIG_KEYS: tuple[str, ...] = (
-    "tts_enabled",
-    "tts_volume",
     "telemetry_enabled",
 )
 
@@ -131,11 +129,11 @@ def migrate_config_to_state() -> dict[str, Any]:
     """Strip dead keys and move runtime state out of ``spellbook.json``.
 
     This is a one-shot migration but safe to run on every session_init: it is
-    a no-op once the user's spellbook.json contains none of the five relevant
+    a no-op once the user's spellbook.json contains none of the three relevant
     keys.
 
     Behaviour:
-        * Dead keys (``tts_enabled``, ``tts_volume``, ``telemetry_enabled``)
+        * Dead keys (``telemetry_enabled``)
           are removed from spellbook.json. Their values are discarded.
         * State keys (``update_check_failures``, ``auto_update_branch``) are
           moved to state.json. Existing state.json values are preserved unless

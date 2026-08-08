@@ -571,16 +571,6 @@ class TestShippedModules:
         core = next(m for m in shipped if m.id == "core")
         assert core.is_mandatory
 
-    def test_admin_and_core_config_register_the_same_keys(self, shipped):
-        from spellbook.admin.routes.config import KNOWN_KEYS
-        from spellbook.core.config import config_default_for, rule_module_config_defaults
-
-        expected = {m.config_key for m in preference_modules(shipped)}
-        assert expected <= KNOWN_KEYS
-        assert expected <= set(rule_module_config_defaults())
-        for module in preference_modules(shipped):
-            assert config_default_for(module.config_key) is module.default_on
-
     def test_rule_module_defaults_are_not_resolved_at_config_import(self):
         """Importing spellbook.core.config must not glob and parse rules/.
 

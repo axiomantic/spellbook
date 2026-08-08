@@ -774,7 +774,7 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
                         )
             else:
                 subprocess.run(
-                    ["pkill", "-f", "spellbook/server.py"],
+                    ["pkill", "-f", "spellbook/mcp/__main__.py"],
                     capture_output=True
                 )
         except FileNotFoundError:
@@ -787,7 +787,7 @@ def stop_daemon(dry_run: bool = False) -> Tuple[bool, str]:
                 # Last resort: SIGKILL (Unix only)
                 try:
                     subprocess.run(
-                        ["pkill", "-9", "-f", "spellbook/server.py"],
+                        ["pkill", "-9", "-f", "spellbook/mcp/__main__.py"],
                         capture_output=True
                     )
                 except FileNotFoundError:

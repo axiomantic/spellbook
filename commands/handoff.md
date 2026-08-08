@@ -16,7 +16,7 @@ Transfer session state so successor instance resumes mid-stride with zero contex
 **Auto mode differences:**
 - Skip `<analysis>` walkthrough (time-sensitive)
 - Prioritize Section 1.20 (machine-readable) completeness
-- MUST call `workflow_state_save` MCP tool; if tool fails: LOG warning, inject recovery context inline
+- MUST persist workflow state; if persistence fails: LOG warning, inject recovery context inline
 - Inject recovery context via plugin hook
 
 <ROLE>
@@ -500,7 +500,7 @@ recovery:
 
 **After generating Section 1.20, if mode is `auto` or `checkpoint`:**
 ```
-workflow_state_save({
+persistWorkflowState({
   project_path: "[from yaml]",
   state: [entire yaml above],
   trigger: "[auto|checkpoint]"
@@ -684,7 +684,7 @@ ALL must be "yes":
 - [ ] skill_stack includes constraints (forbidden/required)
 - [ ] subagents includes skill_stack for each
 - [ ] conversation.corrections captures lessons
-- [ ] If mode=auto: workflow_state_save called
+- [ ] If mode=auto: workflow state persisted
 
 **Verification:**
 - [ ] Skill resume commands executable
@@ -711,7 +711,7 @@ If ANY "no": add detail. You are last defense against context loss.
 
 Plugin detects resumable state via:
 ```typescript
-const state = await callMcpTool('workflow_state_load', {
+const state = await loadWorkflowState({
   project_path: directory,
   max_age_hours: 24.0
 });
@@ -795,7 +795,7 @@ Plugin tracks state changes via `tool.execute.after`:
 
 ```typescript
 // Incremental update
-await callMcpTool('workflow_state_update', {
+await updateWorkflowState({
   project_path: directory,
   updates: { /* partial state */ }
 });
@@ -810,8 +810,8 @@ async function onSessionCompacting(context: PluginContext): Promise<void> {
   // 1. Build complete state from tracking + conversation analysis
   const state = await buildCompleteState(context);
 
-  // 2. Persist to MCP
-  await callMcpTool('workflow_state_save', {
+  // 2. Persist state
+  await persistWorkflowState({
     project_path: directory,
     state: state,
     trigger: 'auto'
@@ -823,13 +823,13 @@ async function onSessionCompacting(context: PluginContext): Promise<void> {
 }
 ```
 
-### 3.6 MCP Tools Required
+### 3.6 State Persistence
 
-| Tool | Purpose |
-|------|---------|
-| `workflow_state_save` | Persist state to database |
-| `workflow_state_load` | Retrieve state for project |
-| `workflow_state_update` | Incremental updates during session |
+| Operation | Purpose |
+|-----------|---------|
+| `persistWorkflowState` | Persist state to storage |
+| `loadWorkflowState` | Retrieve state for project |
+| `updateWorkflowState` | Incremental updates during session |
 | `skill_instructions_get` | Fetch skill constraints for injection |
 
 ### 3.7 Database Schema

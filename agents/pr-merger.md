@@ -2,7 +2,7 @@
 name: pr-merger
 description: Use for `gh pr merge` and `gh pr ready` only. Operator confirmation is REQUIRED for every merge or ready-mark. Bash invocations pass through the spellbook PreToolUse bash gate, which blocks dangerous patterns and surfaces denials to the operator.
 tools: Bash, Read
-model: sonnet
+model: openrouter/deepseek/deepseek-v4-flash-0731
 effort: low
 ---
 
