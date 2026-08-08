@@ -9773,7 +9773,7 @@
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  the plan one-pager and worktree/parallelization choices are gated by
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>  <span class="sb">`feature-implement`</span> Phase 3.4.7 (One-Pager Approval Gate). Autonomous
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>  mode does not waive that gate. (develop is single-orchestrator only;
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>  it does not spawn parallel sessions or auto-invoke <span class="sb">`forge_project_init`</span>.)
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>  it does not spawn parallel sessions.)
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span><span class="gs">**APPROVAL GATES (2.3, 3.3) ARE NEVER AUTO-PROCEEDED.**</span> Even in
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>  full autonomous mode, design and plan approval gates require explicit
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>  artifact verification before continuation. The <span class="ge">*surface*</span> of these gates
@@ -9867,7 +9867,7 @@
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="gs">**Tool name mapping:**</span>
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">-</span><span class="w"> </span>&quot;Task tool&quot; → <span class="sb">`subagent`</span> tool. All references to <span class="sb">`Task()`</span> dispatch in this skill mean <span class="sb">`subagent()`</span> in Pi.
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="k">-</span><span class="w"> </span><span class="sb">`subagent_type`</span> field does NOT exist in Pi. Skip <span class="sb">`CURRENT_AGENT_TYPE`</span> propagation entirely.
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="k">-</span><span class="w"> </span><span class="sb">`forge_project_init`</span> is NOT available. Use <span class="sb">`subagent`</span> with <span class="sb">`planner`</span> or <span class="sb">`delegate`</span> agent for design synthesis.
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="k">-</span><span class="w"> </span>Project initialization is handled by <span class="sb">`develop`</span> directly. Use <span class="sb">`subagent`</span> with <span class="sb">`planner`</span> or <span class="sb">`delegate`</span> agent for design synthesis.
 <a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="k">-</span><span class="w"> </span><span class="sb">`spawn_session`</span> is NOT available.
 <a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="gs">**Skill invocation in Pi:**</span> Pi loads skills via system-prompt auto-trigger by text patterns or via <span class="sb">`/skill:name`</span>. There is no &quot;Skill tool&quot; RPC. To verify a subagent invoked the intended skill:
@@ -10459,7 +10459,7 @@
 <a id="__codelineno-0-725" name="__codelineno-0-725" href="#__codelineno-0-725"></a><span class="k">3.</span> <span class="gs">**RUN**</span> the phases that flag now gates (per design §2.1), and recompute <span class="sb">`remaining_gates`</span> (see Ledger Writes below)
 <a id="__codelineno-0-726" name="__codelineno-0-726" href="#__codelineno-0-726"></a><span class="k">4.</span> <span class="gs">**CONTINUE**</span> from the current point — do NOT restart from Phase 0
 <a id="__codelineno-0-727" name="__codelineno-0-727" href="#__codelineno-0-727"></a>
-<a id="__codelineno-0-728" name="__codelineno-0-728" href="#__codelineno-0-728"></a>There is NO tier to upgrade and NO work-item decomposition. Setting a flag turns on the phases that flag gates; develop simply runs them and proceeds. Do NOT invoke <span class="sb">`forge_project_init`</span> from scope drift.
+<a id="__codelineno-0-728" name="__codelineno-0-728" href="#__codelineno-0-728"></a>There is NO tier to upgrade and NO work-item decomposition. Setting a flag turns on the phases that flag gates; develop simply runs them and proceeds.
 <a id="__codelineno-0-729" name="__codelineno-0-729" href="#__codelineno-0-729"></a>
 <a id="__codelineno-0-730" name="__codelineno-0-730" href="#__codelineno-0-730"></a><span class="gs">**Detection Points:**</span>
 <a id="__codelineno-0-731" name="__codelineno-0-731" href="#__codelineno-0-731"></a><span class="k">-</span><span class="w"> </span>Phase 0: Initial flag elicitation (the wizard)
@@ -11059,16 +11059,16 @@
 <a id="__codelineno-0-1325" name="__codelineno-0-1325" href="#__codelineno-0-1325"></a><span class="gu">### Ledger Writes (workflow_state — accountability + compaction recovery)</span>
 <a id="__codelineno-0-1326" name="__codelineno-0-1326" href="#__codelineno-0-1326"></a>
 <a id="__codelineno-0-1327" name="__codelineno-0-1327" href="#__codelineno-0-1327"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-1328" name="__codelineno-0-1328" href="#__codelineno-0-1328"></a>develop records its own phase/gate progress in <span class="sb">`workflow_state`</span> so the work
+<a id="__codelineno-0-1328" name="__codelineno-0-1328" href="#__codelineno-0-1328"></a>develop records its own phase/gate progress in a persistent state file so the work
 <a id="__codelineno-0-1329" name="__codelineno-0-1329" href="#__codelineno-0-1329"></a>survives context compaction and a resumed session can re-assert the remaining
 <a id="__codelineno-0-1330" name="__codelineno-0-1330" href="#__codelineno-0-1330"></a>gates instead of declaring &quot;done&quot; prematurely. This is design §5 (C4).
 <a id="__codelineno-0-1331" name="__codelineno-0-1331" href="#__codelineno-0-1331"></a>
-<a id="__codelineno-0-1332" name="__codelineno-0-1332" href="#__codelineno-0-1332"></a><span class="gs">**MERGE-ONLY, NEVER overwrite.**</span> develop writes via <span class="sb">`workflow_state_update`</span>
-<a id="__codelineno-0-1333" name="__codelineno-0-1333" href="#__codelineno-0-1333"></a>(deep-merge) and MUST NEVER use <span class="sb">`workflow_state_save`</span> (overwrite). The hooks
-<a id="__codelineno-0-1334" name="__codelineno-0-1334" href="#__codelineno-0-1334"></a>(<span class="sb">`_handle_pre_compact`</span>) write <span class="sb">`compaction_flag`</span> and <span class="sb">`stint_stack`</span> into the SAME
-<a id="__codelineno-0-1335" name="__codelineno-0-1335" href="#__codelineno-0-1335"></a>workflow_state row; a <span class="sb">`save`</span> from develop would clobber them, and vice versa.
-<a id="__codelineno-0-1336" name="__codelineno-0-1336" href="#__codelineno-0-1336"></a><span class="sb">`_deep_merge`</span> preserves sibling keys, so disjoint-key writes never lose a field
-<a id="__codelineno-0-1337" name="__codelineno-0-1337" href="#__codelineno-0-1337"></a>(design §5.2/§5.5). A <span class="sb">`save`</span> here is a Risk §13 regression — do not do it.
+<a id="__codelineno-0-1332" name="__codelineno-0-1332" href="#__codelineno-0-1332"></a><span class="gs">**MERGE-ONLY, NEVER overwrite.**</span> develop writes via deep-merge and MUST NEVER
+<a id="__codelineno-0-1333" name="__codelineno-0-1333" href="#__codelineno-0-1333"></a>use full overwrite. The hooks (<span class="sb">`_handle_pre_compact`</span>) write <span class="sb">`compaction_flag`</span> and
+<a id="__codelineno-0-1334" name="__codelineno-0-1334" href="#__codelineno-0-1334"></a><span class="sb">`stint_stack`</span> into the SAME state row; an overwrite from develop would clobber
+<a id="__codelineno-0-1335" name="__codelineno-0-1335" href="#__codelineno-0-1335"></a>them, and vice versa. <span class="sb">`_deep_merge`</span> preserves sibling keys, so disjoint-key writes
+<a id="__codelineno-0-1336" name="__codelineno-0-1336" href="#__codelineno-0-1336"></a>never lose a field (design §5.2/§5.5). An overwrite here is a Risk §13 regression
+<a id="__codelineno-0-1337" name="__codelineno-0-1337" href="#__codelineno-0-1337"></a>— do not do it.
 <a id="__codelineno-0-1338" name="__codelineno-0-1338" href="#__codelineno-0-1338"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-1339" name="__codelineno-0-1339" href="#__codelineno-0-1339"></a>
 <a id="__codelineno-0-1340" name="__codelineno-0-1340" href="#__codelineno-0-1340"></a><span class="gs">**The ledger shape (`develop_gate_ledger`, design §5.3):**</span>
@@ -11106,7 +11106,7 @@
 <a id="__codelineno-0-1372" name="__codelineno-0-1372" href="#__codelineno-0-1372"></a>and binding every declaration to it (see Pre-Dispatch Ritual above).
 <a id="__codelineno-0-1373" name="__codelineno-0-1373" href="#__codelineno-0-1373"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-1374" name="__codelineno-0-1374" href="#__codelineno-0-1374"></a>
-<a id="__codelineno-0-1375" name="__codelineno-0-1375" href="#__codelineno-0-1375"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Written once, at Phase 0 completion**</span>, in the same <span class="sb">`workflow_state_update`</span> that
+<a id="__codelineno-0-1375" name="__codelineno-0-1375" href="#__codelineno-0-1375"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Written once, at Phase 0 completion**</span>, in the same state write that
 <a id="__codelineno-0-1376" name="__codelineno-0-1376" href="#__codelineno-0-1376"></a>  first writes the ledger. <span class="sb">`locked_at`</span> is set then and NEVER rewritten.
 <a id="__codelineno-0-1377" name="__codelineno-0-1377" href="#__codelineno-0-1377"></a><span class="k">-</span><span class="w"> </span><span class="gs">**`declined` is the load-bearing field.**</span> A gate the operator chose to skip is
 <a id="__codelineno-0-1378" name="__codelineno-0-1378" href="#__codelineno-0-1378"></a>  recorded as declined, not simply left out. Absence cannot distinguish &quot;not chosen&quot;
@@ -11154,18 +11154,18 @@
 <a id="__codelineno-0-1420" name="__codelineno-0-1420" href="#__codelineno-0-1420"></a><span class="gs">**Transition points where develop writes (design §5.4):**</span>
 <a id="__codelineno-0-1421" name="__codelineno-0-1421" href="#__codelineno-0-1421"></a>
 <a id="__codelineno-0-1422" name="__codelineno-0-1422" href="#__codelineno-0-1422"></a><span class="k">1.</span> <span class="gs">**At develop ENTRY (before the Phase-0 wizard):**</span> write ONLY
-<a id="__codelineno-0-1423" name="__codelineno-0-1423" href="#__codelineno-0-1423"></a>   <span class="sb">`workflow_state_update({&quot;active_skill&quot;: &quot;develop&quot;, &quot;skill_phase&quot;: &quot;0&quot;})`</span>.
+<a id="__codelineno-0-1423" name="__codelineno-0-1423" href="#__codelineno-0-1423"></a>   state write: <span class="sb">`{&quot;active_skill&quot;: &quot;develop&quot;, &quot;skill_phase&quot;: &quot;0&quot;}`</span>.
 <a id="__codelineno-0-1424" name="__codelineno-0-1424" href="#__codelineno-0-1424"></a>   This marks ownership + phase. It does <span class="gs">**NOT**</span> write <span class="sb">`develop_gate_ledger`</span> yet.
 <a id="__codelineno-0-1425" name="__codelineno-0-1425" href="#__codelineno-0-1425"></a>   This split is load-bearing for the accountability nudge (design §6.1, IMP-1):
 <a id="__codelineno-0-1426" name="__codelineno-0-1426" href="#__codelineno-0-1426"></a>   writing the ledger at entry would make the nudge unfireable; not gating the
 <a id="__codelineno-0-1427" name="__codelineno-0-1427" href="#__codelineno-0-1427"></a>   nudge on &quot;past Phase 0&quot; would make it false-fire on every wizard prompt.
 <a id="__codelineno-0-1428" name="__codelineno-0-1428" href="#__codelineno-0-1428"></a><span class="k">2.</span> <span class="gs">**At Phase 0 completion (flags resolved AND ceremony locked):**</span> write the ledger for
 <a id="__codelineno-0-1429" name="__codelineno-0-1429" href="#__codelineno-0-1429"></a>   the FIRST time —
-<a id="__codelineno-0-1430" name="__codelineno-0-1430" href="#__codelineno-0-1430"></a>   <span class="sb">`workflow_state_update({&quot;develop_gate_ledger&quot;: {need_flags, current_phase: &lt;next&gt;, remaining_gates: &lt;derived scalar, minus ceremony.declined&gt;, plan_pointer: &quot;&quot;, ceremony: {locked_at, source, assessment, core, selected, declined, promotions: &quot;&quot;}}, &quot;active_skill&quot;: &quot;develop&quot;, &quot;skill_phase&quot;: &lt;next&gt;})`</span>.
+<a id="__codelineno-0-1430" name="__codelineno-0-1430" href="#__codelineno-0-1430"></a>   state write: <span class="sb">`{&quot;develop_gate_ledger&quot;: {need_flags, current_phase: &lt;next&gt;, remaining_gates: &lt;derived scalar, minus ceremony.declined&gt;, plan_pointer: &quot;&quot;, ceremony: {locked_at, source, assessment, core, selected, declined, promotions: &quot;&quot;}}, &quot;active_skill&quot;: &quot;develop&quot;, &quot;skill_phase&quot;: &lt;next&gt;}`</span>.
 <a id="__codelineno-0-1431" name="__codelineno-0-1431" href="#__codelineno-0-1431"></a>   Advance <span class="sb">`skill_phase`</span> past <span class="sb">`&quot;0&quot;`</span>. This is the ONLY write that sets <span class="sb">`locked_at`</span>.
 <a id="__codelineno-0-1432" name="__codelineno-0-1432" href="#__codelineno-0-1432"></a><span class="k">3.</span> **At each subsequent phase entry (1, 1.5, 2, 3, 4) and each in-phase gate
 <a id="__codelineno-0-1433" name="__codelineno-0-1433" href="#__codelineno-0-1433"></a>   completion:**
-<a id="__codelineno-0-1434" name="__codelineno-0-1434" href="#__codelineno-0-1434"></a>   <span class="sb">`workflow_state_update({&quot;develop_gate_ledger&quot;: {current_phase: &quot;&lt;phase&gt;&quot;, need_flags, remaining_gates: &lt;re-derived scalar&gt;, plan_pointer: &lt;path&gt;}, &quot;active_skill&quot;: &quot;develop&quot;, &quot;skill_phase&quot;: &quot;&lt;phase&gt;&quot;})`</span>.
+<a id="__codelineno-0-1434" name="__codelineno-0-1434" href="#__codelineno-0-1434"></a>   state write: <span class="sb">`{&quot;develop_gate_ledger&quot;: {current_phase: &quot;&lt;phase&gt;&quot;, need_flags, remaining_gates: &lt;re-derived scalar&gt;, plan_pointer: &lt;path&gt;}, &quot;active_skill&quot;: &quot;develop&quot;, &quot;skill_phase&quot;: &quot;&lt;phase&gt;&quot;}`</span>.
 <a id="__codelineno-0-1435" name="__codelineno-0-1435" href="#__codelineno-0-1435"></a>   Re-derive <span class="sb">`remaining_gates`</span> as the full scalar with completed gates pruned —
 <a id="__codelineno-0-1436" name="__codelineno-0-1436" href="#__codelineno-0-1436"></a>   REPLACE the whole value, never append (CRIT-1).
 <a id="__codelineno-0-1437" name="__codelineno-0-1437" href="#__codelineno-0-1437"></a><span class="k">4.</span> <span class="gs">**At fast-path entry (zero flags):**</span> <span class="sb">`current_phase=&quot;fast-path&quot;`</span>,

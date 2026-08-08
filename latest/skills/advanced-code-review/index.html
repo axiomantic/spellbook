@@ -10294,49 +10294,40 @@
 <a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
 <a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="gu">## Integration Points</span>
 <a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="gu">### MCP Tools</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="gu">### Git Commands (also used for PR analysis via `gh` CLI)</span>
 <a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>| Tool | Phase | Usage |
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>|------|-------|-------|
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>| <span class="sb">`pr_fetch`</span> | 1, 2 | Fetch PR metadata for remote reviews |
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>| <span class="sb">`pr_diff`</span> | 3 | Parse unified diff into structured format |
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>| <span class="sb">`pr_files`</span> | 1 | Extract file list from PR |
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>| <span class="sb">`pr_match_patterns`</span> | 1 | Categorize files by risk patterns |
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="gu">### Git Commands</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>| Command | Phase | Usage |
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>|---------|-------|-------|
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>| <span class="sb">`branch-context.sh json`</span> | 1 | Detect base, fetch, compute merge base, report provenance |
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>| <span class="sb">`branch-context.sh files-committed`</span> | 1 | Coverage-manifest file list, committed-only endpoint |
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>| <span class="sb">`branch-context.sh diff-committed`</span> | 1, 3 | Diff content, committed-only endpoint |
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>| <span class="sb">`branch-context.sh files`</span> | 1 | Coverage-manifest file list including working tree (pre-commit review only) |
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>| <span class="sb">`branch-context.sh diff`</span> | 1, 3 | Diff content including working tree (pre-commit review only) |
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>| <span class="sb">`git show`</span> | 4 | Verify file contents at SHA |
 <a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>| Command | Phase | Usage |
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>|---------|-------|-------|
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>| <span class="sb">`branch-context.sh json`</span> | 1 | Detect base, fetch, compute merge base, report provenance |
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>| <span class="sb">`branch-context.sh files-committed`</span> | 1 | Coverage-manifest file list, committed-only endpoint |
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>| <span class="sb">`branch-context.sh diff-committed`</span> | 1, 3 | Diff content, committed-only endpoint |
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>| <span class="sb">`branch-context.sh files`</span> | 1 | Coverage-manifest file list including working tree (pre-commit review only) |
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>| <span class="sb">`branch-context.sh diff`</span> | 1, 3 | Diff content including working tree (pre-commit review only) |
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>| <span class="sb">`git show`</span> | 4 | Verify file contents at SHA |
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="sb">`git merge-base`</span> and bare <span class="sb">`git diff &lt;base&gt;`</span> are NOT invoked directly. The script
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>owns base detection, the pre-base <span class="sb">`git fetch`</span>, and provenance reporting;
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>re-implementing that chain is how hardcoded literals get reintroduced.
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="sb">`git merge-base`</span> and bare <span class="sb">`git diff &lt;base&gt;`</span> are NOT invoked directly. The script
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>owns base detection, the pre-base <span class="sb">`git fetch`</span>, and provenance reporting;
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>re-implementing that chain is how hardcoded literals get reintroduced.
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>The file list and the diff MUST come from the SAME endpoint:
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="sb">`files-committed`</span> pairs with <span class="sb">`diff-committed`</span>, and <span class="sb">`files`</span> pairs with <span class="sb">`diff`</span>.
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>Mixing them builds a coverage manifest of files the diff does not contain, so
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>coverage reconciliation reports complete against zero hunks — a review that read
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>nothing and certified N-of-N.
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="gu">### Fallback Chain</span>
 <a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>The file list and the diff MUST come from the SAME endpoint:
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="sb">`files-committed`</span> pairs with <span class="sb">`diff-committed`</span>, and <span class="sb">`files`</span> pairs with <span class="sb">`diff`</span>.
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>Mixing them builds a coverage manifest of files the diff does not contain, so
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>coverage reconciliation reports complete against zero hunks — a review that read
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>nothing and certified N-of-N.
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="gu">### Fallback Chain</span>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="sb">```</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="sb">MCP pr_fetch -&gt; gh pr view -&gt; git diff (local only)</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a><span class="sb">```</span>
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>
-<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>---
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>A code review is only as valuable as its accuracy. Verify before asserting. Respect previous decisions. Prioritize by impact. Your reputation depends on being thorough AND correct.
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="sb">```</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="sb">gh pr view (remote PR) -&gt; git diff (local branch only)</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="sb">```</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>---
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>A code review is only as valuable as its accuracy. Verify before asserting. Respect previous decisions. Prioritize by impact. Your reputation depends on being thorough AND correct.
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

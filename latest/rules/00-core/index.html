@@ -9404,21 +9404,18 @@
 <p>What spellbook is, how paths resolve, what runs at session start, and the shared vocabulary every other rule module assumes.</p>
 <p><strong>Related artifacts:</strong></p>
 <ul>
-<li><code>skills/session-mode-init</code></li>
-<li><code>skills/session-resume</code></li>
-<li><code>skills/audio-notifications</code></li>
 <li><code>skills/managing-artifacts</code></li>
 </ul>
 <h2 id="rule-content">Rule Content<a class="headerlink" href="#rule-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gu">## What Spellbook Is (And Isn&#39;t)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Spellbook is a harness-augmentation layer. <span class="ge">*You*</span> (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI, ForgeCode) are the harness: you own the agent loop, tool execution, and core conversational behavior. Spellbook adds a behavioral layer on top: skills, slash commands, hooks, profiles, and a shared MCP server (focus stints, session resume).
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Spellbook is a harness-augmentation layer. <span class="ge">*You*</span> (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI, ForgeCode, Prime Agent) are the harness: you own the agent loop, tool execution, and core conversational behavior. Spellbook adds a behavioral layer on top: skills, slash commands, hooks, profiles, and a shared state layer (session resume). On platforms with MCP support (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI), this is provided by an MCP server. On Prime Agent, this is provided by the continual harness (memories, skills, prompt notes).
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Operational consequence:
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">-</span><span class="w"> </span>The instructions in the spellbook rule modules augment your default behavior; they do not replace it. Where a spellbook rule is more specific than your default, follow the rule. Where the rule is silent, your default behavior stands.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">-</span><span class="w"> </span>The MCP server (<span class="sb">`spellbook_*`</span> tools) is shared across harnesses on this machine, so stints stored in one harness are visible to another. Treat that shared state as authoritative.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">-</span><span class="w"> </span>On MCP-capable platforms, the <span class="sb">`spellbook_*`</span> tools are shared across harnesses on this machine. Treat shared state as authoritative. On Prime Agent, shared state is managed through the continual harness (memories, skills, prompt notes).
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">-</span><span class="w"> </span>&quot;Skill&quot; and &quot;command&quot; references in the spellbook rule modules point at spellbook artifacts loaded into your environment, not built-in harness features.
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gu">## Spellbook Path Resolution</span>
@@ -9448,73 +9445,49 @@
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| Codex | Your system prompt mentions Codex sandbox | <span class="sb">`codex`</span> | Codex |
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| Gemini CLI | Your system prompt mentions Gemini CLI | <span class="sb">`gemini`</span> | Gemini |
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| ForgeCode | Your system prompt opens with &#39;You are Forge&#39;, &#39;You are Sage&#39;, or &#39;You are Muse&#39; (built-in agents only) | <span class="sb">`forgecode`</span> | Forge |
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>If uncertain, omit the <span class="sb">`platform`</span> parameter (backward compatible). Use the assistant name in greetings.
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="gu">### Step 0.5: OpenCode Agent Inheritance (OpenCode Only)</span>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>If platform is <span class="sb">`opencode`</span>, track and propagate agent type to all subagents.
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="gs">**Detection:**</span> Check system prompt:
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="k">-</span><span class="w"> </span>&quot;operating in YOLO mode&quot; -&gt; <span class="sb">`yolo`</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="k">-</span><span class="w"> </span>&quot;YOLO mode with a focus on precision&quot; -&gt; <span class="sb">`yolo-focused`</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">-</span><span class="w"> </span>No YOLO indicators -&gt; <span class="sb">`general`</span> (default)
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="gs">**Store as `CURRENT_AGENT_TYPE`.**</span> When dispatching via Task tool:
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">-</span><span class="w"> </span><span class="sb">`CURRENT_AGENT_TYPE`</span> is <span class="sb">`yolo`</span> or <span class="sb">`yolo-focused`</span>: pass that same value as <span class="sb">`subagent_type`</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">-</span><span class="w"> </span>Do NOT use <span class="sb">`general`</span> or <span class="sb">`explore`</span> when parent is YOLO
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gs">**Exception:**</span> Pure exploration (finding files, searching code) may use <span class="sb">`explore`</span> even when parent is YOLO.
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gu">### Step 1: Session Mode and Resume Initialization</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">1.</span> Call <span class="sb">`spellbook_session_init`</span> MCP tool with <span class="sb">`platform`</span> = your platform value from Step 0, and <span class="sb">`continuation_message`</span> = user&#39;s first message (if available)
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">2.</span> Handle the response per the Session Mode rules in this module
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="k">3.</span> If <span class="sb">`resume_available: true`</span>, follow the Session Resume rules in this module
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">4.</span> Greet with &quot;Welcome to spellbook-enhanced [assistant name].&quot; If <span class="sb">`admin_url`</span> is present in the session_init response, append: &quot;Admin: [admin_url]&quot;
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| Prime Agent | Your system prompt mentions Prime Agent, RLM, or IPython kernel | <span class="sb">`prime_agent`</span> | Prime Agent |
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>If uncertain, omit the <span class="sb">`platform`</span> parameter (backward compatible). Use the assistant name in greetings.
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gu">### Step 0.5: OpenCode Agent Inheritance (OpenCode Only)</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>If platform is <span class="sb">`opencode`</span>, track and propagate agent type to all subagents.
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gs">**Detection:**</span> Check system prompt:
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="k">-</span><span class="w"> </span>&quot;operating in YOLO mode&quot; -&gt; <span class="sb">`yolo`</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">-</span><span class="w"> </span>&quot;YOLO mode with a focus on precision&quot; -&gt; <span class="sb">`yolo-focused`</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span>No YOLO indicators -&gt; <span class="sb">`general`</span> (default)
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gs">**Store as `CURRENT_AGENT_TYPE`.**</span> When dispatching via Task tool:
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">-</span><span class="w"> </span><span class="sb">`CURRENT_AGENT_TYPE`</span> is <span class="sb">`yolo`</span> or <span class="sb">`yolo-focused`</span>: pass that same value as <span class="sb">`subagent_type`</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">-</span><span class="w"> </span>Do NOT use <span class="sb">`general`</span> or <span class="sb">`explore`</span> when parent is YOLO
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="gs">**Exception:**</span> Pure exploration (finding files, searching code) may use <span class="sb">`explore`</span> even when parent is YOLO.
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gu">### Step 1: Session Mode and Resume Initialization</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">1.</span> <span class="gs">**On Prime Agent:**</span> Check the continual harness (<span class="sb">`rlm.harness.overview()`</span>) for existing session state and memories.
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>   <span class="gs">**On other platforms (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI):**</span> No MCP session tool to call — these platforms just start fresh per session. Skip to Step 2.
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">2.</span> Greet with &quot;Welcome to spellbook-enhanced [assistant name].&quot;
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gu">### Step 1.5: Profile Activation</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gu">### Step 2: Project Knowledge Check</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>If <span class="sb">`session_init`</span> returns a <span class="sb">`profile`</span> field, read and internalize its behavioral instructions.
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>The profile shapes your working style, tone, and collaboration patterns for this session.
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>Profile instructions have a lower priority than explicit user instructions and other core rules in this document.
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">1.</span> Check if project has <span class="sb">`AGENTS.md`</span> (or your platform&#39;s configuration file that references it, e.g. <span class="sb">`CLAUDE.md`</span>). If it exists with content, read it silently for context.
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">2.</span> For larger projects, also check for subdirectory <span class="sb">`AGENTS.md`</span> files relevant to the current work area and read those too.
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">3.</span> If a rule module governing the project-knowledge offer protocol is installed, apply it to decide what to do when the file is missing, thin, or empty. If no such module is installed, read what exists and make no offer.
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">### Step 2: Project Knowledge Check</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">1.</span> Check if project has <span class="sb">`AGENTS.md`</span> (or your platform&#39;s configuration file that references it, e.g. <span class="sb">`CLAUDE.md`</span>). If it exists with content, read it silently for context.
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">2.</span> For larger projects, also check for subdirectory <span class="sb">`AGENTS.md`</span> files relevant to the current work area and read those too.
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">3.</span> If a rule module governing the project-knowledge offer protocol is installed, apply it to decide what to do when the file is missing, thin, or empty. If no such module is installed, read what exists and make no offer.
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gs">**Do NOT skip these steps.**</span> They establish session context and persona.
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gs">**Do NOT skip these steps.**</span> They establish session context and persona.
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="gu">## Glossary</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| Term | Definition |
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>|------|------------|
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>| project-encoded | Path with leading <span class="sb">`/`</span> removed, slashes → dashes. <span class="sb">`/Users/alice/proj`</span> → <span class="sb">`Users-alice-proj`</span> |
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gu">## Session Mode</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>Load <span class="sb">`session-mode-init`</span> skill for mode dispatch table and selection question. Handles fun/tarot/none modes.
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="gu">## Session Resume</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>When <span class="sb">`resume_available: true`</span>, load <span class="sb">`session-resume`</span> skill and execute <span class="sb">`resume_boot_prompt`</span> immediately. The skill contains resume field definitions, protocol, continuation detection, and session repairs handling.
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gu">## MCP Tools</span>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>&lt;RULE&gt;If an MCP tool appears in your available tools list, call it directly. Do not run platform-specific diagnostic commands to verify availability. Your tools list is the source of truth.&lt;/RULE&gt;
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gs">**MCP configuration location varies by platform:**</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">-</span><span class="w"> </span>Claude Code: User-scoped in <span class="sb">`~/.claude.json`</span>, project-scoped in <span class="sb">`.mcp.json`</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>OpenCode: Configured in <span class="sb">`~/.config/opencode/config.json`</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Codex: Configured in <span class="sb">`~/.codex/`</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Gemini CLI: Configured via extension system
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gu">## Glossary</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>| Term | Definition |
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>|------|------------|
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>| project-encoded | Path with leading <span class="sb">`/`</span> removed, slashes → dashes. <span class="sb">`/Users/alice/proj`</span> → <span class="sb">`Users-alice-proj`</span> |
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>Load <span class="sb">`managing-artifacts`</span> skill for artifact storage paths and project-encoded conventions.
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>Load <span class="sb">`managing-artifacts`</span> skill for artifact storage paths and project-encoded conventions.
 </code></pre></div>
 
 

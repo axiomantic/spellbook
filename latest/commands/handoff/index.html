@@ -9548,7 +9548,7 @@
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gs">**Auto mode differences:**</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span>Skip <span class="sb">`&lt;analysis&gt;`</span> walkthrough (time-sensitive)
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span>Prioritize Section 1.20 (machine-readable) completeness
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>MUST call <span class="sb">`workflow_state_save`</span> MCP tool; if tool fails: LOG warning, inject recovery context inline
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>MUST persist workflow state; if persistence fails: LOG warning, inject recovery context inline
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>Inject recovery context via plugin hook
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>&lt;ROLE&gt;
@@ -10032,7 +10032,7 @@
 <a id="__codelineno-0-496" name="__codelineno-0-496" href="#__codelineno-0-496"></a>
 <a id="__codelineno-0-497" name="__codelineno-0-497" href="#__codelineno-0-497"></a><span class="gs">**After generating Section 1.20, if mode is `auto` or `checkpoint`:**</span>
 <a id="__codelineno-0-498" name="__codelineno-0-498" href="#__codelineno-0-498"></a><span class="sb">```</span>
-<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a><span class="sb">workflow_state_save({</span>
+<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a><span class="sb">persistWorkflowState({</span>
 <a id="__codelineno-0-500" name="__codelineno-0-500" href="#__codelineno-0-500"></a><span class="sb">  project_path: &quot;[from yaml]&quot;,</span>
 <a id="__codelineno-0-501" name="__codelineno-0-501" href="#__codelineno-0-501"></a><span class="sb">  state: [entire yaml above],</span>
 <a id="__codelineno-0-502" name="__codelineno-0-502" href="#__codelineno-0-502"></a><span class="sb">  trigger: &quot;[auto|checkpoint]&quot;</span>
@@ -10216,7 +10216,7 @@
 <a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a><span class="k">- [ ]</span> skill_stack includes constraints (forbidden/required)
 <a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a><span class="k">- [ ]</span> subagents includes skill_stack for each
 <a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a><span class="k">- [ ]</span> conversation.corrections captures lessons
-<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a><span class="k">- [ ]</span> If mode=auto: workflow_state_save called
+<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a><span class="k">- [ ]</span> If mode=auto: workflow state persisted
 <a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a>
 <a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="gs">**Verification:**</span>
 <a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a><span class="k">- [ ]</span> Skill resume commands executable
@@ -10243,7 +10243,7 @@
 <a id="__codelineno-0-707" name="__codelineno-0-707" href="#__codelineno-0-707"></a>
 <a id="__codelineno-0-708" name="__codelineno-0-708" href="#__codelineno-0-708"></a>Plugin detects resumable state via:
 <a id="__codelineno-0-709" name="__codelineno-0-709" href="#__codelineno-0-709"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a><span class="kd">const</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">callMcpTool</span><span class="p">(</span><span class="s1">&#39;workflow_state_load&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a><span class="kd">const</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">loadWorkflowState</span><span class="p">({</span>
 <a id="__codelineno-0-711" name="__codelineno-0-711" href="#__codelineno-0-711"></a><span class="w">  </span><span class="nx">project_path</span><span class="o">:</span><span class="w"> </span><span class="kt">directory</span><span class="p">,</span>
 <a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a><span class="w">  </span><span class="nx">max_age_hours</span><span class="o">:</span><span class="w"> </span><span class="kt">24.0</span>
 <a id="__codelineno-0-713" name="__codelineno-0-713" href="#__codelineno-0-713"></a><span class="p">});</span>
@@ -10327,7 +10327,7 @@
 <a id="__codelineno-0-791" name="__codelineno-0-791" href="#__codelineno-0-791"></a>
 <a id="__codelineno-0-792" name="__codelineno-0-792" href="#__codelineno-0-792"></a><span class="sb">```typescript</span>
 <a id="__codelineno-0-793" name="__codelineno-0-793" href="#__codelineno-0-793"></a><span class="c1">// Incremental update</span>
-<a id="__codelineno-0-794" name="__codelineno-0-794" href="#__codelineno-0-794"></a><span class="k">await</span><span class="w"> </span><span class="nx">callMcpTool</span><span class="p">(</span><span class="s1">&#39;workflow_state_update&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-794" name="__codelineno-0-794" href="#__codelineno-0-794"></a><span class="k">await</span><span class="w"> </span><span class="nx">updateWorkflowState</span><span class="p">({</span>
 <a id="__codelineno-0-795" name="__codelineno-0-795" href="#__codelineno-0-795"></a><span class="w">  </span><span class="nx">project_path</span><span class="o">:</span><span class="w"> </span><span class="kt">directory</span><span class="p">,</span>
 <a id="__codelineno-0-796" name="__codelineno-0-796" href="#__codelineno-0-796"></a><span class="w">  </span><span class="nx">updates</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="cm">/* partial state */</span><span class="w"> </span><span class="p">}</span>
 <a id="__codelineno-0-797" name="__codelineno-0-797" href="#__codelineno-0-797"></a><span class="p">});</span>
@@ -10342,8 +10342,8 @@
 <a id="__codelineno-0-806" name="__codelineno-0-806" href="#__codelineno-0-806"></a><span class="w">  </span><span class="c1">// 1. Build complete state from tracking + conversation analysis</span>
 <a id="__codelineno-0-807" name="__codelineno-0-807" href="#__codelineno-0-807"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">state</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">await</span><span class="w"> </span><span class="nx">buildCompleteState</span><span class="p">(</span><span class="nx">context</span><span class="p">);</span>
 <a id="__codelineno-0-808" name="__codelineno-0-808" href="#__codelineno-0-808"></a>
-<a id="__codelineno-0-809" name="__codelineno-0-809" href="#__codelineno-0-809"></a><span class="w">  </span><span class="c1">// 2. Persist to MCP</span>
-<a id="__codelineno-0-810" name="__codelineno-0-810" href="#__codelineno-0-810"></a><span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">callMcpTool</span><span class="p">(</span><span class="s1">&#39;workflow_state_save&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-809" name="__codelineno-0-809" href="#__codelineno-0-809"></a><span class="w">  </span><span class="c1">// 2. Persist state</span>
+<a id="__codelineno-0-810" name="__codelineno-0-810" href="#__codelineno-0-810"></a><span class="w">  </span><span class="k">await</span><span class="w"> </span><span class="nx">persistWorkflowState</span><span class="p">({</span>
 <a id="__codelineno-0-811" name="__codelineno-0-811" href="#__codelineno-0-811"></a><span class="w">    </span><span class="nx">project_path</span><span class="o">:</span><span class="w"> </span><span class="kt">directory</span><span class="p">,</span>
 <a id="__codelineno-0-812" name="__codelineno-0-812" href="#__codelineno-0-812"></a><span class="w">    </span><span class="nx">state</span><span class="o">:</span><span class="w"> </span><span class="kt">state</span><span class="p">,</span>
 <a id="__codelineno-0-813" name="__codelineno-0-813" href="#__codelineno-0-813"></a><span class="w">    </span><span class="nx">trigger</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;auto&#39;</span>
@@ -10355,13 +10355,13 @@
 <a id="__codelineno-0-819" name="__codelineno-0-819" href="#__codelineno-0-819"></a><span class="p">}</span>
 <a id="__codelineno-0-820" name="__codelineno-0-820" href="#__codelineno-0-820"></a><span class="sb">```</span>
 <a id="__codelineno-0-821" name="__codelineno-0-821" href="#__codelineno-0-821"></a>
-<a id="__codelineno-0-822" name="__codelineno-0-822" href="#__codelineno-0-822"></a><span class="gu">### 3.6 MCP Tools Required</span>
+<a id="__codelineno-0-822" name="__codelineno-0-822" href="#__codelineno-0-822"></a><span class="gu">### 3.6 State Persistence</span>
 <a id="__codelineno-0-823" name="__codelineno-0-823" href="#__codelineno-0-823"></a>
-<a id="__codelineno-0-824" name="__codelineno-0-824" href="#__codelineno-0-824"></a>| Tool | Purpose |
-<a id="__codelineno-0-825" name="__codelineno-0-825" href="#__codelineno-0-825"></a>|------|---------|
-<a id="__codelineno-0-826" name="__codelineno-0-826" href="#__codelineno-0-826"></a>| <span class="sb">`workflow_state_save`</span> | Persist state to database |
-<a id="__codelineno-0-827" name="__codelineno-0-827" href="#__codelineno-0-827"></a>| <span class="sb">`workflow_state_load`</span> | Retrieve state for project |
-<a id="__codelineno-0-828" name="__codelineno-0-828" href="#__codelineno-0-828"></a>| <span class="sb">`workflow_state_update`</span> | Incremental updates during session |
+<a id="__codelineno-0-824" name="__codelineno-0-824" href="#__codelineno-0-824"></a>| Operation | Purpose |
+<a id="__codelineno-0-825" name="__codelineno-0-825" href="#__codelineno-0-825"></a>|-----------|---------|
+<a id="__codelineno-0-826" name="__codelineno-0-826" href="#__codelineno-0-826"></a>| <span class="sb">`persistWorkflowState`</span> | Persist state to storage |
+<a id="__codelineno-0-827" name="__codelineno-0-827" href="#__codelineno-0-827"></a>| <span class="sb">`loadWorkflowState`</span> | Retrieve state for project |
+<a id="__codelineno-0-828" name="__codelineno-0-828" href="#__codelineno-0-828"></a>| <span class="sb">`updateWorkflowState`</span> | Incremental updates during session |
 <a id="__codelineno-0-829" name="__codelineno-0-829" href="#__codelineno-0-829"></a>| <span class="sb">`skill_instructions_get`</span> | Fetch skill constraints for injection |
 <a id="__codelineno-0-830" name="__codelineno-0-830" href="#__codelineno-0-830"></a>
 <a id="__codelineno-0-831" name="__codelineno-0-831" href="#__codelineno-0-831"></a><span class="gu">### 3.7 Database Schema</span>

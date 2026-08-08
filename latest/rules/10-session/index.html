@@ -9401,43 +9401,21 @@
 <p class="admonition-title">Optional module</p>
 <p>The installer offers this module pre-checked. Config key: <code>rules.module.session</code>.</p>
 </div>
-<p>Notification configuration, the project-knowledge offer protocol, and the focus-stint stack you own across a session.</p>
-<p><strong>Why keep it:</strong> Keeps stints, OS notifications, and AGENTS.md offers working across every session.</p>
-<p><strong>If you decline:</strong> The agent will not offer to create project knowledge files, will not track a focus stint stack, and will not configure OS notifications.</p>
-<p><strong>Related artifacts:</strong></p>
-<ul>
-<li><code>skills/audio-notifications</code></li>
-<li><code>skills/session-resume</code></li>
-</ul>
+<p>The project-knowledge offer protocol: AGENTS.md reading, fleshing out, and per-directory extensions.</p>
+<p><strong>Why keep it:</strong> Keeps AGENTS.md offers working across every session.</p>
+<p><strong>If you decline:</strong> The agent will not offer to create project knowledge files.</p>
 <h2 id="rule-content">Rule Content<a class="headerlink" href="#rule-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gu">## Notification Configuration</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gu">## Project Knowledge (AGENTS.md)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Load <span class="sb">`audio-notifications`</span> skill for OS notification configuration, MCP tool tables, and quick commands.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>AGENTS.md is the canonical location for project-specific AI assistant knowledge. Prioritize build/test/run commands, architecture overview, key conventions, and gotchas.
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Project Knowledge (AGENTS.md)</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>AGENTS.md is the canonical location for project-specific AI assistant knowledge. Prioritize build/test/run commands, architecture overview, key conventions, and gotchas.
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>This is the project-knowledge offer protocol referenced by the session-start checks.
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>Apply it after greeting, once the session-start read of <span class="sb">`AGENTS.md`</span> has happened:
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gs">**File exists but is thin or empty:**</span> Offer to flesh it out.
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gs">**Offer to create**</span> (if not exists): &quot;This project doesn&#39;t have an AGENTS.md. Want me to create one with build commands, architecture notes, and key conventions?&quot;
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gs">**User declines:**</span> Proceed without. Do not ask again this session.
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gs">**Subdirectory AGENTS.md:**</span> For modules with distinct conventions, create <span class="sb">`&lt;subdir&gt;/AGENTS.md`</span>.
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gu">## Focus Tracking (Stints)</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>Spellbook tracks your focus context via a stint stack. You own this state.
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gs">**When to push:**</span> Starting a distinct work context (new feature, debugging session, code review).
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gs">**When to pop:**</span> Completing or abandoning a work context.
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gs">**When to replace:**</span> Correcting a stale or wrong stack.
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>Tools: <span class="sb">`stint_push`</span>, <span class="sb">`stint_pop`</span>, <span class="sb">`stint_check`</span>, <span class="sb">`stint_replace`</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>Keep the stack shallow (2-3 typical, max 6). An empty stack is fine.
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>The system will nudge you once if your stack is empty, and warn about stale entries (&gt;4h old).
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>This is the project-knowledge offer protocol referenced by the session-start checks.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Apply it after greeting, once the session-start read of <span class="sb">`AGENTS.md`</span> has happened:
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gs">**File exists but is thin or empty:**</span> Offer to flesh it out.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gs">**Offer to create**</span> (if not exists): &quot;This project doesn&#39;t have an AGENTS.md. Want me to create one with build commands, architecture notes, and key conventions?&quot;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gs">**User declines:**</span> Proceed without. Do not ask again this session.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gs">**Subdirectory AGENTS.md:**</span> For modules with distinct conventions, create <span class="sb">`&lt;subdir&gt;/AGENTS.md`</span>.
 </code></pre></div>
 
 
