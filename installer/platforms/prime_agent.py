@@ -197,30 +197,18 @@ class PrimeAgentInstaller(PlatformInstaller):
                 )
             )
 
-        # Step 4: Install AGENTS.spellbook.md as a loadable skill.
-        # Prime Agent loads skills on demand based on the description field.
-        # The AGENTS.spellbook.md frontmatter has a description that tells the
-        # agent to load this at session start. This is the best available
-        # approach since the installer runs outside prime-agent's kernel and
-        # cannot call rlm.harness.create_prompt_note().
-        self._step("Installing spellbook behavioral skill")
-        spellbook_skill_dir = self.skills_dir / "spellbook"
-        spellbook_skill_file = spellbook_skill_dir / "SKILL.md"
-        source_agents = self.spellbook_dir / "AGENTS.spellbook.md"
-
-        if not self.dry_run:
-            spellbook_skill_dir.mkdir(parents=True, exist_ok=True)
-
-        res = create_symlink(source_agents, spellbook_skill_file, dry_run=self.dry_run)
-        results.append(
-            InstallResult(
-                component="spellbook_skill",
-                platform=self.platform_id,
-                success=res.success,
-                action=res.action,
-                message=f"spellbook skill: {res.message}",
-            )
-        )
+        # Step 4: AGENTS.spellbook.md is intentionally NOT installed.
+        # PR #442 (feat/modular-rule-modules) splits the monolithic
+        # AGENTS.spellbook.md into installable rule modules under rules/.
+        # When that PR merges, the modular rules will install via the
+        # existing rules/ directory mechanism. For now, prime-agent users
+        # who want spellbook behavioral rules loaded should either:
+        #   (a) wait for PR #442 to merge, or
+        #   (b) run `rlm.harness.create_prompt_note(...)` manually after
+        #       install to inject AGENTS.spellbook.md content as a prompt
+        #       note (cannot be done from the installer — runs outside
+        #       prime-agent's IPython kernel).
+        self._step("Skipping AGENTS.spellbook.md (modularized in PR #442)")
 
         return results
 
