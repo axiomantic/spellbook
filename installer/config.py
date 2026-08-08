@@ -133,6 +133,7 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "context_file": None,  # Uses skills for behavioral guidance, not context files
         "skills_subdir": "skills",
         "mcp_supported": False,  # prime-agent has no MCP client
+    },
     "goose": {
         "name": "Goose",
         "config_dir_env": "GOOSE_CONFIG_DIR",

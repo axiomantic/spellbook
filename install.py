@@ -26,8 +26,7 @@ Usage:
 Options:
     --yes, -y           Accept all defaults without prompting
     --install-dir DIR   Install spellbook to DIR (default: ~/.local/share/spellbook)
-    --platforms LIST    Comma-separated platforms (claude_code,opencode,codex,gemini,pi,prime_agent)
-    --platforms LIST    Comma-separated platforms (claude_code,opencode,codex,gemini,forgecode,pi,goose)
+    --platforms LIST    Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,forgecode,pi,prime_agent,goose)
     --force             Reinstall even if version matches
     --dry-run           Show what would be done without making changes
     --no-interactive    Skip platform selection UI
@@ -1323,8 +1322,7 @@ Examples:
         "--platforms",
         type=str,
         default=None,
-        help="Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,pi,prime_agent)",
-        help="Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,forgecode,pi,goose)",
+        help="Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,forgecode,pi,prime_agent,goose)",
     )
     parser.add_argument(
         "--force",
