@@ -26,7 +26,7 @@ Usage:
 Options:
     --yes, -y           Accept all defaults without prompting
     --install-dir DIR   Install spellbook to DIR (default: ~/.local/share/spellbook)
-    --platforms LIST    Comma-separated platforms (claude_code,opencode,codex,gemini,pi,prime_agent)
+    --platforms LIST    Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,forgecode,pi,prime_agent,goose)
     --force             Reinstall even if version matches
     --dry-run           Show what would be done without making changes
     --no-interactive    Skip platform selection UI
@@ -1260,6 +1260,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                     _post_notes.append("Prime Agent: Restart prime-agent to load skills. Use /reload in an interactive session.")
                 elif p == "pi":
                     _post_notes.append("Pi: Restart to reload skills and prompts. Verify: /reload")
+                elif p == "goose":
+                    _post_notes.append("Goose: Skills in ~/.agents/skills/. Restart goose to load the spellbook MCP server")
             renderer.render_post_install(_post_notes)
         elif is_interactive():
             try:
@@ -1320,7 +1322,7 @@ Examples:
         "--platforms",
         type=str,
         default=None,
-        help="Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,pi,prime_agent)",
+        help="Comma-separated platforms (claude_code,antigravity,opencode,codex,gemini,forgecode,pi,prime_agent,goose)",
     )
     parser.add_argument(
         "--force",

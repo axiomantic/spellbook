@@ -401,6 +401,8 @@ def render_post_install_notes(
         lines.append("[cyan]ForgeCode[/cyan]: Restart forge to load the spellbook MCP server")
     if "pi" in platforms:
         lines.append("[cyan]Pi[/cyan]: Restart to reload skills and prompts. Verify: /reload")
+    if "goose" in platforms:
+        lines.append("[cyan]Goose[/cyan]: Restart to load the spellbook MCP server. Skills in ~/.agents/skills/")
 
     if lines:
         body = "\n".join(lines)

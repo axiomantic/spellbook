@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **Goose (AAIF) platform support.** Spellbook now ships a basic-tier installer
+  for the Goose AI agent (https://github.com/aaif-goose/goose, Linux Foundation
+  Agentic AI Foundation). New platform `goose` covers:
+  - **Skills** symlinked to `~/.agents/skills/<name>/SKILL.md` (Agent Skills
+    standard, compatible with Claude Code, Codex, OpenCode, Cursor, and VS Code).
+    Requires goose v1.18.0+ for canonical `~/.agents/skills/` discovery.
+  - **Global hints file** at `~/.agents/AGENTS.md` symlinked to
+    `AGENTS.spellbook.md`. Requires goose v1.41.0+ for global hints discovery.
+  - **MCP server** registered as a `streamable_http` extension in
+    `~/.config/goose/config.yaml` with Bearer-token auth (file mode 0600).
+    Honors `$GOOSE_PATH_ROOT` for non-default config dirs.
+  - **`.goosehints` template** at `extensions/goose/.goosehints` that users can
+    copy or symlink into their project roots for per-project behavior.
+  - Use via `spellbook install --platforms goose` or `--platforms claude_code,goose`.
+  - 13 integration tests in `tests/integration/test_goose_installer.py`.
+
+### Changed
+
+- `installer/config.py` `SUPPORTED_PLATFORMS` and `PLATFORM_CONFIG` extended
+  with a `goose` entry (CLI flag `--goose-config-dir`, env var
+  `GOOSE_CONFIG_DIR`).
+- `installer/core.py` dispatches `GooseInstaller` from `installer.platforms.goose`.
+- `install.py` and `spellbook/cli/commands/install.py` include `goose` in
+  `--platforms` choices and post-install completion notes.
+- `installer/tui.py` shows goose in the welcome and post-install panels.
+
 ## [0.83.0] - 2026-08-06
 
 ### Changed

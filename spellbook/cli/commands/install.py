@@ -27,7 +27,7 @@ def register(subparsers: argparse._SubParsersAction) -> None:
         "--platforms",
         nargs="+",
         default=None,
-        help="Platforms to install (e.g. claude_code opencode codex gemini)",
+        help="Platforms to install (e.g. claude_code opencode codex gemini forgecode pi goose)",
     )
     parser.add_argument(
         "--force",
@@ -327,6 +327,8 @@ def run(args: argparse.Namespace) -> None:
                     _post_notes.append("Claude Code: MCP server registered. Verify: /mcp")
                 elif p == "forgecode":
                     _post_notes.append("ForgeCode: Restart forge to load the spellbook MCP server")
+                elif p == "goose":
+                    _post_notes.append("Goose: Skills in ~/.agents/skills/. Restart goose to load the spellbook MCP server")
             renderer.render_post_install(_post_notes)
 
         print()

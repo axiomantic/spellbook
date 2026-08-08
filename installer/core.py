@@ -112,6 +112,7 @@ def get_platform_installer(
     from .platforms.codex import CodexInstaller
     from .platforms.forgecode import ForgeCodeInstaller
     from .platforms.gemini import GeminiInstaller
+    from .platforms.goose import GooseInstaller
     from .platforms.opencode import OpenCodeInstaller
     from .platforms.pi import PiInstaller
     from .platforms.prime_agent import PrimeAgentInstaller
@@ -127,6 +128,7 @@ def get_platform_installer(
         "forgecode": ForgeCodeInstaller,
         "pi": PiInstaller,
         "prime_agent": PrimeAgentInstaller,
+        "goose": GooseInstaller,
     }
 
     installer_class = installers.get(platform)

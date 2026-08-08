@@ -583,6 +583,7 @@ See [full citations](https://axiomantic.github.io/spellbook/reference/citations/
 | **Codex** | Basic support | Skills, MCP server. No subagent Task tool; skills that require it will prompt you to use Claude Code. |
 | **Gemini CLI** | Basic support | Skills via MCP, native extension. No subagent Task tool. |
 | **ForgeCode** | Basic support | Skills via MCP, AGENTS.md context. Built-in agents (Forge, Sage, Muse) detected; custom agents fall through. |
+| **Goose** (AAIF) | Basic support | Skills via `~/.agents/skills/` (Agent Skills standard), MCP server in `~/.config/goose/config.yaml` (streamable_http), global hints at `~/.agents/AGENTS.md`, project `.goosehints` template. Requires goose v1.18.0+ for skills, v1.41.0+ for global hints. |
 
 Some MCP tools, hooks, and skills depend on Claude Code APIs that other platforms do not expose. These features are noted in their documentation. Contributions to extend coverage for other platforms are welcome -- see [Contributing](#contributing).
 
