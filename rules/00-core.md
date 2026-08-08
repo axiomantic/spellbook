@@ -6,9 +6,6 @@ description: >
   What spellbook is, how paths resolve, what runs at session start, and the
   shared vocabulary every other rule module assumes.
 related:
-  - skills/session-mode-init
-  - skills/session-resume
-  - skills/audio-notifications
   - skills/managing-artifacts
 renamed_from: []
 superseded_by: null
@@ -18,12 +15,12 @@ paths: []
 <CRITICAL>
 ## What Spellbook Is (And Isn't)
 
-Spellbook is a harness-augmentation layer. *You* (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI, ForgeCode) are the harness: you own the agent loop, tool execution, and core conversational behavior. Spellbook adds a behavioral layer on top: skills, slash commands, hooks, profiles, and a shared MCP server (focus stints, session resume).
+Spellbook is a harness-augmentation layer. *You* (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI, ForgeCode, Prime Agent) are the harness: you own the agent loop, tool execution, and core conversational behavior. Spellbook adds a behavioral layer on top: skills, slash commands, hooks, profiles, and a shared state layer (session resume). On platforms with MCP support (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI), this is provided by an MCP server. On Prime Agent, this is provided by the continual harness (memories, skills, prompt notes).
 
 Operational consequence:
 
 - The instructions in the spellbook rule modules augment your default behavior; they do not replace it. Where a spellbook rule is more specific than your default, follow the rule. Where the rule is silent, your default behavior stands.
-- The MCP server (`spellbook_*` tools) is shared across harnesses on this machine, so stints stored in one harness are visible to another. Treat that shared state as authoritative.
+- On MCP-capable platforms, the `spellbook_*` tools are shared across harnesses on this machine. Treat shared state as authoritative. On Prime Agent, shared state is managed through the continual harness (memories, skills, prompt notes).
 - "Skill" and "command" references in the spellbook rule modules point at spellbook artifacts loaded into your environment, not built-in harness features.
 
 ## Spellbook Path Resolution
@@ -53,6 +50,7 @@ Identify your platform from your own system prompt or runtime context:
 | Codex | Your system prompt mentions Codex sandbox | `codex` | Codex |
 | Gemini CLI | Your system prompt mentions Gemini CLI | `gemini` | Gemini |
 | ForgeCode | Your system prompt opens with 'You are Forge', 'You are Sage', or 'You are Muse' (built-in agents only) | `forgecode` | Forge |
+| Prime Agent | Your system prompt mentions Prime Agent, RLM, or IPython kernel | `prime_agent` | Prime Agent |
 
 If uncertain, omit the `platform` parameter (backward compatible). Use the assistant name in greetings.
 
@@ -75,16 +73,9 @@ If platform is `opencode`, track and propagate agent type to all subagents.
 
 ### Step 1: Session Mode and Resume Initialization
 
-1. Call `spellbook_session_init` MCP tool with `platform` = your platform value from Step 0, and `continuation_message` = user's first message (if available)
-2. Handle the response per the Session Mode rules in this module
-3. If `resume_available: true`, follow the Session Resume rules in this module
-4. Greet with "Welcome to spellbook-enhanced [assistant name]." If `admin_url` is present in the session_init response, append: "Admin: [admin_url]"
-
-### Step 1.5: Profile Activation
-
-If `session_init` returns a `profile` field, read and internalize its behavioral instructions.
-The profile shapes your working style, tone, and collaboration patterns for this session.
-Profile instructions have a lower priority than explicit user instructions and other core rules in this document.
+1. **On Prime Agent:** Check the continual harness (`rlm.harness.overview()`) for existing session state and memories.
+   **On other platforms (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI):** No MCP session tool to call — these platforms just start fresh per session. Skip to Step 2.
+2. Greet with "Welcome to spellbook-enhanced [assistant name]."
 
 ### Step 2: Project Knowledge Check
 
@@ -94,24 +85,6 @@ Profile instructions have a lower priority than explicit user instructions and o
 
 **Do NOT skip these steps.** They establish session context and persona.
 </CRITICAL>
-
-## Session Mode
-
-Load `session-mode-init` skill for mode dispatch table and selection question. Handles fun/tarot/none modes.
-
-## Session Resume
-
-When `resume_available: true`, load `session-resume` skill and execute `resume_boot_prompt` immediately. The skill contains resume field definitions, protocol, continuation detection, and session repairs handling.
-
-## MCP Tools
-
-<RULE>If an MCP tool appears in your available tools list, call it directly. Do not run platform-specific diagnostic commands to verify availability. Your tools list is the source of truth.</RULE>
-
-**MCP configuration location varies by platform:**
-- Claude Code: User-scoped in `~/.claude.json`, project-scoped in `.mcp.json`
-- OpenCode: Configured in `~/.config/opencode/config.json`
-- Codex: Configured in `~/.codex/`
-- Gemini CLI: Configured via extension system
 
 ## Glossary
 

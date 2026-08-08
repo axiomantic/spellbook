@@ -9,12 +9,17 @@ import logging
 import os
 import tempfile
 import warnings
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
 from spellbook.core.compat import CrossPlatformLock, LockHeldError, get_config_dir
 
 logger = logging.getLogger(__name__)
+
+# Prefix for the per-rule-module opt-in keys. Their defaults are resolved
+# lazily (see rule_module_config_defaults) rather than registered at import.
+RULE_MODULE_KEY_PREFIX = "rules.module."
 
 # Built-in defaults for config keys. config_get returns these when a key is
 # absent from the user's spellbook.json config file. Adding an entry here
