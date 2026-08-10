@@ -36,10 +36,29 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 SH_SCRIPT = REPO_ROOT / "scripts" / "branch-context.sh"
 PY_SCRIPT = REPO_ROOT / "scripts" / "branch-context.py"
 
-pytestmark = pytest.mark.skipif(
-    shutil.which("git") is None or shutil.which("jq") is None,
-    reason="branch-context requires git and jq on PATH",
-)
+pytestmark = [
+    # POSIX-only. Every test here runs the pair through ``run_script``, and
+    # both halves of that pair are POSIX process invocations:
+    #
+    # * ``branch-context.sh`` is executed directly. Windows has no shebang
+    #   handling, so CreateProcess rejects it outright (WinError 193, "%1 is
+    #   not a valid Win32 application").
+    # * the ``gh`` stub is an extensionless ``#!/bin/sh`` file. Even routed
+    #   through Git-for-Windows bash, ``branch-context.py`` shells out to
+    #   ``gh`` itself and Windows will not exec it without a ``.cmd``/``.exe``
+    #   extension.
+    #
+    # Porting this suite means a bash launcher, a second ``gh.cmd`` stub, and
+    # Win<->POSIX path translation through jq -- a real port, not a marker.
+    # Skipping states the existing situation honestly: these tests have never
+    # passed on Windows. See the branch-context Windows-port note in the
+    # commit that added this marker.
+    pytest.mark.posix_only,
+    pytest.mark.skipif(
+        shutil.which("git") is None or shutil.which("jq") is None,
+        reason="branch-context requires git and jq on PATH",
+    ),
+]
 
 
 # --------------------------------------------------------------------------

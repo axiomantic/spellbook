@@ -690,6 +690,12 @@ class TestOpenCodeRegistrationPathRendering:
         from installer.platforms.opencode import OpenCodeInstaller
 
         monkeypatch.setenv("HOME", str(tmp_path))
+        # Path.home() resolves through ntpath.expanduser on Windows, which
+        # reads USERPROFILE (then HOMEPATH) and never consults HOME. Without
+        # this the probe path is not under home, relative_to() raises, and the
+        # renderer correctly falls back to the absolute path -- green on POSIX
+        # and red on Windows for no behavioural reason.
+        monkeypatch.setenv("USERPROFILE", str(tmp_path))
         config_dir = tmp_path / ".config" / "opencode"
         config_dir.mkdir(parents=True)
 

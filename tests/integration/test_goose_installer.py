@@ -1,5 +1,7 @@
 """Integration tests for Goose installer."""
 
+import sys
+
 import pytest
 
 
@@ -114,8 +116,15 @@ def test_goose_detect_when_config_dir_exists(spellbook_dir, goose_env):
 # Install
 # ---------------------------------------------------------------------
 
+@pytest.mark.posix_only
 def test_goose_install_creates_skill_symlinks(spellbook_dir, goose_env):
-    """Skills are symlinked into ~/.agents/skills/."""
+    """Skills are symlinked into ~/.agents/skills/.
+
+    POSIX-only: creating a symlink on Windows needs SeCreateSymbolicLink
+    (Administrator, or Developer Mode). The GitHub runner has neither, so
+    the installer's symlink step cannot succeed there. The uninstall and
+    dry-run tests below assert ABSENCE and so remain valid on Windows.
+    """
     from installer.platforms.goose import GooseInstaller
 
     (goose_env / ".config" / "goose").mkdir(parents=True, exist_ok=True)
@@ -144,8 +153,12 @@ def test_goose_install_creates_skill_symlinks(spellbook_dir, goose_env):
     assert skills_results[0].success
 
 
+@pytest.mark.posix_only
 def test_goose_install_creates_global_hints_symlink(spellbook_dir, goose_env):
-    """~/.agents/AGENTS.md is symlinked to AGENTS.spellbook.md."""
+    """~/.agents/AGENTS.md is symlinked to AGENTS.spellbook.md.
+
+    POSIX-only for the same reason as the skill-symlink test above.
+    """
     from installer.platforms.goose import GooseInstaller
 
     (goose_env / ".config" / "goose").mkdir(parents=True, exist_ok=True)
@@ -196,9 +209,15 @@ def test_goose_install_registers_mcp_in_config_yaml(spellbook_dir, goose_env, mo
     # Bearer token is inlined
     assert "Bearer test-token-abc123" in content
 
-    # File mode is 0600 (token protection)
-    mode = cfg.stat().st_mode & 0o777
-    assert mode == 0o600, f"Expected mode 0600, got {oct(mode)}"
+    # File mode is 0600 (token protection). Windows has no POSIX mode bits:
+    # os.chmod there only toggles the read-only flag, and stat() reports
+    # 0o666 whatever the installer asked for. Asserting 0600 on Windows
+    # would be testing the platform, not the installer -- and the token
+    # registration above (the part that carries the secret) is still
+    # covered there.
+    if sys.platform != "win32":
+        mode = cfg.stat().st_mode & 0o777
+        assert mode == 0o600, f"Expected mode 0600, got {oct(mode)}"
 
 
 def test_goose_install_skipped_when_config_dir_missing(spellbook_dir, goose_env):
