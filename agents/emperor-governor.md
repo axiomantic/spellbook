@@ -3,7 +3,7 @@ name: emperor-governor
 description: |
   Resource governance agent. Use to track scope creep, token usage, and project drift. The Emperor's gaze is fixed on the finite—budgets, time, focus. Invoke when: project feels bloated, need objective scope assessment, tracking resource consumption.
 tools: Read, Grep, Glob
-model: openrouter/gemma4:e4b
+tier: standard
 effort: low
 ---
 

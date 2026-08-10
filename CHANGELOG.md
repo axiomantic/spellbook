@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Model routing is now generic and harness-scoped.** Spellbook installs to
+  nine harnesses, but every agent carried a hardcoded provider-specific
+  `model:` (`openrouter/minimax/minimax-m3`, `openrouter/deepseek/...`). Those
+  identifiers are meaningless on Claude Code, and `opus` is meaningless on a
+  harness wired to OpenRouter, so the shipped routing was correct only for
+  whoever wrote it.
+  - Agents now declare a generic `tier:` -- `heavy`, `standard`, or `light` --
+    naming the SHAPE of the work rather than a vendor. No agent carries a
+    `model:` field any more, and no model identifier is shipped anywhere in
+    the repo.
+  - What a tier MEANS is per-user and per-harness, recorded as
+    `model.tier.<tier>.<harness>` in `~/.config/spellbook/spellbook.json`.
+    Harness scoping is what stops one harness's answer being applied to
+    another.
+  - Resolution happens at DISPATCH time, not install time: a typical install
+    targets many harnesses at once, and prompting per tier per harness there
+    would be unusable. The orchestrator checks for unset tiers once per
+    session, asks the operator offering only models it can actually see in
+    that harness, and records the answers.
+  - An unset tier is not an error. It resolves to "no override", so the
+    harness uses its own default and the dispatch proceeds -- a missing
+    preference never blocks work in non-interactive or CI runs.
+  - New `spellbook/core/model_tiers.py` validates the tier and harness id
+    before writing. `config_set` validates nothing, so a hand-built key like
+    `model.teir.heavy.claude_code` would persist silently and read back
+    `None` forever; since these keys are assembled at runtime by an agent,
+    that is a likely failure rather than a theoretical one. The model value
+    is deliberately NOT validated -- spellbook cannot see a harness's model
+    list. 19 tests in `tests/test_reorg/test_model_tiers.py`.
+  - New MCP tools `spellbook_model_tier_status`, `spellbook_model_tier_resolve`,
+    and `spellbook_model_tier_set`. The harness id is a parameter because the
+    server cannot detect its caller: the `X-Spellbook-Client` header the hook
+    stamps is never read, the transport is stateless, and `prime_agent` has no
+    MCP client at all.
+  - `rules/20-orchestration.md` and `skills/dispatching-parallel-agents/SKILL.md`
+    reconciled onto tiers. They previously named `opus`/`sonnet`/`fable`, which
+    contradicted the `openrouter/...` slugs in the agent files -- two competing
+    vocabularies for the same decision.
+
+### Fixed
+
+- **`MODEL_ROUTING.md` was being installed as a dispatchable subagent.**
+  `install_agents` globs `agents/*.md` indiscriminately, so the routing
+  documentation was symlinked into Claude Code's agents directory and offered
+  as an agent named `agent-model-routing`. Moved to
+  `docs/reference/model-routing.md`, where it is documentation and nothing
+  else. `agents/` now contains only real agents.
+
 ## [0.85.0] - 2026-08-10
 
 ### Added

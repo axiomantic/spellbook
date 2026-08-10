@@ -45,28 +45,50 @@ You are a CONDUCTOR, not a musician. Dispatch subagents. Never implement directl
 Every dispatch matches its model and effort to the COGNITIVE LOAD of the task, not its size. Planning thinks; execution obeys.
 </CRITICAL>
 
-**DO NOT USE `fable` UNLESS THE OPERATOR EXPLICITLY ASKS FOR IT.** `fable` is expensive and burns
-usage fast. The default roster is `opus` and `sonnet` only. If a task genuinely seems to warrant
-`fable`, do not silently upgrade — say so and let the operator decide. "This is hard" is not
-authorization; only the operator naming `fable` is.
+Cognitive load is expressed as a generic **tier**, never as a model name. Spellbook installs to
+nine harnesses and a model id that is correct in one is meaningless in another, so no model name
+belongs in this repo. Which model a tier means is the operator's choice, recorded per harness.
 
-| Kind | What it is | `model` | `effort` |
-|------|-----------|---------|----------|
-| **Thinking** | Planning, design, architecture, code/design review, fact-checking, adversarial review, open-ended debugging where the cause is unknown, research, synthesis, arbitration — anything requiring judgment or trade-off analysis | `opus` | inherit session effort (omit the override) |
-| **Mechanical** | Carrying out an already-approved plan or spec: TDD implementation against a written spec, completion/artifact verification against a checklist, precisely-specified amends, rote edits, running tests, git/PR/Jira mechanics, applying a described change | `sonnet` | `low` |
+| Tier | What it is | `effort` |
+|------|-----------|----------|
+| `heavy` | Planning, design, architecture, code/design review, fact-checking, adversarial review, open-ended debugging where the cause is unknown, research, synthesis, arbitration — anything requiring judgment or trade-off analysis | inherit session effort (omit the override) |
+| `standard` | Judgement work with a bounded blast radius: monitoring, scope assessment, integration review | inherit session effort |
+| `light` | Carrying out an already-approved plan or spec: TDD implementation against a written spec, completion/artifact verification against a checklist, precisely-specified amends, rote edits, running tests, git/PR/Jira mechanics, applying a described change | `low` |
 
-Debugging splits across both rows. Diagnosing an unknown failure is Thinking; working through a
-TDD red-green cycle whose test and target are already specified is Mechanical.
+Debugging splits across tiers. Diagnosing an unknown failure is `heavy`; working through a
+TDD red-green cycle whose test and target are already specified is `light`.
 
-**The specialized agent types already encode this** in their frontmatter, so dispatching the right type gets the right model/effort for free:
+**The specialized agent types already declare their tier** in frontmatter (`tier: heavy`), so
+dispatching the right type gets the right tier for free:
 
-- Mechanical (`sonnet` / `effort: low`) → `implementer`, `chariot-implementer`, `test-runner`, `git-committer`, `git-pusher`, `pr-creator`, `pr-merger`, `jira-reader`, `jira-mutator`
-- Thinking (`opus`, inherit effort) → `code-reviewer`, `justice-resolver`, `lovers-integrator`, `hierophant-distiller`, `web-researcher`
+- `heavy` → `code-reviewer`, `justice-resolver`, `lovers-integrator`, `hierophant-distiller`, `web-researcher`
+- `standard` → `emperor-governor`, `queen-affective`
+- `light` → `implementer`, `chariot-implementer`, `test-runner`, `git-committer`, `git-pusher`, `pr-creator`, `pr-merger`, `jira-reader`, `jira-mutator`
 
-An agent type whose frontmatter still specifies `fable` must be overridden to `opus` at the call
-site until its frontmatter is updated.
+Agent frontmatter carries NO `model:` field. Resolving a tier to a model is a runtime step:
 
-**When dispatching a generic type** (`general-purpose`, `claude`, `Explore`, `Plan`) or when a task's cognitive load differs from the agent's default, pass an explicit per-call `model` + `effort` override to match the table. Precedence: per-call override > agent frontmatter > session default. `fork` subagents ignore the model override — they always inherit the parent model.
+<CRITICAL>
+Before your first subagent dispatch in a session, call `spellbook_model_tier_status(harness)` with
+the spellbook platform id you are running in (underscored — `claude_code`, not `claude-code`).
+
+If it reports unset tiers, ask the operator ONCE, in one exchange covering every unset tier, which
+model to use for each. Offer ONLY models you can actually see in this harness. NEVER invent a model
+id, and NEVER copy one out of documentation — a model that exists on another harness will fail on
+this one. Record the answers with `spellbook_model_tier_set`.
+
+An unset tier is NOT an error and NEVER blocks a dispatch. It resolves to "no override": dispatch
+without a model and let the harness use its own default. If the operator is unavailable —
+non-interactive, headless, or CI — proceed on harness defaults and say so. Do not stall work
+waiting for a preference.
+</CRITICAL>
+
+Then pass the resolved model as a per-call override.
+
+**When dispatching a generic type** (`general-purpose`, `claude`, `Explore`, `Plan`) or when a task's cognitive load differs from the agent's declared tier, resolve the tier the task actually needs and override at the call site. Precedence: per-call override > tier resolution > harness default. `fork` subagents ignore the model override — they always inherit the parent model.
+
+**Escalate up, never down.** If a tier's model cannot produce a usable result, retry at the next
+tier up. Never silently drop a task to a cheaper tier; if cost is a concern, say so and let the
+operator decide.
 
 ### Skill Execution
 

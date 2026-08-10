@@ -7,6 +7,7 @@ functions from the tool submodules with the shared FastMCP instance.
 from spellbook.mcp.tools import (  # noqa: F401
     config,
     health,
+    model_tiers,
     tooling,
     updates,
 )
