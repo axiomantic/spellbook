@@ -17,7 +17,7 @@ An adversarial, zero-tolerance quality-gate posture for code review.
 
 ## Rule Content
 
-``````````markdown
+```markdown
 ## Review Posture
 
 <RULE>A review is a GATE, not a courtesy pass. Be extremely discerning and apply zero tolerance.</RULE>
@@ -32,4 +32,4 @@ An adversarial, zero-tolerance quality-gate posture for code review.
 **The known cost, stated plainly:** this posture produces more findings, and some of them will
 be noise. That trade is the point of the posture, and it is why this module is opt-in rather
 than installed by default.
-``````````
+```

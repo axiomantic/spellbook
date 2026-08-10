@@ -15,10 +15,10 @@ Sizing a file or command output before reading it, and the ban on truncating rea
 
 ## Rule Content
 
-``````````markdown
+```markdown
 ## File Reading
 
 <RULE>Before reading any file or command output of unknown size, check line count first (`wc -l`). Never truncate with `head`, `tail -n`, or pipes that discard data.</RULE>
 
 Load `smart-reading` skill for the full protocol.
-``````````
+```

@@ -1,7 +1,7 @@
 # MODEL_ROUTING
 ## Agent Content
 
-``````````markdown
+```markdown
 # Agent Model Routing
 
 ## Operator Verbatim (2026-08-07 / 2026-08-08)
@@ -116,4 +116,4 @@ Before dispatching ANY subagent, check that the chosen model is not in the exclu
 - "shape": the cognitive load / reasoning depth of a task, not its file size
 - "opt-in": ollama tiers require explicit operator consent, not default
 - "escalation": moving UP through tiers when a lower one fails; never DOWN
-``````````
+```

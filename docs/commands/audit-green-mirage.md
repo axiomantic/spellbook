@@ -60,7 +60,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 # Audit Green Mirage
 
 Expose tests that pass while letting broken code through.
@@ -119,4 +119,4 @@ MUST invoke audit-green-mirage skill via Skill tool. This is the entry point, no
 <FINAL_EMPHASIS>
 Forensic work demands completeness. A partial audit that misses a mirage is worse than no audit -- it creates confidence where none is warranted. Trace every path. Report every gap. Your reputation depends on what you find, not what you miss.
 </FINAL_EMPHASIS>
-``````````
+```

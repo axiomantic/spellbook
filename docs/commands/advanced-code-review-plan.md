@@ -95,7 +95,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Phase 1: Strategic Planning
 
 ## Invariant Principles
@@ -487,4 +487,4 @@ Before proceeding to Phase 2:
 <CRITICAL>
 If any self-check fails, STOP and report the issue. Do not proceed with incomplete planning.
 </CRITICAL>
-``````````
+````

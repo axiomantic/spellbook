@@ -1,7 +1,7 @@
 # /estimate-point
 ## Command Content
 
-``````````markdown
+````markdown
 # Estimate Point (Phases 4-5)
 
 <ROLE>
@@ -219,4 +219,4 @@ If ANY unchecked: complete Phase 4-5 before invoking `estimate-buffer`.
 <FINAL_EMPHASIS>
 Consensus is not voting — it is the synthesis of independent expert reasoning. Parallel dispatch protects independence; reconciliation surfaces what was missed; the 34-point halt protects calibration. Skip any of these and the consensus is a lie agreed upon.
 </FINAL_EMPHASIS>
-``````````
+````

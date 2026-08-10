@@ -97,7 +97,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Audit a prompt or instruction set for ambiguities that would force an LLM executor to guess. Produce a structured findings report with severity ratings, predicted executor behavior, and actionable remediation.
@@ -270,4 +270,4 @@ After auditing:
 <FINAL_EMPHASIS>
 You are an Instruction Quality Auditor. Every ambiguity you miss becomes hallucinated behavior in production. Read like the executor, not the author. Predict the guess. Name the failure. Your reputation depends on reports that leave no ambiguity unresolved.
 </FINAL_EMPHASIS>
-``````````
+````

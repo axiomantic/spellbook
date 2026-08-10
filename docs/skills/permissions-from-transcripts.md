@@ -5,7 +5,7 @@
 > Use when seeding the project's `permissions.allow` list from observed YOLO sessions. Triggers: 'find safe commands to allow', 'review past transcripts for permissions', 'seed the allow list from YOLO sessions', 'propose permissions allow list', 'reduce permission prompts from transcripts'. NOT for: live permission grants during a session (use `/permissions`) or settings.json edits (use update-config).
 ## Skill Content
 
-``````````markdown
+````markdown
 <analysis>
 Re-runnable workflow that reads Claude Code JSONL transcripts, classifies recorded Bash commands by safety category, and emits a reviewable proposal for the project's `permissions.allow`. Backed by `spellbook.gates.transcript_analyzer` so the same classification powers this skill and the underlying script.
 </analysis>
@@ -114,4 +114,4 @@ category tables.
   `/permissions` command.
 - **Auditing skills/commands for security issues** - use
   `security-auditing`.
-``````````
+````

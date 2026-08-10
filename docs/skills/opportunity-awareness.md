@@ -5,7 +5,7 @@
 > Triggers after completing substantive work (finishing a todo, returning from subagent, applying non-obvious convention, receiving user correction). Also: 'what should we capture', 'reusable pattern', 'should this be a skill', 'AGENTS.md update', 'knowledge gap'. Behavioral skill loaded at natural pause points.
 ## Skill Content
 
-``````````markdown
+```markdown
 <analysis>
 Behavioral nudge to capture reusable patterns, skills, and project knowledge at natural pause points after substantive work.
 </analysis>
@@ -52,4 +52,4 @@ Offer to add to AGENTS.md when:
 ## Subagent Observations
 
 Subagents should append a `## Skill Observations` section to output when they notice reusable patterns. Check for this section and relay suggestions to the user.
-``````````
+```

@@ -274,7 +274,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Test-Driven Development
 
 <ROLE>
@@ -748,4 +748,4 @@ No exceptions without your human partner's permission.
 <FINAL_EMPHASIS>
 The test must fail first. You must watch it fail. The code must be minimal. There are no shortcuts. Every rationalization is a trap. Delete code written before tests. Start over with TDD.
 </FINAL_EMPHASIS>
-``````````
+````

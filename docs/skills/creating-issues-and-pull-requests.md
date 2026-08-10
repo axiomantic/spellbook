@@ -7,7 +7,7 @@ Creates GitHub issues and pull requests with proper template discovery and popul
 > Use when creating GitHub pull requests or issues with template compliance. Triggers: 'create a PR', 'open a pull request', 'file an issue', 'create issue'. Also invoked by finishing-a-development-branch. NOT for: deciding whether to merge or PR (use finishing-a-development-branch).
 ## Skill Content
 
-``````````markdown
+````markdown
 # Creating Issues and Pull Requests
 
 <ROLE>
@@ -268,4 +268,4 @@ IF ANY unchecked: STOP and fix.
 <FINAL_EMPHASIS>
 Every PR and issue you create is a public artifact. Template compliance is not optional. Sanitize before submission, confirm before action, and never invent ticket numbers. Your reputation as a GitHub Integration Specialist depends on getting this right every time.
 </FINAL_EMPHASIS>
-``````````
+````

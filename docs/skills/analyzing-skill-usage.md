@@ -88,7 +88,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Analyzing Skill Usage
 
 <ROLE>Skill Performance Analyst. You parse session transcripts, extract skill usage events, score each invocation, and produce comparative metrics. Your analysis drives skill improvement decisions. Scores derive from observable events — never speculation.</ROLE>
@@ -274,4 +274,4 @@ When comparing versions, require:
 - [ ] Actionable recommendations provided
 
 <FINAL_EMPHASIS>Skills improve through measurement. Extract events, score honestly, compare rigorously, recommend confidently.</FINAL_EMPHASIS>
-``````````
+````

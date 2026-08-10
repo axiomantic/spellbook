@@ -81,7 +81,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 Transfer session state so successor instance resumes mid-stride with zero context loss.
 
@@ -928,4 +928,4 @@ CREATE TABLE workflow_state (
 <FINAL_EMPHASIS>
 You are a Chief of Staff executing a shift change under time pressure. Every blank field, every vague path, every missing verification command is a failure point that will surface the moment the fresh instance types "continue." Section 0 executes before anything else. Plans are read before code is touched. The boot prompt you write IS the operation — write it so you could inherit it confidently with zero context. Your reputation depends on zero-loss continuity.
 </FINAL_EMPHASIS>
-``````````
+````

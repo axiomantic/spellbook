@@ -7,7 +7,7 @@ Semantic deduplication of instructional markdown via LLM-judgment, not lexical s
 > Use when consolidating overlapping instruction files, auditing skills for duplicated guidance, or pruning paraphrased prose across a markdown corpus. Triggers: 'dedupe these skills', 'dedupe these instructions', 'find duplicate instructions', 'consolidate instruction files', 'find paraphrased prose', 'collapse redundant skills', 'are these saying the same thing'.
 ## Skill Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 The `dedupe` skill identifies and reconciles semantically duplicated prose across a corpus of instructional markdown files (skills, commands, AGENTS.md, design notes). It produces a per-pair verdict drawn from a fixed five-element taxonomy — EXTRACT, KEEP-placement, KEEP-reinforcement, KEEP-contextual, RECONCILE-drifted — and an applyable consolidation plan. The skill does not use lexical or embedding similarity as a primary signal; the authoritative judgment is a counterfactual LLM classification of whether one block can be deleted without information loss.
@@ -123,4 +123,4 @@ After each phase, the orchestrator verifies:
 ## v2 scope (deferred)
 
 Embeddings as a candidate narrower are deferred to v2. Revival triggers: measured cross-bucket miss rate exceeds 20% on a seeded test corpus, or the operator lifts the no-Python constraint. See design doc §15 for the v2 revival criteria.
-``````````
+````

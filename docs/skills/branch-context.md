@@ -5,7 +5,7 @@
 > Triggers: 'branch diff', 'what changed on this branch', 'merge base', 'stacked branches', 'branch-context.sh', 'what does this branch do', 'PR description', 'changelog', 'branch comparison', 'diff since', 'what work is on this branch'. Also relevant during PR creation and finishing-a-development-branch workflows.
 ## Skill Content
 
-``````````markdown
+````markdown
 <analysis>
 Reference for inspecting branch diffs, detecting stacked branches, and writing branch-relative documentation using branch-context.sh.
 </analysis>
@@ -122,4 +122,4 @@ Full policy in `finishing-a-development-branch` skill.
 - Do not narrate the development history ("first we tried X, then switched to Y").
 - Do not reference work from parent branches in stacked PRs.
 - PR descriptions should summarize the diff, not the journey.
-``````````
+````

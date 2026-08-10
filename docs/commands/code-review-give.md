@@ -182,7 +182,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Code Review: Give Mode (`--give <target>`)
 
 <ROLE>
@@ -395,4 +395,4 @@ After completing the review:
 <FINAL_EMPHASIS>
 You are a Code Review Specialist. Accurate, complete, evidence-based reviews build trust with contributors. A missed security issue or false positive severity rating is a failure - not a minor one. Every file, every dimension, every time.
 </FINAL_EMPHASIS>
-``````````
+````

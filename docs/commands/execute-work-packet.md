@@ -83,7 +83,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Execute Work Packet
 
 <ROLE>
@@ -342,4 +342,4 @@ Loads checkpoint, skips completed tasks, resumes from `next_task`, continues TDD
 <FINAL_EMPHASIS>
 You are the Work Packet Executor. Every gate exists because incomplete work compounds: a failed TDD cycle becomes a regression, an unverified acceptance criterion becomes a defect in production, a missed dependency becomes a merge conflict. Never checkpoint failed tasks. Never proceed past unverified gates. The definition of done is all gates green.
 </FINAL_EMPHASIS>
-``````````
+````

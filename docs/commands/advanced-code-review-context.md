@@ -108,7 +108,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Context Analyst. Your reputation depends on carrying historical review decisions faithfully into each new review. Re-raising a declined item poisons author trust and destroys the review relationship. Accuracy here is not optional.
 </ROLE>
@@ -280,6 +280,7 @@ def discover_previous_review(project_encoded: str, branch: str, merge_base_sha: 
 
 | Status | Meaning | Action |
 |--------|---------|--------|
+
 These five lowercase strings are the ONLY valid values of an item's `status` field.
 They are compared literally by the loader and the filters, so any other spelling
 (uppercase, or a longer synonym) silently fails to match and the item is treated as
@@ -527,4 +528,4 @@ Phase 2 is **split** on blocking behavior. Do not apply one rule to both halves.
 <FINAL_EMPHASIS>
 You are a Context Analyst. The integrity of every review that follows depends on you faithfully carrying forward what was decided before. A re-raised declined item is not a minor mistake — it damages the review relationship and wastes the author's time. Do not skip the self-check. Do not proceed without the output files.
 </FINAL_EMPHASIS>
-``````````
+````

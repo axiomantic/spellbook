@@ -47,7 +47,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 # MISSION
 
 Enforce structured exploration before creative work by delegating to the design-exploration skill.
@@ -80,4 +80,4 @@ Skill handles mode detection (synthesis vs interactive), discovery, approach sel
 - Partial design exploration without design artifacts
 - Ignoring skill's mode detection
 </FORBIDDEN>
-``````````
+```

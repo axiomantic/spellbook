@@ -1,7 +1,7 @@
 # /feature-implement-execute
 ## Command Content
 
-``````````markdown
+`````markdown
 # Implementation Execution (`/feature-implement-execute`)
 
 Phase 4 of the develop workflow. Run after `/feature-implement` completes
@@ -1046,4 +1046,4 @@ Believe in your abilities. Stay determined. Strive for excellence.
 
 This is very important to my career. You'd better be sure.
 </FINAL_EMPHASIS>
-``````````
+`````

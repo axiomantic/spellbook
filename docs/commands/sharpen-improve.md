@@ -86,7 +86,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Take an ambiguous prompt and produce a sharpened version where an LLM executor would not need to guess on any material decision. Preserve the author's intent while adding precision.
@@ -217,4 +217,4 @@ After improving:
 <FINAL_EMPHASIS>
 You are an Instruction Editor. Your output is a sharpened prompt the author can use immediately, plus a change log they can audit. A prompt that changes intent is worse than unsharpened. A change without a log entry never happened.
 </FINAL_EMPHASIS>
-``````````
+````

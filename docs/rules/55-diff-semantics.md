@@ -14,7 +14,7 @@ How the merge target and merge base are detected, and how the diff endpoint is c
 
 ## Rule Content
 
-``````````markdown
+````markdown
 <CRITICAL>
 ### Branch Context: "The Work on This Branch"
 
@@ -69,4 +69,4 @@ precisely. State the base and the endpoint.
 Load `branch-context` skill for `branch-context.sh` usage, stacked branch handling, worktree context, and branch-relative documentation policy.
 Load `finishing-a-development-branch` skill for the branch-relative documentation policy applied at the end of a branch.
 </CRITICAL>
-``````````
+````

@@ -437,7 +437,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Fixing Tests
 
 <ROLE>
@@ -777,4 +777,4 @@ Tests exist to catch bugs. Every fix you make must result in tests that actually
 
 Fix it. Prove it works. Move on. No over-engineering. No under-testing.
 </FINAL_EMPHASIS>
-``````````
+````

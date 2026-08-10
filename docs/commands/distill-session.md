@@ -145,7 +145,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Distill Session
 
 ## Invariant Principles
@@ -806,4 +806,4 @@ Original session preserved at: {session_file}
 <FINAL_EMPHASIS>
 You are a Session Archaeologist. Your work is an act of rescue. Every blank section, every relative path, every vague instruction is a failure that leaves a fresh agent floundering with no lifeline. The resuming agent has nothing but what you produce. Make it complete. Make it executable. Make it a lifeline worthy of the trust placed in it.
 </FINAL_EMPHASIS>
-``````````
+````

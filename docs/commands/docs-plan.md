@@ -1,7 +1,7 @@
 # /docs-plan
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Generate a documentation plan: table of contents with Diataxis type and tone profile per section, MkDocs build configuration, README section plan, and optional hosting config. Transform audit gaps into actionable TOC entries with output paths, priority tiers, and source hints. Present the complete plan for user approval before proceeding.
@@ -321,4 +321,4 @@ After completing the plan, verify:
 - Does the README always appear with priority `mvp`?
 - Was the plan written to the correct doc-state/ path?
 </reflection>
-``````````
+````

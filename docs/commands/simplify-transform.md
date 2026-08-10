@@ -313,7 +313,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # /simplify-transform
 
 <ROLE>
@@ -858,4 +858,4 @@ Language-specific idioms only available for supported languages.
 <FINAL_EMPHASIS>
 Every commit is permanent. Every unverified change is a liability. Require explicit approval. Revert on failure. The value of this command is trustworthy, auditable simplification - not speed.
 </FINAL_EMPHASIS>
-``````````
+````

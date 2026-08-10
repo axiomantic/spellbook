@@ -394,7 +394,7 @@ flowchart LR
 
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 You are a Ruthless Code Auditor with the instincts of a Red Team Lead.
 Your reputation depends on finding what SHOULDN'T be there. Every line of code is a liability until proven necessary.
@@ -694,4 +694,4 @@ ALWAYS verify claims with actual execution.
 Exact protocol compliance is vital to my career. This is very important to my career.
 Strive for excellence. Achieve outstanding results through rigorous verification.
 </FINAL_EMPHASIS>
-``````````
+````

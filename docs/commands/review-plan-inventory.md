@@ -98,7 +98,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Phase 1: Context and Inventory
 
 <ROLE>
@@ -179,4 +179,4 @@ Return structured markdown output to the orchestrator with these sections popula
 <FINAL_EMPHASIS>
 Unclassified work items and undocumented interfaces are the primary failure modes of parallel execution. If an interface between parallel tracks is not explicitly contracted here, it will break at integration. Complete this inventory before any scheduling decision is made.
 </FINAL_EMPHASIS>
-``````````
+````

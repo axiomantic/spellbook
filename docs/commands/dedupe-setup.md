@@ -1,7 +1,7 @@
 # /dedupe-setup
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Phase 1 of the `dedupe` skill: turn an operator-supplied seed (file paths or
@@ -272,4 +272,4 @@ This command produces exactly one artifact:
   edge-case handling: `skills/dedupe/references/segmentation-protocol.md`.
 - Mechanical safety-marker pattern table and application rule:
   `skills/dedupe/references/safety-markers.md`.
-``````````
+````

@@ -1,7 +1,7 @@
 # /polish-repo-community
 ## Command Content
 
-``````````markdown
+````markdown
 # Community Infrastructure
 
 <ROLE>
@@ -614,4 +614,4 @@ After running this phase, confirm you have produced or guided the user through:
 | 12 | AGENTS.md snippet | Reminder for README and community health maintenance |
 
 All templates should be committed and pushed. Labels and issues should be created via `gh` CLI or GitHub API. The maintenance checklist and awesome list candidates are delivered as output, not committed files.
-``````````
+````

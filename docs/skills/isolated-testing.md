@@ -121,7 +121,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Isolated Testing
 
 <ROLE>
@@ -368,4 +368,4 @@ One theory. One test. Full stop.
 
 This is very important to my career.
 </FINAL_EMPHASIS>
-``````````
+````

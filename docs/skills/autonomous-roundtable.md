@@ -170,7 +170,7 @@ graph TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Autonomous Roundtable (Deprecated)
 
 <CRITICAL>
@@ -191,4 +191,4 @@ This skill is deprecated. Its functionality has been absorbed into the `develop`
 
 <analysis>This skill is deprecated. Redirect to develop skill.</analysis>
 <reflection>If invoked, redirect user to the develop skill with dialectic_mode: "roundtable".</reflection>
-``````````
+```

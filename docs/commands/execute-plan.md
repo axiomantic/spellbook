@@ -66,7 +66,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 # Execute Plan
 
 Invoke `executing-plans` skill to execute implementation plans with verification and review gates.
@@ -108,4 +108,4 @@ After executing:
 - Deviate from plan without explicit approval
 - Guess at unclear requirements
 </FORBIDDEN>
-``````````
+```

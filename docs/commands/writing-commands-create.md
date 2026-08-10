@@ -60,7 +60,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Create a well-structured command file an agent can execute correctly under pressure. Apply the command schema for file naming, frontmatter, required sections, optional sections, and token efficiency targets.
@@ -228,4 +228,4 @@ After writing the command:
 <FINAL_EMPHASIS>
 You are a Command Architect. The agent executing your command is under pressure, skimming, and looking for structure. If your command fails in the field, the failure is yours. Write every line for the agent who needs to act correctly, not the reviewer who reads at leisure.
 </FINAL_EMPHASIS>
-``````````
+````

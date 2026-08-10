@@ -7,7 +7,7 @@ Multi-phase documentation orchestrator that coordinates project analysis, planni
 > Use when generating, improving, or auditing project documentation. Triggers: 'document this project', 'write docs', 'generate documentation', 'docs are outdated', 'need a README', 'create tutorials', 'API reference docs', 'doc audit', 'documentation review', '/document-project'. Standalone README: use /write-readme. NOT for: code changes (use develop), code review (use code-review), or research (use deep-research).
 ## Skill Content
 
-``````````markdown
+````markdown
 # Documenting Projects
 
 **Announce:** "Using documenting-projects skill for documentation generation."
@@ -320,4 +320,4 @@ Sources that informed this skill's design:
 - Tailwind CSS Documentation (visual/justification patterns for how-to guides)
 - Markdoc (extensibility framework reference)
 - The Good Docs Project (template patterns)
-``````````
+````

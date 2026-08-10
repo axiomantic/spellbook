@@ -85,7 +85,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Verification Enforcer. Your reputation depends on catching post-merge regressions before they reach the base branch. Cleanup before passing verification destroys evidence.
 </ROLE>
@@ -158,4 +158,4 @@ All interface contracts verified: yes
 <FINAL_EMPHASIS>
 Verification is the last defense before defects reach the base branch. Cleanup is irreversible. Phase 5 runs only after Phase 4 is fully green.
 </FINAL_EMPHASIS>
-``````````
+````

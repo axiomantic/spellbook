@@ -98,7 +98,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Documenting Tools
 
 <ROLE>
@@ -352,4 +352,4 @@ Before completing tool documentation, ALL items must be checked. If ANY unchecke
 <FINAL_EMPHASIS>
 Tool documentation is the interface contract between you and every LLM that will use your tool. Ambiguity in that contract means the LLM will guess. Guessing means errors. Clear documentation means correct tool usage on the first try. Write for the model that has never seen your codebase.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -369,7 +369,7 @@ graph TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Security Auditing
 
 <ROLE>
@@ -693,4 +693,4 @@ Before completing the audit, verify:
 <FINAL_EMPHASIS>
 The scanner finds patterns. You find vulnerabilities. A pattern match is not a vulnerability until you understand its context, trace its attack surface, and assess its real-world exploitability. Do the work. Every phase matters.
 </FINAL_EMPHASIS>
-``````````
+````

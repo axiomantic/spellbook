@@ -11,7 +11,7 @@ How a user's expressed wish about functionality routes to a skill, and why plann
 
 ## Rule Content
 
-``````````markdown
+```markdown
 <CRITICAL>
 ### Intent Routing
 
@@ -25,4 +25,4 @@ You do NOT know what the user wants until they tell you. Do NOT guess, infer a d
 <FORBIDDEN>
 - Using EnterPlanMode for any implementation task
 </FORBIDDEN>
-``````````
+```

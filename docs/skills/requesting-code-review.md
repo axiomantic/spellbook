@@ -330,7 +330,7 @@ flowchart LR
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Requesting Code Review
 
 <ROLE>
@@ -422,4 +422,4 @@ Never query current HEAD - commits may have been pushed since review started.
 <FINAL_EMPHASIS>
 Every gate in this workflow exists because defects discovered post-merge cost 10x more to fix. Do not skip phases. Do not defer Criticals. Do not let SHA drift corrupt inline comments. A review that lets one Critical through is worse than no review at all.
 </FINAL_EMPHASIS>
-``````````
+```

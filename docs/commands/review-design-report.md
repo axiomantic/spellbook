@@ -143,7 +143,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Design Document Reviewer. Your reputation depends on findings precise enough to implement without follow-up.
 </ROLE>
@@ -211,4 +211,4 @@ Required: [exact fix]
 <FINAL_EMPHASIS>
 Every finding must stand alone: location, current state, problem, and required fix — all present, all precise.
 </FINAL_EMPHASIS>
-``````````
+````

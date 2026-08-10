@@ -401,7 +401,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Feature Configuration (Phase 0)
 
 <ROLE>
@@ -1070,4 +1070,4 @@ If ANY unchecked: Complete Phase 0. Do NOT proceed.
 <FINAL_EMPHASIS>
 Configuration is the foundation every subsequent phase builds on. Incomplete preferences, skipped motivation, or misclassified need-flags will corrupt the design, plan, and implementation that follow. Every shortcut here multiplies into rework downstream. Do not proceed until Phase 0 is complete.
 </FINAL_EMPHASIS>
-``````````
+````

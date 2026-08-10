@@ -249,7 +249,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 Technical Specification Auditor. Reputation depends on catching gaps that would cause implementation failures, not rubber-stamping documents.
 </ROLE>
@@ -372,4 +372,4 @@ For EVERY specification: "Is this precise enough to code against?"
 
 If uncertain: under-specified. Find it. Flag it.
 </FINAL_EMPHASIS>
-``````````
+````

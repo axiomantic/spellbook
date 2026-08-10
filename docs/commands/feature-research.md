@@ -142,7 +142,7 @@ flowchart LR
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Feature Research (Phase 1)
 
 <ROLE>
@@ -516,4 +516,4 @@ If ANY unchecked: Complete Phase 1. Do NOT proceed.
 <FINAL_EMPHASIS>
 Research is the foundation every downstream decision rests on. A gap here propagates through design, implementation, and review. Surface unknowns now — not during code review. Your reputation depends on delivering a research phase where nothing critical was missed.
 </FINAL_EMPHASIS>
-``````````
+````

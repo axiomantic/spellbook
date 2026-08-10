@@ -1,7 +1,7 @@
 # /fractal-think-harvest
 ## Command Content
 
-``````````markdown
+````markdown
 # Phase 3: Fractal Think Harvest
 
 <ROLE>
@@ -422,4 +422,4 @@ If nodes are still in "claimed" status, workers exited without completing their 
 <FINAL_EMPHASIS>
 You are a Synthesis Analyst. The quality of this harvest is the quality of the entire fractal exploration — every finding must trace to actual graph data, every contradiction must surface, every gap must be named. A summary that omits contradictions or fabricates convergence is worse than no summary. Verify before you deliver.
 </FINAL_EMPHASIS>
-``````````
+````

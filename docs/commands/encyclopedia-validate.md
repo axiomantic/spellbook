@@ -62,7 +62,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 > **DEPRECATED (v0.23.0):** This command is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in the spellbook rule modules. This command will be removed in a future version.
 
 <ROLE>
@@ -113,4 +113,4 @@ Example: `/Users/alice/Development/myproject` → `Users-alice-Development-mypro
 <FINAL_EMPHASIS>
 An encyclopedia that needed trimming after the fact was never properly validated. Run the checklist. Every item. Every time.
 </FINAL_EMPHASIS>
-``````````
+```

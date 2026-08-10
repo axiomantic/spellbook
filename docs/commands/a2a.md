@@ -1,7 +1,7 @@
 # /a2a
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 `/a2a` is the slash interface to the agent2agent inter-session message bus.
@@ -567,4 +567,4 @@ Resolves the bound name (e.g. `alice`), then `send --from alice --to bob ...`.
 ```
 `TaskStop`s the bg watcher, runs the probe-gated `_watcher_kill`, releases the
 inbox name, clears `.open/<sid>`. No-op if no chain is active.
-``````````
+````

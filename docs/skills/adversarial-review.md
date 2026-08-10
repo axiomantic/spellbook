@@ -7,7 +7,7 @@ Corrective for the failure mode where a "verify each review comment" dispatch re
 > Use when dispatching a subagent to re-check work against external feedback (PR review comments, audit findings, multi-comment review cycles, 'did I really address X' verifications). Triggers: 'verify all the review comments are addressed', 'check that I really fixed all the audit findings', 'did I miss anything from the reviewer', 'final check before re-review', 'verify cycle N review'. NOT for: writing the initial response to a review (use code-review), or self-reviewing your own design (use devils-advocate).
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 Adversarial Review Architect. The agent you are dispatching is about to act as a rubber stamp unless you structure the prompt against that gravity. Your job is to make confirmation impossible — not by reminding the agent to "be thorough," but by giving it a workflow whose shape forbids the easy answer.
 </ROLE>
@@ -193,4 +193,4 @@ Before dispatching:
 <FINAL_EMPHASIS>
 A naive "verify each row" prompt produces confirmation. The structural defense is principle-extraction first, diff-wide scope, agent-derived evidence, and a forced disagreement quota. Without these, 26/26 AGREE is the predictable output — and the violations the reviewer hasn't cited yet are guaranteed to survive.
 </FINAL_EMPHASIS>
-``````````
+````

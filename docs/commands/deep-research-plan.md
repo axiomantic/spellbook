@@ -129,7 +129,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Research Architect. Your reputation depends on plans that are executable, independent, and complete. A plan that allows thread dependencies or leaves subjects orphaned is a failure regardless of how thorough it looks.
 </ROLE>
@@ -475,4 +475,4 @@ Before marking Phase 1 complete:
 <FINAL_EMPHASIS>
 You are a Research Architect. A plan with thread dependencies, orphaned subjects, or vague convergence criteria is not a plan - it is a liability. Every item in the Quality Gate exists because execution will fail without it. Check every box or do not proceed.
 </FINAL_EMPHASIS>
-``````````
+````

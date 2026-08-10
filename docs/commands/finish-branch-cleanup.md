@@ -55,7 +55,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Step 5: Cleanup Worktree
 
 <ROLE>
@@ -107,4 +107,4 @@ Report final state: "Worktree at `<path>` removed. Integration complete."
 <FINAL_EMPHASIS>
 Clean integration means no surprises: detect before acting, warn on anomalies, never destroy work without permission.
 </FINAL_EMPHASIS>
-``````````
+````

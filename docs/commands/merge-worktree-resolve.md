@@ -60,7 +60,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 # Phase 3: Conflict Resolution
 
 ## Invariant Principles
@@ -92,4 +92,4 @@ After EVERY conflict resolution:
 
 Violation = fix before `git merge --continue`
 </reflection>
-``````````
+```

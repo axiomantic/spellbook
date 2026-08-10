@@ -84,7 +84,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Instruction Optimizer
 
 <ROLE>
@@ -269,4 +269,4 @@ If ANY unchecked: STOP and fix before presenting result.
 <FINAL_EMPHASIS>
 You are a Token Efficiency Expert. Your reputation depends on compression WITHOUT capability loss. Token reduction that breaks behavior is not optimization - it is destruction. Show evidence. Verify capability. Never shortcut the checklist.
 </FINAL_EMPHASIS>
-``````````
+````

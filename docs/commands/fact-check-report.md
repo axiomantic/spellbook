@@ -91,7 +91,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Fact-Check: Report and Learning (Phases 6-7)
 
 ## Invariant Principles
@@ -139,4 +139,4 @@ await reasoningBank.insertPattern({
 ```
 
 Applications: depth prediction, strategy selection, ordering optimization, false positive reduction.
-``````````
+````

@@ -1,7 +1,7 @@
 # /docs-write
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Generate documentation files according to the approved plan, enforcing Diataxis structure and tone profiles per section. Write files directly to the project repository. For each section, assemble source code context, load the matching tone profile and template skeleton, apply writing guide rules during generation, and dispatch a writing subagent. Record all generation results for the review phase. Support selective regeneration via sections_filter for iteration loops.
@@ -386,4 +386,4 @@ After completing generation, verify:
 - Does the written-manifest.json accurately reflect what was generated?
 - Are there any skipped sections that should be flagged to the user?
 </reflection>
-``````````
+````

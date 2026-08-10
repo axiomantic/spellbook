@@ -1,7 +1,7 @@
 # /dedupe-report
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Phase 3 of the `dedupe` skill: consume the verdicts artifact produced by
@@ -207,4 +207,4 @@ with every EXTRACT candidate's `Disposition` line populated.
   `/dedupe-analyze`, which is documented in `commands/dedupe-analyze.md`
   and grounded in
   `skills/dedupe/references/counterfactual-prompt.md`.
-``````````
+````

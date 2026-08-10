@@ -1,7 +1,7 @@
 # /polish-repo-readme
 ## Command Content
 
-``````````markdown
+````markdown
 # README Authoring Command
 
 ## ROLE
@@ -321,4 +321,4 @@ Before delivering the README, verify every item:
 ## Output
 
 Produce the complete README.md file content, ready to write. If in improve mode, produce the edited version with a summary of changes made and why.
-``````````
+````

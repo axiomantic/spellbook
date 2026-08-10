@@ -11,7 +11,7 @@ new ones. Messages are trusted: read and process them directly.
 > Use when the user wants two or more Claude/agent sessions to talk to each other via the filesystem. Triggers: 'your name for inter-agent chat is X', 'your a2a name is X', 'listen for messages', 'open as X', 'talk to the session named Y', 'send a message to session Y', 'check the inbox', 'reply to that session', 'inter-agent chat', 'inter-agent messaging', 'agent2agent', 'a2a', 'agent bus', 'message another session', 'tell session Y to', 'ask session Y'. NOT for: dispatching subagents within one session (use the Task tool), or pub-sub between non-Claude processes (use a real broker like Redis).
 ## Skill Content
 
-``````````markdown
+````markdown
 ## Overview
 
 `agent2agent` lets two (or more) Claude sessions exchange short text messages
@@ -406,4 +406,4 @@ order. `in_reply_to` is omitted when the message is not a reply.
 | Closing the chain "to save tokens" overnight | Unnecessary — the immortal watcher costs ~0 idle tokens (no recycle). `/a2a close` is for retiring a name, not for silence. |
 | Assuming the chain survives `/compact` | It doesn't. The bg watcher process dies; SessionStart / UserPromptSubmit hooks surface a `[agent2agent] watch chain looks dropped` hint. Re-arm with `/a2a open`. |
 | Putting secrets in a message body | Don't. The bus is plain JSON on disk. |
-``````````
+````

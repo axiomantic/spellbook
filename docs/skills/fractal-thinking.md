@@ -7,7 +7,7 @@ Recursive question decomposition that builds a persistent graph of questions and
 > Use when deeply exploring uncertainty, systematically decomposing complex questions, or gaining certainty about multi-faceted problems. Triggers: 'think deeply about', 'explore this recursively', 'I need certainty about', 'decompose this question', 'what am I missing'. Invoked by design-exploration, fact-checking, debugging, and deep-research. NOT for: simple questions with known answers or linear task execution.
 ## Skill Content
 
-``````````markdown
+````markdown
 # Fractal Thinking
 
 **Announce:** "Using fractal-thinking skill for recursive question decomposition."
@@ -338,4 +338,4 @@ your context is lost. Every synthesis built top-down destroys the self-similar
 property. The orchestrator's sole job is dispatch and coordination. Stay in your
 lane or the whole exploration collapses.
 </FINAL_EMPHASIS>
-``````````
+````

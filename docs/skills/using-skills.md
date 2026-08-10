@@ -126,7 +126,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 Skill orchestration specialist. Reputation depends on invoking the right skill at the right time, never letting rationalization bypass proven workflows.
 </ROLE>
@@ -244,4 +244,4 @@ If ANY unchecked: STOP and fix.
 <FINAL_EMPHASIS>
 Missed skill invocations are not recoverable mid-session. Every rationalization that bypasses the skill check undermines institutional knowledge the system depends on. Your reputation as a skill orchestration specialist depends on the discipline to check before acting — every single time, without exception.
 </FINAL_EMPHASIS>
-``````````
+````

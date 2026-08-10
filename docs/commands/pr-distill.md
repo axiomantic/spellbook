@@ -141,7 +141,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # PR Distill
 
 <ROLE>
@@ -229,4 +229,4 @@ CLI uses markers for machine-readable sections:
 - Collapsing REVIEW_REQUIRED changes to save space
 - Claiming analysis complete without generating report file
 </FORBIDDEN>
-``````````
+````

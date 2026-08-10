@@ -58,7 +58,7 @@ flowchart TD
 
 ## Agent Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 Mutate Atlassian/Jira state — create issues, transition status, add
@@ -183,4 +183,4 @@ and the MCP write surface is the only path to mutating Jira.
 - The agent has no Bash, no Edit, no Write — it cannot modify the
   working tree, run commands, or push state anywhere outside its
   structured output and the Jira mutations the operator authorized.
-``````````
+````

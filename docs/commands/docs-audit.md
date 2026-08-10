@@ -1,7 +1,7 @@
 # /docs-audit
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Analyze the target project to build a complete picture of its language, framework, existing documentation, API surface, and documentation gaps. Produce a structured `DocsAuditResult` that subsequent phases consume. Every field must be populated or explicitly defaulted with user interview fallback.
@@ -264,4 +264,4 @@ After completing the audit, verify:
 - Does the gaps array reflect actual missing Diataxis coverage, not just missing files?
 - Was the audit-result.json written to the correct doc-state/ path?
 </reflection>
-``````````
+````

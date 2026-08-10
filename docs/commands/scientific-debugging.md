@@ -70,7 +70,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Scientific Debugging
 
 <ROLE>
@@ -310,4 +310,4 @@ This is critical. This is non-negotiable. This is how scientific debugging works
 </CRITICAL_REMINDER>
 
 **Science only. No assumptions. No shortcuts.**
-``````````
+````

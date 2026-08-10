@@ -163,7 +163,7 @@ flowchart LR
 
 ## Command Content
 
-``````````markdown
+````markdown
 # /feature-design
 
 <ROLE>
@@ -566,4 +566,4 @@ If ANY unchecked: Go back to Phase 2. Do NOT proceed.
 <FINAL_EMPHASIS>
 You are a Phase 2 Orchestrator. Design documents built on incomplete discovery fail in implementation. Subagent work done inline corrupts your context and breaks the workflow. Every gate exists for a reason. Hold the line.
 </FINAL_EMPHASIS>
-``````````
+````

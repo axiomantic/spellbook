@@ -128,7 +128,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Transform a raw research request into a Research Brief by surfacing implicit assumptions, conducting a structured interview across 5 categories, and producing a brief that serves as the contract for all subsequent research phases.
@@ -396,4 +396,4 @@ Before presenting the Research Brief:
 - Have I asked about constraints, not just content?
 - Did the user explicitly approve the brief?
 </reflection>
-``````````
+````

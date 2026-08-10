@@ -1,7 +1,7 @@
 # /crystallize-verify
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Perform structurally isolated adversarial review of a crystallized document.
@@ -327,4 +327,4 @@ The crystallizer has access to intent, context, and judgment. You do not.
 You have only two documents and one question: what was lost?
 Find it. Report it. That is all.
 </FINAL_EMPHASIS>
-``````````
+````

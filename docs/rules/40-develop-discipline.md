@@ -18,7 +18,7 @@ Phase non-fungibility inside the develop skill, and the thoroughness contract th
 
 ## Rule Content
 
-``````````markdown
+```markdown
 <CRITICAL>
 ### Develop Skill Phase Non-Fungibility
 
@@ -161,4 +161,4 @@ the nmg2-emulator handoff (2026-08-10): "Wave 3a done" markings made
 without §24.6 verification propagated across handoffs because no later
 step re-checked.
 </CRITICAL>
-``````````
+```

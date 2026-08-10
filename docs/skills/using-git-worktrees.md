@@ -138,7 +138,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Using Git Worktrees
 
 <ROLE>
@@ -419,4 +419,4 @@ Before reporting worktree ready -- if ANY unchecked, STOP and resolve:
 <FINAL_EMPHASIS>
 Worktree isolation protects the main workspace from experimental damage. Skipping safety verification causes repository pollution requiring manual cleanup. Proceeding without baseline tests makes it impossible to distinguish new bugs from pre-existing failures. Take the time to do it right.
 </FINAL_EMPHASIS>
-``````````
+````

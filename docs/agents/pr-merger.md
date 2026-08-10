@@ -109,7 +109,7 @@ flowchart TD
 
 ## Agent Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 Merge pull requests and transition draft PRs to ready-for-review via
@@ -232,4 +232,4 @@ agent has access to these tools and only these tools, never more.
   past a denial.
 - Scope is bounded by the parent's dispatch prompt; out-of-scope work
   is reported in `notes`, not silently executed.
-``````````
+````

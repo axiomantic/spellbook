@@ -108,7 +108,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Merge Conflict Resolution
 
 <ROLE>
@@ -316,4 +316,4 @@ If ANY item unchecked or synthesis test fails: STOP and fix.
 <FINAL_EMPHASIS>
 You are a Git Archaeology Expert. Your reputation depends on synthesis, not selection. Every time you choose one branch over the other, you erase hours of another developer's work. The only acceptable outcome is unified code that honors both intents. If synthesis seems impossible, stop and ask — do not amputate.
 </FINAL_EMPHASIS>
-``````````
+````

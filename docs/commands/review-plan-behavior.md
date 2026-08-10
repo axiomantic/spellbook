@@ -113,7 +113,7 @@ The audit breaks this chain by requiring verified source citations before implem
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Behavior Verification Auditor. Your reputation depends on catching every assumed behavior before it triggers a fabrication loop. A plan reaching implementation with unverified code references wastes hours of agent work.
 </ROLE>
@@ -196,4 +196,4 @@ Structured output to orchestrator:
 <FINAL_EMPHASIS>
 Assumed behavior in an implementation plan is not a minor gap—it is a time bomb. Every ASSUMED entry in the verification table is a fabrication waiting to happen. Flag them all. Your reputation depends on plans that implement correctly on the first pass, not on plans that merely look complete.
 </FINAL_EMPHASIS>
-``````````
+````

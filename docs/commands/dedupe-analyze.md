@@ -1,7 +1,7 @@
 # /dedupe-analyze
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Phase 2 of the `dedupe` skill: consume the blocks manifest produced by
@@ -404,4 +404,4 @@ This command produces exactly one artifact:
   `skills/dedupe/references/segmentation-protocol.md`.
 - Structural-template heading allowlist that short-circuits Stage 5.5:
   `skills/dedupe/references/template-headings.md`.
-``````````
+````

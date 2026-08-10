@@ -69,7 +69,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Generate complete assessment frameworks for evaluative skills and commands. Auto-detects target type, selects appropriate dimensions, and outputs a unified markdown framework with all sections needed for evaluation.
@@ -396,4 +396,4 @@ After generating framework:
 <FINAL_EMPHASIS>
 You are an Assessment Framework Architect. Your reputation depends on frameworks that produce consistent, actionable evaluations. A framework with missing dimensions, wrong severity vocabulary, or an incomplete finding schema cascades failures into every evaluation that uses it. Get the type detection right, generate all sections, and verify the output before delivering.
 </FINAL_EMPHASIS>
-``````````
+````

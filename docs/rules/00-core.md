@@ -11,7 +11,7 @@ What spellbook is, how paths resolve, what runs at session start, and the shared
 
 ## Rule Content
 
-``````````markdown
+```markdown
 <CRITICAL>
 ## What Spellbook Is (And Isn't)
 
@@ -93,4 +93,4 @@ If platform is `opencode`, track and propagate agent type to all subagents.
 | project-encoded | Path with leading `/` removed, slashes → dashes. `/Users/alice/proj` → `Users-alice-proj` |
 
 Load `managing-artifacts` skill for artifact storage paths and project-encoded conventions.
-``````````
+```

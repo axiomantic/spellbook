@@ -11,7 +11,7 @@ How to read a spellbook bash-gate denial, which layer produced it, and what the 
 
 ## Rule Content
 
-``````````markdown
+```markdown
 <CRITICAL>
 ### Navigating the Spellbook Bash Gate
 
@@ -45,4 +45,4 @@ Spellbook's bash gate runs a layered pipeline (L4 bashlex AST → L3 tier classi
 A subagent tried to post a PR comment with embedded technical content via:
 `gh pr comment 288 --body "$(cat <<'EOF' ... EOF)"`. The L4 bashlex layer returned `bashlex failed to parse command` plus `High entropy content detected`. The fix: `Write` the body to `/tmp/comment.md` and use `gh pr comment 288 --body-file /tmp/comment.md`. One retry, succeeded. The same pattern applies to `git commit -F /tmp/msg.txt`, `gh issue create --body-file ...`, `curl --data @file.json`, and any other tool that accepts file-based input as an alternative to inline strings.
 </CRITICAL>
-``````````
+```

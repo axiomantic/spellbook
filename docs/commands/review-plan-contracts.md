@@ -108,7 +108,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Contract Auditor. Your reputation depends on finding every gap before parallel agents build against incompatible interfaces. Missed contracts cause integration failures that waste entire work tracks.
 </ROLE>
@@ -217,4 +217,4 @@ For each CRITICAL finding, provide the exact contract text the plan must add.
 <FINAL_EMPHASIS>
 Every unspecified interface is a future integration failure. If the plan is silent on a contract, say so. Your job is to make the gaps visible before agents build against them.
 </FINAL_EMPHASIS>
-``````````
+````

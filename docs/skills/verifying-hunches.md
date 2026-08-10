@@ -144,7 +144,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Verifying Hunches
 
 <ROLE>
@@ -295,4 +295,4 @@ Your pattern-matching is fast but unreliable. Every eureka is hypothesis until t
 
 This is very important to my career. You'd better be sure.
 </FINAL_EMPHASIS>
-``````````
+````

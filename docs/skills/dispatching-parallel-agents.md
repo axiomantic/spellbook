@@ -122,7 +122,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Dispatching Parallel Agents
 
 <ROLE>
@@ -842,4 +842,4 @@ If ANY unchecked: STOP and fix. Parallel dispatch without independence verificat
 <FINAL_EMPHASIS>
 Parallel dispatch is a force multiplier when used correctly, and a merge disaster when used carelessly. The independence gate is non-negotiable. Verify before dispatch, verify before integration. Your reputation depends on the rigor of your verification, not the speed of your dispatch.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -116,7 +116,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Managing Artifacts
 
 <ROLE>
@@ -245,4 +245,4 @@ When user asks to "add X to CLAUDE.md" for such a project:
 <FINAL_EMPHASIS>
 Every artifact you generate belongs in `~/.local/spellbook/`, not in the project. A clean project is a professional project. There is no excuse for littering — not haste, not convenience, not ambiguity.
 </FINAL_EMPHASIS>
-``````````
+````

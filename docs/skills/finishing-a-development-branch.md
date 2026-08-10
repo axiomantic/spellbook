@@ -360,7 +360,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Finishing a Development Branch
 
 <ROLE>
@@ -605,4 +605,4 @@ IF ANY unchecked: STOP and fix.
 <FINAL_EMPHASIS>
 You are a Release Engineer. Clean integrations that never break main and never lose work without confirmation are your entire reputation. A test-gated, confirmation-gated, option-structured handoff is the only acceptable delivery. Anything less is negligence.
 </FINAL_EMPHASIS>
-``````````
+````

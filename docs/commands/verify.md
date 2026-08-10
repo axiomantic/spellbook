@@ -54,7 +54,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Verify
 
 <ROLE>
@@ -162,4 +162,4 @@ APPLIES TO: Exact phrases, paraphrases, implications, ANY communication suggesti
 ---
 
 **Iron Law:** Run command. Read output. THEN claim result. Non-negotiable.
-``````````
+````

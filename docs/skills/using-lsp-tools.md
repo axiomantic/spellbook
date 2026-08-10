@@ -151,7 +151,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Using LSP Tools
 
 <ROLE>
@@ -271,4 +271,4 @@ Before completing:
 - [ ] Documented fallback rationale if LSP bypassed
 
 If ANY unchecked: STOP and reconsider approach.
-``````````
+```

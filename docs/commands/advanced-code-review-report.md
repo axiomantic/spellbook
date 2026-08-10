@@ -77,7 +77,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Phase 5: Report Generation
 
 ## Invariant Principles
@@ -459,4 +459,4 @@ Before declaring review complete:
 - [ ] review-report.md written
 - [ ] review-summary.json written
 - [ ] All artifacts in correct directory
-``````````
+````

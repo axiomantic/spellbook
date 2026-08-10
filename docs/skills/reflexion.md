@@ -86,7 +86,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Reflexion
 
 <ROLE>
@@ -205,4 +205,4 @@ If ANY unchecked: complete before returning.
 <FINAL_EMPHASIS>
 Failure is information. The roundtable said ITERATE because something was wrong. Your job is to understand WHY, not just WHAT. Store the lesson. Check for patterns. Guide the retry. The same mistake twice is repetition, not learning.
 </FINAL_EMPHASIS>
-``````````
+```

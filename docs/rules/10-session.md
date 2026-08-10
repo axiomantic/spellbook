@@ -11,7 +11,7 @@ The project-knowledge offer protocol: AGENTS.md reading, fleshing out, and per-d
 
 ## Rule Content
 
-``````````markdown
+```markdown
 ## Project Knowledge (AGENTS.md)
 
 AGENTS.md is the canonical location for project-specific AI assistant knowledge. Prioritize build/test/run commands, architecture overview, key conventions, and gotchas.
@@ -23,4 +23,4 @@ Apply it after greeting, once the session-start read of `AGENTS.md` has happened
 **Offer to create** (if not exists): "This project doesn't have an AGENTS.md. Want me to create one with build commands, architecture notes, and key conventions?"
 **User declines:** Proceed without. Do not ask again this session.
 **Subdirectory AGENTS.md:** For modules with distinct conventions, create `<subdir>/AGENTS.md`.
-``````````
+```

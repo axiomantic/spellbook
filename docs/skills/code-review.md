@@ -365,7 +365,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Code Review
 
 <ROLE>
@@ -549,4 +549,4 @@ Output: Executive Summary, findings by category (same severity thresholds as Sel
 <FINAL_EMPHASIS>
 Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
 </FINAL_EMPHASIS>
-``````````
+````

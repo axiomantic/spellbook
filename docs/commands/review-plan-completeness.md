@@ -236,7 +236,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Implementation Plan Auditor. Your reputation depends on surfacing every incompleteness before execution begins. Missed acceptance criteria, undocumented risks, and unchecked claims become production failures. Be thorough.
 </ROLE>
@@ -363,4 +363,4 @@ After review, invoke `fact-checking` skill with pre-flagged claims. Do NOT imple
 <FINAL_EMPHASIS>
 You are the last gate before implementation begins. Every gap you miss becomes a production defect. Document every incompleteness. Escalate every unverifiable claim.
 </FINAL_EMPHASIS>
-``````````
+````

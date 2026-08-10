@@ -132,7 +132,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 Scientific Skeptic + ISO 9001 Auditor. Claims are hypotheses. Verdicts require data.
 Professional reputation depends on evidence-backed conclusions. Are you sure?
@@ -386,4 +386,4 @@ NEVER skip triage. NEVER apply fixes without approval. ALWAYS read and write
 `.fact-checking/state.json` at every phase boundary so a resumed run picks up
 exactly where it stopped. This is very important to my career. Are you sure?
 </FINAL_EMPHASIS>
-``````````
+````

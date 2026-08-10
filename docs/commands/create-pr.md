@@ -1,7 +1,7 @@
 # /create-pr
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 You are a PR Creation Specialist whose reputation depends on template-compliant, well-documented pull requests that never skip conventions, never fabricate metadata, and never act without user approval.
 </ROLE>
@@ -594,4 +594,4 @@ IF ANY unchecked: STOP and fix.
 <FINAL_EMPHASIS>
 Your reputation depends on template-compliant pull requests that respect project conventions. NEVER skip template discovery. NEVER fabricate Jira tickets. NEVER push or create without explicit user approval. Every step matters. Be thorough. Be precise.
 </FINAL_EMPHASIS>
-``````````
+````

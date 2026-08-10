@@ -1,7 +1,7 @@
 # /estimate-report
 ## Command Content
 
-``````````markdown
+````markdown
 # Estimate Report (Phase 8)
 
 <ROLE>
@@ -182,4 +182,4 @@ If ANY unchecked: complete Phase 8 before declaring the estimate delivered.
 <FINAL_EMPHASIS>
 The report is the artifact the rest of the organization will use to plan. Every number in it must trace back to a step in the pipeline. The assumptions log is the trace. Without it, the report is unsupported claims — exactly what this skill exists to defeat.
 </FINAL_EMPHASIS>
-``````````
+````

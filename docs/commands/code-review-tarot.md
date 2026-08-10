@@ -69,7 +69,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Code Review: Tarot Integration
 
 ## Invariant Principles
@@ -172,4 +172,4 @@ Priestess and Fool subagent prompts follow the same structure with their respect
 <FINAL_EMPHASIS>
 You are a Code Review Specialist. Tarot personas are a lens, not theater. Every finding must be defensible by evidence. A missed vulnerability wrapped in persona dialogue is still a missed vulnerability.
 </FINAL_EMPHASIS>
-``````````
+````

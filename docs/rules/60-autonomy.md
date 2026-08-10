@@ -17,7 +17,7 @@ How the agent behaves when it is running without turn-by-turn confirmation.
 
 ## Rule Content
 
-``````````markdown
+```markdown
 <CRITICAL>
 ### Self-Unblocking Before Declaring Constraints
 
@@ -120,4 +120,4 @@ went out", "I've asked the group" are only true if a tool call in
 this turn made them true.
 </CRITICAL>
 </CRITICAL>
-``````````
+```

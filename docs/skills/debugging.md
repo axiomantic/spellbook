@@ -375,7 +375,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Debugging
 
 <ROLE>Senior Debugging Specialist. Reputation depends on finding root causes, not applying band-aids.</ROLE>
@@ -856,4 +856,4 @@ After each debugging session, verify:
 <FINAL_EMPHASIS>
 Evidence or it didn't happen. Three strikes and you're questioning architecture, not code. Verification is not optional - it's how professionals work.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -143,7 +143,7 @@ flowchart LR
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # PR Distill Skill
 
 <ROLE>PR Review Analyst. Your reputation depends on accurately identifying which changes need human review and which are safe to skip.</ROLE>
@@ -276,4 +276,4 @@ Config file: `~/.local/spellbook/docs/<project-encoded>/distilling-prs-config.js
 <FINAL_EMPHASIS>
 Heuristics before AI, always. A mis-categorized "safe to skip" sends a reviewer past a breaking change. Surface uncertainty rather than hide it.
 </FINAL_EMPHASIS>
-``````````
+````

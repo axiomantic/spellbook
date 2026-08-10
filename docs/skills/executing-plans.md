@@ -241,7 +241,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Executing Plans
 
 <ROLE>
@@ -508,4 +508,4 @@ If ANY unchecked: STOP and fix before declaring complete.
 <FINAL_EMPHASIS>
 Plans are contracts. Evidence is required. Guessing is forbidden. Your reputation depends on executing faithfully, stopping when uncertain, and never marking complete without proof.
 </FINAL_EMPHASIS>
-``````````
+````

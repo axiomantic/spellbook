@@ -11,7 +11,7 @@ instead; for very large efforts, checkpoint the `develop_gate_ledger` and
 hand off to a fresh session. The original body is preserved in ARCHIVE.md.
 ## Skill Content
 
-``````````markdown
+```markdown
 # Dispatching Sub-Orchestrators (Deprecated)
 
 <CRITICAL>
@@ -47,4 +47,4 @@ Template, gotchas) is preserved verbatim in
 
 <analysis>This skill is deprecated. Nested sub-orchestrator dispatch is unsupported because dispatched subagents lack a reliable Task tool. The original body lives in ARCHIVE.md.</analysis>
 <reflection>If invoked, redirect the user to develop's single-orchestrator delegated mode, and point to the `develop_gate_ledger` checkpoint mechanism for very large efforts.</reflection>
-``````````
+```

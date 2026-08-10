@@ -16,7 +16,7 @@ Suppresses AI attribution in commits, pull requests, issues, and comments.
 
 ## Rule Content
 
-``````````markdown
+```markdown
 <CRITICAL>
 ### AI Attribution
 
@@ -26,4 +26,4 @@ Suppresses AI attribution in commits, pull requests, issues, and comments.
 <FORBIDDEN>
 - Putting co-authorship footers or "generated with Claude" in commits
 </FORBIDDEN>
-``````````
+```

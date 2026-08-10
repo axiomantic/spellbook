@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.85.0] - 2026-08-10
+
 ### Added
 
 - **Goose (AAIF) platform support.** Spellbook now ships a basic-tier installer
@@ -50,6 +52,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   extension is the working delivery path. 9 integration tests in
   `tests/integration/test_prime_agent_rules_install.py`.
 
+- **Develop gate ledger state file (`scripts/develop_gate_ledger.py`).** The
+  develop skill has referenced a persistent gate ledger for several releases
+  without one existing -- the skill described the contract and the LLM was
+  expected to hand-write the file. This is the Python reference
+  implementation, so the rules are enforced in code rather than in prompt:
+  - Deep-merge on every write, never full overwrite. The develop skill and
+    the spellbook hooks are sibling writers on the same state row, so an
+    overwrite from either clobbers the other.
+  - `ceremony.locked_at` is refused a rewrite once set (re-setting the same
+    value is allowed, so a resumed session may re-assert the lock).
+  - Wave-discipline `status=failed` is refused without `open_rows`, which
+    would otherwise record as a false pass.
+  - A narrow CLI (`show` / `set` / `wave-discipline`) for inspection and
+    recovery; `set ceremony.*` routes through the same lock guard as the
+    library. 28 tests in `tests/scripts/test_develop_gate_ledger.py`.
+
+- **`rules/40-develop-discipline.md`.** A rule module documenting the two
+  develop disciplines below, so an agent that meets them mid-run has seen
+  them at session start rather than discovering them at the gate.
+
 ### Changed
 
 - `installer/config.py` `SUPPORTED_PLATFORMS` and `PLATFORM_CONFIG` extended
@@ -59,6 +81,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `install.py` and `spellbook/cli/commands/install.py` include `goose` in
   `--platforms` choices and post-install completion notes.
 - `installer/tui.py` shows goose in the welcome and post-install panels.
+- **AgentDB references removed from fact-checking.** `skills/fact-checking/SKILL.md`
+  (5 references) and `commands/fact-check-verify.md` (7, including a TypeScript
+  block calling a tool that does not exist) named AgentDB as an invariant
+  -- "ALWAYS use AgentDB" -- for a component that is not implemented anywhere
+  in the spellbook runtime. Replaced with the `.fact-checking/state.json`
+  checkpoint that the skill already uses for interruption handling.
+  Cross-run knowledge accumulation is deliberately out of scope.
+- **Develop wave discipline.** The develop skill now refuses a "Wave X done"
+  claim that has no recorded §24.6 check behind it, and `commands/feature-config.md`
+  §0.4 states plainly that parallelization means dispatch count, not ceremony.
+- `scripts/generate_docs.py` computes the fence that wraps each embedded
+  source body from the body itself (shortest legal fence) instead of emitting
+  a hardcoded ten backticks everywhere. A body containing no fences at all
+  now renders inside a plain ```` ``` ```` block. Regenerated 214 docs pages;
+  the change is fence lines only.
+
+### Fixed
+
+- **Windows CI.** The Windows job had 38 failures, all also present on `main`:
+  - `installer/platforms/opencode.py` path rendering is now exercised
+    correctly on Windows -- the test set only `HOME`, but `Path.home()` goes
+    through `ntpath.expanduser`, which reads `USERPROFILE` and never consults
+    `HOME`.
+  - The hook-upgrade test registers a `shutil.which("powershell")` mock.
+    Tripwire intercepts `shutil.which` inside a sandbox and returns `None`
+    without one, so `install_hooks` short-circuited on "PowerShell not found"
+    and never cleaned the superseded shell hooks.
+  - `tests/test_scripts/test_branch_context.py` (30 of the 38) and the two
+    Goose symlink-creation tests are marked `posix_only`. They exercise a
+    POSIX shell script and `#!/bin/sh` fixture binaries, and symlink creation
+    on Windows requires `SeCreateSymbolicLink`. These have never passed on
+    Windows; the marker records that rather than restoring coverage.
+  - The Goose MCP test still runs on Windows; only its `0600` mode assertion
+    is guarded, since Windows has no POSIX mode bits and `stat()` reports
+    `0o666` regardless.
 
 ## [0.83.0] - 2026-08-06
 

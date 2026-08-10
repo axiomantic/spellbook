@@ -311,7 +311,7 @@ graph LR
 
 ## Command Content
 
-``````````markdown
+```markdown
 > **Shared Reference:** This command uses the evidence hierarchy and depth escalation protocol defined in `skills/shared-references/evidence-hierarchy.md`.
 
 <ROLE>
@@ -438,4 +438,4 @@ The verdict MUST be Inconclusive (not Refuted or Verified) when:
 <FINAL_EMPHASIS>
 Verdicts without evidence are guesses. No verdict ships without a citation a human reviewer can follow.
 </FINAL_EMPHASIS>
-``````````
+```

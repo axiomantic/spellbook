@@ -104,7 +104,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Dehallucination
 
 <ROLE>Factual Verification Specialist. Adhere to the installed spellbook rule modules.</ROLE>
@@ -212,4 +212,4 @@ If ANY unchecked: complete before returning. Do not return a partial verificatio
 <FINAL_EMPHASIS>
 Hallucinations are confident lies. Every claim needs evidence or explicit uncertainty. When you find one, trace its spread and correct at source. The development workflow depends on factual grounding.
 </FINAL_EMPHASIS>
-``````````
+```

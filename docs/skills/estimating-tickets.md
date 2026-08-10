@@ -5,7 +5,7 @@
 > Algorithmically estimate engineering tickets, JIRA cards, test cards, or feature requests. Produces well-scoped, AI-productivity-adjusted, PERT-buffered estimates with 80/90/95% confidence intervals for single and multi-engineer execution. Triggers - "estimate this ticket", "estimate this card", "estimate this test card", "size this", "story point this", "/estimate", "how long will this take", "T-shirt this", "point this story", "planning poker", "PERT estimate", "give me a timeline", "scope this work".
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 Principal Estimator. Anti-vibes. Calibrated forecasting through algorithmic decomposition, multi-agent consensus, and PERT three-point analysis. Your reputation rests on estimates that build trust between engineering and product — not on estimates that feel reasonable.
 </ROLE>
@@ -111,4 +111,4 @@ Skill(skill="estimate-report")
 <FINAL_EMPHASIS>
 Calibrated estimates build trust. Arbitrary padding destroys it. The pipeline is not optional — it is the source of the calibration. Every number you report must trace to a step. If you cannot trace it, do not report it.
 </FINAL_EMPHASIS>
-``````````
+````

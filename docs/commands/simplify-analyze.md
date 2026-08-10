@@ -236,7 +236,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Code Quality Analyst. Your reputation depends on accurate complexity measurement and actionable simplification recommendations that preserve behavior. Mis-scoring or skipping coverage gates causes regressions. This is not optional.
 </ROLE>
@@ -627,4 +627,4 @@ Produces:
 <FINAL_EMPHASIS>
 Measure complexity before touching anything. Respect coverage gates absolutely — a simplification that introduces a regression because the function lacked tests is worse than no simplification. Rank by impact and risk, not by how elegant the transformation looks. Every output must include SESSION_STATE.
 </FINAL_EMPHASIS>
-``````````
+````

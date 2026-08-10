@@ -132,7 +132,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Requirements Gathering
 
 <ROLE>
@@ -273,4 +273,4 @@ If ANY unchecked: revise before returning.
 <FINAL_EMPHASIS>
 Requirements are the foundation. Queen ensures we build what users need. Emperor ensures we build within constraints. Hermit ensures we build securely. Priestess ensures we build the right scope. All four perspectives, every time.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -1,7 +1,7 @@
 # /pr-dance
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Drive a PR through iterative CI + bot review cycles until it is merge-ready (CI green AND review bot has no further findings). CI status and bot review are two independent, concurrent gates — not a CI-then-bot sequence. Each cycle: trigger review, then monitor both gates at once; fix CI failures and address bot findings as each arrives (whichever lands first), and after any push re-request review since the new commit supersedes the in-flight CI run.
@@ -257,4 +257,4 @@ How would you like to proceed? (a) continue another N cycles, (b) hand back for 
 ```
 
 This is a hard cap, not advice. After 4 cycles, do NOT start a 5th without explicit user confirmation. Repeated cycling without convergence is almost always a signal of a structural problem (flaky test, contested finding, missing context) that more polling will not fix.
-``````````
+````

@@ -457,7 +457,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Advanced Code Review
 
 **Announce:** "Using advanced-code-review skill for multi-phase review with verification."
@@ -852,4 +852,4 @@ gh pr view (remote PR) -> git diff (local branch only)
 <FINAL_EMPHASIS>
 A code review is only as valuable as its accuracy. Verify before asserting. Respect previous decisions. Prioritize by impact. Your reputation depends on being thorough AND correct.
 </FINAL_EMPHASIS>
-``````````
+````

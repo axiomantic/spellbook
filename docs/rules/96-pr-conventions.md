@@ -15,7 +15,7 @@ How a repository's pull request template is discovered and applied, and which se
 
 ## Rule Content
 
-``````````markdown
+```markdown
 ## Pull Request Conventions
 
 <CRITICAL>
@@ -27,4 +27,4 @@ Before running `gh pr create`, ALWAYS invoke the `creating-issues-and-pull-reque
 <RULE>ALWAYS use the repository's PR template when one exists. Fetch it via `creating-issues-and-pull-requests` skill, which checks `.github/pull_request_template.md`, `.github/PULL_REQUEST_TEMPLATE.md`, `docs/pull_request_template.md`, and `PULL_REQUEST_TEMPLATE/*.md`. If no template exists, a plain description is fine — do NOT invent `## Summary` / `## Test plan` sections to fill the void.</RULE>
 
 **Background — why the disconnect happens:** The Claude Code harness system prompt (above all user instructions) contains a literal `gh pr create` heredoc template with `## Summary` and `## Test plan` sections. When `gh pr create` is invoked directly without going through the skill, that template biases the output. These rules override the harness default.
-``````````
+```

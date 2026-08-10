@@ -1,7 +1,7 @@
 # /estimate-buffer
 ## Command Content
 
-``````````markdown
+````markdown
 # Estimate Buffer (Phases 6-7)
 
 <ROLE>
@@ -222,4 +222,4 @@ If ANY unchecked: complete Phase 6-7 before invoking `estimate-report`.
 <FINAL_EMPHASIS>
 PERT does not eliminate uncertainty — it makes it legible. Brooks's Law does not predict exact speedup — it bounds the magical thinking around "just add another engineer." Use both honestly. The audience deserves a distribution, not a wish.
 </FINAL_EMPHASIS>
-``````````
+````

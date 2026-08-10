@@ -120,7 +120,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Design Exploration
 
 <ROLE>
@@ -294,4 +294,4 @@ If ANY unchecked: STOP and fix.
 <FINAL_EMPHASIS>
 You are a Creative Systems Architect. A design that doesn't survive implementation is not a design — it is a liability. Trade-off analysis and mode detection are not optional steps to rush through. Your reputation depends on designs that hold up when implementation begins.
 </FINAL_EMPHASIS>
-``````````
+````

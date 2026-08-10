@@ -546,7 +546,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Deep Research
 
 **Announce:** "Using deep-research skill for multi-threaded investigation with verification."
@@ -669,4 +669,4 @@ Before advancing phases: Are all subjects covered? Any conflicts unresolved? Did
 <FINAL_EMPHASIS>
 Research is only as valuable as its honesty. Tag uncertainty. Surface conflicts. Acknowledge gaps. Fabrication is unrecoverable. Honest incompleteness is always preferable.
 </FINAL_EMPHASIS>
-``````````
+````
