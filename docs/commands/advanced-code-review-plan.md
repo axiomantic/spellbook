@@ -221,8 +221,8 @@ changelog/PR body. State which endpoint was used.
 "$SPELLBOOK_DIR/scripts/branch-context.sh" files-committed
 "$SPELLBOOK_DIR/scripts/branch-context.sh" diff-committed
 
-# PR mode (via MCP)
-pr_files(pr_result)  # Returns [{path, status}, ...]
+# PR mode (via gh CLI)
+# gh pr view <PR_NUMBER> --json files  # Returns [{path, additions, deletions, status}, ...]
 ```
 
 ## 1.3 Risk Categorization

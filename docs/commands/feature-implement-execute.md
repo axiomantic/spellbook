@@ -267,19 +267,9 @@ Task:
 When `SESSION_PREFERENCES.dialectic_mode == "roundtable"`:
 
 **At planning_and_gates level:**
-After each per-task quality gate (4.5 code review, 4.5.1 fact-checking), optionally invoke roundtable with 3-archetype fast mode:
+After each per-task quality gate (4.5 code review, 4.5.1 fact-checking), optionally run a 3-archetype roundtable review in-context.
 
 Valid values: `stage` = `DISCOVER` | `DESIGN` | `PLAN` | `IMPLEMENT` | `COMPLETE` | `ESCALATED`; `archetypes` from: `Magician`, `Priestess`, `Hermit`, `Fool`, `Chariot`, `Justice`, `Lovers`, `Hierophant`, `Emperor`, `Queen`
-
-```
-forge_roundtable_convene(
-    feature_name=feature_name,
-    stage="IMPLEMENT",
-    artifact_path=<path to reviewed file>,
-    gate=<gate_name>,
-    archetypes=get_gate_archetypes(<gate_name>)  # 3-archetype subset
-)
-```
 
 **At full level:**
 Same as planning_and_gates, but all 10 archetypes at every gate.
@@ -287,8 +277,8 @@ Same as planning_and_gates, but all 10 archetypes at every gate.
 **At planning_only level:**
 No roundtable overlay during Phase 4. Roundtable was used only during Phases 2 and 3.
 
-**Token enforcement interaction:**
-When `token_enforcement == "gate_level"`, each gate completion is recorded via `forge_record_gate_completion`. When `token_enforcement == "every_step"`, phase transitions also require token validation via `forge_iteration_advance`.
+**Token enforcement:**
+When `token_enforcement == "gate_level"`, each gate completion is recorded in the develop gate ledger. When `token_enforcement == "every_step"`, phase transitions also require token budget validation.
 
 ### 4.4 Implementation Completion Verification
 
