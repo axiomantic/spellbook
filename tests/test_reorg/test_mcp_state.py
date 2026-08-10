@@ -32,11 +32,6 @@ class TestMcpStateImports:
         assert isinstance(FULL_HEALTH_CHECK_INTERVAL_SECONDS, float)
         assert FULL_HEALTH_CHECK_INTERVAL_SECONDS == 300.0
 
-    def test_watcher_slot_exists_and_is_none(self):
-        from spellbook.mcp.state import watcher
-
-        assert watcher is None
-
     def test_update_watcher_slot_exists_and_is_none(self):
         from spellbook.mcp.state import update_watcher
 

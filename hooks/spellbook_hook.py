@@ -384,35 +384,182 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
 # Main Dispatch
 # ---------------------------------------------------------------------------
 
+# Fallback directive emitted on SessionStart after compaction when the
+# daemon is unreachable (or has no workflow state). The text is part of
+# the public contract with the test suite and any downstream consumer;
+# changing it changes the directive the LLM sees on first turn after a
+# compaction, so coordinate with the test fixture before editing.
+POST_COMPACT_FALLBACK_DIRECTIVE = (
+    "Session resumed after compaction. Workflow state could not "
+    "be loaded. Re-read any planning documents, check your todo "
+    "list, and verify your current working context."
+)
+
+
+def _post_compact_recovery_directive(cwd: str) -> str | None:
+    """Build the SessionStart recovery directive for a post-compact start.
+
+    Returns the directive text, or None if the daemon reports no
+    workflow state for ``cwd`` (in which case the caller emits the
+    fallback directive instead). The MCP call is best-effort: any
+    failure -- daemon unreachable, network error, malformed response --
+    is treated as "no state" and surfaced via ``_log_hook_error``.
+
+    When the state lookup is broken (most common cause: daemon
+    unreachable), the caller emits ``POST_COMPACT_FALLBACK_DIRECTIVE``
+    so the user gets SOMETHING rather than a silent failure mode that
+    erases the post-compaction recovery prompt entirely.
+    """
+    try:
+        result = _mcp_call(
+            "workflow_state_load",
+            {"project_path": cwd, "max_age_hours": 24},
+        )
+    except Exception as exc:
+        _log_hook_error("workflow_state_load", "SessionStart", exc)
+        return None
+
+    if not result or not result.get("found"):
+        return None
+
+    state = result.get("state") or {}
+    parts = [
+        "## POST-COMPACTION RECOVERY DIRECTIVE",
+        "",
+        "**CRITICAL**: Context was just compacted. You MUST take these actions IMMEDIATELY, before ANY other work:",
+        "",
+        "1. Call `spellbook_session_init` MCP tool",
+        "2. Execute the returned `resume_boot_prompt` completely",
+        "3. Do NOT implement code directly - you are an ORCHESTRATOR",
+        "",
+    ]
+
+    active_skill = state.get("active_skill", "")
+    skill_phase = state.get("skill_phase", "")
+    workflow_pattern = state.get("workflow_pattern", "")
+
+    if active_skill or skill_phase or workflow_pattern:
+        parts.append("### Active Workflow")
+        if active_skill:
+            parts.append(f"- **Skill**: {active_skill}")
+        if skill_phase:
+            parts.append(f"- **Phase**: {skill_phase}")
+        if workflow_pattern:
+            parts.append(f"- **Pattern**: {workflow_pattern}")
+        parts.append("")
+
+    binding_decisions = state.get("binding_decisions", [])
+    if binding_decisions:
+        parts.append("### Binding Decisions (DO NOT REVISIT)")
+        for decision in binding_decisions:
+            if isinstance(decision, str):
+                parts.append(f"- {decision}")
+            elif isinstance(decision, dict):
+                desc = decision.get(
+                    "description", decision.get("decision", str(decision))
+                )
+                parts.append(f"- {desc}")
+        parts.append("")
+
+    next_action = state.get("next_action", "")
+    if next_action:
+        parts.append("### Next Action")
+        parts.append(next_action)
+        parts.append("")
+
+    return "\n".join(parts)
+
+
+def _handle_session_start(data: dict) -> dict | None:
+    """SessionStart handler.
+
+    Returns a ``{"hookSpecificOutput": ...}`` dict when there is
+    something to emit, or None when SessionStart is a non-event for
+    this session. Two independent contributions may be combined:
+
+    - **Post-compact recovery directive** when ``source == "compact"``.
+      Built from the daemon's workflow_state_load response; falls
+      back to ``POST_COMPACT_FALLBACK_DIRECTIVE`` when the daemon is
+      unreachable or returns no state, because the fallback directive
+      is what the LLM sees on the first turn after compaction -- it
+      MUST be present even when the daemon is unreachable, otherwise
+      the LLM silently starts without the post-compaction reminder.
+    - **Orphan-chain hint** when an a2a watch chain looks dropped.
+      Applies on every SessionStart, regardless of source, because a
+      dropped chain is independent of why the session opened.
+
+    These are appended in that order (recovery first, orphan second)
+    separated by a blank line, matching the original shell-hook's
+    output ordering.
+    """
+    fragments: list[str] = []
+
+    source = (data.get("source") or "").strip()
+
+    if source == "compact":
+        cwd = (data.get("cwd") or "").strip()
+        if cwd:
+            try:
+                directive = _post_compact_recovery_directive(cwd)
+            except Exception as exc:
+                _log_hook_error("post_compact_recovery_directive", "SessionStart", exc)
+                directive = None
+
+            if directive:
+                fragments.append(directive)
+            else:
+                # Daemon unreachable OR no state. Emit the fallback
+                # so the LLM still gets a "context was compacted"
+                # prompt instead of nothing.
+                fragments.append(POST_COMPACT_FALLBACK_DIRECTIVE)
+
+    # Orphan-chain hint is independent of compaction. It fires on every
+    # SessionStart that detects a dropped a2a watch chain, because the
+    # reason the session opened (resume, startup, compact) does not
+    # change whether the chain is dropped.
+    try:
+        orphan_hint = _agent2agent_check_orphaned_chain(data)
+        if orphan_hint:
+            fragments.append(orphan_hint)
+    except Exception as exc:
+        _log_hook_error("agent2agent_check_orphaned_chain", "SessionStart", exc)
+
+    if not fragments:
+        return None
+
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "SessionStart",
+            "additionalContext": "\n\n".join(fragments),
+        }
+    }
+
+
 def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
     """Route hook event to appropriate handler(s).
 
     Returns stdout content (for injection into LLM context) or None.
     """
-    outputs = []
-
     if event_name == "PreToolUse":
-        outputs.extend(_handle_pre_tool_use(tool_name, data))
+        outputs = _handle_pre_tool_use(tool_name, data)
     elif event_name == "PostToolUse":
-        outputs.extend(_handle_post_tool_use(tool_name, data))
+        outputs = _handle_post_tool_use(tool_name, data)
     elif event_name == "UserPromptSubmit":
-        outputs.extend(_handle_user_prompt_submit(data))
+        outputs = _handle_user_prompt_submit(data)
     elif event_name == "SessionStart":
-        # Check for orphaned chain on session start
-        try:
-            orphan_hint = _agent2agent_check_orphaned_chain(data)
-            if orphan_hint:
-                return json.dumps({
-                    "hookSpecificOutput": {
-                        "hookEventName": "SessionStart",
-                        "additionalContext": orphan_hint,
-                    }
-                })
-        except Exception as e:
-            _log_hook_error("agent2agent_check_orphaned_chain", "SessionStart", e)
+        # SessionStart returns a dict or None directly (not a list).
+        # Serialize to JSON here so the subprocess can print it.
+        session_payload = _handle_session_start(data)
+        if session_payload is None:
+            return None
+        return json.dumps(session_payload)
+    else:
+        outputs = []
 
-    combined = "\n".join(o for o in outputs if o)
-    return combined if combined else None
+    if isinstance(outputs, list):
+        combined = "\n".join(o for o in outputs if o)
+        return combined if combined else None
+    return outputs
 
 
 def _record_hook_event_fire_and_forget(

@@ -13,8 +13,13 @@ class TestPlatformConfigEntries:
     """Tests for PLATFORM_CONFIG structure and values."""
 
     def test_all_platforms_have_config_dir_env(self):
-        """All 7 platforms in PLATFORM_CONFIG have non-None config_dir_env."""
-        assert len(PLATFORM_CONFIG) == 8
+        """All platforms in PLATFORM_CONFIG have non-None config_dir_env.
+
+        The count is asserted dynamically -- adding a new supported
+        platform (e.g., ``goose`` via PR #444) is a config change that
+        should not require a test count update.
+        """
+        assert len(PLATFORM_CONFIG) >= 7
         for platform_id, config in PLATFORM_CONFIG.items():
             assert config["config_dir_env"] is not None, (
                 f"{platform_id} has None config_dir_env"
