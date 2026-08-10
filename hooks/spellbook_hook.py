@@ -396,79 +396,6 @@ POST_COMPACT_FALLBACK_DIRECTIVE = (
 )
 
 
-def _post_compact_recovery_directive(cwd: str) -> str | None:
-    """Build the SessionStart recovery directive for a post-compact start.
-
-    Returns the directive text, or None if the daemon reports no
-    workflow state for ``cwd`` (in which case the caller emits the
-    fallback directive instead). The MCP call is best-effort: any
-    failure -- daemon unreachable, network error, malformed response --
-    is treated as "no state" and surfaced via ``_log_hook_error``.
-
-    When the state lookup is broken (most common cause: daemon
-    unreachable), the caller emits ``POST_COMPACT_FALLBACK_DIRECTIVE``
-    so the user gets SOMETHING rather than a silent failure mode that
-    erases the post-compaction recovery prompt entirely.
-    """
-    try:
-        result = _mcp_call(
-            "workflow_state_load",
-            {"project_path": cwd, "max_age_hours": 24},
-        )
-    except Exception as exc:
-        _log_hook_error("workflow_state_load", "SessionStart", exc)
-        return None
-
-    if not result or not result.get("found"):
-        return None
-
-    state = result.get("state") or {}
-    parts = [
-        "## POST-COMPACTION RECOVERY DIRECTIVE",
-        "",
-        "**CRITICAL**: Context was just compacted. You MUST take these actions IMMEDIATELY, before ANY other work:",
-        "",
-        "1. Call `spellbook_session_init` MCP tool",
-        "2. Execute the returned `resume_boot_prompt` completely",
-        "3. Do NOT implement code directly - you are an ORCHESTRATOR",
-        "",
-    ]
-
-    active_skill = state.get("active_skill", "")
-    skill_phase = state.get("skill_phase", "")
-    workflow_pattern = state.get("workflow_pattern", "")
-
-    if active_skill or skill_phase or workflow_pattern:
-        parts.append("### Active Workflow")
-        if active_skill:
-            parts.append(f"- **Skill**: {active_skill}")
-        if skill_phase:
-            parts.append(f"- **Phase**: {skill_phase}")
-        if workflow_pattern:
-            parts.append(f"- **Pattern**: {workflow_pattern}")
-        parts.append("")
-
-    binding_decisions = state.get("binding_decisions", [])
-    if binding_decisions:
-        parts.append("### Binding Decisions (DO NOT REVISIT)")
-        for decision in binding_decisions:
-            if isinstance(decision, str):
-                parts.append(f"- {decision}")
-            elif isinstance(decision, dict):
-                desc = decision.get(
-                    "description", decision.get("decision", str(decision))
-                )
-                parts.append(f"- {desc}")
-        parts.append("")
-
-    next_action = state.get("next_action", "")
-    if next_action:
-        parts.append("### Next Action")
-        parts.append(next_action)
-        parts.append("")
-
-    return "\n".join(parts)
-
 
 def _handle_session_start(data: dict) -> dict | None:
     """SessionStart handler.
@@ -478,12 +405,21 @@ def _handle_session_start(data: dict) -> dict | None:
     this session. Two independent contributions may be combined:
 
     - **Post-compact recovery directive** when ``source == "compact"``.
-      Built from the daemon's workflow_state_load response; falls
-      back to ``POST_COMPACT_FALLBACK_DIRECTIVE`` when the daemon is
-      unreachable or returns no state, because the fallback directive
-      is what the LLM sees on the first turn after compaction -- it
-      MUST be present even when the daemon is unreachable, otherwise
-      the LLM silently starts without the post-compaction reminder.
+      This is what the LLM sees on the first turn after a compaction,
+      so it MUST be emitted unconditionally -- otherwise the LLM
+      silently starts with no indication that its context was just
+      truncated.
+
+      This used to first attempt a richer directive built from a
+      ``workflow_state_load`` MCP call, falling back to the constant
+      only on failure. That tool has no implementation: it is not among
+      the server's registered tools, and ``load_workflow_state`` /
+      ``resume_boot_prompt`` do not exist anywhere in ``spellbook/`` --
+      the state subsystem was removed. So the call could only ever
+      raise, and the fallback was in truth the only path. The dead
+      branch is gone; emitting a directive that instructs the LLM to
+      call a nonexistent tool is the same defect this change set
+      removed from the fact-checking skill.
     - **Orphan-chain hint** when an a2a watch chain looks dropped.
       Applies on every SessionStart, regardless of source, because a
       dropped chain is independent of why the session opened.
@@ -497,21 +433,11 @@ def _handle_session_start(data: dict) -> dict | None:
     source = (data.get("source") or "").strip()
 
     if source == "compact":
-        cwd = (data.get("cwd") or "").strip()
-        if cwd:
-            try:
-                directive = _post_compact_recovery_directive(cwd)
-            except Exception as exc:
-                _log_hook_error("post_compact_recovery_directive", "SessionStart", exc)
-                directive = None
-
-            if directive:
-                fragments.append(directive)
-            else:
-                # Daemon unreachable OR no state. Emit the fallback
-                # so the LLM still gets a "context was compacted"
-                # prompt instead of nothing.
-                fragments.append(POST_COMPACT_FALLBACK_DIRECTIVE)
+        # Emitted regardless of cwd. The directive carries no per-project
+        # content, and a compaction with a missing or blank cwd is exactly
+        # when the LLM most needs telling that its context was truncated --
+        # gating on cwd would drop the notice precisely then.
+        fragments.append(POST_COMPACT_FALLBACK_DIRECTIVE)
 
     # Orphan-chain hint is independent of compaction. It fires on every
     # SessionStart that detects a dropped a2a watch chain, because the

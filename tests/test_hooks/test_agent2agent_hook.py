@@ -930,28 +930,27 @@ class TestSessionStartOrphanWiring:
     def test_compact_path_with_orphan_appends_hint_to_directive(
         self, tmp_path, monkeypatch
     ):
-        """source=compact + orphan present + workflow_state unavailable
-        (MCP unreachable) -> falls through to fallback directive AND
-        appends the orphan hint to additionalContext (separated by blank line).
+        """source=compact + orphan present -> recovery directive AND the
+        orphan hint in additionalContext (separated by a blank line).
+
+        This used to mock ``_mcp_call`` to force a ``workflow_state_load``
+        failure and reach the fallback. That mock was the only thing making
+        the richer branch look reachable: the tool has no implementation, so
+        the call could only ever fail and the "fallback" was the sole path.
+        The branch is gone; the assertions on the emitted text are unchanged.
         """
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
-        # Force MCP failure so we hit the _fallback_directive branch.
-        # _mcp_call returns None when MCP is unreachable.
-        m_mcp = tripwire.mock("spellbook_hook:_mcp_call")
-        m_mcp.returns(None)
 
         missing_transcript = tmp_path / "dead.output"
         _seed_open_state(
             tmp_path, "sess-orphan-compact", name="alice",
             agent_id="agent-x", output_file=missing_transcript,
         )
-        with tripwire:
-            result = spellbook_hook._handle_session_start({
-                "session_id": "sess-orphan-compact",
-                "source": "compact",
-                "cwd": str(tmp_path),
-            })
-        m_mcp.assert_call(args=("workflow_state_load", IsInstance(dict)), kwargs={})
+        result = spellbook_hook._handle_session_start({
+            "session_id": "sess-orphan-compact",
+            "source": "compact",
+            "cwd": str(tmp_path),
+        })
         expected_hint = _expected_orphan_hint("alice", age_s=None, count=0)
         fallback_text = (
             "Session resumed after compaction. Workflow state could not "
@@ -965,21 +964,54 @@ class TestSessionStartOrphanWiring:
             }
         }
 
+    def test_compact_directive_is_emitted_when_cwd_is_missing(
+        self, tmp_path, monkeypatch
+    ):
+        """A compaction with no cwd still gets the directive.
+
+        The directive carries no per-project content, and a compaction with a
+        blank or absent cwd is exactly when the LLM most needs telling that
+        its context was truncated -- gating on cwd dropped the notice
+        precisely then.
+        """
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+
+        for payload in (
+            {"session_id": "s1", "source": "compact"},
+            {"session_id": "s2", "source": "compact", "cwd": ""},
+            {"session_id": "s3", "source": "compact", "cwd": "   "},
+        ):
+            result = spellbook_hook._handle_session_start(payload)
+            assert result is not None, payload
+            assert (
+                result["hookSpecificOutput"]["additionalContext"]
+                == spellbook_hook.POST_COMPACT_FALLBACK_DIRECTIVE
+            ), payload
+
+    def test_non_compact_source_emits_no_recovery_directive(
+        self, tmp_path, monkeypatch
+    ):
+        """The directive is specific to compaction; an ordinary startup must
+        not claim the context was truncated."""
+        monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
+
+        result = spellbook_hook._handle_session_start({
+            "session_id": "s4", "source": "startup", "cwd": str(tmp_path),
+        })
+
+        assert result is None
+
     def test_compact_path_without_orphan_unchanged(self, tmp_path, monkeypatch):
-        """source=compact + no orphan state -> existing fallback directive
+        """source=compact + no orphan state -> the recovery directive
         verbatim, no orphan hint appended.
         """
         monkeypatch.setenv("AGENT2AGENT_DIR", str(tmp_path))
-        m_mcp = tripwire.mock("spellbook_hook:_mcp_call")
-        m_mcp.returns(None)
 
-        with tripwire:
-            result = spellbook_hook._handle_session_start({
-                "session_id": "sess-noorphan-compact",
-                "source": "compact",
-                "cwd": str(tmp_path),
-            })
-        m_mcp.assert_call(args=("workflow_state_load", IsInstance(dict)), kwargs={})
+        result = spellbook_hook._handle_session_start({
+            "session_id": "sess-noorphan-compact",
+            "source": "compact",
+            "cwd": str(tmp_path),
+        })
         fallback_text = (
             "Session resumed after compaction. Workflow state could not "
             "be loaded. Re-read any planning documents, check your todo "
