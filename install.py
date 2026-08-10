@@ -1257,7 +1257,7 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                 elif p == "forgecode":
                     _post_notes.append("ForgeCode: Restart forge to load the spellbook MCP server")
                 elif p == "prime_agent":
-                    _post_notes.append("Prime Agent: Restart prime-agent to load skills. Use /reload in an interactive session.")
+                    _post_notes.append("Prime Agent: Restart prime-agent to load skills and rules. The rules extension at ~/.prime/agent/extensions/spellbook-rules.ts auto-injects rule modules into the system prompt at session start. Use /reload in an interactive session.")
                 elif p == "pi":
                     _post_notes.append("Pi: Restart to reload skills and prompts. Verify: /reload")
                 elif p == "goose":
