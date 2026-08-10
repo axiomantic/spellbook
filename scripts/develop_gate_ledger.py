@@ -58,11 +58,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sys
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_STATE_DIR = Path.home() / ".local" / "spellbook"
 DEFAULT_LEDGER_PATH = DEFAULT_STATE_DIR / "develop_gate_ledger.json"
@@ -94,22 +97,41 @@ def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def _deep_merge(base: Any, overlay: Any) -> Any:
+def _deep_merge(base: Any, overlay: Any, _at: str = "") -> Any:
     """Deep-merge ``overlay`` onto ``base`` per the ledger merge contract.
 
     - dict + dict: per-key merge.
     - scalar + scalar: overlay wins (replacement).
     - list + list: overlay wins (replacement; the ledger does not use lists).
-    - type mismatch: overlay wins (caller is asserting a new shape).
+    - type mismatch: overlay wins (caller is asserting a new shape), but a
+      dict being replaced by a non-dict is WARNED about first.
+
+    The warning covers the one mismatch that destroys structure rather than
+    a single value: collapsing ``ceremony: {...}`` to a scalar discards every
+    field under it at once, including ``locked_at``, whose whole purpose is to
+    be un-rewritable. Scalar-to-scalar replacement is the documented contract
+    and stays silent. The write still proceeds -- refusing it would strand a
+    ledger that a genuine shape change had already moved on from -- but it
+    stops being invisible, which is what makes the loss expensive.
     """
     if isinstance(base, dict) and isinstance(overlay, dict):
         merged = dict(base)
         for k, v in overlay.items():
+            where = f"{_at}.{k}" if _at else k
             if k in merged:
-                merged[k] = _deep_merge(merged[k], v)
+                merged[k] = _deep_merge(merged[k], v, where)
             else:
                 merged[k] = v
         return merged
+    if isinstance(base, dict) and not isinstance(overlay, dict):
+        logger.warning(
+            "develop_gate_ledger: replacing the object at %r with %s; "
+            "%d field(s) are discarded: %s",
+            _at or "<root>",
+            type(overlay).__name__,
+            len(base),
+            ", ".join(sorted(map(str, base))) or "(none)",
+        )
     return overlay
 
 
