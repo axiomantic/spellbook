@@ -112,4 +112,54 @@ develop in the active skill list IS the contract.
   thoroughness ends and report the partial state honestly.
 - This contract is durable across sessions and governs what happens AFTER the
   lock, on every develop invocation in every project.
+
+### Parallelism vs Ceremony (two independent fields, not one)
+
+`SESSION_PREFERENCES.parallelization` (asked in §0.4) and
+`develop_gate_ledger.ceremony` (asked in §0.8) are **two independent fields**.
+Changing one does NOT change the other. Specifically:
+
+- Picking `parallelization: "conservative"` (or `"sequential"`) only controls
+  dispatch count -- how many tasks run concurrently. It does NOT drop any
+  gate, change the review floor, or alter the ceremony.
+- Picking a lighter ceremony in §0.8 (`Customize` -> unselect a component)
+  changes WHICH gates run, not HOW MANY tasks dispatch at once.
+- An operator who says "switch to conservative" is asking for sequential
+  dispatch with the SAME ceremony still in force. The skill treats that as
+  a parallelism change only; the locked `ceremony.selected` is unchanged.
+
+The two are independent because they answer two different questions.
+Parallelism is "how much work in flight at once?"; ceremony is "what
+verification must each piece of work pass?" Asking the operator to
+re-derive ceremony from a parallelism preference would let time pressure
+quietly erode the review floor, which is exactly what the lock prevents.
+The skill reads parallelism from `SESSION_PREFERENCES` and ceremony from
+`develop_gate_ledger.ceremony` independently and never conflates the two.
+
+### Wave Discipline (the §24.6 check)
+
+If the plan you are implementing organizes tasks into waves (`Wave N:`
+headers or `W<n>-` row identifiers in the plan file), the develop skill
+records a §24.6 wave-discipline check for each wave before any
+"Wave X done" claim may be written. The check has three statuses:
+
+- `passed` -- every row assigned to the wave is in a closed state. The
+  `Wave X done` claim may be written.
+- `failed` -- at least one row assigned to the wave is still open. The
+  open-row identifiers are recorded; the `Wave X done` claim is REFUSED
+  until the rows are closed and the check is re-run.
+- `n_a` -- the plan has no wave structure (flat task list). Recorded so the
+  absence of the check is itself visible at review.
+
+The check is implemented in `scripts/develop_gate_ledger.py` and is the
+only path that may write the entry; hand-writing the JSON is a full
+overwrite that clobbers sibling fields written by other develop writes.
+The Python module refuses `status=failed` without an `open_rows` list so
+a false pass (failed status with no rows to fix) cannot be written by
+accident. Refusing a wave-done claim is the only enforcement; if the
+skill does not refuse, the wave-done claim is silently broken work the
+next phase will inherit. The motivating failure mode is documented in
+the nmg2-emulator handoff (2026-08-10): "Wave 3a done" markings made
+without §24.6 verification propagated across handoffs because no later
+step re-checked.
 </CRITICAL>

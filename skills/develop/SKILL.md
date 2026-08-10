@@ -1048,29 +1048,21 @@ gate-ledger entries that must exist before the next phase can begin.
    (e.g., for wave `3a`, every row with a `W3a-` or `Wave 3a` prefix).
 4. Verify each row is in a CLOSED state: it carries `✓`, `[x]`, `done`,
    `closed`, or the equivalent terminal marker the plan uses.
-5. Record the result in `develop_gate_ledger.waves.<wave_id>`:
+5. Record the result in `develop_gate_ledger.waves.<wave_id>.section_24_6_check`.
 
-   ```json
-   {
-     "section_24_6_check": {
-       "status": "passed",
-       "open_rows": [],
-       "timestamp": "..."
-     }
-   }
-   ```
+   The ledger lives at `$SPELLBOOK_DEV_DIR/develop_gate_ledger.json`
+   (default `~/.local/spellbook/develop_gate_ledger.json`). Writes go
+   through `scripts/develop_gate_ledger.py` so the deep-merge and
+   refusal semantics match the rest of the ledger contract -- DO NOT
+   hand-write the file with shell `cat > ledger.json`, because that
+   is a full overwrite and will clobber sibling fields written by
+   other develop writes.
 
-   OR on failure:
-
-   ```json
-   {
-     "section_24_6_check": {
-       "status": "failed",
-       "open_rows": ["W3a-2", "W3a-5"],
-       "timestamp": "..."
-     }
-   }
-   ```
+   The CLI for the wave check is `python3 scripts/develop_gate_ledger.py
+   wave-discipline <wave_id> --status {passed|failed|n_a} [--open-rows W3a-2,W3a-5]`.
+   The Python module refuses `status=failed` without `--open-rows` so
+   a "failed" entry with an empty open-rows list (a false pass) cannot
+   be written by accident.
 
 6. **If `status` is `failed`, REFUSE the wave-done claim.** Report the open
    rows and the reason the check failed. Do NOT mark the wave done, do
@@ -1434,8 +1426,34 @@ develop_gate_ledger: {
     declined: string;           // newline-joined optional gates chosen to SKIP (recorded, not absent)
     promotions: string;         // newline-joined "{gate} <- {reason} ({ISO ts})" escalation record
   };
+  waves: {                      // §24.6 wave-discipline check records, keyed by wave id
+    [wave_id: string]: {
+      section_24_6_check: {
+        status: "passed" | "failed" | "n_a";
+        open_rows?: string[];   // present when status=failed, the W<n>- ids that were still open
+        timestamp?: string;     // ISO 8601; the develop skill writes it on each entry
+      };
+    };
+  };
 }
 ```
+
+**Writes go through `scripts/develop_gate_ledger.py`.** The Python
+implementation is the only path that respects the merge contract --
+it deep-merges, refuses to rewrite `ceremony.locked_at`, and refuses
+`section_24_6_check.status=failed` without open rows. Hand-writing the
+JSON is a full overwrite and will clobber sibling keys written by
+other develop writes or by the spellbook hooks' `workflow_state` row;
+do not do it. The CLI surface is intentionally narrow:
+
+- `python3 scripts/develop_gate_ledger.py show [--field ceremony.locked_at]`
+- `python3 scripts/develop_gate_ledger.py set <field> <value>` (top-level or `ceremony.*`)
+- `python3 scripts/develop_gate_ledger.py wave-discipline <wave_id> --status {passed|failed|n_a} [--open-rows W3a-2,W3a-5] [--timestamp ISO]`
+
+When the skill tells you to "write the ledger", it means call this
+CLI, not write the JSON yourself. The contract is enforced in Python
+because it is enforced in Python; the LLM-side discipline is just
+the trigger.
 
 **Every `ceremony` field is a newline-joined SCALAR, for the same CRIT-1 reason as
 `remaining_gates`: `_deep_merge` APPENDS lists but REPLACES scalars, so a list-valued
