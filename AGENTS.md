@@ -483,6 +483,37 @@ This catches any real I/O that escapes the sandbox during tests. Use `@pytest.ma
 - Automatic PR reviewer: `gemini-code-assist` (external GitHub App; reviews PRs automatically; no in-repo configuration).
 - On-demand reviewer: `axiomantic-momus[bot]` (momus). Trigger by commenting `/ai-review` on a PR, or manually via `workflow_dispatch` of the Momus workflow. Does not auto-review on PR open.
 
+
+
+## Module Cycle Prevention
+
+Module import cycles are hard to diagnose and break. They typically surface as cryptic compile errors like "undeclared identifier" or "type mismatch" when one side of the cycle has been only partially processed. Add findings as you encounter them.
+
+### Symptom Patterns (from the 2026-08-08 mcf5307 Nim cycle)
+
+- `imported and not used: 'X'` warning + `undeclared identifier: 'X'` error in a file that DOES use X
+- `Error: undeclared field: ''cint' for type system.string` — typed literal parsed as field access on string (cascading parse error)
+- `Error: type mismatch` at the call site of a function defined in the other module of the cycle
+- `Error: invalid indentation` or `attempting to call undeclared routine: '<Error>'` after attempting to break the cycle with forward declarations
+
+### Standard Fixes (in order of preference)
+
+1. **Third types module.** If module A defines types that B needs, and B defines functions that A calls, put the shared types in a third module C. Both A and B import from C. No cycle.
+2. **Function pointer.** A declares a global `proc var` slot. B sets it at module load time. A calls through the pointer. No cycle.
+3. **Forward declaration.** In Nim: `type Foo* = ref object` declares the type without fields. Sufficient if B only passes the type around and doesn't access fields.
+4. **Mid-file import.** In Nim, putting `import B` after A's type definitions can work IF the cycle is truly resolvable. Often it isn't.
+5. **Duplicated type declarations.** Last resort. Define the same `ref object` in both files with identical fields. Works but duplicates maintenance burden.
+
+### Prevention
+
+- When designing a new module pair, draw the dependency graph BEFORE writing code. If two modules need each other's definitions, that's a smell.
+- If a cycle is unavoidable, design the shared surface FIRST. Put the types in a third module before writing any functions that cross the cycle.
+- In Nim, if you must have a mid-file import, verify the imported symbols are used by functions DEFINED AFTER the import. Imports don't reach backward through the function-definition order.
+
+### 2026-08-08 mcf5307 (CPU-7+ WIP)
+
+The `decode.nim` <-> `move.nim` cycle blocked the build. The WIP commit at `10f211e` documents the issue. To unblock CPU-7/8/9/10: extract `MCF5307Ctx`, `Decoded`, `Operation`, `EA` from `decode.nim` into a new `mcf5307/decode_types.nim` (or rename `decode.nim` to split types from dispatch), then have both `decode.nim` and the group modules import from it. No cycle. Once done, the conformance runner's move/alu/logic/control tests will go green.
+
 ## Pre-Commit Checklist
 
 Before any commit, verify:
