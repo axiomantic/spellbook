@@ -597,6 +597,10 @@ Signs that you are violating this rule:
 
 An artifact repaired in round N stays UNJUDGED until an independent dispatch
 judges it. Record the fixer's report as a claim, never as a result.
+
+**Relay confidence verbatim.** Carry a subagent's hedges upward with its finding.
+"Medium-high confidence, worth confirming" must not become "the review found X."
+The orchestrator is where that qualifier gets lost, because it is summarising.
 </CRITICAL>
 
 ---
