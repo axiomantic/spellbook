@@ -26,11 +26,15 @@ import develop_gate_ledger as ledger
 
 @pytest.fixture
 def tmp_ledger(tmp_path, monkeypatch):
-    """Point the ledger at a temp file so tests do not touch the real one."""
-    target = tmp_path / "develop_gate_ledger.json"
-    monkeypatch.setattr(ledger, "DEFAULT_LEDGER_PATH", target)
-    monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
-    return target
+    """Point the ledger at a temp file so tests do not touch the real one.
+
+    ``ledger_path()`` already honors ``$SPELLBOOK_DEV_DIR``, so setting
+    the environment variable is enough -- no attribute patching. The
+    same variable also redirects the CLI subprocess tests below, which
+    is why they get the real path rather than a private one.
+    """
+    monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(tmp_path))
+    return tmp_path / "develop_gate_ledger.json"
 
 
 # ---- read / write --------------------------------------------------------
@@ -198,16 +202,15 @@ def _run_cli(*args: str) -> subprocess.CompletedProcess:
     )
 
 
-def test_cli_show_empty(tmp_ledger, monkeypatch):
-    # Point CLI at the same temp file by setting the env var
-    monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(tmp_ledger.parent))
+@pytest.mark.allow("subprocess")
+def test_cli_show_empty(tmp_ledger):
     proc = _run_cli("show")
     assert proc.returncode == 0
     assert proc.stdout.strip() == "{}"
 
 
-def test_cli_set_top_level(tmp_ledger, monkeypatch):
-    monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(tmp_ledger.parent))
+@pytest.mark.allow("subprocess")
+def test_cli_set_top_level(tmp_ledger):
     proc = _run_cli("set", "current_phase", "4")
     assert proc.returncode == 0
     assert "set current_phase" in proc.stdout
@@ -215,23 +218,54 @@ def test_cli_set_top_level(tmp_ledger, monkeypatch):
     assert data["current_phase"] == "4"
 
 
-def test_cli_set_ceremony_field(tmp_ledger, monkeypatch):
-    monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(tmp_ledger.parent))
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_field(tmp_ledger):
     proc = _run_cli("set", "ceremony.selected", "code review")
     assert proc.returncode == 0
     data = json.loads(tmp_ledger.read_text())
     assert data["ceremony"]["selected"] == "code review"
 
 
-def test_cli_wave_discipline_passed_claimable(tmp_ledger, monkeypatch):
-    monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(tmp_ledger.parent))
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_unknown_field_errors(tmp_ledger):
+    proc = _run_cli("set", "ceremony.bogus_field", "x")
+    assert proc.returncode == 2
+    assert "unknown ceremony field" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_locked_at_first_time_succeeds(tmp_ledger):
+    proc = _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
+    assert proc.returncode == 0
+    data = json.loads(tmp_ledger.read_text())
+    assert data["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_locked_at_rewrite_refused(tmp_ledger):
+    """The CLI must not be a hole through the lock.
+
+    ``set ceremony.locked_at`` goes through ``set_ceremony_field``, so
+    the same refusal the library enforces applies here -- and the
+    on-disk value stays at the original lock.
+    """
+    _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
+    proc = _run_cli("set", "ceremony.locked_at", "2026-08-11T09:00Z")
+    assert proc.returncode == 1
+    assert "refusing to rewrite" in proc.stderr
+    data = json.loads(tmp_ledger.read_text())
+    assert data["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_wave_discipline_passed_claimable(tmp_ledger):
     proc = _run_cli("wave-discipline", "3a", "--status", "passed")
     assert proc.returncode == 0
     assert "ALLOWED" in proc.stdout
 
 
-def test_cli_wave_discipline_failed_refused(tmp_ledger, monkeypatch):
-    monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(tmp_ledger.parent))
+@pytest.mark.allow("subprocess")
+def test_cli_wave_discipline_failed_refused(tmp_ledger):
     proc = _run_cli(
         "wave-discipline", "3a", "--status", "failed", "--open-rows", "W3a-2"
     )
@@ -239,8 +273,8 @@ def test_cli_wave_discipline_failed_refused(tmp_ledger, monkeypatch):
     assert "REFUSED" in proc.stdout
 
 
-def test_cli_wave_discipline_failed_without_open_rows_errors(tmp_ledger, monkeypatch):
-    monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(tmp_ledger.parent))
+@pytest.mark.allow("subprocess")
+def test_cli_wave_discipline_failed_without_open_rows_errors(tmp_ledger):
     proc = _run_cli("wave-discipline", "3a", "--status", "failed")
     assert proc.returncode == 2
     assert "requires at least one open row" in proc.stderr

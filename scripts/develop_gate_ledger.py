@@ -94,16 +94,6 @@ def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def _is_scalar(v: Any) -> bool:
-    """A scalar in ledger terms: not a dict, not a list.
-
-    Strings, ints, bools, None are scalars. The skill stores
-    newline-joined SCALAR strings for things like ``remaining_gates``;
-    a list would accumulate forever under merge semantics.
-    """
-    return isinstance(v, (str, int, bool, float, type(None)))
-
-
 def _deep_merge(base: Any, overlay: Any) -> Any:
     """Deep-merge ``overlay`` onto ``base`` per the ledger merge contract.
 
@@ -323,7 +313,12 @@ def _cmd_set(args: argparse.Namespace) -> int:
                     file=sys.stderr,
                 )
                 return 2
-            write_ledger({"ceremony": {name: args.value}}, path=Path(args.path) if args.path else None)
+            # Route through set_ceremony_field, not write_ledger: the
+            # locked_at rewrite guard lives there, and a CLI that wrote
+            # directly would be a hole straight through the lock.
+            set_ceremony_field(
+                name, args.value, path=Path(args.path) if args.path else None
+            )
         else:
             write_ledger({args.field: args.value}, path=Path(args.path) if args.path else None)
     except LedgerError as exc:
