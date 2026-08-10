@@ -25,6 +25,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Use via `spellbook install --platforms goose` or `--platforms claude_code,goose`.
   - 13 integration tests in `tests/integration/test_goose_installer.py`.
 
+- **Prime Agent rules delivery via session-start extension.** Prime Agent
+  now receives every selected rule module as auto-loaded system-prompt
+  content rather than as installable skills the agent has to remember to
+  fetch. The installer writes two things on every install:
+  - One symlink per selected rule module at
+    `~/.prime/agent/rules/XX-spellbook-<id>.md`, honoring the same
+    `rules.module.<id>` selection every other platform uses (mandatory
+    modules always installed; preference modules gated on the user's
+    recorded `true` / `false`; declining a module removes its symlink on
+    the next install).
+  - A TypeScript extension at
+    `~/.prime/agent/extensions/spellbook-rules.ts` (symlinked into
+    `extensions/prime-agent/spellbook-rules.ts`) that reads the rule
+    files at `session_start` and inlines their bodies into the system
+    prompt at `before_agent_start`. A small per-rule header
+    (`## <id> -- <name>`) keeps the agent oriented if individual rules
+    are referenced later. A 80 KiB safety cap falls back to a listing
+    the agent can fetch on demand if the total ruleset exceeds it.
+  The user's `~/.prime/agent/AGENTS.md` is never touched. Prime Agent
+  has no native `rules/` directory walker and its documented
+  `SYSTEM.md` / `APPEND_SYSTEM.md` mechanisms are not yet implemented
+  in `packages/coding-agent/src/core/system-prompt.ts`, so the
+  extension is the working delivery path. 9 integration tests in
+  `tests/integration/test_prime_agent_rules_install.py`.
+
 ### Changed
 
 - `installer/config.py` `SUPPORTED_PLATFORMS` and `PLATFORM_CONFIG` extended

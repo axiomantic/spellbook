@@ -130,8 +130,17 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         "config_dir_env": "PRIME_AGENT_CONFIG_DIR",
         "default_config_dir": Path.home() / ".prime" / "agent",
         "cli_flag_name": "prime-agent-config-dir",
-        "context_file": None,  # Uses skills for behavioral guidance, not context files
+        # Prime Agent auto-loads AGENTS.md from the agent config dir at
+        # session start (Prime Agent docs/usage.md "Context Files"; the
+        # underlying loadContextFileFromDir + buildSystemPrompt live in
+        # packages/coding-agent/src/core/{resource-loader,system-prompt}.ts).
+        # That file belongs to the user, so spellbook does NOT write to
+        # it -- behavioral guidance is delivered through the rules/
+        # subdirectory and the spellbook-rules extension instead.
+        "context_file": None,
         "skills_subdir": "skills",
+        "rules_subdir": "rules",
+        "extensions_subdir": "extensions",
         "mcp_supported": False,  # prime-agent has no MCP client
     },
     "goose": {
