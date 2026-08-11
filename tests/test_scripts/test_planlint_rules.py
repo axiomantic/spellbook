@@ -11,7 +11,7 @@ from pathlib import Path
 
 from spellbook.planlint import registry
 from spellbook.planlint.document import PlanDocument
-from spellbook.planlint.finding import ERROR, Finding
+from spellbook.planlint.finding import ERROR, Finding, LintResult
 from spellbook.planlint.rules import structure
 
 FIXTURES = Path(__file__).parent / "fixtures" / "planlint"
@@ -857,13 +857,53 @@ def test_files_rule_reports_no_input_when_no_files_entries_are_examined(tmp_path
     doc = PlanDocument.from_text(text)
     ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
     result = files.run(ctx)
-    assert result.failed is True
-    hits = [f for f in result.findings if f.rule == "no-input"]
-    assert len(hits) == 1
-    assert hits[0] == Finding(
-        rule="no-input",
-        message="the files lint examined 0 Files: entries",
-        severity=ERROR,
+    assert result == LintResult(
+        name="files",
+        findings=[
+            Finding(
+                rule="no-input",
+                message="the files lint examined 0 Files: entries",
+                severity=ERROR,
+            )
+        ],
+        examined=0,
+        examined_label="Files: entries",
+    )
+
+
+def test_files_rule_counts_only_entries_that_pass_the_path_guards(tmp_path):
+    """`examined` must count an entry only after the absolute-path and
+    traversal guards let it through — never before. A plan whose ONLY
+    `Files:` entries are one absolute path and one traversal path (both
+    guarded out, both `Modify:` so `create-path-exists`'s guard tests above
+    do not already cover this) must land at `examined == 0` and trip the
+    same `guard_no_input` `no-input` finding as a plan with zero `Files:`
+    bullets at all — proving the counter sits after the guards, not before
+    them. A regression that moves `examined += 1` back above the guards
+    would instead report `examined == 2` and no `no-input` finding here."""
+    from spellbook.planlint.rules import files
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n**Files:**\n"
+        "- Modify: `/etc/passwd`\n"
+        "- Modify: `../sibling_target.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
+    result = files.run(ctx)
+    assert result == LintResult(
+        name="files",
+        findings=[
+            Finding(
+                rule="no-input",
+                message="the files lint examined 0 Files: entries",
+                severity=ERROR,
+            )
+        ],
+        examined=0,
+        examined_label="Files: entries",
     )
 
 
