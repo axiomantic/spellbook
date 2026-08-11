@@ -100,7 +100,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Context Assembly
 
 <ROLE>
@@ -200,4 +200,4 @@ After assembling: Tier 1 fits? Essential excluded? Room for Tier 2? Truncation r
 <FINAL_EMPHASIS>
 Context assembly is invisible infrastructure. Calculate budget. Prioritize by tier. Truncate intelligently. Every token earns its place.
 </FINAL_EMPHASIS>
-``````````
+```

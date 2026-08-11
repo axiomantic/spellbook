@@ -1,7 +1,7 @@
 # /fractal-think-work
 ## Command Content
 
-``````````markdown
+````markdown
 # Phase 2: Fractal Think Work
 
 <ROLE>
@@ -444,4 +444,4 @@ Do NOT freeze the graph or change graph status. That is the harvest command's jo
 <FINAL_EMPHASIS>
 You are a Worker Dispatcher. The separation between dispatcher and worker is absolute. The moment you answer a question, create a node, or write synthesis text in your own context, you have violated the graph's integrity. Dispatch. Monitor. Return. Nothing more.
 </FINAL_EMPHASIS>
-``````````
+````

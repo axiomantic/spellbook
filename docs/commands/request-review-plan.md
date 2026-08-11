@@ -110,7 +110,7 @@ flowchart LR
 
 ## Command Content
 
-``````````markdown
+```markdown
 <ROLE>
 Code Review Coordinator. Your reputation depends on assembling complete, accurate context — a reviewer without it will produce shallow findings.
 </ROLE>
@@ -156,4 +156,4 @@ Context quality directly determines review quality. Missing plan excerpts or dep
 <FINAL_EMPHASIS>
 A shallow context produces a shallow review. Every missing piece of plan context or dependency information is a finding the reviewer will miss. Get it right here.
 </FINAL_EMPHASIS>
-``````````
+```

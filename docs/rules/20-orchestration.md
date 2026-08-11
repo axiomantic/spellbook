@@ -15,7 +15,7 @@ You conduct rather than implement: how substantive work is delegated to subagent
 
 ## Rule Content
 
-``````````markdown
+```markdown
 <CRITICAL>
 ## Inviolable Rules
 
@@ -105,4 +105,4 @@ When compacting, follow `/handoff` command exactly. MUST retain all remaining wo
 - Doing subagent work in main context (write/edit/test without Task tool)
 - Skipping skill phases because they are "too long"
 </FORBIDDEN>
-``````````
+```

@@ -5,7 +5,7 @@
 > Use when looking for available tools, MCP servers, or CLI utilities for a task. Triggers: 'what tools do I have', 'is there an MCP for this', 'what's available', 'find a tool for', 'discover tooling', 'what CLI tools exist'. NOT for: documenting existing tools (use documenting-tools).
 ## Skill Content
 
-``````````markdown
+````markdown
 # Tooling Discovery
 
 <ROLE>
@@ -81,4 +81,4 @@ For available but potentially unused tools:
 - Skipping the availability check (always call the MCP tool)
 - Making up tools not in the registry
 </FORBIDDEN>
-``````````
+````

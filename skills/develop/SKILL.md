@@ -597,6 +597,10 @@ Signs that you are violating this rule:
 
 An artifact repaired in round N stays UNJUDGED until an independent dispatch
 judges it. Record the fixer's report as a claim, never as a result.
+
+**Relay confidence verbatim.** Carry a subagent's hedges upward with its finding.
+"Medium-high confidence, worth confirming" must not become "the review found X."
+The orchestrator is where that qualifier gets lost, because it is summarising.
 </CRITICAL>
 
 ---
@@ -1028,6 +1032,69 @@ Direct/Lightweight Path (zero flags — develop STAYS RESIDENT, never exits):
 
 ---
 
+### Wave Discipline (the §24.6 check)
+
+If the plan you are implementing organizes tasks into waves (look for `Wave N:`
+headers or `W<n>-` row identifiers in the plan file), you MUST run the
+wave-discipline check before declaring any wave complete. The same gate that
+rejects a "task done" claim without `code_review: passed` also rejects a
+"wave done" claim without `section_24_6_check: passed` — both are
+gate-ledger entries that must exist before the next phase can begin.
+
+**Procedure before any "Wave X done" claim:**
+
+1. Open the plan file (the one your Phase 3 plan review approved).
+2. Find the wave-discipline section. It is commonly labeled `§24.6` or
+   `Wave discipline` or `Wave-completion rules`; in plan files that do not
+   name the section, the check defaults to "every row whose identifier
+   carries the wave's prefix must be in a closed state."
+3. For the wave being marked done, enumerate every row assigned to it
+   (e.g., for wave `3a`, every row with a `W3a-` or `Wave 3a` prefix).
+4. Verify each row is in a CLOSED state: it carries `✓`, `[x]`, `done`,
+   `closed`, or the equivalent terminal marker the plan uses.
+5. Record the result in `develop_gate_ledger.waves.<wave_id>.section_24_6_check`.
+
+   The ledger lives at `$SPELLBOOK_DEV_DIR/develop_gate_ledger.json`
+   (default `~/.local/spellbook/develop_gate_ledger.json`). Writes go
+   through `scripts/develop_gate_ledger.py` so the deep-merge and
+   refusal semantics match the rest of the ledger contract -- DO NOT
+   hand-write the file with shell `cat > ledger.json`, because that
+   is a full overwrite and will clobber sibling fields written by
+   other develop writes.
+
+   The CLI for the wave check is `python3 scripts/develop_gate_ledger.py
+   wave-discipline <wave_id> --status {passed|failed|n_a} [--open-rows W3a-2,W3a-5]`.
+   The Python module refuses `status=failed` without `--open-rows` so
+   a "failed" entry with an empty open-rows list (a false pass) cannot
+   be written by accident.
+
+6. **If `status` is `failed`, REFUSE the wave-done claim.** Report the open
+   rows and the reason the check failed. Do NOT mark the wave done, do
+   NOT proceed to Phase 5, do NOT use `finishing-a-development-branch`.
+   The two honest answers are: close the open rows and re-run the check,
+   or abort the run with a plain explanation.
+
+7. **If `status` is `passed`, the wave-done claim may be written.** Record
+   the wave completion in `develop_gate_ledger.waves.<wave_id>.completed_at`.
+
+**Why this is not a check you can delegate or skip.** The wave-discipline
+check is the only gate that says "this wave's work is genuinely finished"
+rather than "this wave's tasks that I tracked are done." A task tracker
+loses rows when subagent reports don't propagate; the plan file does not.
+A wave that closes with open rows is silently broken work the next phase
+will inherit. The check exists because the nmg2-emulator project lost
+material progress to exactly this class of error — "Wave 3a done"
+markings made without §24.6 verification, then propagated across handoffs
+because no later step re-checked.
+
+**If the plan has no wave structure** (single flat list of tasks, no
+`Wave N:` headers, no `W<n>-` row prefixes), this check is N/A — record
+`section_24_6_check: { "status": "n_a", "reason": "plan has no wave
+structure" }` in `develop_gate_ledger.waves` (with `<wave_id>` being the
+literal string `"plan"`) so the absence of the check is itself visible.
+
+---
+
 ## Session State Data Structures
 
 **Mandatory state structures. Subagents receive these as context. All fields required.**
@@ -1363,8 +1430,35 @@ develop_gate_ledger: {
     declined: string;           // newline-joined optional gates chosen to SKIP (recorded, not absent)
     promotions: string;         // newline-joined "{gate} <- {reason} ({ISO ts})" escalation record
   };
+  waves: {                      // §24.6 wave-discipline check records, keyed by wave id
+    [wave_id: string]: {
+      section_24_6_check: {
+        status: "passed" | "failed" | "n_a";
+        open_rows?: string[];   // present when status=failed, the W<n>- ids that were still open
+        timestamp?: string;     // ISO 8601; the develop skill writes it on each entry
+        reason?: string;        // free-form context; records WHY on status=n_a
+      };
+    };
+  };
 }
 ```
+
+**Writes go through `scripts/develop_gate_ledger.py`.** The Python
+implementation is the only path that respects the merge contract --
+it deep-merges, refuses to rewrite `ceremony.locked_at`, and refuses
+`section_24_6_check.status=failed` without open rows. Hand-writing the
+JSON is a full overwrite and will clobber sibling keys written by
+other develop writes or by the spellbook hooks' `workflow_state` row;
+do not do it. The CLI surface is intentionally narrow:
+
+- `python3 scripts/develop_gate_ledger.py show [--field ceremony.locked_at]`
+- `python3 scripts/develop_gate_ledger.py set <field> <value>` (top-level or `ceremony.*`)
+- `python3 scripts/develop_gate_ledger.py wave-discipline <wave_id> --status {passed|failed|n_a} [--open-rows W3a-2,W3a-5] [--timestamp ISO]`
+
+When the skill tells you to "write the ledger", it means call this
+CLI, not write the JSON yourself. The contract is enforced in Python
+because it is enforced in Python; the LLM-side discipline is just
+the trigger.
 
 **Every `ceremony` field is a newline-joined SCALAR, for the same CRIT-1 reason as
 `remaining_gates`: `_deep_merge` APPENDS lists but REPLACES scalars, so a list-valued

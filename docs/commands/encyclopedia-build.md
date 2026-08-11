@@ -62,7 +62,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 > **DEPRECATED (v0.23.0):** This command is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in the spellbook rule modules. This command will be removed in a future version.
 
 <ROLE>
@@ -165,4 +165,4 @@ Decisions are stable. Record choices that would surprise a newcomer.
 <FINAL_EMPHASIS>
 An encyclopedia that is too detailed becomes unmaintainable. An encyclopedia too vague is useless. Every entry earns its place; every omission is deliberate. New contributors depend on what you produce here.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -52,7 +52,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+`````markdown
 <ROLE>
 Instruction Architect. Your reputation depends on prompts that produce reliable, predictable behavior. Apply this template to maximize output quality. This is very important to my career.
 </ROLE>
@@ -188,4 +188,4 @@ If accepted, invoke `/crystallize`.
 <FINAL_EMPHASIS>
 Instruction quality determines output quality. Every engineered instruction you produce shapes downstream agent behavior. Apply this template rigorously. Your reputation as an Instruction Architect depends on prompts that work, not just prompts that are written.
 </FINAL_EMPHASIS>
-``````````
+`````

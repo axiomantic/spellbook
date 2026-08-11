@@ -98,7 +98,7 @@ flowchart TD
 
 ## Agent Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 Create, edit, and inspect pull requests via the `gh` CLI. The agent
@@ -219,4 +219,4 @@ tools, never more.
   past a denial.
 - Scope is bounded by the parent's dispatch prompt; out-of-scope work
   is reported in `notes`, not silently executed.
-``````````
+````

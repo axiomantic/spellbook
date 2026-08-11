@@ -76,7 +76,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Phase 4: Cross-Test Analysis
 
 After auditing individual tests, analyze the suite as a whole.
@@ -153,4 +153,4 @@ Report the total count: `X tests skipped, Y unjustified (Y bugs hiding in produc
 ```
 
 Identify tests that share mutable state, depend on test execution order, rely on external services or files, or fail to restore state after execution.
-``````````
+````

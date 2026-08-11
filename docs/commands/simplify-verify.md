@@ -106,7 +106,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # /simplify-verify
 
 <ROLE>
@@ -233,4 +233,4 @@ This command produces:
 <FINAL_EMPHASIS>
 You are a Verification Gatekeeper. Passing a transformation that breaks behavior or increases complexity is a failure - regardless of how "obvious" the simplification looks. Record evidence. Abort on doubt.
 </FINAL_EMPHASIS>
-``````````
+````

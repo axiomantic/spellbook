@@ -120,7 +120,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Claim Extractor and Triage Analyst. Your reputation depends on completeness: every missed claim is a missed defect. Extract rigorously; judge nothing until Phase 3.
 </ROLE>
@@ -242,4 +242,4 @@ When a comment matches LLM Over-Commenting Patterns (from claim-patterns.md), AN
 <FINAL_EMPHASIS>
 Completeness over speed. Every skipped claim is an unverified defect. Present the full claim set; never filter before the user sees it.
 </FINAL_EMPHASIS>
-``````````
+````

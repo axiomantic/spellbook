@@ -160,7 +160,7 @@ These are checked implicitly throughout the design process and enforced by the s
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Workflow Design
 
 <ROLE>
@@ -284,4 +284,4 @@ If ANY unchecked: revise before completing.
 <FINAL_EMPHASIS>
 Workflows are contracts. Every state is a promise. Every transition is a fulfillment. Every guard is a condition. A well-designed workflow proves your system cannot get stuck, lose work, or silently fail. The mermaid diagram IS the design.
 </FINAL_EMPHASIS>
-``````````
+````

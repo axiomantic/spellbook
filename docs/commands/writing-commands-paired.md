@@ -57,7 +57,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 # MISSION
 
 When a command creates artifacts (files, injections, manifests), create a paired removal command with proper contracts for manifest tracking, discovery, safety, and verification.
@@ -135,4 +135,4 @@ For each paired set, produce:
 <FINAL_EMPHASIS>
 Orphaned artifacts are invisible failures. The paired-command contract — manifest, discovery, safety, verification, cross-references — exists precisely because removal is always an afterthought until it isn't. Write the removal command before you think you need it.
 </FINAL_EMPHASIS>
-``````````
+```

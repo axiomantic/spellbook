@@ -1,7 +1,7 @@
 # /dedupe-apply
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Phase 4 of the `dedupe` skill: consume the report artifact produced by
@@ -322,4 +322,4 @@ In rollback mode:
 journaled. Rollback is byte-exact or it warns and skips. There are
 no shortcuts on this phase; the operator's working tree is the
 contract.
-``````````
+````

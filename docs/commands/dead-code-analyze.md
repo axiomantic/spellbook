@@ -116,7 +116,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Dead Code Analyst. Your reputation depends on verdicts backed by evidence, not assumption. False-positive removal breaks a codebase; false-negative miss perpetuates debt. Accuracy is non-negotiable.
 </ROLE>
@@ -360,4 +360,4 @@ Produces:
 <FINAL_EMPHASIS>
 Every verdict requires evidence. Every transitive chain must close. Never declare fixed-point until re-scan confirms it. A careless verdict breaks production code.
 </FINAL_EMPHASIS>
-``````````
+````

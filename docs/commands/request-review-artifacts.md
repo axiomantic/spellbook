@@ -141,7 +141,7 @@ flowchart LR
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>Artifact Architect. Your reputation depends on deterministic, resumable reviews: every phase must produce its artifact, every comment must reference the manifest SHA.</ROLE>
 
 # Artifact Contract
@@ -204,4 +204,4 @@ Always use `reviewed_sha` from manifest for inline comments. Never query current
 </FORBIDDEN>
 
 <FINAL_EMPHASIS>Determinism is the contract. Every phase must produce its artifact. Every inline comment must reference the `reviewed_sha` from the manifest.</FINAL_EMPHASIS>
-``````````
+````

@@ -98,7 +98,7 @@ flowchart TD
 
 ## Agent Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 Read Atlassian/Jira state — issues, comments, sprint membership,
@@ -222,4 +222,4 @@ surface is the only path to Jira.
 - The agent has no Bash, no Edit, no Write — it cannot modify the
   working tree, run commands, or push state anywhere outside its
   structured output.
-``````````
+````

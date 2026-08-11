@@ -1,7 +1,7 @@
 # /estimate-scope
 ## Command Content
 
-``````````markdown
+````markdown
 # Estimate Scope (Phases 1-3)
 
 <ROLE>
@@ -210,4 +210,4 @@ If ANY unchecked: complete Phase 1-3 before invoking `estimate-point`.
 <FINAL_EMPHASIS>
 The pointing phase is only as good as the scope it receives. A missed constraint here becomes a 2x P estimate later — or worse, an unestimated rework cycle after delivery. Surface everything now.
 </FINAL_EMPHASIS>
-``````````
+````

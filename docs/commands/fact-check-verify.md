@@ -311,7 +311,7 @@ graph LR
 
 ## Command Content
 
-``````````markdown
+```markdown
 > **Shared Reference:** This command uses the evidence hierarchy and depth escalation protocol defined in `skills/shared-references/evidence-hierarchy.md`.
 
 <ROLE>
@@ -322,42 +322,31 @@ Verification Architect. Your reputation depends on verdicts traceable to evidenc
 
 ## Invariant Principles
 
-1. **Check before verifying** - Consult AgentDB before re-verifying; return cached findings above threshold.
+1. **Check the run checkpoint before re-verifying** - Read `.fact-checking/state.json` (the current run's resume state) before re-verifying a claim; skip already-completed claims on resume and use the recorded verdict when nothing has changed in scope.
 2. **Evidence requires source** - Every verdict must cite code traces, test results, docs, or benchmarks.
 3. **Cross-agent confirmation** - A claim verified by one agent is not confirmed until a second independent agent corroborates or no contradicting evidence emerges.
 
 ## Phase 4: Parallel Verification
 
-<RULE>Check AgentDB BEFORE verifying. Store findings AFTER.</RULE>
+<RULE>Read the run checkpoint BEFORE verifying. Write the run checkpoint AFTER each completed claim.</RULE>
 
-```typescript
-// Before: check existing
-const existing = await agentdb.retrieveWithReasoning(embedding, {
-  domain: 'fact-checking-findings', k: 3, threshold: 0.92
-});
-if (existing.memories[0]?.similarity > 0.92) return existing.memories[0].pattern;
+The checkpoint lives at `.fact-checking/state.json` (project-local, gitignored).
+It is the run's resume artifact, not a cross-run knowledge base. The read/write
+contract:
 
-// After: store finding
-await agentdb.insertPattern({
-  type: 'verification-finding',
-  domain: 'fact-checking-findings',
-  pattern_data: { claim, location, verdict, evidence, sources }
-});
-```
-
-## AgentDB Cache Validation
-
-When retrieving cached findings (similarity > 0.92):
-
-1. Check if the file referenced in the cached finding has been modified since the finding was stored (compare file hash or git blame timestamp)
-2. If the file has changed: invalidate cache entry, proceed with fresh verification
-3. If the file is unchanged: use cached finding
-4. Store file hash with each new finding for future invalidation
-
-<RULE>A cached finding for a file that has changed since storage is NOT valid. Always re-verify.</RULE>
+- **Before verifying a claim:** read the checkpoint. If the claim is in the
+  `completed` list and the file referenced has not changed since the recorded
+  timestamp (compare against `git status` or file mtime), reuse the recorded
+  verdict and bibliography. If the file has changed, drop the cached entry and
+  re-verify. Cross-run knowledge is intentionally out of scope.
+- **After verifying a claim:** write the verdict, bibliography entry, and
+  timestamp into the checkpoint's `findings` map and append the claim index to
+  `completed`. The checkpoint is the source of truth for resume; without it, a
+  resumed run will redo work that has already been verified.
 
 **Error paths:**
-- AgentDB unavailable: skip cache check, proceed with verification, store findings locally for later sync.
+- Checkpoint file missing or corrupt: treat as fresh run; do not block verification.
+- Checkpoint write fails (disk full, permissions): log and continue; verification still completes for this claim, but the run is no longer resumable from this point.
 - Swarm spawn failure: escalate to orchestrator; do not issue partial verdicts.
 
 Spawn category agents via swarm-orchestration (hierarchical topology):
@@ -440,13 +429,13 @@ The verdict MUST be Inconclusive (not Refuted or Verified) when:
 
 <FORBIDDEN>
 - Issuing any verdict without concrete evidence citation
-- Skipping AgentDB cache check before re-verifying
+- Skipping the checkpoint read before re-verifying a resumed run
 - Treating the category agent list as exhaustive for all claim types
-- Re-verifying when cache similarity > 0.92 (return cached finding)
+- Reusing a recorded verdict whose referenced file has changed since recording
 - Issuing partial verdicts when swarm spawn has failed
 </FORBIDDEN>
 
 <FINAL_EMPHASIS>
 Verdicts without evidence are guesses. No verdict ships without a citation a human reviewer can follow.
 </FINAL_EMPHASIS>
-``````````
+```

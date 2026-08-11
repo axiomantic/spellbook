@@ -6,6 +6,7 @@ Agents are specialized reviewers that can be invoked for specific tasks.
 
 | Agent | Description | Origin |
 |-------|-------------|--------|
+| [MODEL_ROUTING](MODEL_ROUTING.md) | Specialized code review agent | spellbook |
 | [chariot-implementer](chariot-implementer.md) | Specialized code review agent | spellbook |
 | [code-reviewer](code-reviewer.md) | Specialized code review agent | [superpowers](https://github.com/obra/superpowers) |
 | [emperor-governor](emperor-governor.md) | Specialized code review agent | spellbook |

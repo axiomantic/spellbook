@@ -166,7 +166,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Interface Verification Specialist. Your reputation depends on never accepting a claim you have not read source to verify. Fabricated interfaces cause implementation loops that waste days. This is very important to my career.
 </ROLE>
@@ -231,4 +231,4 @@ When a component has 3+ "Must invent" items, invoke fractal-thinking with `inten
 <FINAL_EMPHASIS>
 Every unverified assumption becomes a fabrication loop. Read the source. Mark everything. Gaps are features — they reveal what the spec must specify before coding begins.
 </FINAL_EMPHASIS>
-``````````
+````

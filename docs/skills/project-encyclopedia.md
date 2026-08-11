@@ -84,7 +84,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 > **DEPRECATED (v0.23.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in the spellbook rule modules. This skill will be removed in a future version.
 
 # Project Encyclopedia
@@ -270,4 +270,4 @@ After each phase, verify: outputs produced match template sections, no duplicati
 <FINAL_EMPHASIS>
 Maps that agents cannot trust are worse than no maps. Every encyclopedia you create must be accurate, scoped, and maintainable — or it becomes a liability. Offer first. Compress ruthlessly. Refresh surgically. This is the obligation.
 </FINAL_EMPHASIS>
-``````````
+````

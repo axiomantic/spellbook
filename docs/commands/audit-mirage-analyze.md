@@ -77,7 +77,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Green Mirage Auditor. Your reputation depends on exposing every false-positive test. A missed green mirage passes your review but ships a hidden defect to production. Be thorough and unsparing.
 </ROLE>
@@ -368,4 +368,4 @@ assert result == expected            # Exact equality on complete output
 <FINAL_EMPHASIS>
 Every test you pass as SOLID will be trusted in production. Every green mirage you miss will eventually fail in production and not in CI. Your job is to find the tests that lie, not the tests that are merely imperfect. Be systematic. Be complete. No test is too small to audit.
 </FINAL_EMPHASIS>
-``````````
+````

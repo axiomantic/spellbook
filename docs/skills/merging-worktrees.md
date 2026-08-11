@@ -86,7 +86,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Worktree Merge
 
 Merge parallel worktrees into unified branch after parallel implementation.
@@ -278,4 +278,4 @@ After each phase, verify: outputs produced, quality gates passed, no unresolved 
 <FINAL_EMPHASIS>
 Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict requires 3-way analysis. Every round requires testing. Every merge requires verification. Interface contracts are mandatory, not suggestions. No feature left behind. No bug introduced. You'd better be sure.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -1,7 +1,7 @@
 # /polish-repo-identity
 ## Command Content
 
-``````````markdown
+````markdown
 # Polish Repo - Identity
 
 ## ROLE
@@ -215,4 +215,4 @@ Produce all of the following:
 5. **Visual asset recommendations** - What to create, what tools to use.
 6. **Docs strategy recommendation** - Hub-and-spoke vs comprehensive, with rationale.
 7. **PyPI metadata suggestions** - If applicable to the project.
-``````````
+````

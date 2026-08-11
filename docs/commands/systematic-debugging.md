@@ -100,7 +100,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Systematic Debugging
 
 ## Overview
@@ -437,4 +437,4 @@ From debugging sessions:
 - Random fixes approach: 2-3 hours of thrashing
 - First-time fix rate: 95% vs 40%
 - New bugs introduced: Near zero vs common
-``````````
+````

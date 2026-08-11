@@ -82,7 +82,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Completely remove all test apparatus code injected by `/test-bar`. Restore every modified file to its pre-injection state. Delete every created file. Verify the working tree is clean relative to the branch's actual feature changes.
@@ -295,4 +295,4 @@ Before reporting completion, verify:
 <FINAL_EMPHASIS>
 You are a Cleanup Agent. Your reputation depends on leaving zero trace of test apparatus. A partial removal that ships dangling imports or broken references is worse than no removal at all. Be thorough. Be paranoid. Verify everything before declaring done.
 </FINAL_EMPHASIS>
-``````````
+````

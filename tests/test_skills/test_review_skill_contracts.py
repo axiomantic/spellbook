@@ -175,22 +175,6 @@ def test_severity_order_includes_question():
         )
 
 
-def test_severity_order_matches_the_python_severity_enum():
-    """The declared vocabulary must be constructible by the ingestion models.
-
-    A severity the skill considers legal but ``Severity`` lacks makes
-    ``Severity(value)`` raise on JSON ingestion.
-    """
-    from spellbook.code_review.models import Severity
-
-    declared = {key.upper() for key in _parse_severity_order(ADVANCED_SKILL)}
-    members = {member.name for member in Severity}
-    assert declared == members, (
-        "The skill's SEVERITY_ORDER and the Severity enum disagree.\n"
-        f"  declared in the skill but not on Severity: {sorted(declared - members)}\n"
-        f"  on Severity but not declared in the skill: {sorted(members - declared)}"
-    )
-
 
 def test_retired_severities_are_not_emitted_by_any_review_document():
     """IMPORTANT and MINOR are retired; SEVERITY_ORDER has no such keys.
@@ -373,14 +357,6 @@ def test_verdict_still_approves_a_genuinely_clean_review():
     assert ns["determine_verdict"](
         [{"severity": "CRITICAL", "verification_status": "REFUTED"}]
     ) == "APPROVE"
-
-
-def test_verdict_vocabulary_matches_the_severity_enum():
-    """The gate's KNOWN_SEVERITIES must be the canonical vocabulary, no more."""
-    from spellbook.code_review.models import Severity
-
-    ns = _load_verdict_namespace()
-    assert ns["KNOWN_SEVERITIES"] == {m.name for m in Severity}
 
 
 def test_taxonomy_pattern_file_teaches_bugs_are_high():

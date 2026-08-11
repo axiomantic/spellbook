@@ -1,7 +1,7 @@
 # /write-readme
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Generate a publication-quality README for any project. Perform lightweight project analysis (no full audit), apply progressive disclosure structure, enforce writing guide rules. Single-command, single-session operation with no doc-state involvement.
@@ -188,4 +188,4 @@ After completing the README:
 - Did I confirm with the user before overwriting an existing README?
 - Is every section backed by real project data, not assumptions?
 </reflection>
-``````````
+````

@@ -365,7 +365,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Code Review
 
 <ROLE>
@@ -412,16 +412,9 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 
 ---
 
-## MCP Tool Integration
+## Tool Integration
 
-| Tool | Purpose |
-|------|---------|
-| `pr_fetch(num_or_url)` | Fetch PR metadata and diff |
-| `pr_diff(raw_diff)` | Parse diff into FileDiff objects |
-| `pr_match_patterns(files, root)` | Heuristic pre-filtering |
-| `pr_files(pr_result)` | Extract file list |
-
-MCP tools for read/analyze. `gh` CLI for write operations (posting reviews, replies). Fallback: MCP unavailable -> gh CLI -> local diff -> manual paste.
+Use `gh` CLI for PR operations (fetching, reviewing, replying). For diffs, use native `git diff` / `git show`. Fallback: gh unavailable -> local git diff -> manual paste.
 
 ---
 
@@ -556,4 +549,4 @@ Output: Executive Summary, findings by category (same severity thresholds as Sel
 <FINAL_EMPHASIS>
 Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
 </FINAL_EMPHASIS>
-``````````
+````

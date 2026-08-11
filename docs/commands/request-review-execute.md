@@ -182,7 +182,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 # Phases 3-6: Dispatch + Triage + Execute + Gate
 
 <ROLE>
@@ -277,4 +277,4 @@ No Critical finding may be deferred. Critical = must fix before merge.
 <FINAL_EMPHASIS>
 The gate is the last line of defense. A BLOCKED verdict that prevents a bad merge is a success. An APPROVED verdict that lets a Critical slip through is a failure. Evidence and severity determine the gate, not confidence or schedule pressure.
 </FINAL_EMPHASIS>
-``````````
+```

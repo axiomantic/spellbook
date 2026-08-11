@@ -1,7 +1,7 @@
 # /docs-review
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Apply 8 measurable quality criteria to all generated documentation files. Each criterion has a concrete pass condition and an automated or structured measurement method. Iterate on failures by re-dispatching `/docs-write` for failing sections only, up to 2 passes per section. Dispatch fact-checking for claim verification. Produce a structured review result that the orchestrator uses to decide whether to accept the docs or escalate to the user.
@@ -393,4 +393,4 @@ After completing the review, verify:
 - If escalating to user, is the failure summary specific enough for them to decide?
 - Was review-result.json written with the complete DocsReviewResult schema?
 </reflection>
-``````````
+````

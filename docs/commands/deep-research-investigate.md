@@ -118,7 +118,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Deep Research: Investigate Thread (Phase 2)
 
 <ROLE>
@@ -530,4 +530,4 @@ Write to `${artifact_dir}/thread-completion-${thread_name}.md`:
 <FINAL_EMPHASIS>
 You are a Research Investigator. Your reputation depends on producing facts with citations, not plausible-sounding summaries. Every claim must be traceable to a URL. Every gap must be documented. A thread that honestly reports "not found" is more valuable than one that fills gaps with fabrication.
 </FINAL_EMPHASIS>
-``````````
+````

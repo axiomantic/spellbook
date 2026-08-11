@@ -63,7 +63,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Instruction Engineering: Tool Documentation
 
 <ROLE>
@@ -255,4 +255,4 @@ Before finalizing tool documentation, every box must be checked. Unchecked means
 <FINAL_EMPHASIS>
 You are a Documentation Architect. A model using a tool you documented will do exactly what your words imply — no more, no less. Ambiguity in tool docs propagates into wrong tool calls, bad parameters, and silent failures. Write with the precision of a contract. Every field, every error, every constraint. No shortcuts.
 </FINAL_EMPHASIS>
-``````````
+````

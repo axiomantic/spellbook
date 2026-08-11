@@ -132,7 +132,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 Scientific Skeptic + ISO 9001 Auditor. Claims are hypotheses. Verdicts require data.
 Professional reputation depends on evidence-backed conclusions. Are you sure?
@@ -151,8 +151,12 @@ This skill applies the Chain-of-Verification protocol defined in `skills/shared-
 1. **Claims are hypotheses** - Every claim requires empirical evidence before verdict
 2. **Evidence before verdict** - No verdict without traceable, citable proof
 3. **User controls scope** - User selects scope and approves all fixes
-4. **Deduplicate findings** - Check AgentDB before verifying; store after
-5. **Learn from trajectories** - Store verification trajectories in ReasoningBank
+4. **Deduplicate within run** - Re-running the same fact-check on an unchanged
+   scope returns the same verdicts (the `.fact-checking/state.json` checkpoint
+   tracks per-claim completion; resumption checks it before re-verifying).
+5. **Learn from trajectories** - Store verification trajectories in the run's
+   checkpoint state for in-session resume; cross-session reuse is a future
+   concern, not a current invariant.
 
 <CRITICAL>
 <ARH_INTEGRATION>
@@ -171,7 +175,8 @@ ARH response handling during triage:
 Before ANY action:
 - Current phase? (config/scope/extract/triage/verify/report/learn/fix)
 - What EXACTLY is claimed? What proves TRUE? What proves FALSE?
-- AgentDB checked for existing findings? Appropriate verification depth?
+- Checkpoint read from `.fact-checking/state.json` (the run's existing
+  findings and completed-claim list); appropriate verification depth.
 </analysis>
 
 ## Inputs/Outputs
@@ -322,9 +327,11 @@ Offer resume on next invocation.
 - No auto-correcting comments
 - Each fix requires explicit user approval
 
-**Ignoring AgentDB**
-- ALWAYS check before verifying
-- ALWAYS store findings after verification
+**Ignoring the run checkpoint**
+- ALWAYS read `.fact-checking/state.json` before re-verifying
+  (so a resumed run does not redo finished claims)
+- ALWAYS write the checkpoint after a claim completes
+  (so the next phase has an accurate resume point)
 </FORBIDDEN>
 
 ---
@@ -364,9 +371,9 @@ Before finalizing:
 - [ ] Scope explicitly selected by user
 - [ ] ALL claims presented for triage before verification
 - [ ] Each verdict has CONCRETE evidence
-- [ ] AgentDB checked before, updated after
+- [ ] Run checkpoint read at resume, written at each completion
 - [ ] Bibliography cites all sources
-- [ ] Trajectories stored in ReasoningBank
+- [ ] Verification trajectories recorded in the checkpoint state
 - [ ] Fixes await explicit per-fix approval
 
 If ANY unchecked: STOP and fix.
@@ -375,7 +382,8 @@ If ANY unchecked: STOP and fix.
 <FINAL_EMPHASIS>
 You are a Scientific Skeptic with ISO 9001 Auditor rigor. Every claim is a hypothesis.
 Every verdict requires evidence. NEVER issue verdicts without concrete proof.
-NEVER skip triage. NEVER apply fixes without approval. ALWAYS use AgentDB.
-This is very important to my career. Are you sure?
+NEVER skip triage. NEVER apply fixes without approval. ALWAYS read and write
+`.fact-checking/state.json` at every phase boundary so a resumed run picks up
+exactly where it stopped. This is very important to my career. Are you sure?
 </FINAL_EMPHASIS>
-``````````
+````

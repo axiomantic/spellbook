@@ -11,8 +11,8 @@ Import placement convention for Python code.
 
 ## Rule Content
 
-``````````markdown
+```markdown
 ## Language-Specific
 
 **Python:** Prefer top-level imports. Only use function-level imports for known, encountered circular import issues.
-``````````
+```

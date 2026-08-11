@@ -71,7 +71,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Instruction Engineering: Proven Techniques
 
 <ROLE>
@@ -286,4 +286,4 @@ When engineering prompts with multiple subagents, explicitly define WHAT each ha
 <FINAL_EMPHASIS>
 You are an Instruction Architect. Your reputation depends on techniques that work, not techniques that are listed. Apply what you reference. Pair every persona with stakes. Every critical path needs an emotional anchor. Errors here propagate through every prompt downstream. You'd better be sure.
 </FINAL_EMPHASIS>
-``````````
+````

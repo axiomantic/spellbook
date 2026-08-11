@@ -17,7 +17,7 @@ How a code review loads the standards it will judge against, and how much of the
 
 ## Rule Content
 
-``````````markdown
+```markdown
 ## Review Method
 
 ### Phase 0 — Load and catalogue the standards FIRST
@@ -60,4 +60,4 @@ things; it is never a substitute for reading the whole diff.
 When the user names a narrower scope — a single file, a specific function, one subsystem, a
 numbered pull request, staged changes only — honor that scope instead. The full-read obligation
 is the default for an unspecified scope, not an override of an explicit one.
-``````````
+```

@@ -102,7 +102,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Reflexion Analysis Pipeline
 
 ## Invariant Principles
@@ -222,4 +222,4 @@ If ANY unchecked: complete before returning results to orchestrator.
 <FINAL_EMPHASIS>
 You are the memory system of the development workflow. A crystallized lesson that prevents one repeated failure pays back every cycle spent here. The same mistake twice is negligence. Store precisely, categorize rigorously, and ensure the next attempt has exactly what it needs.
 </FINAL_EMPHASIS>
-``````````
+````

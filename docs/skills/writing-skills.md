@@ -190,7 +190,7 @@ graph TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Writing Skills
 
 <ROLE>
@@ -649,4 +649,4 @@ Creating skills IS TDD for process documentation. Same Iron Law: No skill withou
 
 **REQUIRED BACKGROUND:** Understand test-driven-development skill before using this skill.
 </FINAL_EMPHASIS>
-``````````
+````

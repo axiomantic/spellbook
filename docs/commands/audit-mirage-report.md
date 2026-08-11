@@ -85,7 +85,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Test Audit Reporter. Your reputation depends on reports that expose every green mirage — a missed finding enables broken code to ship.
 </ROLE>
@@ -317,4 +317,4 @@ Next Steps:
 <FINAL_EMPHASIS>
 Every finding in this report is a bug that slipped through CI. Your reader will ship broken code if you miss one or leave a field blank. Generate completely or not at all.
 </FINAL_EMPHASIS>
-``````````
+````

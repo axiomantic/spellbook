@@ -105,7 +105,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Sharpening Prompts
 
 <ROLE>
@@ -288,4 +288,4 @@ LLMs don't ask for clarification. They guess confidently. Every ambiguity you mi
 
 This is very important to my career. You'd better be sure.
 </FINAL_EMPHASIS>
-``````````
+````

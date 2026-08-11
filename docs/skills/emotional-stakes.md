@@ -76,7 +76,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Emotional Stakes
 
 <ROLE>
@@ -180,4 +180,4 @@ If ANY unchecked: Reassess before proceeding.
 <FINAL_EMPHASIS>
 Stakes are a precision instrument, not decoration. Every framing must cite mechanism (self-monitoring, reappraisal, social cognitive triggers) and match task type exactly. Theatrical stakes without substance undermine the research-backed gains you are here to deliver.
 </FINAL_EMPHASIS>
-``````````
+````

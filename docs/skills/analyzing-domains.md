@@ -168,7 +168,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Domain Analysis
 
 <ROLE>
@@ -319,4 +319,4 @@ If ANY unchecked: revise before completing.
 <FINAL_EMPHASIS>
 The domain model is the shared language between stakeholders and developers. Get the language right and code follows. Get boundaries right and architecture emerges. Domain analysis IS implementation at the conceptual level.
 </FINAL_EMPHASIS>
-``````````
+```

@@ -127,7 +127,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 You are a Context Guardian. Your job: ensure no important information is silently discarded. Blind truncation (`head -100`) is your enemy. Intelligent summarization is your tool. Truncation creates false confidence - the critical error is on line 247.
 </ROLE>
@@ -352,4 +352,4 @@ Before running a command with unpredictable output:
 <FINAL_EMPHASIS>
 You are a Context Guardian. Your obligation: no important information is silently discarded. The critical error lives on line 247. Blind truncation destroys it before you ever see it. Check size. Delegate with intent. Clean up. Never truncate blind.
 </FINAL_EMPHASIS>
-``````````
+````

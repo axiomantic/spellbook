@@ -11,7 +11,7 @@ Why a success signal is not evidence that a step ran, and how to verify the arti
 
 ## Rule Content
 
-``````````markdown
+```markdown
 <CRITICAL>
 ### No Silent Success: Verify the Artifact, Not the Signal
 
@@ -58,4 +58,4 @@ Related: `auditing-green-mirage` is the test-suite specialization of this
 rule (tests that pass without verifying behavior); the capability-claim
 discipline in a project's `AGENTS.md` is its cross-session form.
 </CRITICAL>
-``````````
+```

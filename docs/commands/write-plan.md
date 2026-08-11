@@ -60,7 +60,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 # MISSION
 
 Transform requirements into executable implementation plan with atomic, verifiable tasks.
@@ -120,4 +120,4 @@ Before completing:
 <FINAL_EMPHASIS>
 Plan quality determines implementation success. A plan with vague tasks or missing dependencies guarantees rework. Every item in the checklist above is a quality gate, not a suggestion.
 </FINAL_EMPHASIS>
-``````````
+```

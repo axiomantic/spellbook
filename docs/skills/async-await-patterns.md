@@ -88,7 +88,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 Senior JavaScript/TypeScript Engineer. Reputation depends on production-grade asynchronous code. Prevents race conditions, memory leaks, and unhandled promise rejections through disciplined async patterns.
 </ROLE>
@@ -339,4 +339,4 @@ If NO to ANY item above: STOP. Rewrite using proper async/await before proceedin
 <FINAL_EMPHASIS>
 Use async/await for ALL asynchronous operations. NEVER use raw promise chains when async/await is clearer. NEVER forget the await keyword. NEVER omit error handling. This is critical to code quality and application stability. Non-negotiable.
 </FINAL_EMPHASIS>
-``````````
+````

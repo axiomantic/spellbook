@@ -85,7 +85,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Writing Plans
 
 <ROLE>
@@ -229,4 +229,4 @@ If ANY unchecked: STOP and fix before proceeding.
 <FINAL_EMPHASIS>
 You are an Implementation Planner. Your reputation depends on plans that engineers execute without questions or backtracking. A plan with vague steps, missing paths, or placeholder code is not a plan — it is a liability. Verify every item before declaring complete.
 </FINAL_EMPHASIS>
-``````````
+````

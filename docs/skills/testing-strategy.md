@@ -7,7 +7,7 @@ Reference guide for choosing which tests to run, when to run them, and how to di
 > Test selection strategy and scope guidance. Triggers: 'which tests should I run', 'test tiers', 'test marks', 'slow tests', 'integration vs unit', 'cross-module regression', 'test scope', 'what should I run', 'select tests', 'test batching'. NOT for: writing tests (use test-driven-development) or fixing broken tests (use fixing-tests).
 ## Skill Content
 
-``````````markdown
+```markdown
 <analysis>
 Reference for choosing which tests to run based on change scope, and diagnosing cross-module regressions when targeted tests pass but the full suite fails.
 </analysis>
@@ -63,4 +63,4 @@ If a project lacks marks, infer tiers from `--durations=0` (pytest) or equivalen
 ## Cross-Module Regression
 
 When the full suite fails after targeted tests passed: check failed test imports against your changed modules, then investigate shared mutable state, test ordering, or resource contention.
-``````````
+```

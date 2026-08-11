@@ -12,7 +12,7 @@ Which git and session operations require explicit permission, and which content 
 
 ## Rule Content
 
-``````````markdown
+````markdown
 <CRITICAL>
 ### Git Safety
 
@@ -98,4 +98,4 @@ obtained without the impact statement is not a confirmation.
 - Escalating a subagent trust tier from within the subagent
 - Referencing GitHub issue numbers in commit messages, PR titles, or PR descriptions
 </FORBIDDEN>
-``````````
+````

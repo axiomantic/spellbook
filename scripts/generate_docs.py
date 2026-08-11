@@ -6,6 +6,7 @@
 """
 Generate documentation pages from SKILL.md, command, agent, and rule files.
 """
+import re
 from pathlib import Path
 
 import yaml
@@ -44,6 +45,26 @@ SUPERPOWERS_SKILLS = {
 SUPERPOWERS_COMMANDS = {"design-explore", "execute-plan", "write-plan"}
 
 SUPERPOWERS_AGENTS = {"code-reviewer"}
+
+
+_FENCE_RUN = re.compile(r"^\s{0,3}(`{3,})", re.MULTILINE)
+
+
+def fence_for(body: str) -> str:
+    """Return the shortest fence that can legally wrap ``body``.
+
+    Every generator below embeds a raw source body inside a fenced block so
+    that XML-style tags (``<CRITICAL>``, ``<RULE>``) are shown rather than
+    swallowed as HTML. CommonMark only requires the wrapping fence to be
+    LONGER than the longest fence inside it, so the fence length is a
+    property of the body, not a constant.
+
+    This used to be a hardcoded ten backticks everywhere. That is legal but
+    reads as noise -- a body containing no fences at all (agents/MODEL_ROUTING.md)
+    got the same ``` `````````` ``` wrapper as a deeply nested one.
+    """
+    longest = max((len(m.group(1)) for m in _FENCE_RUN.finditer(body)), default=0)
+    return "`" * max(3, longest + 1)
 
 
 def write_if_changed(path: Path, content: str) -> bool:
@@ -154,11 +175,12 @@ def generate_skill_doc(skill_dir: Path) -> str | None:
         parts.append(diagram.lstrip("\n") if attribution else diagram)
 
     parts.append("## Skill Content\n\n")
-    parts.append("``````````markdown\n")
+    fence = fence_for(body)
+    parts.append(f"{fence}markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
         parts.append("\n")
-    parts.append("``````````\n")
+    parts.append(f"{fence}\n")
 
     return "".join(parts)
 
@@ -187,11 +209,12 @@ def generate_command_doc(command_file: Path) -> str:
         parts.append(diagram.lstrip("\n") if attribution else diagram)
 
     parts.append("## Command Content\n\n")
-    parts.append("``````````markdown\n")
+    fence = fence_for(body)
+    parts.append(f"{fence}markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
         parts.append("\n")
-    parts.append("``````````\n")
+    parts.append(f"{fence}\n")
 
     return "".join(parts)
 
@@ -220,11 +243,12 @@ def generate_agent_doc(agent_file: Path) -> str:
         parts.append(diagram.lstrip("\n") if attribution else diagram)
 
     parts.append("## Agent Content\n\n")
-    parts.append("``````````markdown\n")
+    fence = fence_for(body)
+    parts.append(f"{fence}markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
         parts.append("\n")
-    parts.append("``````````\n")
+    parts.append(f"{fence}\n")
 
     return "".join(parts)
 
@@ -275,11 +299,12 @@ def generate_rule_doc(rule_file: Path) -> str:
     # Wrap body in a markdown code block to prevent XML-style tags (<CRITICAL>,
     # <RULE>) from being swallowed as HTML, as the other generators do.
     parts.append("## Rule Content\n\n")
-    parts.append("``````````markdown\n")
+    fence = fence_for(body)
+    parts.append(f"{fence}markdown\n")
     parts.append(body)
     if not body.endswith("\n"):
         parts.append("\n")
-    parts.append("``````````\n")
+    parts.append(f"{fence}\n")
 
     return "".join(parts)
 

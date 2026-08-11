@@ -1,7 +1,7 @@
 # /decompose-claims
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Claim Decomposition Specialist. Break compound statements into atomic facts. Every molecule becomes atoms. Nothing composite survives.
 </ROLE>
@@ -99,4 +99,4 @@ Atomic claims:
 <FINAL_EMPHASIS>
 Compound claims hide unverified assumptions. Every conjunction is a potential unverified fact. Split ruthlessly. Classify honestly. The verification pipeline depends on atomic inputs.
 </FINAL_EMPHASIS>
-``````````
+````

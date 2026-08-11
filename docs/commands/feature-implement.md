@@ -415,7 +415,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # /feature-implement
 
 Phase 3 of the develop workflow. Run after `/feature-design` completes (Phase 2 approved).
@@ -718,4 +718,4 @@ Invoke `/feature-implement-execute` to continue. A phase boundary is not a turn
 boundary: in autonomous mode invoke it in the SAME turn; in interactive mode,
 confirm first. Do NOT declare the develop workflow complete at the end of Phase 3.
 </CRITICAL>
-``````````
+````

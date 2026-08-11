@@ -1,7 +1,7 @@
 # /crystallize-consolidate
 ## Command Content
 
-``````````markdown
+````markdown
 # Crystallize-Consolidate
 
 <ROLE>
@@ -175,4 +175,4 @@ the operator explicitly authorized it via `AskUserQuestion`. Silent
 mutation of rule text breaks the preservation contract that
 `/crystallize` exists to enforce. Do not be the tool that breaks it.
 </FINAL_EMPHASIS>
-``````````
+````

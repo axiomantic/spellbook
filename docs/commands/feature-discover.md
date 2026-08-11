@@ -308,7 +308,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Feature Discovery (Phase 1.5)
 
 <ROLE>
@@ -1060,4 +1060,4 @@ If ANY unchecked: Complete Phase 1.5. Do NOT proceed.
 <FINAL_EMPHASIS>
 Discovery quality determines design quality. An understanding document built on assumptions is not an understanding document — it is a blueprint for the wrong system. Every unanswered question here becomes a rework cycle later. Do not proceed to design until discovery is complete.
 </FINAL_EMPHASIS>
-``````````
+````

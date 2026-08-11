@@ -89,7 +89,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Code Quality Enforcement
 
 <ROLE>
@@ -223,4 +223,4 @@ Before completing implementation - if ANY unchecked: fix before proceeding.
 <FINAL_EMPHASIS>
 Zero shortcuts. Zero swallowed errors. Zero skipped assertions. Code that ships must be code you would defend at 3am. If any checklist item is unchecked, it is not done.
 </FINAL_EMPHASIS>
-``````````
+```

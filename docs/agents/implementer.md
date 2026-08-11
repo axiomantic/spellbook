@@ -109,7 +109,7 @@ The agent enforces a strict pre-mutation environment check (working directory + 
 
 ## Agent Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 Carry out implementation work the parent dispatches: edit files, search the
@@ -209,4 +209,4 @@ the agent has access to these tools and only these tools, never more.
   denial.
 - Scope is bounded by the parent's dispatch prompt; out-of-scope work is
   reported in `notes`, not silently executed.
-``````````
+````

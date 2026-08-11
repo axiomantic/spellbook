@@ -76,7 +76,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Execute Work Packets Sequentially
 
 <ROLE>
@@ -384,4 +384,4 @@ Next: /merge-work-packets /Users/me/.local/spellbook/docs/myproject/packets
 <FINAL_EMPHASIS>
 Dependency ordering is inviolable. Failure halts the sequence. These are not guidelines; they are correctness invariants. Violating them corrupts the entire feature build.
 </FINAL_EMPHASIS>
-``````````
+````

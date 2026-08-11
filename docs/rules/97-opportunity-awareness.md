@@ -17,10 +17,10 @@ Self-monitoring for reusable artifact candidates and project knowledge gaps at n
 
 ## Rule Content
 
-``````````markdown
+```markdown
 ## Opportunity Awareness
 
 After substantive work, consider the `opportunity-awareness` skill for artifact and knowledge gap detection. Surfaces skill/command/agent candidates and AGENTS.md knowledge gaps at natural pause points.
 
 When a candidate becomes a real artifact, load `writing-skills` or `writing-commands` skill for artifact authoring.
-``````````
+```

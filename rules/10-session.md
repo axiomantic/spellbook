@@ -27,4 +27,3 @@ Apply it after greeting, once the session-start read of `AGENTS.md` has happened
 **Offer to create** (if not exists): "This project doesn't have an AGENTS.md. Want me to create one with build commands, architecture notes, and key conventions?"
 **User declines:** Proceed without. Do not ask again this session.
 **Subdirectory AGENTS.md:** For modules with distinct conventions, create `<subdir>/AGENTS.md`.
-

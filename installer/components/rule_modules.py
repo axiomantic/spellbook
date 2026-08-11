@@ -268,8 +268,17 @@ def load_rule_modules(rules_dir: Path) -> List[RuleModule]:
     # rules/ was indistinguishable from an empty one and the installer told
     # the user "no rule modules found" -- pointing at the wrong problem
     # entirely. Probe the directory directly so a permission error says so.
+    #
+    # The previous implementation opened the directory with ``os.open(dir,
+    # O_RDONLY)`` and immediately closed the handle, which works on POSIX
+    # but raises OSError on Windows -- Windows does not allow opening a
+    # directory handle at all. Use ``os.scandir`` instead: it is the
+    # cross-platform directory iterator and raises OSError on a real
+    # permissions problem on every OS.
     try:
-        os.close(os.open(rules_dir, os.O_RDONLY))
+        with os.scandir(rules_dir) as it:
+            for _entry in it:
+                break  # one probe is enough -- any OSError will surface above
     except OSError as exc:
         raise RuleModuleError(f"cannot read rule modules in {rules_dir}: {exc}") from exc
 

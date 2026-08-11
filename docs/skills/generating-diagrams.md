@@ -100,7 +100,7 @@ graph TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Generating Diagrams
 
 <ROLE>
@@ -493,4 +493,4 @@ Major structural changes fall through to the full 4-phase generation workflow ab
 <FINAL_EMPHASIS>
 Every node traces to source. Every diagram renders. Every phase executes. Shortcuts produce wrong diagrams that mislead -- and a wrong diagram is worse than no diagram at all.
 </FINAL_EMPHASIS>
-``````````
+````

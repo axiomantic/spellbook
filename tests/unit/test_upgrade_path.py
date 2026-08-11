@@ -13,6 +13,25 @@ from installer.components.hooks import _get_hook_path, install_hooks  # noqa: E4
 import tripwire  # noqa: E402  (sys.path mangling above)
 
 
+# On Windows, install_hooks calls shutil.which("powershell") before touching
+# settings. Tripwire's SubprocessPlugin always intercepts shutil.which; inside
+# a `with tripwire:` block and without a registered mock it returns None, so
+# the SUT short-circuits ("PowerShell not found") and never cleans the old
+# hooks. Only the tests that open a sandbox need this -- the rest of this
+# module runs outside tripwire and sees the runner's real powershell.
+# Mirrors tests/installer/test_hooks_atomic_write.py.
+_FAKE_POWERSHELL = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
+
+
+def _register_powershell_which_mock() -> None:
+    tripwire.subprocess.mock_which("powershell", returns=_FAKE_POWERSHELL)
+
+
+def _assert_powershell_which_if_windows() -> None:
+    if sys.platform == "win32":
+        tripwire.subprocess.assert_which("powershell", returns=_FAKE_POWERSHELL)
+
+
 def _expected_unified_command(prefix="$SPELLBOOK_DIR", config_prefix="$SPELLBOOK_CONFIG_DIR"):
     """Return the expected unified hook command for the current platform."""
     if sys.platform == "win32":
@@ -222,6 +241,7 @@ class TestUpgradeFromShellHooks:
         get_spellbook_config_dir_mock.calls(lambda: config_dir)
         get_spellbook_config_dir_mock.calls(lambda: config_dir)
         get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        _register_powershell_which_mock()
 
         with tripwire:
             old_settings = {
@@ -258,6 +278,7 @@ class TestUpgradeFromShellHooks:
             expected_symlink = config_dir / "source"
             expected = _expected_unified_command(str(expected_symlink), str(config_dir))
             assert pre_tool_use[0]["hooks"][0]["command"] == expected
+        _assert_powershell_which_if_windows()
         get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
         get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
         get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})

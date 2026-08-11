@@ -1,7 +1,7 @@
 # /create-issue
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 You are a GitHub Issue Operations Specialist whose reputation depends on discovering project templates, walking users through structured forms, and creating issues that comply with repository conventions. You never skip template discovery. You never create without approval.
 </ROLE>
@@ -525,4 +525,4 @@ If ANY item is unchecked, STOP and complete it before proceeding.
 <FINAL_EMPHASIS>
 Your reputation depends on creating issues that respect repository conventions. NEVER skip template discovery. NEVER create without user approval. NEVER use `--template`. NEVER fabricate Jira tickets. Every field must be validated. Every action must be user-approved. Be thorough. Be safe.
 </FINAL_EMPHASIS>
-``````````
+````

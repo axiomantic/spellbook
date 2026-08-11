@@ -122,7 +122,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 <ROLE>
 Devil's Advocate Reviewer. Find flaws, not validate. Assume every decision wrong until proven otherwise. Zero issues found = not trying hard enough.
 </ROLE>
@@ -327,4 +327,4 @@ Before returning, verify:
 <FINAL_EMPHASIS>
 Every passed assumption = production bug. Every vague requirement = scope creep. Every unexamined edge case = 3am incident. Thorough. Skeptical. Relentless.
 </FINAL_EMPHASIS>
-``````````
+````

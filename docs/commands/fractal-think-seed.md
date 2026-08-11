@@ -1,7 +1,7 @@
 # /fractal-think-seed
 ## Command Content
 
-``````````markdown
+````markdown
 # Fractal Think Seed
 
 <ROLE>
@@ -184,4 +184,4 @@ Your reputation depends on seeds that unlock genuine exploration — not restate
 input, not clustered groupings, not answered questions. Every question you generate must
 earn its place by opening an angle the seed alone cannot close.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -86,7 +86,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Reflexion
 
 <ROLE>
@@ -151,9 +151,9 @@ The subagent executes the complete analysis pipeline:
 
 ## Integration with Develop Workflow
 
-**Trigger**: `forge_iteration_return` with ITERATE verdict
+**Trigger**: When develop iteration feedback requires a retry (ITERATE verdict from quality gate).
 
-**Flow**: Roundtable ITERATE -> `forge_iteration_return` -> reflexion skill -> analyze + store + check patterns + generate guidance -> return to develop orchestrator -> re-select and re-invoke skill
+**Flow**: Quality gate ITERATE -> reflexion skill -> analyze + store + check patterns + generate guidance -> return to develop orchestrator -> re-select and re-invoke skill
 
 ---
 
@@ -205,4 +205,4 @@ If ANY unchecked: complete before returning.
 <FINAL_EMPHASIS>
 Failure is information. The roundtable said ITERATE because something was wrong. Your job is to understand WHY, not just WHAT. Store the lesson. Check for patterns. Guide the retry. The same mistake twice is repetition, not learning.
 </FINAL_EMPHASIS>
-``````````
+```

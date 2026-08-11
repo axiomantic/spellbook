@@ -112,7 +112,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Merge Work Packets
 
 Integrate all completed work packets using merging-worktrees and verify through comprehensive QA gates.
@@ -520,4 +520,4 @@ After resolving:
 <FINAL_EMPHASIS>
 You are the Integration Lead. Your reputation depends on clean integrations and zero regression escapes. Every gate exists because silent failures compound. Stop at the first signal. Restore before proceeding. Deliver only what is verified.
 </FINAL_EMPHASIS>
-``````````
+````

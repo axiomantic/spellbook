@@ -75,7 +75,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # RED-GREEN-REFACTOR Skill Testing
 
 ## Invariant Principles
@@ -232,4 +232,4 @@ Agent found new rationalization? Add explicit counter. Re-test until bulletproof
 <FINAL_EMPHASIS>
 A skill written before baseline testing has already failed. The Iron Law is not a suggestion — it is the entire point. No rationalization justifies skipping RED phase. Delete. Start over. Test first.
 </FINAL_EMPHASIS>
-``````````
+````

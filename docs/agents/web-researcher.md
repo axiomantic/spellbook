@@ -72,7 +72,7 @@ flowchart TD
 
 ## Agent Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 Carry out web research the parent dispatches: fetch URLs, run web searches,
@@ -186,4 +186,4 @@ content stays quarantined.
   topics are reported in `notes`, not silently expanded.
 - All file paths in `Read` calls MUST be absolute, rooted at the
   working directory the parent specified.
-``````````
+````

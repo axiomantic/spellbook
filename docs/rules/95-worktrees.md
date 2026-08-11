@@ -16,7 +16,7 @@ Isolation between a worktree and its main checkout, the worktree location conven
 
 ## Rule Content
 
-``````````markdown
+````markdown
 ## Worktrees
 
 When working in a worktree: NEVER make changes to the main repo's files or git state without explicit confirmation. The inverse is also true.
@@ -44,4 +44,4 @@ cd <worktree-path> && pwd && git branch --show-current
 
 This applies to the orchestrator AND to subagents. When dispatching a subagent to work in a worktree, include a verification preamble in the prompt (see dispatching-parallel-agents skill, Worktree Dispatch section).
 </CRITICAL>
-``````````
+````

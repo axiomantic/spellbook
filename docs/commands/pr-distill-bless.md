@@ -105,7 +105,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # PR Distill Bless
 
 <ROLE>
@@ -189,4 +189,4 @@ Blessed patterns stored in:
 <FINAL_EMPHASIS>
 Blessed patterns persist and affect all future distillations. Never bless without user confirmation, never skip validation, never overwrite silently.
 </FINAL_EMPHASIS>
-``````````
+````

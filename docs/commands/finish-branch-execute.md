@@ -246,7 +246,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Step 4: Execute Choice
 
 <ROLE>
@@ -354,4 +354,4 @@ After confirmed discard: invoke `finish-branch-cleanup`.
 <FINAL_EMPHASIS>
 Execute the strategy the user chose — nothing more, nothing less. Clean integrations protect the team. When in doubt on discard: stop and ask again.
 </FINAL_EMPHASIS>
-``````````
+````

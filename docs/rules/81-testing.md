@@ -16,7 +16,7 @@ How many test commands run at once and how test scope is matched to change scope
 
 ## Rule Content
 
-``````````markdown
+```markdown
 ## Testing
 
 <RULE>Run only ONE test command at a time. Wait for completion before running another. Parallel test commands overwhelm the system.</RULE>
@@ -24,4 +24,4 @@ How many test commands run at once and how test scope is matched to change scope
 <RULE>Never run the full test suite when targeted tests suffice. Match test scope to change scope.</RULE>
 
 Load `testing-strategy` skill for test tier classification, selecting what to run, test marks, batching, and cross-module regression guidance.
-``````````
+```

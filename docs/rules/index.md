@@ -14,7 +14,7 @@ you decline is never reinstalled and a module added later is offered once.
 | Module | Class | Description |
 |--------|-------|-------------|
 | [Spellbook Core](00-core.md) | mandatory | What spellbook is, how paths resolve, what runs at session start, and the shared vocabulary every other rule module assumes. |
-| [Session Context](10-session.md) | optional (default on) | Notification configuration, the project-knowledge offer protocol, and the focus-stint stack you own across a session. |
+| [Session Context](10-session.md) | optional (default on) | The project-knowledge offer protocol: AGENTS.md reading, fleshing out, and per-directory extensions. |
 | [Orchestration and Subagent Dispatch](20-orchestration.md) | mandatory | You conduct rather than implement: how substantive work is delegated to subagents, how model and effort are matched to a task, and how skills execute. |
 | [Intent Routing](30-intent-routing.md) | mandatory | How a user's expressed wish about functionality routes to a skill, and why planning happens inside the develop skill rather than in the harness planner. |
 | [Develop Skill Discipline](40-develop-discipline.md) | optional (default on) | Phase non-fungibility inside the develop skill, and the thoroughness contract that invoking develop establishes. |

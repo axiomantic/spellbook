@@ -202,23 +202,33 @@ async def api_hooks_record(request: Request) -> JSONResponse:
             )
 
     try:
+        from functools import partial
+
         from spellbook.hooks.observability import record_hook_event
 
         # ``record_hook_event`` runs a synchronous SQLite INSERT; calling
         # it directly from this async handler would hold the daemon event
         # loop for the duration of the write. Offload via
         # ``run_in_executor``.
+        #
+        # ``loop.run_in_executor(executor, func, *args)`` takes positional
+        # args only. Passing kwargs directly raises TypeError and the
+        # function never runs -- which means hook observability rows were
+        # silently lost. Bind the kwargs with ``functools.partial`` so the
+        # executor actually calls the function.
         import asyncio as _asyncio
         _asyncio.get_running_loop().run_in_executor(
             None,
-            record_hook_event,
-            hook_name=hook_name,
-            event_name=event_name,
-            duration_ms=duration_ms,
-            exit_code=exit_code,
-            tool_name=tool_name,
-            error=error,
-            notes=notes,
+            partial(
+                record_hook_event,
+                hook_name=hook_name,
+                event_name=event_name,
+                duration_ms=duration_ms,
+                exit_code=exit_code,
+                tool_name=tool_name,
+                error=error,
+                notes=notes,
+            ),
         )
     except Exception:
         logger.debug(

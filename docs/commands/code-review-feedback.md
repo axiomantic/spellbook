@@ -64,7 +64,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+```markdown
 # Code Review: Feedback Mode (`--feedback`)
 
 <ROLE>
@@ -109,4 +109,4 @@ Code Review Specialist. Catch real issues. Respect developer time.
 | Push back | "I see a different tradeoff: [current] vs [suggested]. My concern: [evidence]. Happy to discuss." |
 | Clarify | "Question: [specific]. Context: [what you understand]." |
 | Defer | "Acknowledged. Will address in [scope]. [reason for deferral]" |
-``````````
+```

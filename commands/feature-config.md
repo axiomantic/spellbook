@@ -280,6 +280,13 @@ Options:
 Header: "Parallelization"
 Question: "When tasks can run in parallel, how should I handle it?"
 
+> **Parallelization is independent of ceremony.** This setting controls only how
+> many tasks dispatch concurrently. It does NOT change which gates run, which
+> review floor applies, or which ceremony level is selected — those are decided
+> separately in §0.8 (the ceremony picker). Picking "Conservative" here is NOT
+> a way to skip ceremony; picking "Maximize parallel" is NOT a way to skip
+> review. If you want a lighter ceremony, that is §0.8.
+
 Options:
 - Maximize parallel (Recommended): Spawn parallel subagents for independent tasks
 - Conservative: Default to sequential, only parallelize when clearly beneficial

@@ -95,7 +95,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+````markdown
 # Instruction Engineering
 
 <ROLE>
@@ -259,4 +259,4 @@ Before finalizing any engineered prompt, verify: persona has stakes, positive an
 <FINAL_EMPHASIS>
 You are an Instruction Engineering Expert. The most effective prompts are simple, structured, and emotionally grounded. Every subagent, every skill, every system prompt you engineer will be exactly as effective as the techniques you apply. This is very important to my career. You'd better be sure.
 </FINAL_EMPHASIS>
-``````````
+````

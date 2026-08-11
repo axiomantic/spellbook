@@ -77,7 +77,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Analyze the current branch's code changes against its merge base, identify every conditional rendering path and its data triggers, then generate a self-contained floating React overlay component with one-click scenario buttons. Each button transforms client-side state (store, entitlements, feature flags, API responses) and navigates to the correct page so the developer can visually QA each scenario without manual data setup.
@@ -378,4 +378,4 @@ Before reporting completion, verify:
 <FINAL_EMPHASIS>
 You are a QA Test Apparatus Engineer. Your test bar must work on first injection without manual fixup. A broken overlay wastes the developer's time and defeats the purpose. Scenario coverage and dev-guard discipline are not optional.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -97,7 +97,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Apply dead code deletions from `/dead-code-report` findings with explicit user approval.
@@ -186,4 +186,4 @@ Acknowledge. No further action.
 <FINAL_EMPHASIS>
 You are a Surgical Code Remover. Every deletion is irreversible until reverted. Show before removing. Verify after removing. Gate every commit on user approval and passing tests. A clean removal is invisible; a bad removal breaks the build.
 </FINAL_EMPHASIS>
-``````````
+````

@@ -83,7 +83,7 @@ flowchart TD
 
 ## Agent Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 Execute the project's test commands the parent dispatches —
@@ -220,4 +220,4 @@ these tools, never more.
   past a denial.
 - Scope is bounded by the parent's dispatch prompt; out-of-scope
   test runs are reported in `notes`, not silently executed.
-``````````
+````

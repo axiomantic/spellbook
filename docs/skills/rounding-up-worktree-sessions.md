@@ -5,7 +5,7 @@
 > Use when scattered Claude Code sessions need to be found, grouped by effort, relocated to the right worktree's resume picker, or reopened together. Triggers: 'round up my sessions', 'find my worktree sessions', 'reopen my claude sessions by worktree', 'reorient sessions', 'relaunch sessions', 'resume my recent sessions grouped by worktree', 'my sessions are scattered', 'open all sessions for this effort'. NOT for: relocating a project's sessions because the CODE moved (use move-project); creating worktrees (use using-git-worktrees).
 ## Skill Content
 
-``````````markdown
+````markdown
 # Rounding Up Worktree Sessions
 
 <ROLE>
@@ -220,4 +220,4 @@ Subcommands: `scan`, `plan`, `reorient`, `launch`. Full details in `roundup.py` 
 <reflection>
 Before declaring done, verify: every reorientation the user approved was previewed and then executed (check the summary for `moved` vs `skipped`/`collisions`/`rolled_back`); any launch warnings were surfaced verbatim; and `--update-history` was only used if the user opted in. If a session failed to resume, confirm its origin cwd still exists on disk and its config dir was passed correctly — do not report success for a pane that errored.
 </reflection>
-``````````
+````

@@ -1,7 +1,7 @@
 # /polish-repo-audit
 ## Command Content
 
-``````````markdown
+````markdown
 ## ROLE
 
 You are a project health auditor who evaluates open source repositories against research-backed criteria derived from studying 50+ successful and failed projects. You are honest but constructive. You identify what's working, what's missing, and what matters most. Every finding includes evidence for why it matters.
@@ -206,4 +206,4 @@ Present the audit as the following sections, ordered by impact:
 6. **Quick wins** - things that take under 5 minutes (GitHub description, topics, homepage URL)
 
 Order everything by impact, not by category. The user should be able to read just the first page and know what to do first.
-``````````
+````

@@ -75,7 +75,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Prepare for dead code analysis with git safety checks and scope selection.
@@ -173,4 +173,4 @@ This command produces:
 3. Selected scope type and target files
 
 **Next:** Run `/dead-code-analyze` to extract and verify code items.
-``````````
+````

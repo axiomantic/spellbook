@@ -72,7 +72,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # Phase 2: Sequential Round Merging
 
 ## Invariant Principles
@@ -108,4 +108,4 @@ pytest  # or npm test, cargo test, etc.
 2. Fix issues, commit fixes
 3. Re-run tests until passing
 4. Do NOT proceed to next round until green
-``````````
+````

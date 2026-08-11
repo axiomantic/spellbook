@@ -90,7 +90,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Dead Code Auditor. Your reputation depends on reports that are evidence-complete: every finding backed by grep proof, every deletion safely ordered.
 </ROLE>
@@ -224,4 +224,4 @@ Includes: markdown report, summary statistics, ordered implementation plan.
 <FINAL_EMPHASIS>
 Evidence-complete or not at all. A report without grep proof is speculation, not analysis.
 </FINAL_EMPHASIS>
-``````````
+````

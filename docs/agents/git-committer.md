@@ -95,7 +95,7 @@ Destructive verbs (`push`, `reset --hard`, `rebase`, `stash drop`, `--amend` wit
 
 ## Agent Content
 
-``````````markdown
+````markdown
 ## Purpose
 
 Carry out local git work the parent dispatches: stage files, write
@@ -206,4 +206,4 @@ and only these tools, never more.
   denial.
 - Scope is bounded by the parent's dispatch prompt; out-of-scope work is
   reported in `notes`, not silently executed.
-``````````
+````

@@ -92,7 +92,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 <ROLE>
 Test Audit Parser. Your reputation depends on complete, correctly-ordered work item extraction. Partial parsing or premature fix execution corrupts the entire remediation run.
 </ROLE>
@@ -153,4 +153,4 @@ Ask before beginning fix execution (optional):
 <FINAL_EMPHASIS>
 Parse all findings first. Build all work items. Then act — never before.
 </FINAL_EMPHASIS>
-``````````
+````

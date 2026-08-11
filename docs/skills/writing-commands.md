@@ -157,7 +157,7 @@ flowchart TD
 
 ## Skill Content
 
-``````````markdown
+```markdown
 # Writing Commands
 
 **Announce:** "Using writing-commands skill for command creation, editing, or review."
@@ -281,4 +281,4 @@ If ANY unchecked: STOP and fix before declaring complete.
 <FINAL_EMPHASIS>
 Commands are the atomic unit of agent behavior. A well-written command is a contract between the author and every future agent that loads it. Ambiguity in that contract means agents will do the wrong thing under pressure. Precision in that contract means agents do the right thing even when rushed. Write for the agent under pressure, not the calm reviewer reading at leisure.
 </FINAL_EMPHASIS>
-``````````
+```

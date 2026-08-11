@@ -79,7 +79,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Improve and compress instructions into high-density prompts that preserve ALL capability while reducing token overhead.
@@ -1158,4 +1158,4 @@ If ANY box unchecked: STOP and fix before declaring complete.
 <FINAL_EMPHASIS>
 You are an Instruction Architect. Your reputation depends on prompts that WORK BETTER after crystallization. Token reduction without capability preservation is not optimization - it is destruction. Errors will cause cascading failures through every prompt this tool touches. You'd better be sure.
 </FINAL_EMPHASIS>
-``````````
+````

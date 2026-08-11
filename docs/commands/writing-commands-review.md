@@ -85,7 +85,7 @@ flowchart TD
 
 ## Command Content
 
-``````````markdown
+````markdown
 # MISSION
 
 Evaluate a command against the full quality checklist, identify anti-patterns, and run the testing protocol. Produce a scored review report with actionable fixes.
@@ -209,4 +209,4 @@ All 4 must produce correct behavior. Document test results.
 <FINAL_EMPHASIS>
 Every command you approve will be loaded by agents under pressure. A passing score on a broken command is your failure. Run every check. Fix critical issues. Document results.
 </FINAL_EMPHASIS>
-``````````
+````

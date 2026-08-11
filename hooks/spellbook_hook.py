@@ -384,35 +384,108 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
 # Main Dispatch
 # ---------------------------------------------------------------------------
 
+# Fallback directive emitted on SessionStart after compaction when the
+# daemon is unreachable (or has no workflow state). The text is part of
+# the public contract with the test suite and any downstream consumer;
+# changing it changes the directive the LLM sees on first turn after a
+# compaction, so coordinate with the test fixture before editing.
+POST_COMPACT_FALLBACK_DIRECTIVE = (
+    "Session resumed after compaction. Workflow state could not "
+    "be loaded. Re-read any planning documents, check your todo "
+    "list, and verify your current working context."
+)
+
+
+
+def _handle_session_start(data: dict) -> dict | None:
+    """SessionStart handler.
+
+    Returns a ``{"hookSpecificOutput": ...}`` dict when there is
+    something to emit, or None when SessionStart is a non-event for
+    this session. Two independent contributions may be combined:
+
+    - **Post-compact recovery directive** when ``source == "compact"``.
+      This is what the LLM sees on the first turn after a compaction,
+      so it MUST be emitted unconditionally -- otherwise the LLM
+      silently starts with no indication that its context was just
+      truncated.
+
+      This used to first attempt a richer directive built from a
+      ``workflow_state_load`` MCP call, falling back to the constant
+      only on failure. That tool has no implementation: it is not among
+      the server's registered tools, and ``load_workflow_state`` /
+      ``resume_boot_prompt`` do not exist anywhere in ``spellbook/`` --
+      the state subsystem was removed. So the call could only ever
+      raise, and the fallback was in truth the only path. The dead
+      branch is gone; emitting a directive that instructs the LLM to
+      call a nonexistent tool is the same defect this change set
+      removed from the fact-checking skill.
+    - **Orphan-chain hint** when an a2a watch chain looks dropped.
+      Applies on every SessionStart, regardless of source, because a
+      dropped chain is independent of why the session opened.
+
+    These are appended in that order (recovery first, orphan second)
+    separated by a blank line, matching the original shell-hook's
+    output ordering.
+    """
+    fragments: list[str] = []
+
+    source = (data.get("source") or "").strip()
+
+    if source == "compact":
+        # Emitted regardless of cwd. The directive carries no per-project
+        # content, and a compaction with a missing or blank cwd is exactly
+        # when the LLM most needs telling that its context was truncated --
+        # gating on cwd would drop the notice precisely then.
+        fragments.append(POST_COMPACT_FALLBACK_DIRECTIVE)
+
+    # Orphan-chain hint is independent of compaction. It fires on every
+    # SessionStart that detects a dropped a2a watch chain, because the
+    # reason the session opened (resume, startup, compact) does not
+    # change whether the chain is dropped.
+    try:
+        orphan_hint = _agent2agent_check_orphaned_chain(data)
+        if orphan_hint:
+            fragments.append(orphan_hint)
+    except Exception as exc:
+        _log_hook_error("agent2agent_check_orphaned_chain", "SessionStart", exc)
+
+    if not fragments:
+        return None
+
+    return {
+        "hookSpecificOutput": {
+            "hookEventName": "SessionStart",
+            "additionalContext": "\n\n".join(fragments),
+        }
+    }
+
+
 def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
     """Route hook event to appropriate handler(s).
 
     Returns stdout content (for injection into LLM context) or None.
     """
-    outputs = []
-
     if event_name == "PreToolUse":
-        outputs.extend(_handle_pre_tool_use(tool_name, data))
+        outputs = _handle_pre_tool_use(tool_name, data)
     elif event_name == "PostToolUse":
-        outputs.extend(_handle_post_tool_use(tool_name, data))
+        outputs = _handle_post_tool_use(tool_name, data)
     elif event_name == "UserPromptSubmit":
-        outputs.extend(_handle_user_prompt_submit(data))
+        outputs = _handle_user_prompt_submit(data)
     elif event_name == "SessionStart":
-        # Check for orphaned chain on session start
-        try:
-            orphan_hint = _agent2agent_check_orphaned_chain(data)
-            if orphan_hint:
-                return json.dumps({
-                    "hookSpecificOutput": {
-                        "hookEventName": "SessionStart",
-                        "additionalContext": orphan_hint,
-                    }
-                })
-        except Exception as e:
-            _log_hook_error("agent2agent_check_orphaned_chain", "SessionStart", e)
+        # SessionStart returns a dict or None directly (not a list).
+        # Serialize to JSON here so the subprocess can print it.
+        session_payload = _handle_session_start(data)
+        if session_payload is None:
+            return None
+        return json.dumps(session_payload)
+    else:
+        outputs = []
 
-    combined = "\n".join(o for o in outputs if o)
-    return combined if combined else None
+    if isinstance(outputs, list):
+        combined = "\n".join(o for o in outputs if o)
+        return combined if combined else None
+    return outputs
 
 
 def _record_hook_event_fire_and_forget(

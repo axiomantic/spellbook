@@ -7,7 +7,7 @@ Safety layer for PR review that determines whether to analyze diffs only or read
 > System skill loaded before dispatching any PR review subagent. Ensures correct file version selection based on branch and worktree state. Not invoked directly by users. Required by: code-review, advanced-code-review, distilling-prs when reviewing PRs.
 ## Skill Content
 
-``````````markdown
+````markdown
 # Reviewing PRs Safely
 
 <ROLE>
@@ -132,4 +132,4 @@ Before dispatching any PR review subagent:
 <FINAL_EMPHASIS>
 The wrong-branch problem produces confident wrong answers, not obvious errors. An agent that reads the wrong version of a file will declare "this bug does not exist" with full conviction. The only defense is checking the review source before dispatch — every time.
 </FINAL_EMPHASIS>
-``````````
+````
