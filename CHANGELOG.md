@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.86.0] - 2026-08-10
+
 ### Changed
 
 - **Model routing is now generic and harness-scoped.** Spellbook installs to
@@ -56,6 +58,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as an agent named `agent-model-routing`. Moved to
   `docs/reference/model-routing.md`, where it is documentation and nothing
   else. `agents/` now contains only real agents.
+
+- **The real-user-config test guard was blind on Windows.** `tests/conftest.py`
+  fingerprints the developer's genuine `spellbook.json` before and after every
+  test and fails the test that changed it, but it hardcoded the POSIX path
+  (`~/.config/spellbook/spellbook.json`) on every platform. Windows resolves
+  `%APPDATA%/spellbook`, so there the guard watched a file that does not
+  exist: it fingerprinted "absent" before and after every test and could never
+  fire. The one control designed to stop tests clobbering a real user config
+  silently covered two of the three platforms CI runs.
+
+  Caught because the model-tier tests above walked straight through it -- they
+  redirected only `HOME` and `USERPROFILE`, so on Windows they wrote to the
+  real `spellbook.json` and the guard said nothing. Resolution is now
+  platform-aware, and mirrors `get_config_dir` by hand rather than importing
+  it, so a bug in the runtime resolver cannot disarm the check that guards
+  against it. Its `platform` / `env` / `home` inputs are injectable so the
+  Windows branch is testable from POSIX -- a platform branch only its own
+  platform can exercise is precisely how this survived.
 
 ## [0.85.0] - 2026-08-10
 
