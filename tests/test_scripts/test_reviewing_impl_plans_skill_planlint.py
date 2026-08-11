@@ -56,3 +56,14 @@ def test_reflection_list_leads_with_the_phase_0_check():
     reflection = text.split("<reflection>", 1)[1].split("</reflection>", 1)[0]
     first_item = [line for line in reflection.splitlines() if line.strip().startswith("[ ]")][0]
     assert "Phase 0" in first_item
+
+
+def test_phase_0_states_the_not_linted_policy():
+    """`report.linted is False` with no crash and no findings is a third,
+    distinct state from RAN and CRASH: the linter declined to lint at all.
+    Without this prose, a reviewer has no fitting bucket for the Linter: line
+    and would wrongly record RAN with an empty 'Claims NOT decided'."""
+    text = _text()
+    section = text.split("## Phase 0: Mechanized Pre-Pass", 1)[1].split("## Phase 1", 1)[0]
+    assert "linted" in section or "report.linted" in section
+    assert "UNAVAILABLE (not linted: <report.skip_reason>)" in text

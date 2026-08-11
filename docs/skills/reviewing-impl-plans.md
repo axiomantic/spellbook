@@ -156,6 +156,31 @@ claim of mechanical coverage is withdrawn.
 The same rule applies when the linter is absent entirely (`ImportError`) — that is a
 crash by another name.
 
+**If the linter DECLINES to lint, that is a third state — distinct from both a clean
+RUN and a CRASH.** `report.linted is False` with `report.internal_errors` EMPTY and
+`report.findings` EMPTY means the linter never examined the plan at all: it hit
+`SKIP_UNREADABLE`, `SKIP_NOT_UTF8`, or `SKIP_NO_SCHEMA` (design §5.4, "Errors that are
+not exceptions"). This is reachable even when the Phase 0 Gate above judged the plan
+IN SCOPE, because the Gate's `declares_schema(plan_text)` reads the in-context draft
+TEXT while `lint_for_review(plan_path)` reads the on-disk PATH — the two can drift
+apart (file not found at that path, a permissions issue, a stale draft versus the
+actual file on disk). Design §5.4 documents this same class of gap for the
+`unreadable`/`not UTF-8` skip reasons. Do not read an empty `decided_claims()` as
+"nothing to decide" in this state — it means the linter never ran, not that it ran and
+found nothing:
+
+```python
+if not report.linted:
+    # Record the linter line as UNAVAILABLE (not linted), naming the skip reason, and
+    # treat EVERY claim as UNDECIDED — same fail-closed posture as a crash. Phases 1-4
+    # still cover everything; nothing is suppressed because the linter declined.
+    print(report.skip_reason)
+```
+
+Write `Linter: UNAVAILABLE (not linted: <report.skip_reason>)` on the Report Assembly
+line, list every rule under "Claims NOT decided" with the skip reason as the cause, and
+CONTINUE to Phase 1.
+
 ## Phase 1: Context and Inventory
 
 Dispatch subagent with `review-plan-inventory` command. If command unavailable, execute phase criteria directly.
@@ -200,7 +225,7 @@ Assemble the final report from subagent outputs:
 
 ```
 ## Phase 0: Mechanized Pre-Pass — claims already decided
-- Linter: RAN / NOT APPLICABLE (no Schema:) / UNAVAILABLE (see error below)
+- Linter: RAN / NOT APPLICABLE (no Schema:) / UNAVAILABLE (see error below) / UNAVAILABLE (not linted: <report.skip_reason>)
 - Rules run: N of M   (a skipped rule is listed by name, with its reason)
 - Claims decided: [rule-id: clean | rule-id: N finding(s)]
 - Claims NOT decided (prose review must cover these): [rule-id: reason]
