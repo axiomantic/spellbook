@@ -877,3 +877,75 @@ def test_create_path_exists_is_absent_when_the_create_path_does_not_exist(tmp_pa
         "neg_create_path_exists.md", phase=_Phase.AUTHORING, repo_root=tmp_path
     )
     assert [f for f in files.run(ctx).findings if f.rule == "create-path-exists"] == []
+
+
+def test_create_path_exists_is_off_in_execution_phase(tmp_path):
+    """`_create_severity` returns None for the execution phase, and the rule
+    must not fire at all in that branch — not merely carry a null severity.
+    `already_here.py` genuinely exists on disk (per `create-path-exists`'s
+    positive test above), so if the OFF-in-execution branch were broken the
+    rule would incorrectly report a finding here."""
+    from spellbook.planlint.rules import files
+
+    (tmp_path / "already_here.py").write_text("# here\n", encoding="utf-8")
+    ctx = _ctx(
+        "neg_create_path_exists.md", phase=_Phase.EXECUTION, repo_root=tmp_path
+    )
+    assert files.run(ctx).findings == []
+
+
+def test_modify_path_missing_skips_an_absolute_path_entry(tmp_path):
+    """An absolute path in a `Modify:` bullet must never reach a real
+    filesystem call outside repo_root. `pathlib`'s `__truediv__` silently
+    DISCARDS the left operand when the right is absolute
+    (`Path("/a/b") / "/etc/passwd" == Path("/etc/passwd")`), so without the
+    guard `ctx.repo_root / entry.path` would resolve to the real `/etc/passwd`
+    on the machine running the test, which exists on macOS/Linux — a naive
+    "does it exist" check would then stay silent (real file exists), masking
+    the fact that the check ran outside the repo at all. The construction
+    below proves the guard: `create-path-exists` fires on `already_here.py`
+    existing inside `repo_root`, but the absolute-path entry, if it escaped
+    the guard and resolved to a real, existing `/etc/passwd`, would ALSO
+    trip `create-path-exists` for that entry. Asserting there is exactly one
+    hit — the legitimate one — proves the absolute entry never got that far."""
+    from spellbook.planlint.rules import files
+
+    (tmp_path / "already_here.py").write_text("# here\n", encoding="utf-8")
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n**Files:**\n"
+        "- Create: `already_here.py`\n"
+        "- Create: `/etc/passwd`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
+    hits = [f for f in files.run(ctx).findings if f.rule == "create-path-exists"]
+    assert len(hits) == 1
+    assert "already_here.py" in hits[0].evidence
+    assert "/etc/passwd" not in hits[0].evidence
+
+
+def test_modify_path_missing_skips_a_traversal_escaping_path_entry(tmp_path):
+    """Same escape, reached via `..`-traversal instead of an absolute path.
+    `../../etc/passwd` resolves outside `repo_root` once `.resolve()` walks
+    the `..` segments, and the real `/etc/passwd` it lands on exists — so
+    absent the guard, `create-path-exists` would fire a SECOND, bogus hit for
+    it. Asserting exactly one hit (the legitimate `already_here.py` one)
+    proves the traversal entry never reached the filesystem check."""
+    from spellbook.planlint.rules import files
+
+    (tmp_path / "already_here.py").write_text("# here\n", encoding="utf-8")
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n**Files:**\n"
+        "- Create: `already_here.py`\n"
+        "- Create: `../../etc/passwd`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
+    hits = [f for f in files.run(ctx).findings if f.rule == "create-path-exists"]
+    assert len(hits) == 1
+    assert "already_here.py" in hits[0].evidence
+    assert "etc/passwd" not in hits[0].evidence

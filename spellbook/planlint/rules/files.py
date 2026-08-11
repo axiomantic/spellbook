@@ -18,6 +18,8 @@ set — never a clean report. decided_claims() (api.py, Task 12) reports a
 skipped rule as UNDECIDED so the prose review still covers the claim.
 """
 
+from pathlib import Path
+
 from spellbook.planlint.finding import ERROR, INFO, WARNING, Finding, LintResult
 
 EMITS = frozenset({"modify-path-missing", "create-path-exists"})
@@ -55,7 +57,27 @@ def run(ctx):
             if "*" in entry.path:
                 continue
             examined += 1
+
+            # A `Files:` bullet is documented (writing-plans skill) as a
+            # repo-relative path, but nothing upstream enforces that. Guard
+            # against a plan-authored path that reaches a real filesystem
+            # call outside the repo:
+            #   - an absolute path: pathlib's `__truediv__` silently
+            #     DISCARDS the left operand when the right operand is
+            #     absolute (`Path("/a/b") / "/etc/passwd"` == `Path("/etc/
+            #     passwd")`), so a bullet like `- Modify: `/etc/passwd``
+            #     would resolve to the real path on the machine running the
+            #     linter, not anything inside the reviewed repo.
+            #   - a `..`-traversal path that walks outside repo_root once
+            #     resolved.
+            # Existence-checking a path outside repo_root is meaningless for
+            # what these rules validate, so a bad entry is silently skipped
+            # rather than reported as a new finding type (out of scope here).
+            if Path(entry.path).is_absolute():
+                continue
             resolved = ctx.repo_root / entry.path
+            if not resolved.resolve().is_relative_to(ctx.repo_root.resolve()):
+                continue
 
             if entry.verb == "Modify":
                 if not resolved.exists():
