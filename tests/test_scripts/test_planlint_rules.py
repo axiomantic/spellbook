@@ -770,3 +770,110 @@ def test_check_verify_pass_consistency_reports_a_malformed_run_line_accurately()
         ),
         severity=ERROR,
     )
+
+
+# ------------------------------------------------------------------ files
+
+def test_modify_path_missing_fires_only_on_the_absent_path(tmp_path):
+    from spellbook.planlint.rules import files
+
+    (tmp_path / "real.py").write_text("# real\n", encoding="utf-8")
+    ctx = _ctx("neg_modify_path_missing.md", repo_root=tmp_path)
+    findings = files.run(ctx).findings
+    hits = [f for f in findings if f.rule == "modify-path-missing"]
+    assert len(hits) == 1
+    resolved = tmp_path / "does_not_exist.py"
+    assert hits[0] == Finding(
+        rule="modify-path-missing",
+        message=(
+            "a `Modify:` entry names a path that does not exist in the "
+            "repository, so the task is planned against a tree that is not "
+            "there"
+        ),
+        task="Task 2",
+        section="Task 2: Modifies a missing file",
+        line=15,
+        evidence=f"- Modify: `does_not_exist.py` (resolved: {resolved})",
+        severity=ERROR,
+    )
+
+
+def test_modify_path_missing_is_absent_on_the_clean_fixture(tmp_path):
+    from spellbook.planlint.rules import files
+
+    (tmp_path / "spellbook" / "sample").mkdir(parents=True)
+    (tmp_path / "spellbook" / "sample" / "first.py").write_text("# x\n", encoding="utf-8")
+    ctx = _ctx("clean_plan.md", repo_root=tmp_path)
+    findings = files.run(ctx).findings
+    assert [f for f in findings if f.rule == "modify-path-missing"] == []
+
+
+def test_modify_path_missing_does_not_fire_on_a_test_entry(tmp_path):
+    """A `Test:` path that does not exist is the NORMAL TDD case, not a defect.
+
+    This is the assertion that keeps the rule usable: every plan writing-plans
+    emits names a not-yet-written test file, so a rule that checked `Test:`
+    would fire on every correct plan. `clean_plan.md`'s own two `Test:` entries
+    are absent from the tree built here, and the rule must stay silent about
+    both while still deciding the `Modify:` entry beside them."""
+    from spellbook.planlint.rules import files
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n**Files:**\n"
+        "- Modify: `present.py`\n"
+        "- Test: `tests/not_written_yet.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    (tmp_path / "present.py").write_text("# here\n", encoding="utf-8")
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
+    assert [f for f in files.run(ctx).findings if f.rule == "modify-path-missing"] == []
+
+
+def test_files_rule_skips_and_reports_undecided_when_repo_root_is_none():
+    from spellbook.planlint.rules import files
+
+    ctx = _ctx("neg_modify_path_missing.md", repo_root=None)
+    result = files.run(ctx)
+    assert result.findings == []
+    assert result.skipped_reason == "no repo_root supplied"
+
+
+def test_create_path_exists_fires_when_a_create_path_already_exists(tmp_path):
+    from spellbook.planlint.finding import WARNING
+    from spellbook.planlint.rules import files
+
+    (tmp_path / "already_here.py").write_text("# here\n", encoding="utf-8")
+    ctx = _ctx(
+        "neg_create_path_exists.md", phase=_Phase.AUTHORING, repo_root=tmp_path
+    )
+    findings = files.run(ctx).findings
+    hits = [f for f in findings if f.rule == "create-path-exists"]
+    assert len(hits) == 1
+    resolved = tmp_path / "already_here.py"
+    assert hits[0] == Finding(
+        rule="create-path-exists",
+        message=(
+            "a `Create:` path already exists; this is almost "
+            "always a mislabeled `Modify:`"
+        ),
+        task="Task 1",
+        section="Task 1: Creates a path that is already there",
+        line=6,
+        evidence=f"- Create: `already_here.py` (resolved: {resolved})",
+        severity=WARNING,
+    )
+
+
+def test_create_path_exists_is_absent_when_the_create_path_does_not_exist(tmp_path):
+    """The negative control for the rule above. `clean_plan.md` cannot serve
+    as this control — the tmp tree that makes `modify-path-missing` clean
+    there necessarily makes `create-path-exists` fire — so the control is the
+    SAME fixture against an empty tree."""
+    from spellbook.planlint.rules import files
+
+    ctx = _ctx(
+        "neg_create_path_exists.md", phase=_Phase.AUTHORING, repo_root=tmp_path
+    )
+    assert [f for f in files.run(ctx).findings if f.rule == "create-path-exists"] == []
