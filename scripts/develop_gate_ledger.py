@@ -48,6 +48,10 @@ The script is also a CLI for inspecting and editing the ledger:
     python3 scripts/develop_gate_ledger.py wave-discipline 3a \
         --status failed --open-rows W3a-2,W3a-5
 
+    # Record that the check does not apply, and why
+    python3 scripts/develop_gate_ledger.py wave-discipline plan \
+        --status n_a --reason "plan has no wave structure"
+
 The CLI is intentionally narrow. The ledger is meant to be WRITTEN by
 the orchestrator's own discipline, not poked at from outside. Operations
 the skill describes -- "write ceremony.locked_at at Phase 0",
@@ -245,6 +249,7 @@ def record_wave_discipline(
     status: str,
     open_rows: Iterable[str] | None = None,
     timestamp: str | None = None,
+    reason: str | None = None,
     path: Path | None = None,
 ) -> dict[str, Any]:
     """Record the §24.6 wave-discipline check for a wave.
@@ -258,6 +263,12 @@ def record_wave_discipline(
     ``open_rows`` is the list of W<n>- identifiers that were still
     open when the check ran; required when ``status="failed"`` and
     ignored when ``status="passed"`` or ``"n_a"``.
+
+    ``reason`` is optional free-form context. It earns its place on
+    ``n_a``: "not applicable" alone does not say WHY, and the point of
+    recording n_a at all is that a later reader can tell "the operator
+    established this check does not apply here" from "nobody ran it".
+    Without the reason, n_a says only the former half.
     """
     if status not in ("passed", "failed", "n_a"):
         raise ValueError(
@@ -272,6 +283,8 @@ def record_wave_discipline(
     entry: dict[str, Any] = {"status": status}
     if timestamp:
         entry["timestamp"] = timestamp
+    if reason and reason.strip():
+        entry["reason"] = reason.strip()
     if status == "failed":
         entry["open_rows"] = open_rows_list
     return write_ledger({"waves": {wave_id: {"section_24_6_check": entry}}}, path=path)
@@ -359,6 +372,7 @@ def _cmd_wave_discipline(args: argparse.Namespace) -> int:
             status=args.status,
             open_rows=open_rows,
             timestamp=args.timestamp,
+            reason=args.reason,
             path=path,
         )
     except (ValueError, LedgerError) as exc:
@@ -429,6 +443,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--timestamp",
         default=None,
         help="ISO-8601 timestamp. Default: omitted (caller writes one if needed).",
+    )
+    p_wd.add_argument(
+        "--reason",
+        default=None,
+        help=(
+            "Free-form context for the entry. Most useful with --status n_a, "
+            "where it records WHY the check does not apply "
+            "(e.g. 'plan has no wave structure')."
+        ),
     )
     p_wd.set_defaults(func=_cmd_wave_discipline)
 

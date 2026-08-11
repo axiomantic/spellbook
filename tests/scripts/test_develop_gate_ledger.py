@@ -202,6 +202,45 @@ def test_record_wave_discipline_na(tmp_ledger):
     assert ledger.wave_discipline_status("plan")["status"] == "n_a"
 
 
+def test_record_wave_discipline_na_records_a_reason(tmp_ledger):
+    """The develop skill's prose tells the LLM to write this exact shape.
+    'n_a' alone says the check does not apply but not why -- and the point
+    of recording n_a is that a later reader can tell 'established as not
+    applicable' from 'nobody ran it'."""
+    ledger.record_wave_discipline(
+        "plan", status="n_a", reason="plan has no wave structure"
+    )
+    entry = ledger.wave_discipline_status("plan")
+    assert entry["status"] == "n_a"
+    assert entry["reason"] == "plan has no wave structure"
+
+
+def test_reason_is_optional_and_omitted_when_absent(tmp_ledger):
+    ledger.record_wave_discipline("3a", status="passed")
+    assert "reason" not in ledger.wave_discipline_status("3a")
+
+
+def test_blank_reason_is_not_recorded(tmp_ledger):
+    """An empty reason is worse than none: it looks answered."""
+    ledger.record_wave_discipline("3a", status="n_a", reason="   ")
+    assert "reason" not in ledger.wave_discipline_status("3a")
+
+
+def test_reason_does_not_make_a_failed_entry_claimable(tmp_ledger):
+    """Narrative must never substitute for evidence -- open_rows is still
+    what a failed entry is judged on."""
+    ledger.record_wave_discipline(
+        "3a", status="failed", open_rows=["W3a-2"], reason="blocked on review"
+    )
+    assert ledger.is_wave_done_claimable("3a") is False
+    assert ledger.wave_discipline_status("3a")["open_rows"] == ["W3a-2"]
+
+
+def test_reason_does_not_satisfy_the_failed_open_rows_requirement(tmp_ledger):
+    with pytest.raises(ValueError, match="requires at least one open row"):
+        ledger.record_wave_discipline("3a", status="failed", reason="because")
+
+
 def test_record_wave_discipline_rejects_invalid_status(tmp_ledger):
     with pytest.raises(ValueError, match="status must be one of"):
         ledger.record_wave_discipline("3a", status="maybe")
@@ -309,6 +348,21 @@ def test_cli_wave_discipline_failed_refused(tmp_ledger):
     )
     assert proc.returncode == 0
     assert "REFUSED" in proc.stdout
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_wave_discipline_na_with_reason(tmp_ledger):
+    """The documented invocation from skills/develop/SKILL.md must actually
+    work from the CLI -- prose describing a flag that does not exist is the
+    defect this finding raised."""
+    proc = _run_cli(
+        "wave-discipline", "plan",
+        "--status", "n_a",
+        "--reason", "plan has no wave structure",
+    )
+    assert proc.returncode == 0
+    entry = json.loads(tmp_ledger.read_text())["waves"]["plan"]["section_24_6_check"]
+    assert entry == {"status": "n_a", "reason": "plan has no wave structure"}
 
 
 @pytest.mark.allow("subprocess")
