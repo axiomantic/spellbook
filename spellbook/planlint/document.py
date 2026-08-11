@@ -82,6 +82,87 @@ def strip_markup(text):
 # Ported from nmg2-tools/planlint/document.py:206-266. See module docstring.
 
 
+def _pair_fence_markers(markers):
+    """Pair one segment's fence-marker line indexes into `(open, close)`
+    tuples, plus the one leftover index if the count is odd (`None` if even).
+
+    Markers pair CONSECUTIVELY -- `markers[1]` closes `markers[0]`,
+    `markers[3]` closes `markers[2]`, and so on -- except that on an ODD
+    count the FIRST marker is set aside as the leftover before consecutive
+    pairing runs, rather than the last. This is the deliberate resolution of
+    an otherwise irreducible ambiguity: with only bare ``` lines as signal,
+    nothing in the text says which single marker among an odd group is "the
+    one with no partner" -- pairing consecutively from the front (leftover
+    last) and pairing consecutively from the back (leftover first) are
+    BOTH valid non-crossing matchings, and no amount of "smarter" greedy
+    pairing resolves that in general.
+
+    Leftover-first is chosen because it is what `fenced_line_indexes`'s
+    contract requires: "nothing below a broken fence is hidden from any
+    lint." A fence marker that opens and is never really closed is a
+    document defect near where it sits; a SEPARATE, well-formed fence pair
+    that happens to follow it later is unrelated content the defect must not
+    swallow. Leftover-last (the naive whole-segment toggle this replaced)
+    does the opposite: it lets the broken opener consume the well-formed
+    pair's own opening marker as a phantom close, hiding everything between
+    them -- including real `Depends:`/`Check:` field text -- and then blames
+    the well-formed pair's genuine closing marker as "the" unclosed one.
+    Leftover-first keeps the well-formed pair intact and correctly blames
+    the marker that is actually alone.
+
+    This does not resolve every possible odd-count arrangement (a
+    well-formed pair immediately followed by a later, truly trailing,
+    never-closed marker is the mirror case, and is not what this document
+    family's fences are expected to look like -- see the module docstring).
+    It is chosen because it is the shape the real, reported defect takes.
+    """
+    if len(markers) % 2:
+        leftover, markers = markers[0], markers[1:]
+    else:
+        leftover = None
+    pairs = [(markers[i], markers[i + 1]) for i in range(0, len(markers), 2)]
+    return pairs, leftover
+
+
+def _fence_segments(lines):
+    """Group fence-marker line indexes into segments split at `TASK_HEADER`
+    lines, and pair each segment's markers via `_pair_fence_markers`.
+
+    A fence is never expected to span a task boundary in this document
+    family, so a `### Task N: ...` header always closes out whatever segment
+    came before it -- pending pairing is resolved right there, whether or
+    not the segment's marker count is even -- rather than letting the
+    segment's markers reach across the header looking for a partner.
+
+    Yields `(pairs, leftover)` per segment, in document order.
+    """
+    markers = []
+    for index, line in enumerate(lines):
+        if TASK_HEADER.match(line):
+            if markers:
+                yield _pair_fence_markers(markers)
+                markers = []
+            continue
+        if FENCE.match(line):
+            markers.append(index)
+    if markers:
+        yield _pair_fence_markers(markers)
+
+
+def unclosed_fence_index(lines):
+    """The 0-based index of the first fence marker with no partner, or
+    `None` if every fence marker pairs off.
+
+    Reads the document exactly like `fenced_line_indexes`/`_scan_fences`
+    (same segmentation, same `_pair_fence_markers` leftover rule), so
+    `rules/structure.py` reports the same line those two treat as broken.
+    """
+    for _pairs, leftover in _fence_segments(lines):
+        if leftover is not None:
+            return leftover
+    return None
+
+
 def fenced_line_indexes(lines):
     """The index of every line inside a CLOSED fence, both markers included.
 
@@ -89,31 +170,30 @@ def fenced_line_indexes(lines):
     reads the document the same way, so the two agree, and nothing below a
     broken fence is hidden from any lint.
 
-    A plain open/close TOGGLE across the whole input is not enough: if an
-    opener is never really closed and a SEPARATE, well-formed fence pair
-    follows later, the toggle pairs the broken opener with the next fence's
-    OPENING marker instead of recognizing it as unpaired -- which marks
-    everything between them (a task header, a `Files:` bullet, anything) as
-    "inside a fence" by mistake, and leaves the real pair's closing marker
-    dangling unclosed at EOF. A pending, unclosed open is therefore abandoned
-    (dropped, not paired with anything) the moment a `### Task N: ...` header
-    is seen -- a fence is never expected to span a task boundary in this
-    document family, so crossing one is exactly the signal that the pending
-    opener was never going to be genuinely closed.
+    Markers are grouped into per-task segments and paired by
+    `_fence_segments`/`_pair_fence_markers`: consecutively, except that an
+    odd-count segment sets its FIRST marker aside as the unpaired one rather
+    than its last. A plain whole-segment open/close TOGGLE that always
+    leaves the LAST marker unpaired is not enough -- if an opener is never
+    really closed and a SEPARATE, well-formed fence pair follows later IN
+    THE SAME TASK BODY (no task header between them), that toggle pairs the
+    broken opener with the next fence's OPENING marker instead of
+    recognizing the opener as unpaired, which marks everything between them
+    (real field text, anything) as "inside a fence" by mistake, and leaves
+    the well-formed pair's genuine closing marker dangling as if IT were the
+    broken one. See `_pair_fence_markers`'s docstring for why leftover-first
+    is the chosen resolution.
+
+    A pending, unclosed open is also abandoned (dropped, not paired with
+    anything) the moment a `### Task N: ...` header is seen -- a fence is
+    never expected to span a task boundary in this document family, so
+    crossing one is exactly the signal that the pending opener was never
+    going to be genuinely closed.
     """
     inside = set()
-    open_at = None
-    for index, line in enumerate(lines):
-        if open_at is not None and TASK_HEADER.match(line):
-            open_at = None
-            continue
-        if not FENCE.match(line):
-            continue
-        if open_at is None:
-            open_at = index
-        else:
-            inside.update(range(open_at, index + 1))
-            open_at = None
+    for pairs, _leftover in _fence_segments(lines):
+        for open_at, close_at in pairs:
+            inside.update(range(open_at, close_at + 1))
     return inside
 
 
@@ -352,22 +432,14 @@ class PlanDocument:
         self._resolve_plan_schema()
 
     def _scan_fences(self):
-        """See `fenced_line_indexes`'s docstring for why a plain toggle is
-        not enough: a pending, unclosed open is abandoned (not paired with
-        anything) the moment a task header is seen, so it cannot steal a
-        later, unrelated fence's opening marker as its own phantom close."""
-        open_at = None
-        for index, line in enumerate(self.lines):
-            if open_at is not None and TASK_HEADER.match(line):
-                open_at = None
-                continue
-            if not FENCE.match(line):
-                continue
-            if open_at is None:
-                open_at = index
-            else:
-                self._fences.append({"start": open_at, "end": index})
-                open_at = None
+        """See `fenced_line_indexes`'s and `_pair_fence_markers`'s
+        docstrings for why a plain whole-segment toggle is not enough: a
+        pending, unclosed open must not be able to steal a later, unrelated
+        fence's opening marker as its own phantom close, whether that later
+        fence sits across a task header or later in the SAME task body."""
+        for pairs, _leftover in _fence_segments(self.lines):
+            for open_at, close_at in pairs:
+                self._fences.append({"start": open_at, "end": close_at})
 
     def _in_fence(self, index):
         for fence in self._fences:

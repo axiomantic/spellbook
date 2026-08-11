@@ -361,7 +361,61 @@ def test_unpaired_fence_does_not_corrupt_a_later_paired_fence():
     fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
     assert len(fence_indexes) == 3
     _broken_open, real_open, real_close = fence_indexes
-    assert doc._fences == [{"start": real_open, "end": real_close}]
+    assert fenced_line_indexes(lines) == set(range(real_open, real_close + 1))
+
+
+def test_unpaired_fence_does_not_corrupt_a_later_paired_fence_same_task_body():
+    """Regression for the fence-region bug found in code review of the
+    task-header special case: an unclosed fence marker followed LATER IN THE
+    SAME TASK BODY (no intervening task header) by a separate, well-formed
+    fence pair still gets mispaired under a naive forward toggle -- the
+    broken opener silently absorbs the well-formed pair's OPENING marker as
+    its own phantom close, corrupting `depends_text`/`check_text` and
+    everything in between, and misattributing which line is actually broken
+    (the well-formed pair's real closer gets blamed instead of the true
+    broken opener).
+
+    This fixture has THREE fence markers, all inside ONE task body: a broken
+    opener (never legitimately closed), then, later in the SAME body, a
+    well-formed pair, then real `Depends:`/`Check:` field content after the
+    well-formed pair's close.
+
+    The fix must recognize the FIRST marker as the genuinely unpaired one
+    and the second/third markers as the real pair -- see
+    `fenced_line_indexes`'s docstring for the chosen algorithm.
+    """
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Has an unclosed fence, then a well-formed one\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "```\n"                              # broken opener, never paired
+        "this fence never closes\n\n"
+        "Some prose, then a genuinely well-formed fence:\n\n"
+        "```\n"                              # real open
+        "real fence content\n"
+        "```\n\n"                             # real close
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+
+    # The real Depends:/Check: fields, which sit AFTER the well-formed
+    # pair's close, must be parsed normally -- they must not have been
+    # swallowed by a phantom fence spanning from the broken opener to the
+    # well-formed pair's opener.
+    task = doc.task("Task 1")
+    assert task.depends_text == "none"
+    assert task.check_text == "`pytest -q`"
+    assert task.check_command == "pytest -q"
+
+    # Only the genuinely well-formed pair (the second and third markers)
+    # is a closed fence. The broken opener must not have consumed the
+    # well-formed pair's opener as its own phantom close.
+    lines = text.split("\n")
+    fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
+    assert len(fence_indexes) == 3
+    _broken_open, real_open, real_close = fence_indexes
+    assert fenced_line_indexes(lines) == set(range(real_open, real_close + 1))
 
 
 def test_files_block_does_not_absorb_a_fenced_example_bullet():
