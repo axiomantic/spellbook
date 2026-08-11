@@ -966,3 +966,129 @@ def test_modify_path_missing_skips_a_traversal_escaping_path_entry(tmp_path):
         assert "sibling_target.py" not in hits[0].evidence
     finally:
         sibling.unlink(missing_ok=True)
+
+
+# --------------------------------------------------------------- ownership
+
+def test_shared_path_without_owner_fires_when_no_edge_no_annotation():
+    """Two tasks `Modify:` the same path; neither an owner annotation nor a
+    `Depends:` edge orders them. Full `Finding` equality — not just
+    `len(hits) == 1` plus a substring check on `.evidence` — proves `task`,
+    `section`, and `.line` all point at the FIRST claimant's bullet (Task 2,
+    fixture line 15), and that `.evidence` names both claimants with their
+    (absent) annotations rather than merely containing their names somewhere
+    in a longer string a wrong implementation could also produce."""
+    from spellbook.planlint.finding import WARNING
+    from spellbook.planlint.rules import ownership
+
+    findings = _findings_for(ownership, "neg_shared_path_no_owner.md")
+    hits = [f for f in findings if f.rule == "shared-path-without-owner"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="shared-path-without-owner",
+        message=(
+            "two or more tasks write this path, they do not all name the "
+            "same `(owner: Task N)`, and no `Depends:` edge orders them; "
+            "the writes may race"
+        ),
+        task="Task 2",
+        section="Task 2: First writer",
+        line=15,
+        evidence=(
+            "shared.py claimed by Task 2, Task 5 "
+            "(annotations: Task 2=-, Task 5=-; no dependency path in "
+            "either direction)"
+        ),
+        severity=WARNING,
+    )
+
+
+def test_shared_path_without_owner_is_silent_when_a_depends_edge_orders_them():
+    from spellbook.planlint.rules import ownership
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 2: First writer\n\n**Files:**\n- Modify: `shared.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n\n"
+        "### Task 5: Second writer\n\n**Files:**\n- Modify: `shared.py`\n\n"
+        "**Depends:** Task 2\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=None, repo_root=None)
+    findings = ownership.run(ctx).findings
+    assert [f for f in findings if f.rule == "shared-path-without-owner"] == []
+
+
+def test_shared_path_without_owner_is_silent_with_an_owner_annotation():
+    from spellbook.planlint.rules import ownership
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 2: First writer\n\n**Files:**\n"
+        "- Modify: `shared.py` (owner: Task 2)\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n\n"
+        "### Task 5: Second writer\n\n**Files:**\n"
+        "- Modify: `shared.py` (owner: Task 2)\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=None, repo_root=None)
+    findings = ownership.run(ctx).findings
+    assert [f for f in findings if f.rule == "shared-path-without-owner"] == []
+
+
+def test_shared_path_without_owner_still_fires_when_only_one_of_three_is_annotated():
+    """ONE annotation does not coordinate THREE writers.
+
+    Task 3 declares Task 2 the owner; Tasks 2 and 5 write the same path with no
+    annotation and no edge between them. Suppressing on `any` annotation would
+    silence this, which would mean the rule gets cheaper to defeat the more
+    writers a path collects — backwards from what the finding is worth.
+
+    Full `Finding` equality (not a bare substring check) proves the reported
+    `task`/`section`/`.line` are the FIRST claimant's (Task 2, line 6 of this
+    inline text) and that `.evidence` lists all THREE claimants with their
+    respective annotations — including Task 3's real `owner: Task 2` — rather
+    than an implementation that happens to mention "Task 5" somewhere."""
+    from spellbook.planlint.finding import WARNING
+    from spellbook.planlint.rules import ownership
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 2: First writer\n\n**Files:**\n- Modify: `shared.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n\n"
+        "### Task 3: Annotated writer\n\n**Files:**\n"
+        "- Modify: `shared.py` (owner: Task 2)\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n\n"
+        "### Task 5: Unannotated writer\n\n**Files:**\n- Modify: `shared.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=None, repo_root=None)
+    findings = ownership.run(ctx).findings
+    hits = [f for f in findings if f.rule == "shared-path-without-owner"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="shared-path-without-owner",
+        message=(
+            "two or more tasks write this path, they do not all name the "
+            "same `(owner: Task N)`, and no `Depends:` edge orders them; "
+            "the writes may race"
+        ),
+        task="Task 2",
+        section="Task 2: First writer",
+        line=6,
+        evidence=(
+            "shared.py claimed by Task 2, Task 3, Task 5 "
+            "(annotations: Task 2=-, Task 3=Task 2, Task 5=-; no dependency "
+            "path in either direction)"
+        ),
+        severity=WARNING,
+    )
+
+
+def test_shared_path_without_owner_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import ownership
+
+    findings = _findings_for(ownership, "clean_plan.md")
+    assert [f for f in findings if f.rule == "shared-path-without-owner"] == []
