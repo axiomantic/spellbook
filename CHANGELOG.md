@@ -187,56 +187,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     is guarded, since Windows has no POSIX mode bits and `stat()` reports
     `0o666` regardless.
 
-## [0.83.0] - 2026-08-06
-
-### Changed
-
-- **develop skill — checkability, review-round convergence, and author/judge
-  separation.** Three new rules in `skills/develop/SKILL.md` close gaps that let a
-  plan review run four times and return more blocking findings each round (9, then
-  6, then 12, then 20 CRITICAL).
-  - **Checkability (before every review gate).** Existence is not checkability. A
-    machine must decide the claims that a machine can decide, before a reviewer
-    reads them. Four rules apply: mechanize the decidable claims and repair them
-    before you dispatch the reviewer; build the tooling that the artifact itself
-    specifies BEFORE the gate that the tooling closes; treat a check as evidence
-    only after it goes red on a known-bad input; report which rule fired, not only
-    how many rules fired. The pass is proportional — if the artifact makes no
-    decidable claims, record one line and dispatch the reviewer.
-  - **Review-Round Convergence (gates 2.2 ↔ 2.4 and 3.2 ↔ 3.4).** Number each
-    review round of the same artifact. If the majority of the blocking findings of
-    round N+1 are defects that the repairs of round N caused, the loop does not
-    converge: stop reviewing, mechanize that class of finding, repair against the
-    check, then run ONE more round for the claims the check cannot decide. This is
-    a regression trigger, not a round cap. From round 2 on, the review dispatch
-    carries an `ESTABLISHED FACTS` block, so a fresh reviewer does not measure
-    again what an earlier round measured.
-  - **Author ≠ Judge.** The agent that wrote or repaired an artifact never supplies
-    the verdict on it. That agent is the correct agent to BUILD the executable
-    check, because it holds the context, but it is the wrong agent to run the check
-    and pronounce the result. An agent must never change a check that measures its
-    own repair.
-- **develop dispatch steps 2.1.5 and 3.1.5 — checkability pass.** A new checkability
-  pass runs before the design review (`commands/feature-design.md`, step 2.1.5,
-  before 2.2) and before the implementation-plan review
-  (`commands/feature-implement.md`, step 3.1.5, before 3.2). Step 3.1.5 decides the
-  claims a plan makes about itself: the dependency graph is acyclic, every declared
-  dependency exists, wave and ordering assignments agree with the graph, every tag
-  comes from the declared vocabulary, and every cited path and symbol exists. If the
-  plan schedules its own lint or checker as a Phase 4 task, 3.1.5 builds that tooling
-  now instead. Both steps are registered in the dispatch table, the workflow
-  overview, the STOP AND VERIFY checklists, the skill-invocation-verification
-  exemption list, and the Phase 3 anti-pattern list. Neither step runs on the
-  zero-flag fast path.
-- **`/feature-implement` split into two commands.** The file reached 50,266 bytes,
-  over the 49,152-byte command limit that guards against truncation on platforms
-  like OpenCode. Per the repo's split-don't-trim rule it was divided at its own
-  declared Phase 3 → Phase 4 transition gate: `commands/feature-implement.md`
-  now covers Phase 3 (plan creation, review, approval, execution-mode analysis)
-  and the new `commands/feature-implement-execute.md` covers Phase 4
-  (worktree setup, per-task TDD and gates, end-of-phase audits, finishing).
-  All content preserved; no rules, gates, or dispatch templates were removed.
-
 ## [0.84.0] - 2026-08-06
 
 ### Added
@@ -297,6 +247,56 @@ The rule modules are a refactor of `AGENTS.spellbook.md` and preserve its behavi
 - **`AGENTS.spellbook.md`**, superseded by the `rules/` modules. `spellbook/core/config.py` and `install.py` still accept it when detecting a spellbook checkout, retained for one minor release so an in-flight upgrade resolves.
 - **`patterns/autonomous-mode-protocol.md`, `patterns/git-safety-protocol.md`, and `patterns/subagent-dispatch.md`**, after migrating their unique content into the corresponding rule modules.
 - **`scripts/update_context_files.py` and `scripts/generate_context.py`**, obsolete now that rules are delivered as modules rather than interpolated into context files.
+
+## [0.83.0] - 2026-08-06
+
+### Changed
+
+- **develop skill — checkability, review-round convergence, and author/judge
+  separation.** Three new rules in `skills/develop/SKILL.md` close gaps that let a
+  plan review run four times and return more blocking findings each round (9, then
+  6, then 12, then 20 CRITICAL).
+  - **Checkability (before every review gate).** Existence is not checkability. A
+    machine must decide the claims that a machine can decide, before a reviewer
+    reads them. Four rules apply: mechanize the decidable claims and repair them
+    before you dispatch the reviewer; build the tooling that the artifact itself
+    specifies BEFORE the gate that the tooling closes; treat a check as evidence
+    only after it goes red on a known-bad input; report which rule fired, not only
+    how many rules fired. The pass is proportional — if the artifact makes no
+    decidable claims, record one line and dispatch the reviewer.
+  - **Review-Round Convergence (gates 2.2 ↔ 2.4 and 3.2 ↔ 3.4).** Number each
+    review round of the same artifact. If the majority of the blocking findings of
+    round N+1 are defects that the repairs of round N caused, the loop does not
+    converge: stop reviewing, mechanize that class of finding, repair against the
+    check, then run ONE more round for the claims the check cannot decide. This is
+    a regression trigger, not a round cap. From round 2 on, the review dispatch
+    carries an `ESTABLISHED FACTS` block, so a fresh reviewer does not measure
+    again what an earlier round measured.
+  - **Author ≠ Judge.** The agent that wrote or repaired an artifact never supplies
+    the verdict on it. That agent is the correct agent to BUILD the executable
+    check, because it holds the context, but it is the wrong agent to run the check
+    and pronounce the result. An agent must never change a check that measures its
+    own repair.
+- **develop dispatch steps 2.1.5 and 3.1.5 — checkability pass.** A new checkability
+  pass runs before the design review (`commands/feature-design.md`, step 2.1.5,
+  before 2.2) and before the implementation-plan review
+  (`commands/feature-implement.md`, step 3.1.5, before 3.2). Step 3.1.5 decides the
+  claims a plan makes about itself: the dependency graph is acyclic, every declared
+  dependency exists, wave and ordering assignments agree with the graph, every tag
+  comes from the declared vocabulary, and every cited path and symbol exists. If the
+  plan schedules its own lint or checker as a Phase 4 task, 3.1.5 builds that tooling
+  now instead. Both steps are registered in the dispatch table, the workflow
+  overview, the STOP AND VERIFY checklists, the skill-invocation-verification
+  exemption list, and the Phase 3 anti-pattern list. Neither step runs on the
+  zero-flag fast path.
+- **`/feature-implement` split into two commands.** The file reached 50,266 bytes,
+  over the 49,152-byte command limit that guards against truncation on platforms
+  like OpenCode. Per the repo's split-don't-trim rule it was divided at its own
+  declared Phase 3 → Phase 4 transition gate: `commands/feature-implement.md`
+  now covers Phase 3 (plan creation, review, approval, execution-mode analysis)
+  and the new `commands/feature-implement-execute.md` covers Phase 4
+  (worktree setup, per-task TDD and gates, end-of-phase audits, finishing).
+  All content preserved; no rules, gates, or dispatch templates were removed.
 
 ## [0.82.1] - 2026-08-05
 
