@@ -9,8 +9,9 @@ claim the design document makes about this port, decided by a check here.
 9.7 — the registry's RULES tuple and each rule's returned name are consistent.
 9.10 — the registry's error barrier wraps Exception, not BaseException.
 9.11 — no third-party dependency.
-
-9.8, 9.9 continue in Task 22 (after the SKILL.md edits exist).
+9.8 — the writing-plans Task Structure template carries all four fields and
+     passes the port's own check-verify-pass-consistency rule.
+9.9 — all three call sites are documented in their skills.
 """
 
 import ast
@@ -542,8 +543,9 @@ def test_writing_plans_template_carries_all_four_fields():
     field markers."""
     block = _writing_plans_template_block()
     assert "| Field | Meaning |" not in block  # the Field Definitions guard
-    for marker in ("**Files:**", "**Depends:**", "**Check:**", "**Schema:** planlint-v1"):
-        assert marker in block
+    markers = ("**Files:**", "**Depends:**", "**Check:**", "**Schema:** planlint-v1")
+    missing = [m for m in markers if m not in block]
+    assert missing == []
 
 
 def test_writing_plans_template_check_and_step_4_run_match_under_consistency_rule():
