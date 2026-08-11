@@ -12,7 +12,6 @@ SKILL.md edits exist).
 
 import ast
 import re
-import subprocess
 import sys
 from pathlib import Path
 
@@ -21,8 +20,30 @@ import spellbook.planlint
 PACKAGE = Path(spellbook.planlint.__file__).parent
 REPO_ROOT = PACKAGE.parents[1]
 
+
+def _package_modules():
+    """Every module the §9 checks scan — and a hard error when there are none.
+
+    `finding.py` states the rule this helper enforces on the tests themselves:
+    nothing to check is never a pass. Every check below ends in
+    `assert <offenders> == {}`, which an empty scan satisfies trivially. If
+    `PACKAGE` ever resolved somewhere without modules — a moved package, an
+    import that resolved to a namespace package, a stale install — the checks
+    would report green having examined nothing at all. So the file list is
+    produced in one place and proven non-empty there.
+    """
+    modules = sorted(PACKAGE.rglob("*.py"))
+    assert modules, f"no modules found under {PACKAGE}: the checks would pass vacuously"
+    return modules
+
+
 # ------------------------------------------------------------------ 9.1
 
+# SCOPE, stated so the pass is not read as more than it is: this is an
+# ENUMERATED DENYLIST, so a green run means "zero KNOWN source-tool
+# vocabulary", never "zero source-tool vocabulary". Source-tool wording that
+# no pattern below names passes unseen. The list is the check's definition of
+# the claim, so widening the claim means adding a pattern.
 VOCAB_PATTERNS = [
     re.compile(p)
     for p in (
@@ -56,7 +77,7 @@ VOCAB_PATTERNS = [
 
 def _grep_package(patterns):
     hits = {}
-    for path in sorted(PACKAGE.rglob("*.py")):
+    for path in _package_modules():
         text = path.read_text(encoding="utf-8")
         for pattern in patterns:
             if pattern.search(text):
@@ -77,6 +98,20 @@ def test_known_bad_input_the_grep_actually_matches_unparameterized_vocabulary():
     )
     hits = [p.pattern for p in VOCAB_PATTERNS if p.search(bad_source)]
     assert hits, "the known-bad fixture must trip at least one vocabulary pattern"
+
+
+def test_the_scanned_module_list_is_proven_non_empty(monkeypatch, tmp_path):
+    """The guard against the vacuous pass, proven against a KNOWN-BAD input.
+
+    Asserting `_package_modules()` is non-empty on the real package proves
+    little — it would also hold if the assert inside were deleted. So point
+    `PACKAGE` at an empty directory and require the helper to RAISE."""
+    monkeypatch.setattr(sys.modules[__name__], "PACKAGE", tmp_path)
+    try:
+        _package_modules()
+    except AssertionError:
+        return
+    raise AssertionError("_package_modules() accepted an empty scan")
 
 
 def test_the_ported_engine_carries_zero_source_tool_vocabulary():
@@ -117,11 +152,13 @@ def _walks_subprocess(tree):
             findings.append("from subprocess import ...")
 
     for node in ast.walk(tree):
-        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
-            if node.value.id == "os" and (
-                node.attr in ("system", "popen") or node.attr.startswith("exec")
-            ):
-                findings.append(f"os.{node.attr}")
+        if (
+            isinstance(node, ast.Attribute)
+            and isinstance(node.value, ast.Name)
+            and node.value.id == "os"
+            and (node.attr in ("system", "popen") or node.attr.startswith("exec"))
+        ):
+            findings.append(f"os.{node.attr}")
         if isinstance(node, ast.Call):
             func = node.func
             if isinstance(func, ast.Attribute):
@@ -170,7 +207,7 @@ def test_a_plain_dot_run_call_is_not_mistaken_for_a_subprocess_call():
 
 def test_no_call_site_outside_cli_spawns_a_subprocess():
     offenders = {}
-    for path in sorted(PACKAGE.rglob("*.py")):
+    for path in _package_modules():
         if path.name == "cli.py":
             continue  # cli.py itself never spawns one either, but is exempt
             # from this check by design intent (design §9.2 scopes the check
@@ -186,6 +223,22 @@ def test_no_call_site_outside_cli_spawns_a_subprocess():
 # ----------------------------------------------------------------- 9.11
 
 def _top_level_imports(tree):
+    """Imports bound at module scope, read from `tree.body` ONLY.
+
+    Two forms are therefore INVISIBLE to this walk, and a green run does not
+    speak to either:
+
+    1. A function-level import. `document.py`'s `declared_dependencies` uses
+       one as a documented cycle-breaker, so the form is live in this package.
+    2. An import nested in a module-level `try:`/`except ImportError:` — the
+       `tomllib`/`tomli` fallback shape. The `Import` node sits inside the
+       `Try` node rather than directly in `tree.body`.
+
+    The narrow walk is deliberate: `ast.walk` would also reach imports inside
+    `TYPE_CHECKING` guards and other conditionals that impose no install-time
+    dependency, which is the thing §9.11 is actually about. The trade is that
+    a third-party dependency introduced by either form above ships unflagged.
+    """
     names = []
     for node in tree.body:
         if isinstance(node, ast.Import):
@@ -197,7 +250,7 @@ def _top_level_imports(tree):
 
 def test_the_package_adds_no_third_party_dependency():
     offenders = {}
-    for path in sorted(PACKAGE.rglob("*.py")):
+    for path in _package_modules():
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for name in _top_level_imports(tree):
             if name == "spellbook":
@@ -220,4 +273,11 @@ def test_package_needs_no_new_wheel_packaging_entry():
         pyproject_text,
     )
     assert wheel_section_match is not None
-    assert "planlint" not in wheel_section_match.group("list")
+    packages_list = wheel_section_match.group("list")
+    # The claim has TWO halves and needs both. "planlint is absent" alone is
+    # satisfied by a wheel that ships nothing at all; it is only good news
+    # because `spellbook` is present and carries `planlint` as a subpackage.
+    # Assert the carrier, or deleting `spellbook` from the list would leave
+    # this test green while the package stopped shipping entirely.
+    assert '"spellbook"' in packages_list or "'spellbook'" in packages_list
+    assert "planlint" not in packages_list

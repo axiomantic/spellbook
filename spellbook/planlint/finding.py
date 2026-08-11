@@ -1,10 +1,12 @@
 """Findings and lint results.
 
 Exit codes are stated once, here, because the source project measured what a
-silent zero costs: a test runner invoked with a filter pattern exits 0 when
-the pattern matches no test, and about a hundred checks reported PASS against
-no code. A lint therefore reports a hard error when it finds no input to
-examine. Nothing to check is never a pass.
+silent zero costs. That project's test runner exited 0 when its filter
+pattern matched no test, and about a hundred checks reported PASS against no
+code. Not every runner behaves that way — pytest exits 5 on an empty
+collection — which is the point: a lint cannot inherit the guarantee from its
+runner. So this one reports a hard error when it finds no input to examine.
+Nothing to check is never a pass.
 """
 
 import dataclasses
