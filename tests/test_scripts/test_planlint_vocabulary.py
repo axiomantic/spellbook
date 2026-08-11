@@ -515,3 +515,64 @@ def test_registry_error_barrier_wraps_exception_not_baseexception():
                 # cannot slip past the two branches above unrecorded.
                 except_types.append(ast.unparse(node.type))
     assert except_types == ["Exception"]
+
+
+# ------------------------------------------------------------------ 9.8
+
+def _writing_plans_template_block():
+    """The FENCED template under `## Task Structure`, and nothing else.
+
+    Slicing `## Task Structure` → `## Mode Behavior` is WRONG here, for the
+    reason test_writing_plans_skill_planlint.py's own `_template_block` spells
+    out: Task 19's Edit B inserts `## Field Definitions` between those two
+    headings, and that section's table itself names `**Depends:**`,
+    `**Check:**` and `**Schema:** planlint-v1`. A field assertion over the
+    wider slice therefore passes when Edit B alone lands and Edit A — the
+    template change — never does. Both readers of this template must narrow
+    the same way or the pair disagrees about what it is checking.
+    """
+    skill = REPO_ROOT / "skills" / "writing-plans" / "SKILL.md"
+    text = skill.read_text(encoding="utf-8")
+    section = text.split("## Task Structure", 1)[1].split("## Field Definitions", 1)[0]
+    return section.split("```markdown\n", 1)[1].split("\n```", 1)[0]
+
+
+def test_writing_plans_template_carries_all_four_fields():
+    """(i) grep the Task Structure fenced block for all four required
+    field markers."""
+    block = _writing_plans_template_block()
+    assert "| Field | Meaning |" not in block  # the Field Definitions guard
+    for marker in ("**Files:**", "**Depends:**", "**Check:**", "**Schema:** planlint-v1"):
+        assert marker in block
+
+
+def test_writing_plans_template_check_and_step_4_run_match_under_consistency_rule():
+    """(ii) run rules/consistency.py over the template block, treating it
+    as a one-task plan, and assert zero check-verify-pass-consistency
+    findings. The template is the first thing the rule must be right
+    about."""
+    from spellbook.planlint import registry
+    from spellbook.planlint.document import PlanDocument
+    from spellbook.planlint.rules import consistency
+
+    fenced = _writing_plans_template_block()
+    one_task_plan = "**Schema:** planlint-v1\n\n" + fenced.replace("### Task N:", "### Task 1:")
+    doc = PlanDocument.from_text(one_task_plan)
+    ctx = registry.RuleContext(doc=doc, phase=None, repo_root=None)
+    findings = consistency.run(ctx).findings
+    assert [f for f in findings if f.rule == "check-verify-pass-consistency"] == []
+
+
+# ------------------------------------------------------------------ 9.9
+
+def test_all_three_call_sites_are_documented_in_their_skills():
+    checks = {
+        "lint_for_authoring": REPO_ROOT / "skills" / "writing-plans" / "SKILL.md",
+        "lint_for_review": REPO_ROOT / "skills" / "reviewing-impl-plans" / "SKILL.md",
+        "lint_on_write": REPO_ROOT / "skills" / "executing-plans" / "SKILL.md",
+    }
+    missing = []
+    for function_name, skill_path in checks.items():
+        if function_name not in skill_path.read_text(encoding="utf-8"):
+            missing.append(f"{function_name} not found in {skill_path.name}")
+    assert missing == []
