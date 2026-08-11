@@ -46,18 +46,30 @@ def test_lint_result_report_orders_by_severity_rule_task_line():
         Finding(rule="a", severity=ERROR, task="Task 1", line=1, message="m1"),
     ]
     result = LintResult(name="r", findings=findings, examined=2)
-    text = result.report()
-    assert text.index("[ERROR] a") < text.index("[WARNING] z")
+    expected = (
+        "r: 2 finding(s) (2 inputs examined)\n"
+        "  [ERROR] a  Task 1  line 1\n"
+        "      m1\n"
+        "  [WARNING] z  Task 2  line 5\n"
+        "      m2\n"
+    )
+    assert result.report() == expected
 
 
 def test_guard_no_input_adds_no_input_error_when_examined_is_zero():
     result = guard_no_input("mylint", [], 0, "task blocks", "mylint")
     assert result.failed is True
-    assert result.findings[0].rule == "no-input"
-    assert result.findings[0].severity == ERROR
+    assert result.findings[0] == Finding(
+        rule="no-input",
+        message="the mylint examined 0 task blocks",
+        severity=ERROR,
+    )
 
 
 def test_guard_no_input_passes_through_when_examined_is_nonzero():
     result = guard_no_input("mylint", [], 3, "task blocks", "mylint")
     assert result.failed is False
     assert result.examined == 3
+    assert result.findings == []
+    assert result.name == "mylint"
+    assert result.examined_label == "task blocks"
