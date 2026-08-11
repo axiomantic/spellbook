@@ -3,7 +3,6 @@ schema gate, phase behavior, fail-open/fail-closed, and BaseException
 propagation through the error barrier (design §5.2/§5.3, §9.10).
 """
 
-import dataclasses
 from pathlib import Path
 
 import pytest
@@ -531,69 +530,60 @@ LEGACY_PLAN_TEXT = (
 )
 
 
-def _counting(run, calls):
-    def wrapper(ctx):
-        calls.append(ctx)
-        return run(ctx)
-
-    return wrapper
-
-
-def _mock_rules_with_counter(calls):
+def _rules_must_not_be_called():
     """Replace the `_rules()` seam (registry.py's own indirection over the
     plain-data `RULES` tuple, built for exactly this purpose — see its
-    docstring) with a counting-wrapped copy of the real table via tripwire,
-    per AGENTS.md: tripwire is the only acceptable mocking framework;
-    `monkeypatch.setattr` is restricted to environment/cwd/sys.path only, so
-    it cannot be used to swap out `registry.RULES` directly. `.required(False)`
-    lets the mock go unfired without tripping tripwire's unused-mock guard —
-    for a CORRECT `lint_on_write`, the legacy short-circuit means `_rules()`
-    is never reached at all."""
-    counting_rules = tuple(
-        dataclasses.replace(r, run=_counting(r.run, calls)) for r in registry.RULES
-    )
+    docstring) via tripwire, per AGENTS.md: tripwire is the only acceptable
+    mocking framework; `monkeypatch.setattr` is restricted to
+    environment/cwd/sys.path only, so it cannot be used to swap out
+    `registry.RULES` directly. The mock FIRING is itself the failure — this
+    proves `_rules()` was never reached at all, not merely that a rule
+    produced zero findings or that a counter stayed at zero (which a rule
+    set phase-filtered to nothing would also satisfy). `run_rules()` calls
+    `_rules()` outside its own `try/except` barrier (registry.py, `for rule
+    in _rules():` precedes the `try:`), so this `AssertionError` propagates
+    rather than being swallowed as a rule crash."""
     rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
-    rules_mock.__call__.required(False).returns(counting_rules)
+    rules_mock.__call__.required(False).raises(AssertionError("should not be called"))
     return rules_mock
 
 
 def test_a_legacy_plan_triggers_zero_rule_invocations(tmp_path):
-    """A plan with no Schema: field must never reach a rule. Asserted as
-    ZERO INVOCATIONS, not as zero findings — a linter that ran every rule
-    and happened to find nothing would pass a findings-based assertion
-    while doing exactly the work this design promises it will not do. The
-    counter wraps the registry's rule callables — the package's own seam —
-    rather than patching a rule's internals."""
-    calls = []
-    _mock_rules_with_counter(calls)
+    """A plan with no Schema: field must never reach a rule."""
+    _rules_must_not_be_called()
     plan = tmp_path / "legacy.md"
-    plan.write_text(LEGACY_PLAN_TEXT, encoding="utf-8")
 
     with tripwire:
         report = api.lint_on_write(plan, LEGACY_PLAN_TEXT, repo_root=tmp_path)
 
     assert report is None
-    assert calls == []
 
 
-def test_zero_invocations_holds_across_a_full_amendment_cycle(tmp_path):
-    """The same assertion across write, amend, write again — the
-    understanding document's stated success criterion."""
-    calls = []
-    _mock_rules_with_counter(calls)
+@pytest.mark.parametrize(
+    "legacy_text",
+    [
+        pytest.param(LEGACY_PLAN_TEXT, id="single-task"),
+        pytest.param(
+            LEGACY_PLAN_TEXT + "\n### Task 2: Amended in\n\n**Files:**\n- Create: `y.py`\n",
+            id="longer-body",
+        ),
+        pytest.param(
+            LEGACY_PLAN_TEXT
+            + "\n### Task 2: Amended in\n\n**Files:**\n- Create: `y.py`\n"
+            + "\n<!-- a scope-drift note -->\n",
+            id="body-with-html-comment",
+        ),
+    ],
+)
+def test_zero_invocations_holds_across_different_legacy_plan_shapes(tmp_path, legacy_text):
+    """`lint_on_write` is a pure function of its arguments (no caching, no
+    module state), so different legacy-plan TEXT SHAPES are independent
+    invocations, each of which must independently prove zero rule
+    invocations — not a stateful "cycle" with carryover between calls."""
+    _rules_must_not_be_called()
     plan = tmp_path / "legacy.md"
 
     with tripwire:
-        plan.write_text(LEGACY_PLAN_TEXT, encoding="utf-8")
-        assert api.lint_on_write(plan, LEGACY_PLAN_TEXT, repo_root=tmp_path) is None
-        assert calls == []
+        report = api.lint_on_write(plan, legacy_text, repo_root=tmp_path)
 
-        amended = LEGACY_PLAN_TEXT + "\n### Task 2: Amended in\n\n**Files:**\n- Create: `y.py`\n"
-        plan.write_text(amended, encoding="utf-8")
-        assert api.lint_on_write(plan, amended, repo_root=tmp_path) is None
-        assert calls == []
-
-        amended_again = amended + "\n<!-- a scope-drift note -->\n"
-        plan.write_text(amended_again, encoding="utf-8")
-        assert api.lint_on_write(plan, amended_again, repo_root=tmp_path) is None
-        assert calls == []
+    assert report is None
