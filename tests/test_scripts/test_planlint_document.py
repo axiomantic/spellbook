@@ -12,6 +12,7 @@ import pytest
 
 from spellbook.planlint.document import (
     NONE_WORDS,
+    FilesEntry,
     PlanDocument,
     backticked,
     fenced_line_indexes,
@@ -50,10 +51,21 @@ def test_files_field_is_block_scoped_bullet_list():
     doc = PlanDocument.from_path(FIXTURES / "clean_plan.md")
     task1 = doc.task("Task 1")
     entries = task1.files_entries
-    assert [(e.verb, e.path) for e in entries] == [
-        ("Create", "spellbook/sample/first.py"),
-        ("Test", "tests/test_scripts/test_sample_first.py"),
-    ]
+    expected = (
+        FilesEntry(
+            verb="Create",
+            path="spellbook/sample/first.py",
+            raw="spellbook/sample/first.py",
+            line=10,
+        ),
+        FilesEntry(
+            verb="Test",
+            path="tests/test_scripts/test_sample_first.py",
+            raw="tests/test_scripts/test_sample_first.py",
+            line=11,
+        ),
+    )
+    assert entries == expected
 
 
 def test_files_entry_line_points_at_its_own_bullet_not_the_files_label():
@@ -66,7 +78,14 @@ def test_files_entry_line_points_at_its_own_bullet_not_the_files_label():
     # clean_plan.md: `**Files:**` is fixture line 9; its two bullets are
     # fixture lines 10 and 11. A regression to the label would give [9, 9].
     assert task1.files_line == 9
-    assert [e.line for e in task1.files_entries] == [10, 11]
+    entries = task1.files_entries
+    assert [e.line for e in entries] == [10, 11]
+    assert entries[0] == FilesEntry(
+        verb="Create",
+        path="spellbook/sample/first.py",
+        raw="spellbook/sample/first.py",
+        line=10,
+    )
 
 
 def test_files_entry_line_survives_a_blank_line_inside_the_block():
@@ -89,7 +108,11 @@ def test_files_entry_line_survives_a_blank_line_inside_the_block():
     )
     doc = PlanDocument.from_text(text)
     entries = doc.task("Task 1").files_entries
-    assert [(e.verb, e.line) for e in entries] == [("Create", 6), ("Modify", 8)]
+    expected = (
+        FilesEntry(verb="Create", path="a.py", raw="a.py", line=6),
+        FilesEntry(verb="Modify", path="b.py", raw="b.py", line=8),
+    )
+    assert entries == expected
 
 
 def test_files_entry_with_line_range_suffix():
@@ -103,10 +126,14 @@ def test_files_entry_with_line_range_suffix():
     )
     doc = PlanDocument.from_text(text)
     entry = doc.task("Task 1").files_entries[0]
-    assert entry.path == "spellbook/x.py"
-    assert entry.raw == "spellbook/x.py:12-30"
-    assert entry.line_start == 12
-    assert entry.line_end == 30
+    assert entry == FilesEntry(
+        verb="Modify",
+        path="spellbook/x.py",
+        raw="spellbook/x.py:12-30",
+        line_start=12,
+        line_end=30,
+        line=6,
+    )
 
 
 def test_check_command_is_the_single_inline_span():
@@ -199,3 +226,82 @@ def test_declares_schema_reads_task_level_schema_when_no_plan_level_value():
 def test_from_path_raises_filenotfounderror_on_missing_file(tmp_path):
     with pytest.raises(FileNotFoundError):
         PlanDocument.from_path(tmp_path / "does_not_exist.md")
+
+
+def test_step_run_command_is_parsed_from_its_run_line():
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "**Step 1: Do it**\n"
+        "Run: `pytest -q`\n"
+        "Expected: PASS\n"
+    )
+    doc = PlanDocument.from_text(text)
+    step = doc.task("Task 1").steps[0]
+    assert step.number == 1
+    assert step.title == "Do it"
+    assert step.run_command == "pytest -q"
+    assert step.run_line == 13
+
+
+def test_step_run_command_is_empty_when_not_a_single_span():
+    """Regression test for the run_command/check_command asymmetry: `Run:`
+    must require the SAME whole-span-coverage check `check_command` already
+    applies, or a trailing annotation after the backtick span is silently
+    dropped instead of rejecting the whole value."""
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "**Step 1: Do it**\n"
+        "Run: `pytest -q` (expect fail)\n"
+    )
+    doc = PlanDocument.from_text(text)
+    step = doc.task("Task 1").steps[0]
+    assert step.run_command == ""
+
+
+def test_files_entry_owner_annotation_is_parsed():
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n"
+        "**Files:**\n"
+        "- Modify: `shared.py` (owner: Task 2)\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    entry = doc.task("Task 1").files_entries[0]
+    assert entry == FilesEntry(
+        verb="Modify",
+        path="shared.py",
+        raw="shared.py",
+        owner="Task 2",
+        line=6,
+    )
+
+
+def test_files_block_does_not_absorb_a_fenced_example_bullet():
+    """A fenced code block later in the same task body may illustrate the
+    Files: syntax for readers; a line inside it that happens to match
+    FILES_ENTRY must not be picked up as a real bullet."""
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n"
+        "**Files:**\n"
+        "- Create: `real.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "Example of the Files: syntax:\n"
+        "```\n"
+        "- Create: `fenced_example.py`\n"
+        "```\n"
+    )
+    doc = PlanDocument.from_text(text)
+    entries = doc.task("Task 1").files_entries
+    assert [e.path for e in entries] == ["real.py"]

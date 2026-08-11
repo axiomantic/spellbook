@@ -468,9 +468,12 @@ class PlanDocument:
                 run_match = RUN_LINE.match(body_line.strip())
                 if run_match:
                     run_line = task.line + offset + body_offset
-                    spans, unmatched = inline_code_spans(run_match.group("value"))
+                    value = run_match.group("value")
+                    spans, unmatched = inline_code_spans(value)
                     if len(spans) == 1 and not unmatched:
-                        run_command = spans[0][2]
+                        start, end, inner = spans[0]
+                        if value[start:end + 1] == value.strip():
+                            run_command = inner
                     break
             steps.append(
                 Step(
