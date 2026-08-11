@@ -44,6 +44,7 @@ docs = [
 ]
 [project.scripts]
 spellbook = "spellbook.cli.main:main"
+spellbook-planlint = "spellbook.planlint.cli:main"
 
 [build-system]
 requires = ["hatchling"]
