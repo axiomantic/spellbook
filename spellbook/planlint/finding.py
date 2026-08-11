@@ -43,6 +43,8 @@ class LintResult:
 
     def report(self):
         """A human-readable report: task, section, evidence, and the rule."""
+        if self.skipped_reason:
+            return f"{self.name}: skipped ({self.skipped_reason})\n"
         if not self.findings:
             return f"{self.name}: clean ({self.examined} {self.examined_label} examined)\n"
         head = (

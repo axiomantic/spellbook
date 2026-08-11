@@ -37,6 +37,18 @@ class DecidedClaim:
     reason: str = ""  # populated when decided is False
 
 
+# `skip_kind` — a structured reason code for why `linted` is False, set ONLY
+# at the actual except-handlers / gate branches that decide it, never derived
+# from `skip_reason`'s prose. `skip_reason` interpolates caller-controlled
+# text (a plan's own `Schema:` field value), so substring-sniffing it for
+# exit-code decisions is fooled by a plan whose `Schema:` field happens to
+# contain the words "unreadable" or "not UTF-8". `skip_kind` is the
+# structural fact a caller (cli.py) can safely branch on.
+SKIP_UNREADABLE = "unreadable"
+SKIP_NOT_UTF8 = "not_utf8"
+SKIP_NO_SCHEMA = "no_schema"
+
+
 @dataclasses.dataclass(frozen=True)
 class PlanLintReport:
     """The whole answer. Never raised through; always returned."""
@@ -46,6 +58,7 @@ class PlanLintReport:
     skip_reason: str
     results: "tuple[LintResult, ...]"
     internal_errors: "tuple[registry.RuleCrash, ...]"
+    skip_kind: str = ""  # one of the SKIP_* constants above; "" when linted
 
     @property
     def findings(self):
@@ -69,8 +82,7 @@ class PlanLintReport:
         parts = [r.report() for r in self.results]
         for crash in self.internal_errors:
             parts.append(
-                f"{crash.rule}: CRASHED ({crash.exc_type}: {crash.message})\n"
-                f"{crash.traceback_text}"
+                f"{crash.rule}: CRASHED ({crash.exc_type}: {crash.message})\n{crash.traceback_text}"
             )
         return "".join(parts)
 
@@ -179,6 +191,7 @@ def lint_text(text, *, name="<text>", phase=Phase.REVIEW, repo_root=None):
             skip_reason=_skip_reason_for(value),
             results=(),
             internal_errors=(),
+            skip_kind=SKIP_NO_SCHEMA,
         )
 
     doc = PlanDocument.from_text(text, name=name)
@@ -219,6 +232,7 @@ def lint_path(path, *, phase=Phase.REVIEW, repo_root=None):
             skip_reason=f"unreadable: {exc}",
             results=(),
             internal_errors=(),
+            skip_kind=SKIP_UNREADABLE,
         )
     except UnicodeDecodeError:
         return PlanLintReport(
@@ -227,6 +241,7 @@ def lint_path(path, *, phase=Phase.REVIEW, repo_root=None):
             skip_reason="not UTF-8",
             results=(),
             internal_errors=(),
+            skip_kind=SKIP_NOT_UTF8,
         )
     return lint_text(text, name=str(path), phase=phase, repo_root=repo_root)
 

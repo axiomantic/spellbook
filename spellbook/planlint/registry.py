@@ -19,7 +19,15 @@ from pathlib import Path
 
 from spellbook.planlint.document import PlanDocument
 from spellbook.planlint.finding import LintResult
-from spellbook.planlint.rules import checks, consistency, depends, files, ownership, schema, structure
+from spellbook.planlint.rules import (
+    checks,
+    consistency,
+    depends,
+    files,
+    ownership,
+    schema,
+    structure,
+)
 
 
 class Phase(enum.Enum):
@@ -84,7 +92,7 @@ class RuleContext:
     """
 
     doc: PlanDocument
-    phase: "Phase | None"    # Phase, or None (see docstring)
+    phase: "Phase | None"  # Phase, or None (see docstring)
     repo_root: "Path | None"
 
 

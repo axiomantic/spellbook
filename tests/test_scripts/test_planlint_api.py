@@ -395,7 +395,7 @@ def test_report_with_findings_includes_per_rule_report_text():
         "consistency: 1 finding(s) (0 task blocks examined)\n"
         "  [ERROR] no-input\n"
         "      the consistency lint examined 0 task blocks\n"
-        "files: clean (0 Files: entries examined)\n"
+        "files: skipped (no repo_root supplied)\n"
         "ownership: 1 finding(s) (0 task blocks examined)\n"
         "  [ERROR] no-input\n"
         "      the ownership lint examined 0 task blocks\n"
