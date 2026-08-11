@@ -460,12 +460,53 @@ def test_errors_property_returns_only_error_severity_findings():
     )
 
 
+def test_schema_value_containing_the_words_unreadable_or_not_utf8_is_a_normal_skip(tmp_path):
+    """M2 regression: the motivating bug for `skip_kind` being a STRUCTURAL
+    enum rather than prose-sniffed from `skip_reason`. A plan whose
+    `Schema:` value literally contains the text "unreadable" or "not UTF-8"
+    must still be treated as an ordinary "not a planlint schema" skip
+    (`SKIP_NO_SCHEMA`, exit 0) — not misread as a genuinely unreadable file
+    or a non-UTF-8 decode failure, which is what code that decided "skip" by
+    grepping `skip_reason` text would get wrong."""
+    for bogus_value in ("this-file-is-unreadable", "definitely-not-UTF-8-compatible"):
+        text = f"**Schema:** {bogus_value}\n\n### Task 1: X\n"
+        report = api.lint_text(text)
+        assert report.linted is False
+        assert report.skip_kind == api.SKIP_NO_SCHEMA
+
+        plan = tmp_path / "plan.md"
+        plan.write_text(text, encoding="utf-8")
+        path_report = api.lint_path(plan)
+        assert path_report.linted is False
+        assert path_report.skip_kind == api.SKIP_NO_SCHEMA
+
+
 def test_lint_path_on_a_non_utf8_file_returns_unlinted_not_an_exception(tmp_path):
     plan = tmp_path / "bad.md"
     plan.write_bytes(b"\xff\xfe not utf-8 at all")
     report = api.lint_path(plan)
     assert report.linted is False
     assert report.skip_reason == "not UTF-8"
+
+
+def test_skip_kind_is_unreadable_for_a_missing_file(tmp_path):
+    report = api.lint_path(tmp_path / "does_not_exist.md")
+    assert report.linted is False
+    assert report.skip_kind == api.SKIP_UNREADABLE
+
+
+def test_skip_kind_is_not_utf8_for_a_non_utf8_file(tmp_path):
+    plan = tmp_path / "bad.md"
+    plan.write_bytes(b"\xff\xfe not utf-8 at all")
+    report = api.lint_path(plan)
+    assert report.linted is False
+    assert report.skip_kind == api.SKIP_NOT_UTF8
+
+
+def test_skip_kind_is_no_schema_for_a_legacy_plan():
+    report = api.lint_text("### Task 1: X\n\n**Files:**\n- Create: `x.py`\n")
+    assert report.linted is False
+    assert report.skip_kind == api.SKIP_NO_SCHEMA
 
 
 def test_decided_claim_finding_count_for_a_rule_that_actually_fires():

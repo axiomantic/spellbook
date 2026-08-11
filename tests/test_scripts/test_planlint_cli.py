@@ -14,6 +14,7 @@ test_planlint_registry.py and test_planlint_api.py use) gives a crash that
 is deliberate, readable, and immune to a rule module's own bug fixes.
 """
 
+import os
 import shutil
 import subprocess
 import sys
@@ -23,7 +24,7 @@ import pytest
 import tripwire
 
 from spellbook.planlint import api, cli, registry
-from spellbook.planlint.finding import LintResult
+from spellbook.planlint.finding import ERROR, Finding, LintResult
 
 FIXTURES = Path(__file__).parent / "fixtures" / "planlint"
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -40,6 +41,9 @@ SUBPROCESS_TIMEOUT = 20
 
 
 def _run_cli(*args):
+    # COLUMNS is pinned so argparse's usage/help text wraps identically
+    # regardless of the invoking shell's terminal width — otherwise tests
+    # asserting exact usage/help text are flaky under different COLUMNS.
     return subprocess.run(
         [sys.executable, "-m", "spellbook.planlint.cli", *args],
         cwd=REPO_ROOT,
@@ -47,6 +51,7 @@ def _run_cli(*args):
         text=True,
         timeout=SUBPROCESS_TIMEOUT,
         check=False,
+        env={**os.environ, "COLUMNS": "80"},
     )
 
 
@@ -149,6 +154,22 @@ def test_cli_reports_non_utf8_file_and_exits_nonzero(tmp_path):
     assert result.stderr == f"{bad}: not linted (not UTF-8)\n"
 
 
+def test_cli_exits_zero_on_a_schema_value_that_mentions_unreadable_or_not_utf8(tmp_path):
+    """M2 regression at the CLI level: a plan whose `Schema:` value literally
+    contains the words "unreadable" or "not UTF-8" must exit 0 as an ordinary
+    not-a-planlint-schema skip, not be misrouted to the exit-1 unreadable /
+    non-UTF-8 path."""
+    for bogus_value in ("this-file-is-unreadable", "definitely-not-UTF-8-compatible"):
+        plan = tmp_path / "plan.md"
+        plan.write_text(f"**Schema:** {bogus_value}\n\n### Task 1: X\n", encoding="utf-8")
+        result = _run_cli(str(plan))
+        assert result.returncode == 0
+        assert result.stdout == ""
+        assert result.stderr == (
+            f"{plan}: not linted (Schema: {bogus_value} (not a planlint schema))\n"
+        )
+
+
 def test_cli_rejects_a_nonexistent_repo_root(tmp_path):
     missing_root = tmp_path / "does_not_exist_dir"
     result = _run_cli(str(FIXTURES / "clean_plan.md"), "--repo-root", str(missing_root))
@@ -159,6 +180,38 @@ def test_cli_rejects_a_nonexistent_repo_root(tmp_path):
         "                          [--phase {authoring,review,execution}]\n"
         "                          plan\n"
         f"spellbook-planlint: error: --repo-root {str(missing_root)!r} is not an "
+        "existing directory\n"
+    )
+
+
+def test_cli_rejects_an_empty_repo_root(tmp_path):
+    """L1 regression: `--repo-root ""` (explicitly passed but empty) must
+    error out via `parser.error`, not silently bypass validation via a
+    falsy-string check and degrade to `files: skipped`."""
+    result = _run_cli(str(FIXTURES / "clean_plan.md"), "--repo-root", "")
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert result.stderr == (
+        "usage: spellbook-planlint [-h] [--repo-root REPO_ROOT]\n"
+        "                          [--phase {authoring,review,execution}]\n"
+        "                          plan\n"
+        "spellbook-planlint: error: --repo-root '' is not an existing directory\n"
+    )
+
+
+def test_cli_rejects_a_repo_root_that_is_a_file_not_a_directory(tmp_path):
+    """L5: --repo-root pointing at a real FILE (not a directory, not
+    nonexistent) must also trigger `parser.error` (exit 2)."""
+    a_file = tmp_path / "not_a_dir.txt"
+    a_file.write_text("x", encoding="utf-8")
+    result = _run_cli(str(FIXTURES / "clean_plan.md"), "--repo-root", str(a_file))
+    assert result.returncode == 2
+    assert result.stdout == ""
+    assert result.stderr == (
+        "usage: spellbook-planlint [-h] [--repo-root REPO_ROOT]\n"
+        "                          [--phase {authoring,review,execution}]\n"
+        "                          plan\n"
+        f"spellbook-planlint: error: --repo-root {str(a_file)!r} is not an "
         "existing directory\n"
     )
 
@@ -180,11 +233,19 @@ def test_cli_phase_choices_exactly_match_the_real_phase_enum():
     """I4: pins that argparse's `choices=[p.value for p in Phase]` is not
     silently stale against the real enum — a future `Phase` member that the
     CLI forgets to accept would fail this test instead of surfacing only as
-    a confusing `invalid choice` at runtime."""
+    a confusing `invalid choice` at runtime.
+
+    COLUMNS is pinned to 80 by `_run_cli`, so the `--phase` option line's
+    exact wrapping is deterministic; the full line is asserted for exact
+    equality rather than substring-matched.
+    """
     result = _run_cli("--help")
     assert result.returncode == 0
     expected_choices = "{" + ",".join(p.value for p in api.Phase) + "}"
-    assert f"--phase {expected_choices}" in result.stdout
+    lines = result.stdout.splitlines()
+    phase_lines = [line for line in lines if line.strip().startswith("--phase")]
+    assert len(phase_lines) == 1
+    assert phase_lines[0] == f"  --phase {expected_choices}"
 
 
 def test_cli_with_repo_root_exits_zero_on_a_clean_plan(tmp_path):
@@ -262,5 +323,53 @@ def test_cli_exits_2_and_reports_a_rule_crash_on_stderr(capsys):
     # parseable outcome); the full rule-by-rule report — which embeds the
     # crash — is the diagnostic and goes to stderr instead.
     assert captured.out == f"{plan}: 0 finding(s), 0 error(s), 1 crash(es)\n"
+    # The traceback body is non-deterministic (frame/line details), so only
+    # the HEAD portion — up through the CRASHED line, before the traceback
+    # itself — is asserted for exact equality. The traceback marker line is
+    # asserted to start the remainder, without checking its contents.
+    expected_head = (
+        "survivor: clean (1 inputs examined)\ncrasher: CRASHED (KeyError: 'boom')\n"
+    )
+    assert captured.err.startswith(expected_head)
+    traceback_tail = captured.err[len(expected_head) :]
+    assert traceback_tail.startswith("Traceback (most recent call last):")
+
+
+def test_cli_exits_2_when_a_rule_crashes_alongside_a_separate_rules_finding(capsys):
+    """L4: a rule CRASH and a SEPARATE rule's finding, in the same run. The
+    disclosed precedence is crash-wins-over-findings for the exit code (a
+    crash is a linter defect, more severe than a plan defect), and the
+    finding still appears in the full report on stderr — nothing is
+    silently dropped."""
+
+    def crashing_rule(ctx):
+        raise KeyError("boom")
+
+    def finding_rule(ctx):
+        return LintResult(
+            name="finder",
+            findings=[Finding(rule="some-rule", message="a real finding", severity=ERROR)],
+            examined=1,
+        )
+
+    crasher = registry.Rule(
+        name="crasher", run=crashing_rule, emits=frozenset(), phases=frozenset(api.Phase)
+    )
+    finder = registry.Rule(
+        name="finder", run=finding_rule, emits=frozenset(), phases=frozenset(api.Phase)
+    )
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((crasher, finder))
+    with tripwire:
+        exit_code = cli.main([str(FIXTURES / "clean_plan.md")])
+    rules_mock.assert_call(args=(), kwargs={})
+
+    assert exit_code == 2
+    captured = capsys.readouterr()
+    plan = str(FIXTURES / "clean_plan.md")
+    # Crash-wins-over-findings: exit 2 (not 1), and the summary line still
+    # reports both the finding and the crash counts on stdout.
+    assert captured.out == f"{plan}: 1 finding(s), 1 error(s), 1 crash(es)\n"
+    assert "finder: 1 finding(s) (1 inputs examined)" in captured.err
+    assert "a real finding" in captured.err
     assert "crasher: CRASHED (KeyError: 'boom')" in captured.err
-    assert "survivor: clean (1 inputs examined)" in captured.err

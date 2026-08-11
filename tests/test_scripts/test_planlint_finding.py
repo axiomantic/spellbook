@@ -79,3 +79,25 @@ def test_guard_no_input_passes_through_when_examined_is_nonzero():
     assert result.findings == []
     assert result.name == "mylint"
     assert result.examined_label == "task blocks"
+
+
+def test_lint_result_report_is_skipped_message_when_skipped_reason_is_set():
+    result = LintResult(name="files", findings=[], examined=0, skipped_reason="some reason")
+    assert result.report() == "files: skipped (some reason)\n"
+
+
+def test_lint_result_report_shows_skip_reason_and_findings_when_both_present():
+    """L2 regression: `skipped_reason` and `findings` are not mutually
+    exclusive in the dataclass's shape. When both are present, `report()`
+    must show the skip reason AND the findings — never silently dropping
+    either."""
+    findings = [Finding(rule="x", message="m", severity=ERROR)]
+    result = LintResult(
+        name="r", findings=findings, examined=1, skipped_reason="why", examined_label="tasks"
+    )
+    assert result.report() == (
+        "r: skipped (why)\n"
+        "r: 1 finding(s) (1 tasks examined)\n"
+        "  [ERROR] x\n"
+        "      m\n"
+    )

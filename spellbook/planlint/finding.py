@@ -42,8 +42,15 @@ class LintResult:
         return bool(self.findings)
 
     def report(self):
-        """A human-readable report: task, section, evidence, and the rule."""
-        if self.skipped_reason:
+        """A human-readable report: task, section, evidence, and the rule.
+
+        `skipped_reason` and `findings` are not mutually exclusive in the
+        dataclass's shape, even though no current call path constructs both
+        at once (`guard_no_input`/`files.py`'s skip path always sets one or
+        the other, never both). If both are ever present, the skip reason is
+        reported first, then the findings — never dropping either.
+        """
+        if self.skipped_reason and not self.findings:
             return f"{self.name}: skipped ({self.skipped_reason})\n"
         if not self.findings:
             return f"{self.name}: clean ({self.examined} {self.examined_label} examined)\n"
@@ -51,6 +58,8 @@ class LintResult:
             f"{self.name}: {len(self.findings)} finding(s) "
             f"({self.examined} {self.examined_label} examined)\n"
         )
+        if self.skipped_reason:
+            head = f"{self.name}: skipped ({self.skipped_reason})\n" + head
         body = []
         for f in sorted(
             self.findings, key=lambda f: (SEVERITY_ORDER[f.severity], f.rule, f.task, f.line)

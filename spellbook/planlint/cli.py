@@ -10,6 +10,13 @@ from spellbook.planlint.api import SKIP_NOT_UTF8, SKIP_UNREADABLE, Phase, lint_p
 
 
 def main(argv=None):
+    """Exit code contract:
+    0 — clean run, no findings (including a legacy/not-a-planlint-schema skip).
+    1 — the plan has findings, or the file was unreadable/not UTF-8.
+    2 — a usage error (bad argv) OR an internal rule crash.
+    Exit code 2 is intentionally overloaded: both cases mean "something is
+    wrong with the run itself, not with the plan under review."
+    """
     parser = argparse.ArgumentParser(prog="spellbook-planlint")
     parser.add_argument("plan", help="path to a spellbook implementation plan")
     parser.add_argument("--repo-root", default=None, help="repository root for Files: path checks")
@@ -28,7 +35,9 @@ def main(argv=None):
     # CRASH — a caller bug wearing a plan defect's costume. This is the only
     # place a string can enter, so this is the only place that converts.
     repo_root = None
-    if args.repo_root:
+    if args.repo_root is not None:
+        if args.repo_root == "":
+            parser.error(f"--repo-root {args.repo_root!r} is not an existing directory")
         repo_root = Path(args.repo_root)
         if not repo_root.is_dir():
             parser.error(f"--repo-root {args.repo_root!r} is not an existing directory")
@@ -50,8 +59,9 @@ def main(argv=None):
     # summary_line() is what C1 was missing: LintResult.report() alone can
     # read as "clean" for a rule that was actually SKIPPED (e.g. `files`
     # with no --repo-root). summary_line() states, in one line, how many
-    # rules actually decided vs were skipped — printed unconditionally so a
-    # skipped rule is never mistaken for a clean run.
+    # rules actually decided vs were skipped. It is printed here, on the
+    # `report.linted` path only — not unconditionally — because the
+    # not-linted branch above already returned before reaching this line.
     sys.stdout.write(report.summary_line() + "\n")
 
     if report.internal_errors:
