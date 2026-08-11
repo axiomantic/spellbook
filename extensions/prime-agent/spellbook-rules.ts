@@ -38,6 +38,7 @@
  */
 
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -173,9 +174,13 @@ export function loadRules(dir: string): { rules: RuleFile[]; error: string | nul
 	return { rules, error: null };
 }
 
-function resolveRulesDir(): string {
+export function resolveRulesDir(): string {
 	const envDir = process.env.PRIME_AGENT_CONFIG_DIR;
-	const home = process.env.HOME ?? process.env.USERPROFILE ?? "~";
+	// os.homedir() rather than a literal "~": nothing in Node expands tilde,
+	// so the old fallback produced a RELATIVE path and would have scanned
+	// (or silently found nothing at) "./~/.prime/agent/rules" -- creating a
+	// directory literally named "~" if anything downstream ever wrote there.
+	const home = process.env.HOME ?? process.env.USERPROFILE ?? os.homedir();
 	const base =
 		envDir && envDir.trim().length > 0 ? envDir : path.join(home, ".prime", "agent");
 	return path.join(base, "rules");

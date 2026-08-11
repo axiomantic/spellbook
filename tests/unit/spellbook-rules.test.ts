@@ -3,7 +3,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
 
-import { loadRules } from '../../extensions/prime-agent/spellbook-rules.ts';
+
+import { loadRules, resolveRulesDir } from '../../extensions/prime-agent/spellbook-rules.ts';
 
 // These cover the resilience contract of the Prime Agent rules loader: the
 // rules directory is full of SYMLINKS into a spellbook checkout, so one of
@@ -123,5 +124,60 @@ describe('loadRules', () => {
     expect(error).toBeNull();
     expect(rules).toHaveLength(2);
     expect(rules.every((r) => r.body.includes('Could not read'))).toBe(true);
+  });
+});
+
+describe('resolveRulesDir', () => {
+  const saved = { ...process.env };
+
+  afterEach(() => {
+    process.env = { ...saved };
+  });
+
+  it('prefers PRIME_AGENT_CONFIG_DIR when set', () => {
+    process.env.PRIME_AGENT_CONFIG_DIR = '/tmp/custom';
+    expect(resolveRulesDir()).toBe(path.join('/tmp/custom', 'rules'));
+  });
+
+  it('ignores a blank PRIME_AGENT_CONFIG_DIR', () => {
+    process.env.PRIME_AGENT_CONFIG_DIR = '   ';
+    process.env.HOME = '/tmp/home';
+    expect(resolveRulesDir()).toBe(
+      path.join('/tmp/home', '.prime', 'agent', 'rules'),
+    );
+  });
+
+  it('falls back to HOME', () => {
+    delete process.env.PRIME_AGENT_CONFIG_DIR;
+    process.env.HOME = '/tmp/home';
+    expect(resolveRulesDir()).toBe(
+      path.join('/tmp/home', '.prime', 'agent', 'rules'),
+    );
+  });
+
+  // The BOT-F1 regression.
+  it('returns an absolute path even with no home env vars', () => {
+    delete process.env.PRIME_AGENT_CONFIG_DIR;
+    delete process.env.HOME;
+    delete process.env.USERPROFILE;
+
+    const resolved = resolveRulesDir();
+
+    // Previously this was `~/.prime/agent/rules` -- RELATIVE, because nothing
+    // in Node expands a tilde. It would resolve against cwd and scan the
+    // wrong place entirely.
+    expect(path.isAbsolute(resolved)).toBe(true);
+    expect(resolved.startsWith('~')).toBe(false);
+    expect(resolved).not.toContain(`${path.sep}~${path.sep}`);
+  });
+
+  it('uses the real home directory as the last resort', () => {
+    delete process.env.PRIME_AGENT_CONFIG_DIR;
+    delete process.env.HOME;
+    delete process.env.USERPROFILE;
+
+    expect(resolveRulesDir()).toBe(
+      path.join(os.homedir(), '.prime', 'agent', 'rules'),
+    );
   });
 });
