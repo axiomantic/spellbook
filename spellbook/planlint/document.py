@@ -157,34 +157,57 @@ def _pair_fence_markers(markers):
 
 
 def _protective_fence_ranges(markers):
-    """Pair one segment's fence-marker line indexes FRONT-CONSECUTIVELY for
-    CONTENT-SCANNING PROTECTION: `(markers[0], markers[1])`,
-    `(markers[2], markers[3])`, and so on, regardless of whether the
-    segment's marker count is even or odd. A final unpaired marker (odd
-    count) protects nothing, exactly like the single-marker trivial case in
-    `_pair_fence_markers` -- there is no lookahead signal that content after
-    an unclosed marker belongs to it.
+    """Compute one segment's CONTENT-SCANNING PROTECTION ranges from its
+    fence-marker line indexes.
 
-    This is DELIBERATELY separate from, and looser than, `_pair_fence_markers`.
-    That function refuses to name ANY pair once a segment is ambiguous (3+
-    markers), because naming a wrong pair as "the" unclosed one would
-    misinform the `unclosed-fence` Finding -- a reporting concern where a
-    wrong guess is actively misleading. Content-scanning protection (used by
-    `fenced_line_indexes` for field-scanning and by `inline_code_spans` for
-    backtick-span scanning) has no symmetric downside: under-protecting is
-    the only way it can go wrong, by letting fenced illustrative content
-    (e.g. an example `**Depends:** Task 99` inside a code block) leak into
-    field-scanning and silently substitute the wrong value. Front-consecutive
-    pairing keeps every COMPLETE pair protected even when a segment also
-    carries one unrelated, genuinely-unpaired marker, whichever side of the
-    complete pair that unrelated marker sits on. It does not need to agree
-    with `_pair_fence_markers` about which marker is "the" broken one --
-    both attempts already tried and failed to guess that correctly for
-    reporting purposes; this function does not guess at all, it just pairs
-    off whatever markers it can two at a time from the front.
+    This is the FINAL rule (see `fenced_line_indexes`'s docstring for the
+    full history and the reasoning behind it):
+
+    - 0 or 1 markers: nothing to pair. A lone marker protects nothing --
+      there is no lookahead signal that content after an unclosed marker
+      belongs to it, same as the trivial case in `_pair_fence_markers`.
+    - EVEN count (2, 4, 6, ...): UNAMBIGUOUS. Pair consecutively --
+      `(markers[0], markers[1])`, `(markers[2], markers[3])`, and so on.
+      There is exactly one non-crossing matching, so this case was never
+      broken and is unchanged from every earlier iteration.
+    - ODD count, 3 or more: AMBIGUOUS -- exactly one marker in the segment
+      has no partner, and (per `_pair_fence_markers`'s docstring) WHICH one
+      cannot be determined from position alone. Protect the ENTIRE span from
+      `markers[0]` to `markers[-1]` inclusive as ONE undifferentiated block,
+      rather than guessing at sub-pairs within it.
+
+      This is provably safe against ever letting real fenced content LEAK:
+      for any placement of the one genuinely-stray marker among the
+      remaining well-formed pairs, every well-formed pair's own
+      `[open, close]` range is a subset of `[markers[0], markers[-1]]`,
+      because `markers[0] <= open <= close <= markers[-1]` by definition of
+      "first" and "last" in a sorted marker list. So the full-span block
+      always protects every well-formed pair's content, regardless of
+      whether the stray marker sits before, after, or between them. Two
+      earlier attempts (front-consecutive pairing, and its mirror
+      leftover-first pairing) each guessed at a specific sub-pairing instead,
+      and each guess was provably wrong on the shape it did not anticipate --
+      see `_pair_fence_markers`'s docstring for the two failure shapes. This
+      function does not guess: it makes no claim about which sub-pairing is
+      "real", so there is no wrong guess left to make.
+
+      The accepted cost of this safety: genuine non-fenced content that
+      happens to fall inside `[markers[0], markers[-1]]` -- e.g. a real
+      `Depends:` line sitting between the stray marker and a well-formed
+      pair -- is also treated as protected (DROPPED from field-scanning),
+      even though it was never really inside any fence. That is a safe
+      degradation (the field comes back empty/missing, not substituted with
+      a wrong value) and is the documented, accepted tradeoff: DROP over
+      LEAK. Combined with `unclosed_fence_index`'s "N markers, cannot
+      determine which is unclosed" diagnostic on the same segment, the drop
+      is not silent -- the plan author gets a visible signal that the
+      region needs manual attention.
     """
-    complete = len(markers) - (len(markers) % 2)
-    return [(markers[i], markers[i + 1]) for i in range(0, complete, 2)]
+    if len(markers) < 2:
+        return []
+    if len(markers) % 2 == 0:
+        return [(markers[i], markers[i + 1]) for i in range(0, len(markers), 2)]
+    return [(markers[0], markers[-1])]
 
 
 def _fence_segments(lines):
@@ -244,15 +267,36 @@ def fenced_line_indexes(lines):
     `inline_code_spans` must skip so fenced illustrative content is never
     misread as real field text.
 
-    Markers are grouped into per-task segments by `_fence_segments`, then
-    paired PERMISSIVELY within each segment by `_protective_fence_ranges`:
-    front-consecutive pairing, dropping only a final unpaired marker. This
-    protects every COMPLETE pair even in a segment that is ambiguous for
-    DIAGNOSTIC reporting purposes (3+ markers) -- see
-    `_protective_fence_ranges`'s docstring for why content-scanning
-    protection can safely be more permissive than the `unclosed-fence`
-    Finding's pairing (`_pair_fence_markers`, used by `unclosed_fence_index`,
-    stays conservative and never names a pair in an ambiguous segment).
+    This is the FINAL algorithm, after several prior iterations each found a
+    real leak counterexample. Markers are grouped into per-task segments by
+    `_fence_segments`; within each segment:
+
+    - 0 or 1 markers: no pairing possible, protects nothing.
+    - EVEN count: UNAMBIGUOUS. Pair consecutively (open 1/close 2, open
+      3/close 4, ...) -- there is exactly one non-crossing matching, so this
+      case was never broken.
+    - ODD count (3+): AMBIGUOUS -- which single marker is the true stray one
+      cannot be determined from position alone (see `_pair_fence_markers`'s
+      docstring for why). Rather than guess at a sub-pairing, the ENTIRE
+      span from the segment's first marker to its last marker is protected
+      as ONE undifferentiated block. This is provably safe against LEAK: any
+      well-formed pair's `[open, close]` range is necessarily a subset of
+      `[first, last]` for the whole segment, so full-span protection always
+      covers every well-formed pair's content regardless of where the stray
+      marker sits. See `_protective_fence_ranges`'s docstring for the full
+      proof and for the two earlier, narrower pairing rules (front-
+      consecutive and leftover-first) that each leaked on the shape they did
+      not anticipate.
+
+    The ONE accepted tradeoff of this rule: genuinely non-fenced content
+    that happens to fall inside an odd segment's `[first, last]` span (e.g. a
+    real `Depends:` line between a stray marker and a well-formed pair) is
+    also treated as protected, and so DROPPED from field-scanning -- the
+    field comes back empty/missing rather than substituted with a wrong
+    value. DROP is accepted; LEAK is not. This is paired with the
+    `unclosed-fence` diagnostic (`unclosed_fence_index`, unchanged) so the
+    drop is never silent: the plan author sees "N markers, cannot determine
+    which is unclosed" for that same segment.
 
     A pending, unclosed open is also abandoned (dropped, not paired with
     anything) the moment a `### Task N: ...` header is seen -- a fence is
@@ -503,14 +547,11 @@ class PlanDocument:
 
     def _scan_fences(self):
         """Content-scanning protection -- see `fenced_line_indexes`'s and
-        `_protective_fence_ranges`'s docstrings. Pairing here is PERMISSIVE
-        (front-consecutive), not the conservative pairing
-        `unclosed_fence_index`/`rules/structure.py` use for the
-        `unclosed-fence` Finding: every COMPLETE pair in a segment is
-        recorded as a protected fence, even when the segment also carries
-        one unrelated, genuinely-unpaired marker (odd count, 3+), whether
-        that ambiguity spans a task header or sits entirely within one task
-        body. Only a final unpaired marker protects nothing."""
+        `_protective_fence_ranges`'s docstrings. An even-count segment pairs
+        consecutively and unambiguously; an odd-count (3+) segment protects
+        its ENTIRE `[first, last]` marker span as one block, which provably
+        eliminates the LEAK failure mode at the cost of the documented,
+        accepted DROP tradeoff. A lone unpaired marker protects nothing."""
         for markers in _fence_segments(self.lines):
             for open_at, close_at in _protective_fence_ranges(markers):
                 self._fences.append({"start": open_at, "end": close_at})

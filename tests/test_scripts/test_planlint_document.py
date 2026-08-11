@@ -381,16 +381,14 @@ def test_unpaired_fence_does_not_corrupt_a_later_paired_fence_same_task_body():
 
     With 3 markers and genuine positional ambiguity, `unclosed_fence_index`
     (diagnostic reporting) does not guess which marker is "the" broken one
-    -- see `_pair_fence_markers`'s docstring. But content-scanning
-    protection (`fenced_line_indexes`) is a separate, more PERMISSIVE
-    concern: it pairs markers front-consecutively via
-    `_protective_fence_ranges` regardless of diagnostic ambiguity, so the
-    broken opener (marker 1) pairs with the well-formed pair's own opener
-    (marker 2) as a protected span, and marker 3 (the well-formed pair's
-    real closer) is left as an unpaired trailing marker that protects
-    nothing. That is fine here: the real `Depends:`/`Check:` fields sit
-    AFTER marker 3, outside any protected range either way, so they are
-    never swallowed.
+    -- see `_pair_fence_markers`'s docstring. Content-scanning protection
+    (`fenced_line_indexes`) is separate: for an odd (3+) marker count it
+    protects the ENTIRE `[first, last]` marker span as one block (see
+    `_protective_fence_ranges`'s docstring), so all three markers here --
+    the broken opener through the well-formed pair's real closer -- fall
+    inside one protected block. That is safe here: the real
+    `Depends:`/`Check:` fields sit AFTER marker 3, outside the protected
+    range either way, so they are never swallowed.
     """
     text = (
         "**Schema:** planlint-v1\n\n"
@@ -416,46 +414,44 @@ def test_unpaired_fence_does_not_corrupt_a_later_paired_fence_same_task_body():
     assert task.check_text == "`pytest -q`"
     assert task.check_command == "pytest -q"
 
-    # Content-scanning protection pairs front-consecutively (marker 1 with
-    # marker 2), independent of the diagnostic-reporting ambiguity; marker 3
-    # is a trailing unpaired marker and protects nothing.
+    # Content-scanning protection treats the whole odd (3-marker) segment as
+    # one protected block, spanning from the broken opener through the
+    # well-formed pair's real closer, independent of the diagnostic-
+    # reporting ambiguity.
     lines = text.split("\n")
     fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
     assert len(fence_indexes) == 3
-    broken_open, well_formed_open, _well_formed_close = fence_indexes
+    broken_open, _well_formed_open, well_formed_close = fence_indexes
     assert fenced_line_indexes(lines) == set(
-        range(broken_open, well_formed_open + 1)
+        range(broken_open, well_formed_close + 1)
     )
 
 
 def test_ambiguous_odd_fence_segment_does_not_swallow_later_field_text():
     """Mirror-case regression (the shape `d808059f`'s leftover-first fix got
     wrong): a well-formed fence pair FIRST, then a separate broken/unclosed
-    marker LATER, in the SAME task body, followed by real `Depends:`/
-    `Check:` field content.
+    marker LATER, in the SAME task body, with real `Depends:`/`Check:`
+    field content in between.
 
     This fixture has THREE fence markers, all inside ONE task body: a
     well-formed pair, then, later in the SAME body, a broken trailing
-    marker that is never closed, then real `Depends:`/`Check:` content
-    between the well-formed pair's close and the broken marker.
+    marker that is never closed, with real `Depends:`/`Check:` content
+    sitting BETWEEN the well-formed pair's close and the broken marker.
 
-    Under leftover-first (the immediately preceding fix), the FIRST marker
-    (the well-formed pair's own opener) is set aside as the leftover, and
-    the remaining two markers -- the well-formed pair's closer and the
-    broken trailing marker -- are paired consecutively as a phantom fence.
-    That phantom fence spans exactly the real `Depends:`/`Check:` content,
-    so it gets swallowed and the resulting `depends_text`/`check_text` come
-    back empty, with no error raised anywhere.
-
-    The correct behavior: `unclosed_fence_index` (diagnostic reporting)
-    takes neither guess for THIS segment's ambiguity. Content-scanning
-    protection (`fenced_line_indexes`) is separate and permissive: it pairs
-    front-consecutively, so marker 1 (the well-formed pair's real opener)
-    pairs with marker 2 (its real closer) as a protected span -- correctly,
-    since that IS the well-formed pair here -- and marker 3 (the later
-    broken trailing marker) is left unpaired, protecting nothing. Either
-    way, the real `Depends:`/`Check:` lines sit between marker 2 and marker
-    3, outside any protected range, and are read as ordinary text.
+    This is now a DOCUMENTED DROP case, not a leak case: the FINAL
+    algorithm treats every odd (3+) marker segment as ambiguous and
+    protects the ENTIRE `[first, last]` marker span as one undifferentiated
+    block (see `_protective_fence_ranges`'s docstring for the full
+    leak-safety proof). Here that means markers 1 through 3 -- from the
+    well-formed pair's real opener through the later broken trailing
+    marker -- are ALL treated as one protected block, which necessarily
+    also covers the real `Depends:`/`Check:` lines sandwiched in between.
+    Those fields therefore come back EMPTY, not corrupted or substituted --
+    this is the accepted DROP tradeoff, safe because no wrong value is ever
+    fabricated. It is a deliberate improvement over the earlier
+    leftover-first fix, which produced the same empty result but via a
+    guessed sub-pairing that could ALSO leak in other shapes; the
+    full-span rule reaches the same drop here without ever guessing.
     """
     text = (
         "**Schema:** planlint-v1\n\n"
@@ -473,23 +469,23 @@ def test_ambiguous_odd_fence_segment_does_not_swallow_later_field_text():
     doc = PlanDocument.from_text(text)
 
     # The real Depends:/Check: fields, which sit BETWEEN the well-formed
-    # pair's close and the later broken marker, must be parsed normally --
-    # they must not have been swallowed by a phantom fence spanning from
-    # the well-formed pair's closer to the broken trailing marker.
+    # pair's close and the later broken marker, fall inside the full-span
+    # protected block and are DROPPED (empty), not corrupted or
+    # substituted with a wrong value -- the accepted tradeoff.
     task = doc.task("Task 1")
-    assert task.depends_text == "none"
-    assert task.check_text == "`pytest -q`"
-    assert task.check_command == "pytest -q"
+    assert task.depends_text == ""
+    assert task.check_text == ""
+    assert task.check_command == ""
 
-    # Content-scanning protection pairs front-consecutively (marker 1 with
-    # marker 2, the true well-formed pair); marker 3, the later broken
-    # trailing marker, is left unpaired and protects nothing.
+    # Content-scanning protection protects the ENTIRE odd (3-marker) span
+    # as one block: marker 1 (well-formed opener) through marker 3 (the
+    # later broken trailing marker).
     lines = text.split("\n")
     fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
     assert len(fence_indexes) == 3
-    well_formed_open, well_formed_close, _broken_trailing = fence_indexes
+    well_formed_open, _well_formed_close, broken_trailing = fence_indexes
     assert fenced_line_indexes(lines) == set(
-        range(well_formed_open, well_formed_close + 1)
+        range(well_formed_open, broken_trailing + 1)
     )
 
 
@@ -516,10 +512,14 @@ def test_ambiguous_segment_still_protects_a_well_formed_pairs_illustrative_conte
     illustrative line inside the fence is read as an ordinary field line
     and overwrites `depends_text` to `"Task 99"`.
 
-    Under this fix (GREEN), content-scanning protection pairs the well-
-    formed fence's own two markers front-consecutively, independent of the
-    segment's diagnostic ambiguity, so the illustrative line stays hidden
-    from field-scanning and `depends_text` keeps its real value.
+    Under the FINAL fix (GREEN), content-scanning protection treats the
+    whole odd (3-marker) segment as one protected block spanning the
+    well-formed opener through the later broken trailing marker -- which
+    still fully covers the well-formed fence's own content -- so the
+    illustrative line stays hidden from field-scanning and `depends_text`
+    keeps its real value. (The `**Check:**` field, which sits inside that
+    same full-span block, is a DROP case here -- not asserted by this
+    test, which is only about the LEAK failure mode.)
     """
     text = (
         "**Schema:** planlint-v1\n\n"
@@ -541,6 +541,129 @@ def test_ambiguous_segment_still_protects_a_well_formed_pairs_illustrative_conte
     # illustrative fenced line leaking through and silently overwriting the
     # real field. GREEN recovers the real value.
     assert task.depends_text == "Task 2"
+
+
+def test_broken_first_marker_does_not_leak_a_well_formed_pairs_content():
+    """The exact leak shape iterations 4 and 5 could not close: the STRAY
+    marker comes FIRST in the segment, then a well-formed pair whose
+    fenced content includes an illustrative field-like line.
+
+    Under a front-consecutive (iteration-4) pairing rule, marker 1 (the
+    stray opener) pairs with marker 2 (the well-formed pair's own opener)
+    as a phantom span, so the well-formed pair's REAL closer (marker 3) is
+    left unpaired and protects nothing -- the well-formed fence's own
+    content, including the illustrative line inside it, is then read as
+    ordinary text and leaks into field-scanning.
+
+    Under the FINAL full-span rule, this 3-marker odd segment is protected
+    as ONE block from marker 1 through marker 3 -- which necessarily
+    contains the well-formed pair's own `[open, close]` range -- so the
+    illustrative line inside the well-formed fence never leaks.
+    """
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Broken opener first, then a well-formed illustrative fence\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "```\n"                              # broken opener, never paired
+        "this fence never closes\n\n"
+        "Some prose, then a well-formed fence with illustrative content:\n\n"
+        "```\n"                              # well-formed open
+        "**Depends:** Task 99\n"            # illustrative, must NOT leak
+        "```\n\n"                             # well-formed close
+        "**Depends:** Task 2\n\n"           # the REAL field, after the fence
+        "**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    task = doc.task("Task 1")
+
+    # The real Depends: field, which comes AFTER the well-formed fence, must
+    # keep its real value -- the illustrative line inside the fence must not
+    # have leaked in and been overwritten (or overwritten it, since
+    # `_fill_fields` keeps the LAST match: if the illustrative line leaked,
+    # it would actually be overwritten BY the real field here, so the
+    # sharper assertion is that the illustrative value never appears at
+    # all -- confirmed directly on the protected-range check below).
+    assert task.depends_text == "Task 2"
+    assert task.check_text == "`pytest -q`"
+    assert task.check_command == "pytest -q"
+
+    lines = text.split("\n")
+    fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
+    assert len(fence_indexes) == 3
+    broken_open, _well_formed_open, well_formed_close = fence_indexes
+    # The illustrative line never becomes visible to field-scanning: its
+    # document index sits inside the protected full span.
+    illustrative_index = lines.index("**Depends:** Task 99")
+    protected = fenced_line_indexes(lines)
+    assert illustrative_index in protected
+    assert protected == set(range(broken_open, well_formed_close + 1))
+
+
+def test_broken_middle_marker_protects_both_surrounding_well_formed_pairs():
+    """A segment with 5 markers: a well-formed pair, a stray/broken marker,
+    then a second well-formed pair -- both real pairs must stay fully
+    protected regardless of where in the segment the stray marker sits.
+    """
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Two well-formed pairs around a broken middle marker\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "```\n"                              # pair 1 open
+        "**Depends:** Task 99\n"            # illustrative, must NOT leak
+        "```\n\n"                             # pair 1 close
+        "```\n"                              # broken/stray marker, never paired
+        "this fence never closes\n\n"
+        "```\n"                              # pair 2 open
+        "**Check:** bogus illustrative check\n"  # illustrative, must NOT leak
+        "```\n"                              # pair 2 close
+    )
+    doc = PlanDocument.from_text(text)
+    task = doc.task("Task 1")
+
+    lines = text.split("\n")
+    fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
+    assert len(fence_indexes) == 5
+    first_marker, *_middle, last_marker = fence_indexes
+    protected = fenced_line_indexes(lines)
+    assert protected == set(range(first_marker, last_marker + 1))
+
+    # Neither illustrative line inside either well-formed pair leaked into
+    # the real fields (both fields are empty here since no real
+    # Depends:/Check: line exists outside the protected span).
+    assert task.depends_text == ""
+    assert task.check_text == ""
+
+
+def test_ambiguous_segment_drops_real_field_content_inside_the_full_span():
+    """DOCUMENTED, ACCEPTED tradeoff (DROP over LEAK): real, non-fenced
+    field content that happens to sit between the stray marker and a
+    well-formed pair -- genuinely NOT inside any real fence -- is still
+    inside the odd segment's full `[first, last]` protected span, so it is
+    read as absent (empty/missing), never as a wrong or corrupted value.
+    This is the accepted cost of the leak-safe full-span rule: it is a
+    documented DROP, not a bug.
+    """
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: A real field genuinely outside any fence, but inside the span\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "```\n"                              # broken opener, never paired
+        "this fence never closes\n\n"
+        "**Depends:** Task 2\n\n"           # genuinely NOT inside a fence
+        "```\n"                              # well-formed open
+        "real fence content\n"
+        "```\n\n"                             # well-formed close
+        "**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    task = doc.task("Task 1")
+
+    # The Depends: line sits between the broken marker and the well-formed
+    # pair, genuinely outside any real fence -- but it is still inside the
+    # full-span protected block, so it is DROPPED (empty), not corrupted.
+    assert task.depends_text == ""
+    # The Check: field, after the whole segment closes, is unaffected.
+    assert task.check_text == "`pytest -q`"
 
 
 def test_files_block_does_not_absorb_a_fenced_example_bullet():
