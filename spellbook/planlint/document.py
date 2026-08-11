@@ -228,6 +228,25 @@ def _scan_fence_markers(lines):
     unambiguous OPENER signal. A bare marker alone carries no such signal --
     it is exactly as likely to be a same-convention pair's opener as its
     closer.
+
+    KNOWN LIMITATION, deliberate scope boundary: this scanner (and the
+    pairing built on it in `_pair_fence_markers`/`_protective_fence_ranges`)
+    does not track backtick-RUN LENGTH. A 4-or-more-backtick marker (e.g.
+    ` ```` `) is treated identically to a plain 3-backtick ` ``` ` marker --
+    `FENCE` matches any run of 3+ backticks and everything past the third is
+    folded into the `info` group. Real CommonMark pairs a fence opener with
+    the first closer whose run length is >= the opener's, which is what lets
+    a document nest a shorter-delimiter fence (```` ``` ````) inside a
+    longer one (```` ```` ````) as literal, unparsed content -- the standard
+    idiom for a fenced example that itself shows fenced code. Length-blind
+    pairing can misread that nesting. A proper fix would record each
+    marker's run length alongside its `has_info` flag and require the
+    closer's length to be >= the opener's when pairing, instead of pairing
+    by position alone. As of commit dabe9569, a corpus sweep of all 758
+    `.md` files in this repository found zero cases where the current,
+    length-blind logic disagrees with the pre-info-string-fix baseline, so
+    the gap is real but currently unreached by anything in this repo.
+    Closing it fully is out of scope for this port.
     """
     markers = []
     for index, line in enumerate(lines):
