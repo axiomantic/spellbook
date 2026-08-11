@@ -128,3 +128,42 @@ def test_unclosed_fence_does_not_hide_tasks_below_it():
 def test_unclosed_fence_is_absent_on_the_clean_fixture():
     findings = _findings_for(structure, "clean_plan.md")
     assert [f for f in findings if f.rule == "unclosed-fence"] == []
+
+
+def test_unclosed_fence_reports_the_generic_ambiguous_message_for_a_3plus_marker_segment():
+    """Closes the MEDIUM-severity test-coverage gap flagged in `7fd94a6e`'s
+    review: no prior test drove `unclosed_fence_line`'s AMBIGUOUS branch
+    (`ambiguous_lines is not None`, the `elif opened:` arm in `run()`) with
+    a full `Finding`-equality assertion. A segment with 3+ fence markers
+    cannot say which single marker is unclosed -- see
+    `document._pair_fence_markers`'s docstring -- so `run()` must emit the
+    generic "N markers, cannot determine which is unclosed" Finding instead
+    of naming one line."""
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Three fence markers, genuinely ambiguous\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "```\n"                              # line 8 -- marker 1
+        "one\n"
+        "```\n"                              # line 10 -- marker 2
+        "```\n"                              # line 11 -- marker 3, unclosed
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    findings = structure.run(ctx).findings
+    hits = [f for f in findings if f.rule == "unclosed-fence"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="unclosed-fence",
+        message=(
+            "a section has an odd, ambiguous number of fence markers; "
+            "marker position alone cannot say which one is unclosed, so "
+            "none of them are treated as a matched pair"
+        ),
+        section="Task 1: Three fence markers, genuinely ambiguous",
+        line=8,
+        evidence="3 fence markers in this section (lines 8, 10, 11); cannot determine which is unclosed",
+        severity=ERROR,
+    )

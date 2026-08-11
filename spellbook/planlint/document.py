@@ -103,7 +103,12 @@ class _UnpairedFence:
 
 def _pair_fence_markers(markers):
     """Pair one segment's fence-marker line indexes into `(open, close)`
-    tuples, plus the leftover info if the count is odd (`None` if even).
+    tuples, plus the leftover info if the count is odd (`None` if even), for
+    DIAGNOSTIC/REPORTING purposes only -- i.e. `unclosed_fence_index`, which
+    feeds the `unclosed-fence` Finding. See `_protective_fence_ranges` for
+    the separate, permissive pairing used for content-scanning protection
+    (`fenced_line_indexes`, `PlanDocument._scan_fences`); the two concerns
+    are deliberately decoupled and this function serves only the first.
 
     On an EVEN count, markers pair CONSECUTIVELY -- `markers[1]` closes
     `markers[0]`, `markers[3]` closes `markers[2]`, and so on. There is
@@ -132,14 +137,16 @@ def _pair_fence_markers(markers):
       phantom pair, swallowing the same kind of field text in between, and
       blames the real closer instead of the true defect.
 
-    Since guessing is wrong on some real input either way, a 3+-marker
-    segment is not guessed at all: NOTHING in it is reported as a pair (see
-    `fenced_line_indexes`), and the caller reports the ambiguity itself
-    ("N markers here, cannot tell which is unclosed") rather than accusing
-    one line. This trades fence-detection precision -- a well-formed pair
-    that happens to share a segment with an unrelated broken marker loses
-    its fence protection in this one scenario -- for correctness: no field
-    content is ever silently dropped by a wrong guess.
+    Since guessing "which ONE marker is broken" is wrong on some real input
+    either way, a 3+-marker segment never names a single broken marker for
+    REPORTING: the caller reports the ambiguity itself ("N markers here,
+    cannot tell which is unclosed") rather than accusing one line. This
+    function returns no pairs at all for that case -- `(pairs, leftover)` is
+    `([], _UnpairedFence(..., markers=...))` -- because for THIS function's
+    one consumer (naming "the" unclosed marker) a wrong pair is exactly as
+    misleading as a wrong single accusation. Content-scanning protection
+    does not share that downside and uses a separate, permissive function
+    instead of leaning on this one's pairs.
     """
     if len(markers) % 2 == 0:
         pairs = [(markers[i], markers[i + 1]) for i in range(0, len(markers), 2)]
@@ -149,29 +156,64 @@ def _pair_fence_markers(markers):
     return [], _UnpairedFence(anchor=markers[0], markers=tuple(markers))
 
 
+def _protective_fence_ranges(markers):
+    """Pair one segment's fence-marker line indexes FRONT-CONSECUTIVELY for
+    CONTENT-SCANNING PROTECTION: `(markers[0], markers[1])`,
+    `(markers[2], markers[3])`, and so on, regardless of whether the
+    segment's marker count is even or odd. A final unpaired marker (odd
+    count) protects nothing, exactly like the single-marker trivial case in
+    `_pair_fence_markers` -- there is no lookahead signal that content after
+    an unclosed marker belongs to it.
+
+    This is DELIBERATELY separate from, and looser than, `_pair_fence_markers`.
+    That function refuses to name ANY pair once a segment is ambiguous (3+
+    markers), because naming a wrong pair as "the" unclosed one would
+    misinform the `unclosed-fence` Finding -- a reporting concern where a
+    wrong guess is actively misleading. Content-scanning protection (used by
+    `fenced_line_indexes` for field-scanning and by `inline_code_spans` for
+    backtick-span scanning) has no symmetric downside: under-protecting is
+    the only way it can go wrong, by letting fenced illustrative content
+    (e.g. an example `**Depends:** Task 99` inside a code block) leak into
+    field-scanning and silently substitute the wrong value. Front-consecutive
+    pairing keeps every COMPLETE pair protected even when a segment also
+    carries one unrelated, genuinely-unpaired marker, whichever side of the
+    complete pair that unrelated marker sits on. It does not need to agree
+    with `_pair_fence_markers` about which marker is "the" broken one --
+    both attempts already tried and failed to guess that correctly for
+    reporting purposes; this function does not guess at all, it just pairs
+    off whatever markers it can two at a time from the front.
+    """
+    complete = len(markers) - (len(markers) % 2)
+    return [(markers[i], markers[i + 1]) for i in range(0, complete, 2)]
+
+
 def _fence_segments(lines):
     """Group fence-marker line indexes into segments split at `TASK_HEADER`
-    lines, and pair each segment's markers via `_pair_fence_markers`.
+    lines.
 
     A fence is never expected to span a task boundary in this document
     family, so a `### Task N: ...` header always closes out whatever segment
-    came before it -- pending pairing is resolved right there, whether or
-    not the segment's marker count is even -- rather than letting the
-    segment's markers reach across the header looking for a partner.
+    came before it -- rather than letting the segment's markers reach across
+    the header looking for a partner.
 
-    Yields `(pairs, leftover)` per segment, in document order.
+    Yields each segment's raw marker-index tuple, in document order. Callers
+    derive whatever they need from the raw markers: `_pair_fence_markers` for
+    conservative diagnostic pairing, `_protective_fence_ranges` for
+    permissive content-scanning protection. Keeping the raw markers here
+    (rather than pre-pairing them) is what lets the two concerns use
+    different pairing rules on the same segmentation.
     """
     markers = []
     for index, line in enumerate(lines):
         if TASK_HEADER.match(line):
             if markers:
-                yield _pair_fence_markers(markers)
+                yield tuple(markers)
                 markers = []
             continue
         if FENCE.match(line):
             markers.append(index)
     if markers:
-        yield _pair_fence_markers(markers)
+        yield tuple(markers)
 
 
 def unclosed_fence_index(lines):
@@ -179,36 +221,38 @@ def unclosed_fence_index(lines):
     or `None` if every segment's markers pair off evenly.
 
     Reads the document exactly like `fenced_line_indexes`/`_scan_fences`
-    (same segmentation, same `_pair_fence_markers` leftover rule), so
-    `rules/structure.py` reports on the same segment those two treat as
-    broken. The caller distinguishes the trivial case (`.markers is None`,
-    one marker, unambiguously the defect) from the genuinely ambiguous case
-    (`.markers` is the segment's full marker tuple) to decide whether it may
-    name one line as "the" defect or must report the ambiguity itself.
+    (same segmentation via `_fence_segments`), so `rules/structure.py`
+    reports on the same segment those two treat as broken -- though the
+    PAIRING rule this function applies (`_pair_fence_markers`, conservative)
+    differs from theirs (`_protective_fence_ranges`, permissive); see each
+    function's docstring. The caller distinguishes the trivial case
+    (`.markers is None`, one marker, unambiguously the defect) from the
+    genuinely ambiguous case (`.markers` is the segment's full marker tuple)
+    to decide whether it may name one line as "the" defect or must report
+    the ambiguity itself.
     """
-    for _pairs, leftover in _fence_segments(lines):
+    for markers in _fence_segments(lines):
+        _pairs, leftover = _pair_fence_markers(markers)
         if leftover is not None:
             return leftover
     return None
 
 
 def fenced_line_indexes(lines):
-    """The index of every line inside a CLOSED, UNAMBIGUOUSLY-paired fence,
-    both markers included.
+    """The index of every line inside a fence, for CONTENT-SCANNING
+    PROTECTION -- i.e. the set of lines `_fill_fields` and
+    `inline_code_spans` must skip so fenced illustrative content is never
+    misread as real field text.
 
     Markers are grouped into per-task segments by `_fence_segments`, then
-    paired within each segment by `_pair_fence_markers`. An even-count
-    segment pairs consecutively with no ambiguity. An odd-count segment with
-    exactly one marker is dropped as the (unambiguous) unclosed one. An
-    odd-count segment with 3+ markers is genuinely ambiguous -- see
-    `_pair_fence_markers`'s docstring -- and NONE of its markers are treated
-    as paired here, even the two that look like an obviously well-formed
-    pair. That is a deliberate precision-for-safety trade: guessing which
-    marker is the real defect and pairing the rest is exactly the mistake
-    that let a broken marker's phantom pairing swallow real `Depends:`/
-    `Check:` field text in two earlier fix attempts. Leaving the whole
-    ambiguous segment unfenced costs fence-region precision in that one
-    scenario, but never silently drops field content.
+    paired PERMISSIVELY within each segment by `_protective_fence_ranges`:
+    front-consecutive pairing, dropping only a final unpaired marker. This
+    protects every COMPLETE pair even in a segment that is ambiguous for
+    DIAGNOSTIC reporting purposes (3+ markers) -- see
+    `_protective_fence_ranges`'s docstring for why content-scanning
+    protection can safely be more permissive than the `unclosed-fence`
+    Finding's pairing (`_pair_fence_markers`, used by `unclosed_fence_index`,
+    stays conservative and never names a pair in an ambiguous segment).
 
     A pending, unclosed open is also abandoned (dropped, not paired with
     anything) the moment a `### Task N: ...` header is seen -- a fence is
@@ -217,8 +261,8 @@ def fenced_line_indexes(lines):
     going to be genuinely closed.
     """
     inside = set()
-    for pairs, _leftover in _fence_segments(lines):
-        for open_at, close_at in pairs:
+    for markers in _fence_segments(lines):
+        for open_at, close_at in _protective_fence_ranges(markers):
             inside.update(range(open_at, close_at + 1))
     return inside
 
@@ -458,15 +502,17 @@ class PlanDocument:
         self._resolve_plan_schema()
 
     def _scan_fences(self):
-        """See `fenced_line_indexes`'s and `_pair_fence_markers`'s
-        docstrings: an odd-count segment is never guessed at. A single
-        leftover marker is dropped as unambiguously unclosed; a 3+-marker
-        segment is genuinely ambiguous and none of its markers -- including
-        ones that look like an obviously well-formed pair -- are recorded
-        as a fence here, whether the ambiguity spans a task header or sits
-        entirely within one task body."""
-        for pairs, _leftover in _fence_segments(self.lines):
-            for open_at, close_at in pairs:
+        """Content-scanning protection -- see `fenced_line_indexes`'s and
+        `_protective_fence_ranges`'s docstrings. Pairing here is PERMISSIVE
+        (front-consecutive), not the conservative pairing
+        `unclosed_fence_index`/`rules/structure.py` use for the
+        `unclosed-fence` Finding: every COMPLETE pair in a segment is
+        recorded as a protected fence, even when the segment also carries
+        one unrelated, genuinely-unpaired marker (odd count, 3+), whether
+        that ambiguity spans a task header or sits entirely within one task
+        body. Only a final unpaired marker protects nothing."""
+        for markers in _fence_segments(self.lines):
+            for open_at, close_at in _protective_fence_ranges(markers):
                 self._fences.append({"start": open_at, "end": close_at})
 
     def _in_fence(self, index):
