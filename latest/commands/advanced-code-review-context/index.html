@@ -9732,253 +9732,254 @@
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>| Status | Meaning | Action |
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>|--------|---------|--------|
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>These five lowercase strings are the ONLY valid values of an item&#39;s <span class="sb">`status`</span> field.
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>They are compared literally by the loader and the filters, so any other spelling
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>(uppercase, or a longer synonym) silently fails to match and the item is treated as
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>if it had never been resolved.
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>| Status | Meaning | Action |
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>|--------|---------|--------|
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>| <span class="sb">`pending`</span> | Item was raised, not yet addressed | Include in new review if still present |
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>| <span class="sb">`fixed`</span> | Item was addressed in subsequent commits | Do not re-raise |
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>| <span class="sb">`declined`</span> | Author explicitly declined to fix | Do NOT re-raise (respect decision) |
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>| <span class="sb">`partial`</span> | Partial agreement: some parts fixed, some pending | Note pending parts only |
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>| <span class="sb">`alternative`</span> | Author proposed a different solution | Accept if it satisfies the original concern; reject if the core risk remains unaddressed |
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">```python</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="k">def</span><span class="w"> </span><span class="nf">load_previous_items</span><span class="p">(</span><span class="n">review_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sd">    Load previous items with their resolution status.</span>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sd">    Returns list of:</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sd">    {</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sd">        &quot;id&quot;: &quot;finding-prev-001&quot;,</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sd">        &quot;status&quot;: &quot;declined&quot; | &quot;fixed&quot; | &quot;partial&quot; | &quot;alternative&quot; | &quot;pending&quot;,</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sd">        &quot;reason&quot;: &quot;Performance tradeoff acceptable&quot;,  # for declined</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sd">        &quot;fixed&quot;: [&quot;item1&quot;],                           # for partial</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sd">        &quot;pending&quot;: [&quot;item2&quot;],                         # for partial</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sd">        &quot;alternative_proposed&quot;: &quot;Use LRU cache&quot;,      # for alternative</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sd">        &quot;accepted&quot;: true                              # for alternative</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sd">    }</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>    <span class="n">items_path</span> <span class="o">=</span> <span class="n">review_dir</span> <span class="o">/</span> <span class="s2">&quot;previous-items.json&quot;</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">items_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>        <span class="k">return</span> <span class="p">[]</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">items_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;items&quot;</span><span class="p">,</span> <span class="p">[])</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">```</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="gu">## 2.3 PR History Fetching (Online Mode)</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="c1"># Use gh CLI to fetch PR details and comments</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>number,title,body,state,baseRefName,headRefName,commits,additions,deletions,changedFiles
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>gh<span class="w"> </span>pr<span class="w"> </span>diff<span class="w"> </span>&lt;PR_NUMBER&gt;
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">&quot;repos/{owner}/{repo}/pulls/&lt;PR_NUMBER&gt;/comments&quot;</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">```</span>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="gs">**Offline Mode:**</span> Skip this step. Log: <span class="sb">`[OFFLINE] Skipping PR comment history.`</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="gs">**Tool failure (non-offline):**</span> Log warning, proceed with empty PR context.
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="gu">## 2.4 Re-check Request Detection</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>| Pattern | Meaning |
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>|---------|---------|
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>| &quot;please re-check X&quot; | Author wants X verified again |
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>| &quot;PTAL at Y&quot; | Please take another look at Y |
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>| &quot;addressed in &lt;sha&gt;&quot; | Author claims fix in specific commit |
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>| &quot;@reviewer ready for re-review&quot; | General re-review request |
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">```python</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="n">RECHECK_PATTERNS</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>    <span class="sa">r</span><span class="s2">&quot;please\s+(?:re-?)?check\s+(.+)&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>    <span class="sa">r</span><span class="s2">&quot;PTAL\s+(?:at\s+)?(.+)&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>    <span class="sa">r</span><span class="s2">&quot;addressed\s+(?:in\s+)?([a-f0-9]{7,40})&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>    <span class="sa">r</span><span class="s2">&quot;ready\s+for\s+re-?review&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="p">]</span>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="k">def</span><span class="w"> </span><span class="nf">detect_recheck_requests</span><span class="p">(</span><span class="n">comments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract re-check requests from PR comments.&quot;&quot;&quot;</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>    <span class="n">requests</span> <span class="o">=</span> <span class="p">[]</span>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>    <span class="k">for</span> <span class="n">comment</span> <span class="ow">in</span> <span class="n">comments</span><span class="p">:</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>        <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">RECHECK_PATTERNS</span><span class="p">:</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">comment</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>                    <span class="s2">&quot;pattern&quot;</span><span class="p">:</span> <span class="n">pattern</span><span class="p">,</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>                    <span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>                    <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">lastindex</span> <span class="k">else</span> <span class="kc">None</span>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>                <span class="p">})</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>    <span class="k">return</span> <span class="n">requests</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">```</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="gu">## 2.5 Context Object Construction</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">```python</span>
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_context</span><span class="p">(</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>    <span class="n">manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>    <span class="n">rule_catalogue</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>    <span class="n">previous_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>    <span class="n">pr_data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct review context for Phase 3.</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="sd">    `rule_catalogue` comes from the BLOCKING standards load (2.0) and is not</span>
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="sd">    optional; Phase 3 cites its rules by id in every finding.</span>
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>        <span class="s2">&quot;manifest&quot;</span><span class="p">:</span> <span class="n">manifest</span><span class="p">,</span>
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>        <span class="c1"># --- Standards (2.0, blocking) ---</span>
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>        <span class="s2">&quot;standards_loaded&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">rule_catalogue</span><span class="p">[</span><span class="s2">&quot;sources&quot;</span><span class="p">]),</span>
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>        <span class="s2">&quot;rule_catalogue&quot;</span><span class="p">:</span> <span class="n">rule_catalogue</span><span class="p">[</span><span class="s2">&quot;rules&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>        <span class="s2">&quot;standards_sources&quot;</span><span class="p">:</span> <span class="n">rule_catalogue</span><span class="p">[</span><span class="s2">&quot;sources&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>        <span class="c1"># --- History (non-blocking, may be empty) ---</span>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>        <span class="s2">&quot;previous_review&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>        <span class="s2">&quot;pr_context&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>        <span class="s2">&quot;declined_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>        <span class="s2">&quot;partial_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>        <span class="s2">&quot;alternative_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>        <span class="s2">&quot;malformed_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>        <span class="s2">&quot;recheck_requests&quot;</span><span class="p">:</span> <span class="p">[]</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>    <span class="p">}</span>
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>    <span class="k">if</span> <span class="n">previous_dir</span><span class="p">:</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>        <span class="n">items</span> <span class="o">=</span> <span class="n">load_previous_items</span><span class="p">(</span><span class="n">previous_dir</span><span class="p">)</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;previous_review&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">previous_dir</span><span class="p">)</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>        <span class="c1"># .get(): a malformed item missing &quot;status&quot; must not raise inside this</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>        <span class="c1"># non-blocking phase. It falls through to no bucket and is reported as</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>        <span class="c1"># unrecognized rather than aborting history loading.</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;declined_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;declined&quot;</span><span class="p">]</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;partial_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;partial&quot;</span><span class="p">]</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;alternative_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;alternative&quot;</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>        <span class="p">]</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;malformed_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>            <span class="p">{</span><span class="s2">&quot;pending&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span> <span class="s2">&quot;declined&quot;</span><span class="p">,</span> <span class="s2">&quot;partial&quot;</span><span class="p">,</span> <span class="s2">&quot;alternative&quot;</span><span class="p">}</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>        <span class="p">]</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>    <span class="k">if</span> <span class="n">pr_data</span><span class="p">:</span>
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;pr_context&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">pr_data</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>            <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">pr_data</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">),</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>            <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">pr_data</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;author&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>        <span class="p">}</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;recheck_requests&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detect_recheck_requests</span><span class="p">(</span>
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>            <span class="n">pr_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;comments&quot;</span><span class="p">,</span> <span class="p">[])</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>        <span class="p">)</span>
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>    <span class="k">return</span> <span class="n">context</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="sb">```</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="gu">## 2.6 Output: context-analysis.md</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="gh"># Context Analysis</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="gs">**Previous Review:**</span> Found (2026-01-28)
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="gs">**PR Context:**</span> Available
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="gu">## Previous Items Summary</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>| Status | Count |
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>|--------|-------|
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>| Declined | 1 |
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>| Partial | 1 |
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>| Alternative | 1 |
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="gu">### Declined Items (will NOT re-raise)</span>
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finding-prev-001**</span>: &quot;Cache invalidation strategy&quot;
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Reason: &quot;Performance tradeoff acceptable for our scale&quot;
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Declined: 2026-01-28
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="gu">### Partial Agreements (pending items only)</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finding-prev-002**</span>: Security validation
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Fixed: &quot;Use parameterized queries&quot;
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Pending: &quot;Add input validation at API layer&quot;
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="gu">### Alternative Solutions</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finding-prev-003**</span>: Caching approach
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Original: &quot;Use Redis for caching&quot;
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Alternative: &quot;Use in-memory LRU cache&quot;
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Accepted: Yes (simpler deployment)
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="gu">## Re-check Requests</span>
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="k">-</span><span class="w"> </span>&quot;please re-check the error handling in auth.py&quot;
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="k">-</span><span class="w"> </span>&quot;addressed in abc1234&quot;
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="sb">```</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="gu">## 2.7 Output: previous-items.json</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="sb">```json</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="p">{</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="w">  </span><span class="nt">&quot;source_review&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-01-28T15:00:00Z&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="w">  </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;finding-prev-001&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;declined&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="w">      </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Performance tradeoff acceptable for our scale&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="w">      </span><span class="nt">&quot;declined_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-01-28T16:00:00Z&quot;</span>
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;finding-prev-002&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;partial&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="w">      </span><span class="nt">&quot;fixed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Use parameterized queries&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="w">      </span><span class="nt">&quot;pending&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Add input validation at API layer&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="w">      </span><span class="nt">&quot;updated_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-01-29T10:00:00Z&quot;</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="w">    </span><span class="p">},</span>
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;finding-prev-003&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;alternative&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="w">      </span><span class="nt">&quot;original_suggestion&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Use Redis for caching&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="w">      </span><span class="nt">&quot;alternative_proposed&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Use in-memory LRU cache&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="w">      </span><span class="nt">&quot;rationale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Simpler deployment, sufficient for current load&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="w">      </span><span class="nt">&quot;accepted&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="w">  </span><span class="p">]</span>
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="p">}</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="sb">```</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a><span class="gu">## Phase 2 Self-Check</span>
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>Before proceeding to Phase 3:
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="k">- [ ]</span> <span class="gs">**Standards load attempted across the full document net (BLOCKING)**</span>
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="k">- [ ]</span> <span class="gs">**Every subdirectory `AGENTS.md` covering a changed path discovered and read**</span>
-<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="k">- [ ]</span> <span class="gs">**rule-catalogue.json written; every rule traceable to a source document**</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="k">- [ ]</span> <span class="gs">**`standards_loaded` recorded; if false, style/convention findings are forbidden downstream**</span>
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a><span class="k">- [ ]</span> Previous review discovered (or confirmed not found)
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="k">- [ ]</span> Previous items loaded with correct statuses
-<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a><span class="k">- [ ]</span> PR context fetched (if online and PR mode)
-<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="k">- [ ]</span> Re-check requests extracted
-<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="k">- [ ]</span> context-analysis.md written
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="k">- [ ]</span> previous-items.json updated (or created empty)
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>&lt;RULE&gt;
-<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>Phase 2 is <span class="gs">**split**</span> on blocking behavior. Do not apply one rule to both halves.
-<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>
-<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a><span class="k">-</span><span class="w"> </span><span class="gs">**2.0 Standards load — BLOCKING.**</span> A read failure on a discovered standards
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>  document stops the phase. A review that has not loaded the standards cannot
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>  report standards findings. If no standards document exists at all, that is not
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>  a failure: record <span class="sb">`standards_loaded: false`</span>, proceed, and disclose it.
-<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="k">-</span><span class="w"> </span>**2.1-2.4 History (previous reviews, PR context, re-check requests) —
-<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>  non-blocking.** If this context cannot be loaded, proceed with empty history
-<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>  and log a warning.
-<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>&lt;/RULE&gt;
-<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>
-<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>You are a Context Analyst. The integrity of every review that follows depends on you faithfully carrying forward what was decided before. A re-raised declined item is not a minor mistake — it damages the review relationship and wastes the author&#39;s time. Do not skip the self-check. Do not proceed without the output files.
-<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>These five lowercase strings are the ONLY valid values of an item&#39;s <span class="sb">`status`</span> field.
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>They are compared literally by the loader and the filters, so any other spelling
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>(uppercase, or a longer synonym) silently fails to match and the item is treated as
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>if it had never been resolved.
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>| Status | Meaning | Action |
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>|--------|---------|--------|
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>| <span class="sb">`pending`</span> | Item was raised, not yet addressed | Include in new review if still present |
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>| <span class="sb">`fixed`</span> | Item was addressed in subsequent commits | Do not re-raise |
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>| <span class="sb">`declined`</span> | Author explicitly declined to fix | Do NOT re-raise (respect decision) |
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>| <span class="sb">`partial`</span> | Partial agreement: some parts fixed, some pending | Note pending parts only |
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>| <span class="sb">`alternative`</span> | Author proposed a different solution | Accept if it satisfies the original concern; reject if the core risk remains unaddressed |
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">```python</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="k">def</span><span class="w"> </span><span class="nf">load_previous_items</span><span class="p">(</span><span class="n">review_dir</span><span class="p">:</span> <span class="n">Path</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sd">    Load previous items with their resolution status.</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sd">    Returns list of:</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sd">    {</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sd">        &quot;id&quot;: &quot;finding-prev-001&quot;,</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sd">        &quot;status&quot;: &quot;declined&quot; | &quot;fixed&quot; | &quot;partial&quot; | &quot;alternative&quot; | &quot;pending&quot;,</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sd">        &quot;reason&quot;: &quot;Performance tradeoff acceptable&quot;,  # for declined</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sd">        &quot;fixed&quot;: [&quot;item1&quot;],                           # for partial</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sd">        &quot;pending&quot;: [&quot;item2&quot;],                         # for partial</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sd">        &quot;alternative_proposed&quot;: &quot;Use LRU cache&quot;,      # for alternative</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sd">        &quot;accepted&quot;: true                              # for alternative</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sd">    }</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>    <span class="n">items_path</span> <span class="o">=</span> <span class="n">review_dir</span> <span class="o">/</span> <span class="s2">&quot;previous-items.json&quot;</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>    <span class="k">if</span> <span class="ow">not</span> <span class="n">items_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>        <span class="k">return</span> <span class="p">[]</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>    <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">items_path</span><span class="o">.</span><span class="n">read_text</span><span class="p">())</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>    <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;items&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="sb">```</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="gu">## 2.3 PR History Fetching (Online Mode)</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="c1"># Use gh CLI to fetch PR details and comments</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>number,title,body,state,baseRefName,headRefName,commits,additions,deletions,changedFiles
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>gh<span class="w"> </span>pr<span class="w"> </span>diff<span class="w"> </span>&lt;PR_NUMBER&gt;
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">&quot;repos/{owner}/{repo}/pulls/&lt;PR_NUMBER&gt;/comments&quot;</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">```</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="gs">**Offline Mode:**</span> Skip this step. Log: <span class="sb">`[OFFLINE] Skipping PR comment history.`</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="gs">**Tool failure (non-offline):**</span> Log warning, proceed with empty PR context.
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="gu">## 2.4 Re-check Request Detection</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>| Pattern | Meaning |
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>|---------|---------|
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>| &quot;please re-check X&quot; | Author wants X verified again |
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>| &quot;PTAL at Y&quot; | Please take another look at Y |
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>| &quot;addressed in &lt;sha&gt;&quot; | Author claims fix in specific commit |
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>| &quot;@reviewer ready for re-review&quot; | General re-review request |
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">```python</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="n">RECHECK_PATTERNS</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>    <span class="sa">r</span><span class="s2">&quot;please\s+(?:re-?)?check\s+(.+)&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>    <span class="sa">r</span><span class="s2">&quot;PTAL\s+(?:at\s+)?(.+)&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>    <span class="sa">r</span><span class="s2">&quot;addressed\s+(?:in\s+)?([a-f0-9]{7,40})&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>    <span class="sa">r</span><span class="s2">&quot;ready\s+for\s+re-?review&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="p">]</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="k">def</span><span class="w"> </span><span class="nf">detect_recheck_requests</span><span class="p">(</span><span class="n">comments</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">]:</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Extract re-check requests from PR comments.&quot;&quot;&quot;</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>    <span class="n">requests</span> <span class="o">=</span> <span class="p">[]</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>    <span class="k">for</span> <span class="n">comment</span> <span class="ow">in</span> <span class="n">comments</span><span class="p">:</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>        <span class="k">for</span> <span class="n">pattern</span> <span class="ow">in</span> <span class="n">RECHECK_PATTERNS</span><span class="p">:</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>            <span class="n">match</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">pattern</span><span class="p">,</span> <span class="n">comment</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>            <span class="k">if</span> <span class="n">match</span><span class="p">:</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>                <span class="n">requests</span><span class="o">.</span><span class="n">append</span><span class="p">({</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>                    <span class="s2">&quot;pattern&quot;</span><span class="p">:</span> <span class="n">pattern</span><span class="p">,</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>                    <span class="s2">&quot;match&quot;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>                    <span class="s2">&quot;target&quot;</span><span class="p">:</span> <span class="n">match</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="k">if</span> <span class="n">match</span><span class="o">.</span><span class="n">lastindex</span> <span class="k">else</span> <span class="kc">None</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>                <span class="p">})</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>    <span class="k">return</span> <span class="n">requests</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb">```</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="gu">## 2.5 Context Object Construction</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="sb">```python</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="k">def</span><span class="w"> </span><span class="nf">build_context</span><span class="p">(</span>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>    <span class="n">manifest</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>    <span class="n">rule_catalogue</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>    <span class="n">previous_dir</span><span class="p">:</span> <span class="n">Path</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>    <span class="n">pr_data</span><span class="p">:</span> <span class="nb">dict</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;Construct review context for Phase 3.</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="sd">    `rule_catalogue` comes from the BLOCKING standards load (2.0) and is not</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sd">    optional; Phase 3 cites its rules by id in every finding.</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>    <span class="n">context</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>        <span class="s2">&quot;manifest&quot;</span><span class="p">:</span> <span class="n">manifest</span><span class="p">,</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>        <span class="c1"># --- Standards (2.0, blocking) ---</span>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>        <span class="s2">&quot;standards_loaded&quot;</span><span class="p">:</span> <span class="nb">bool</span><span class="p">(</span><span class="n">rule_catalogue</span><span class="p">[</span><span class="s2">&quot;sources&quot;</span><span class="p">]),</span>
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>        <span class="s2">&quot;rule_catalogue&quot;</span><span class="p">:</span> <span class="n">rule_catalogue</span><span class="p">[</span><span class="s2">&quot;rules&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>        <span class="s2">&quot;standards_sources&quot;</span><span class="p">:</span> <span class="n">rule_catalogue</span><span class="p">[</span><span class="s2">&quot;sources&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>        <span class="c1"># --- History (non-blocking, may be empty) ---</span>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>        <span class="s2">&quot;previous_review&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>        <span class="s2">&quot;pr_context&quot;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>        <span class="s2">&quot;declined_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>        <span class="s2">&quot;partial_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>        <span class="s2">&quot;alternative_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>        <span class="s2">&quot;malformed_items&quot;</span><span class="p">:</span> <span class="p">[],</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>        <span class="s2">&quot;recheck_requests&quot;</span><span class="p">:</span> <span class="p">[]</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>    <span class="p">}</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>    <span class="k">if</span> <span class="n">previous_dir</span><span class="p">:</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>        <span class="n">items</span> <span class="o">=</span> <span class="n">load_previous_items</span><span class="p">(</span><span class="n">previous_dir</span><span class="p">)</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;previous_review&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">previous_dir</span><span class="p">)</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>        <span class="c1"># .get(): a malformed item missing &quot;status&quot; must not raise inside this</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>        <span class="c1"># non-blocking phase. It falls through to no bucket and is reported as</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>        <span class="c1"># unrecognized rather than aborting history loading.</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;declined_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;declined&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;partial_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;partial&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;alternative_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span> <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;alternative&quot;</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>        <span class="p">]</span>
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;malformed_items&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>            <span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">items</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>            <span class="k">if</span> <span class="n">i</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;status&quot;</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>            <span class="p">{</span><span class="s2">&quot;pending&quot;</span><span class="p">,</span> <span class="s2">&quot;fixed&quot;</span><span class="p">,</span> <span class="s2">&quot;declined&quot;</span><span class="p">,</span> <span class="s2">&quot;partial&quot;</span><span class="p">,</span> <span class="s2">&quot;alternative&quot;</span><span class="p">}</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>        <span class="p">]</span>
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>    <span class="k">if</span> <span class="n">pr_data</span><span class="p">:</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;pr_context&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a>            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="n">pr_data</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;title&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>            <span class="s2">&quot;body&quot;</span><span class="p">:</span> <span class="n">pr_data</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;body&quot;</span><span class="p">),</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>            <span class="s2">&quot;author&quot;</span><span class="p">:</span> <span class="n">pr_data</span><span class="p">[</span><span class="s2">&quot;meta&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;author&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>        <span class="p">}</span>
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>        <span class="n">context</span><span class="p">[</span><span class="s2">&quot;recheck_requests&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">detect_recheck_requests</span><span class="p">(</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>            <span class="n">pr_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;comments&quot;</span><span class="p">,</span> <span class="p">[])</span>
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>        <span class="p">)</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>    <span class="k">return</span> <span class="n">context</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="sb">```</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="gu">## 2.6 Output: context-analysis.md</span>
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="gh"># Context Analysis</span>
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="gs">**Previous Review:**</span> Found (2026-01-28)
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="gs">**PR Context:**</span> Available
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="gu">## Previous Items Summary</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>| Status | Count |
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>|--------|-------|
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>| Declined | 1 |
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>| Partial | 1 |
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>| Alternative | 1 |
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="gu">### Declined Items (will NOT re-raise)</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finding-prev-001**</span>: &quot;Cache invalidation strategy&quot;
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Reason: &quot;Performance tradeoff acceptable for our scale&quot;
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Declined: 2026-01-28
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="gu">### Partial Agreements (pending items only)</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finding-prev-002**</span>: Security validation
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Fixed: &quot;Use parameterized queries&quot;
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Pending: &quot;Add input validation at API layer&quot;
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="gu">### Alternative Solutions</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="k">-</span><span class="w"> </span><span class="gs">**finding-prev-003**</span>: Caching approach
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Original: &quot;Use Redis for caching&quot;
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Alternative: &quot;Use in-memory LRU cache&quot;
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Accepted: Yes (simpler deployment)
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="gu">## Re-check Requests</span>
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="k">-</span><span class="w"> </span>&quot;please re-check the error handling in auth.py&quot;
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="k">-</span><span class="w"> </span>&quot;addressed in abc1234&quot;
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="sb">```</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="gu">## 2.7 Output: previous-items.json</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="sb">```json</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="p">{</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="w">  </span><span class="nt">&quot;version&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;1.0&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="w">  </span><span class="nt">&quot;source_review&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-01-28T15:00:00Z&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="w">  </span><span class="nt">&quot;items&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;finding-prev-001&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;declined&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="w">      </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Performance tradeoff acceptable for our scale&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="w">      </span><span class="nt">&quot;declined_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-01-28T16:00:00Z&quot;</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;finding-prev-002&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;partial&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="w">      </span><span class="nt">&quot;fixed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Use parameterized queries&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="w">      </span><span class="nt">&quot;pending&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;Add input validation at API layer&quot;</span><span class="p">],</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="w">      </span><span class="nt">&quot;updated_at&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;2026-01-29T10:00:00Z&quot;</span>
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="w">    </span><span class="p">},</span>
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="w">    </span><span class="p">{</span>
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a><span class="w">      </span><span class="nt">&quot;id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;finding-prev-003&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;alternative&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="w">      </span><span class="nt">&quot;original_suggestion&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Use Redis for caching&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="w">      </span><span class="nt">&quot;alternative_proposed&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Use in-memory LRU cache&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="w">      </span><span class="nt">&quot;rationale&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Simpler deployment, sufficient for current load&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="w">      </span><span class="nt">&quot;accepted&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="w">  </span><span class="p">]</span>
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="p">}</span>
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="sb">```</span>
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="gu">## Phase 2 Self-Check</span>
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>Before proceeding to Phase 3:
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="k">- [ ]</span> <span class="gs">**Standards load attempted across the full document net (BLOCKING)**</span>
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="k">- [ ]</span> <span class="gs">**Every subdirectory `AGENTS.md` covering a changed path discovered and read**</span>
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="k">- [ ]</span> <span class="gs">**rule-catalogue.json written; every rule traceable to a source document**</span>
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a><span class="k">- [ ]</span> <span class="gs">**`standards_loaded` recorded; if false, style/convention findings are forbidden downstream**</span>
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="k">- [ ]</span> Previous review discovered (or confirmed not found)
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a><span class="k">- [ ]</span> Previous items loaded with correct statuses
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="k">- [ ]</span> PR context fetched (if online and PR mode)
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="k">- [ ]</span> Re-check requests extracted
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="k">- [ ]</span> context-analysis.md written
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="k">- [ ]</span> previous-items.json updated (or created empty)
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>&lt;RULE&gt;
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>Phase 2 is <span class="gs">**split**</span> on blocking behavior. Do not apply one rule to both halves.
+<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="k">-</span><span class="w"> </span><span class="gs">**2.0 Standards load — BLOCKING.**</span> A read failure on a discovered standards
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>  document stops the phase. A review that has not loaded the standards cannot
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>  report standards findings. If no standards document exists at all, that is not
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>  a failure: record <span class="sb">`standards_loaded: false`</span>, proceed, and disclose it.
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="k">-</span><span class="w"> </span>**2.1-2.4 History (previous reviews, PR context, re-check requests) —
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>  non-blocking.** If this context cannot be loaded, proceed with empty history
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>  and log a warning.
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>&lt;/RULE&gt;
+<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a>
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a>You are a Context Analyst. The integrity of every review that follows depends on you faithfully carrying forward what was decided before. A re-raised declined item is not a minor mistake — it damages the review relationship and wastes the author&#39;s time. Do not skip the self-check. Do not proceed without the output files.
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
