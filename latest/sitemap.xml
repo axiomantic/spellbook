@@ -53,10 +53,6 @@
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
-         <loc>https://axiomantic.github.io/spellbook/latest/agents/MODEL_ROUTING/</loc>
-         <lastmod>2026-08-11</lastmod>
-    </url>
-    <url>
          <loc>https://axiomantic.github.io/spellbook/latest/agents/chariot-implementer/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
@@ -590,6 +586,10 @@
     </url>
     <url>
          <loc>https://axiomantic.github.io/spellbook/latest/reference/contributing/</loc>
+         <lastmod>2026-08-11</lastmod>
+    </url>
+    <url>
+         <loc>https://axiomantic.github.io/spellbook/latest/reference/model-routing/</loc>
          <lastmod>2026-08-11</lastmod>
     </url>
     <url>
