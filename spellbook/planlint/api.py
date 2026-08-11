@@ -263,7 +263,9 @@ def decided_claims(report):
 
     One entry per rule that RAN. A rule that ran and found nothing has
     decided its claim. A rule that was SKIPPED (LintResult.skipped_reason
-    set) is reported as UNDECIDED, never as clean.
+    set) is reported as UNDECIDED, never as clean. A rule that CRASHED
+    (present in `report.internal_errors`) is also reported as UNDECIDED,
+    with `reason` set to `"crashed: <type>: <message>"`.
     """
     claims = []
     for result in report.results:
