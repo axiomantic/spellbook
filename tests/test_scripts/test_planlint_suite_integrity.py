@@ -52,7 +52,7 @@ def discover_planlint_test_modules():
     return sorted(
         TESTS / name
         for name in os.listdir(TESTS)
-        if name.startswith("test_planlint_") and name.endswith(".py")
+        if "planlint" in name and name.endswith(".py")
     )
 
 
@@ -62,47 +62,28 @@ def collected_tests(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             if node.name.startswith("test"):
                 found.append((None, node))
-        elif isinstance(node, ast.ClassDef):
+        elif isinstance(node, ast.ClassDef) and node.name.startswith("Test"):
+            if any(
+                isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)) and member.name == "__init__"
+                for member in node.body
+            ):
+                # pytest refuses to collect a class defining __init__.
+                continue
             for member in node.body:
                 if isinstance(member, (ast.FunctionDef, ast.AsyncFunctionDef)) and member.name.startswith("test"):
                     found.append((node.name, member))
     return found
 
 
-def _parametrize_case_count(function):
-    """Number of test items a single test function expands to at collection
-    time, accounting for `@pytest.mark.parametrize`. Stacked parametrize
-    decorators multiply (pytest's cartesian-product expansion). A function
-    with no parametrize decorator expands to exactly 1 item.
-    """
-    count = 1
-    saw_parametrize = False
-    for decorator in function.decorator_list:
-        call = decorator
-        if not isinstance(call, ast.Call):
-            continue
-        target = call.func
-        # Matches both `@pytest.mark.parametrize(...)` and
-        # `@parametrize(...)` (from `from pytest import mark`-style imports).
-        attr_name = target.attr if isinstance(target, ast.Attribute) else getattr(target, "id", None)
-        if attr_name != "parametrize":
-            continue
-        if len(call.args) < 2:
-            continue
-        argvalues = call.args[1]
-        if isinstance(argvalues, (ast.List, ast.Tuple)):
-            saw_parametrize = True
-            count *= max(len(argvalues.elts), 1)
-    return count if saw_parametrize else 1
-
-
 def qualified_names(path):
+    """The `file::function` collection identities in `path`, one per test
+    function regardless of parametrize expansion — set membership here is
+    about WHICH functions exist, not how many cases each expands to."""
     tree = ast.parse(path.read_text(encoding="utf-8"))
     names = []
     for owner, function in collected_tests(tree):
-        parts = [path.stem, owner, function.name] if owner else [path.stem, function.name]
-        qualified = ".".join(parts)
-        names.extend([qualified] * _parametrize_case_count(function))
+        identity = f"{path.name}::{owner}::{function.name}" if owner else f"{path.name}::{function.name}"
+        names.append(identity)
     return names
 
 
@@ -123,8 +104,14 @@ def returned_values(function):
 
 def _documented_fixtures():
     text = README.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    start = next(i for i, line in enumerate(lines) if line.startswith("## Fixtures"))
+    end = next(
+        (i for i in range(start + 1, len(lines)) if lines[i].startswith("## ")),
+        len(lines),
+    )
     found = set()
-    for line in text.splitlines():
+    for line in lines[start:end]:
         if not line.startswith("|"):
             continue
         for cell in line.split("|"):
@@ -145,7 +132,7 @@ def test_every_fixture_has_a_row_in_the_readme_table():
 
 
 def test_every_readme_row_names_a_fixture_that_exists():
-    rows = {n for n in _documented_fixtures() if n.startswith(("neg_", "clean_", "legacy_", "opted_"))}
+    rows = _documented_fixtures()
     assert "clean_plan.md" in rows
     assert sorted(rows - _committed_fixtures()) == []
 
@@ -187,11 +174,11 @@ def test_pytest_collection_matches_the_ast_scan():
     above pyproject.toml's global `timeout = 30`. The outer mark must exceed the
     inner `timeout=` below, or a slow collection is killed by pytest-timeout and
     reports as an opaque hang instead of a named `subprocess.TimeoutExpired`."""
-    scanned = sorted(
+    scanned = {
         name
         for path in discover_planlint_test_modules()
         for name in qualified_names(path)
-    )
+    }
     module_paths = [str(p.relative_to(REPO_ROOT)) for p in discover_planlint_test_modules()]
     result = subprocess.run(
         [
@@ -208,11 +195,20 @@ def test_pytest_collection_matches_the_ast_scan():
         text=True,
         timeout=90,
     )
-    assert result.returncode in (0, 5), result.stdout + result.stderr  # 5 = no tests collected is a real failure
-    collected_count = sum(
-        1 for line in result.stdout.splitlines() if "::" in line
-    )
-    assert collected_count == len(scanned), (
-        f"AST scan found {len(scanned)} tests; pytest --collect-only found "
-        f"{collected_count}.\n{result.stdout}"
+    # Only 0 (tests collected) and 5 (no tests collected) are accepted: 5 is a
+    # real failure worth asserting on below via an empty `collected` set, not
+    # a silent pass, so it is let through here rather than rejected outright.
+    assert result.returncode in (0, 5), result.stdout + result.stderr
+    collected = set()
+    for line in result.stdout.splitlines():
+        if "::" not in line:
+            continue
+        node_id = line.split(" ")[0].split("[", 1)[0]
+        file_part, _, rest = node_id.partition("::")
+        collected.add(f"{os.path.basename(file_part)}::{rest}")
+    assert collected == scanned, (
+        f"AST scan and pytest --collect-only disagree on which tests exist.\n"
+        f"Only in AST scan (missing from pytest collection): {sorted(scanned - collected)}\n"
+        f"Only in pytest collection (missing from AST scan): {sorted(collected - scanned)}\n"
+        f"{result.stdout}"
     )

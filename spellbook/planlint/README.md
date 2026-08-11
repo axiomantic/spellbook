@@ -38,7 +38,7 @@ no negative fixture is not done.
 | `neg_shared_path_no_owner.md` | `shared-path-without-owner` |
 | `neg_schema_conflict.md` | `schema-conflict` |
 | `neg_schema_unknown_version.md` | `schema-unknown-version` |
-| `neg_schema_fallback_unknown_version.md` | `schema-unknown-version`, reported once against the task that owns the copied-down plan-level `Schema:`, not twice. |
+| `neg_schema_fallback_unknown_version.md` | `schema-unknown-version`, reported once against the task whose own `Schema:` gets copied up into the plan-level `doc.schema_text` (there is no true plan-level `Schema:` header), not twice. |
 | `neg_schema_conflict_task_section.md` | `schema-conflict` and `schema-unknown-version` together, each attributed to its own owning section rather than a hardcoded `Task 1`. |
 
 ## Rollback
