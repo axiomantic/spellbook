@@ -1,6 +1,7 @@
 """Structural checks on skills/reviewing-impl-plans/SKILL.md's Phase 0
 mechanized pre-pass (design §3.2.2)."""
 
+import re
 from pathlib import Path
 
 SKILL = Path(__file__).parents[2] / "skills" / "reviewing-impl-plans" / "SKILL.md"
@@ -22,6 +23,20 @@ def test_phase_0_calls_lint_for_review_and_declares_schema():
     assert "declares_schema" in section
     assert "lint_for_review" in section
     assert "decided_claims" in section
+
+
+def test_phase_0_imports_declares_schema_not_just_mentions_it():
+    """`declares_schema` must be IMPORTED, not merely used. A bare mention
+    (e.g. only inside the Gate's function-call text) without an import line
+    naming it means the snippet raises NameError when executed."""
+    text = _text()
+    section = text.split("## Phase 0: Mechanized Pre-Pass", 1)[1].split("## Phase 1", 1)[0]
+    import_lines = [
+        line
+        for line in section.splitlines()
+        if re.match(r"\s*from spellbook\.planlint import\b", line) and "declares_schema" in line
+    ]
+    assert import_lines, "expected a 'from spellbook.planlint import ...' line naming declares_schema"
 
 
 def test_phase_0_states_the_crash_policy():

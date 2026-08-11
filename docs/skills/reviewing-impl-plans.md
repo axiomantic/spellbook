@@ -116,6 +116,12 @@ Before each phase, identify: interfaces between parallel work streams, behavior 
 
 ## Phase 0: Mechanized Pre-Pass
 
+```python
+from pathlib import Path
+
+from spellbook.planlint import declares_schema, decided_claims, lint_for_review
+```
+
 **Gate:** if `declares_schema(plan_text)` is False, this plan is legacy. Record
 `Phase 0: NOT APPLICABLE (plan declares no Schema:)` and go to Phase 1. Do NOT
 call the linter.
@@ -123,8 +129,11 @@ call the linter.
 Otherwise:
 
 ```python
-from spellbook.planlint import lint_for_review, decided_claims
-report = lint_for_review(plan_path, repo_root=repo_root)
+# repo_root MUST be a pathlib.Path, never a str. `rules/files.py` does
+# `repo_root / entry.path`; a str makes that `str / str`, which raises
+# TypeError, which the rule barrier reports as a CRASH — a caller bug
+# wearing a plan-defect costume. Coerce at the boundary, as cli.py does.
+report = lint_for_review(plan_path, repo_root=Path(repo_root))
 ```
 
 Every ERROR finding is a Critical Finding in the report, with the rule ID as its
@@ -143,8 +152,10 @@ if report.internal_errors:
     print(report.report())      # each crash carries its full traceback
 ```
 
-Write `Linter: UNAVAILABLE` on the Report Assembly line, list every rule under
-"Claims NOT decided" with the crash as the reason, and CONTINUE to Phase 1. Both
+Write `Linter: UNAVAILABLE (see error below)` on the Report Assembly line, then paste
+the printed `report.report()` traceback directly beneath that line so "below" points at
+real content. List every rule under "Claims NOT decided" with the crash as the reason,
+and CONTINUE to Phase 1. Both
 halves matter and they pull in opposite directions on purpose. Failing closed on the
 claims is non-negotiable: a review gate must never report a claim as machine-decided
 when no machine decided it, and the failure mode of getting this wrong is silent —
