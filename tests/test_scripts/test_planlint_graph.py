@@ -6,13 +6,14 @@ dicts, matching the source project's own test shape.
 """
 
 from spellbook.planlint import document
+from spellbook.planlint.finding import ERROR, Finding
 from spellbook.planlint.graph import DEPENDS, build_edges, parse_depends, tarjan
 
 
 def test_tarjan_finds_no_components_in_an_acyclic_graph():
     edges = {"a": ["b"], "b": ["c"], "c": []}
     components = tarjan(edges)
-    assert all(len(c) < 2 for c in components)
+    assert sorted(map(sorted, components)) == sorted(map(sorted, [["a"], ["b"], ["c"]]))
 
 
 def test_tarjan_finds_a_three_node_cycle():
@@ -25,7 +26,7 @@ def test_tarjan_finds_a_three_node_cycle():
 def test_tarjan_ignores_a_self_loop_as_a_size_one_component():
     edges = {"a": ["a"]}
     components = tarjan(edges)
-    assert all(len(c) < 2 for c in components)
+    assert components == [["a"]]
 
 
 def test_parse_depends_yields_edges_for_plain_idents():
@@ -51,9 +52,18 @@ def test_parse_depends_prose_yields_a_finding_and_no_phantom_edge():
         "Task 1, and Task 2 once the fixtures land.", DEPENDS
     )
     assert edges == ["Task 1"]
-    assert len(findings) == 1
-    assert findings[0].rule == "depends-prose"
-    assert "Task 2" in findings[0].evidence
+    assert findings == [
+        Finding(
+            rule="depends-prose",
+            message=(
+                "an identifier sits in prose on the `Depends:` line, so it is "
+                "not read as an edge; state it as an item or move the note "
+                "off the line"
+            ),
+            evidence="and Task 2 once the fixtures land → Task 2",
+            severity=ERROR,
+        )
+    ]
 
 
 def test_parse_depends_reports_a_second_sentence_instead_of_dropping_it():
@@ -61,8 +71,40 @@ def test_parse_depends_reports_a_second_sentence_instead_of_dropping_it():
     A second sentence must therefore be REPORTED, never silently ignored."""
     edges, findings = parse_depends("Task 1. Task 2 must land first.", DEPENDS)
     assert edges == ["Task 1"]
-    assert [f.rule for f in findings] == ["depends-prose"]
-    assert "Task 2 must land first." in findings[0].evidence
+    assert findings == [
+        Finding(
+            rule="depends-prose",
+            message=(
+                "the `Depends:` line carries more than one sentence; only the "
+                "first is read as an item list, so nothing in this one becomes "
+                "an edge — state it as an item or move the note off the line"
+            ),
+            evidence="Task 2 must land first.",
+            severity=ERROR,
+        )
+    ]
+
+
+def test_parse_depends_reversed_range_yields_a_finding_and_no_edges():
+    """Task 6 to Task 3: low > high must not silently vanish. Every other
+    malformed `Depends:` shape in parse_depends emits a depends-prose
+    finding; a reversed range is the sole path that used to produce zero
+    edges AND zero findings (range(6, 4) is empty, so nothing was added
+    and nothing was reported)."""
+    edges, findings = parse_depends("Task 6 to Task 3", DEPENDS)
+    assert edges == []
+    assert findings == [
+        Finding(
+            rule="depends-prose",
+            message=(
+                "a range on the `Depends:` line is reversed (the low endpoint "
+                "is greater than the high endpoint), so it yields no edges; "
+                "state the range low-to-high or as separate items"
+            ),
+            evidence="Task 6 to Task 3",
+            severity=ERROR,
+        )
+    ]
 
 
 def test_build_edges_reads_every_task_depends_field():

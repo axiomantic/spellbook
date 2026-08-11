@@ -9,6 +9,7 @@ for spellbook: spellbook plans define no such markers.
 
 import dataclasses
 import re
+from collections.abc import Callable
 
 from spellbook.planlint import document
 from spellbook.planlint.finding import ERROR, Finding
@@ -17,12 +18,12 @@ from spellbook.planlint.finding import ERROR, Finding
 @dataclasses.dataclass(frozen=True)
 class GraphSpec:
     field_label: str
-    ident_only: object
-    ident_any: object
-    range_pattern: object
-    ident_of_range: object
-    none_words: frozenset
-    annotation_markers: frozenset
+    ident_only: re.Pattern[str]
+    ident_any: re.Pattern[str]
+    range_pattern: re.Pattern[str]
+    ident_of_range: Callable[[int], str]
+    none_words: frozenset[str]
+    annotation_markers: frozenset[str]
 
 
 DEPENDS = GraphSpec(
@@ -79,6 +80,21 @@ def parse_depends(text, spec):
         match = spec.range_pattern.match(item) if spec.range_pattern else None
         if match:
             low, high = int(match.group("low")), int(match.group("high"))
+            if low > high:
+                findings.append(
+                    Finding(
+                        rule="depends-prose",
+                        message=(
+                            f"a range on the `{spec.field_label}:` line is reversed "
+                            "(the low endpoint is greater than the high endpoint), "
+                            "so it yields no edges; state the range low-to-high or "
+                            "as separate items"
+                        ),
+                        evidence=item,
+                        severity=ERROR,
+                    )
+                )
+                continue
             for number in range(low, high + 1):
                 add(spec.ident_of_range(number))
             continue
