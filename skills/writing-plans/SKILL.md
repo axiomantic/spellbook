@@ -167,15 +167,31 @@ If ANY unchecked: STOP and fix before proceeding.
 After saving the plan, run the linter in-process:
 
 ```python
+from pathlib import Path
+
 from spellbook.planlint import lint_for_authoring
-report = lint_for_authoring(plan_path, repo_root=repo_root)
+
+# repo_root MUST be a pathlib.Path, never a str. `rules/files.py` does
+# `repo_root / entry.path`; a str makes that `str / str`, which raises
+# TypeError, which the rule barrier reports as a CRASH — a caller bug
+# wearing a plan-defect costume. Coerce at the boundary, as cli.py does.
+report = lint_for_authoring(plan_path, repo_root=Path(repo_root))
 print(report.report())
 ```
 
-Any ERROR finding blocks completion. Fix the plan and run it again. This
-SUPPLEMENTS the prose self-check above; it replaces no item in it. The prose
-checklist verifies authoring diligence. The linter verifies the emitted
-document's decidable claims.
+Any ERROR finding (`report.errors`) blocks completion. Fix the plan and run it
+again. This SUPPLEMENTS the prose self-check above; it replaces no item in it.
+The prose checklist verifies authoring diligence. The linter verifies the
+emitted document's decidable claims.
+
+**A report that was never linted is not a clean report.** When `report.linted`
+is False the gate never opened, and `report.findings` is empty because nothing
+ran — not because nothing is wrong. `report.report()` says `not linted
+(<reason>)`. Usual causes: the plan carries no `**Schema:** planlint-v1` line,
+it declares `**Schema:** legacy`, its `Schema:` line sits inside a fenced block
+(the gate skips fenced lines, so a plan ABOUT plans can hide its own field), or
+`plan_path` is wrong. Treat it exactly as a crash: leave the bullet UNCHECKED,
+fix the cause, run again.
 
 **On a rule CRASH, this self-check FAILS CLOSED.** If `report.internal_errors`
 is non-empty — a rule raised and the barrier caught it — the planlint bullet
@@ -187,9 +203,11 @@ never ran is the absence of an answer, not a clean one. This is the authoring
 call site, where nothing is built yet and fixing is cheapest — the opposite of
 `executing-plans`, which fails OPEN because there the write already happened.
 
+The whole decision rule, mechanically:
+
 ```python
-if report.internal_errors:
-    print(report.report())     # includes each crash's full traceback
+if not report.linted or report.internal_errors or report.errors:
+    print(report.report())     # crashes carry each rule's full traceback
     # leave the planlint bullet UNCHECKED and stop
 ```
 

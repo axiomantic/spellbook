@@ -44,6 +44,15 @@ PLANLINT_TEST_MODULES = (
     "test_planlint_schema_census.py",
     "test_planlint_suite_integrity.py",
     "test_planlint_vocabulary.py",
+    # Task 19's skill-integration test. `discover_planlint_test_modules` matches
+    # on the substring "planlint" anywhere in the name, not on a
+    # `test_planlint_` prefix, so a per-skill file named
+    # `test_<skill>_planlint.py` is discovered and MUST be registered here in
+    # the same commit that creates it. Tasks 20 and 21 add
+    # `test_reviewing_impl_plans_skill_planlint.py` and
+    # `test_executing_plans_skill_planlint.py` and owe this tuple the same
+    # one-line addition.
+    "test_writing_plans_skill_planlint.py",
 )
 
 
