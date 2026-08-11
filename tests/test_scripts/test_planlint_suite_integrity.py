@@ -29,10 +29,10 @@ REPO_ROOT = TESTS.parents[1]
 README = REPO_ROOT / "spellbook" / "planlint" / "README.md"
 
 # The planlint test modules that EXIST when this file is written (Task 15, after
-# Tasks 1-14). `test_planlint_vocabulary.py` is deliberately absent: Task 17
-# creates it, and Task 17 adds the entry in the same commit that creates the file.
-# The tuple is therefore correct at every point in build order — it is never a
-# true list with an entry deleted to buy a green run.
+# Tasks 1-14). `test_planlint_vocabulary.py` was deliberately absent until Task
+# 17 created it in the same commit that adds this entry — the promised follow-up
+# noted in Task 15's Step 3. The tuple is therefore correct at every point in
+# build order — it is never a true list with an entry deleted to buy a green run.
 PLANLINT_TEST_MODULES = (
     "test_planlint_finding.py",
     "test_planlint_document.py",
@@ -43,6 +43,7 @@ PLANLINT_TEST_MODULES = (
     "test_planlint_cli.py",
     "test_planlint_schema_census.py",
     "test_planlint_suite_integrity.py",
+    "test_planlint_vocabulary.py",
 )
 
 

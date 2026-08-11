@@ -1,10 +1,10 @@
 """Findings and lint results.
 
 Exit codes are stated once, here, because the source project measured what a
-silent zero costs: `ctest -R` exits 0 when its pattern matches no test, and
-about a hundred checks reported PASS against no code. A lint therefore
-reports a hard error when it finds no input to examine. Nothing to check is
-never a pass.
+silent zero costs: a test runner invoked with a filter pattern exits 0 when
+the pattern matches no test, and about a hundred checks reported PASS against
+no code. A lint therefore reports a hard error when it finds no input to
+examine. Nothing to check is never a pass.
 """
 
 import dataclasses
