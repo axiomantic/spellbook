@@ -222,28 +222,85 @@ def _fence_segments(lines):
     lines.
 
     A fence is never expected to span a task boundary in this document
-    family, so a `### Task N: ...` header always closes out whatever segment
-    came before it -- rather than letting the segment's markers reach across
-    the header looking for a partner.
+    family, so a `### Task N: ...` header ordinarily closes out whatever
+    segment came before it -- rather than letting the segment's markers
+    reach across the header looking for a partner. That is the common case
+    and is unchanged here.
 
-    Yields each segment's raw marker-index tuple, in document order. Callers
-    derive whatever they need from the raw markers: `_pair_fence_markers` for
-    conservative diagnostic pairing, `_protective_fence_ranges` for
-    permissive content-scanning protection. Keeping the raw markers here
-    (rather than pre-pairing them) is what lets the two concerns use
-    different pairing rules on the same segmentation.
+    The ONE exception: a `### Task N: ...`-shaped line can itself be FENCE
+    CONTENT -- e.g. this document family's own docs quoting a worked example
+    of another plan document inside a fence, where the example's own
+    `### Task 1: ...` line is textually indistinguishable from a real
+    header. Splitting there would be wrong: the segment ending right before
+    it has an ODD marker count (a fence is currently pending), which means
+    treating the header line as a hard boundary abandons that pending fence
+    even though it is genuinely still open and about to be closed by a LATER
+    marker, on the far side of one or more such quoted header-shaped lines.
+
+    Resolving this requires provisional lookahead, not a same-pass decision:
+    a header seen while a fence is pending is first treated as a TENTATIVE
+    boundary (the segment collected since the last confirmed boundary is
+    provisionally closed off), and a running `_carry` accumulates tentative
+    segments across those provisional boundaries. Only once the carry's
+    total marker count returns to EVEN is it confirmed and yielded as one
+    segment -- at that point every header-shaped line swallowed along the
+    way genuinely sat inside a fence that has now closed, exactly the
+    quoted-example shape above.
+
+    If the carry NEVER returns to even (a genuinely unclosed, abandoned
+    fence, with no quoting fence later closing it), provisional lookahead
+    was the wrong call in hindsight: nothing to the right of the pending
+    fence was ever going to close it, so the header(s) it swallowed were
+    real boundaries after all. On that path -- and ONLY on that path -- the
+    carry's constituent tentative segments are yielded UN-merged, exactly as
+    they would have been under the unconditional split this replaces. This
+    is what keeps the existing "abandon a genuinely broken fence at the next
+    task header" behavior intact: see
+    `test_unpaired_fence_does_not_corrupt_a_later_paired_fence`, where a
+    lone broken opener is followed by an unrelated, self-contained
+    well-formed pair in the NEXT task -- that carry never resolves to even,
+    so the fallback reports the broken opener and the well-formed pair as
+    two separate segments, matching pre-fix behavior exactly.
+
+    A well-formed segment with no pending fence at any header boundary never
+    enters the carry machinery at all (each tentative piece is already
+    even on its own and is yielded immediately) -- this is the case that
+    was never broken, and is unchanged.
+
+    Yields each confirmed segment's raw marker-index tuple, in document
+    order. Callers derive whatever they need from the raw markers:
+    `_pair_fence_markers` for conservative diagnostic pairing,
+    `_protective_fence_ranges` for permissive content-scanning protection.
+    Keeping the raw markers here (rather than pre-pairing them) is what lets
+    the two concerns use different pairing rules on the same segmentation.
     """
-    markers = []
+    tentative = []
+    current = []
     for index, line in enumerate(lines):
         if TASK_HEADER.match(line):
-            if markers:
-                yield tuple(markers)
-                markers = []
+            tentative.append(tuple(current))
+            current = []
             continue
         if FENCE.match(line):
-            markers.append(index)
-    if markers:
-        yield tuple(markers)
+            current.append(index)
+    tentative.append(tuple(current))
+
+    carry = []
+    carry_pieces = []
+    for piece in tentative:
+        carry.extend(piece)
+        carry_pieces.append(piece)
+        if len(carry) % 2 == 0:
+            if carry:
+                yield tuple(carry)
+            carry = []
+            carry_pieces = []
+    # The carry never resolved to even -- fall back to the constituent
+    # tentative pieces, unmerged, exactly as unconditional splitting at
+    # every header would have produced. See docstring.
+    for piece in carry_pieces:
+        if piece:
+            yield piece
 
 
 def unclosed_fence_index(lines):

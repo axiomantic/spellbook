@@ -711,3 +711,47 @@ def test_files_block_does_not_absorb_a_fenced_example_bullet():
     doc = PlanDocument.from_text(text)
     entries = doc.task("Task 1").files_entries
     assert [e.path for e in entries] == ["real.py"]
+
+
+def test_task_header_shaped_line_inside_an_open_fence_is_fence_content():
+    """Regression for the "worked-example" leak: a `### Task N: ...`-shaped
+    line that sits INSIDE an already-open, not-yet-closed fence must stay
+    fence content, not be treated as a real segment boundary.
+
+    Real-world shape: a plan's own body quotes a worked EXAMPLE of another
+    plan document inside a fence, and that example carries its own
+    `### Task 1: ...` header and its own `**Schema:**`-looking line. Before
+    this fix, `_fence_segments` split at every `TASK_HEADER` match
+    unconditionally, so the fake header inside the still-open fence closed
+    out the segment early (an odd, single-marker segment that protects
+    nothing), leaving the example's own `**Schema:** planlint-v1` line
+    exposed to ordinary field-scanning -- which then set the OUTER
+    document's `schema_text` from the fenced example's illustrative value
+    instead of from the outer document's real (absent) declaration.
+
+    Fixture: one real task, with a fence that opens, contains a fake
+    `### Task 1: ...` header and a fake `**Schema:**` line, and then
+    closes -- with no real `**Schema:**` field anywhere outside the fence.
+    """
+    text = (
+        "### Task 1: Real task quoting a worked example\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "Worked example of another plan document:\n\n"
+        "```markdown\n"                       # real open
+        "### Task 1: Example component\n\n"   # fake header, fence content
+        "**Schema:** planlint-v1\n"           # fake field, fence content
+        "```\n"                                # real close
+    )
+    doc = PlanDocument.from_text(text)
+
+    # The fenced example's own `### Task 1: ...` line must not register as
+    # a second real task -- there is exactly one real task in this document.
+    assert [t.ident for t in doc.tasks] == ["Task 1"]
+
+    # The fenced example's illustrative `**Schema:**` line must not leak
+    # out as the outer document's real schema declaration -- the outer
+    # document never declares one.
+    assert doc.schema_text == ""
+    assert not doc.declares_planlint_schema
