@@ -28,8 +28,9 @@ class Rule:
     reports a rule as absent that ran — a wrong fact in a review gate, which
     is worse than a missing one. `guard_no_input(name=...)` is the single
     place the returned name is set, so keeping the two in step means passing
-    this same literal there. Enforced by
-    `test_every_rule_result_name_matches_its_registry_row_name` (Task 18).
+    this same literal there. Will be enforced by
+    `test_every_rule_result_name_matches_its_registry_row_name`, added in
+    Task 18 (not yet written).
     """
 
     name: str
@@ -57,13 +58,14 @@ class RuleContext:
 
     `repo_root` — a `pathlib.Path`, or `None`. COERCION CONTRACT: callers pass
     a `Path`, never a `str`. `rules/files.py` does `ctx.repo_root / entry.path`,
-    which raises `TypeError` on a `str` — and that `TypeError` would be caught
-    by `run_rules()`'s error barrier and reported as a rule CRASH rather than
-    as the caller bug it is. Any boundary that receives a string (argparse in
-    `cli.py`, an operator-supplied value) coerces at that boundary, before
-    constructing this dataclass. `None` means "path existence is undecidable
-    here" and makes `rules/files.py` return a skipped result — never a clean
-    one.
+    where `entry.path` is `FilesEntry.path`, typed `str` in `document.py` — so
+    a `str` `repo_root` makes that expression `str / str`, which raises
+    `TypeError` — and that `TypeError` would be caught by `run_rules()`'s
+    error barrier and reported as a rule CRASH rather than as the caller bug
+    it is. Any boundary that receives a string (argparse in `cli.py`, an
+    operator-supplied value) coerces at that boundary, before constructing
+    this dataclass. `None` means "path existence is undecidable here" and
+    makes `rules/files.py` return a skipped result — never a clean one.
     """
 
     doc: PlanDocument
