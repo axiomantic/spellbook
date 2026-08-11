@@ -19,16 +19,22 @@ EMITS = frozenset(
 )
 
 # Bracket/angle-bracket content only reads as an unsubstituted placeholder
-# when the content itself looks like an English placeholder description —
-# a single word drawn from this vocabulary, or several such words strung
-# together ("test file", "file_path"). Real command syntax that happens to
-# use brackets — pytest parametrize IDs (`[case1]`), shell/HTML content
-# (`<div>`) — never matches this vocabulary, so it is left alone.
+# when the content itself IS a placeholder word from this vocabulary — on
+# its own, or as an underscore-joined pair that reads as an unsubstituted
+# Python-style template identifier ("file_path", "test_path"). Real command
+# syntax that happens to use brackets — pytest parametrize IDs (`[case1]`),
+# shell/HTML content (`<div>`) — never matches this vocabulary, so it is
+# left alone. Hyphen- or whitespace-joined combinations of two vocabulary
+# words (`[key-value]`, `[key value]`, `[param key]`) are deliberately NOT
+# matched: those shapes read as real bracket content (a dict/key-value pair
+# description, prose), not as an unsubstituted template placeholder, and
+# treating every pairing of vocabulary words as a placeholder produced false
+# positives on real command syntax.
 _PLACEHOLDER_WORD = (
     r"(?:path|file|name|test|value|arg|argument|param|parameter|"
     r"key|token|url|dir|directory)"
 )
-_PLACEHOLDER_PHRASE = rf"{_PLACEHOLDER_WORD}(?:[\s_-]+{_PLACEHOLDER_WORD})*"
+_PLACEHOLDER_PHRASE = rf"{_PLACEHOLDER_WORD}(?:_+{_PLACEHOLDER_WORD})?"
 
 PLACEHOLDER_PATTERNS = (
     re.compile(r"\bTODO\b", re.IGNORECASE),

@@ -513,6 +513,30 @@ def test_check_placeholder_fires_on_a_prose_placeholder_filename():
     )
 
 
+def test_check_placeholder_does_not_fire_on_a_hyphen_joined_key_value_pair():
+    """MEDIUM finding: the old `[\\s_-]+`-joined multi-word combination
+    pattern treated ANY pairing of vocabulary words as a placeholder, so
+    real bracket content describing a key-value pair (`[key-value]`) tripped
+    `check-placeholder` even though it is plausible real command syntax, not
+    unsubstituted template text. Hyphen-joined pairs of vocabulary words no
+    longer match; only a single vocabulary word, or an underscore-joined
+    pair (the Python-identifier placeholder convention, e.g. `test_path`),
+    fires."""
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Real key-value bracket content\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `jq '.[key-value]' file.json`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = tuple(f for f in checks.run(ctx).findings if f.rule == "check-placeholder")
+    assert hits == ()
+
+
 def test_check_placeholder_fires_case_insensitively_on_lowercase_todo():
     """Closes a MEDIUM-severity false negative from `7fd94a6e`: the
     placeholder markers `TODO`/`TBD`/`FIXME` are conventionally
