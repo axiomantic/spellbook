@@ -928,24 +928,41 @@ def test_modify_path_missing_skips_an_absolute_path_entry(tmp_path):
 
 def test_modify_path_missing_skips_a_traversal_escaping_path_entry(tmp_path):
     """Same escape, reached via `..`-traversal instead of an absolute path.
-    `../../etc/passwd` resolves outside `repo_root` once `.resolve()` walks
-    the `..` segments, and the real `/etc/passwd` it lands on exists — so
-    absent the guard, `create-path-exists` would fire a SECOND, bogus hit for
-    it. Asserting exactly one hit (the legitimate `already_here.py` one)
-    proves the traversal entry never reached the filesystem check."""
+
+    This does NOT rely on the real `/etc/passwd` or on `tmp_path`'s actual
+    nesting depth (pytest's tmp tree is many directories deep, e.g.
+    `/private/var/folders/.../pytest-NNNN/test_name0/`, so a fixed number of
+    `..` segments like `../../` only climbs INSIDE that tree and never
+    reaches the real `/etc/passwd` — a construction that would pass whether
+    or not the guard exists, since `resolved.exists()` is `False` either
+    way). Instead this exercises the guard's actual decision directly: a
+    genuinely-existing SIBLING of `repo_root` stands in for "a real path
+    outside the repo". `../sibling_target.py`, resolved against
+    `repo_root == tmp_path`, lands at `tmp_path.parent /
+    "sibling_target.py"` — outside `repo_root` by construction, regardless
+    of how deep `tmp_path` sits on this machine — and that file is created
+    so it genuinely exists on disk. Absent the guard, `create-path-exists`
+    would fire a SECOND, bogus hit for it. Asserting exactly one hit (the
+    legitimate `already_here.py` one) proves the traversal entry never
+    reached the filesystem check."""
     from spellbook.planlint.rules import files
 
     (tmp_path / "already_here.py").write_text("# here\n", encoding="utf-8")
-    text = (
-        "**Schema:** planlint-v1\n\n"
-        "### Task 1: X\n\n**Files:**\n"
-        "- Create: `already_here.py`\n"
-        "- Create: `../../etc/passwd`\n\n"
-        "**Depends:** none\n\n**Check:** `pytest -q`\n"
-    )
-    doc = PlanDocument.from_text(text)
-    ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
-    hits = [f for f in files.run(ctx).findings if f.rule == "create-path-exists"]
-    assert len(hits) == 1
-    assert "already_here.py" in hits[0].evidence
-    assert "etc/passwd" not in hits[0].evidence
+    sibling = tmp_path.parent / "sibling_target.py"
+    sibling.write_text("# outside repo_root\n", encoding="utf-8")
+    try:
+        text = (
+            "**Schema:** planlint-v1\n\n"
+            "### Task 1: X\n\n**Files:**\n"
+            "- Create: `already_here.py`\n"
+            "- Create: `../sibling_target.py`\n\n"
+            "**Depends:** none\n\n**Check:** `pytest -q`\n"
+        )
+        doc = PlanDocument.from_text(text)
+        ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
+        hits = [f for f in files.run(ctx).findings if f.rule == "create-path-exists"]
+        assert len(hits) == 1
+        assert "already_here.py" in hits[0].evidence
+        assert "sibling_target.py" not in hits[0].evidence
+    finally:
+        sibling.unlink(missing_ok=True)
