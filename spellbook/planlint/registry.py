@@ -8,6 +8,7 @@ task's own Check line runnable in isolation.
 """
 
 import dataclasses
+import enum
 import traceback
 from collections.abc import Callable
 from pathlib import Path
@@ -15,6 +16,15 @@ from pathlib import Path
 from spellbook.planlint.document import PlanDocument
 from spellbook.planlint.finding import LintResult
 from spellbook.planlint.rules import checks, consistency, depends, files, ownership, schema, structure
+
+
+class Phase(enum.Enum):
+    """Which call site is asking. Two rules (files.py, and any future rule
+    that reads it) branch on this."""
+
+    AUTHORING = "authoring"
+    REVIEW = "review"
+    EXECUTION = "execution"
 
 
 @dataclasses.dataclass(frozen=True)
@@ -87,47 +97,43 @@ RULES = (
         name="structure",
         run=structure.run,
         emits=structure.EMITS,
-        phases=frozenset(
-            {"authoring", "review", "execution"}
-        ),  # placeholder set of phase VALUES; Task 12 replaces this with
-            # frozenset(Phase) once api.Phase exists. Every subsequent rule
-            # task's registry.py edit uses this same placeholder until Task 12.
+        phases=frozenset(Phase),
     ),
     Rule(
         name="depends",
         run=depends.run,
         emits=depends.EMITS,
-        phases=frozenset({"authoring", "review", "execution"}),
+        phases=frozenset(Phase),
     ),
     Rule(
         name="checks",
         run=checks.run,
         emits=checks.EMITS,
-        phases=frozenset({"authoring", "review", "execution"}),
+        phases=frozenset(Phase),
     ),
     Rule(
         name="consistency",
         run=consistency.run,
         emits=consistency.EMITS,
-        phases=frozenset({"authoring", "review", "execution"}),
+        phases=frozenset(Phase),
     ),
     Rule(
         name="files",
         run=files.run,
         emits=files.EMITS,
-        phases=frozenset({"authoring", "review", "execution"}),
+        phases=frozenset(Phase),
     ),
     Rule(
         name="ownership",
         run=ownership.run,
         emits=ownership.EMITS,
-        phases=frozenset({"authoring", "review", "execution"}),
+        phases=frozenset(Phase),
     ),
     Rule(
         name="schema",
         run=schema.run,
         emits=schema.EMITS,
-        phases=frozenset({"authoring", "review", "execution"}),
+        phases=frozenset(Phase),
     ),
 )
 
