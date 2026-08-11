@@ -60,8 +60,8 @@ def fence_for(body: str) -> str:
     property of the body, not a constant.
 
     This used to be a hardcoded ten backticks everywhere. That is legal but
-    reads as noise -- a body containing no fences at all (agents/MODEL_ROUTING.md)
-    got the same ``` `````````` ``` wrapper as a deeply nested one.
+    reads as noise -- a body containing no fences at all got the same
+    ``` `````````` ``` wrapper as a deeply nested one.
     """
     longest = max((len(m.group(1)) for m in _FENCE_RUN.finditer(body)), default=0)
     return "`" * max(3, longest + 1)

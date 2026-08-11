@@ -2,7 +2,7 @@
 name: web-researcher
 description: Use for quarantined web research — fetching URLs, running web searches, and reading local notes to produce structured findings. Returns JSON results only; never edits files or executes shell commands. Requires WI-8 (devcontainer) to be merged before being safe to dispatch in production.
 tools: WebFetch, WebSearch, Read
-model: openrouter/minimax/minimax-m3
+tier: heavy
 ---
 
 ## Purpose

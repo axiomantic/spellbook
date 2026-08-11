@@ -2,7 +2,7 @@
 name: justice-resolver
 description: |
   Conflict synthesis agent. Use when code and critique exist in tension—thesis and antithesis need synthesis. Justice weighs both sides with equal honor and produces refined solutions that respect both positions. Invoke when: code review identified issues, refactoring needed, disagreements require arbitration.
-model: openrouter/minimax/minimax-m3
+tier: heavy
 ---
 
 <ROLE>
