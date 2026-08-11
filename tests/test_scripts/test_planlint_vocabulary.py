@@ -281,3 +281,148 @@ def test_package_needs_no_new_wheel_packaging_entry():
     # this test green while the package stopped shipping entirely.
     assert '"spellbook"' in packages_list or "'spellbook'" in packages_list
     assert "planlint" not in packages_list
+
+
+# ------------------------------------------------------------------ 9.4
+
+def _string_literals_in(tree):
+    out = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            out.add(node.value)
+    return out
+
+
+def test_every_rule_has_at_least_one_mutation_test():
+    """Union every emits set from the real registry, AST-scan
+    test_planlint_rules.py for every string literal, and assert every rule
+    ID appears as a literal somewhere in that file. Reported as
+    added-versus-missing NAMES."""
+    from spellbook.planlint import registry
+
+    all_rule_ids = set()
+    for rule in registry.RULES:
+        all_rule_ids |= rule.emits
+
+    rules_test_path = PACKAGE.parents[1] / "tests" / "test_scripts" / "test_planlint_rules.py"
+    tree = ast.parse(rules_test_path.read_text(encoding="utf-8"))
+    literals = _string_literals_in(tree)
+
+    missing = sorted(all_rule_ids - literals)
+    assert missing == [], f"rule IDs with no mutation test reference: {missing}"
+
+
+# ------------------------------------------------------------------ 9.5
+
+def test_known_bad_input_undeclared_rule_id_check_actually_fires():
+    bad_source = (
+        "from spellbook.planlint.finding import Finding\n"
+        "EMITS = frozenset({'declared-id'})\n"
+        "def run(ctx):\n"
+        "    return [Finding(rule='undeclared-id', message='x')]\n"
+    )
+    tree = ast.parse(bad_source)
+    emits = {"declared-id"}
+    used = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Name) and func.id == "Finding":
+                for kw in node.keywords:
+                    if kw.arg == "rule" and isinstance(kw.value, ast.Constant):
+                        used.add(kw.value.value)
+    assert used - emits, "the known-bad fixture must contain an undeclared rule ID"
+
+
+def test_no_rule_emits_a_rule_id_its_own_module_does_not_declare():
+    offenders = {}
+    rules_dir = PACKAGE / "rules"
+    for path in sorted(rules_dir.glob("*.py")):
+        if path.name == "__init__.py":
+            continue
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        emits_literal = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Assign) and any(
+                isinstance(t, ast.Name) and t.id == "EMITS" for t in node.targets
+            ):
+                if isinstance(node.value, ast.Call):
+                    for arg in node.value.args:
+                        if isinstance(arg, (ast.Set, ast.Tuple, ast.List)):
+                            emits_literal |= {
+                                el.value for el in arg.elts if isinstance(el, ast.Constant)
+                            }
+        used_ids = set()
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Call):
+                func = node.func
+                if isinstance(func, ast.Name) and func.id == "Finding":
+                    for kw in node.keywords:
+                        if kw.arg == "rule" and isinstance(kw.value, ast.Constant):
+                            used_ids.add(kw.value.value)
+        stray = used_ids - emits_literal
+        if stray:
+            offenders[path.name] = sorted(stray)
+    assert offenders == {}
+
+
+# ------------------------------------------------------------------ 9.7
+
+def test_registry_rules_tuple_has_exactly_seven_entries():
+    """Cross-check against test_planlint_api.py's own zero-invocation test
+    (Task 16): this asserts the STRUCTURAL precondition — RULES has one
+    entry per rule module — that makes the zero-invocation counting test
+    meaningful (7 entries, not 0, not a subset)."""
+    from spellbook.planlint import registry
+
+    assert len(registry.RULES) == 7
+    assert {r.name for r in registry.RULES} == {
+        "structure", "depends", "checks", "consistency", "files", "ownership", "schema",
+    }
+
+
+def test_every_rule_result_name_matches_its_registry_row_name():
+    """`Rule.name` and the `LintResult.name` the rule returns must be equal.
+
+    `api.decided_claims()` builds its per-rule verdicts from `LintResult.name`
+    alone, and reviewing-impl-plans's Phase 0 report (design §3.2.2) names
+    rules from that list — so a disagreement makes a REVIEW GATE state a wrong
+    fact: a claim attributed to a rule that did not decide it, or a rule
+    reported missing that actually ran. Both are worse than a gap, because a
+    gap is visible. `guard_no_input(name=...)` is the single place the returned
+    name is set, so this compares the registry row against what the rule body
+    actually passes there."""
+    from spellbook.planlint import api, registry
+    from spellbook.planlint.document import PlanDocument
+
+    fixture = (
+        REPO_ROOT / "tests" / "test_scripts" / "fixtures" / "planlint" / "clean_plan.md"
+    )
+    ctx = registry.RuleContext(
+        doc=PlanDocument.from_path(fixture), phase=api.Phase.REVIEW, repo_root=None
+    )
+    mismatched = []
+    for rule in registry.RULES:
+        returned = rule.run(ctx).name
+        if returned != rule.name:
+            mismatched.append(f"registry row {rule.name!r} returns {returned!r}")
+    assert mismatched == []
+
+
+# ----------------------------------------------------------------- 9.10
+
+def test_registry_error_barrier_wraps_exception_not_baseexception():
+    """Cross-check on the AST: run_rules()'s except clause names Exception,
+    not BaseException and not a bare except. A bare except or an
+    except BaseException would catch KeyboardInterrupt, defeating the
+    guarantee test_barrier_propagates_keyboardinterrupt (Task 12) checks
+    at runtime — this is the static counterpart of that dynamic test."""
+    tree = ast.parse((PACKAGE / "registry.py").read_text(encoding="utf-8"))
+    except_types = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ExceptHandler):
+            if node.type is None:
+                except_types.append("bare except")
+            elif isinstance(node.type, ast.Name):
+                except_types.append(node.type.id)
+    assert except_types == ["Exception"]
