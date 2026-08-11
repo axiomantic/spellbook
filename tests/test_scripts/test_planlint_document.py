@@ -18,6 +18,7 @@ from spellbook.planlint.document import (
     backticked,
     fenced_line_indexes,
     inline_code_spans,
+    unclosed_fence_index,
 )
 
 FIXTURES = Path(__file__).parent / "fixtures" / "planlint"
@@ -754,4 +755,202 @@ def test_task_header_shaped_line_inside_an_open_fence_is_fence_content():
     # out as the outer document's real schema declaration -- the outer
     # document never declares one.
     assert doc.schema_text == ""
-    assert not doc.declares_planlint_schema
+    assert doc.declares_planlint_schema is False
+
+    # The surviving task's own real fields, which sit BEFORE the fence,
+    # must come through uncorrupted -- a merge-corruption of the real
+    # task's fields (e.g. the fence swallowing or overwriting them) would
+    # not be caught by only checking idents/schema above.
+    task = doc.task("Task 1")
+    assert task.depends_text == "none"
+    assert task.check_text == "`pytest -q`"
+    assert task.check_command == "pytest -q"
+
+
+def test_two_adjacent_unclosed_fences_do_not_cancel_each_other_out():
+    """Scenario A regression: a global running-PARITY carry treats two
+    UNRELATED single-marker segments in adjacent tasks as one merged,
+    even-count (2-marker) segment -- silently cancelling what should be TWO
+    real defects into a phantom, well-formed-looking pair. That is worse
+    than merely misreporting: the phantom pair's protected range spans the
+    header between the two tasks, which would make Task 2 vanish from
+    `doc.tasks` entirely (the same "a task disappears" failure mode as the
+    original worked-example bug, from a different cause), and the parser
+    emits NO `unclosed-fence` diagnostic at all even though both fences are
+    genuinely broken.
+
+    Fixture: Task 1 and Task 2 each open a fence and never close it -- two
+    independent, single-marker segments, with nothing between them but the
+    task boundary.
+    """
+    text = (
+        "### Task 1: Has its own unclosed fence\n\n"
+        "**Files:**\n- Create: `a.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "```\n"                               # Task 1's broken opener
+        "task 1's fence never closes\n\n"
+        "### Task 2: Also has its own unclosed fence\n\n"
+        "**Files:**\n- Create: `b.py`\n\n"
+        "**Depends:** Task 1\n\n"
+        "**Check:** `pytest -q -k b`\n\n"
+        "```\n"                               # Task 2's broken opener
+        "task 2's fence never closes\n"
+    )
+    doc = PlanDocument.from_text(text)
+
+    # Neither task vanishes -- a merged phantom pair spanning the header
+    # between them would have swallowed Task 2's header line.
+    assert [t.ident for t in doc.tasks] == ["Task 1", "Task 2"]
+
+    # Each task's own real fields, on both sides of its own broken fence,
+    # come through uncorrupted.
+    task1 = doc.task("Task 1")
+    assert task1.depends_text == "none"
+    assert task1.check_text == "`pytest -q`"
+    task2 = doc.task("Task 2")
+    assert task2.depends_text == "Task 1"
+    assert task2.check_text == "`pytest -q -k b`"
+
+    # Neither single, unpaired marker protects anything -- if the two had
+    # been merged into one phantom even-count pair, this would report a
+    # non-empty protected span instead.
+    lines = text.split("\n")
+    assert fenced_line_indexes(lines) == set()
+
+    # The FIRST genuinely unclosed marker (Task 1's) is still reported --
+    # the defect is not silently cancelled away.
+    broken_open = lines.index("```")
+    info = unclosed_fence_index(lines)
+    assert info is not None
+    assert info.anchor == broken_open
+    assert info.markers is None
+
+
+def test_broken_openers_around_a_well_formed_pair_do_not_leak_its_content():
+    """Scenario B regression: a broken opener, then an unrelated well-formed
+    pair in the NEXT task, then another broken opener in a THIRD task --
+    4 fence markers total, spread across 3 header-separated tasks. Under a
+    global running-PARITY carry, the combined count (1 + 2 + 1 = 4) is
+    even, so the carry merges all three tasks' markers into ONE confirmed
+    4-marker segment and pairs them CONSECUTIVELY by position: (marker 1,
+    marker 2) and (marker 3, marker 4). Markers 2 and 3 are the well-formed
+    pair's OWN opener and closer -- consecutive pairing splits them across
+    two different phantom pairs instead of pairing them with each other,
+    so the well-formed pair's own illustrative content is left completely
+    unprotected and LEAKS into ordinary field-scanning. That violates the
+    DROP-over-LEAK invariant this parser's fence handling otherwise holds.
+
+    Fixture: Task 1 opens a fence and never closes it; Task 2 has its own,
+    unrelated well-formed fence pair containing an illustrative
+    `**Depends:**` line; Task 3 opens a fence and never closes it.
+    """
+    text = (
+        "### Task 1: Has a broken opener, never closed\n\n"
+        "**Files:**\n- Create: `a.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "```\n"                               # Task 1's broken opener
+        "task 1's fence never closes\n\n"
+        "### Task 2: Has a well-formed pair with illustrative content\n\n"
+        "**Files:**\n- Create: `b.py`\n\n"
+        "**Depends:** Task 1\n\n"
+        "Example of a Depends: line inside a fence:\n\n"
+        "```\n"                               # Task 2's well-formed open
+        "**Depends:** Task 99\n"              # illustrative, must NOT leak
+        "```\n\n"                              # Task 2's well-formed close
+        "**Check:** `pytest -q -k b`\n\n"
+        "### Task 3: Has its own broken opener, never closed\n\n"
+        "**Files:**\n- Create: `c.py`\n\n"
+        "**Depends:** Task 2\n\n"
+        "**Check:** `pytest -q -k c`\n\n"
+        "```\n"                               # Task 3's broken opener
+        "task 3's fence never closes\n"
+    )
+    doc = PlanDocument.from_text(text)
+
+    assert [t.ident for t in doc.tasks] == ["Task 1", "Task 2", "Task 3"]
+
+    # Task 2's own real fields -- the illustrative `**Depends:** Task 99`
+    # line inside its fence must never overwrite the real value.
+    task2 = doc.task("Task 2")
+    assert task2.depends_text == "Task 1"
+    assert task2.check_text == "`pytest -q -k b`"
+    assert task2.check_command == "pytest -q -k b"
+
+    # Only Task 2's own well-formed pair is protected; the two unrelated
+    # broken openers in Task 1 and Task 3 protect nothing on their own and
+    # do not extend the protected range into Task 2's pair or vice versa.
+    lines = text.split("\n")
+    fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
+    assert len(fence_indexes) == 4
+    _task1_open, task2_open, task2_close, _task3_open = fence_indexes
+    assert fenced_line_indexes(lines) == set(range(task2_open, task2_close + 1))
+
+
+def test_real_broken_fence_is_not_misattributed_to_a_later_quoted_example():
+    """Scenario E regression: an ordinary, real unclosed-fence typo earlier
+    in the document, combined with the quoted-worked-example idiom later
+    (an info-string-marked fence whose content includes a fake
+    `### Task N: ...` header), used to feed a global running-PARITY carry
+    that phantom-paired the typo's broken opener with the quoted example's
+    real, info-string-marked opener -- because 1 (the typo) + 1 (the
+    example's opener, counted before its own bare closer is even seen) is
+    even. That phantom pair's protected span reached from the typo through
+    the example's opener, which swallowed the REAL `### Task 2: ...` header
+    sitting in between (it would vanish from `doc.tasks`), and left the
+    example's own bare closer to be misreported as the ambiguous defect
+    (blaming the wrong line) or as its own dangling unclosed marker.
+
+    Fixture: Task 1 has a genuine, unrelated broken fence that is never
+    closed. Task 2 quotes a worked example (an info-string-marked fence)
+    containing a fake `### Task 1: ...` header, and has real
+    `**Depends:**`/`**Check:**` fields on both sides of that fence.
+    """
+    text = (
+        "### Task 1: Has a real broken fence, never closed\n\n"
+        "**Files:**\n- Create: `a.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "```\n"                                    # Task 1's real broken opener
+        "task 1's fence never closes\n\n"
+        "### Task 2: Quotes a worked example with a fake header\n\n"
+        "**Files:**\n- Create: `b.py`\n\n"
+        "**Depends:** Task 1\n\n"
+        "Worked example of another plan document:\n\n"
+        "```markdown\n"                             # real open, info-string marked
+        "### Task 1: Example component\n\n"        # fake header, fence content
+        "**Schema:** planlint-v1\n"                 # fake field, fence content
+        "```\n\n"                                    # real close, bare
+        "**Check:** `pytest -q -k b`\n"
+    )
+    doc = PlanDocument.from_text(text)
+
+    # Task 2's real header survives -- it must not be swallowed as though it
+    # were inside a phantom fence spanning from Task 1's broken opener to
+    # the quoted example's opener.
+    assert [t.ident for t in doc.tasks] == ["Task 1", "Task 2"]
+
+    # Task 2's real fields, on both sides of the quoted example, come
+    # through uncorrupted.
+    task2 = doc.task("Task 2")
+    assert task2.depends_text == "Task 1"
+    assert task2.check_text == "`pytest -q -k b`"
+    assert task2.check_command == "pytest -q -k b"
+
+    lines = text.split("\n")
+    broken_open = lines.index("```")
+    info_open = lines.index("```markdown")
+    bare_close = lines.index("```", info_open + 1)
+
+    # The REAL defect -- Task 1's broken opener -- is the one diagnosed,
+    # not the quoted example's real closer.
+    info = unclosed_fence_index(lines)
+    assert info is not None
+    assert info.anchor == broken_open
+    assert info.markers is None
+
+    # Only the quoted example's own span is protected; Task 1's broken
+    # opener protects nothing on its own, and does not extend into the
+    # example's span.
+    assert fenced_line_indexes(lines) == set(range(info_open, bare_close + 1))

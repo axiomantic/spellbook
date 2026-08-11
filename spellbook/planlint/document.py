@@ -49,7 +49,7 @@ OWNER_ANNOTATION = re.compile(r"\(\s*owner\s*:\s*(?P<owner>Task\s+\d+)\s*\)\s*$"
 # A path may carry a line range: `path/to/file.py:123-145`.
 LINE_RANGE_SUFFIX = re.compile(r":(?P<start>\d+)(?:-(?P<end>\d+))?$")
 
-FENCE = re.compile(r"^\s*```")
+FENCE = re.compile(r"^\s*```(?P<info>.*)$")
 HEADING = re.compile(r"^(?P<hashes>#{1,6}) +(?P<text>.+?)\s*$")
 
 # A `**Step N: Title**` line and its `Run:` line.
@@ -217,90 +217,132 @@ def _protective_fence_ranges(markers):
     return [(markers[0], markers[-1])]
 
 
+def _scan_fence_markers(lines):
+    """Every fence-marker line index in document order, paired with whether
+    that marker carries a fence INFO STRING (non-whitespace content after
+    the triple backtick, e.g. the `markdown` in ` ```markdown `).
+
+    This is standard Markdown fence syntax, and every fixture in this
+    codebase honors it: an OPENER may carry an info string; a CLOSER is
+    always bare. `_fence_segments` uses that convention as a strong,
+    unambiguous OPENER signal. A bare marker alone carries no such signal --
+    it is exactly as likely to be a same-convention pair's opener as its
+    closer.
+    """
+    markers = []
+    for index, line in enumerate(lines):
+        match = FENCE.match(line)
+        if match:
+            markers.append((index, bool(match.group("info").strip())))
+    return markers
+
+
+def _header_based_segments(lines, markers):
+    """Split the given, already-filtered marker indexes into segments at
+    every `### Task N: ...` header, unconditionally -- a header is always a
+    hard boundary for whatever markers reach this function.
+
+    This is the segmentation `_fence_segments` used for ALL markers before a
+    header-crossing "carry" mechanism was introduced to patch one specific
+    positional ambiguity (see `_fence_segments`'s docstring). It is correct
+    again, unchanged, for the AMBIGUOUS residual that reaches this function:
+    a fence is never expected to span a task boundary in this document
+    family, and the one shape that genuinely needed to look past a header
+    -- an info-string-marked fence swallowing a header-shaped line as fence
+    content -- is resolved by `_fence_segments` before this function ever
+    sees those markers.
+    """
+    marker_set = set(markers)
+    current = []
+    for index, line in enumerate(lines):
+        if TASK_HEADER.match(line):
+            if current:
+                yield tuple(current)
+                current = []
+            continue
+        if index in marker_set:
+            current.append(index)
+    if current:
+        yield tuple(current)
+
+
 def _fence_segments(lines):
-    """Group fence-marker line indexes into segments split at `TASK_HEADER`
-    lines.
+    """Group fence-marker line indexes into segments, in two passes.
 
-    A fence is never expected to span a task boundary in this document
-    family, so a `### Task N: ...` header ordinarily closes out whatever
-    segment came before it -- rather than letting the segment's markers
-    reach across the header looking for a partner. That is the common case
-    and is unchanged here.
+    PASS 1 -- INFO-STRING RESOLUTION (unambiguous, needs no lookahead). A
+    marker WITH an info string (` ```python `, ` ```markdown `) is read as
+    an opener that closes at the very NEXT bare marker, full stop --
+    regardless of what falls between them, including a
+    `### Task N: ...`-shaped line that is really fence CONTENT (this
+    document family's own docs quoting a worked example of another plan
+    document, complete with the example's own fake header). The info string
+    already says "this is an opener", so the pair is settled the moment its
+    next bare marker is seen -- no provisional boundary, no carry, no
+    guessing. This is what resolves the original motivating case.
 
-    The ONE exception: a `### Task N: ...`-shaped line can itself be FENCE
-    CONTENT -- e.g. this document family's own docs quoting a worked example
-    of another plan document inside a fence, where the example's own
-    `### Task 1: ...` line is textually indistinguishable from a real
-    header. Splitting there would be wrong: the segment ending right before
-    it has an ODD marker count (a fence is currently pending), which means
-    treating the header line as a hard boundary abandons that pending fence
-    even though it is genuinely still open and about to be closed by a LATER
-    marker, on the far side of one or more such quoted header-shaped lines.
+    If a second info-string marker appears before the first one's bare
+    closer arrives, the first one's "next bare marker" never came -- it did
+    not resolve via this rule, and it falls through to PASS 2 rather than
+    forcing a guess about which opener a later closer belongs to.
 
-    Resolving this requires provisional lookahead, not a same-pass decision:
-    a header seen while a fence is pending is first treated as a TENTATIVE
-    boundary (the segment collected since the last confirmed boundary is
-    provisionally closed off), and a running `_carry` accumulates tentative
-    segments across those provisional boundaries. Only once the carry's
-    total marker count returns to EVEN is it confirmed and yielded as one
-    segment -- at that point every header-shaped line swallowed along the
-    way genuinely sat inside a fence that has now closed, exactly the
-    quoted-example shape above.
-
-    If the carry NEVER returns to even (a genuinely unclosed, abandoned
-    fence, with no quoting fence later closing it), provisional lookahead
-    was the wrong call in hindsight: nothing to the right of the pending
-    fence was ever going to close it, so the header(s) it swallowed were
-    real boundaries after all. On that path -- and ONLY on that path -- the
-    carry's constituent tentative segments are yielded UN-merged, exactly as
-    they would have been under the unconditional split this replaces. This
-    is what keeps the existing "abandon a genuinely broken fence at the next
-    task header" behavior intact: see
+    PASS 2 -- HEADER-BASED SEGMENTATION OF THE AMBIGUOUS RESIDUAL. Whatever
+    PASS 1 could not resolve (a bare marker with no preceding pending
+    info-string opener, or a trailing info-string opener that never found
+    its bare closer) is genuinely ambiguous -- a bare marker alone carries
+    no signal for which half of a pair it is. That residual is split
+    unconditionally at every task header by `_header_based_segments`: the
+    segmentation this document family used before a header-crossing "carry"
+    mechanism was introduced to patch the motivating case positionally.
+    That carry mechanism (accumulate marker counts across header boundaries
+    until the running total returns to EVEN, then merge) is retired here --
+    parity alone is too coarse a signal: it can coincidentally merge two
+    UNRELATED single-marker segments in adjacent tasks into a phantom pair
+    (silently cancelling a real defect in each and losing neither task from
+    `doc.tasks` -- until it does, since the merged pair's range can swallow
+    the header between them), and it can just as easily merge a stray
+    marker with a well-formed pair's own opener or closer, leaking that
+    pair's content unprotected. Both failure modes disappear once PASS 1
+    peels off the one shape the carry was actually needed for; an
+    unconditional per-header split has nothing left to get wrong on the
+    ambiguous-only residual. See
     `test_unpaired_fence_does_not_corrupt_a_later_paired_fence`, where a
-    lone broken opener is followed by an unrelated, self-contained
-    well-formed pair in the NEXT task -- that carry never resolves to even,
-    so the fallback reports the broken opener and the well-formed pair as
-    two separate segments, matching pre-fix behavior exactly.
+    lone broken opener in one task and an unrelated, self-contained
+    well-formed pair in the next are correctly kept as two separate
+    segments by this same unconditional split.
 
-    A well-formed segment with no pending fence at any header boundary never
-    enters the carry machinery at all (each tentative piece is already
-    even on its own and is yielded immediately) -- this is the case that
-    was never broken, and is unchanged.
-
-    Yields each confirmed segment's raw marker-index tuple, in document
-    order. Callers derive whatever they need from the raw markers:
+    Yields each segment's raw marker-index tuple, in document order
+    (PASS 1's resolved pairs first, then PASS 2's header-split segments).
+    Callers derive whatever they need from the raw markers:
     `_pair_fence_markers` for conservative diagnostic pairing,
     `_protective_fence_ranges` for permissive content-scanning protection.
     Keeping the raw markers here (rather than pre-pairing them) is what lets
     the two concerns use different pairing rules on the same segmentation.
     """
-    tentative = []
-    current = []
-    for index, line in enumerate(lines):
-        if TASK_HEADER.match(line):
-            tentative.append(tuple(current))
-            current = []
+    pending_info = None
+    ambiguous = []
+    resolved_pairs = []
+    for index, has_info in _scan_fence_markers(lines):
+        if has_info:
+            if pending_info is not None:
+                # The previously pending info-string opener never found a
+                # bare closer before this new opener appeared -- it did not
+                # resolve via PASS 1, so it joins the ambiguous residual
+                # instead of being silently dropped.
+                ambiguous.append(pending_info)
+            pending_info = index
             continue
-        if FENCE.match(line):
-            current.append(index)
-    tentative.append(tuple(current))
+        if pending_info is not None:
+            resolved_pairs.append((pending_info, index))
+            pending_info = None
+        else:
+            ambiguous.append(index)
+    if pending_info is not None:
+        # EOF reached with an info-string opener still pending -- it never
+        # found its bare closer, so it too falls through to PASS 2.
+        ambiguous.append(pending_info)
 
-    carry = []
-    carry_pieces = []
-    for piece in tentative:
-        carry.extend(piece)
-        carry_pieces.append(piece)
-        if len(carry) % 2 == 0:
-            if carry:
-                yield tuple(carry)
-            carry = []
-            carry_pieces = []
-    # The carry never resolved to even -- fall back to the constituent
-    # tentative pieces, unmerged, exactly as unconditional splitting at
-    # every header would have produced. See docstring.
-    for piece in carry_pieces:
-        if piece:
-            yield piece
+    yield from resolved_pairs
+    yield from _header_based_segments(lines, ambiguous)
 
 
 def unclosed_fence_index(lines):
@@ -362,11 +404,17 @@ def fenced_line_indexes(lines):
     drop is never silent: the plan author sees "N markers, cannot determine
     which is unclosed" for that same segment.
 
-    A pending, unclosed open is also abandoned (dropped, not paired with
-    anything) the moment a `### Task N: ...` header is seen -- a fence is
-    never expected to span a task boundary in this document family, so
-    crossing one is exactly the signal that the pending opener was never
-    going to be genuinely closed.
+    Segmentation (`_fence_segments`) resolves an info-string-marked opener
+    (` ```python `, ` ```markdown `) against its next bare marker directly,
+    regardless of any `### Task N: ...`-shaped line in between -- a fence
+    genuinely open on an info string is never abandoned at a header, since
+    Markdown's own opener/closer convention already says it must still be
+    pending. A BARE pending open, with no info string to signal it is a real
+    opener, IS abandoned (dropped, not paired with anything) the moment a
+    `### Task N: ...` header is seen -- a fence is never expected to span a
+    task boundary in this document family, so for a marker with no stronger
+    signal, crossing one is exactly the signal that the pending opener was
+    never going to be genuinely closed.
     """
     inside = set()
     for markers in _fence_segments(lines):
