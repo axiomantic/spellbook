@@ -3,10 +3,28 @@ nmg2-tools/tests/planlint/test_marker_census.py, retargeted from the Files:
 marker onto the Schema: gate (design §7.2). See that design section for the
 full rationale on why Schema: is censused and Check: is not.
 
-Four verdicts: PARSES (builds the gate value from the raw field), GATES
-(calls declares_schema and branches), READS-RAW-TEXT (reads schema_text
-without gating — rules/schema.py, on purpose), UNGATED (a bug — asserted
-zero, separately from the whole-mapping assertion).
+Four verdicts: PARSES (builds the gate value from the raw field, as
+`PlanDocument.declares_planlint_schema` and `_resolve_plan_schema` do —
+these are comparison/assembly steps, not parsers of external syntax), GATES
+(reaches a gate primitive and branches on it, directly or transitively —
+`gate_names`'s own docstring calls this "REACHES the gate", which is the
+precise framing this docstring follows too), READS-RAW-TEXT (reads
+schema_text without gating — rules/schema.py, on purpose), UNGATED (a bug —
+asserted zero, separately from the whole-mapping assertion).
+
+Scope boundary: this census measures STATIC ATTRIBUTE ACCESS only, as seen
+by an AST walk. Two things are out of scope by construction:
+
+- A private regex over the raw plan text that reaches the Schema: value
+  without ever touching the `schema_text` attribute (bypassing the census
+  entirely — no accessor read for the walker to see).
+- Dynamic access via `getattr`/`setattr` (a `Call`, not an `Attribute` in
+  `Load`/`Store` context, so `attributes_read` and `_attribute_assign_targets`
+  do not see it).
+
+The likelier variant — a module reading the raw field regex itself instead
+of going through `document.py` — is a different, covered risk: see
+`test_one_module_reads_the_field_regex_out_of_the_document`.
 """
 
 import ast
@@ -157,17 +175,22 @@ def calls_in(node):
 
 
 def accessor_set(trees):
+    # Keyed by (class name, method name), not method name alone: TaskBlock
+    # and PlanDocument are walked into the SAME dict, and a bare method-name
+    # key would let a same-named method on the other class silently replace
+    # this one's read-set, shrinking the census without either method being
+    # removed from the source.
     members = {}
     for name, (node, stack) in functions_in(trees["document"]).items():
         if len(stack) == 2 and stack[0] in ("TaskBlock", "PlanDocument"):
-            members[stack[1]] = attributes_read(node)
+            members[(stack[0], stack[1])] = attributes_read(node)
 
     found = {SEED}
     while True:
         grown = set(found)
-        for name, reads in members.items():
+        for (_cls, method), reads in members.items():
             if reads & found:
-                grown.add(name)
+                grown.add(method)
         if grown == found:
             return frozenset(found)
         found = grown
@@ -245,20 +268,62 @@ def census(trees, accessors):
     return out
 
 
-def test_the_schema_field_is_assigned_to_one_attribute_only():
-    """_resolve_plan_schema / _fill_fields assign the Schema: value to
-    self.schema_text or task.schema_text and nothing else."""
-    tree = ast.parse(
-        (PACKAGE / "document.py").read_text(encoding="utf-8")
-    )
-    targets = []
+def _attribute_assign_targets(node):
+    """Unparsed `ast.Attribute` assignment targets within `node`, walked over
+    its FULL subtree. Local-variable targets (e.g. `match = ...`) are
+    excluded by construction: only `ast.Attribute` targets count, so this
+    stays robust against unrelated local-variable refactors in the same
+    method."""
+    targets = set()
+    for child in ast.walk(node):
+        if isinstance(child, ast.Assign):
+            for target in child.targets:
+                if isinstance(target, ast.Attribute):
+                    targets.add(ast.unparse(target))
+    return targets
+
+
+def test_the_schema_value_reaches_only_the_named_attributes():
+    """_resolve_plan_schema and the Schema: branch of _fill_fields assign
+    the Schema: value to self.schema_text/self.schema_line or
+    task.schema_text/task.schema_line and NOTHING ELSE.
+
+    Unlike a membership check over a pre-filtered set of expected names, this
+    collects EVERY attribute-assignment target in each scope and asserts the
+    exact set — so a THIRD assignment target added anywhere in these scopes
+    (e.g. `self.schema_alias = self.schema_text`, opening a second, uncensused
+    channel to the same gate value) makes this test fail. A rule could branch
+    on such an alias without ever being caught by the census, since the
+    census only walks accessors named in EXPECTED_ACCESSORS."""
+    tree = ast.parse((PACKAGE / "document.py").read_text(encoding="utf-8"))
+
+    resolve_plan_schema = None
+    fill_fields = None
     for node in ast.walk(tree):
-        if isinstance(node, ast.Assign):
-            for target in node.targets:
-                unparsed = ast.unparse(target)
-                if unparsed in ("task.schema_text", "self.schema_text"):
-                    targets.append(unparsed)
-    assert set(targets) == {"task.schema_text", "self.schema_text"}
+        if isinstance(node, ast.FunctionDef) and node.name == "_resolve_plan_schema":
+            resolve_plan_schema = node
+        elif isinstance(node, ast.FunctionDef) and node.name == "_fill_fields":
+            fill_fields = node
+    assert resolve_plan_schema is not None, "_resolve_plan_schema not found"
+    assert fill_fields is not None, "_fill_fields not found"
+
+    resolve_targets = _attribute_assign_targets(resolve_plan_schema)
+    assert resolve_targets == {"self.schema_text", "self.schema_line"}
+
+    schema_branch = None
+    for node in ast.walk(fill_fields):
+        if isinstance(node, ast.If) and ast.unparse(node.test) == "field == 'Schema'":
+            schema_branch = node
+            break
+    assert schema_branch is not None, "no `field == 'Schema'` branch in _fill_fields"
+
+    branch_targets = set()
+    for stmt in schema_branch.body:
+        if isinstance(stmt, ast.Assign):
+            for target in stmt.targets:
+                if isinstance(target, ast.Attribute):
+                    branch_targets.add(ast.unparse(target))
+    assert branch_targets == {"task.schema_text", "task.schema_line"}
 
 
 def test_one_module_reads_the_field_regex_out_of_the_document():
