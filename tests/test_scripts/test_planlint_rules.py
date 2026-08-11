@@ -383,6 +383,168 @@ def test_check_placeholder_is_absent_on_the_clean_fixture():
     assert [f for f in findings if f.rule == "check-placeholder"] == []
 
 
+def test_check_placeholder_does_not_fire_on_a_pytest_parametrize_id():
+    """A false positive from source review `7fd94a6e`: the old bare
+    `\\[[^\\]]+\\]` pattern treated ANY bracketed content as a placeholder,
+    so a real pytest parametrize ID (`[case1]`) tripped `check-placeholder`
+    on a perfectly runnable command. `[case1]` is not drawn from the
+    placeholder-word vocabulary, so the narrowed pattern must leave it
+    alone."""
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Parametrized test\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest tests/test_foo.py::test_bar[case1]`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = tuple(f for f in checks.run(ctx).findings if f.rule == "check-placeholder")
+    assert hits == ()
+
+
+def test_check_placeholder_does_not_fire_on_real_angle_bracket_shell_content():
+    """A false positive from source review `7fd94a6e`: the old bare
+    `<[^>]+>` pattern treated ANY angle-bracketed content as a placeholder,
+    so a real `grep` command matching HTML tag text (`<div>`) tripped
+    `check-placeholder`. `div` is not drawn from the placeholder-word
+    vocabulary, so the narrowed pattern must leave it alone."""
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Grep for a tag\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `grep -c '<div>' file.html`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = tuple(f for f in checks.run(ctx).findings if f.rule == "check-placeholder")
+    assert hits == ()
+
+
+def test_check_placeholder_does_not_fire_on_a_real_test_named_test_name():
+    """A false positive from source review `7fd94a6e`: the old literal
+    `\\btest_name\\b` pattern fired on the SUBSTRING, not on placeholder
+    intent, so a real test function that happens to be named `test_name`
+    tripped `check-placeholder` even though the command is fully
+    substituted and runnable. The true-positive fixture
+    (`neg_check_placeholder.md`) keeps firing without this pattern, because
+    its command also carries the unsubstituted `exact/path/` literal."""
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Real test named test_name\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest tests/test_models.py::test_name`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = tuple(f for f in checks.run(ctx).findings if f.rule == "check-placeholder")
+    assert hits == ()
+
+
+def test_check_placeholder_fires_on_a_curly_brace_placeholder():
+    """Closes a MEDIUM-severity false negative from `7fd94a6e`: a
+    `{test_path}`-style curly-brace placeholder is unsubstituted template
+    text just as much as `[test path]` or `<test path>`, and must fire the
+    same way."""
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Curly brace placeholder\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest {test_path} -v`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = [f for f in checks.run(ctx).findings if f.rule == "check-placeholder"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="check-placeholder",
+        message=(
+            "the `Check:` command still carries template placeholder text, "
+            "so the task has no command that can prove its work"
+        ),
+        task="Task 1",
+        section="Task 1: Curly brace placeholder",
+        line=10,
+        evidence="Check: `pytest {test_path} -v`",
+        severity=ERROR,
+    )
+
+
+def test_check_placeholder_fires_on_a_prose_placeholder_filename():
+    """Closes a MEDIUM-severity false negative from `7fd94a6e`: a
+    `your_test_file.py`-style prose placeholder (English words standing in
+    for a real filename) is unsubstituted template text and must fire the
+    same way as the other placeholder shapes."""
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Prose placeholder filename\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest your_test_file.py -v`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = [f for f in checks.run(ctx).findings if f.rule == "check-placeholder"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="check-placeholder",
+        message=(
+            "the `Check:` command still carries template placeholder text, "
+            "so the task has no command that can prove its work"
+        ),
+        task="Task 1",
+        section="Task 1: Prose placeholder filename",
+        line=10,
+        evidence="Check: `pytest your_test_file.py -v`",
+        severity=ERROR,
+    )
+
+
+def test_check_placeholder_fires_case_insensitively_on_lowercase_todo():
+    """Closes a MEDIUM-severity false negative from `7fd94a6e`: the
+    placeholder markers `TODO`/`TBD`/`FIXME` are conventionally
+    case-insensitive in prose (`todo:`, `Todo`, `ToDo`), and the old
+    patterns only matched the all-caps spelling."""
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Lowercase todo marker\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest tests/todo-fill-this-in.py -v`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = [f for f in checks.run(ctx).findings if f.rule == "check-placeholder"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="check-placeholder",
+        message=(
+            "the `Check:` command still carries template placeholder text, "
+            "so the task has no command that can prove its work"
+        ),
+        task="Task 1",
+        section="Task 1: Lowercase todo marker",
+        line=10,
+        evidence="Check: `pytest tests/todo-fill-this-in.py -v`",
+        severity=ERROR,
+    )
+
+
 def test_check_not_runnable_fires_as_a_warning_on_a_prose_opener():
     from spellbook.planlint.finding import WARNING
     from spellbook.planlint.rules import checks

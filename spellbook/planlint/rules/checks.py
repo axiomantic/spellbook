@@ -18,16 +18,29 @@ EMITS = frozenset(
     {"check-empty", "check-not-a-command", "check-placeholder", "check-not-runnable"}
 )
 
+# Bracket/angle-bracket content only reads as an unsubstituted placeholder
+# when the content itself looks like an English placeholder description —
+# a single word drawn from this vocabulary, or several such words strung
+# together ("test file", "file_path"). Real command syntax that happens to
+# use brackets — pytest parametrize IDs (`[case1]`), shell/HTML content
+# (`<div>`) — never matches this vocabulary, so it is left alone.
+_PLACEHOLDER_WORD = (
+    r"(?:path|file|name|test|value|arg|argument|param|parameter|"
+    r"key|token|url|dir|directory)"
+)
+_PLACEHOLDER_PHRASE = rf"{_PLACEHOLDER_WORD}(?:[\s_-]+{_PLACEHOLDER_WORD})*"
+
 PLACEHOLDER_PATTERNS = (
-    re.compile(r"\bTODO\b"),
-    re.compile(r"\bTBD\b"),
-    re.compile(r"\bFIXME\b"),
-    re.compile(r"<[^>]+>"),
-    re.compile(r"\[[^\]]+\]"),
+    re.compile(r"\bTODO\b", re.IGNORECASE),
+    re.compile(r"\bTBD\b", re.IGNORECASE),
+    re.compile(r"\bFIXME\b", re.IGNORECASE),
+    re.compile(rf"<\s*{_PLACEHOLDER_PHRASE}\s*>", re.IGNORECASE),
+    re.compile(rf"\[\s*{_PLACEHOLDER_PHRASE}\s*\]", re.IGNORECASE),
+    re.compile(r"\{\s*" + _PLACEHOLDER_PHRASE + r"\s*\}", re.IGNORECASE),
     re.compile(r"(?<!\.)\.\.\.(?!\.)"),
     re.compile(r"\bpath/to/"),
     re.compile(r"\bexact/path/"),
-    re.compile(r"\btest_name\b"),
+    re.compile(r"\byour_[a-z_]*\.[a-z]+\b", re.IGNORECASE),
 )
 
 LEADING_RUNNER = re.compile(r"^(?:uv run|npx|poetry run|pnpm|make)\s+")
