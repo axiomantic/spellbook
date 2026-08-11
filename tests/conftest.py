@@ -7,10 +7,56 @@ from pathlib import Path
 
 import pytest
 
-# Resolved at conftest import, before any test can redirect ``HOME``. This is
-# the developer's (or CI user's) genuine config file -- the one no test is ever
-# allowed to touch.
-REAL_USER_CONFIG_PATH = Path(os.path.expanduser("~")) / ".config" / "spellbook" / "spellbook.json"
+
+def _real_user_config_path(
+    platform: str | None = None,
+    env: dict | None = None,
+    home: str | None = None,
+) -> Path:
+    """The genuine user config path, resolved the way the runtime resolves it.
+
+    Mirrors ``spellbook.core.compat.get_config_dir``, which is PLATFORM-
+    DEPENDENT:
+
+        POSIX    $HOME/.config/spellbook/spellbook.json
+        Windows  %APPDATA%/spellbook/spellbook.json
+
+    Hardcoding the POSIX path meant this guard watched a file that does not
+    exist on Windows, so it fingerprinted "absent" before and after every
+    test and could never fire. The protection silently applied to two of the
+    three platforms CI runs.
+
+    That is not theoretical: the model-tier tests added in PR #447 redirected
+    only HOME and USERPROFILE, so on Windows they wrote to the real
+    spellbook.json -- and this guard, the one control designed to catch
+    exactly that, said nothing. Windows CI caught it only indirectly, via
+    state leaking between tests.
+
+    Resolved by hand rather than by importing ``get_config_dir`` so the guard
+    stays independent of the code under test: a bug in the runtime resolver
+    must not be able to disarm the check that guards against it.
+
+    The three inputs are injectable so the Windows branch is testable from a
+    POSIX machine. The repo restricts ``monkeypatch.setattr`` to environment,
+    cwd, and sys.path, so patching ``sys.platform`` is not available -- and a
+    platform branch that only its own platform can exercise is how this
+    defect survived in the first place.
+    """
+    platform = sys.platform if platform is None else platform
+    env = os.environ if env is None else env
+    home = os.path.expanduser("~") if home is None else home
+
+    if platform.startswith("win"):
+        appdata = env.get("APPDATA")
+        base = Path(appdata) if appdata else Path(home) / "AppData" / "Roaming"
+        return base / "spellbook" / "spellbook.json"
+    return Path(home) / ".config" / "spellbook" / "spellbook.json"
+
+
+# Resolved at conftest import, before any test can redirect ``HOME`` or
+# ``APPDATA``. This is the developer's (or CI user's) genuine config file --
+# the one no test is ever allowed to touch.
+REAL_USER_CONFIG_PATH = _real_user_config_path()
 
 
 def _real_user_config_fingerprint() -> tuple:
