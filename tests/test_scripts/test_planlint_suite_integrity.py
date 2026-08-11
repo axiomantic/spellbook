@@ -54,6 +54,7 @@ PLANLINT_TEST_MODULES = (
     # one-line addition.
     "test_writing_plans_skill_planlint.py",
     "test_reviewing_impl_plans_skill_planlint.py",
+    "test_executing_plans_skill_planlint.py",
 )
 
 

@@ -313,6 +313,22 @@ BEFORE ANY WORK:
 Use `batch` when: architect wants review between batches, tasks tightly coupled, plan needs active discussion.
 Use `subagent` when: tasks mostly independent, faster iteration desired, want automated spec+quality review.
 
+## Plan Amendment Writes
+
+The trigger is a DISK WRITE of the plan file. It is not a `TodoWrite` status
+flip, and it is not a review-loop iteration. Exactly one lint per write.
+
+```python
+from spellbook.planlint import lint_on_write
+report = lint_on_write(plan_path, new_text, repo_root=repo_root)
+if report is not None and report.failed:
+    print(report.report())   # report; do NOT revert the write
+```
+
+A finding here is REPORTED, never blocking: the write already happened, and the
+amendment is the operator's work product. Treat an ERROR finding the same way
+you treat a failing verification — surface it and fix the plan.
+
 ## Autonomous Mode
 
 Check for "Mode: AUTONOMOUS" or explicit autonomous instruction.
@@ -467,6 +483,7 @@ Return to Phase 1 (Load Plan) when: user updates plan based on your feedback, fu
 - Guess at unclear requirements instead of asking
 - Accept "close enough" on spec compliance
 - Let implementer self-review replace actual review (both needed)
+- Writing an amended plan to disk without re-running planlint when the plan declares Schema: planlint-v1
 </FORBIDDEN>
 
 ### Handling Subagent Questions
@@ -493,6 +510,7 @@ Before marking execution complete:
 - [ ] All review issues addressed (spec and code quality)
 - [ ] Plan followed exactly or deviations explicitly approved
 - [ ] `finishing-a-development-branch` invoked
+- [ ] Every disk write of an amended plan was followed by a planlint run (or the plan declares no Schema:)
 
 <CRITICAL>
 If ANY unchecked: STOP and fix before declaring complete.
