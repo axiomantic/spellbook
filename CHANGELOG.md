@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.87.0] - 2026-08-11
+
+### Added
+
+- New `spellbook-planlint` tool that validates implementation plans against a
+  small schema (`Schema:`/`Files:`/`Depends:`/`Check:` fields) -- catches
+  broken dependency graphs, missing or invalid file paths, drifted
+  verify-step commands, and other structural plan defects before they cause
+  problems during execution.
+- Integrated into the `writing-plans`, `reviewing-impl-plans`, and
+  `executing-plans` skills, so plans are linted at authoring time, reviewed
+  for undecided claims, and re-checked on every amendment write.
+- Opt-in via a `Schema: planlint-v1` field -- a plan with no `Schema:` field
+  is untouched, so existing plans see zero behavior change.
+
 ## [0.86.0] - 2026-08-10
 
 ### Changed
