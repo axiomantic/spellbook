@@ -79,15 +79,15 @@ def run(ctx):
         if _ownership_is_declared(claims, idents):
             continue
 
-        unordered_pairs_exist = False
+        unordered_pairs = []
         for i in range(len(claims)):
             for j in range(i + 1, len(claims)):
                 task_a = claims[i][0].ident
                 task_b = claims[j][0].ident
                 if not _ordered(task_a, task_b, edges):
-                    unordered_pairs_exist = True
+                    unordered_pairs.append((task_a, task_b))
 
-        if not unordered_pairs_exist:
+        if not unordered_pairs:
             continue
 
         first_task, _, first_line = claims[0]
@@ -109,7 +109,11 @@ def run(ctx):
                         f"{task.ident}={annotation or '-'}"
                         for task, annotation, _ in claims
                     ) +
-                    "; no dependency path in either direction)"
+                    "; no dependency path between " +
+                    ", or ".join(
+                        f"{task_a} and {task_b}" for task_a, task_b in unordered_pairs
+                    ) +
+                    ")"
                 ),
                 severity=WARNING,
             )

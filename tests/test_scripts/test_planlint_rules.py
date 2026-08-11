@@ -996,8 +996,8 @@ def test_shared_path_without_owner_fires_when_no_edge_no_annotation():
         line=15,
         evidence=(
             "shared.py claimed by Task 2, Task 5 "
-            "(annotations: Task 2=-, Task 5=-; no dependency path in "
-            "either direction)"
+            "(annotations: Task 2=-, Task 5=-; no dependency path between "
+            "Task 2 and Task 5)"
         ),
         severity=WARNING,
     )
@@ -1081,7 +1081,54 @@ def test_shared_path_without_owner_still_fires_when_only_one_of_three_is_annotat
         evidence=(
             "shared.py claimed by Task 2, Task 3, Task 5 "
             "(annotations: Task 2=-, Task 3=Task 2, Task 5=-; no dependency "
-            "path in either direction)"
+            "path between Task 2 and Task 3, or Task 2 and Task 5, or "
+            "Task 3 and Task 5)"
+        ),
+        severity=WARNING,
+    )
+
+
+def test_shared_path_without_owner_is_partial_ordering_names_only_the_unordered_pair():
+    """3 writers where ONE pair IS ordered via `Depends:` and the third task is
+    unconnected to either. The finding still fires (the group as a whole is not
+    resolved), but the evidence must name only the pairs that are ACTUALLY
+    unordered (Task 2/Task 7 and Task 3/Task 7) rather than falsely claiming no
+    ordering exists anywhere — Task 2 -> Task 3 IS ordered via Depends.
+
+    Full `Finding` equality proves the evidence text does not regress to the
+    blanket "no dependency path in either direction" phrasing this test guards
+    against."""
+    from spellbook.planlint.finding import WARNING
+    from spellbook.planlint.rules import ownership
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 2: First writer\n\n**Files:**\n- Modify: `shared.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n\n"
+        "### Task 3: Ordered writer\n\n**Files:**\n- Modify: `shared.py`\n\n"
+        "**Depends:** Task 2\n\n**Check:** `pytest -q`\n\n"
+        "### Task 7: Unordered writer\n\n**Files:**\n- Modify: `shared.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=None, repo_root=None)
+    findings = ownership.run(ctx).findings
+    hits = [f for f in findings if f.rule == "shared-path-without-owner"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="shared-path-without-owner",
+        message=(
+            "two or more tasks write this path, they do not all name the "
+            "same `(owner: Task N)`, and no `Depends:` edge orders them; "
+            "the writes may race"
+        ),
+        task="Task 2",
+        section="Task 2: First writer",
+        line=6,
+        evidence=(
+            "shared.py claimed by Task 2, Task 3, Task 7 "
+            "(annotations: Task 2=-, Task 3=-, Task 7=-; no dependency "
+            "path between Task 2 and Task 7, or Task 3 and Task 7)"
         ),
         severity=WARNING,
     )
