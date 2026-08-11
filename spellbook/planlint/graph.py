@@ -162,7 +162,10 @@ def build_edges(doc, spec):
 
 
 def tarjan(edges):
-    """Every strongly connected component, in discovery order.
+    """Every strongly connected component.
+
+    Components are returned in the order each one finishes (reverse
+    topological order of the condensation graph), not discovery order.
 
     Ported verbatim from nmg2-tools/planlint/graph.py:184-234. Pure graph
     code over a plain dict[str, Iterable[str]] edge map; iterative rather
