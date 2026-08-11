@@ -167,3 +167,124 @@ def test_unclosed_fence_reports_the_generic_ambiguous_message_for_a_3plus_marker
         evidence="3 fence markers in this section (lines 8, 10, 11); cannot determine which is unclosed",
         severity=ERROR,
     )
+
+
+# --------------------------------------------------------------- depends
+
+def test_dependency_cycle_names_all_three_tasks():
+    from spellbook.planlint.rules import depends
+
+    findings = _findings_for(depends, "neg_depends_cycle.md")
+    hits = [f for f in findings if f.rule == "dependency-cycle"]
+    assert len(hits) == 1
+    # fixture: Task 1 -> Task 2 -> Task 3 -> Task 1, a 3-cycle. Full Finding
+    # equality, not just a membership check on the evidence string -- see the
+    # structure-rule tests above for why: a membership check alone leaves a
+    # wrong `task=`/`section=`/`line=` value invisible.
+    assert hits[0] == Finding(
+        rule="dependency-cycle",
+        message="these tasks wait on each other and none of them can start",
+        task="Task 1",
+        section="Task 1: A",
+        line=3,
+        evidence="strongly connected component: Task 1, Task 2, Task 3",
+        severity=ERROR,
+    )
+
+
+def test_dependency_cycle_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import depends
+
+    findings = _findings_for(depends, "clean_plan.md")
+    assert [f for f in findings if f.rule == "dependency-cycle"] == []
+
+
+def test_unknown_dependency_fires_on_undefined_task():
+    from spellbook.planlint.rules import depends
+
+    findings = _findings_for(depends, "neg_depends_unknown.md")
+    hits = [f for f in findings if f.rule == "unknown-dependency"]
+    assert len(hits) == 1
+    # fixture line 26: Task 3's `Depends:` names Task 9, which no task block
+    # defines.
+    assert hits[0] == Finding(
+        rule="unknown-dependency",
+        message=(
+            "a `Depends:` line names an identifier this plan defines in no "
+            "task block"
+        ),
+        task="Task 3",
+        section="Task 3: C",
+        line=26,
+        evidence="Depends: Task 9 → Task 9",
+        severity=ERROR,
+    )
+
+
+def test_unknown_dependency_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import depends
+
+    findings = _findings_for(depends, "clean_plan.md")
+    assert [f for f in findings if f.rule == "unknown-dependency"] == []
+
+
+def test_self_dependency_fires_when_a_task_names_itself():
+    from spellbook.planlint.rules import depends
+
+    findings = _findings_for(depends, "neg_depends_self.md")
+    hits = [f for f in findings if f.rule == "self-dependency"]
+    assert len(hits) == 1
+    # fixture line 17: Task 2's `Depends:` names itself.
+    assert hits[0] == Finding(
+        rule="self-dependency",
+        message="a task names itself on its `Depends:` line",
+        task="Task 2",
+        section="Task 2: B",
+        line=17,
+        evidence="Depends: Task 2",
+        severity=ERROR,
+    )
+
+
+def test_self_dependency_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import depends
+
+    findings = _findings_for(depends, "clean_plan.md")
+    assert [f for f in findings if f.rule == "self-dependency"] == []
+
+
+def test_depends_prose_fires_and_edge_set_excludes_the_prose_task():
+    from spellbook.planlint.rules import depends
+
+    findings = _findings_for(depends, "neg_depends_prose.md")
+    hits = [f for f in findings if f.rule == "depends-prose"]
+    assert len(hits) == 1
+    # fixture line 17: Task 2's `Depends:` reads "Task 1, and Task 2 once the
+    # fixtures land." -- the second comma-item is prose carrying a stray
+    # `Task 2` reference, not a bare identifier, so it yields a depends-prose
+    # finding and no edge. The graph.py/depends.py split under test here: the
+    # Finding is CONSTRUCTED by graph.parse_depends (Task 3) and merely
+    # returned by depends.run() (Task 6) -- see this rule module's own
+    # docstring.
+    assert hits[0] == Finding(
+        rule="depends-prose",
+        message=(
+            "an identifier sits in prose on the `Depends:` line, so it is "
+            "not read as an edge; state it as an item or move the note off "
+            "the line"
+        ),
+        task="Task 2",
+        section="Task 2: B",
+        line=17,
+        evidence="and Task 2 once the fixtures land → Task 2",
+        severity=ERROR,
+    )
+    doc = PlanDocument.from_path(FIXTURES / "neg_depends_prose.md")
+    assert doc.task("Task 2").declared_dependencies == ("Task 1",)
+
+
+def test_depends_prose_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import depends
+
+    findings = _findings_for(depends, "clean_plan.md")
+    assert [f for f in findings if f.rule == "depends-prose"] == []

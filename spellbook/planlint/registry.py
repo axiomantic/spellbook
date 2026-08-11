@@ -14,7 +14,7 @@ from pathlib import Path
 
 from spellbook.planlint.document import PlanDocument
 from spellbook.planlint.finding import LintResult
-from spellbook.planlint.rules import structure
+from spellbook.planlint.rules import depends, structure
 
 
 @dataclasses.dataclass(frozen=True)
@@ -92,6 +92,12 @@ RULES = (
         ),  # placeholder set of phase VALUES; Task 12 replaces this with
             # frozenset(Phase) once api.Phase exists. Every subsequent rule
             # task's registry.py edit uses this same placeholder until Task 12.
+    ),
+    Rule(
+        name="depends",
+        run=depends.run,
+        emits=depends.EMITS,
+        phases=frozenset({"authoring", "review", "execution"}),
     ),
 )
 
