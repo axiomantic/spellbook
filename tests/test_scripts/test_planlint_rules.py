@@ -598,3 +598,102 @@ def test_check_not_runnable_is_absent_on_the_clean_fixture():
 
     findings = _findings_for(checks, "clean_plan.md")
     assert [f for f in findings if f.rule == "check-not-runnable"] == []
+
+
+# ------------------------------------------------------------ consistency
+
+def test_check_verify_pass_consistency_fires_at_the_run_line_not_check_line():
+    from spellbook.planlint.rules import consistency
+
+    findings = _findings_for(consistency, "neg_check_verify_drift.md")
+    hits = [f for f in findings if f.rule == "check-verify-pass-consistency"]
+    assert len(hits) == 1
+    doc = PlanDocument.from_path(FIXTURES / "neg_check_verify_drift.md")
+    step4 = next(s for s in doc.task("Task 1").steps if s.number == 4)
+    # Full Finding equality, not piecemeal fields: a mutation test proved a
+    # wrong `task=`/`section=`/`message=` value leaves a `len(hits) == 1` +
+    # `.line` assertion green. The evidence format is exactly
+    #   f"Check: {command}  |  Step {n} Run: {run_command}"
+    # — no backticks, no newline. Both halves must be named, because the
+    # whole value of this finding is showing the reader the two commands
+    # side by side.
+    assert hits[0] == Finding(
+        rule="check-verify-pass-consistency",
+        message=(
+            "the `Check:` field and the `Verify pass` step name "
+            "different commands; `Check:` is the single source of "
+            "truth and the step's `Run:` line must repeat it "
+            "verbatim"
+        ),
+        task="Task 1",
+        section="Task 1: Drifted verify step",
+        line=step4.run_line,
+        evidence=(
+            "Check: pytest tests/x.py::test_a -v  |  "
+            "Step 4 Run: pytest tests/x.py::test_a"
+        ),
+        severity=ERROR,
+    )
+
+
+def test_check_verify_pass_consistency_is_silent_when_the_two_match():
+    from spellbook.planlint.rules import consistency
+
+    findings = _findings_for(consistency, "neg_check_verify_drift.md")
+    hits = [f for f in findings if f.rule == "check-verify-pass-consistency" and f.task == "Task 2"]
+    assert hits == []
+
+
+def test_check_verify_pass_consistency_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import consistency
+
+    findings = _findings_for(consistency, "clean_plan.md")
+    assert [f for f in findings if f.rule == "check-verify-pass-consistency"] == []
+
+
+def test_check_verify_pass_consistency_reports_a_malformed_run_line_accurately():
+    """Closes a review finding: `run_command` is empty in TWO source shapes
+    (no `Run:` line under the step at all, OR a `Run:` line present but not
+    a single well-formed backtick-wrapped command — e.g. missing backticks).
+    The evidence text must not claim "has no Run: line" when a `Run:` line
+    is right there in the source; it must be worded true of BOTH shapes.
+    This test exercises the second shape, which the other three tests in
+    this section never reach."""
+    from spellbook.planlint.rules import consistency
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Malformed verify Run line\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest tests/x.py::test_a -v`\n\n"
+        "**Step 4: Verify pass**\n"
+        "Run: pytest tests/x.py::test_a -v\n"
+        "Expected: PASS\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = [
+        f for f in consistency.run(ctx).findings
+        if f.rule == "check-verify-pass-consistency"
+    ]
+    assert len(hits) == 1
+    step4 = next(s for s in doc.task("Task 1").steps if s.number == 4)
+    assert step4.run_command == ""  # the malformed shape under test: no backticks
+    assert hits[0] == Finding(
+        rule="check-verify-pass-consistency",
+        message=(
+            "the `Check:` field and the `Verify pass` step name "
+            "different commands; `Check:` is the single source of "
+            "truth and the step's `Run:` line must repeat it "
+            "verbatim"
+        ),
+        task="Task 1",
+        section="Task 1: Malformed verify Run line",
+        line=step4.run_line,
+        evidence=(
+            "Check: pytest tests/x.py::test_a -v  |  "
+            "Step 4 'Verify pass' has no valid Run: command line"
+        ),
+        severity=ERROR,
+    )
