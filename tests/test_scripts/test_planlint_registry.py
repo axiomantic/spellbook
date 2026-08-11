@@ -10,6 +10,7 @@ import dataclasses
 import enum
 
 import pytest
+import tripwire
 
 from spellbook.planlint import registry
 from spellbook.planlint.document import PlanDocument
@@ -34,14 +35,17 @@ def _ctx():
     return registry.RuleContext(doc=doc, phase=Phase.REVIEW, repo_root=None)
 
 
-def test_run_rules_returns_empty_when_rules_is_empty(monkeypatch):
-    monkeypatch.setattr(registry, "RULES", ())
-    results, crashes = registry.run_rules(_ctx())
+def test_run_rules_returns_empty_when_rules_is_empty():
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns(())
+    with tripwire:
+        results, crashes = registry.run_rules(_ctx())
+    rules_mock.assert_call(args=(), kwargs={})
     assert results == ()
     assert crashes == ()
 
 
-def test_run_rules_calls_every_rule_in_phase(monkeypatch):
+def test_run_rules_calls_every_rule_in_phase():
     calls = []
 
     def ok_rule(ctx):
@@ -51,28 +55,35 @@ def test_run_rules_calls_every_rule_in_phase(monkeypatch):
     dummy = registry.Rule(
         name="dummy", run=ok_rule, emits=frozenset({"dummy-id"}), phases=frozenset(Phase)
     )
-    monkeypatch.setattr(registry, "RULES", (dummy,))
-    results, crashes = registry.run_rules(_ctx())
-    assert len(calls) == 1
-    assert len(results) == 1
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((dummy,))
+    ctx = _ctx()
+    with tripwire:
+        results, crashes = registry.run_rules(ctx)
+    rules_mock.assert_call(args=(), kwargs={})
+    assert calls == [ctx]
+    assert results == (LintResult(name="ok", findings=[], examined=1),)
     assert crashes == ()
 
 
-def test_run_rules_skips_a_rule_outside_its_declared_phases(monkeypatch):
+def test_run_rules_skips_a_rule_outside_its_declared_phases():
     def never_called(ctx):
         raise AssertionError("should not be called")
 
     dummy = registry.Rule(
         name="dummy", run=never_called, emits=frozenset(), phases=frozenset({Phase.EXECUTION})
     )
-    monkeypatch.setattr(registry, "RULES", (dummy,))
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((dummy,))
     ctx = dataclasses.replace(_ctx(), phase=Phase.AUTHORING)
-    results, crashes = registry.run_rules(ctx)
+    with tripwire:
+        results, crashes = registry.run_rules(ctx)
+    rules_mock.assert_call(args=(), kwargs={})
     assert results == ()
     assert crashes == ()
 
 
-def test_run_rules_barrier_catches_one_rule_crash_without_stopping_others(monkeypatch):
+def test_run_rules_barrier_catches_one_rule_crash_without_stopping_others():
     def crashing_rule(ctx):
         raise KeyError("boom")
 
@@ -85,24 +96,30 @@ def test_run_rules_barrier_catches_one_rule_crash_without_stopping_others(monkey
     survivor = registry.Rule(
         name="survivor", run=ok_rule, emits=frozenset(), phases=frozenset(Phase)
     )
-    monkeypatch.setattr(registry, "RULES", (crasher, survivor))
-    results, crashes = registry.run_rules(_ctx())
-    assert len(results) == 1
-    assert results[0].name == "ok"
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((crasher, survivor))
+    with tripwire:
+        results, crashes = registry.run_rules(_ctx())
+    rules_mock.assert_call(args=(), kwargs={})
+    assert results == (LintResult(name="ok", findings=[], examined=1),)
     assert len(crashes) == 1
     assert crashes[0].rule == "crasher"
     assert crashes[0].exc_type == "KeyError"
-    assert "boom" in crashes[0].message
+    # KeyError's str() quotes single-arg messages: repr(the arg), not the
+    # bare text — str(KeyError("boom")) == "'boom'", not "boom".
+    assert crashes[0].message == "'boom'"
     assert crashes[0].traceback_text
 
 
-def test_run_rules_barrier_does_not_catch_keyboardinterrupt(monkeypatch):
+def test_run_rules_barrier_does_not_catch_keyboardinterrupt():
     def interrupting_rule(ctx):
         raise KeyboardInterrupt()
 
     dummy = registry.Rule(
         name="dummy", run=interrupting_rule, emits=frozenset(), phases=frozenset(Phase)
     )
-    monkeypatch.setattr(registry, "RULES", (dummy,))
-    with pytest.raises(KeyboardInterrupt):
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((dummy,))
+    with tripwire, pytest.raises(KeyboardInterrupt):
         registry.run_rules(_ctx())
+    rules_mock.assert_call(args=(), kwargs={})

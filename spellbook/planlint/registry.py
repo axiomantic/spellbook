@@ -9,7 +9,11 @@ task's own Check line runnable in isolation.
 
 import dataclasses
 import traceback
+from collections.abc import Callable
 from pathlib import Path
+
+from spellbook.planlint.document import PlanDocument
+from spellbook.planlint.finding import LintResult
 
 
 @dataclasses.dataclass(frozen=True)
@@ -29,8 +33,8 @@ class Rule:
     """
 
     name: str
-    run: object          # Callable[[RuleContext], LintResult]
-    emits: frozenset      # every rule ID this module may put in a Finding
+    run: Callable[["RuleContext"], LintResult]
+    emits: frozenset[str]  # every rule ID this module may put in a Finding
     phases: frozenset     # the Phase values in which it runs
 
 
@@ -62,7 +66,7 @@ class RuleContext:
     one.
     """
 
-    doc: object            # PlanDocument
+    doc: PlanDocument
     phase: object           # Phase, or None (see docstring)
     repo_root: "Path | None"
 
@@ -76,6 +80,18 @@ class RuleCrash:
 
 
 RULES = ()
+
+
+def _rules():
+    """Indirection over the module-level `RULES` tuple.
+
+    `RULES` itself is plain data (a tuple), not a callable, so it cannot be
+    substituted via `tripwire.mock()` — tripwire replaces call sites, not
+    data attributes. This thin wrapper gives tests a callable seam to mock,
+    per AGENTS.md's "if tripwire can't express what you need, refactor the
+    code under test" guidance.
+    """
+    return RULES
 
 
 def run_rules(ctx):
@@ -92,7 +108,7 @@ def run_rules(ctx):
     test_run_rules_barrier_does_not_catch_keyboardinterrupt.
     """
     results, crashes = [], []
-    for rule in RULES:
+    for rule in _rules():
         if ctx.phase not in rule.phases:
             continue
         try:
