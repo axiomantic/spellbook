@@ -20,7 +20,7 @@ skipped rule as UNDECIDED so the prose review still covers the claim.
 
 from pathlib import Path
 
-from spellbook.planlint.finding import ERROR, INFO, WARNING, Finding, LintResult
+from spellbook.planlint.finding import ERROR, INFO, WARNING, Finding, LintResult, guard_no_input
 
 EMITS = frozenset({"modify-path-missing", "create-path-exists"})
 
@@ -56,7 +56,6 @@ def run(ctx):
                 continue
             if "*" in entry.path:
                 continue
-            examined += 1
 
             # A `Files:` bullet is documented (writing-plans skill) as a
             # repo-relative path, but nothing upstream enforces that. Guard
@@ -78,6 +77,8 @@ def run(ctx):
             resolved = ctx.repo_root / entry.path
             if not resolved.resolve().is_relative_to(ctx.repo_root.resolve()):
                 continue
+
+            examined += 1
 
             if entry.verb == "Modify":
                 if not resolved.exists():
@@ -116,6 +117,4 @@ def run(ctx):
                     )
                 )
 
-    return LintResult(
-        name="files", findings=findings, examined=examined, examined_label="Files: entries"
-    )
+    return guard_no_input("files", findings, examined, "Files: entries", "files lint")

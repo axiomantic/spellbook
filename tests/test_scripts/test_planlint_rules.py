@@ -840,6 +840,33 @@ def test_files_rule_skips_and_reports_undecided_when_repo_root_is_none():
     assert result.skipped_reason == "no repo_root supplied"
 
 
+def test_files_rule_reports_no_input_when_no_files_entries_are_examined(tmp_path):
+    """A schema-declaring plan whose tasks carry no `Files:` bullets at all
+    (or only `Test:`/`Delete:` bullets, which this rule never examines) must
+    NOT report clean. `guard_no_input` is the mechanism every other rule
+    module already routes through for this — `files.py` was the one holdout
+    that returned a bare `LintResult()` and reported a false clean instead."""
+    from spellbook.planlint.rules import files
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n**Files:**\n"
+        "- Test: `tests/not_written_yet.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
+    result = files.run(ctx)
+    assert result.failed is True
+    hits = [f for f in result.findings if f.rule == "no-input"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="no-input",
+        message="the files lint examined 0 Files: entries",
+        severity=ERROR,
+    )
+
+
 def test_create_path_exists_fires_when_a_create_path_already_exists(tmp_path):
     from spellbook.planlint.finding import WARNING
     from spellbook.planlint.rules import files

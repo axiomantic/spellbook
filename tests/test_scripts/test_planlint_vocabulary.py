@@ -25,7 +25,7 @@ PACKAGE = Path(spellbook.planlint.__file__).parent
 REPO_ROOT = PACKAGE.parents[1]
 
 
-def _package_modules():
+def _package_modules(package=None):
     """Every module the §9 checks scan — and a hard error when there are none.
 
     `finding.py` states the rule this helper enforces on the tests themselves:
@@ -35,9 +35,20 @@ def _package_modules():
     import that resolved to a namespace package, a stale install — the checks
     would report green having examined nothing at all. So the file list is
     produced in one place and proven non-empty there.
+
+    `package` defaults to the module-level `PACKAGE` constant but may be
+    passed explicitly — the seam
+    `test_the_scanned_module_list_is_proven_non_empty` uses to point the scan
+    at an empty directory, since `PACKAGE` is a plain `pathlib.Path` data
+    attribute and AGENTS.md's Testing-with-Tripwire rule forbids patching a
+    module attribute directly via `monkeypatch` (tripwire itself can only
+    substitute call sites, not data). Same precedent as
+    `registry._rules()`'s callable-seam wrapper.
     """
-    modules = sorted(PACKAGE.rglob("*.py"))
-    assert modules, f"no modules found under {PACKAGE}: the checks would pass vacuously"
+    if package is None:
+        package = PACKAGE
+    modules = sorted(package.rglob("*.py"))
+    assert modules, f"no modules found under {package}: the checks would pass vacuously"
     return modules
 
 
@@ -104,15 +115,14 @@ def test_known_bad_input_the_grep_actually_matches_unparameterized_vocabulary():
     assert hits, "the known-bad fixture must trip at least one vocabulary pattern"
 
 
-def test_the_scanned_module_list_is_proven_non_empty(monkeypatch, tmp_path):
+def test_the_scanned_module_list_is_proven_non_empty(tmp_path):
     """The guard against the vacuous pass, proven against a KNOWN-BAD input.
 
     Asserting `_package_modules()` is non-empty on the real package proves
     little — it would also hold if the assert inside were deleted. So point
-    `PACKAGE` at an empty directory and require the helper to RAISE."""
-    monkeypatch.setattr(sys.modules[__name__], "PACKAGE", tmp_path)
+    the scan at an explicit empty directory and require the helper to RAISE."""
     try:
-        _package_modules()
+        _package_modules(package=tmp_path)
     except AssertionError:
         return
     raise AssertionError("_package_modules() accepted an empty scan")
