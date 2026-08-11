@@ -12,6 +12,7 @@ import pytest
 
 from spellbook.planlint.document import (
     NONE_WORDS,
+    SCHEMA_FAMILY,
     FilesEntry,
     PlanDocument,
     backticked,
@@ -45,6 +46,25 @@ def test_opted_out_plan_schema_text_is_legacy():
     doc = PlanDocument.from_path(FIXTURES / "opted_out_plan.md")
     assert doc.schema_text == "legacy"
     assert doc.declares_planlint_schema is False
+
+
+@pytest.mark.parametrize(
+    "value",
+    [
+        "PLANLINT-V1",
+        "planlint-v1.2.3",
+        "planlint-1.0",
+        "planlint-v1.",
+        "planlint-v1-",
+    ],
+)
+def test_schema_family_admits_case_insensitive_dotted_and_hyphenated_values(value):
+    assert SCHEMA_FAMILY.match(value) is not None
+
+
+@pytest.mark.parametrize("value", ["some-other-tool-v3", ""])
+def test_schema_family_rejects_values_outside_the_family(value):
+    assert SCHEMA_FAMILY.match(value) is None
 
 
 def test_files_field_is_block_scoped_bullet_list():

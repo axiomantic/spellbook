@@ -44,7 +44,7 @@ class PlanLintReport:
     plan: str
     linted: bool
     skip_reason: str
-    results: "tuple[registry.LintResult, ...]"
+    results: "tuple[LintResult, ...]"
     internal_errors: "tuple[registry.RuleCrash, ...]"
 
     @property

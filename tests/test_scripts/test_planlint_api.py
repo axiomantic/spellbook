@@ -10,7 +10,7 @@ import tripwire
 
 from spellbook.planlint import api, registry
 from spellbook.planlint.document import PlanDocument
-from spellbook.planlint.finding import INFO, WARNING
+from spellbook.planlint.finding import ERROR, INFO, WARNING, Finding
 
 FIXTURES = Path(__file__).parent / "fixtures" / "planlint"
 
@@ -296,22 +296,21 @@ def test_lint_path_with_a_phase_matching_no_rule_reports_no_rules_ran(tmp_path):
     report = api.lint_path(plan, phase=None)
     assert report.linted is True
     assert report.failed is True
-    assert any(f.rule == "no-rules-ran" for f in report.findings)
+    assert len(report.results) == 1
+    assert report.results[0].name == "no-rules-ran"
+    assert report.findings == (api.NO_RULES_RAN,)
 
 
 # ------------------------------------------------- H2: gate/parser agreement
 
 
-def test_gate_and_lint_text_agree_on_crlf_line_endings():
-    text = (
-        "**Schema:** planlint-v1\r\n\r\n"
-        "### Task 1: A\r\n\r\n**Files:**\r\n- Create: `a.py`\r\n\r\n"
-        "**Depends:** none\r\n\r\n**Check:** `pytest a`\r\n"
-    )
-    assert api.declares_schema(text) is True
-    report = api.lint_text(text)
-    assert report.linted is True
-    assert report.skip_reason == ""
+# A CRLF-only variant of this test was removed: `split("\n")` on `\r\n` text
+# still splits correctly line-by-line (the trailing `\r` lands at end-of-line
+# and gets absorbed by `.strip()` downstream), so a CRLF-only scenario passes
+# against the OLD buggy line-splitting gate just as well as the fixed one and
+# proves nothing about the fix. `test_gate_and_lint_text_agree_on_bare_cr_line_endings`
+# below is the regression test that actually distinguishes old vs new behavior,
+# since a bare `\r` line ending is exactly what `split("\n")` fails to split on.
 
 
 def test_gate_and_lint_text_agree_on_bare_cr_line_endings():
@@ -331,9 +330,7 @@ def test_skip_reason_truncates_an_overly_long_schema_value():
     text = f"**Schema:** {huge_value}\n\n### Task 1: X\n"
     report = api.lint_text(text)
     assert report.linted is False
-    assert huge_value not in report.skip_reason
-    assert "..." in report.skip_reason
-    assert len(report.skip_reason) < 150
+    assert report.skip_reason == f"Schema: {huge_value[:50]}... (not a planlint schema)"
 
 
 # --------------------------------------------------------- M1: summary_line
@@ -344,7 +341,7 @@ def test_summary_line_reports_skipped_rules_when_a_rule_is_undecided():
     report = api.lint_text(text, repo_root=None)
     assert report.failed is False
     line = report.summary_line()
-    assert "6 of 7 rule(s) decided, 1 skipped, 0 findings" in line
+    assert line == f"{report.plan}: clean (6 of 7 rule(s) decided, 1 skipped, 0 findings)"
 
 
 # --------------------------------------------------- M2: decided_claims crash
@@ -365,11 +362,14 @@ def test_decided_claims_reports_a_crashed_rule_as_undecided_with_a_reason():
         )
     rules_mock.assert_call(args=(), kwargs={})
     claims = api.decided_claims(report)
-    assert len(claims) == 1
-    crasher_claim = claims[0]
-    assert crasher_claim.rule == "crasher"
-    assert crasher_claim.decided is False
-    assert crasher_claim.reason == "crashed: KeyError: 'boom'"
+    assert claims == (
+        api.DecidedClaim(
+            rule="crasher",
+            decided=False,
+            finding_count=0,
+            reason="crashed: KeyError: 'boom'",
+        ),
+    )
 
 
 # --------------------------------------------------------------------- M3
@@ -377,14 +377,32 @@ def test_decided_claims_reports_a_crashed_rule_as_undecided_with_a_reason():
 
 def test_report_on_an_unlinted_plan():
     report = api.lint_text("### Task 1: X\n\n**Files:**\n- Create: `x.py`\n")
-    assert report.report() == f"{report.plan}: not linted ({report.skip_reason})\n"
+    assert report.report() == "<text>: not linted (no Schema: field (legacy plan))\n"
 
 
 def test_report_with_findings_includes_per_rule_report_text():
     report = api.lint_text("**Schema:** planlint-v1\n\nNo tasks here at all.\n")
-    text = report.report()
-    assert "no-input" in text or "finding" in text.lower()
-    assert "structure:" in text
+    assert report.report() == (
+        "structure: 1 finding(s) (0 task bodies examined)\n"
+        "  [ERROR] no-input\n"
+        "      the structure lint examined 0 task bodies\n"
+        "depends: 1 finding(s) (0 task blocks examined)\n"
+        "  [ERROR] no-input\n"
+        "      the depends lint examined 0 task blocks\n"
+        "checks: 1 finding(s) (0 task blocks examined)\n"
+        "  [ERROR] no-input\n"
+        "      the checks lint examined 0 task blocks\n"
+        "consistency: 1 finding(s) (0 task blocks examined)\n"
+        "  [ERROR] no-input\n"
+        "      the consistency lint examined 0 task blocks\n"
+        "files: clean (0 Files: entries examined)\n"
+        "ownership: 1 finding(s) (0 task blocks examined)\n"
+        "  [ERROR] no-input\n"
+        "      the ownership lint examined 0 task blocks\n"
+        "schema: 1 finding(s) (0 task blocks examined)\n"
+        "  [ERROR] no-input\n"
+        "      the schema lint examined 0 task blocks\n"
+    )
 
 
 def test_report_with_crashes_includes_crash_traceback():
@@ -408,9 +426,38 @@ def test_report_with_crashes_includes_crash_traceback():
 
 def test_errors_property_returns_only_error_severity_findings():
     report = api.lint_text("**Schema:** planlint-v1\n\nNo tasks here at all.\n")
-    assert report.errors
-    assert all(f.severity == api.ERROR for f in report.errors)
-    assert report.errors == tuple(f for f in report.findings if f.severity == api.ERROR)
+    assert report.errors == (
+        Finding(
+            rule="no-input",
+            message="the structure lint examined 0 task bodies",
+            severity=ERROR,
+        ),
+        Finding(
+            rule="no-input",
+            message="the depends lint examined 0 task blocks",
+            severity=ERROR,
+        ),
+        Finding(
+            rule="no-input",
+            message="the checks lint examined 0 task blocks",
+            severity=ERROR,
+        ),
+        Finding(
+            rule="no-input",
+            message="the consistency lint examined 0 task blocks",
+            severity=ERROR,
+        ),
+        Finding(
+            rule="no-input",
+            message="the ownership lint examined 0 task blocks",
+            severity=ERROR,
+        ),
+        Finding(
+            rule="no-input",
+            message="the schema lint examined 0 task blocks",
+            severity=ERROR,
+        ),
+    )
 
 
 def test_lint_path_on_a_non_utf8_file_returns_unlinted_not_an_exception(tmp_path):

@@ -65,8 +65,15 @@ SCHEMA_LEGACY = "legacy"
 # rules/schema.py's `schema-unknown-version` rule. Gating on the exact marker
 # instead would send every future version down the "legacy plan" path, where no
 # rule runs — which would make the forward-compatibility alarm unreachable and
-# hand an unrecognized schema the same silent pass a legacy plan gets.
-SCHEMA_FAMILY = re.compile(r"^planlint-[a-z0-9][a-z0-9.-]*$", re.IGNORECASE)
+# hand an unrecognized schema the same silent pass a legacy plan gets. The gate
+# is also case-insensitive and allows `.`/`-` in the version suffix, wider than
+# the exact-match checks downstream (this property and rules/schema.py's
+# `KNOWN_VALUES`); an unusually-cased declaration like `PLANLINT-V1` is ADMITTED
+# here and then correctly flagged as unrecognized/malformed by rules/schema.py,
+# rather than silently skipped. `re.ASCII` keeps the case-folding restricted to
+# ASCII letters — without it, `re.IGNORECASE` on a `str` pattern also folds
+# Unicode lookalike characters into `[a-z]`, which is not the intent.
+SCHEMA_FAMILY = re.compile(r"^planlint-[a-z0-9][a-z0-9.-]*$", re.IGNORECASE | re.ASCII)
 
 NONE_WORDS = frozenset({"none", "nothing", "n/a", "na", "-", "—"})
 
