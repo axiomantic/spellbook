@@ -651,6 +651,79 @@ def test_check_verify_pass_consistency_is_absent_on_the_clean_fixture():
     assert [f for f in findings if f.rule == "check-verify-pass-consistency"] == []
 
 
+def test_check_verify_pass_consistency_selects_the_first_verify_pass_step():
+    """Coverage gap: a task with TWO steps whose titles both match the
+    `Verify pass` pattern. `run()` uses `next()` to pick the first match —
+    a deliberate, documented policy (see the comment above the `next()` call
+    in `consistency.py`). This fixture makes the FIRST step's `Run:` command
+    match `Check:` exactly and the SECOND step's `Run:` command differ, so
+    the test only stays green if the rule really compares against the first
+    occurrence: last-match (or any other) selection would flag the second
+    step's drift and this assertion would fail."""
+    from spellbook.planlint.rules import consistency
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Two verify-pass steps\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest tests/x.py::test_a -v`\n\n"
+        "**Step 3: Verify pass**\n"
+        "Run: `pytest tests/x.py::test_a -v`\n"
+        "Expected: PASS\n\n"
+        "**Step 5: Verify pass**\n"
+        "Run: `pytest tests/x.py::test_b -v`\n"
+        "Expected: PASS\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    task = doc.task("Task 1")
+    # Sanity: the fixture really has two steps whose title matches the
+    # rule's pattern, and their Run: commands really differ from each
+    # other — otherwise this test would pass for the wrong reason.
+    assert [s.title for s in task.steps] == ["Verify pass", "Verify pass"]
+    assert task.steps[0].run_command == "pytest tests/x.py::test_a -v"
+    assert task.steps[1].run_command == "pytest tests/x.py::test_b -v"
+    assert task.check_command == "pytest tests/x.py::test_a -v"
+
+    hits = [
+        f for f in consistency.run(ctx).findings
+        if f.rule == "check-verify-pass-consistency"
+    ]
+    assert hits == []
+
+
+def test_check_verify_pass_consistency_is_silent_with_no_verify_pass_step():
+    """Coverage gap: a task with a real `Check:` command and steps present,
+    but none of the step titles match the `Verify pass` pattern. Exercises
+    the `verify_step is None: continue` early-exit — the rule must not
+    crash or false-positive when there is nothing to compare `Check:`
+    against."""
+    from spellbook.planlint.rules import consistency
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: No verify-pass step\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest tests/x.py::test_a -v`\n\n"
+        "**Step 1: Implement**\n"
+        "Run: `pytest tests/x.py::test_a -v`\n"
+        "Expected: PASS\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    task = doc.task("Task 1")
+    assert [s.title for s in task.steps] == ["Implement"]
+    assert task.check_command == "pytest tests/x.py::test_a -v"
+
+    hits = [
+        f for f in consistency.run(ctx).findings
+        if f.rule == "check-verify-pass-consistency"
+    ]
+    assert hits == []
+
+
 def test_check_verify_pass_consistency_reports_a_malformed_run_line_accurately():
     """Closes a review finding: `run_command` is empty in TWO source shapes
     (no `Run:` line under the step at all, OR a `Run:` line present but not
