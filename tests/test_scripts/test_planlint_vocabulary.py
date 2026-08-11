@@ -4,10 +4,13 @@ claim the design document makes about this port, decided by a check here.
 9.1 — zero source-tool vocabulary in the ported engine.
 9.2 — no call site (outside cli.py) spawns a subprocess.
 9.3 — no new packaging entry is needed.
+9.4 — every rule has at least one mutation test.
+9.5 — no rule emits a rule ID its own module does not declare.
+9.7 — the registry's RULES tuple and each rule's returned name are consistent.
+9.10 — the registry's error barrier wraps Exception, not BaseException.
 9.11 — no third-party dependency.
 
-9.4, 9.5 continue in Task 18. 9.8, 9.9 continue in Task 22 (after the
-SKILL.md edits exist).
+9.8, 9.9 continue in Task 22 (after the SKILL.md edits exist).
 """
 
 import ast
@@ -136,7 +139,7 @@ def _walks_subprocess(tree):
     Design §9.2 words the claim the same way: "no `Call` whose function
     attribute is `run`/`Popen`/`check_output` RESOLVED FROM `subprocess`".
     """
-    module_aliases = set()      # names bound to the subprocess module itself
+    module_aliases = set()  # names bound to the subprocess module itself
     imported_callables = set()  # names bound by `from subprocess import X`
     findings = []
 
@@ -197,11 +200,7 @@ def test_a_plain_dot_run_call_is_not_mistaken_for_a_subprocess_call():
     `.run(...)` reports the package's own dispatch loop as a process spawn — and
     the only available "fix" for a false positive in a gate is to stop believing
     the gate."""
-    good_source = (
-        "def run_rules(ctx):\n"
-        "    for rule in RULES:\n"
-        "        rule.run(ctx)\n"
-    )
+    good_source = "def run_rules(ctx):\n    for rule in RULES:\n        rule.run(ctx)\n"
     assert _walks_subprocess(ast.parse(good_source)) == []
 
 
@@ -221,6 +220,7 @@ def test_no_call_site_outside_cli_spawns_a_subprocess():
 
 
 # ----------------------------------------------------------------- 9.11
+
 
 def _top_level_imports(tree):
     """Imports bound at module scope, read from `tree.body` ONLY.
@@ -263,6 +263,7 @@ def test_the_package_adds_no_third_party_dependency():
 
 # ------------------------------------------------------------------ 9.3
 
+
 def test_package_needs_no_new_wheel_packaging_entry():
     assert Path(spellbook.planlint.__file__).is_relative_to(
         Path(__import__("spellbook").__file__).parent
@@ -285,6 +286,7 @@ def test_package_needs_no_new_wheel_packaging_entry():
 
 # ------------------------------------------------------------------ 9.4
 
+
 def _string_literals_in(tree):
     out = set()
     for node in ast.walk(tree):
@@ -296,15 +298,23 @@ def _string_literals_in(tree):
 def test_every_rule_has_at_least_one_mutation_test():
     """Union every emits set from the real registry, AST-scan
     test_planlint_rules.py for every string literal, and assert every rule
-    ID appears as a literal somewhere in that file. Reported as
-    added-versus-missing NAMES."""
+    ID appears as a literal somewhere in that file. Reported as missing
+    NAMES only (no "added" side — a literal in the test file that is not
+    a rule ID is not a failure mode this check cares about).
+
+    Scope: the universe checked here is `union(rule.emits for rule in
+    registry.RULES)`, not every rule ID any Finding in the package can
+    carry. `no-input` and `no-rules-ran` (constructed in `finding.py`,
+    not tied to any rule's `emits`) are outside that universe — they are
+    tested elsewhere (`test_planlint_api.py`, `test_planlint_finding.py`),
+    not a gap this check leaves open."""
     from spellbook.planlint import registry
 
     all_rule_ids = set()
     for rule in registry.RULES:
         all_rule_ids |= rule.emits
 
-    rules_test_path = PACKAGE.parents[1] / "tests" / "test_scripts" / "test_planlint_rules.py"
+    rules_test_path = REPO_ROOT / "tests" / "test_scripts" / "test_planlint_rules.py"
     tree = ast.parse(rules_test_path.read_text(encoding="utf-8"))
     literals = _string_literals_in(tree)
 
@@ -313,8 +323,82 @@ def test_every_rule_has_at_least_one_mutation_test():
 
 
 # ------------------------------------------------------------------ 9.5
+#
+# SCOPE: Findings in this section come from `rules/*.py` only. `graph.py`
+# also constructs `Finding(rule="depends-prose", ...)` for a `depends-prose`
+# check that lives outside `PACKAGE / "rules"` — a deliberate, already-
+# documented split from `depends.py`'s own docstring (Task 6). The test
+# names below read as a universal claim about "no rule"; they are not — the
+# universe is `rules/*.py`, and `graph.py` is intentionally excluded, not
+# missed.
+
+
+def _emits_literals(tree):
+    """Literal string rule IDs declared by a module's `EMITS = frozenset({...})`
+    (or `set`/`tuple`/`list`-of-string-literals) assignment.
+
+    Only the literal form is recognized: `EMITS = SOME_OTHER_NAME` or any
+    non-`Call` right-hand side yields an empty set here, same as an absent
+    `EMITS` entirely.
+    """
+    emits_literal = set()
+    for node in ast.walk(tree):
+        if (
+            isinstance(node, ast.Assign)
+            and any(isinstance(t, ast.Name) and t.id == "EMITS" for t in node.targets)
+            and isinstance(node.value, ast.Call)
+        ):
+            for arg in node.value.args:
+                if isinstance(arg, (ast.Set, ast.Tuple, ast.List)):
+                    emits_literal |= {el.value for el in arg.elts if isinstance(el, ast.Constant)}
+    return emits_literal
+
+
+def _finding_rule_ids(tree):
+    """Literal string `rule=` arguments passed to `Finding(...)` calls.
+
+    Only string-literal `rule=` arguments are recognized. A `rule=` argument
+    that is a variable reference (e.g. `rule=SOME_CONSTANT`) is invisible to
+    this walk — see `_dynamic_rule_args`, which exists specifically to catch
+    that gap rather than let it pass unseen (design §9.5 known limitation).
+    """
+    used_ids = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Name) and func.id == "Finding":
+                for kw in node.keywords:
+                    if kw.arg == "rule" and isinstance(kw.value, ast.Constant):
+                        used_ids.add(kw.value.value)
+    return used_ids
+
+
+def _dynamic_rule_args(tree):
+    """`Finding(rule=...)` call sites whose `rule=` argument is NOT a string
+    literal (e.g. `rule=SOME_CONSTANT`). These are invisible to
+    `_finding_rule_ids`'s literal-only scan, so a rules module could route a
+    variable reference into `rule=` and never trip the undeclared-ID check.
+    Rather than let that pass silently, every such site is reported here and
+    the check that calls this fails loudly, flagging it for manual
+    investigation."""
+    dynamic = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Name) and func.id == "Finding":
+                for kw in node.keywords:
+                    if kw.arg == "rule" and not isinstance(kw.value, ast.Constant):
+                        dynamic.append(ast.unparse(kw.value))
+    return dynamic
+
 
 def test_known_bad_input_undeclared_rule_id_check_actually_fires():
+    """The known-bad-input guard for `test_no_rule_emits_a_rule_id_its_own_
+    module_does_not_declare`, exercised through the SAME helper functions
+    (`_emits_literals`, `_finding_rule_ids`) the real check calls below —
+    not a reimplementation of the walk. If this guard used its own inline
+    AST walk instead, a green real check would prove only that a fork of
+    the scanner fires, not that the scanner itself does."""
     bad_source = (
         "from spellbook.planlint.finding import Finding\n"
         "EMITS = frozenset({'declared-id'})\n"
@@ -322,51 +406,45 @@ def test_known_bad_input_undeclared_rule_id_check_actually_fires():
         "    return [Finding(rule='undeclared-id', message='x')]\n"
     )
     tree = ast.parse(bad_source)
-    emits = {"declared-id"}
-    used = set()
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Call):
-            func = node.func
-            if isinstance(func, ast.Name) and func.id == "Finding":
-                for kw in node.keywords:
-                    if kw.arg == "rule" and isinstance(kw.value, ast.Constant):
-                        used.add(kw.value.value)
-    assert used - emits, "the known-bad fixture must contain an undeclared rule ID"
+    emits = _emits_literals(tree)
+    used = _finding_rule_ids(tree)
+    assert sorted(used - emits) == ["undeclared-id"]
 
 
 def test_no_rule_emits_a_rule_id_its_own_module_does_not_declare():
+    """Every `rule=` literal a `rules/*.py` module passes to `Finding(...)`
+    must appear in that same module's own `EMITS` set — a rule cannot emit
+    an ID it never declared.
+
+    Scope: only `rules/*.py`. `graph.py`'s `depends-prose` Finding is
+    outside this walk by design (see the module-level scope note above this
+    section) and a `rule=` argument that is not a string literal is outside
+    `_finding_rule_ids`'s reach (see `_dynamic_rule_args`, checked
+    separately below)."""
     offenders = {}
+    dynamic_offenders = {}
     rules_dir = PACKAGE / "rules"
-    for path in sorted(rules_dir.glob("*.py")):
-        if path.name == "__init__.py":
-            continue
+    scanned = sorted(p for p in rules_dir.glob("*.py") if p.name != "__init__.py")
+    assert scanned, f"no rule modules found under {rules_dir}: the check would pass vacuously"
+    for path in scanned:
         tree = ast.parse(path.read_text(encoding="utf-8"))
-        emits_literal = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Assign) and any(
-                isinstance(t, ast.Name) and t.id == "EMITS" for t in node.targets
-            ):
-                if isinstance(node.value, ast.Call):
-                    for arg in node.value.args:
-                        if isinstance(arg, (ast.Set, ast.Tuple, ast.List)):
-                            emits_literal |= {
-                                el.value for el in arg.elts if isinstance(el, ast.Constant)
-                            }
-        used_ids = set()
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Call):
-                func = node.func
-                if isinstance(func, ast.Name) and func.id == "Finding":
-                    for kw in node.keywords:
-                        if kw.arg == "rule" and isinstance(kw.value, ast.Constant):
-                            used_ids.add(kw.value.value)
+        emits_literal = _emits_literals(tree)
+        used_ids = _finding_rule_ids(tree)
         stray = used_ids - emits_literal
         if stray:
             offenders[path.name] = sorted(stray)
+        dynamic = _dynamic_rule_args(tree)
+        if dynamic:
+            dynamic_offenders[path.name] = dynamic
     assert offenders == {}
+    assert dynamic_offenders == {}, (
+        f"non-literal rule= arguments found, undetectable by the literal-only "
+        f"scan above and requiring manual investigation: {dynamic_offenders}"
+    )
 
 
 # ------------------------------------------------------------------ 9.7
+
 
 def test_registry_rules_tuple_has_exactly_seven_entries():
     """Cross-check against test_planlint_api.py's own zero-invocation test
@@ -377,7 +455,13 @@ def test_registry_rules_tuple_has_exactly_seven_entries():
 
     assert len(registry.RULES) == 7
     assert {r.name for r in registry.RULES} == {
-        "structure", "depends", "checks", "consistency", "files", "ownership", "schema",
+        "structure",
+        "depends",
+        "checks",
+        "consistency",
+        "files",
+        "ownership",
+        "schema",
     }
 
 
@@ -395,9 +479,7 @@ def test_every_rule_result_name_matches_its_registry_row_name():
     from spellbook.planlint import api, registry
     from spellbook.planlint.document import PlanDocument
 
-    fixture = (
-        REPO_ROOT / "tests" / "test_scripts" / "fixtures" / "planlint" / "clean_plan.md"
-    )
+    fixture = REPO_ROOT / "tests" / "test_scripts" / "fixtures" / "planlint" / "clean_plan.md"
     ctx = registry.RuleContext(
         doc=PlanDocument.from_path(fixture), phase=api.Phase.REVIEW, repo_root=None
     )
@@ -410,6 +492,7 @@ def test_every_rule_result_name_matches_its_registry_row_name():
 
 
 # ----------------------------------------------------------------- 9.10
+
 
 def test_registry_error_barrier_wraps_exception_not_baseexception():
     """Cross-check on the AST: run_rules()'s except clause names Exception,
@@ -425,4 +508,10 @@ def test_registry_error_barrier_wraps_exception_not_baseexception():
                 except_types.append("bare except")
             elif isinstance(node.type, ast.Name):
                 except_types.append(node.type.id)
+            else:
+                # ast.Attribute (`except mod.Error:`), ast.Tuple
+                # (`except (A, B):`), or any other handler-type shape —
+                # captured here so a second handler of one of these forms
+                # cannot slip past the two branches above unrecorded.
+                except_types.append(ast.unparse(node.type))
     assert except_types == ["Exception"]
