@@ -14,6 +14,7 @@ from pathlib import Path
 
 from spellbook.planlint.document import PlanDocument
 from spellbook.planlint.finding import LintResult
+from spellbook.planlint.rules import structure
 
 
 @dataclasses.dataclass(frozen=True)
@@ -81,7 +82,18 @@ class RuleCrash:
     traceback_text: str
 
 
-RULES = ()
+RULES = (
+    Rule(
+        name="structure",
+        run=structure.run,
+        emits=structure.EMITS,
+        phases=frozenset(
+            {"authoring", "review", "execution"}
+        ),  # placeholder set of phase VALUES; Task 12 replaces this with
+            # frozenset(Phase) once api.Phase exists. Every subsequent rule
+            # task's registry.py edit uses this same placeholder until Task 12.
+    ),
+)
 
 
 def _rules():
