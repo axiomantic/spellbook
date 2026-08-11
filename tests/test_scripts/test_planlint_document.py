@@ -368,21 +368,23 @@ def test_unpaired_fence_does_not_corrupt_a_later_paired_fence_same_task_body():
     """Regression for the fence-region bug found in code review of the
     task-header special case: an unclosed fence marker followed LATER IN THE
     SAME TASK BODY (no intervening task header) by a separate, well-formed
-    fence pair still gets mispaired under a naive forward toggle -- the
-    broken opener silently absorbs the well-formed pair's OPENING marker as
-    its own phantom close, corrupting `depends_text`/`check_text` and
-    everything in between, and misattributing which line is actually broken
-    (the well-formed pair's real closer gets blamed instead of the true
-    broken opener).
+    fence pair. A naive forward toggle would silently absorb the well-formed
+    pair's OPENING marker as the broken opener's own phantom close,
+    corrupting `depends_text`/`check_text` and everything in between, and
+    misattributing which line is actually broken (the well-formed pair's
+    real closer gets blamed instead of the true broken opener).
 
     This fixture has THREE fence markers, all inside ONE task body: a broken
     opener (never legitimately closed), then, later in the SAME body, a
     well-formed pair, then real `Depends:`/`Check:` field content after the
     well-formed pair's close.
 
-    The fix must recognize the FIRST marker as the genuinely unpaired one
-    and the second/third markers as the real pair -- see
-    `fenced_line_indexes`'s docstring for the chosen algorithm.
+    With 3 markers and genuine positional ambiguity, the fix does not guess
+    which marker is "the" broken one -- see `_pair_fence_markers`'s
+    docstring. It leaves the whole segment unfenced, which is what keeps
+    the real `Depends:`/`Check:` content from ever being swallowed: nothing
+    in this segment is treated as "inside a fence" at all, well-formed pair
+    included, so ordinary field-scanning reads the real text correctly.
     """
     text = (
         "**Schema:** planlint-v1\n\n"
@@ -408,14 +410,71 @@ def test_unpaired_fence_does_not_corrupt_a_later_paired_fence_same_task_body():
     assert task.check_text == "`pytest -q`"
     assert task.check_command == "pytest -q"
 
-    # Only the genuinely well-formed pair (the second and third markers)
-    # is a closed fence. The broken opener must not have consumed the
-    # well-formed pair's opener as its own phantom close.
+    # With genuine 3-marker ambiguity, nothing in the segment is treated as
+    # a paired fence -- not even the two markers that look like an
+    # obviously well-formed pair. This is the fail-safe trade: precision on
+    # this one ambiguous segment, for correctness everywhere else.
     lines = text.split("\n")
     fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
     assert len(fence_indexes) == 3
-    _broken_open, real_open, real_close = fence_indexes
-    assert fenced_line_indexes(lines) == set(range(real_open, real_close + 1))
+    assert fenced_line_indexes(lines) == set()
+
+
+def test_ambiguous_odd_fence_segment_does_not_swallow_later_field_text():
+    """Mirror-case regression (the shape `d808059f`'s leftover-first fix got
+    wrong): a well-formed fence pair FIRST, then a separate broken/unclosed
+    marker LATER, in the SAME task body, followed by real `Depends:`/
+    `Check:` field content.
+
+    This fixture has THREE fence markers, all inside ONE task body: a
+    well-formed pair, then, later in the SAME body, a broken trailing
+    marker that is never closed, then real `Depends:`/`Check:` content
+    between the well-formed pair's close and the broken marker.
+
+    Under leftover-first (the immediately preceding fix), the FIRST marker
+    (the well-formed pair's own opener) is set aside as the leftover, and
+    the remaining two markers -- the well-formed pair's closer and the
+    broken trailing marker -- are paired consecutively as a phantom fence.
+    That phantom fence spans exactly the real `Depends:`/`Check:` content,
+    so it gets swallowed and the resulting `depends_text`/`check_text` come
+    back empty, with no error raised anywhere.
+
+    The correct behavior: with 3 markers and genuine ambiguity, NEITHER
+    guess is taken. `fenced_line_indexes` reports no fenced lines at all
+    for this segment, so the real `Depends:`/`Check:` lines are read as
+    ordinary text and come back correct.
+    """
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Well-formed pair, then a later broken trailing marker\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "Some prose, then a genuinely well-formed fence:\n\n"
+        "```\n"                              # real open
+        "real fence content\n"
+        "```\n\n"                             # real close
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "```\n"                              # broken trailing marker, never paired
+        "this fence never closes\n"
+    )
+    doc = PlanDocument.from_text(text)
+
+    # The real Depends:/Check: fields, which sit BETWEEN the well-formed
+    # pair's close and the later broken marker, must be parsed normally --
+    # they must not have been swallowed by a phantom fence spanning from
+    # the well-formed pair's closer to the broken trailing marker.
+    task = doc.task("Task 1")
+    assert task.depends_text == "none"
+    assert task.check_text == "`pytest -q`"
+    assert task.check_command == "pytest -q"
+
+    # With genuine 3-marker ambiguity, nothing in the segment is treated as
+    # a paired fence -- not even the two markers that look like an
+    # obviously well-formed pair.
+    lines = text.split("\n")
+    fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
+    assert len(fence_indexes) == 3
+    assert fenced_line_indexes(lines) == set()
 
 
 def test_files_block_does_not_absorb_a_fenced_example_bullet():

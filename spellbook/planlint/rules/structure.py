@@ -27,19 +27,28 @@ def unmatched_backticks(task):
 
 
 def unclosed_fence_line(doc):
-    """The 1-based line of a fence with no partner, or 0.
+    """`(line, ambiguous_lines)` for the first segment with an odd fence-
+    marker count, or `(0, None)` if every segment pairs off evenly.
 
-    Delegates to `document.unclosed_fence_index`, which reads the document
-    the same way `document._scan_fences`/`fenced_line_indexes` do: fence
-    markers are grouped into per-task segments and paired consecutively,
-    except that an odd-count segment sets its FIRST marker aside as the
-    unpaired one. Without this, a genuinely broken fence followed later --
-    whether across a task header or later in the SAME task body -- by a
-    separate, well-formed pair would report the well-formed pair's CLOSING
-    marker as unclosed instead of the real defect.
+    Delegates to `document.unclosed_fence_index`. `line` is 1-based and
+    always set when a defect exists -- it is where the finding attaches.
+    `ambiguous_lines` is `None` for the trivial single-marker case (that
+    ONE line unambiguously IS the unclosed fence); for a segment with 3+
+    markers it is the 1-based line of every marker in that segment, because
+    with only marker positions as signal, which single one is "the" broken
+    marker is not knowable -- see `document._pair_fence_markers`'s
+    docstring. `run()` uses the distinction to decide whether it may accuse
+    one line or must report the ambiguity itself.
     """
-    index = unclosed_fence_index(doc.lines)
-    return index + 1 if index is not None else 0
+    info = unclosed_fence_index(doc.lines)
+    if info is None:
+        return 0, None
+    ambiguous_lines = (
+        tuple(index + 1 for index in info.markers)
+        if info.markers is not None
+        else None
+    )
+    return info.anchor + 1, ambiguous_lines
 
 
 def run(ctx):
@@ -70,8 +79,8 @@ def run(ctx):
                 )
             )
 
-    opened = unclosed_fence_line(doc)
-    if opened:
+    opened, ambiguous_lines = unclosed_fence_line(doc)
+    if opened and ambiguous_lines is None:
         findings.append(
             Finding(
                 rule="unclosed-fence",
@@ -83,6 +92,25 @@ def run(ctx):
                 line=opened,
                 evidence=(
                     f"line {opened} opens a fenced block and no line below it closes it"
+                ),
+                severity=ERROR,
+            )
+        )
+    elif opened:
+        lines_text = ", ".join(str(line) for line in ambiguous_lines)
+        findings.append(
+            Finding(
+                rule="unclosed-fence",
+                message=(
+                    "a section has an odd, ambiguous number of fence markers; "
+                    "marker position alone cannot say which one is unclosed, so "
+                    "none of them are treated as a matched pair"
+                ),
+                section=doc.section_at_line(opened),
+                line=opened,
+                evidence=(
+                    f"{len(ambiguous_lines)} fence markers in this section "
+                    f"(lines {lines_text}); cannot determine which is unclosed"
                 ),
                 severity=ERROR,
             )

@@ -82,46 +82,71 @@ def strip_markup(text):
 # Ported from nmg2-tools/planlint/document.py:206-266. See module docstring.
 
 
+@dataclasses.dataclass(frozen=True)
+class _UnpairedFence:
+    """The leftover info for one segment with an odd fence-marker count.
+
+    `anchor` is the 0-based line index a finding attaches to. `markers` is
+    `None` for the trivial single-marker case (there is nothing to
+    disambiguate -- one marker with no partner IS the defect). For a
+    genuinely ambiguous segment (3 or more markers) `markers` is the full
+    ordered tuple of that segment's marker indexes, so the caller can report
+    "N markers, cannot tell which is unclosed" instead of accusing one
+    arbitrarily chosen line. `anchor` is still set in the ambiguous case
+    (the first marker) purely so a finding has A line to point at; it is
+    not, by itself, an accusation that that marker is the broken one.
+    """
+
+    anchor: int
+    markers: tuple = None
+
+
 def _pair_fence_markers(markers):
     """Pair one segment's fence-marker line indexes into `(open, close)`
-    tuples, plus the one leftover index if the count is odd (`None` if even).
+    tuples, plus the leftover info if the count is odd (`None` if even).
 
-    Markers pair CONSECUTIVELY -- `markers[1]` closes `markers[0]`,
-    `markers[3]` closes `markers[2]`, and so on -- except that on an ODD
-    count the FIRST marker is set aside as the leftover before consecutive
-    pairing runs, rather than the last. This is the deliberate resolution of
-    an otherwise irreducible ambiguity: with only bare ``` lines as signal,
-    nothing in the text says which single marker among an odd group is "the
-    one with no partner" -- pairing consecutively from the front (leftover
-    last) and pairing consecutively from the back (leftover first) are
-    BOTH valid non-crossing matchings, and no amount of "smarter" greedy
-    pairing resolves that in general.
+    On an EVEN count, markers pair CONSECUTIVELY -- `markers[1]` closes
+    `markers[0]`, `markers[3]` closes `markers[2]`, and so on. There is
+    nothing to guess: an even count has exactly one non-crossing matching.
 
-    Leftover-first is chosen because it is what `fenced_line_indexes`'s
-    contract requires: "nothing below a broken fence is hidden from any
-    lint." A fence marker that opens and is never really closed is a
-    document defect near where it sits; a SEPARATE, well-formed fence pair
-    that happens to follow it later is unrelated content the defect must not
-    swallow. Leftover-last (the naive whole-segment toggle this replaced)
-    does the opposite: it lets the broken opener consume the well-formed
-    pair's own opening marker as a phantom close, hiding everything between
-    them -- including real `Depends:`/`Check:` field text -- and then blames
-    the well-formed pair's genuine closing marker as "the" unclosed one.
-    Leftover-first keeps the well-formed pair intact and correctly blames
-    the marker that is actually alone.
+    An ODD count is where "which marker has no partner" stops being a
+    question position alone can answer:
 
-    This does not resolve every possible odd-count arrangement (a
-    well-formed pair immediately followed by a later, truly trailing,
-    never-closed marker is the mirror case, and is not what this document
-    family's fences are expected to look like -- see the module docstring).
-    It is chosen because it is the shape the real, reported defect takes.
+    - Exactly ONE marker: zero ambiguity. It is trivially the unclosed one.
+    - THREE OR MORE markers: genuinely ambiguous. Pairing consecutively from
+      the front (the FIRST marker left over) and pairing consecutively from
+      the back (the LAST marker left over) are BOTH valid non-crossing
+      matchings, and no amount of "smarter" greedy pairing resolves that in
+      general -- bare ``` lines carry no other signal.
+
+    Two earlier fix attempts each picked one of those guesses and paid for
+    it on the shape the guess got wrong:
+
+    - Leftover-LAST (a naive whole-segment toggle): wrong when the broken
+      marker comes FIRST. It pairs the broken opener with the next real
+      opener as a phantom close, swallowing everything between them --
+      including real `Depends:`/`Check:` field text -- and blames the real
+      pair's own closing marker as "the" unclosed one.
+    - Leftover-FIRST: wrong the mirror way, when the broken marker comes
+      LAST. It pairs a real closer with the later broken marker as a
+      phantom pair, swallowing the same kind of field text in between, and
+      blames the real closer instead of the true defect.
+
+    Since guessing is wrong on some real input either way, a 3+-marker
+    segment is not guessed at all: NOTHING in it is reported as a pair (see
+    `fenced_line_indexes`), and the caller reports the ambiguity itself
+    ("N markers here, cannot tell which is unclosed") rather than accusing
+    one line. This trades fence-detection precision -- a well-formed pair
+    that happens to share a segment with an unrelated broken marker loses
+    its fence protection in this one scenario -- for correctness: no field
+    content is ever silently dropped by a wrong guess.
     """
-    if len(markers) % 2:
-        leftover, markers = markers[0], markers[1:]
-    else:
-        leftover = None
-    pairs = [(markers[i], markers[i + 1]) for i in range(0, len(markers), 2)]
-    return pairs, leftover
+    if len(markers) % 2 == 0:
+        pairs = [(markers[i], markers[i + 1]) for i in range(0, len(markers), 2)]
+        return pairs, None
+    if len(markers) == 1:
+        return [], _UnpairedFence(anchor=markers[0])
+    return [], _UnpairedFence(anchor=markers[0], markers=tuple(markers))
 
 
 def _fence_segments(lines):
@@ -150,12 +175,16 @@ def _fence_segments(lines):
 
 
 def unclosed_fence_index(lines):
-    """The 0-based index of the first fence marker with no partner, or
-    `None` if every fence marker pairs off.
+    """The `_UnpairedFence` for the first segment with an odd marker count,
+    or `None` if every segment's markers pair off evenly.
 
     Reads the document exactly like `fenced_line_indexes`/`_scan_fences`
     (same segmentation, same `_pair_fence_markers` leftover rule), so
-    `rules/structure.py` reports the same line those two treat as broken.
+    `rules/structure.py` reports on the same segment those two treat as
+    broken. The caller distinguishes the trivial case (`.markers is None`,
+    one marker, unambiguously the defect) from the genuinely ambiguous case
+    (`.markers` is the segment's full marker tuple) to decide whether it may
+    name one line as "the" defect or must report the ambiguity itself.
     """
     for _pairs, leftover in _fence_segments(lines):
         if leftover is not None:
@@ -164,25 +193,22 @@ def unclosed_fence_index(lines):
 
 
 def fenced_line_indexes(lines):
-    """The index of every line inside a CLOSED fence, both markers included.
+    """The index of every line inside a CLOSED, UNAMBIGUOUSLY-paired fence,
+    both markers included.
 
-    A fence with no partner is absent from the result on purpose. `_scan_fences`
-    reads the document the same way, so the two agree, and nothing below a
-    broken fence is hidden from any lint.
-
-    Markers are grouped into per-task segments and paired by
-    `_fence_segments`/`_pair_fence_markers`: consecutively, except that an
-    odd-count segment sets its FIRST marker aside as the unpaired one rather
-    than its last. A plain whole-segment open/close TOGGLE that always
-    leaves the LAST marker unpaired is not enough -- if an opener is never
-    really closed and a SEPARATE, well-formed fence pair follows later IN
-    THE SAME TASK BODY (no task header between them), that toggle pairs the
-    broken opener with the next fence's OPENING marker instead of
-    recognizing the opener as unpaired, which marks everything between them
-    (real field text, anything) as "inside a fence" by mistake, and leaves
-    the well-formed pair's genuine closing marker dangling as if IT were the
-    broken one. See `_pair_fence_markers`'s docstring for why leftover-first
-    is the chosen resolution.
+    Markers are grouped into per-task segments by `_fence_segments`, then
+    paired within each segment by `_pair_fence_markers`. An even-count
+    segment pairs consecutively with no ambiguity. An odd-count segment with
+    exactly one marker is dropped as the (unambiguous) unclosed one. An
+    odd-count segment with 3+ markers is genuinely ambiguous -- see
+    `_pair_fence_markers`'s docstring -- and NONE of its markers are treated
+    as paired here, even the two that look like an obviously well-formed
+    pair. That is a deliberate precision-for-safety trade: guessing which
+    marker is the real defect and pairing the rest is exactly the mistake
+    that let a broken marker's phantom pairing swallow real `Depends:`/
+    `Check:` field text in two earlier fix attempts. Leaving the whole
+    ambiguous segment unfenced costs fence-region precision in that one
+    scenario, but never silently drops field content.
 
     A pending, unclosed open is also abandoned (dropped, not paired with
     anything) the moment a `### Task N: ...` header is seen -- a fence is
@@ -433,10 +459,12 @@ class PlanDocument:
 
     def _scan_fences(self):
         """See `fenced_line_indexes`'s and `_pair_fence_markers`'s
-        docstrings for why a plain whole-segment toggle is not enough: a
-        pending, unclosed open must not be able to steal a later, unrelated
-        fence's opening marker as its own phantom close, whether that later
-        fence sits across a task header or later in the SAME task body."""
+        docstrings: an odd-count segment is never guessed at. A single
+        leftover marker is dropped as unambiguously unclosed; a 3+-marker
+        segment is genuinely ambiguous and none of its markers -- including
+        ones that look like an obviously well-formed pair -- are recorded
+        as a fence here, whether the ambiguity spans a task header or sits
+        entirely within one task body."""
         for pairs, _leftover in _fence_segments(self.lines):
             for open_at, close_at in pairs:
                 self._fences.append({"start": open_at, "end": close_at})
