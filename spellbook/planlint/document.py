@@ -489,8 +489,8 @@ class PlanDocument:
 
     def _resolve_plan_schema(self):
         """The plan-level `Schema:` if present before the first task header,
-        else the FIRST task's own `Schema:` value. See design §3.1.2's
-        judgment call: either reading opts a plan in."""
+        else the first task with a non-empty `Schema:` value. See design
+        §3.1.2's judgment call: either reading opts a plan in."""
         first_task_line = self.tasks[0].line - 1 if self.tasks else len(self.lines)
         for index in range(first_task_line):
             if self._in_fence(index):

@@ -223,6 +223,26 @@ def test_declares_schema_reads_task_level_schema_when_no_plan_level_value():
     assert doc.declares_planlint_schema is True
 
 
+def test_resolved_schema_skips_to_first_task_with_a_non_empty_schema_value():
+    """When no plan-level Schema: exists, _resolve_plan_schema falls back to
+    the FIRST TASK WITH A NON-EMPTY Schema: value, not literally the first
+    task in the list. Task 1 here declares no Schema:, so doc.schema_text
+    must come from Task 2."""
+    text = (
+        "### Task 1: X\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "### Task 2: Y\n\n"
+        "**Files:**\n- Create: `y.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "**Schema:** planlint-v1\n"
+    )
+    doc = PlanDocument.from_text(text)
+    assert doc.schema_text == "planlint-v1"
+
+
 def test_from_path_raises_filenotfounderror_on_missing_file(tmp_path):
     with pytest.raises(FileNotFoundError):
         PlanDocument.from_path(tmp_path / "does_not_exist.md")
@@ -289,7 +309,13 @@ def test_files_entry_owner_annotation_is_parsed():
 def test_files_block_does_not_absorb_a_fenced_example_bullet():
     """A fenced code block later in the same task body may illustrate the
     Files: syntax for readers; a line inside it that happens to match
-    FILES_ENTRY must not be picked up as a real bullet."""
+    FILES_ENTRY must not be picked up as a real bullet.
+
+    A fence delimiter line is neither blank nor a FILES_ENTRY bullet, so the
+    block-collection loop halts there incidentally -- this is NOT fence-aware
+    parsing, just a side effect of the two-condition halt rule. If
+    FILES_ENTRY's pattern ever loosened to match a fence marker, this would
+    break silently."""
     text = (
         "**Schema:** planlint-v1\n\n"
         "### Task 1: X\n\n"
