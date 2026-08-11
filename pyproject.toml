@@ -21,7 +21,7 @@ gemini = []
 daemon = [
     "fastmcp>=3.4.5",
     "fastapi>=0.141.1",
-    "uvicorn>=0.51.0",
+    "uvicorn>=0.52.1",
     "httpx>=0.28.1",
 ]
 dev = [
