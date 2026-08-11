@@ -42,16 +42,22 @@ def test_lint_result_report_is_clean_message_when_no_findings():
 
 def test_lint_result_report_orders_by_severity_rule_task_line():
     findings = [
-        Finding(rule="z", severity=WARNING, task="Task 2", line=5, message="m2"),
-        Finding(rule="a", severity=ERROR, task="Task 1", line=1, message="m1"),
+        Finding(rule="b", severity=ERROR, task="Task 1", line=1, message="m-b1"),
+        Finding(rule="a", severity=ERROR, task="Task 2", line=1, message="m-a2"),
+        Finding(rule="a", severity=ERROR, task="Task 1", line=5, message="m-a1-5"),
+        Finding(rule="a", severity=ERROR, task="Task 1", line=1, message="m-a1-1"),
     ]
-    result = LintResult(name="r", findings=findings, examined=2)
+    result = LintResult(name="r", findings=findings, examined=4)
     expected = (
-        "r: 2 finding(s) (2 inputs examined)\n"
+        "r: 4 finding(s) (4 inputs examined)\n"
         "  [ERROR] a  Task 1  line 1\n"
-        "      m1\n"
-        "  [WARNING] z  Task 2  line 5\n"
-        "      m2\n"
+        "      m-a1-1\n"
+        "  [ERROR] a  Task 1  line 5\n"
+        "      m-a1-5\n"
+        "  [ERROR] a  Task 2  line 1\n"
+        "      m-a2\n"
+        "  [ERROR] b  Task 1  line 1\n"
+        "      m-b1\n"
     )
     assert result.report() == expected
 
