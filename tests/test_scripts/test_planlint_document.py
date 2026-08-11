@@ -544,7 +544,7 @@ def test_ambiguous_segment_still_protects_a_well_formed_pairs_illustrative_conte
 
 
 def test_broken_first_marker_does_not_leak_a_well_formed_pairs_content():
-    """The exact leak shape iterations 4 and 5 could not close: the STRAY
+    """The exact leak shape iterations 3 and 4 could not close: the STRAY
     marker comes FIRST in the segment, then a well-formed pair whose
     fenced content includes an illustrative field-like line.
 
