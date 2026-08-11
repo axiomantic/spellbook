@@ -1139,3 +1139,80 @@ def test_shared_path_without_owner_is_absent_on_the_clean_fixture():
 
     findings = _findings_for(ownership, "clean_plan.md")
     assert [f for f in findings if f.rule == "shared-path-without-owner"] == []
+
+
+# ------------------------------------------------------------------ schema
+
+def test_schema_conflict_fires_and_plan_is_still_linted():
+    """The plan-level `Schema:` (line 1, `planlint-v1`) and Task 2's own
+    `Schema:` (line 21, `legacy`) disagree. Full `Finding` equality proves the
+    reported owner is the FIRST value encountered (the plan header, so
+    `task=""`), `.line` is that value's own line, and `.evidence` lists both
+    disagreeing values with their owners.
+
+    The plan IS linted despite the conflict — asserted as WORK DONE, not as
+    a type. A rule that returned an empty list without looking at anything
+    would satisfy `isinstance(..., list)`; only `examined` proves the two
+    task blocks were actually read, and only an empty `skipped_reason`
+    proves the result is a decision rather than an abstention."""
+    from spellbook.planlint.rules import schema, structure
+
+    findings = _findings_for(schema, "neg_schema_conflict.md")
+    hits = [f for f in findings if f.rule == "schema-conflict"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="schema-conflict",
+        message=(
+            "the plan-level `Schema:` and a task-level `Schema:` "
+            "disagree, or two tasks disagree"
+        ),
+        task="",
+        section="Task 1: A",
+        line=1,
+        evidence="<plan header>: planlint-v1, Task 2: legacy",
+        severity=ERROR,
+    )
+
+    structure_result = structure.run(_ctx("neg_schema_conflict.md"))
+    assert structure_result.examined == 2      # Task 1 and Task 2 both read
+    assert structure_result.skipped_reason == ""
+    assert structure_result.findings == []     # and it decided them clean
+
+
+def test_schema_conflict_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import schema
+
+    findings = _findings_for(schema, "clean_plan.md")
+    assert [f for f in findings if f.rule == "schema-conflict"] == []
+
+
+def test_schema_unknown_version_names_the_bad_value():
+    """The plan-level `Schema:` on line 1 declares `planlint-v2`, which is
+    neither `planlint-v1` nor `legacy`. Full `Finding` equality proves the
+    reported owner is the plan header (`task=""`), `.line` is 1, and
+    `.evidence` names the exact unrecognized value."""
+    from spellbook.planlint.rules import schema
+
+    findings = _findings_for(schema, "neg_schema_unknown_version.md")
+    hits = [f for f in findings if f.rule == "schema-unknown-version"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="schema-unknown-version",
+        message=(
+            "a `Schema:` value is neither `planlint-v1` nor `legacy`; "
+            "a plan declaring an unrecognized schema must say so "
+            "rather than be linted under the wrong rules"
+        ),
+        task="",
+        section="Task 1: A",
+        line=1,
+        evidence="Schema: planlint-v2",
+        severity=ERROR,
+    )
+
+
+def test_schema_unknown_version_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import schema
+
+    findings = _findings_for(schema, "clean_plan.md")
+    assert [f for f in findings if f.rule == "schema-unknown-version"] == []

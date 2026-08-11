@@ -14,7 +14,7 @@ from pathlib import Path
 
 from spellbook.planlint.document import PlanDocument
 from spellbook.planlint.finding import LintResult
-from spellbook.planlint.rules import checks, consistency, depends, files, ownership, structure
+from spellbook.planlint.rules import checks, consistency, depends, files, ownership, schema, structure
 
 
 @dataclasses.dataclass(frozen=True)
@@ -121,6 +121,12 @@ RULES = (
         name="ownership",
         run=ownership.run,
         emits=ownership.EMITS,
+        phases=frozenset({"authoring", "review", "execution"}),
+    ),
+    Rule(
+        name="schema",
+        run=schema.run,
+        emits=schema.EMITS,
         phases=frozenset({"authoring", "review", "execution"}),
     ),
 )
