@@ -288,3 +288,127 @@ def test_depends_prose_is_absent_on_the_clean_fixture():
 
     findings = _findings_for(depends, "clean_plan.md")
     assert [f for f in findings if f.rule == "depends-prose"] == []
+
+
+# ---------------------------------------------------------------- checks
+
+def test_check_empty_fires_when_check_field_is_blank():
+    from spellbook.planlint.rules import checks
+
+    findings = _findings_for(checks, "neg_check_empty.md")
+    hits = [f for f in findings if f.rule == "check-empty"]
+    assert len(hits) == 1
+    # fixture line 10: the `**Check:**` label carries no value at all. Full
+    # Finding equality -- see the structure-rule tests above for why a
+    # membership check alone leaves a wrong `task=`/`section=`/`line=` value
+    # invisible.
+    assert hits[0] == Finding(
+        rule="check-empty",
+        message=(
+            "the `Check:` field is absent or empty; a task with no proving "
+            "command has no definition of done"
+        ),
+        task="Task 1",
+        section="Task 1: Empty check",
+        line=10,
+        evidence="",
+        severity=ERROR,
+    )
+
+
+def test_check_empty_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import checks
+
+    findings = _findings_for(checks, "clean_plan.md")
+    assert [f for f in findings if f.rule == "check-empty"] == []
+
+
+def test_check_not_a_command_fires_and_check_command_is_empty_string():
+    from spellbook.planlint.rules import checks
+
+    findings = _findings_for(checks, "neg_check_not_a_command.md")
+    hits = [f for f in findings if f.rule == "check-not-a-command"]
+    assert len(hits) == 1
+    # fixture line 10: the `Check:` value has one code span but prose text
+    # surrounds it, so the span does not cover the whole value.
+    assert hits[0] == Finding(
+        rule="check-not-a-command",
+        message=(
+            "the `Check:` value is not EXACTLY one inline code span "
+            "covering the whole value"
+        ),
+        task="Task 1",
+        section="Task 1: Prose check",
+        line=10,
+        evidence="Check: run `pytest -q` after the migration",
+        severity=ERROR,
+    )
+    doc = PlanDocument.from_path(FIXTURES / "neg_check_not_a_command.md")
+    assert doc.task("Task 1").check_command == ""
+
+
+def test_check_not_a_command_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import checks
+
+    findings = _findings_for(checks, "clean_plan.md")
+    assert [f for f in findings if f.rule == "check-not-a-command"] == []
+
+
+def test_check_placeholder_fires_on_unsubstituted_template_text():
+    from spellbook.planlint.rules import checks
+
+    findings = _findings_for(checks, "neg_check_placeholder.md")
+    hits = [f for f in findings if f.rule == "check-placeholder"]
+    assert len(hits) == 1
+    # fixture line 10: the command still carries `exact/path/` and
+    # `test_name`, both unsubstituted template placeholders.
+    assert hits[0] == Finding(
+        rule="check-placeholder",
+        message=(
+            "the `Check:` command still carries template placeholder text, "
+            "so the task has no command that can prove its work"
+        ),
+        task="Task 1",
+        section="Task 1: Unfilled template",
+        line=10,
+        evidence="Check: `pytest tests/exact/path/to/test.py::test_name -v`",
+        severity=ERROR,
+    )
+
+
+def test_check_placeholder_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import checks
+
+    findings = _findings_for(checks, "clean_plan.md")
+    assert [f for f in findings if f.rule == "check-placeholder"] == []
+
+
+def test_check_not_runnable_fires_as_a_warning_on_a_prose_opener():
+    from spellbook.planlint.finding import WARNING
+    from spellbook.planlint.rules import checks
+
+    findings = _findings_for(checks, "neg_check_not_runnable.md")
+    hits = [f for f in findings if f.rule == "check-not-runnable"]
+    assert len(hits) == 1
+    # fixture line 10: the command opens with "manually", a closed-list
+    # prose opener, so this fires as a WARNING (a heuristic), not an ERROR.
+    assert hits[0] == Finding(
+        rule="check-not-runnable",
+        message=(
+            "the `Check:` command opens with a word from a closed "
+            "prose-opener list and is likely a description, not a "
+            "runnable command"
+        ),
+        task="Task 1",
+        section="Task 1: Prose disguised as a command",
+        line=10,
+        evidence="Check: `manually confirm the daemon restarts`",
+        severity=WARNING,
+    )
+
+
+def test_check_not_runnable_is_absent_on_the_clean_fixture():
+    from spellbook.planlint.rules import checks
+
+    findings = _findings_for(checks, "clean_plan.md")
+    assert [f for f in findings if f.rule == "check-not-runnable"] == []
