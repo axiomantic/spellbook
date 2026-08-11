@@ -66,7 +66,7 @@ SCHEMA_LEGACY = "legacy"
 # instead would send every future version down the "legacy plan" path, where no
 # rule runs — which would make the forward-compatibility alarm unreachable and
 # hand an unrecognized schema the same silent pass a legacy plan gets.
-SCHEMA_FAMILY = re.compile(r"^planlint-[a-z0-9]+$")
+SCHEMA_FAMILY = re.compile(r"^planlint-[a-z0-9][a-z0-9.-]*$", re.IGNORECASE)
 
 NONE_WORDS = frozenset({"none", "nothing", "n/a", "na", "-", "—"})
 

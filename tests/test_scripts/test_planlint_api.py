@@ -10,6 +10,7 @@ import tripwire
 
 from spellbook.planlint import api, registry
 from spellbook.planlint.document import PlanDocument
+from spellbook.planlint.finding import INFO, WARNING
 
 FIXTURES = Path(__file__).parent / "fixtures" / "planlint"
 
@@ -145,7 +146,9 @@ def test_lint_text_on_a_v1_plan_with_zero_tasks_reports_no_input_error():
     assert report.linted is True
     assert report.failed is True
     no_input_hits = [f for f in report.findings if f.rule == "no-input"]
-    assert len(no_input_hits) >= 1
+    # six of seven rules emit no-input on a zero-task plan; `files` has
+    # nothing to say about a task-free plan (no Files: bullets to examine).
+    assert len(no_input_hits) == 6
 
 
 def test_lint_path_on_a_missing_file_returns_unlinted_not_an_exception(tmp_path):
@@ -163,8 +166,6 @@ def test_lint_path_on_a_real_file(tmp_path):
 
 
 def test_lint_for_authoring_turns_on_create_path_exists_as_warning(tmp_path):
-    from spellbook.planlint.finding import WARNING
-
     (tmp_path / "spellbook").mkdir()
     (tmp_path / "spellbook" / "sample").mkdir()
     (tmp_path / "spellbook" / "sample" / "first.py").write_text("# x\n", encoding="utf-8")
@@ -182,8 +183,6 @@ def test_lint_for_authoring_turns_on_create_path_exists_as_warning(tmp_path):
 
 
 def test_lint_for_review_downgrades_create_path_exists_to_info(tmp_path):
-    from spellbook.planlint.finding import INFO
-
     (tmp_path / "spellbook").mkdir()
     (tmp_path / "spellbook" / "sample").mkdir()
     (tmp_path / "spellbook" / "sample" / "first.py").write_text("# x\n", encoding="utf-8")
@@ -272,3 +271,162 @@ def test_summary_line_is_one_line():
     text = (FIXTURES / "clean_plan.md").read_text(encoding="utf-8")
     report = api.lint_text(text)
     assert "\n" not in report.summary_line()
+
+
+# --------------------------------------------------------- H1: no-rules-ran
+
+
+def test_lint_text_with_a_phase_matching_no_rule_reports_no_rules_ran():
+    text = (FIXTURES / "clean_plan.md").read_text(encoding="utf-8")
+    report = api.lint_text(text, phase=None)
+    assert report.linted is True
+    assert report.failed is True
+    assert len(report.results) == 1
+    assert report.results[0].name == "no-rules-ran"
+    hits = [f for f in report.findings if f.rule == "no-rules-ran"]
+    assert len(hits) == 1
+    assert hits[0] == api.NO_RULES_RAN
+    assert hits[0].severity == api.ERROR
+    assert hits[0].message == "phase matched zero registered rules; nothing was checked"
+
+
+def test_lint_path_with_a_phase_matching_no_rule_reports_no_rules_ran(tmp_path):
+    plan = tmp_path / "clean.md"
+    plan.write_text((FIXTURES / "clean_plan.md").read_text(encoding="utf-8"), encoding="utf-8")
+    report = api.lint_path(plan, phase=None)
+    assert report.linted is True
+    assert report.failed is True
+    assert any(f.rule == "no-rules-ran" for f in report.findings)
+
+
+# ------------------------------------------------- H2: gate/parser agreement
+
+
+def test_gate_and_lint_text_agree_on_crlf_line_endings():
+    text = (
+        "**Schema:** planlint-v1\r\n\r\n"
+        "### Task 1: A\r\n\r\n**Files:**\r\n- Create: `a.py`\r\n\r\n"
+        "**Depends:** none\r\n\r\n**Check:** `pytest a`\r\n"
+    )
+    assert api.declares_schema(text) is True
+    report = api.lint_text(text)
+    assert report.linted is True
+    assert report.skip_reason == ""
+
+
+def test_gate_and_lint_text_agree_on_bare_cr_line_endings():
+    text = (
+        "**Schema:** planlint-v1\r\r"
+        "### Task 1: A\r\r**Files:**\r- Create: `a.py`\r\r"
+        "**Depends:** none\r\r**Check:** `pytest a`\r"
+    )
+    assert api.declares_schema(text) is True
+    report = api.lint_text(text)
+    assert report.linted is True
+    assert report.skip_reason == ""
+
+
+def test_skip_reason_truncates_an_overly_long_schema_value():
+    huge_value = "x" * 500
+    text = f"**Schema:** {huge_value}\n\n### Task 1: X\n"
+    report = api.lint_text(text)
+    assert report.linted is False
+    assert huge_value not in report.skip_reason
+    assert "..." in report.skip_reason
+    assert len(report.skip_reason) < 150
+
+
+# --------------------------------------------------------- M1: summary_line
+
+
+def test_summary_line_reports_skipped_rules_when_a_rule_is_undecided():
+    text = (FIXTURES / "clean_plan.md").read_text(encoding="utf-8")
+    report = api.lint_text(text, repo_root=None)
+    assert report.failed is False
+    line = report.summary_line()
+    assert "6 of 7 rule(s) decided, 1 skipped, 0 findings" in line
+
+
+# --------------------------------------------------- M2: decided_claims crash
+
+
+def test_decided_claims_reports_a_crashed_rule_as_undecided_with_a_reason():
+    def crashing(ctx):
+        raise KeyError("boom")
+
+    crash_rule = registry.Rule(
+        name="crasher", run=crashing, emits=frozenset(), phases=frozenset(api.Phase)
+    )
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((crash_rule,))
+    with tripwire:
+        report = api.lint_text(
+            "**Schema:** planlint-v1\n\n### Task 1: X\n\n**Files:**\n- Create: `x.py`\n"
+        )
+    rules_mock.assert_call(args=(), kwargs={})
+    claims = api.decided_claims(report)
+    assert len(claims) == 1
+    crasher_claim = claims[0]
+    assert crasher_claim.rule == "crasher"
+    assert crasher_claim.decided is False
+    assert crasher_claim.reason == "crashed: KeyError: 'boom'"
+
+
+# --------------------------------------------------------------------- M3
+
+
+def test_report_on_an_unlinted_plan():
+    report = api.lint_text("### Task 1: X\n\n**Files:**\n- Create: `x.py`\n")
+    assert report.report() == f"{report.plan}: not linted ({report.skip_reason})\n"
+
+
+def test_report_with_findings_includes_per_rule_report_text():
+    report = api.lint_text("**Schema:** planlint-v1\n\nNo tasks here at all.\n")
+    text = report.report()
+    assert "no-input" in text or "finding" in text.lower()
+    assert "structure:" in text
+
+
+def test_report_with_crashes_includes_crash_traceback():
+    def crashing(ctx):
+        raise KeyError("boom")
+
+    crash_rule = registry.Rule(
+        name="crasher", run=crashing, emits=frozenset(), phases=frozenset(api.Phase)
+    )
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((crash_rule,))
+    with tripwire:
+        report = api.lint_text(
+            "**Schema:** planlint-v1\n\n### Task 1: X\n\n**Files:**\n- Create: `x.py`\n"
+        )
+    rules_mock.assert_call(args=(), kwargs={})
+    text = report.report()
+    assert "crasher: CRASHED (KeyError: 'boom')" in text
+    assert "Traceback" in text
+
+
+def test_errors_property_returns_only_error_severity_findings():
+    report = api.lint_text("**Schema:** planlint-v1\n\nNo tasks here at all.\n")
+    assert report.errors
+    assert all(f.severity == api.ERROR for f in report.errors)
+    assert report.errors == tuple(f for f in report.findings if f.severity == api.ERROR)
+
+
+def test_lint_path_on_a_non_utf8_file_returns_unlinted_not_an_exception(tmp_path):
+    plan = tmp_path / "bad.md"
+    plan.write_bytes(b"\xff\xfe not utf-8 at all")
+    report = api.lint_path(plan)
+    assert report.linted is False
+    assert report.skip_reason == "not UTF-8"
+
+
+def test_decided_claim_finding_count_for_a_rule_that_actually_fires():
+    report = api.lint_text("**Schema:** planlint-v1\n\nNo tasks here at all.\n")
+    claims = api.decided_claims(report)
+    structure_claim = next(c for c in claims if c.rule == "structure")
+    assert structure_claim.decided is True
+    assert structure_claim.finding_count >= 1
+    assert structure_claim.finding_count == len(
+        next(r for r in report.results if r.name == "structure").findings
+    )

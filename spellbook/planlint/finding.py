@@ -78,3 +78,10 @@ def guard_no_input(name, findings, examined, label, noun):
             )
         ]
     return LintResult(name=name, findings=findings, examined=examined, examined_label=label)
+
+
+NO_RULES_RAN = Finding(
+    rule="no-rules-ran",
+    message="phase matched zero registered rules; nothing was checked",
+    severity=ERROR,
+)

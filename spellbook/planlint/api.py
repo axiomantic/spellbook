@@ -21,7 +21,7 @@ from spellbook.planlint.document import (
     PlanDocument,
     fenced_line_indexes,
 )
-from spellbook.planlint.finding import ERROR
+from spellbook.planlint.finding import ERROR, NO_RULES_RAN, LintResult
 from spellbook.planlint.registry import Phase  # re-exported for callers
 
 _SCHEMA_LINE = re.compile(r"^\s*(?:\*\*)?Schema\s*:(?:\*\*)?\s?(?P<value>.*)$")
@@ -44,8 +44,8 @@ class PlanLintReport:
     plan: str
     linted: bool
     skip_reason: str
-    results: tuple
-    internal_errors: tuple
+    results: "tuple[registry.LintResult, ...]"
+    internal_errors: "tuple[registry.RuleCrash, ...]"
 
     @property
     def findings(self):
@@ -86,6 +86,14 @@ class PlanLintReport:
             # hardcoded count would state a wrong fact about the run that
             # produced it — the exact class of defect this linter exists to
             # catch, in the linter's own summary line.
+            claims = decided_claims(self)
+            skipped = [c for c in claims if not c.decided]
+            if skipped:
+                decided_count = len(claims) - len(skipped)
+                return (
+                    f"{self.plan}: clean ({decided_count} of {len(claims)} rule(s) "
+                    f"decided, {len(skipped)} skipped, 0 findings)"
+                )
             return f"{self.plan}: clean ({len(self.results)} rule(s), 0 findings)"
         return (
             f"{self.plan}: {len(self.findings)} finding(s), "
@@ -112,7 +120,7 @@ def _first_schema_value(text):
     Cost: two linear passes over the split lines. No PlanDocument is built, no
     task block is parsed, no rule is imported.
     """
-    lines = text.split("\n")
+    lines = text.splitlines()
     fenced = fenced_line_indexes(lines)
     for index, line in enumerate(lines):
         if index in fenced:
@@ -156,7 +164,8 @@ def _skip_reason_for(value):
         return "no Schema: field (legacy plan)"
     if value == SCHEMA_LEGACY:
         return "Schema: legacy (explicit opt-out)"
-    return f"Schema: {value} (not a planlint schema)"
+    displayed = value if len(value) <= 50 else f"{value[:50]}..."
+    return f"Schema: {displayed} (not a planlint schema)"
 
 
 def lint_text(text, *, name="<text>", phase=Phase.REVIEW, repo_root=None):
@@ -175,6 +184,20 @@ def lint_text(text, *, name="<text>", phase=Phase.REVIEW, repo_root=None):
     doc = PlanDocument.from_text(text, name=name)
     ctx = registry.RuleContext(doc=doc, phase=phase, repo_root=repo_root)
     results, crashes = registry.run_rules(ctx)
+    if not results and not crashes:
+        # Every rule was dispatch-filtered out (an unrecognized phase, or
+        # `phase=None`, matches no rule's `frozenset(Phase)`). Nothing ran,
+        # so a clean report here would be a silent PASS on zero evidence —
+        # the exact failure mode `guard_no_input` exists to prevent for a
+        # single rule's own input, applied at the whole-run level.
+        results = (
+            LintResult(
+                name="no-rules-ran",
+                findings=[NO_RULES_RAN],
+                examined=0,
+                examined_label="rules",
+            ),
+        )
     return PlanLintReport(
         plan=name, linted=True, skip_reason="", results=results, internal_errors=crashes
     )
@@ -261,4 +284,13 @@ def decided_claims(report):
                     finding_count=len(result.findings),
                 )
             )
+    for crash in report.internal_errors:
+        claims.append(
+            DecidedClaim(
+                rule=crash.rule,
+                decided=False,
+                finding_count=0,
+                reason=f"crashed: {crash.exc_type}: {crash.message}",
+            )
+        )
     return tuple(claims)

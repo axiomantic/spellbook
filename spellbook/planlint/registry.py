@@ -1,10 +1,14 @@
-"""The rule table and the per-rule error barrier.
+"""The dispatch vocabulary (`Phase`), the rule table (`RULES`), and the
+per-rule error barrier (`run_rules`).
 
-RULES starts empty here and is grown by one row per rule module — Tasks 5-11
-each append their own Rule(...) entry via a Modify to this file. Populating
-the table incrementally (rather than importing all seven rule modules up
-front, which do not exist yet at this point in the build order) keeps this
-task's own Check line runnable in isolation.
+`Phase` lives here rather than in `api.py` because it names the values
+`RuleContext.phase` and `Rule.phases` are compared against — putting it in
+`api.py` would make `registry` import `api` and `api` import `registry`.
+`api.py` re-exports it for caller convenience.
+
+`RULES` carries one row per rule module in `spellbook/planlint/rules/`. A row
+is what makes a rule reachable in production: a module with no row here never
+runs, however well its own tests pass.
 """
 
 import dataclasses
@@ -47,7 +51,7 @@ class Rule:
     name: str
     run: Callable[["RuleContext"], LintResult]
     emits: frozenset[str]  # every rule ID this module may put in a Finding
-    phases: frozenset     # the Phase values in which it runs
+    phases: frozenset[Phase]  # the phases in which this rule runs
 
 
 @dataclasses.dataclass(frozen=True)
@@ -80,7 +84,7 @@ class RuleContext:
     """
 
     doc: PlanDocument
-    phase: object           # Phase, or None (see docstring)
+    phase: "Phase | None"    # Phase, or None (see docstring)
     repo_root: "Path | None"
 
 
@@ -169,7 +173,7 @@ def run_rules(ctx):
             continue
         try:
             results.append(rule.run(ctx))
-        except Exception as exc:
+        except Exception as exc:  # noqa: BLE001 — deliberate barrier, see docstring above
             crashes.append(
                 RuleCrash(
                     rule=rule.name,
