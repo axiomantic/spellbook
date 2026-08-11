@@ -6,10 +6,16 @@ propagation through the error barrier (design §5.2/§5.3, §9.10).
 from pathlib import Path
 
 import pytest
+import tripwire
 
 from spellbook.planlint import api, registry
+from spellbook.planlint.document import PlanDocument
 
 FIXTURES = Path(__file__).parent / "fixtures" / "planlint"
+
+RULE_NAMES = frozenset(
+    {"structure", "depends", "checks", "consistency", "files", "ownership", "schema"}
+)
 
 
 def test_declares_schema_true_for_planlint_v1_text():
@@ -53,57 +59,53 @@ def test_declares_schema_ignores_a_schema_line_inside_a_fenced_block():
     assert api.lint_text(text).linted is False
 
 
-def test_declares_schema_builds_no_document(monkeypatch):
+def test_declares_schema_builds_no_document():
     """A pure line-scan; PlanDocument.from_text must not be called for a
-    legacy plan. Verified by monkeypatching from_text to raise."""
-    import spellbook.planlint.document as document_module
+    legacy plan. Verified via tripwire (AGENTS.md: tripwire is the only
+    acceptable mocking framework; monkeypatch.setattr is restricted to
+    environment/cwd/sys.path only). `.required(False)` lets the mock stay
+    unused without tripping tripwire's unused-mock guard — the whole point
+    of this test is that the mock is NEVER called; if it fires at all, the
+    configured `.raises()` turns that into a test failure."""
+    from_text_mock = tripwire.mock.object(PlanDocument, "from_text")
+    from_text_mock.__call__.required(False).raises(AssertionError("should not be called"))
+    with tripwire:
+        assert api.declares_schema("no schema field here\n") is False
 
-    monkeypatch.setattr(
-        document_module.PlanDocument,
-        "from_text",
-        staticmethod(
-            lambda *a, **k: (_ for _ in ()).throw(AssertionError("should not be called"))
-        ),
-    )
-    assert api.declares_schema("no schema field here\n") is False
 
-
-def test_lint_text_builds_no_document_for_a_legacy_plan(monkeypatch):
+def test_lint_text_builds_no_document_for_a_legacy_plan():
     """The cost contract of design §6.1/§8.1: on a False gate there is ZERO
     further work — including no document built merely to phrase the skip
     reason. This is the assertion that keeps the 75 in-flight legacy plans
     free, and it is the one a later 'just probe the doc for a nicer message'
     refactor would break."""
-    import spellbook.planlint.document as document_module
-
-    monkeypatch.setattr(
-        document_module.PlanDocument,
-        "from_text",
-        staticmethod(
-            lambda *a, **k: (_ for _ in ()).throw(AssertionError("should not be called"))
-        ),
-    )
-    report = api.lint_text("### Task 1: X\n\n**Files:**\n- Create: `x.py`\n")
+    from_text_mock = tripwire.mock.object(PlanDocument, "from_text")
+    from_text_mock.__call__.required(False).raises(AssertionError("should not be called"))
+    with tripwire:
+        report = api.lint_text("### Task 1: X\n\n**Files:**\n- Create: `x.py`\n")
     assert report.linted is False
-    assert "legacy" in report.skip_reason
+    assert report.skip_reason == "no Schema: field (legacy plan)"
 
 
 def test_lint_text_on_a_legacy_plan_returns_unlinted_report():
     report = api.lint_text("### Task 1: X\n\n**Files:**\n- Create: `x.py`\n")
     assert report.linted is False
-    assert "legacy" in report.skip_reason
+    assert report.skip_reason == "no Schema: field (legacy plan)"
+    assert report.results == ()
+    assert report.internal_errors == ()
+    assert report.findings == ()
 
 
 def test_lint_text_on_an_opted_out_plan_returns_unlinted_report():
     report = api.lint_text("**Schema:** legacy\n\n### Task 1: X\n")
     assert report.linted is False
-    assert "opt-out" in report.skip_reason
+    assert report.skip_reason == "Schema: legacy (explicit opt-out)"
 
 
 def test_lint_text_on_a_value_outside_the_planlint_family_returns_unlinted_report():
     report = api.lint_text("**Schema:** some-other-tool-v3\n\n### Task 1: X\n")
     assert report.linted is False
-    assert "not a planlint schema" in report.skip_reason
+    assert report.skip_reason == "Schema: some-other-tool-v3 (not a planlint schema)"
 
 
 def test_an_unknown_planlint_version_is_linted_and_fires_schema_unknown_version():
@@ -135,13 +137,15 @@ def test_lint_text_on_a_schema_v1_plan_runs_all_rules():
     assert report.linted is True
     assert report.skip_reason == ""
     assert len(report.results) == 7  # seven rule modules
+    assert {r.name for r in report.results} == RULE_NAMES
 
 
 def test_lint_text_on_a_v1_plan_with_zero_tasks_reports_no_input_error():
     report = api.lint_text("**Schema:** planlint-v1\n\nNo tasks here at all.\n")
     assert report.linted is True
     assert report.failed is True
-    assert any(f.rule == "no-input" for f in report.findings)
+    no_input_hits = [f for f in report.findings if f.rule == "no-input"]
+    assert len(no_input_hits) >= 1
 
 
 def test_lint_path_on_a_missing_file_returns_unlinted_not_an_exception(tmp_path):
@@ -155,6 +159,7 @@ def test_lint_path_on_a_real_file(tmp_path):
     plan.write_text((FIXTURES / "clean_plan.md").read_text(encoding="utf-8"), encoding="utf-8")
     report = api.lint_path(plan)
     assert report.linted is True
+    assert report.plan == str(plan)
 
 
 def test_lint_for_authoring_turns_on_create_path_exists_as_warning(tmp_path):
@@ -169,6 +174,11 @@ def test_lint_for_authoring_turns_on_create_path_exists_as_warning(tmp_path):
     hits = [f for f in report.findings if f.rule == "create-path-exists"]
     assert len(hits) == 1
     assert hits[0].severity == WARNING
+    assert hits[0].task == "Task 1"
+    assert (
+        hits[0].message
+        == "a `Create:` path already exists; this is almost always a mislabeled `Modify:`"
+    )
 
 
 def test_lint_for_review_downgrades_create_path_exists_to_info(tmp_path):
@@ -202,30 +212,40 @@ def test_lint_on_write_runs_with_create_path_exists_off(tmp_path):
     assert [f for f in report.findings if f.rule == "create-path-exists"] == []
 
 
-def test_plan_lint_report_failed_is_true_on_a_crash_even_with_no_findings(monkeypatch):
+def test_plan_lint_report_failed_is_true_on_a_crash_even_with_no_findings():
     def crashing(ctx):
         raise RuntimeError("synthetic crash")
 
     crash_rule = registry.Rule(
         name="crasher", run=crashing, emits=frozenset(), phases=frozenset(api.Phase)
     )
-    monkeypatch.setattr(registry, "RULES", (crash_rule,))
-    report = api.lint_text("**Schema:** planlint-v1\n\n### Task 1: X\n\n**Files:**\n- Create: `x.py`\n")
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((crash_rule,))
+    with tripwire:
+        report = api.lint_text(
+            "**Schema:** planlint-v1\n\n### Task 1: X\n\n**Files:**\n- Create: `x.py`\n"
+        )
+    rules_mock.assert_call(args=(), kwargs={})
     assert report.findings == ()
     assert report.failed is True
     assert len(report.internal_errors) == 1
+    assert report.internal_errors[0].rule == "crasher"
+    assert report.internal_errors[0].exc_type == "RuntimeError"
+    assert report.internal_errors[0].message == "synthetic crash"
 
 
-def test_barrier_propagates_keyboardinterrupt(monkeypatch):
+def test_barrier_propagates_keyboardinterrupt():
     def interrupting(ctx):
         raise KeyboardInterrupt()
 
     dummy = registry.Rule(
         name="dummy", run=interrupting, emits=frozenset(), phases=frozenset(api.Phase)
     )
-    monkeypatch.setattr(registry, "RULES", (dummy,))
-    with pytest.raises(KeyboardInterrupt):
+    rules_mock = tripwire.mock("spellbook.planlint.registry:_rules")
+    rules_mock.returns((dummy,))
+    with tripwire, pytest.raises(KeyboardInterrupt):
         api.lint_text("**Schema:** planlint-v1\n\n### Task 1: X\n\n**Files:**\n- Create: `x.py`\n")
+    rules_mock.assert_call(args=(), kwargs={})
 
 
 def test_decided_claims_reports_ran_rules_as_decided():
@@ -234,15 +254,18 @@ def test_decided_claims_reports_ran_rules_as_decided():
     claims = api.decided_claims(report)
     assert len(claims) == 7
     names = {c.rule for c in claims}
-    assert "structure" in names
+    assert names == RULE_NAMES
+    assert all(c.decided is True for c in claims if c.rule != "files")
 
 
-def test_decided_claims_reports_skipped_rule_as_undecided(tmp_path):
+def test_decided_claims_reports_skipped_rule_as_undecided():
     text = (FIXTURES / "clean_plan.md").read_text(encoding="utf-8")
     report = api.lint_text(text, repo_root=None)
     claims = api.decided_claims(report)
     files_claim = next(c for c in claims if c.rule == "files")
     assert files_claim.decided is False
+    assert files_claim.finding_count == 0
+    assert files_claim.reason == "no repo_root supplied"
 
 
 def test_summary_line_is_one_line():
