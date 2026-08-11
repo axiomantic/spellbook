@@ -6,7 +6,7 @@ defect L-5: a whole-body backtick-pairing regex inverted every pairing after
 the first fence, and the warning count fell while text was added).
 """
 
-from spellbook.planlint.document import FENCE, inline_code_spans
+from spellbook.planlint.document import FENCE, TASK_HEADER, inline_code_spans
 from spellbook.planlint.finding import ERROR, Finding, guard_no_input
 
 EMITS = frozenset({"unmatched-backtick", "unclosed-fence"})
@@ -27,9 +27,19 @@ def unmatched_backticks(task):
 
 
 def unclosed_fence_line(doc):
-    """The 1-based line of a fence with no partner, or 0."""
+    """The 1-based line of a fence with no partner, or 0.
+
+    Must agree with `document._scan_fences`/`fenced_line_indexes`: a pending,
+    unclosed open is abandoned the moment a task header is seen, rather than
+    being paired with whatever fence marker happens to come next. Without
+    this, a genuinely broken fence followed later by a separate, well-formed
+    pair would report the well-formed pair's CLOSING marker as unclosed
+    instead of the real defect -- the exact real bug reported.
+    """
     open_at = 0
     for index, line in enumerate(doc.lines):
+        if open_at and TASK_HEADER.match(line):
+            return open_at
         if FENCE.match(line):
             open_at = 0 if open_at else index + 1
     return open_at

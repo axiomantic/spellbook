@@ -306,6 +306,64 @@ def test_files_entry_owner_annotation_is_parsed():
     )
 
 
+def test_unpaired_fence_does_not_corrupt_a_later_paired_fence():
+    """Regression for the fence-region bug found in Task 5's review of
+    structure.py: a naive open/close TOGGLE across the whole document pairs
+    an unclosed fence with whatever marker happens to come next, instead of
+    recognizing it as unpaired. That phantom pairing swallows everything
+    between the broken opener and the next real marker -- including a task
+    header, which then silently vanishes from `doc.tasks`.
+
+    This fixture has THREE fence markers: one broken opener (never legitimately
+    closed), then, after a task header, a separate well-formed pair. Under the
+    naive toggle: marker 1 (broken open) pairs with marker 2 (which is really
+    the WELL-FORMED pair's opener), marking the task header between them as
+    "inside a fence" and dropping Task 2 from `doc.tasks` entirely. Marker 3
+    (the well-formed pair's real close) is left dangling, unclosed, at EOF.
+
+    The fix must recognize marker 1 as genuinely unpaired (so the task header
+    after it stays visible) and marker 2/marker 3 as the real pair.
+    """
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Has an unclosed fence\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest -q`\n\n"
+        "```\n"                              # broken opener, never paired
+        "this fence never closes\n\n"
+        "### Task 2: Comes after the broken fence\n\n"
+        "**Files:**\n- Create: `y.py`\n\n"
+        "**Depends:** Task 1\n\n"
+        "**Check:** `pytest -q -k y`\n\n"
+        "Some prose, then a genuinely well-formed fence:\n\n"
+        "```\n"                              # real open
+        "real fence content\n"
+        "```\n\n"                             # real close
+        "### Task 3: Comes after the well-formed fence\n\n"
+        "**Files:**\n- Create: `z.py`\n\n"
+        "**Depends:** Task 2\n\n"
+        "**Check:** `pytest -q -k z`\n"
+    )
+    doc = PlanDocument.from_text(text)
+
+    # Task 2 sits between the broken opener and the well-formed pair's
+    # opener. Under the old toggle it is misparsed as "inside a fence" and
+    # vanishes; it must survive.
+    assert doc.has_task("Task 2")
+    assert doc.has_task("Task 3")
+    assert [t.ident for t in doc.tasks] == ["Task 1", "Task 2", "Task 3"]
+
+    # Only the genuinely well-formed pair (the second and third markers)
+    # should be a recorded, closed fence. The broken opener must not have
+    # consumed the well-formed pair's opener as its own phantom close.
+    lines = text.split("\n")
+    fence_indexes = [i for i, line in enumerate(lines) if line == "```"]
+    assert len(fence_indexes) == 3
+    _broken_open, real_open, real_close = fence_indexes
+    assert doc._fences == [{"start": real_open, "end": real_close}]
+
+
 def test_files_block_does_not_absorb_a_fenced_example_bullet():
     """A fenced code block later in the same task body may illustrate the
     Files: syntax for readers; a line inside it that happens to match

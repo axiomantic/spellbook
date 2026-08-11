@@ -88,10 +88,25 @@ def fenced_line_indexes(lines):
     A fence with no partner is absent from the result on purpose. `_scan_fences`
     reads the document the same way, so the two agree, and nothing below a
     broken fence is hidden from any lint.
+
+    A plain open/close TOGGLE across the whole input is not enough: if an
+    opener is never really closed and a SEPARATE, well-formed fence pair
+    follows later, the toggle pairs the broken opener with the next fence's
+    OPENING marker instead of recognizing it as unpaired -- which marks
+    everything between them (a task header, a `Files:` bullet, anything) as
+    "inside a fence" by mistake, and leaves the real pair's closing marker
+    dangling unclosed at EOF. A pending, unclosed open is therefore abandoned
+    (dropped, not paired with anything) the moment a `### Task N: ...` header
+    is seen -- a fence is never expected to span a task boundary in this
+    document family, so crossing one is exactly the signal that the pending
+    opener was never going to be genuinely closed.
     """
     inside = set()
     open_at = None
     for index, line in enumerate(lines):
+        if open_at is not None and TASK_HEADER.match(line):
+            open_at = None
+            continue
         if not FENCE.match(line):
             continue
         if open_at is None:
@@ -337,8 +352,15 @@ class PlanDocument:
         self._resolve_plan_schema()
 
     def _scan_fences(self):
+        """See `fenced_line_indexes`'s docstring for why a plain toggle is
+        not enough: a pending, unclosed open is abandoned (not paired with
+        anything) the moment a task header is seen, so it cannot steal a
+        later, unrelated fence's opening marker as its own phantom close."""
         open_at = None
         for index, line in enumerate(self.lines):
+            if open_at is not None and TASK_HEADER.match(line):
+                open_at = None
+                continue
             if not FENCE.match(line):
                 continue
             if open_at is None:

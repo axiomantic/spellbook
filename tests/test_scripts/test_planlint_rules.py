@@ -11,6 +11,8 @@ from pathlib import Path
 
 from spellbook.planlint import registry
 from spellbook.planlint.document import PlanDocument
+from spellbook.planlint.finding import ERROR, Finding
+from spellbook.planlint.rules import structure
 
 FIXTURES = Path(__file__).parent / "fixtures" / "planlint"
 
@@ -48,43 +50,81 @@ def _findings_for(rule_module, fixture_name, **kwargs):
 # --------------------------------------------------------------- structure
 
 def test_unmatched_backtick_fires_on_the_defect_line():
-    from spellbook.planlint.rules import structure
-
     findings = _findings_for(structure, "neg_unmatched_backtick.md")
     hits = [f for f in findings if f.rule == "unmatched-backtick"]
     assert len(hits) == 1
     # fixture line 10 is the `**Check:**` line, which carries 3 backticks —
-    # one pair plus one unmatched opener. See the fixture's line table.
-    assert hits[0].line == 10
+    # one pair plus one unmatched opener. See the fixture's line table. Full
+    # Finding equality, not just `.line`: a mutation test proved a wrong
+    # `task=` value leaves a `len(hits) == 1` + `.line` assertion green.
+    assert hits[0] == Finding(
+        rule="unmatched-backtick",
+        message=(
+            "a task body carries a backtick with no partner on its own "
+            "line; a reader and the linter read two different documents"
+        ),
+        task="Task 1",
+        section="Task 1: Broken backticks",
+        line=10,
+        evidence=(
+            "line 10 carries 1 backtick with no partner: "
+            "`**Check:** `pytest -q` and also `make lint`"
+        ),
+        severity=ERROR,
+    )
 
 
 def test_unmatched_backtick_is_absent_on_the_clean_fixture():
-    from spellbook.planlint.rules import structure
-
     findings = _findings_for(structure, "clean_plan.md")
     assert [f for f in findings if f.rule == "unmatched-backtick"] == []
 
 
 def test_unclosed_fence_fires_at_the_opening_line():
-    from spellbook.planlint.rules import structure
-
     findings = _findings_for(structure, "neg_unclosed_fence.md")
     hits = [f for f in findings if f.rule == "unclosed-fence"]
     assert len(hits) == 1
-    # fixture line 13 is the opening fence with no partner. See the line table.
-    assert hits[0].line == 13
+    # fixture line 13 is the opening fence with no partner. See the line
+    # table. Full Finding equality, not just `.line` -- see the sibling
+    # unmatched-backtick test above for why.
+    assert hits[0] == Finding(
+        rule="unclosed-fence",
+        message=(
+            "a fenced block is opened and never closed; every fenced-block "
+            "boundary below this line is the wrong one"
+        ),
+        task="",
+        section="Task 1: Has an unclosed fence",
+        line=13,
+        evidence="line 13 opens a fenced block and no line below it closes it",
+        severity=ERROR,
+    )
 
 
 def test_unclosed_fence_does_not_hide_tasks_below_it():
     """The second assertion that would have caught source defect L-5: the
-    plan must still parse both Task 2 and Task 3 below the broken fence."""
+    plan must still parse Task 2 and Task 3 below the broken fence.
+
+    The fixture also carries a SEPARATE, well-formed fence pair further down
+    (after Task 3), followed by Task 4. This is the regression coverage for
+    the fence-region bug fixed alongside this task: a naive open/close
+    toggle would misattribute the broken fence's phantom "close" to the
+    well-formed pair's own opening marker, hiding Task 4 as well and (in the
+    `unclosed-fence` rule) blaming the well-formed pair's real closing tick
+    for the defect instead of the true broken opener at line 13."""
     doc = PlanDocument.from_path(FIXTURES / "neg_unclosed_fence.md")
     assert doc.has_task("Task 2")
     assert doc.has_task("Task 3")
+    assert doc.has_task("Task 4")
+    assert [t.ident for t in doc.tasks] == ["Task 1", "Task 2", "Task 3", "Task 4"]
+
+    # The defect is still correctly attributed to the true broken opener
+    # (line 13), never to the well-formed later fence's closing tick.
+    findings = _findings_for(structure, "neg_unclosed_fence.md")
+    hits = [f for f in findings if f.rule == "unclosed-fence"]
+    assert len(hits) == 1
+    assert hits[0].line == 13
 
 
 def test_unclosed_fence_is_absent_on_the_clean_fixture():
-    from spellbook.planlint.rules import structure
-
     findings = _findings_for(structure, "clean_plan.md")
     assert [f for f in findings if f.rule == "unclosed-fence"] == []

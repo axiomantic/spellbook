@@ -30,3 +30,18 @@ this fence never closes
 **Depends:** Task 2
 
 **Check:** `pytest -q -k z`
+
+Some prose, then a separate, genuinely well-formed fence pair:
+
+```
+real fence content
+```
+
+### Task 4: A fourth task after the well-formed fence
+
+**Files:**
+- Create: `spellbook/w.py`
+
+**Depends:** Task 3
+
+**Check:** `pytest -q -k w`
