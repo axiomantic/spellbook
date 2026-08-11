@@ -31,10 +31,17 @@ def test_plan_amendment_writes_states_fail_open_never_revert():
 def test_forbidden_block_names_the_missing_relint_case():
     text = _text()
     forbidden = text.split("<FORBIDDEN>", 1)[1].split("</FORBIDDEN>", 1)[0]
-    assert "planlint" in forbidden.lower()
+    assert (
+        "- Write an amended plan to disk without re-running planlint when it declares Schema: planlint-v1"
+        in forbidden
+    )
 
 
 def test_self_check_has_the_planlint_bullet():
     text = _text()
     self_check = text.split("## Self-Check", 1)[1].split("<CRITICAL>", 1)[0]
-    assert "planlint" in self_check.lower()
+    assert (
+        "- [ ] Every disk write of an amended plan was followed by a planlint run "
+        "(or `lint_on_write` returned `None` — the plan doesn't declare a `planlint-v1` schema)"
+        in self_check
+    )
