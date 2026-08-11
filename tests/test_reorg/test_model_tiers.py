@@ -17,15 +17,52 @@ from spellbook.core import model_tiers
 
 @pytest.fixture(autouse=True)
 def isolated_config(tmp_path, monkeypatch):
-    """Point the config resolver at a temp HOME.
+    """Redirect the config resolver at a temp directory on every platform.
 
     ``spellbook.core.compat.get_config_dir`` does NOT consult
-    $SPELLBOOK_CONFIG_DIR (see its own warning), so HOME is the only lever
-    that redirects config_get/config_set.
+    $SPELLBOOK_CONFIG_DIR (see its own warning), so the environment is the
+    only lever -- and it is a DIFFERENT variable per platform:
+
+    * POSIX:   ``$HOME/.config/spellbook``
+    * Windows: ``%APPDATA%/spellbook``
+
+    Setting only HOME/USERPROFILE passes on macOS and Linux while leaving
+    Windows pointed at the real user config. That is not merely a leak
+    between tests -- though it is that, and it is how CI caught this: a
+    model recorded by one test was still there for the next one. It also
+    means the suite writes to the developer's actual spellbook.json.
     """
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    monkeypatch.setenv("APPDATA", str(tmp_path))
     return tmp_path
+
+
+# ---- fixture self-check --------------------------------------------------
+
+
+def test_the_fixture_actually_redirects_config_off_the_real_path(
+    isolated_config, tmp_path
+):
+    """Assert the isolation instead of trusting it.
+
+    Every other test here writes config, so if the fixture does not redirect,
+    they silently mutate the developer's real spellbook.json and leak state
+    into one another. That is not hypothetical: redirecting only HOME passed
+    on POSIX and left Windows -- which reads %APPDATA% -- pointed at the real
+    file, and the failure surfaced as a model set by one test still being
+    present in the next.
+    """
+    from spellbook.core.config import get_config_path
+
+    model_tiers.set_tier_model("heavy", "claude_code", "probe-model")
+    written = get_config_path()
+
+    assert written.exists()
+    assert tmp_path in written.parents, (
+        f"config resolved to {written}, which is NOT under the test's tmp_path. "
+        "The fixture is not isolating; this suite is writing to the real config."
+    )
 
 
 # ---- key construction ----------------------------------------------------

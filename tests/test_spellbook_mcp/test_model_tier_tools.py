@@ -24,8 +24,15 @@ from spellbook.mcp.tools.model_tiers import (
 
 @pytest.fixture(autouse=True)
 def isolated_config(tmp_path, monkeypatch):
+    """Redirect config on every platform.
+
+    APPDATA is the Windows lever -- ``get_config_dir`` reads it there rather
+    than HOME, so redirecting only HOME/USERPROFILE leaves Windows writing to
+    the real user config and leaking state between tests.
+    """
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    monkeypatch.setenv("APPDATA", str(tmp_path))
     return tmp_path
 
 
