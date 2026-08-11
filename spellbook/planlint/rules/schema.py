@@ -18,8 +18,20 @@ def run(ctx):
     doc = ctx.doc
     findings = []
 
+    # `_resolve_plan_schema()` (document.py) falls back to copying a task's
+    # `Schema:` value into `doc.schema_text`/`doc.schema_line` when no TRUE
+    # plan-level `Schema:` header precedes the first task. A genuine header
+    # can only be found scanning lines strictly before the first task's
+    # heading line, so its `schema_line` is always `< doc.tasks[0].line`.
+    # The fallback instead copies a task's OWN `schema_line`, which lies
+    # inside that task's block and so is always `>= doc.tasks[0].line`. That
+    # inequality is a direct, non-fragile readout of which branch fired —
+    # treat the fallback copy as belonging solely to the task that owns it,
+    # not as a second, independent plan-level declaration.
+    is_fallback = bool(doc.tasks) and doc.schema_line >= doc.tasks[0].line
+
     values = []
-    if doc.schema_text:
+    if doc.schema_text and not is_fallback:
         values.append(("<plan header>", doc.schema_text, doc.schema_line))
     for task in doc.tasks:
         if task.schema_text:
@@ -36,7 +48,7 @@ def run(ctx):
                     "disagree, or two tasks disagree"
                 ),
                 task=owner if owner != "<plan header>" else "",
-                section=doc.tasks[0].section if doc.tasks else "",
+                section=doc.section_at_line(line),
                 line=line,
                 evidence=", ".join(f"{o}: {v}" for o, v, _ in values),
                 severity=ERROR,
@@ -54,7 +66,7 @@ def run(ctx):
                         "rather than be linted under the wrong rules"
                     ),
                     task=owner if owner != "<plan header>" else "",
-                    section=doc.tasks[0].section if doc.tasks else "",
+                    section=doc.section_at_line(line),
                     line=line,
                     evidence=f"Schema: {value}",
                     severity=ERROR,

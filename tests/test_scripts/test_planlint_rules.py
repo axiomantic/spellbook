@@ -1150,6 +1150,11 @@ def test_schema_conflict_fires_and_plan_is_still_linted():
     `task=""`), `.line` is that value's own line, and `.evidence` lists both
     disagreeing values with their owners.
 
+    `section=""` (not `doc.tasks[0].section`): line 1 sits before ANY
+    heading, so the correct answer from `doc.section_at_line(1)` is the
+    empty string — proving the finding's section is computed from the
+    reported line's own position, not hardcoded to the first task.
+
     The plan IS linted despite the conflict — asserted as WORK DONE, not as
     a type. A rule that returned an empty list without looking at anything
     would satisfy `isinstance(..., list)`; only `examined` proves the two
@@ -1167,7 +1172,7 @@ def test_schema_conflict_fires_and_plan_is_still_linted():
             "disagree, or two tasks disagree"
         ),
         task="",
-        section="Task 1: A",
+        section="",
         line=1,
         evidence="<plan header>: planlint-v1, Task 2: legacy",
         severity=ERROR,
@@ -1190,7 +1195,10 @@ def test_schema_unknown_version_names_the_bad_value():
     """The plan-level `Schema:` on line 1 declares `planlint-v2`, which is
     neither `planlint-v1` nor `legacy`. Full `Finding` equality proves the
     reported owner is the plan header (`task=""`), `.line` is 1, and
-    `.evidence` names the exact unrecognized value."""
+    `.evidence` names the exact unrecognized value.
+
+    `section=""`: line 1 precedes any heading, so `doc.section_at_line(1)`
+    is the empty string — same reasoning as the schema-conflict test above."""
     from spellbook.planlint.rules import schema
 
     findings = _findings_for(schema, "neg_schema_unknown_version.md")
@@ -1204,7 +1212,7 @@ def test_schema_unknown_version_names_the_bad_value():
             "rather than be linted under the wrong rules"
         ),
         task="",
-        section="Task 1: A",
+        section="",
         line=1,
         evidence="Schema: planlint-v2",
         severity=ERROR,
@@ -1216,3 +1224,90 @@ def test_schema_unknown_version_is_absent_on_the_clean_fixture():
 
     findings = _findings_for(schema, "clean_plan.md")
     assert [f for f in findings if f.rule == "schema-unknown-version"] == []
+
+
+def test_schema_fallback_reports_once_not_as_a_fake_plan_header():
+    """No TRUE plan-level `Schema:` header precedes Task 1 (there is no
+    `Schema:` line before line 1's `### Task 1: A`), so
+    `document.py`'s `_resolve_plan_schema()` falls back to COPYING Task 1's
+    own `Schema:` (`planlint-v9`, line 10) into `doc.schema_text` /
+    `doc.schema_line`.
+
+    Before the fix, `schema.py` did not know this was a copy: it read
+    `doc.schema_text` as an independent plan-level declaration AND read
+    Task 1's own `schema_text`, reporting the SAME single declaration
+    TWICE — once as `task=""` (`<plan header>`) and once as `task="Task 1"`.
+    Full `Finding` equality proves there is exactly one finding, it is
+    attributed to Task 1 (not `task=""`), and its section is Task 1's own
+    section (not a synthetic plan-level one)."""
+    from spellbook.planlint.rules import schema
+
+    findings = _findings_for(schema, "neg_schema_fallback_unknown_version.md")
+
+    conflict_hits = [f for f in findings if f.rule == "schema-conflict"]
+    assert conflict_hits == []
+
+    hits = [f for f in findings if f.rule == "schema-unknown-version"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="schema-unknown-version",
+        message=(
+            "a `Schema:` value is neither `planlint-v1` nor `legacy`; "
+            "a plan declaring an unrecognized schema must say so "
+            "rather than be linted under the wrong rules"
+        ),
+        task="Task 1",
+        section="Task 1: A",
+        line=10,
+        evidence="Schema: planlint-v9",
+        severity=ERROR,
+    )
+
+
+def test_schema_conflict_and_unknown_version_attribute_section_to_owning_task():
+    """A GENUINE plan-level header (`planlint-v1`, line 1, before any
+    heading) conflicts with Task 2's own `Schema:` (`planlint-v9`, line 25,
+    under the `## Group B` / `### Task 2: B` headings).
+
+    Before the fix, EVERY finding's `section` was hardcoded to
+    `doc.tasks[0].section` (`"Task 1: A"`) regardless of which line/task the
+    finding actually belongs to. Full `Finding` equality on both findings
+    proves `section` now tracks the OWNING line via `doc.section_at_line()`:
+    the plan-header-owned `schema-conflict` finding gets `""` (line 1
+    precedes every heading), while the Task-2-owned `schema-unknown-version`
+    finding gets `"Task 2: B"` — neither of which is `doc.tasks[0].section`,
+    so a regression back to the hardcoded value would fail both."""
+    from spellbook.planlint.rules import schema
+
+    findings = _findings_for(schema, "neg_schema_conflict_task_section.md")
+
+    conflict_hits = [f for f in findings if f.rule == "schema-conflict"]
+    assert len(conflict_hits) == 1
+    assert conflict_hits[0] == Finding(
+        rule="schema-conflict",
+        message=(
+            "the plan-level `Schema:` and a task-level `Schema:` "
+            "disagree, or two tasks disagree"
+        ),
+        task="",
+        section="",
+        line=1,
+        evidence="<plan header>: planlint-v1, Task 2: planlint-v9",
+        severity=ERROR,
+    )
+
+    unknown_hits = [f for f in findings if f.rule == "schema-unknown-version"]
+    assert len(unknown_hits) == 1
+    assert unknown_hits[0] == Finding(
+        rule="schema-unknown-version",
+        message=(
+            "a `Schema:` value is neither `planlint-v1` nor `legacy`; "
+            "a plan declaring an unrecognized schema must say so "
+            "rather than be linted under the wrong rules"
+        ),
+        task="Task 2",
+        section="Task 2: B",
+        line=25,
+        evidence="Schema: planlint-v9",
+        severity=ERROR,
+    )
