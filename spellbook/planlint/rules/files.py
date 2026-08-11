@@ -13,6 +13,11 @@ the task exists to create it — so checking it would make the rule fire on
 every correct plan this repo's own writing-plans skill emits. Globs ('*' in
 the path) are skipped, not resolved, per design §4.5's judgment call.
 
+The `no-input` guard is keyed on zero TASKS (`len(doc.tasks)`), matching
+every sibling rule — not on zero checkable `Files:` entries, since a plan
+whose entries are entirely `Test:`/`Delete:`/glob-`Create:` legitimately
+examines none of them and is not a defective plan.
+
 When repo_root is None, this rule returns ZERO findings with skipped_reason
 set — never a clean report. decided_claims() (api.py, Task 12) reports a
 skipped rule as UNDECIDED so the prose review still covers the claim.
@@ -20,7 +25,14 @@ skipped rule as UNDECIDED so the prose review still covers the claim.
 
 from pathlib import Path
 
-from spellbook.planlint.finding import ERROR, INFO, WARNING, Finding, LintResult, guard_no_input
+from spellbook.planlint.finding import (
+    ERROR,
+    INFO,
+    WARNING,
+    Finding,
+    LintResult,
+    guard_no_input,
+)
 
 EMITS = frozenset({"modify-path-missing", "create-path-exists"})
 
@@ -117,4 +129,17 @@ def run(ctx):
                     )
                 )
 
-    return guard_no_input("files", findings, examined, "Files: entries", "files lint")
+    # The no-input guard fires on zero TASKS (matching every sibling rule),
+    # not on zero checkable Files: entries — a plan whose entries are
+    # entirely Test:/Delete:/glob-Create: legitimately examines none of
+    # them and is not a defective plan. `examined` (the per-entry count)
+    # is still reported for the "N Files: entries examined" display.
+    guarded = guard_no_input(
+        "files", findings, len(doc.tasks), "Files: entries", "files lint"
+    )
+    return LintResult(
+        name="files",
+        findings=guarded.findings,
+        examined=examined,
+        examined_label="Files: entries",
+    )

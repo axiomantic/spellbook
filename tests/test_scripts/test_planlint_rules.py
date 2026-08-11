@@ -1091,21 +1091,16 @@ def test_files_rule_skips_and_reports_undecided_when_repo_root_is_none():
     assert result.skipped_reason == "no repo_root supplied"
 
 
-def test_files_rule_reports_no_input_when_no_files_entries_are_examined(tmp_path):
-    """A schema-declaring plan whose tasks carry no `Files:` bullets at all
-    (or only `Test:`/`Delete:` bullets, which this rule never examines) must
-    NOT report clean. `guard_no_input` is the mechanism every other rule
-    module already routes through for this — `files.py` was the one holdout
-    that returned a bare `LintResult()` and reported a false clean instead."""
+def test_files_rule_reports_no_input_when_plan_has_zero_tasks(tmp_path):
+    """A plan that declares a schema but defines no tasks at all is the
+    genuinely defective case `guard_no_input` exists to catch. `files.py`
+    keys its guard on `len(doc.tasks)` — matching every sibling rule module
+    — so a zero-task plan must still report `no-input`, not a false clean."""
     from spellbook.planlint.rules import files
 
-    text = (
-        "**Schema:** planlint-v1\n\n"
-        "### Task 1: X\n\n**Files:**\n"
-        "- Test: `tests/not_written_yet.py`\n\n"
-        "**Depends:** none\n\n**Check:** `pytest -q`\n"
-    )
+    text = "**Schema:** planlint-v1\n"
     doc = PlanDocument.from_text(text)
+    assert doc.tasks == []
     ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
     result = files.run(ctx)
     assert result == LintResult(
@@ -1122,16 +1117,44 @@ def test_files_rule_reports_no_input_when_no_files_entries_are_examined(tmp_path
     )
 
 
+def test_files_rule_does_not_false_positive_on_test_only_tdd_plan(tmp_path):
+    """A real plan with 1+ tasks whose `Files:` entries are ALL `Test:`
+    bullets is the normal TDD-authoring case: the task exists to create a
+    test file that does not exist yet. The `no-input` guard must key on
+    `len(doc.tasks)` (>0 here), NOT on the per-entry `examined` count (0
+    here, since `Test:` entries are deliberately exempt from checking) —
+    otherwise every correct TDD plan this repo's own writing-plans skill
+    emits would false-positive as 'no input examined'."""
+    from spellbook.planlint.rules import files
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: X\n\n**Files:**\n"
+        "- Test: `tests/not_written_yet.py`\n\n"
+        "**Depends:** none\n\n**Check:** `pytest -q`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.AUTHORING, repo_root=tmp_path)
+    result = files.run(ctx)
+    assert result == LintResult(
+        name="files",
+        findings=[],
+        examined=0,
+        examined_label="Files: entries",
+    )
+
+
 def test_files_rule_counts_only_entries_that_pass_the_path_guards(tmp_path):
-    """`examined` must count an entry only after the absolute-path and
-    traversal guards let it through — never before. A plan whose ONLY
-    `Files:` entries are one absolute path and one traversal path (both
-    guarded out, both `Modify:` so `create-path-exists`'s guard tests above
-    do not already cover this) must land at `examined == 0` and trip the
-    same `guard_no_input` `no-input` finding as a plan with zero `Files:`
-    bullets at all — proving the counter sits after the guards, not before
-    them. A regression that moves `examined += 1` back above the guards
-    would instead report `examined == 2` and no `no-input` finding here."""
+    """`examined` (the per-entry display count) must count an entry only
+    after the absolute-path and traversal guards let it through — never
+    before. A plan whose ONLY `Files:` entries are one absolute path and
+    one traversal path (both guarded out, both `Modify:` so
+    `create-path-exists`'s guard tests above do not already cover this)
+    must land at the displayed `examined == 0` with no findings — the
+    guard itself does not fire because the plan carries a real task
+    (`len(doc.tasks) == 1`), proving the counter is display-only and no
+    longer drives `no-input`. A regression that moves `examined += 1` back
+    above the guards would instead report `examined == 2`."""
     from spellbook.planlint.rules import files
 
     text = (
@@ -1146,13 +1169,7 @@ def test_files_rule_counts_only_entries_that_pass_the_path_guards(tmp_path):
     result = files.run(ctx)
     assert result == LintResult(
         name="files",
-        findings=[
-            Finding(
-                rule="no-input",
-                message="the files lint examined 0 Files: entries",
-                severity=ERROR,
-            )
-        ],
+        findings=[],
         examined=0,
         examined_label="Files: entries",
     )
