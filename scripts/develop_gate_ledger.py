@@ -48,6 +48,10 @@ The script is also a CLI for inspecting and editing the ledger:
     python3 scripts/develop_gate_ledger.py wave-discipline 3a \
         --status failed --open-rows W3a-2,W3a-5
 
+    # Record that the check does not apply, and why
+    python3 scripts/develop_gate_ledger.py wave-discipline plan \
+        --status n_a --reason "plan has no wave structure"
+
 The CLI is intentionally narrow. The ledger is meant to be WRITTEN by
 the orchestrator's own discipline, not poked at from outside. Operations
 the skill describes -- "write ceremony.locked_at at Phase 0",
@@ -58,11 +62,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import logging
 import os
 import sys
 from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 DEFAULT_STATE_DIR = Path.home() / ".local" / "spellbook"
 DEFAULT_LEDGER_PATH = DEFAULT_STATE_DIR / "develop_gate_ledger.json"
@@ -94,22 +101,41 @@ def _ensure_parent(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
 
 
-def _deep_merge(base: Any, overlay: Any) -> Any:
+def _deep_merge(base: Any, overlay: Any, _at: str = "") -> Any:
     """Deep-merge ``overlay`` onto ``base`` per the ledger merge contract.
 
     - dict + dict: per-key merge.
     - scalar + scalar: overlay wins (replacement).
     - list + list: overlay wins (replacement; the ledger does not use lists).
-    - type mismatch: overlay wins (caller is asserting a new shape).
+    - type mismatch: overlay wins (caller is asserting a new shape), but a
+      dict being replaced by a non-dict is WARNED about first.
+
+    The warning covers the one mismatch that destroys structure rather than
+    a single value: collapsing ``ceremony: {...}`` to a scalar discards every
+    field under it at once, including ``locked_at``, whose whole purpose is to
+    be un-rewritable. Scalar-to-scalar replacement is the documented contract
+    and stays silent. The write still proceeds -- refusing it would strand a
+    ledger that a genuine shape change had already moved on from -- but it
+    stops being invisible, which is what makes the loss expensive.
     """
     if isinstance(base, dict) and isinstance(overlay, dict):
         merged = dict(base)
         for k, v in overlay.items():
+            where = f"{_at}.{k}" if _at else k
             if k in merged:
-                merged[k] = _deep_merge(merged[k], v)
+                merged[k] = _deep_merge(merged[k], v, where)
             else:
                 merged[k] = v
         return merged
+    if isinstance(base, dict) and not isinstance(overlay, dict):
+        logger.warning(
+            "develop_gate_ledger: replacing the object at %r with %s; "
+            "%d field(s) are discarded: %s",
+            _at or "<root>",
+            type(overlay).__name__,
+            len(base),
+            ", ".join(sorted(map(str, base))) or "(none)",
+        )
     return overlay
 
 
@@ -223,6 +249,7 @@ def record_wave_discipline(
     status: str,
     open_rows: Iterable[str] | None = None,
     timestamp: str | None = None,
+    reason: str | None = None,
     path: Path | None = None,
 ) -> dict[str, Any]:
     """Record the §24.6 wave-discipline check for a wave.
@@ -236,6 +263,12 @@ def record_wave_discipline(
     ``open_rows`` is the list of W<n>- identifiers that were still
     open when the check ran; required when ``status="failed"`` and
     ignored when ``status="passed"`` or ``"n_a"``.
+
+    ``reason`` is optional free-form context. It earns its place on
+    ``n_a``: "not applicable" alone does not say WHY, and the point of
+    recording n_a at all is that a later reader can tell "the operator
+    established this check does not apply here" from "nobody ran it".
+    Without the reason, n_a says only the former half.
     """
     if status not in ("passed", "failed", "n_a"):
         raise ValueError(
@@ -250,6 +283,8 @@ def record_wave_discipline(
     entry: dict[str, Any] = {"status": status}
     if timestamp:
         entry["timestamp"] = timestamp
+    if reason and reason.strip():
+        entry["reason"] = reason.strip()
     if status == "failed":
         entry["open_rows"] = open_rows_list
     return write_ledger({"waves": {wave_id: {"section_24_6_check": entry}}}, path=path)
@@ -337,6 +372,7 @@ def _cmd_wave_discipline(args: argparse.Namespace) -> int:
             status=args.status,
             open_rows=open_rows,
             timestamp=args.timestamp,
+            reason=args.reason,
             path=path,
         )
     except (ValueError, LedgerError) as exc:
@@ -407,6 +443,15 @@ def build_parser() -> argparse.ArgumentParser:
         "--timestamp",
         default=None,
         help="ISO-8601 timestamp. Default: omitted (caller writes one if needed).",
+    )
+    p_wd.add_argument(
+        "--reason",
+        default=None,
+        help=(
+            "Free-form context for the entry. Most useful with --status n_a, "
+            "where it records WHY the check does not apply "
+            "(e.g. 'plan has no wave structure')."
+        ),
     )
     p_wd.set_defaults(func=_cmd_wave_discipline)
 

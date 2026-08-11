@@ -38,6 +38,7 @@
  */
 
 import * as fs from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 
@@ -92,7 +93,10 @@ function parseFrontmatter(text: string): { meta: Record<string, string>; body: s
 	return { meta, body };
 }
 
-function loadRules(dir: string): { rules: RuleFile[]; error: string | null } {
+// Exported for tests. A broken symlink in the rules directory must degrade to
+// one unreadable rule, never to an empty ruleset, and that is only assertable
+// from outside.
+export function loadRules(dir: string): { rules: RuleFile[]; error: string | null } {
 	if (!fs.existsSync(dir)) {
 		return { rules: [], error: null };
 	}
@@ -119,8 +123,32 @@ function loadRules(dir: string): { rules: RuleFile[]; error: string | null } {
 		try {
 			text = fs.readFileSync(fullPath, "utf8");
 		} catch (err) {
+			// Skip THIS rule; never abort the whole load. These are symlinks
+			// into a spellbook checkout, so one going stale (the checkout
+			// moved, a module was deselected mid-flight) is an ordinary
+			// occurrence. Returning early here dropped every rule -- including
+			// every rule already parsed -- and the agent started with no
+			// behavioural context at all, silently.
+			//
+			// A marker rule is pushed rather than skipping quietly: a missing
+			// rule that says nothing is indistinguishable from a rule that
+			// was never installed, and the agent cannot report what it never
+			// saw.
 			const msg = err instanceof Error ? err.message : String(err);
-			return { rules: [], error: `cannot read ${name}: ${msg}` };
+			const markerId = name.replace(/^\d{2}-spellbook-/, "").replace(/\.md$/, "");
+			rules.push({
+				id: markerId,
+				name: `${markerId} (unreadable)`,
+				prefix: name.slice(0, 2),
+				relPath: name,
+				sizeBytes: 0,
+				body:
+					`[spellbook-rules] Could not read this rule file: ${msg}\n` +
+					"Its guidance is NOT loaded. Run `spellbook install` to repair " +
+					"the symlink, and do not assume this rule's constraints are absent " +
+					"-- they are merely unreadable.",
+			});
+			continue;
 		}
 
 		const { meta, body } = parseFrontmatter(text);
@@ -146,9 +174,13 @@ function loadRules(dir: string): { rules: RuleFile[]; error: string | null } {
 	return { rules, error: null };
 }
 
-function resolveRulesDir(): string {
+export function resolveRulesDir(): string {
 	const envDir = process.env.PRIME_AGENT_CONFIG_DIR;
-	const home = process.env.HOME ?? process.env.USERPROFILE ?? "~";
+	// os.homedir() rather than a literal "~": nothing in Node expands tilde,
+	// so the old fallback produced a RELATIVE path and would have scanned
+	// (or silently found nothing at) "./~/.prime/agent/rules" -- creating a
+	// directory literally named "~" if anything downstream ever wrote there.
+	const home = process.env.HOME ?? process.env.USERPROFILE ?? os.homedir();
 	const base =
 		envDir && envDir.trim().length > 0 ? envDir : path.join(home, ".prime", "agent");
 	return path.join(base, "rules");

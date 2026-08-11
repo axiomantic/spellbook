@@ -5,10 +5,10 @@ description = "Harness-augmentation layer for AI coding assistants: skills, comm
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "websockets>=16.0",
-    "sqlalchemy[asyncio]>=2.0.49,<2.1",
+    "websockets>=16.1.1",
+    "sqlalchemy[asyncio]>=2.0.51,<2.1",
     "aiosqlite>=0.20.0,<0.23",
-    "alembic>=1.18.4,<1.19",
+    "alembic>=1.18.5,<1.19",
     "rich>=15.0.0",
     "claude-agent-sdk",
 ]
@@ -19,27 +19,27 @@ gemini = []
 
 [dependency-groups]
 daemon = [
-    "fastmcp>=3.3.1",
-    "fastapi>=0.136.1",
-    "uvicorn>=0.46.0",
+    "fastmcp>=3.4.5",
+    "fastapi>=0.141.1",
+    "uvicorn>=0.51.0",
     "httpx>=0.28.1",
 ]
 dev = [
-    "pytest>=9.0.3",
-    "pytest-asyncio>=1.3.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
     "pytest-timeout>=2.4.0",
     "httpx>=0.28.1",
     "pytest-tripwire[http]>=0.21.1",
     "dirty-equals>=0.11",
-    "fastmcp>=3.3.1",
-    "fastapi>=0.136.1",
+    "fastmcp>=3.4.5",
+    "fastapi>=0.141.1",
     "pyyaml>=6.0.3",
-    "ruff>=0.6.0",
+    "ruff>=0.15.22",
 ]
 docs = [
     "mkdocs>=1.6.1",
-    "mkdocs-material>=9.7.6",
+    "mkdocs-material>=9.7.7",
     "mike>=2.2.0",
 ]
 [project.scripts]

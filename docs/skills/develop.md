@@ -1722,6 +1722,7 @@ develop_gate_ledger: {
         status: "passed" | "failed" | "n_a";
         open_rows?: string[];   // present when status=failed, the W<n>- ids that were still open
         timestamp?: string;     // ISO 8601; the develop skill writes it on each entry
+        reason?: string;        // free-form context; records WHY on status=n_a
       };
     };
   };

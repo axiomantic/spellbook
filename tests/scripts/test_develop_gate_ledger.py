@@ -9,6 +9,7 @@ run, not a Python test.
 """
 
 import json
+import logging
 import subprocess
 import sys
 from pathlib import Path
@@ -73,6 +74,43 @@ def test_scalar_replacement_shrinks_lists_of_strings(tmp_ledger):
     ledger.write_ledger({"remaining_gates": "code review\ngreen-mirage"})
     ledger.write_ledger({"remaining_gates": "code review"})
     assert ledger.read_ledger()["remaining_gates"] == "code review"
+
+
+def test_replacing_an_object_with_a_scalar_warns(tmp_ledger, caplog):
+    """Collapsing an object to a scalar discards every field under it at
+    once -- including ceremony.locked_at, whose whole purpose is to be
+    un-rewritable. The write still proceeds (a genuine shape change must
+    not strand the ledger), but it must not be invisible."""
+    ledger.write_ledger({"ceremony": {"locked_at": "2026-08-10T14:02Z", "source": "op"}})
+
+    with caplog.at_level(logging.WARNING):
+        ledger.write_ledger({"ceremony": "legacy-string"})
+
+    assert "ceremony" in caplog.text
+    assert "locked_at" in caplog.text
+    assert ledger.read_ledger()["ceremony"] == "legacy-string"
+
+
+def test_ordinary_scalar_replacement_does_not_warn(tmp_ledger, caplog):
+    """Scalar-to-scalar replacement is the documented contract. Warning on it
+    would train the reader to ignore the warning that matters."""
+    ledger.write_ledger({"current_phase": "1"})
+
+    with caplog.at_level(logging.WARNING):
+        ledger.write_ledger({"current_phase": "2"})
+
+    assert caplog.text == ""
+
+
+def test_nested_object_replacement_names_the_full_path(tmp_ledger, caplog):
+    """A warning that says 'something was replaced' without saying where is
+    not actionable in a ledger this nested."""
+    ledger.record_wave_discipline("3a", status="passed")
+
+    with caplog.at_level(logging.WARNING):
+        ledger.write_ledger({"waves": {"3a": {"section_24_6_check": "clobbered"}}})
+
+    assert "waves.3a.section_24_6_check" in caplog.text
 
 
 def test_corrupt_json_raises(tmp_ledger):
@@ -162,6 +200,45 @@ def test_record_wave_discipline_na(tmp_ledger):
     """
     ledger.record_wave_discipline("plan", status="n_a")
     assert ledger.wave_discipline_status("plan")["status"] == "n_a"
+
+
+def test_record_wave_discipline_na_records_a_reason(tmp_ledger):
+    """The develop skill's prose tells the LLM to write this exact shape.
+    'n_a' alone says the check does not apply but not why -- and the point
+    of recording n_a is that a later reader can tell 'established as not
+    applicable' from 'nobody ran it'."""
+    ledger.record_wave_discipline(
+        "plan", status="n_a", reason="plan has no wave structure"
+    )
+    entry = ledger.wave_discipline_status("plan")
+    assert entry["status"] == "n_a"
+    assert entry["reason"] == "plan has no wave structure"
+
+
+def test_reason_is_optional_and_omitted_when_absent(tmp_ledger):
+    ledger.record_wave_discipline("3a", status="passed")
+    assert "reason" not in ledger.wave_discipline_status("3a")
+
+
+def test_blank_reason_is_not_recorded(tmp_ledger):
+    """An empty reason is worse than none: it looks answered."""
+    ledger.record_wave_discipline("3a", status="n_a", reason="   ")
+    assert "reason" not in ledger.wave_discipline_status("3a")
+
+
+def test_reason_does_not_make_a_failed_entry_claimable(tmp_ledger):
+    """Narrative must never substitute for evidence -- open_rows is still
+    what a failed entry is judged on."""
+    ledger.record_wave_discipline(
+        "3a", status="failed", open_rows=["W3a-2"], reason="blocked on review"
+    )
+    assert ledger.is_wave_done_claimable("3a") is False
+    assert ledger.wave_discipline_status("3a")["open_rows"] == ["W3a-2"]
+
+
+def test_reason_does_not_satisfy_the_failed_open_rows_requirement(tmp_ledger):
+    with pytest.raises(ValueError, match="requires at least one open row"):
+        ledger.record_wave_discipline("3a", status="failed", reason="because")
 
 
 def test_record_wave_discipline_rejects_invalid_status(tmp_ledger):
@@ -271,6 +348,21 @@ def test_cli_wave_discipline_failed_refused(tmp_ledger):
     )
     assert proc.returncode == 0
     assert "REFUSED" in proc.stdout
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_wave_discipline_na_with_reason(tmp_ledger):
+    """The documented invocation from skills/develop/SKILL.md must actually
+    work from the CLI -- prose describing a flag that does not exist is the
+    defect this finding raised."""
+    proc = _run_cli(
+        "wave-discipline", "plan",
+        "--status", "n_a",
+        "--reason", "plan has no wave structure",
+    )
+    assert proc.returncode == 0
+    entry = json.loads(tmp_ledger.read_text())["waves"]["plan"]["section_24_6_check"]
+    assert entry == {"status": "n_a", "reason": "plan has no wave structure"}
 
 
 @pytest.mark.allow("subprocess")
