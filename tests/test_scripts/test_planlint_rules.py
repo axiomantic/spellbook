@@ -9,10 +9,12 @@ from passing its own test.
 import enum
 from pathlib import Path
 
+import pytest
+
 from spellbook.planlint import registry
 from spellbook.planlint.document import PlanDocument
 from spellbook.planlint.finding import ERROR, Finding, LintResult
-from spellbook.planlint.rules import structure
+from spellbook.planlint.rules import checks, structure
 
 FIXTURES = Path(__file__).parent / "fixtures" / "planlint"
 
@@ -288,6 +290,42 @@ def test_depends_prose_is_absent_on_the_clean_fixture():
 
     findings = _findings_for(depends, "clean_plan.md")
     assert [f for f in findings if f.rule == "depends-prose"] == []
+
+
+def test_dependency_cycle_fires_on_a_2task_mutual_cycle():
+    """Coverage gap: only a 3-task cycle (`neg_depends_cycle.md`) is exercised
+    elsewhere. A 2-task MUTUAL cycle (Task 1 depends on Task 2, Task 2 depends
+    on Task 1) is the smallest possible strongly-connected component `tarjan`
+    can report, and it is untested. Full Finding equality, matching the
+    3-cycle test's own justification: a membership check alone leaves a wrong
+    `task=`/`section=`/`line=`/`evidence=` value invisible."""
+    from spellbook.planlint.rules import depends
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: A\n\n"
+        "**Files:**\n- Create: `a.py`\n\n"
+        "**Depends:** Task 2\n\n"
+        "**Check:** `pytest a`\n\n"
+        "### Task 2: B\n\n"
+        "**Files:**\n- Create: `b.py`\n\n"
+        "**Depends:** Task 1\n\n"
+        "**Check:** `pytest b`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    findings = depends.run(ctx).findings
+    hits = [f for f in findings if f.rule == "dependency-cycle"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="dependency-cycle",
+        message="these tasks wait on each other and none of them can start",
+        task="Task 1",
+        section="Task 1: A",
+        line=3,
+        evidence="strongly connected component: Task 1, Task 2",
+        severity=ERROR,
+    )
 
 
 # ---------------------------------------------------------------- checks
@@ -600,6 +638,150 @@ def test_check_not_runnable_is_absent_on_the_clean_fixture():
     assert [f for f in findings if f.rule == "check-not-runnable"] == []
 
 
+def test_check_not_runnable_leading_runner_is_stripped_before_the_prose_check():
+    r"""Coverage gap: `LEADING_RUNNER` (`uv run`, `npx`, `poetry run`, `pnpm`,
+    `make`) is stripped from the front of `command` before the prose-opener
+    check runs, and no test exercises it. `Check: \`uv run confirm the
+    output\`` strips `uv run `, leaving `confirm the output` -- `confirm` is
+    a `PROSE_OPENERS` member, so this fires check-not-runnable. Full Finding
+    equality."""
+    from spellbook.planlint.finding import WARNING
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Runner-prefixed prose\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `uv run confirm the output`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    findings = checks.run(ctx).findings
+    hits = [f for f in findings if f.rule == "check-not-runnable"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="check-not-runnable",
+        message=(
+            "the `Check:` command opens with a word from a closed "
+            "prose-opener list and is likely a description, not a "
+            "runnable command"
+        ),
+        task="Task 1",
+        section="Task 1: Runner-prefixed prose",
+        line=10,
+        evidence="Check: `uv run confirm the output`",
+        severity=WARNING,
+    )
+
+
+def test_check_not_runnable_leading_assignment_is_stripped_before_the_prose_check():
+    r"""Coverage gap: `LEADING_ASSIGNMENT` (an env-var prefix like
+    `FOO=bar somecommand`) is stripped from the front of `command` before the
+    prose-opener check runs, and no test exercises it. `Check: \`FOO=bar
+    ensure the flag is set\`` strips `FOO=bar `, leaving `ensure the flag is
+    set` -- `ensure` is a `PROSE_OPENERS` member, so this fires
+    check-not-runnable. Full Finding equality."""
+    from spellbook.planlint.finding import WARNING
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Env-assignment-prefixed prose\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `FOO=bar ensure the flag is set`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    findings = checks.run(ctx).findings
+    hits = [f for f in findings if f.rule == "check-not-runnable"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="check-not-runnable",
+        message=(
+            "the `Check:` command opens with a word from a closed "
+            "prose-opener list and is likely a description, not a "
+            "runnable command"
+        ),
+        task="Task 1",
+        section="Task 1: Env-assignment-prefixed prose",
+        line=10,
+        evidence="Check: `FOO=bar ensure the flag is set`",
+        severity=WARNING,
+    )
+
+
+def test_check_empty_fires_when_the_none_word_carries_a_trailing_period():
+    """Coverage gap: `raw.lower().rstrip(".")` strips a trailing period
+    before comparing against `NONE_WORDS`, and no test exercises the
+    `.rstrip(".")` branch. `Check: none.` (with a trailing period) must still
+    report check-empty. Full Finding equality."""
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Trailing-period none\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** none.\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    findings = checks.run(ctx).findings
+    hits = [f for f in findings if f.rule == "check-empty"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="check-empty",
+        message=(
+            "the `Check:` field is absent or empty; a task with no proving "
+            "command has no definition of done"
+        ),
+        task="Task 1",
+        section="Task 1: Trailing-period none",
+        line=10,
+        evidence="",
+        severity=ERROR,
+    )
+
+
+@pytest.mark.parametrize("opener", sorted(checks.PROSE_OPENERS))
+def test_check_not_runnable_fires_for_every_prose_opener(opener):
+    """Closes the coverage gap where only ~6 of `PROSE_OPENERS`'s 15 words
+    were exercised. Parametrized over the ACTUAL frozenset read from the
+    source (`checks.PROSE_OPENERS`), not a hand-typed list that could drift
+    out of sync -- removing any single word from `PROSE_OPENERS` now fails
+    exactly the case parametrized on that word."""
+    from spellbook.planlint.finding import WARNING
+    from spellbook.planlint.rules import checks
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Prose opener case\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        f"**Check:** `{opener} the output is correct`\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    findings = checks.run(ctx).findings
+    hits = [f for f in findings if f.rule == "check-not-runnable"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="check-not-runnable",
+        message=(
+            "the `Check:` command opens with a word from a closed "
+            "prose-opener list and is likely a description, not a "
+            "runnable command"
+        ),
+        task="Task 1",
+        section="Task 1: Prose opener case",
+        line=10,
+        evidence=f"Check: `{opener} the output is correct`",
+        severity=WARNING,
+    )
+
+
 # ------------------------------------------------------------ consistency
 
 def test_check_verify_pass_consistency_fires_at_the_run_line_not_check_line():
@@ -767,6 +949,75 @@ def test_check_verify_pass_consistency_reports_a_malformed_run_line_accurately()
         evidence=(
             "Check: pytest tests/x.py::test_a -v  |  "
             "Step 4 'Verify pass' has no valid Run: command line"
+        ),
+        severity=ERROR,
+    )
+
+
+def test_check_verify_pass_consistency_is_silent_when_only_internal_whitespace_differs():
+    """`_normalize` collapses internal whitespace runs and strips the ends
+    (design §4.3, "deliberately narrow"). If a future edit TIGHTENS
+    `_normalize` by removing the whitespace-collapse, this test catches it:
+    `Check:` and `Run:` differ only by extra internal spacing, so the rule
+    must stay silent."""
+    from spellbook.planlint.rules import consistency
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Whitespace-only drift\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest tests/x.py::test_a -v`\n\n"
+        "**Step 4: Verify pass**\n"
+        "Run: `pytest  tests/x.py::test_a   -v`\n"
+        "Expected: PASS\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    hits = [
+        f for f in consistency.run(ctx).findings
+        if f.rule == "check-verify-pass-consistency"
+    ]
+    assert hits == []
+
+
+def test_check_verify_pass_consistency_fires_when_only_case_differs():
+    """`_normalize` does NOT lowercase (design §4.3, "deliberately narrow").
+    If a future edit LOOSENS `_normalize` by adding `.lower()`, this test
+    catches it: `Check:` and `Run:` differ only by case, so the rule must
+    fire. Full Finding equality."""
+    from spellbook.planlint.rules import consistency
+
+    text = (
+        "**Schema:** planlint-v1\n\n"
+        "### Task 1: Case-only drift\n\n"
+        "**Files:**\n- Create: `x.py`\n\n"
+        "**Depends:** none\n\n"
+        "**Check:** `pytest tests/x.py::Test_A -v`\n\n"
+        "**Step 4: Verify pass**\n"
+        "Run: `pytest tests/x.py::test_a -v`\n"
+        "Expected: PASS\n"
+    )
+    doc = PlanDocument.from_text(text)
+    ctx = registry.RuleContext(doc=doc, phase=_Phase.REVIEW, repo_root=None)
+    step4 = next(s for s in doc.task("Task 1").steps if s.number == 4)
+    findings = consistency.run(ctx).findings
+    hits = [f for f in findings if f.rule == "check-verify-pass-consistency"]
+    assert len(hits) == 1
+    assert hits[0] == Finding(
+        rule="check-verify-pass-consistency",
+        message=(
+            "the `Check:` field and the `Verify pass` step name "
+            "different commands; `Check:` is the single source of "
+            "truth and the step's `Run:` line must repeat it "
+            "verbatim"
+        ),
+        task="Task 1",
+        section="Task 1: Case-only drift",
+        line=step4.run_line,
+        evidence=(
+            "Check: pytest tests/x.py::Test_A -v  |  "
+            "Step 4 Run: pytest tests/x.py::test_a -v"
         ),
         severity=ERROR,
     )

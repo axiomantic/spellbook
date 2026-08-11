@@ -19,7 +19,7 @@ def test_plan_amendment_writes_section_exists_between_mode_selection_and_autonom
 def test_plan_amendment_writes_calls_lint_on_write():
     text = _text()
     section = text.split("## Plan Amendment Writes", 1)[1].split("## Autonomous Mode", 1)[0]
-    assert "lint_on_write" in section
+    assert "report = lint_on_write(plan_path, new_text, repo_root=Path(repo_root))" in section
 
 
 def test_plan_amendment_writes_states_fail_open_never_revert():

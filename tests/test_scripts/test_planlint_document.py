@@ -265,8 +265,13 @@ def test_resolved_schema_skips_to_first_task_with_a_non_empty_schema_value():
 
 
 def test_from_path_raises_filenotfounderror_on_missing_file(tmp_path):
-    with pytest.raises(FileNotFoundError):
-        PlanDocument.from_path(tmp_path / "does_not_exist.md")
+    missing = tmp_path / "does_not_exist.md"
+    with pytest.raises(FileNotFoundError) as exc_info:
+        PlanDocument.from_path(missing)
+    # Assert the raised exception actually names the missing path, not just
+    # its type — a stub that raised FileNotFoundError() with no path would
+    # satisfy pytest.raises alone but be a strictly weaker guarantee.
+    assert exc_info.value.filename == str(missing)
 
 
 def test_step_run_command_is_parsed_from_its_run_line():

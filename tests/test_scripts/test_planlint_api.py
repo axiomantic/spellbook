@@ -152,9 +152,19 @@ def test_lint_text_on_a_v1_plan_with_zero_tasks_reports_no_input_error():
 
 
 def test_lint_path_on_a_missing_file_returns_unlinted_not_an_exception(tmp_path):
-    report = api.lint_path(tmp_path / "does_not_exist.md")
+    missing = tmp_path / "does_not_exist.md"
+    report = api.lint_path(missing)
     assert report.linted is False
-    assert "unreadable" in report.skip_reason
+    # api.py builds this as f"unreadable: {exc}" from the caught OSError; assert
+    # exact equality against the SAME exception the production code path raises,
+    # not a bare substring that would also pass if the prefix were dropped or the
+    # exception text were replaced with something unrelated.
+    try:
+        missing.read_text(encoding="utf-8")
+        raise AssertionError("expected the missing file to raise OSError")
+    except OSError as exc:
+        expected_reason = f"unreadable: {exc}"
+    assert report.skip_reason == expected_reason
 
 
 def test_lint_path_on_a_real_file(tmp_path):
@@ -270,7 +280,12 @@ def test_decided_claims_reports_skipped_rule_as_undecided():
 def test_summary_line_is_one_line():
     text = (FIXTURES / "clean_plan.md").read_text(encoding="utf-8")
     report = api.lint_text(text)
-    assert "\n" not in report.summary_line()
+    # lint_text has no repo_root, so `files` is undecided (6 of 7 rules
+    # decided) -- see test_decided_claims_reports_skipped_rule_as_undecided
+    # above. Full-string equality against the exact summary_line() format,
+    # not just newline-absence, so a wrong count or a dropped clause is
+    # caught.
+    assert report.summary_line() == "<text>: clean (6 of 7 rule(s) decided, 1 skipped, 0 findings)"
 
 
 # --------------------------------------------------------- H1: no-rules-ran

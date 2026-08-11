@@ -57,9 +57,12 @@ def test_field_definitions_section_exists_after_task_structure():
 def test_field_definitions_documents_depends_check_and_schema():
     text = _text()
     section = text.split("## Field Definitions", 1)[1].split("## Mode Behavior", 1)[0]
-    assert "Depends" in section
-    assert "Check" in section
-    assert "Schema" in section
+    field_rows = [
+        line.split("|")[1].strip().strip("`")
+        for line in section.splitlines()
+        if line.strip().startswith("| `**")
+    ]
+    assert field_rows == ["**Depends:**", "**Check:**", "**Schema:** planlint-v1"]
 
 
 def test_plan_lint_self_check_section_exists_before_final_emphasis():
@@ -77,5 +80,4 @@ def test_plan_lint_self_check_calls_lint_for_authoring():
 def test_self_check_list_has_the_planlint_bullet():
     text = _text()
     self_check = text.split("## Self-Check", 1)[1].split("## Plan Lint Self-Check", 1)[0]
-    assert "planlint" in self_check.lower()
-    assert "ERROR" in self_check
+    assert "- [ ] planlint reports zero ERROR findings (see Plan Lint Self-Check)" in self_check

@@ -370,6 +370,18 @@ def test_cli_exits_2_when_a_rule_crashes_alongside_a_separate_rules_finding(caps
     # Crash-wins-over-findings: exit 2 (not 1), and the summary line still
     # reports both the finding and the crash counts on stdout.
     assert captured.out == f"{plan}: 1 finding(s), 1 error(s), 1 crash(es)\n"
-    assert "finder: 1 finding(s) (1 inputs examined)" in captured.err
-    assert "a real finding" in captured.err
-    assert "crasher: CRASHED (KeyError: 'boom')" in captured.err
+    # Mirror the exact-head + traceback-marker pattern from
+    # test_cli_exits_2_when_a_rule_crashes above: the traceback body is
+    # non-deterministic, so only the HEAD portion (results.report() for the
+    # surviving `finder` rule, then the crasher's CRASHED line) is asserted
+    # for exact equality, and the traceback marker line is asserted to start
+    # the remainder without checking its contents.
+    expected_head = (
+        "finder: 1 finding(s) (1 inputs examined)\n"
+        "  [ERROR] some-rule\n"
+        "      a real finding\n"
+        "crasher: CRASHED (KeyError: 'boom')\n"
+    )
+    assert captured.err.startswith(expected_head)
+    traceback_tail = captured.err[len(expected_head) :]
+    assert traceback_tail.startswith("Traceback (most recent call last):")

@@ -20,9 +20,8 @@ def test_phase_0_section_exists_before_phase_1():
 def test_phase_0_calls_lint_for_review_and_declares_schema():
     text = _text()
     section = text.split("## Phase 0: Mechanized Pre-Pass", 1)[1].split("## Phase 1", 1)[0]
-    assert "declares_schema" in section
-    assert "lint_for_review" in section
-    assert "decided_claims" in section
+    assert "from spellbook.planlint import declares_schema, decided_claims, lint_for_review" in section
+    assert "report = lint_for_review(plan_path, repo_root=Path(repo_root))" in section
 
 
 def test_phase_0_imports_declares_schema_not_just_mentions_it():
@@ -47,15 +46,19 @@ def test_phase_0_states_the_crash_policy():
     random."""
     text = _text()
     section = text.split("## Phase 0: Mechanized Pre-Pass", 1)[1].split("## Phase 1", 1)[0]
-    assert "internal_errors" in section
-    assert "UNAVAILABLE" in section
-    assert "UNDECIDED" in section
+    assert (
+        "**If the linter CRASHES, this phase fails CLOSED on the claims and OPEN on the\n"
+        "review.**"
+    ) in section
 
 
 def test_phase_0_gate_names_legacy_plans_not_applicable():
     text = _text()
     section = text.split("## Phase 0: Mechanized Pre-Pass", 1)[1].split("## Phase 1", 1)[0]
-    assert "NOT APPLICABLE" in section
+    assert (
+        "Record\n`Phase 0: NOT APPLICABLE (plan declares no Schema:)` and go to Phase 1. Do NOT\n"
+        "call the linter."
+    ) in section
 
 
 def test_report_assembly_carries_phase_0_block():
