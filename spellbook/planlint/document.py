@@ -1,0 +1,847 @@
+"""Parser for a spellbook implementation plan.
+
+A task block is an H3 heading (`### Task N: Name`), then line-scoped fields
+(`Depends:`, `Check:`, `Schema:`), then one block-scoped field (`Files:`, a
+bullet list). This is the inverse of nmg2-tools/planlint/document.py, where
+`Check:` is the block-scoped field and `Files:` is a single line — the
+ARCHITECTURE (one block-scoped field per task) is kept; WHICH field is
+block-scoped is swapped, because writing-plans already writes `Files:` as a
+multi-line bullet list and `Check:` as one line.
+
+The backtick scanner below is ported unchanged in behavior from
+nmg2-tools/planlint/document.py:206-266. A fenced block is a REGION and
+yields no inline spans. An inline span never crosses a line break. An
+unmatched backtick is literal text and is REPORTED (see rules/structure.py),
+not silently absorbed.
+"""
+
+import dataclasses
+import pathlib
+import re
+
+# A task header is an H3 heading. This is what writing-plans already emits:
+#     ### Task 4: Rule registry
+TASK_HEADER = re.compile(r"^###\s+Task\s+(?P<number>\d+)\s*:\s*(?P<name>.+?)\s*$")
+
+# The canonical identifier of a task. `Task 4`. Used in Depends:, in every
+# Finding.task, and as the graph node key.
+TASK_IDENT = re.compile(r"^Task\s+(?P<number>\d+)$")
+
+# A reference to a task anywhere in prose or in a Depends: item.
+TASK_REF = re.compile(r"\bTask\s+(?P<number>\d+)\b")
+
+# `Task 3 to Task 6` is four idents, not two.
+TASK_RANGE = re.compile(r"^Task\s+(?P<low>\d+)\s+to\s+Task\s+(?P<high>\d+)$")
+
+# A field label. writing-plans writes labels in bold; a plain label is
+# accepted too, so a hand-written plan is not rejected on markup alone.
+FIELD = re.compile(
+    r"^\s*(?:\*\*)?(?P<field>Files|Depends|Check|Schema)\s*:(?:\*\*)?\s?(?P<value>.*)$"
+)
+
+# A Files: bullet. `- Create: `path``, `- Modify: `path:12-30``,
+# `- Test: `path``, optionally followed by `(owner: Task 3)`.
+FILES_ENTRY = re.compile(
+    r"^\s*[-*]\s+(?P<verb>Create|Modify|Test|Delete)\s*:\s*(?P<rest>.+?)\s*$"
+)
+OWNER_ANNOTATION = re.compile(r"\(\s*owner\s*:\s*(?P<owner>Task\s+\d+)\s*\)\s*$")
+
+# A path may carry a line range: `path/to/file.py:123-145`.
+LINE_RANGE_SUFFIX = re.compile(r":(?P<start>\d+)(?:-(?P<end>\d+))?$")
+
+FENCE = re.compile(r"^\s*```(?P<info>.*)$")
+HEADING = re.compile(r"^(?P<hashes>#{1,6}) +(?P<text>.+?)\s*$")
+
+# A `**Step N: Title**` line and its `Run:` line.
+STEP_HEADER = re.compile(r"^\*\*Step\s+(?P<number>\d+)\s*:\s*(?P<title>.+?)\*\*\s*$")
+RUN_LINE = re.compile(r"^Run:\s*(?P<value>.*)$")
+
+SCHEMA_MARKER = "planlint-v1"
+SCHEMA_LEGACY = "legacy"
+
+# The FAMILY of values that opt a plan into the linter. Deliberately wider than
+# SCHEMA_MARKER: `api.declares_schema` gates on the family, not on one version,
+# so a plan declaring `planlint-v2` is admitted and then JUDGED by
+# rules/schema.py's `schema-unknown-version` rule. Gating on the exact marker
+# instead would send every future version down the "legacy plan" path, where no
+# rule runs — which would make the forward-compatibility alarm unreachable and
+# hand an unrecognized schema the same silent pass a legacy plan gets. The gate
+# is also case-insensitive and allows `.`/`-` in the version suffix, wider than
+# the exact-match checks downstream (this property and rules/schema.py's
+# `KNOWN_VALUES`); an unusually-cased declaration like `PLANLINT-V1` is ADMITTED
+# here and then correctly flagged as unrecognized/malformed by rules/schema.py,
+# rather than silently skipped. `re.ASCII` keeps the case-folding restricted to
+# ASCII letters — without it, `re.IGNORECASE` on a `str` pattern also folds
+# Unicode lookalike characters into `[a-z]`, which is not the intent.
+SCHEMA_FAMILY = re.compile(r"^planlint-[a-z0-9][a-z0-9.-]*$", re.IGNORECASE | re.ASCII)
+
+NONE_WORDS = frozenset({"none", "nothing", "n/a", "na", "-", "—"})
+
+
+def strip_markup(text):
+    """Remove bold markers and backticks, and collapse whitespace."""
+    text = text.replace("**", "")
+    text = text.replace("`", "")
+    return " ".join(text.split())
+
+
+# ------------------------------------------------------- the backtick scanner
+# Ported from nmg2-tools/planlint/document.py:206-266. See module docstring.
+
+
+@dataclasses.dataclass(frozen=True)
+class _UnpairedFence:
+    """The leftover info for one segment with an odd fence-marker count.
+
+    `anchor` is the 0-based line index a finding attaches to. `markers` is
+    `None` for the trivial single-marker case (there is nothing to
+    disambiguate -- one marker with no partner IS the defect). For a
+    genuinely ambiguous segment (3 or more markers) `markers` is the full
+    ordered tuple of that segment's marker indexes, so the caller can report
+    "N markers, cannot tell which is unclosed" instead of accusing one
+    arbitrarily chosen line. `anchor` is still set in the ambiguous case
+    (the first marker) purely so a finding has A line to point at; it is
+    not, by itself, an accusation that that marker is the broken one.
+    """
+
+    anchor: int
+    markers: tuple = None
+
+
+def _pair_fence_markers(markers):
+    """Pair one segment's fence-marker line indexes into `(open, close)`
+    tuples, plus the leftover info if the count is odd (`None` if even), for
+    DIAGNOSTIC/REPORTING purposes only -- i.e. `unclosed_fence_index`, which
+    feeds the `unclosed-fence` Finding. See `_protective_fence_ranges` for
+    the separate, permissive pairing used for content-scanning protection
+    (`fenced_line_indexes`, `PlanDocument._scan_fences`); the two concerns
+    are deliberately decoupled and this function serves only the first.
+
+    On an EVEN count, markers pair CONSECUTIVELY -- `markers[1]` closes
+    `markers[0]`, `markers[3]` closes `markers[2]`, and so on. There is
+    nothing to guess: an even count has exactly one non-crossing matching.
+
+    An ODD count is where "which marker has no partner" stops being a
+    question position alone can answer:
+
+    - Exactly ONE marker: zero ambiguity. It is trivially the unclosed one.
+    - THREE OR MORE markers: genuinely ambiguous. Pairing consecutively from
+      the front (the FIRST marker left over) and pairing consecutively from
+      the back (the LAST marker left over) are BOTH valid non-crossing
+      matchings, and no amount of "smarter" greedy pairing resolves that in
+      general -- bare ``` lines carry no other signal.
+
+    Two earlier fix attempts each picked one of those guesses and paid for
+    it on the shape the guess got wrong:
+
+    - Leftover-LAST (a naive whole-segment toggle): wrong when the broken
+      marker comes FIRST. It pairs the broken opener with the next real
+      opener as a phantom close, swallowing everything between them --
+      including real `Depends:`/`Check:` field text -- and blames the real
+      pair's own closing marker as "the" unclosed one.
+    - Leftover-FIRST: wrong the mirror way, when the broken marker comes
+      LAST. It pairs a real closer with the later broken marker as a
+      phantom pair, swallowing the same kind of field text in between, and
+      blames the real closer instead of the true defect.
+
+    Since guessing "which ONE marker is broken" is wrong on some real input
+    either way, a 3+-marker segment never names a single broken marker for
+    REPORTING: the caller reports the ambiguity itself ("N markers here,
+    cannot tell which is unclosed") rather than accusing one line. This
+    function returns no pairs at all for that case -- `(pairs, leftover)` is
+    `([], _UnpairedFence(..., markers=...))` -- because for THIS function's
+    one consumer (naming "the" unclosed marker) a wrong pair is exactly as
+    misleading as a wrong single accusation. Content-scanning protection
+    does not share that downside and uses a separate, permissive function
+    instead of leaning on this one's pairs.
+    """
+    if len(markers) % 2 == 0:
+        pairs = [(markers[i], markers[i + 1]) for i in range(0, len(markers), 2)]
+        return pairs, None
+    if len(markers) == 1:
+        return [], _UnpairedFence(anchor=markers[0])
+    return [], _UnpairedFence(anchor=markers[0], markers=tuple(markers))
+
+
+def _protective_fence_ranges(markers):
+    """Compute one segment's CONTENT-SCANNING PROTECTION ranges from its
+    fence-marker line indexes.
+
+    This is the FINAL rule (see `fenced_line_indexes`'s docstring for the
+    full history and the reasoning behind it):
+
+    - 0 or 1 markers: nothing to pair. A lone marker protects nothing --
+      there is no lookahead signal that content after an unclosed marker
+      belongs to it, same as the trivial case in `_pair_fence_markers`.
+    - EVEN count (2, 4, 6, ...): UNAMBIGUOUS. Pair consecutively --
+      `(markers[0], markers[1])`, `(markers[2], markers[3])`, and so on.
+      There is exactly one non-crossing matching, so this case was never
+      broken and is unchanged from every earlier iteration.
+    - ODD count, 3 or more: AMBIGUOUS -- exactly one marker in the segment
+      has no partner, and (per `_pair_fence_markers`'s docstring) WHICH one
+      cannot be determined from position alone. Protect the ENTIRE span from
+      `markers[0]` to `markers[-1]` inclusive as ONE undifferentiated block,
+      rather than guessing at sub-pairs within it.
+
+      This is provably safe against ever letting real fenced content LEAK:
+      for any placement of the one genuinely-stray marker among the
+      remaining well-formed pairs, every well-formed pair's own
+      `[open, close]` range is a subset of `[markers[0], markers[-1]]`,
+      because `markers[0] <= open <= close <= markers[-1]` by definition of
+      "first" and "last" in a sorted marker list. So the full-span block
+      always protects every well-formed pair's content, regardless of
+      whether the stray marker sits before, after, or between them. Two
+      earlier attempts (front-consecutive pairing, and its mirror
+      leftover-first pairing) each guessed at a specific sub-pairing instead,
+      and each guess was provably wrong on the shape it did not anticipate --
+      see `_pair_fence_markers`'s docstring for the two failure shapes. This
+      function does not guess: it makes no claim about which sub-pairing is
+      "real", so there is no wrong guess left to make.
+
+      The accepted cost of this safety: genuine non-fenced content that
+      happens to fall inside `[markers[0], markers[-1]]` -- e.g. a real
+      `Depends:` line sitting between the stray marker and a well-formed
+      pair -- is also treated as protected (DROPPED from field-scanning),
+      even though it was never really inside any fence. That is a safe
+      degradation (the field comes back empty/missing, not substituted with
+      a wrong value) and is the documented, accepted tradeoff: DROP over
+      LEAK. Combined with `unclosed_fence_index`'s "N markers, cannot
+      determine which is unclosed" diagnostic on the same segment, the drop
+      is not silent -- the plan author gets a visible signal that the
+      region needs manual attention.
+    """
+    if len(markers) < 2:
+        return []
+    if len(markers) % 2 == 0:
+        return [(markers[i], markers[i + 1]) for i in range(0, len(markers), 2)]
+    return [(markers[0], markers[-1])]
+
+
+def _scan_fence_markers(lines):
+    """Every fence-marker line index in document order, paired with whether
+    that marker carries a fence INFO STRING (non-whitespace content after
+    the triple backtick, e.g. the `markdown` in ` ```markdown `).
+
+    This is standard Markdown fence syntax, and every fixture in this
+    codebase honors it: an OPENER may carry an info string; a CLOSER is
+    always bare. `_fence_segments` uses that convention as a strong,
+    unambiguous OPENER signal. A bare marker alone carries no such signal --
+    it is exactly as likely to be a same-convention pair's opener as its
+    closer.
+
+    KNOWN LIMITATION, deliberate scope boundary: this scanner (and the
+    pairing built on it in `_pair_fence_markers`/`_protective_fence_ranges`)
+    does not track backtick-RUN LENGTH. A 4-or-more-backtick marker (e.g.
+    ` ```` `) is treated identically to a plain 3-backtick ` ``` ` marker --
+    `FENCE` matches any run of 3+ backticks and everything past the third is
+    folded into the `info` group. Real CommonMark pairs a fence opener with
+    the first closer whose run length is >= the opener's, which is what lets
+    a document nest a shorter-delimiter fence (```` ``` ````) inside a
+    longer one (```` ```` ````) as literal, unparsed content -- the standard
+    idiom for a fenced example that itself shows fenced code. Length-blind
+    pairing can misread that nesting. A proper fix would record each
+    marker's run length alongside its `has_info` flag and require the
+    closer's length to be >= the opener's when pairing, instead of pairing
+    by position alone. As of commit dabe9569, a corpus sweep of all 758
+    `.md` files in this repository found zero cases where the current,
+    length-blind logic disagrees with the pre-info-string-fix baseline, so
+    the gap is real but currently unreached by anything in this repo.
+    Closing it fully is out of scope for this port.
+    """
+    markers = []
+    for index, line in enumerate(lines):
+        match = FENCE.match(line)
+        if match:
+            markers.append((index, bool(match.group("info").strip())))
+    return markers
+
+
+def _header_based_segments(lines, markers):
+    """Split the given, already-filtered marker indexes into segments at
+    every `### Task N: ...` header, unconditionally -- a header is always a
+    hard boundary for whatever markers reach this function.
+
+    This is the segmentation `_fence_segments` used for ALL markers before a
+    header-crossing "carry" mechanism was introduced to patch one specific
+    positional ambiguity (see `_fence_segments`'s docstring). It is correct
+    again, unchanged, for the AMBIGUOUS residual that reaches this function:
+    a fence is never expected to span a task boundary in this document
+    family, and the one shape that genuinely needed to look past a header
+    -- an info-string-marked fence swallowing a header-shaped line as fence
+    content -- is resolved by `_fence_segments` before this function ever
+    sees those markers.
+    """
+    marker_set = set(markers)
+    current = []
+    for index, line in enumerate(lines):
+        if TASK_HEADER.match(line):
+            if current:
+                yield tuple(current)
+                current = []
+            continue
+        if index in marker_set:
+            current.append(index)
+    if current:
+        yield tuple(current)
+
+
+def _fence_segments(lines):
+    """Group fence-marker line indexes into segments, in two passes.
+
+    PASS 1 -- INFO-STRING RESOLUTION (unambiguous, needs no lookahead). A
+    marker WITH an info string (` ```python `, ` ```markdown `) is read as
+    an opener that closes at the very NEXT bare marker, full stop --
+    regardless of what falls between them, including a
+    `### Task N: ...`-shaped line that is really fence CONTENT (this
+    document family's own docs quoting a worked example of another plan
+    document, complete with the example's own fake header). The info string
+    already says "this is an opener", so the pair is settled the moment its
+    next bare marker is seen -- no provisional boundary, no carry, no
+    guessing. This is what resolves the original motivating case.
+
+    If a second info-string marker appears before the first one's bare
+    closer arrives, the first one's "next bare marker" never came -- it did
+    not resolve via this rule, and it falls through to PASS 2 rather than
+    forcing a guess about which opener a later closer belongs to.
+
+    PASS 2 -- HEADER-BASED SEGMENTATION OF THE AMBIGUOUS RESIDUAL. Whatever
+    PASS 1 could not resolve (a bare marker with no preceding pending
+    info-string opener, or a trailing info-string opener that never found
+    its bare closer) is genuinely ambiguous -- a bare marker alone carries
+    no signal for which half of a pair it is. That residual is split
+    unconditionally at every task header by `_header_based_segments`: the
+    segmentation this document family used before a header-crossing "carry"
+    mechanism was introduced to patch the motivating case positionally.
+    That carry mechanism (accumulate marker counts across header boundaries
+    until the running total returns to EVEN, then merge) is retired here --
+    parity alone is too coarse a signal: it can coincidentally merge two
+    UNRELATED single-marker segments in adjacent tasks into a phantom pair
+    (silently cancelling a real defect in each and losing neither task from
+    `doc.tasks` -- until it does, since the merged pair's range can swallow
+    the header between them), and it can just as easily merge a stray
+    marker with a well-formed pair's own opener or closer, leaking that
+    pair's content unprotected. Both failure modes disappear once PASS 1
+    peels off the one shape the carry was actually needed for; an
+    unconditional per-header split has nothing left to get wrong on the
+    ambiguous-only residual. See
+    `test_unpaired_fence_does_not_corrupt_a_later_paired_fence`, where a
+    lone broken opener in one task and an unrelated, self-contained
+    well-formed pair in the next are correctly kept as two separate
+    segments by this same unconditional split.
+
+    Yields each segment's raw marker-index tuple, in document order
+    (PASS 1's resolved pairs first, then PASS 2's header-split segments).
+    Callers derive whatever they need from the raw markers:
+    `_pair_fence_markers` for conservative diagnostic pairing,
+    `_protective_fence_ranges` for permissive content-scanning protection.
+    Keeping the raw markers here (rather than pre-pairing them) is what lets
+    the two concerns use different pairing rules on the same segmentation.
+    """
+    pending_info = None
+    ambiguous = []
+    resolved_pairs = []
+    for index, has_info in _scan_fence_markers(lines):
+        if has_info:
+            if pending_info is not None:
+                # The previously pending info-string opener never found a
+                # bare closer before this new opener appeared -- it did not
+                # resolve via PASS 1, so it joins the ambiguous residual
+                # instead of being silently dropped.
+                ambiguous.append(pending_info)
+            pending_info = index
+            continue
+        if pending_info is not None:
+            resolved_pairs.append((pending_info, index))
+            pending_info = None
+        else:
+            ambiguous.append(index)
+    if pending_info is not None:
+        # EOF reached with an info-string opener still pending -- it never
+        # found its bare closer, so it too falls through to PASS 2.
+        ambiguous.append(pending_info)
+
+    yield from resolved_pairs
+    yield from _header_based_segments(lines, ambiguous)
+
+
+def unclosed_fence_index(lines):
+    """The `_UnpairedFence` for the first segment with an odd marker count,
+    or `None` if every segment's markers pair off evenly.
+
+    Reads the document exactly like `fenced_line_indexes`/`_scan_fences`
+    (same segmentation via `_fence_segments`), so `rules/structure.py`
+    reports on the same segment those two treat as broken -- though the
+    PAIRING rule this function applies (`_pair_fence_markers`, conservative)
+    differs from theirs (`_protective_fence_ranges`, permissive); see each
+    function's docstring. The caller distinguishes the trivial case
+    (`.markers is None`, one marker, unambiguously the defect) from the
+    genuinely ambiguous case (`.markers` is the segment's full marker tuple)
+    to decide whether it may name one line as "the" defect or must report
+    the ambiguity itself.
+    """
+    for markers in _fence_segments(lines):
+        _pairs, leftover = _pair_fence_markers(markers)
+        if leftover is not None:
+            return leftover
+    return None
+
+
+def fenced_line_indexes(lines):
+    """The index of every line inside a fence, for CONTENT-SCANNING
+    PROTECTION -- i.e. the set of lines `_fill_fields` and
+    `inline_code_spans` must skip so fenced illustrative content is never
+    misread as real field text.
+
+    This is the FINAL algorithm, after several prior iterations each found a
+    real leak counterexample. Markers are grouped into per-task segments by
+    `_fence_segments`; within each segment:
+
+    - 0 or 1 markers: no pairing possible, protects nothing.
+    - EVEN count: UNAMBIGUOUS. Pair consecutively (open 1/close 2, open
+      3/close 4, ...) -- there is exactly one non-crossing matching, so this
+      case was never broken.
+    - ODD count (3+): AMBIGUOUS -- which single marker is the true stray one
+      cannot be determined from position alone (see `_pair_fence_markers`'s
+      docstring for why). Rather than guess at a sub-pairing, the ENTIRE
+      span from the segment's first marker to its last marker is protected
+      as ONE undifferentiated block. This is provably safe against LEAK: any
+      well-formed pair's `[open, close]` range is necessarily a subset of
+      `[first, last]` for the whole segment, so full-span protection always
+      covers every well-formed pair's content regardless of where the stray
+      marker sits. See `_protective_fence_ranges`'s docstring for the full
+      proof and for the two earlier, narrower pairing rules (front-
+      consecutive and leftover-first) that each leaked on the shape they did
+      not anticipate.
+
+    The ONE accepted tradeoff of this rule: genuinely non-fenced content
+    that happens to fall inside an odd segment's `[first, last]` span (e.g. a
+    real `Depends:` line between a stray marker and a well-formed pair) is
+    also treated as protected, and so DROPPED from field-scanning -- the
+    field comes back empty/missing rather than substituted with a wrong
+    value. DROP is accepted; LEAK is not. This is paired with the
+    `unclosed-fence` diagnostic (`unclosed_fence_index`, unchanged) so the
+    drop is never silent: the plan author sees "N markers, cannot determine
+    which is unclosed" for that same segment.
+
+    Segmentation (`_fence_segments`) resolves an info-string-marked opener
+    (` ```python `, ` ```markdown `) against its next bare marker directly,
+    regardless of any `### Task N: ...`-shaped line in between -- a fence
+    genuinely open on an info string is never abandoned at a header, since
+    Markdown's own opener/closer convention already says it must still be
+    pending. A BARE pending open, with no info string to signal it is a real
+    opener, IS abandoned (dropped, not paired with anything) the moment a
+    `### Task N: ...` header is seen -- a fence is never expected to span a
+    task boundary in this document family, so for a marker with no stronger
+    signal, crossing one is exactly the signal that the pending opener was
+    never going to be genuinely closed.
+    """
+    inside = set()
+    for markers in _fence_segments(lines):
+        for open_at, close_at in _protective_fence_ranges(markers):
+            inside.update(range(open_at, close_at + 1))
+    return inside
+
+
+def _scan_line(line, offset, spans, unmatched):
+    """Pair the backticks of ONE line. Whatever is left over is literal."""
+    ticks = [index for index, char in enumerate(line) if char == "`"]
+    position = 0
+    while position + 1 < len(ticks):
+        opener, closer = ticks[position], ticks[position + 1]
+        if closer == opener + 1:
+            unmatched.append(offset + opener)
+            position += 1
+            continue
+        spans.append((offset + opener, offset + closer, line[opener + 1:closer]))
+        position += 2
+    for leftover in ticks[position:]:
+        unmatched.append(offset + leftover)
+
+
+def inline_code_spans(text):
+    """`(spans, unmatched)` for a run of text.
+
+    A span is `(opening tick offset, closing tick offset, the text between)`.
+    `unmatched` carries the offset of every backtick with no partner on its own
+    line, which is what `rules/structure.py` reports rather than absorbing.
+    """
+    lines = text.split("\n")
+    fenced = fenced_line_indexes(lines)
+    spans = []
+    unmatched = []
+    offset = 0
+    for index, line in enumerate(lines):
+        if index not in fenced:
+            _scan_line(line, offset, spans, unmatched)
+        offset += len(line) + 1
+    return spans, unmatched
+
+
+def backticked(text):
+    """Every inline backticked name, in order. The fence-aware `findall`."""
+    return [inner for _, _, inner in inline_code_spans(text)[0]]
+
+
+# ------------------------------------------------------------------ dataclasses
+
+
+@dataclasses.dataclass(frozen=True)
+class FilesEntry:
+    """One bullet of the block-scoped `Files:` field."""
+
+    verb: str
+    path: str
+    raw: str
+    line_start: int = 0
+    line_end: int = 0
+    owner: str = ""
+    line: int = 0
+
+
+@dataclasses.dataclass(frozen=True)
+class Step:
+    """One `**Step N: Title**` block inside a task body."""
+
+    number: int
+    title: str
+    line: int
+    body_text: str
+    run_command: str = ""
+    run_line: int = 0
+
+
+@dataclasses.dataclass
+class TaskBlock:
+    ident: str
+    number: int
+    name: str
+    line: int
+    section: str
+    header_text: str = ""
+    body_text: str = ""
+
+    files_text: str = ""
+    files_line: int = 0        # 1-based line of the `**Files:**` LABEL
+    files_block_line: int = 0  # 1-based line of the FIRST line of the bullet block
+
+    depends_text: str = ""
+    depends_line: int = 0
+    check_text: str = ""
+    check_line: int = 0
+    schema_text: str = ""
+    schema_line: int = 0
+
+    steps: tuple = ()
+
+    @property
+    def files_entries(self):
+        """One FilesEntry per bullet, each carrying ITS OWN document line.
+
+        `FilesEntry.line` must point at the bullet, not at the `**Files:**`
+        label. Three rules report at it — `modify-path-missing`,
+        `create-path-exists`, `shared-path-without-owner` — and all three name
+        a specific path, so a reader who follows the reported line to the label
+        finds a line that does not mention the path the finding is about. On a
+        task with six bullets, every one of those findings would point at the
+        same wrong line.
+
+        The offset arithmetic below is only correct because `_fill_fields`
+        keeps the block CONTIGUOUS (blank lines inside it are preserved in
+        `files_text` rather than dropped). An earlier draft skipped blanks
+        while collecting and then indexed as though it had not, which made the
+        error grow by one for every blank line above the bullet.
+        """
+        entries = []
+        for line_offset, raw_line in enumerate(self.files_text.split("\n")):
+            match = FILES_ENTRY.match(raw_line)
+            if not match:
+                continue
+            rest = match.group("rest")
+            owner_match = OWNER_ANNOTATION.search(rest)
+            owner = owner_match.group("owner") if owner_match else ""
+            if owner_match:
+                rest = rest[: owner_match.start()].strip()
+            names = backticked(rest)
+            if not names:
+                continue
+            raw = names[0]
+            path = raw
+            line_start = line_end = 0
+            range_match = LINE_RANGE_SUFFIX.search(raw)
+            if range_match:
+                path = raw[: range_match.start()]
+                line_start = int(range_match.group("start"))
+                line_end = int(range_match.group("end") or line_start)
+            entries.append(
+                FilesEntry(
+                    verb=match.group("verb"),
+                    path=path,
+                    raw=raw,
+                    line_start=line_start,
+                    line_end=line_end,
+                    owner=owner,
+                    line=self.files_block_line + line_offset,
+                )
+            )
+        return tuple(entries)
+
+    @property
+    def check_command(self):
+        spans, unmatched = inline_code_spans(self.check_text)
+        if len(spans) != 1 or unmatched:
+            return ""
+        start, end, inner = spans[0]
+        stripped = self.check_text.strip()
+        if self.check_text[start:end + 1] != stripped:
+            return ""
+        return inner
+
+    @property
+    def declared_dependencies(self):
+        from spellbook.planlint import graph  # local import: avoids a cycle,
+        # since graph.py imports TASK_IDENT/TASK_REF/TASK_RANGE from this
+        # module. See registry.py Task 4 for why the cycle would otherwise
+        # exist: document -> graph -> document.
+
+        edges, _ = graph.parse_depends(self.depends_text, graph.DEPENDS)
+        return tuple(edges)
+
+
+class PlanDocument:
+    """A spellbook implementation plan, parsed."""
+
+    def __init__(self, lines, name):
+        self.name = name
+        self.lines = lines
+        self.tasks = []
+        self._by_ident = {}
+        self._fences = []
+        self._headings = []
+        self.schema_text = ""
+        self.schema_line = 0
+        self._parse()
+
+    @classmethod
+    def from_text(cls, text, name="<text>"):
+        return cls(text.splitlines(), name)
+
+    @classmethod
+    def from_path(cls, path):
+        path = pathlib.Path(path)
+        return cls(path.read_text(encoding="utf-8").splitlines(), str(path))
+
+    def task(self, ident):
+        return self._by_ident.get(ident)
+
+    def has_task(self, ident):
+        return ident in self._by_ident
+
+    @property
+    def idents(self):
+        return frozenset(self._by_ident)
+
+    @property
+    def declares_planlint_schema(self):
+        """True when this plan declares THIS version. Reads `schema_text` ONLY.
+
+        NOT the call-site gate, and not a synonym for one. `api.declares_schema`
+        admits the whole `planlint-*` FAMILY so that an unrecognized version is
+        linted and reported by `rules/schema.py` rather than silently skipped;
+        this property answers the narrower question "is this exactly the version
+        the current rule pack was written for?". Do not use it to decide whether
+        to run the linter — that decision belongs to `api.declares_schema` alone,
+        and `test_planlint_schema_census.py` records which functions make it.
+        """
+        return self.schema_text == SCHEMA_MARKER
+
+    def section_at_line(self, line):
+        """The nearest enclosing heading text at 1-based document `line`,
+        markup stripped; `""` before the first heading.
+
+        This is the PUBLIC accessor for heading context. Rules that need the
+        section for a document line (rules/structure.py's `unclosed-fence`,
+        which reports a line that belongs to no task block) call this rather
+        than reaching into `_headings`, which is private and whose tuple shape
+        is not part of any contract.
+        """
+        return self._section_at(line - 1)
+
+    # ----------------------------------------------------------------- parse
+
+    def _parse(self):
+        self._scan_fences()
+        self._scan_headings()
+        self._scan_tasks()
+        for task in self.tasks:
+            self._scan_steps(task)
+        self._resolve_plan_schema()
+
+    def _scan_fences(self):
+        """Content-scanning protection -- see `fenced_line_indexes`'s and
+        `_protective_fence_ranges`'s docstrings. An even-count segment pairs
+        consecutively and unambiguously; an odd-count (3+) segment protects
+        its ENTIRE `[first, last]` marker span as one block, which provably
+        eliminates the LEAK failure mode at the cost of the documented,
+        accepted DROP tradeoff. A lone unpaired marker protects nothing."""
+        for markers in _fence_segments(self.lines):
+            for open_at, close_at in _protective_fence_ranges(markers):
+                self._fences.append({"start": open_at, "end": close_at})
+
+    def _in_fence(self, index):
+        for fence in self._fences:
+            if fence["start"] <= index <= fence["end"]:
+                return fence
+        return None
+
+    def _scan_headings(self):
+        for index, line in enumerate(self.lines):
+            if self._in_fence(index):
+                continue
+            match = HEADING.match(line)
+            if match:
+                self._headings.append((index, match.group("text")))
+
+    def _section_at(self, index):
+        found = ""
+        for line_index, text in self._headings:
+            if line_index <= index:
+                found = strip_markup(text)
+            else:
+                break
+        return found
+
+    def _scan_tasks(self):
+        starts = []
+        for index, line in enumerate(self.lines):
+            if self._in_fence(index):
+                continue
+            match = TASK_HEADER.match(line)
+            if match:
+                starts.append((index, match))
+
+        for position, (index, match) in enumerate(starts):
+            end = starts[position + 1][0] if position + 1 < len(starts) else len(self.lines)
+            for heading_index, _ in self._headings:
+                if index < heading_index < end:
+                    end = heading_index
+                    break
+            task = TaskBlock(
+                ident=f"Task {match.group('number')}",
+                number=int(match.group("number")),
+                name=match.group("name").strip(),
+                header_text=self.lines[index].strip(),
+                line=index + 1,
+                section=self._section_at(index),
+                body_text="\n".join(self.lines[index:end]),
+            )
+            self._fill_fields(task, index, end)
+            self.tasks.append(task)
+            self._by_ident[task.ident] = task
+
+    def _fill_fields(self, task, start, end):
+        """Line-scoped fields take the rest of their own line. `Files:` opens
+        a BLOCK that runs until the first line that is neither blank nor a
+        FILES_ENTRY bullet."""
+        index = start
+        while index < end:
+            if self._in_fence(index):
+                index += 1
+                continue
+            match = FIELD.match(self.lines[index])
+            if not match:
+                index += 1
+                continue
+            field = match.group("field")
+            value = match.group("value").strip()
+            if field == "Files":
+                task.files_line = index + 1
+                # The Files: label line itself never carries a bullet; the
+                # block begins on the NEXT line.
+                task.files_block_line = index + 2
+                # A blank line inside the block is KEPT, not skipped. `block`
+                # is indexed positionally by `files_entries` to recover each
+                # bullet's document line, so it has to stay contiguous with the
+                # source; dropping blanks here would shift every bullet below
+                # one of them. A kept blank line never matches FILES_ENTRY, so
+                # it costs one skipped iteration and nothing else.
+                block = []
+                cursor = index + 1
+                while cursor < end:
+                    line = self.lines[cursor]
+                    if not line.strip():
+                        block.append(line)
+                        cursor += 1
+                        continue
+                    if FILES_ENTRY.match(line):
+                        block.append(line)
+                        cursor += 1
+                        continue
+                    break
+                task.files_text = "\n".join(block)
+                index = cursor
+                continue
+            elif field == "Depends":
+                task.depends_text = value
+                task.depends_line = index + 1
+            elif field == "Check":
+                task.check_text = value
+                task.check_line = index + 1
+            elif field == "Schema":
+                task.schema_text = value
+                task.schema_line = index + 1
+            index += 1
+
+    def _scan_steps(self, task):
+        steps = []
+        lines = task.body_text.split("\n")
+        starts = []
+        for offset, line in enumerate(lines):
+            match = STEP_HEADER.match(line.strip())
+            if match:
+                starts.append((offset, match))
+        for position, (offset, match) in enumerate(starts):
+            end = starts[position + 1][0] if position + 1 < len(starts) else len(lines)
+            body = lines[offset:end]
+            run_command = ""
+            run_line = 0
+            for body_offset, body_line in enumerate(body):
+                run_match = RUN_LINE.match(body_line.strip())
+                if run_match:
+                    run_line = task.line + offset + body_offset
+                    value = run_match.group("value")
+                    spans, unmatched = inline_code_spans(value)
+                    if len(spans) == 1 and not unmatched:
+                        start, end, inner = spans[0]
+                        if value[start:end + 1] == value.strip():
+                            run_command = inner
+                    break
+            steps.append(
+                Step(
+                    number=int(match.group("number")),
+                    title=match.group("title").strip(),
+                    line=task.line + offset,
+                    body_text="\n".join(body),
+                    run_command=run_command,
+                    run_line=run_line,
+                )
+            )
+        task.steps = tuple(steps)
+
+    def _resolve_plan_schema(self):
+        """The plan-level `Schema:` if present before the first task header,
+        else the first task with a non-empty `Schema:` value. See design
+        §3.1.2's judgment call: either reading opts a plan in."""
+        first_task_line = self.tasks[0].line - 1 if self.tasks else len(self.lines)
+        for index in range(first_task_line):
+            if self._in_fence(index):
+                continue
+            match = FIELD.match(self.lines[index])
+            if match and match.group("field") == "Schema":
+                self.schema_text = match.group("value").strip()
+                self.schema_line = index + 1
+                return
+        for task in self.tasks:
+            if task.schema_text:
+                self.schema_text = task.schema_text
+                self.schema_line = task.schema_line
+                return

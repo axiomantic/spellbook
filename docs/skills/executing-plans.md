@@ -313,6 +313,51 @@ BEFORE ANY WORK:
 Use `batch` when: architect wants review between batches, tasks tightly coupled, plan needs active discussion.
 Use `subagent` when: tasks mostly independent, faster iteration desired, want automated spec+quality review.
 
+## Plan Amendment Writes
+
+The trigger is a DISK WRITE of the plan file. It is not a `TodoWrite` status
+flip, and it is not a review-loop iteration. One lint per write is enough — do
+not re-lint on `TodoWrite` status flips or review-loop iterations.
+
+```python
+from pathlib import Path
+
+from spellbook.planlint import decided_claims, lint_on_write
+
+# repo_root MUST be a pathlib.Path, never a str. `rules/files.py` does
+# `repo_root / entry.path`; a str makes that `str / str`, which raises
+# TypeError, which the rule barrier reports as a CRASH — a caller bug
+# wearing a plan-defect costume. Coerce at the boundary, as cli.py does.
+report = lint_on_write(plan_path, new_text, repo_root=Path(repo_root))
+if report is not None:
+    if report.failed:
+        print(report.report())   # report; do NOT revert the write
+    skipped = [c for c in decided_claims(report) if not c.decided]
+    if skipped:
+        total = len(decided_claims(report))
+        print(
+            f"{total - len(skipped)} of {total} rule(s) decided, "
+            f"{len(skipped)} skipped — see report for which checks did not run"
+        )
+```
+
+A finding here is REPORTED, never blocking: the write already happened, and the
+amendment is the operator's work product. An ERROR finding is a defect in the
+plan text, not a blocker for the task in flight — surface it, keep executing,
+and fix the plan. This is NOT a Stop Condition (see `## Stop Conditions`
+below), and it is not one of the "unfixed issues" the Anti-Patterns block's
+`Proceed with unfixed issues` line forbids proceeding past.
+
+**A rule CRASH is reported the same way — never blocking — but it is not
+silence either.** `report.failed` is True when `report.internal_errors` is
+non-empty, so the guard above still prints it. A `<rule>: CRASHED (...)` line
+in the printed report does not mean "no plan defects": it means that rule
+DECIDED NOTHING about the claims it owns, so treat the plan as
+not-fully-verified for whatever that crashed rule covers — the same
+fail-open-but-honest spirit `writing-plans` and `reviewing-impl-plans` apply
+at their own call sites, just without their fail-CLOSED consequence, because
+here the write already happened.
+
 ## Autonomous Mode
 
 Check for "Mode: AUTONOMOUS" or explicit autonomous instruction.
@@ -448,7 +493,7 @@ Ask for clarification rather than guessing. The cost of asking is one exchange. 
 
 ## When to Revisit Phase 1
 
-Return to Phase 1 (Load Plan) when: user updates plan based on your feedback, fundamental approach needs rethinking, critical gap discovered mid-execution. Don't force through blockers - stop and ask.
+Return to Phase 1 (Load Plan) when: user updates plan based on your feedback, fundamental approach needs rethinking, critical gap discovered mid-execution. Don't force through blockers - stop and ask. When this revisit writes the amended plan to disk, re-lint the write — see Plan Amendment Writes above.
 
 ---
 
@@ -467,6 +512,7 @@ Return to Phase 1 (Load Plan) when: user updates plan based on your feedback, fu
 - Guess at unclear requirements instead of asking
 - Accept "close enough" on spec compliance
 - Let implementer self-review replace actual review (both needed)
+- Write an amended plan to disk without re-running planlint when it declares Schema: planlint-v1
 </FORBIDDEN>
 
 ### Handling Subagent Questions
@@ -493,6 +539,7 @@ Before marking execution complete:
 - [ ] All review issues addressed (spec and code quality)
 - [ ] Plan followed exactly or deviations explicitly approved
 - [ ] `finishing-a-development-branch` invoked
+- [ ] Every disk write of an amended plan was followed by a planlint run (or `lint_on_write` returned `None` — the plan doesn't declare a `planlint-v1` schema)
 
 <CRITICAL>
 If ANY unchecked: STOP and fix before declaring complete.

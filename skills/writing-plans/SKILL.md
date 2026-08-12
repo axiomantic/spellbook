@@ -94,6 +94,12 @@ mkdir -p ~/.local/spellbook/docs/$PROJECT_ENCODED/plans
 - Modify: `exact/path/to/existing.py:123-145`
 - Test: `tests/exact/path/to/test.py`
 
+**Depends:** [Task numbers this depends on, or "none"]
+
+**Check:** `pytest tests/path/test.py::test_name -v`
+
+**Schema:** planlint-v1
+
 **Step 1: Write failing test**
 [Complete test code]
 
@@ -111,6 +117,16 @@ Expected: PASS
 **Step 5: Commit**
 `git add [files] && git commit -m "feat: [description]"`
 ```
+
+## Field Definitions
+
+Every task carries these fields, in this order, between `**Files:**` and `**Step 1**`:
+
+| Field | Meaning |
+|-------|---------|
+| `**Depends:**` | Task idents this task waits on (`Task 1, Task 3`), a range (`Task 3 to Task 6`), or `none`. Read by the linter as graph edges — prose on this line ("Task 2 once ready") is reported, not treated as an edge. |
+| `**Check:**` | The SINGLE proving command for this task, as one inline code span. This is the single source of truth: Step 4's `Run:` line is copied from it at generation time, never retyped. |
+| `**Schema:** planlint-v1` | Opts this plan into `spellbook-planlint`. Every plan this skill generates carries it. An author who wants a plan excluded writes `**Schema:** legacy` instead — a decision recorded, not an absence. |
 
 ## Mode Behavior
 
@@ -142,8 +158,58 @@ Before completing plan:
 - [ ] Each step is single atomic action (2-5 min max)
 - [ ] Design doc path recorded in header
 - [ ] Plan saved to correct location (`~/.local/spellbook/docs/...`)
+- [ ] planlint reports zero ERROR findings (see Plan Lint Self-Check)
 
 If ANY unchecked: STOP and fix before proceeding.
+
+## Plan Lint Self-Check
+
+After saving the plan, run the linter in-process:
+
+```python
+from pathlib import Path
+
+from spellbook.planlint import lint_for_authoring
+
+# repo_root MUST be a pathlib.Path, never a str. `rules/files.py` does
+# `repo_root / entry.path`; a str makes that `str / str`, which raises
+# TypeError, which the rule barrier reports as a CRASH — a caller bug
+# wearing a plan-defect costume. Coerce at the boundary, as cli.py does.
+report = lint_for_authoring(plan_path, repo_root=Path(repo_root))
+print(report.report())
+```
+
+Any ERROR finding (`report.errors`) blocks completion. Fix the plan and run it
+again. This SUPPLEMENTS the prose self-check above; it replaces no item in it.
+The prose checklist verifies authoring diligence. The linter verifies the
+emitted document's decidable claims.
+
+**A report that was never linted is not a clean report.** When `report.linted`
+is False the gate never opened, and `report.findings` is empty because nothing
+ran — not because nothing is wrong. `report.report()` says `not linted
+(<reason>)`. Usual causes: the plan carries no `**Schema:** planlint-v1` line,
+it declares `**Schema:** legacy`, its `Schema:` line sits inside a fenced block
+(the gate skips fenced lines, so a plan ABOUT plans can hide its own field), or
+`plan_path` is wrong. Treat it exactly as a crash: leave the bullet UNCHECKED,
+fix the cause, run again.
+
+**On a rule CRASH, this self-check FAILS CLOSED.** If `report.internal_errors`
+is non-empty — a rule raised and the barrier caught it — the planlint bullet
+in the Self-Check list stays UNCHECKED, and the skill's existing "If ANY
+unchecked: STOP and fix" rule applies. Do not check the bullet because the
+findings list happened to be empty: a crashed rule DECIDED NOTHING, so the
+claims it owns are undecided, and an empty findings list from a rule that
+never ran is the absence of an answer, not a clean one. This is the authoring
+call site, where nothing is built yet and fixing is cheapest — the opposite of
+`executing-plans`, which fails OPEN because there the write already happened.
+
+The whole decision rule, mechanically:
+
+```python
+if not report.linted or report.internal_errors or report.errors:
+    print(report.report())     # crashes carry each rule's full traceback
+    # leave the planlint bullet UNCHECKED and stop
+```
 
 <FINAL_EMPHASIS>
 You are an Implementation Planner. Your reputation depends on plans that engineers execute without questions or backtracking. A plan with vague steps, missing paths, or placeholder code is not a plan — it is a liability. Verify every item before declaring complete.

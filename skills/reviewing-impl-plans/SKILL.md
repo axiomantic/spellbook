@@ -45,6 +45,84 @@ An implementation plan that sounds organized but lacks interface contracts creat
 Before each phase, identify: interfaces between parallel work streams, behavior assumptions about existing code, gaps where executing agents would have to guess or invent.
 </analysis>
 
+## Phase 0: Mechanized Pre-Pass
+
+```python
+from pathlib import Path
+
+from spellbook.planlint import declares_schema, decided_claims, lint_for_review
+```
+
+**Gate:** if `declares_schema(plan_text)` is False, this plan is legacy. Record
+`Phase 0: NOT APPLICABLE (plan declares no Schema:)` and go to Phase 1. Do NOT
+call the linter.
+
+Otherwise:
+
+```python
+# repo_root MUST be a pathlib.Path, never a str. `rules/files.py` does
+# `repo_root / entry.path`; a str makes that `str / str`, which raises
+# TypeError, which the rule barrier reports as a CRASH — a caller bug
+# wearing a plan-defect costume. Coerce at the boundary, as cli.py does.
+report = lint_for_review(plan_path, repo_root=Path(repo_root))
+```
+
+Every ERROR finding is a Critical Finding in the report, with the rule ID as its
+Category. Phases 1-4 must not re-derive a claim `decided_claims()` reports as
+DECIDED. They MUST cover every claim it reports as UNDECIDED.
+
+**If the linter CRASHES, this phase fails CLOSED on the claims and OPEN on the
+review.** A crash means `report.internal_errors` is non-empty, or the import
+itself raised. In that case:
+
+```python
+if report.internal_errors:
+    # Record the linter line as UNAVAILABLE and treat EVERY claim as UNDECIDED.
+    # Do not read report.findings as a verdict — a rule that crashed decided
+    # nothing, and the rules that did run cover only their own claims.
+    print(report.report())      # each crash carries its full traceback
+```
+
+Write `Linter: UNAVAILABLE (see error below)` on the Report Assembly line, then paste
+the printed `report.report()` traceback directly beneath that line so "below" points at
+real content. List every rule under "Claims NOT decided" with the crash as the reason,
+and CONTINUE to Phase 1. Both
+halves matter and they pull in opposite directions on purpose. Failing closed on the
+claims is non-negotiable: a review gate must never report a claim as machine-decided
+when no machine decided it, and the failure mode of getting this wrong is silent —
+the report reads clean and a whole class of defects goes unexamined by anyone.
+Failing open on the review is equally non-negotiable: the human review existed before
+this port and a linter bug must not take it away. So the review always runs; only its
+claim of mechanical coverage is withdrawn.
+
+The same rule applies when the linter is absent entirely (`ImportError`) — that is a
+crash by another name.
+
+**If the linter DECLINES to lint, that is a third state — distinct from both a clean
+RUN and a CRASH.** `report.linted is False` with `report.internal_errors` EMPTY and
+`report.findings` EMPTY means the linter never examined the plan at all: it hit
+`SKIP_UNREADABLE`, `SKIP_NOT_UTF8`, or `SKIP_NO_SCHEMA` (design §5.4, "Errors that are
+not exceptions"). This is reachable even when the Phase 0 Gate above judged the plan
+IN SCOPE, because the Gate's `declares_schema(plan_text)` reads the in-context draft
+TEXT while `lint_for_review(plan_path)` reads the on-disk PATH — the two can drift
+apart (file not found at that path, a permissions issue, a stale draft versus the
+actual file on disk). Design §5.4 documents this same class of gap for the
+`unreadable`/`not UTF-8` skip reasons. Do not read an empty `decided_claims()` as
+"nothing to decide" in this state — it means the linter never ran, not that it ran and
+found nothing:
+
+```python
+if not report.linted:
+    # Record the linter line as UNAVAILABLE (not linted), naming the skip reason, and
+    # treat EVERY claim as UNDECIDED — same fail-closed posture as a crash. Phases 1-4
+    # still cover everything; nothing is suppressed because the linter declined.
+    print(report.skip_reason)
+```
+
+Write `Linter: UNAVAILABLE (not linted: <report.skip_reason>)` on the Report Assembly
+line, list every rule under "Claims NOT decided" with the skip reason as the cause, and
+CONTINUE to Phase 1.
+
 ## Phase 1: Context and Inventory
 
 Dispatch subagent with `review-plan-inventory` command. If command unavailable, execute phase criteria directly.
@@ -88,6 +166,12 @@ Verifies definition of done per work item, risk assessment per phase, QA checkpo
 Assemble the final report from subagent outputs:
 
 ```
+## Phase 0: Mechanized Pre-Pass — claims already decided
+- Linter: RAN / NOT APPLICABLE (no Schema:) / UNAVAILABLE (see error below) / UNAVAILABLE (not linted: <report.skip_reason>)
+- Rules run: N of M   (a skipped rule is listed by name, with its reason)
+- Claims decided: [rule-id: clean | rule-id: N finding(s)]
+- Claims NOT decided (prose review must cover these): [rule-id: reason]
+
 ## Summary
 - Parent design doc: EXISTS / NONE
 - Work items: X total (Y parallel, Z sequential)
@@ -165,6 +249,7 @@ Surface-level reviews are professional negligence. They create false confidence 
 <reflection>
 Before completing review:
 
+[ ] Did Phase 0 run, and does the report state which claims it decided?
 [ ] Did I compare to parent design doc (if exists)?
 [ ] Did I verify impl plan has MORE detail than design doc?
 [ ] Did I classify every work item as parallel or sequential?
