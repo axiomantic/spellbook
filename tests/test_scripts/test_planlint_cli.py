@@ -137,12 +137,16 @@ def test_cli_exits_zero_on_a_legacy_plan_and_says_so():
 
 def test_cli_reports_missing_file_and_exits_nonzero(tmp_path):
     missing = tmp_path / "does_not_exist.md"
+    try:
+        missing.read_text(encoding="utf-8")
+    except OSError as exc:
+        errno_text = str(exc)
+    else:
+        raise AssertionError("expected reading a missing file to raise OSError")
     result = _run_cli(str(missing))
     assert result.returncode == 1
     assert result.stdout == ""
-    assert result.stderr == (
-        f"{missing}: not linted (unreadable: [Errno 2] No such file or directory: '{missing}')\n"
-    )
+    assert result.stderr == f"{missing}: not linted (unreadable: {errno_text})\n"
 
 
 def test_cli_reports_non_utf8_file_and_exits_nonzero(tmp_path):
