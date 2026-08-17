@@ -193,6 +193,8 @@ Task:
 
 ### 4.3 Implementation Task Subagent Template
 
+**Incidentals:** if executing this task surfaces a departure, omission, or redirection the plan didn't anticipate, STOP before continuing implementation and follow the Incidentals rule in `40-develop-discipline.md` — integrate it into the plan document first, gated like any other task, then resume.
+
 For each individual task:
 
 ```

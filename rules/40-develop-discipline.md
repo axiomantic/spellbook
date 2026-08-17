@@ -179,4 +179,36 @@ definition:
   block siblings, and no sibling's completion marks the blocked one.
 - The dispatch report MUST list each covered task as COMPLETE or
   OPEN(reason). A batch report with no per-task status is invalid.
+
+### Incidentals: Mid-Implementation Departures Must Be Integrated, Not Improvised
+
+An "incidental" is any departure from the implementation plan discovered
+DURING implementation: a design assumption that turns out wrong, scope the
+plan didn't anticipate, or a redirection the plan's own approach doesn't
+cover. An incidental is not optional housekeeping — it changes what "the
+plan" means, and the plan document is the only artifact a resumed session,
+a reviewer, or a later incidental will ever read to find out what's true.
+
+Discovering an incidental does not authorize working around it silently.
+Before continuing implementation past the point where it was found:
+
+1. **Stop and classify it** — a bug in the plan (a stated assumption is
+   wrong), scope the plan omitted (a task the plan should have had), or a
+   full redirection (the plan's approach itself needs to change).
+2. **Write it into the plan document itself** — not a chat message, not a
+   code comment, not a mental note to clean the plan up later. A task
+   block, an amendment section, or an explicit superseding note, in the
+   same document a resumed session or reviewer will actually read.
+   "Later" does not reliably arrive; an incidental deferred past the
+   moment it was found is the exact failure this rule exists to prevent.
+3. **Gate the incidental like any other task** — it inherits the same
+   ceremony (ledger entry, ownership, a `Check:` line where the plan uses
+   them) as a task the plan shipped with. Being discovered rather than
+   planned is not grounds for a lighter version of the gate.
+4. Only then continue implementation.
+
+This applies regardless of how small the incidental looks. A departure too
+small to write down was too small to have required a decision in the
+first place — and if it required a decision, the decision belongs in the
+plan, not only in the diff.
 </CRITICAL>
