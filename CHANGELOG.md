@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Comment discipline in the `code-quality` rule module. Comments are sparse and
+  explain a decision. Counts, present-tense coverage claims, and history notes
+  are forbidden in comments, because the next change makes them wrong and
+  nothing catches it. The one exception is a number a mechanism reads and checks
+  at build or test time, which fails loudly when it drifts. The rule applies to
+  code we author and leaves inherited upstream comments alone.
+- Search-visibility rule in the `file-reading` rule module. A negative search
+  result is evidence only if the tool could see the file. `git grep` skips
+  untracked files, so an empty result and an unsearched file produce the same
+  output. Use `grep -r`, `rg`, or `git grep --untracked`, and name the tool
+  beside any "appears nowhere" claim.
+- Subagent Efficiency Contract in the `dispatching-parallel-agents` skill.
+  Every dispatch prompt must now include explicit tool-output-reduction and
+  call-batching instructions, because an audit of a real multi-day project
+  found raw, unsummarized tool output present in 80-90% of over 1,300 sampled
+  transcript chunks.
+- `code-review` and `advanced-code-review` skills now require delegating
+  green-mirage (test-quality) assessment to the dedicated
+  `auditing-green-mirage` skill instead of an inline/ad hoc mutation check --
+  the same audit found a case where an inline check reached the wrong
+  conclusion ("robust, not a green mirage") that a dedicated audit later
+  reversed.
+- Re-Review Protocol added to `reviewing-impl-plans`. Review rounds after the
+  first must verify only what changed since the last verified pass, and a
+  convergence check now forbids another same-style manual round if more than
+  half of a round's findings are induced by the previous round's own repairs
+  rather than newly-discovered defects.
+- "Stop Semantics in Batched Dispatches" clarification in
+  `rules/40-develop-discipline.md`. Stopping on a design defect means leaving
+  the task open, not withholding a commit -- directly motivated by a real
+  incident where an ambiguous reading of that rule let 47 of 48 files in a
+  batch land without a working implementation.
+- Explicit invariant in the `feature-implement-execute` command: a batched
+  dispatch does not exempt any of its tasks from per-task completion gates.
+- Claim-verification gate in the `handoff` command. Concrete claims in a
+  handoff (build commands, repo attributions, counts) must be verified by
+  execution or computation before the handoff is considered final, not
+  shipped from recall.
+- One-time, non-blocking suggestion in the `feature-config` command to use a
+  dedicated project directory for multi-session efforts, since project-scoped
+  tooling depends on it.
+- Clarification in `skills/develop/SKILL.md` that a response which dispatches
+  no subagent needs no Phase Declaration.
+- One additional real-world example each in `rules/45-verification.md`,
+  `rules/60-autonomy.md`, and `rules/20-orchestration.md`, illustrating their
+  existing rules (hand-counted vs. computed verification, a false constraint
+  recorded after a single failed fetch, and dispatch scope matching the size
+  of its trigger).
+
+### Fixed
+
+- `scripts/develop_gate_ledger.py` defaulted to one global ledger state file
+  shared across every project; it now defaults to a per-project path using
+  the existing project-encoding convention, so concurrent develop runs in
+  different projects no longer read or write each other's gate/phase state.
+  The `SPELLBOOK_DEV_DIR` override is unchanged.
+- Stale `workflow_state_save MCP` label in the handoff command's diagrams
+  (`docs/diagrams/commands/handoff.md`, `docs/commands/handoff.md`) that
+  didn't match the rest of the same document's terminology
+  (`persistWorkflowState`).
+
 ## [0.87.0] - 2026-08-11
 
 ### Added

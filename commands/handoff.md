@@ -82,6 +82,15 @@ After generating, verify:
 - Planning docs have ABSOLUTE paths?
 - Todos EXACTLY preserved (verbatim)?
 - Would I inherit this confidently with zero context?
+- **Claim verification gate (before the handoff is final):** every concrete,
+  checkable claim in the handoff — build/test command sequences, repo and
+  path attributions, counts, version numbers — must be verified by
+  execution or computation, not recall. Run each quoted command sequence
+  (or its cheapest dry-run equivalent) and compute each count. A handoff
+  that ships an untested build command has already required a correction
+  pass in practice ("Trust the corrections over the body", 2026-08-10).
+  For handoffs with many claims, dispatch one subagent invoking the
+  fact-checking skill over the claim list.
 </reflection>
 
 ---

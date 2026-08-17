@@ -204,6 +204,10 @@ Options:
 - **Treat as ready (design doc):** Skip entire Phase 2, start at Phase 3
 - **Treat as ready (impl plan):** Skip Phases 2–3, start at Phase 4
 
+### 0.1.5 Suggest Dedicated Project Directory (multi-session efforts)
+
+<RULE>If `cwd` is a home directory or generic parent (`~`, `~/Development`, or similar non-project-specific path), and the effort looks multi-session (based on Q-flags or cost/scope assessment), suggest — once, non-blocking — starting from or creating a dedicated project directory, since session artifacts, transcripts, and project-scoped tooling all key off the project path.</RULE>
+
 ### 0.2 Clarify Motivation (WHY)
 
 <RULE>Before diving into WHAT to build, understand WHY. Motivation shapes every subsequent decision.</RULE>

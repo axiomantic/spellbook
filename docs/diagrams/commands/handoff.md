@@ -29,7 +29,7 @@ flowchart TD
     ConversationCtx --> MachineYAML[Section 1.20: YAML State]
 
     MachineYAML --> PersistCheck{Mode auto or checkpoint?}
-    PersistCheck -->|Yes| MCPSave[workflow_state_save MCP]
+    PersistCheck -->|Yes| MCPSave[persistWorkflowState]
     PersistCheck -->|No| SkipPersist[Skip Persistence]
 
     MCPSave --> GenSection2[Generate Section 2: Continuation]

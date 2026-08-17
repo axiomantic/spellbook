@@ -462,6 +462,10 @@ sufficient referent on its own — the operative set is the one recorded in
 3. **The reverse move does not exist.** Nothing ever moves from `selected` to
    `declined`. `selected` and `core` shrink only by completion, never by decision.
 
+The Phase Declaration is required per Task() dispatch. A response that dispatches
+nothing — a status answer, a question to the operator — requires no declaration
+and no artifact write.
+
 If the ledger has no `ceremony` block (a pre-existing or externally-resumed
 session), treat the ceremony as `default_full`: every flag-derived gate is
 selected and nothing is declined. Absence is never read as permission to skip.
