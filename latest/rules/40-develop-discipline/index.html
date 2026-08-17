@@ -9570,7 +9570,39 @@
 <a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>  block siblings, and no sibling&#39;s completion marks the blocked one.
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">-</span><span class="w"> </span>The dispatch report MUST list each covered task as COMPLETE or
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>  OPEN(reason). A batch report with no per-task status is invalid.
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="gu">### Incidentals: Mid-Implementation Departures Must Be Integrated, Not Improvised</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>An &quot;incidental&quot; is any departure from the implementation plan discovered
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>DURING implementation: a design assumption that turns out wrong, scope the
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>plan didn&#39;t anticipate, or a redirection the plan&#39;s own approach doesn&#39;t
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>cover. An incidental is not optional housekeeping — it changes what &quot;the
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>plan&quot; means, and the plan document is the only artifact a resumed session,
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>a reviewer, or a later incidental will ever read to find out what&#39;s true.
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>Discovering an incidental does not authorize working around it silently.
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>Before continuing implementation past the point where it was found:
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="k">1.</span> <span class="gs">**Stop and classify it**</span> — a bug in the plan (a stated assumption is
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>   wrong), scope the plan omitted (a task the plan should have had), or a
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>   full redirection (the plan&#39;s approach itself needs to change).
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">2.</span> <span class="gs">**Write it into the plan document itself**</span> — not a chat message, not a
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>   code comment, not a mental note to clean the plan up later. A task
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>   block, an amendment section, or an explicit superseding note, in the
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>   same document a resumed session or reviewer will actually read.
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>   &quot;Later&quot; does not reliably arrive; an incidental deferred past the
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>   moment it was found is the exact failure this rule exists to prevent.
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="k">3.</span> <span class="gs">**Gate the incidental like any other task**</span> — it inherits the same
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>   ceremony (ledger entry, ownership, a <span class="sb">`Check:`</span> line where the plan uses
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>   them) as a task the plan shipped with. Being discovered rather than
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>   planned is not grounds for a lighter version of the gate.
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">4.</span> Only then continue implementation.
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>This applies regardless of how small the incidental looks. A departure too
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>small to write down was too small to have required a decision in the
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>first place — and if it required a decision, the decision belongs in the
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>plan, not only in the diff.
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>&lt;/CRITICAL&gt;
 </code></pre></div>
 
 
