@@ -676,6 +676,8 @@ Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
 
 **Self-Check:** Coverage reconciled N-of-N at hunk level with gaps disclosed, all passes complete, declined items respected, required fields present including `rule`.
 
+Findings about test adequacy are PLAUSIBLE at best until auditing-green-mirage has run on the test in question; Phase 4 must not promote such a finding to verified without it.
+
 ---
 
 ## Phase 4: Verification
@@ -768,6 +770,11 @@ exist. If a future edit removes a consumer, remove the row.
 - Proceed past failed self-check
 - **Read local files to verify or refute PR findings when local HEAD ≠ PR HEAD SHA** — this is the most dangerous error in PR reviews; it produces confidently wrong REFUTED verdicts on real bugs
 - **Declare a finding REFUTED based on local file content during a PR review** without first confirming SHA match via `git rev-parse HEAD`
+- Assess whether a test is a green mirage with an inline/ad hoc mutation
+  table. Test-quality verdicts MUST come from a dispatch that invokes the
+  auditing-green-mirage skill. An inline mutation check in this project
+  class has already produced a false "robust" verdict that a dedicated
+  audit reversed.
 </FORBIDDEN>
 
 ---

@@ -127,6 +127,132 @@ Every task carries these fields, in this order, between `**Files:**` and `**Step
 | `**Depends:**` | Task idents this task waits on (`Task 1, Task 3`), a range (`Task 3 to Task 6`), or `none`. Read by the linter as graph edges — prose on this line ("Task 2 once ready") is reported, not treated as an edge. |
 | `**Check:**` | The SINGLE proving command for this task, as one inline code span. This is the single source of truth: Step 4's `Run:` line is copied from it at generation time, never retyped. |
 | `**Schema:** planlint-v1` | Opts this plan into `spellbook-planlint`. Every plan this skill generates carries it. An author who wants a plan excluded writes `**Schema:** legacy` instead — a decision recorded, not an absence. |
+| `**Subject:**` | Required on measurement-type tasks. One of `fixed_artifact`, `instrumented_run`, `physical_access` — the snake_case tokens `feature-config` §0.7.6 names. Records the measurement's subject kind as a real, greppable field rather than prose. |
+
+## Capability Groups
+
+`SESSION_PREFERENCES.task_granularity` (set by `feature-config` §0.7 Step 2.5) routes this
+section: `capability` REQUIRES the plan to declare capability groups below — this is what
+unlocks the `per_group` gate-position option; `file` means groups are not declared and
+per-task `Files:` gating applies as before, unchanged.
+
+3.1.5 must build and red-test a check that: under `task_granularity == "capability"`, a task
+whose deliverable is merely that a file exists or compiles fails — that deliverable is a
+file-cut task wearing a capability label, not a capability.
+
+When tasks share a deliverable that no single task's files can produce alone, declare a
+capability group instead of cutting tasks by file:
+
+```markdown
+### Group: [Deliverable Name]
+
+**Members:** Task N, Task M, Task P
+**File union:** [every path any member may write]
+**Deliverable:** [one end-to-end outcome]
+**Check:** `[single command proving the deliverable]`
+```
+
+Inside a group, a write by any member to any path in the group's file union is declared
+work; per-task `Files:` lines stay on each task but become informative routing, not a
+gate. Hard single-owner declaration survives ONLY at group boundaries and on named
+cross-track shared files (build-registration lists, top-level wiring files) — do not
+trade this away, it is the protection that stops concurrent writers from colliding on
+the same shared file.
+
+Dispatch by DELIVERABLE, never by path: a task joins the group whose deliverable needs
+it, not the group whose union happens to contain its files. A union may carry a file
+whose write the group's deliverable does not actually govern — do not route on file
+membership alone.
+
+**Cost, state it in the plan:** intra-group collisions between concurrent members are no
+longer prevented by declaration. Members of one group default to sequential execution
+unless the plan explicitly accepts merge cost for parallel execution.
+
+3.1.5 must build and red-test a check that: a write lands outside every group's file
+union and outside the writer's own `Files:` declaration (fails), and a write inside the
+writer's group union passes without further adjudication.
+
+3.1.5 must also build and red-test two more checks: every task belongs to exactly one
+declared group, OR the plan records `gate_position: per_task` (fails otherwise); and a
+group whose deliverable has no mechanically checkable check-command is a finding.
+
+`planlint-v1`'s task-header pattern matches only `### Task N:` headers; a `### Group:`
+block and its `**Check:**` line are invisible to it. A plan carrying `**Schema:**
+planlint-v1` therefore asserts conformance to a schema that cannot see group
+deliverables, unions, or check commands. The three group checks above are 3.1.5's
+responsibility, not the linter's — do not assume a clean `planlint-v1` report covers
+group blocks.
+
+## Attribution and Pass Register
+
+Every figure a routine pass writes carries a one-line tag at the point of the figure,
+and no other form:
+
+- `[MEASURED, <tool>, <date>]`
+- `[CARRIED from <source>, unverified]`
+
+Provenance for a pass — what it read, what it could not measure, what it may not write —
+does not go in the plan body as prose. It goes in a structured pass register, one row
+per pass:
+
+| id | date | measured set | carried set | prohibitions |
+|----|------|--------------|-------------|---------------|
+
+Long-form provenance paragraphs stay legal only inside milestone-bearing sections that
+the plan NAMES explicitly (e.g., "Milestone Audit" sections). A provenance paragraph
+anywhere else is a defect, not a style choice. 3.1.5 must build and red-test a check
+that: a register row is missing a required field (fails), and a provenance paragraph
+appears outside a plan-named milestone section (fails).
+
+## Defect Register Template
+
+The defect register is partitioned by lifecycle, not append-only:
+
+- **(a) OPEN-ACTIONABLE** — the row blocks a wave, milestone, or decision.
+- **(b) DECISION-RECORDS** — closed, kept verbatim as history.
+- **(c) STALE-TEXT** — findings about prose claims, resolved by DELETING the claim, not
+  repairing it. A repaired claim goes stale again.
+
+Row state machine: `open -> struck | decided | superseded`. The pass that closes a row
+moves it to the archive partition (b or c) IN THE SAME EDIT, citing what closed it. Every
+row also carries a `class:` tag identifying its recurring-shape fork.
+
+The plan MUST declare its `class:` vocabulary in one named place (e.g., a "Defect Class
+Vocabulary" list near the register). Proposal O1 triggers on `class:` tag EQUALITY, so
+two agents tagging the same shape differently silently disables the fork; an undeclared
+vocabulary makes that drift undetectable. This ties into the decidable claim already
+listed in `skills/develop/SKILL.md` §3.1.5 ("every tag comes from the declared
+vocabulary") — 3.1.5 must build and red-test that check against the `class:` tags here.
+
+The wave-completion check (the ledger's §24.6-class check) reads ONLY partition (a).
+History in (b) or (c) cannot hold a wave open. 3.1.5 must build and red-test a check
+that: a closed-state row appears in the actionable partition (fails), and an open row
+appears in the archive partitions (fails).
+
+## Decision Records
+
+A recorded decision in a plan requires an `Implements:` field naming the task or edit
+that enacts the decision, or the explicit marker `Informational`. A decision with
+neither is a defect — a recorded decision is not itself an implemented mechanism.
+
+This generalizes to any stop-token or marker a plan introduces: it must name its READER
+in the same block. A marker nothing reads is a mechanism whose silence equals success,
+which is not a mechanism. The `Informational` escape exists for genuinely informational
+decisions only — do not let it become the default. 3.1.5 must build and red-test a check
+that: a decision row carries neither `Implements:` nor `Informational` (fails).
+
+## Measurement-Type Deliverables
+
+Each measurement-type deliverable records its subject kind in the `**Subject:**` field
+(see Field Definitions): `fixed_artifact` / `instrumented_run` / `physical_access`.
+Order tasks cheapest-first by kind: static reads (`fixed_artifact`) before harnesses
+(`instrumented_run`) before hardware (`physical_access`). This makes the
+static-read-first ordering detectable at plan time instead of discovered by accident
+during execution.
+
+3.1.5 must build and red-test a check that: a task whose deliverable is a measurement
+carries no `**Subject:**` field (fails), and a `**Subject:**` value outside
+`{fixed_artifact, instrumented_run, physical_access}` (fails).
 
 ## Mode Behavior
 

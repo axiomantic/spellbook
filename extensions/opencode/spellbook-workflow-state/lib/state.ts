@@ -65,10 +65,7 @@ export function initializeWorkflowState(projectPath: string, sessionId: string):
       binding: [],
       technical: [],
     },
-    conversation: {
-      user_messages: [],
-      corrections: [],
-      errors: [],
-    },
+    // handoff.md Section 1.25 standing constraints — flat list, empty on init.
+    constraints: [],
   };
 }

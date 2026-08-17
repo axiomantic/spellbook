@@ -10,6 +10,7 @@ run, not a Python test.
 
 import json
 import logging
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -163,12 +164,178 @@ def test_set_ceremony_rejects_unknown_field(tmp_ledger):
         ledger.set_ceremony_field("bogus_field", "x")
 
 
+def test_set_ceremony_gate_position_accepts_per_task(tmp_ledger):
+    """gate_position is a documented ceremony field; the module must be able
+    to write it (capability 1)."""
+    ledger.set_ceremony_field("gate_position", "per_task")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_task"
+
+
+def test_set_ceremony_gate_position_accepts_per_group(tmp_ledger):
+    ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
+
+
+def test_set_ceremony_gate_position_rejects_invalid_value(tmp_ledger):
+    """A field whose value space is closed needs a VALUE guard, not just a
+    NAME guard: 'per_wave' is a plausible typo that would otherwise be
+    stored and read back as if it meant something."""
+    with pytest.raises(ValueError, match="per_task"):
+        ledger.set_ceremony_field("gate_position", "per_wave")
+    assert "gate_position" not in ledger.read_ledger().get("ceremony", {})
+
+
+def test_set_ceremony_gate_position_rewrite_after_lock_refused(tmp_ledger):
+    """gate_position is locked WITH the rest of ceremony at locked_at.
+
+    The skill's ledger shape says "Locked with the rest of ceremony at
+    locked_at; never changed mid-run", and 40-develop-discipline.md says
+    changing gate position after the lock requires the same
+    ABORT-and-re-invoke path as any other ceremony change. A guard that
+    only covers locked_at leaves repositioning as a silent mid-run edit.
+    """
+    ledger.set_ceremony_field("gate_position", "per_task")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to rewrite"):
+        ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_task"
+
+
+def test_set_ceremony_gate_position_same_value_after_lock_succeeds(tmp_ledger):
+    """Idempotent re-assertion is not a change -- a resumed session
+    re-writing the value it already holds must not be punished, matching
+    the locked_at guard's own same-value allowance.
+    """
+    ledger.set_ceremony_field("gate_position", "per_group")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
+
+
+def test_set_ceremony_gate_position_first_write_after_lock_succeeds(tmp_ledger):
+    """The guard refuses a REWRITE, not a first write. A ceremony locked
+    without an explicit gate_position defaults to per_task by documentation,
+    not by a stored value, so writing the field once afterwards is still the
+    original selection being recorded -- not a mid-run reposition.
+    """
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
+
+
+def test_gate_position_writable_again_after_archive_ceremony(tmp_ledger):
+    """ABORT-and-re-invoke is the sanctioned path: archiving clears the
+    ceremony, so a fresh Phase 0 may select a different gate_position.
+    """
+    ledger.set_ceremony_field("gate_position", "per_task")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted; re-selecting")
+    ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
+
+
 def test_set_scalar_rejects_dotted_field(tmp_ledger):
     """Use set_ceremony_field for ceremony.* -- set_scalar is for the
     top level only, and a dotted argument is almost certainly a bug.
     """
     with pytest.raises(ValueError, match="top-level fields"):
         ledger.set_scalar("ceremony.selected", "x")
+
+
+# ---- archive-ceremony ----------------------------------------------------
+
+
+def test_archive_ceremony_refuses_empty_reason(tmp_ledger):
+    """Superseding a lock is the one auditable exception to CRIT-2. An
+    archive with no stated reason is exactly the unaudited path the lock
+    exists to prevent -- mirrors status=failed requiring open_rows."""
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ValueError, match="reason"):
+        ledger.archive_ceremony("   ")
+    assert ledger.read_ledger()["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+
+
+def test_archive_ceremony_refuses_when_no_ceremony(tmp_ledger):
+    with pytest.raises(ledger.LedgerError, match="no ceremony"):
+        ledger.archive_ceremony("aborted the run")
+
+
+def test_archive_ceremony_archives_and_clears(tmp_ledger):
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "code review")
+    ledger.archive_ceremony("operator aborted", timestamp="2026-08-11T09:00Z")
+
+    data = ledger.read_ledger()
+    assert data["ceremony"] == {}
+    archived = data["ceremony_history"]["2026-08-11T09:00Z"]
+    assert archived["reason"] == "operator aborted"
+    assert archived["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+    assert archived["ceremony"]["selected"] == "code review"
+
+
+def test_archive_ceremony_allows_a_fresh_lock(tmp_ledger):
+    """This is the whole point: ABORT-and-re-invoke must be mechanically
+    possible, and only through this path."""
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted", timestamp="2026-08-11T09:00Z")
+    ledger.set_ceremony_field("locked_at", "2026-08-11T09:05Z")
+    assert ledger.read_ledger()["ceremony"]["locked_at"] == "2026-08-11T09:05Z"
+
+
+def test_archive_ceremony_still_refuses_ordinary_rewrite(tmp_ledger):
+    """Archiving must not LOOSEN the guard. With a lock present, the
+    ordinary set path is refused exactly as before."""
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted", timestamp="2026-08-11T09:00Z")
+    ledger.set_ceremony_field("locked_at", "2026-08-11T09:05Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to rewrite"):
+        ledger.set_ceremony_field("locked_at", "2026-08-12T10:00Z")
+
+
+def test_second_archive_does_not_overwrite_the_first(tmp_ledger):
+    """ceremony_history is the audit trail C7 depends on. Two archives must
+    BOTH survive -- this is why it is a map, not a list (lists are replaced
+    wholesale by the merge policy)."""
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("first abort", timestamp="2026-08-11T09:00Z")
+    ledger.set_ceremony_field("locked_at", "2026-08-11T09:05Z")
+    ledger.archive_ceremony("second abort", timestamp="2026-08-12T10:00Z")
+
+    history = ledger.read_ledger()["ceremony_history"]
+    assert len(history) == 2
+    assert history["2026-08-11T09:00Z"]["reason"] == "first abort"
+    assert history["2026-08-12T10:00Z"]["reason"] == "second abort"
+    assert history["2026-08-11T09:00Z"]["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+    assert history["2026-08-12T10:00Z"]["ceremony"]["locked_at"] == "2026-08-11T09:05Z"
+
+
+def test_archive_ceremony_colliding_timestamps_both_survive(tmp_ledger):
+    """A map keyed by timestamp loses an entry if two archives share a
+    timestamp. Append-only must hold even then."""
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("first abort", timestamp="2026-08-11T09:00Z")
+    ledger.set_ceremony_field("locked_at", "2026-08-11T09:05Z")
+    ledger.archive_ceremony("second abort", timestamp="2026-08-11T09:00Z")
+
+    history = ledger.read_ledger()["ceremony_history"]
+    assert len(history) == 2
+    reasons = {entry["reason"] for entry in history.values()}
+    assert reasons == {"first abort", "second abort"}
+
+
+def test_archive_ceremony_collision_keys_sort_in_insertion_order(tmp_ledger):
+    """The history is read as an ordered audit trail, and every reader that
+    sorts it gets lexical order. An unpadded ``#10`` sorts before ``#2``, so
+    the trail reads out of sequence past nine collisions in one second."""
+    stamp = "2026-08-11T09:00Z"
+    for i in range(1, 13):
+        ledger.set_ceremony_field("locked_at", f"2026-08-10T14:{i:02d}Z")
+        ledger.archive_ceremony(f"abort {i:02d}", timestamp=stamp)
+
+    history = ledger.read_ledger()["ceremony_history"]
+    assert len(history) == 12
+    by_key = [history[k]["reason"] for k in sorted(history)]
+    assert by_key == [f"abort {i:02d}" for i in range(1, 13)]
 
 
 # ---- wave-discipline -----------------------------------------------------
@@ -266,6 +433,247 @@ def test_record_wave_discipline_preserves_other_waves(tmp_ledger):
     assert ledger.wave_discipline_status("3b")["status"] == "passed"
 
 
+def test_wave_discipline_passed_after_failed_clears_open_rows(tmp_ledger):
+    """open_rows must SHRINK as rows close (module docstring).
+
+    Omitting the key on a passing re-record leaves the previous failure's
+    rows in place, because _deep_merge has no delete -- producing a ledger
+    that reads "passed" while still listing rows as open.
+    """
+    ledger.record_wave_discipline("3a", status="failed", open_rows=["W3a-2", "W3a-5"])
+    ledger.record_wave_discipline("3a", status="passed")
+    entry = ledger.wave_discipline_status("3a")
+    assert entry["status"] == "passed"
+    assert entry["open_rows"] == []
+
+
+def test_wave_discipline_na_after_failed_clears_open_rows(tmp_ledger):
+    ledger.record_wave_discipline("3a", status="failed", open_rows=["W3a-2"])
+    ledger.record_wave_discipline("3a", status="n_a", reason="wave dissolved")
+    assert ledger.wave_discipline_status("3a")["open_rows"] == []
+
+
+def test_wave_discipline_failed_guard_still_fires_after_a_prior_record(tmp_ledger):
+    """Writing open_rows unconditionally must not weaken the false-pass
+    guard: status=failed with no rows is still refused, and the previously
+    recorded entry is left untouched by the refusal.
+    """
+    ledger.record_wave_discipline("3a", status="failed", open_rows=["W3a-2"])
+    with pytest.raises(ValueError, match="requires at least one open row"):
+        ledger.record_wave_discipline("3a", status="failed")
+    assert ledger.wave_discipline_status("3a")["open_rows"] == ["W3a-2"]
+
+
+# ---- blockers ------------------------------------------------------------
+
+
+def test_blocker_rejects_invalid_type(tmp_ledger):
+    with pytest.raises(ValueError, match="type must be one of"):
+        ledger.record_blocker("B1", blocker_type="vibes")
+    assert "blockers" not in ledger.read_ledger()
+
+
+def test_blocker_open_records_type_and_opened_at(tmp_ledger):
+    ledger.record_blocker(
+        "B1", blocker_type="decision", description="await operator",
+        timestamp="2026-08-11T09:00Z",
+    )
+    entry = ledger.read_ledger()["blockers"]["B1"]
+    assert entry["type"] == "decision"
+    assert entry["description"] == "await operator"
+    assert entry["opened_at"] == "2026-08-11T09:00Z"
+    assert "closed_at" not in entry
+
+
+def test_blocker_description_is_optional(tmp_ledger):
+    ledger.record_blocker("B1", blocker_type="work", timestamp="2026-08-11T09:00Z")
+    assert "description" not in ledger.read_ledger()["blockers"]["B1"]
+
+
+def test_blocker_close_sets_closed_at(tmp_ledger):
+    """Closure is a FIELD, not an absence: _deep_merge never deletes, so a
+    closed blocker must be distinguishable from an open one by content."""
+    ledger.record_blocker(
+        "B1", blocker_type="external", timestamp="2026-08-11T09:00Z"
+    )
+    ledger.record_blocker(
+        "B1", blocker_type="external", close=True, timestamp="2026-08-12T10:00Z"
+    )
+    entry = ledger.read_ledger()["blockers"]["B1"]
+    assert entry["closed_at"] == "2026-08-12T10:00Z"
+    assert entry["opened_at"] == "2026-08-11T09:00Z"
+    assert entry["type"] == "external"
+
+
+def test_blocker_close_nonexistent_fails(tmp_ledger):
+    with pytest.raises(ledger.LedgerError, match="no open blocker"):
+        ledger.record_blocker("B9", blocker_type="work", close=True)
+
+
+def test_blocker_close_does_not_require_a_type(tmp_ledger):
+    """Closing consumes no type: ``record_blocker`` writes only ``closed_at``.
+    Demanding a type to close means the caller must restate a value the call
+    ignores -- and a wrong restatement was accepted silently."""
+    ledger.record_blocker("B1", blocker_type="work", timestamp="2026-08-11T09:00Z")
+    ledger.record_blocker("B1", close=True, timestamp="2026-08-12T10:00Z")
+    entry = ledger.read_ledger()["blockers"]["B1"]
+    assert entry["closed_at"] == "2026-08-12T10:00Z"
+    assert entry["type"] == "work"
+
+
+def test_blocker_open_without_type_is_refused(tmp_ledger):
+    """Opening is the operation that CONSUMES the type, so it still needs one --
+    and the refusal must say so rather than defaulting to a kind nobody chose."""
+    with pytest.raises(ValueError, match="requires --type"):
+        ledger.record_blocker("B1", timestamp="2026-08-11T09:00Z")
+    assert "blockers" not in ledger.read_ledger()
+
+
+def test_blocker_close_with_contradicting_type_is_refused(tmp_ledger):
+    """The proven defect: ``--type work --close`` on a blocker opened as
+    ``decision`` succeeded and discarded the flag. Either the caller has the
+    wrong blocker or the wrong type; both are errors, neither is silent."""
+    ledger.record_blocker("B1", blocker_type="decision", timestamp="2026-08-11T09:00Z")
+    with pytest.raises(ledger.LedgerError, match="type mismatch"):
+        ledger.record_blocker(
+            "B1", blocker_type="work", close=True, timestamp="2026-08-12T10:00Z"
+        )
+    assert "closed_at" not in ledger.read_ledger()["blockers"]["B1"]
+
+
+def test_blocker_close_without_type_on_nonexistent_id_fails(tmp_ledger):
+    with pytest.raises(ledger.LedgerError, match="no open blocker"):
+        ledger.record_blocker("B9", close=True)
+
+
+def test_two_blockers_coexist(tmp_ledger):
+    """Deep-merge check: recording B2 must not erase B1."""
+    ledger.record_blocker("B1", blocker_type="decision", timestamp="2026-08-11T09:00Z")
+    ledger.record_blocker("B2", blocker_type="work", timestamp="2026-08-11T09:30Z")
+    blockers = ledger.read_ledger()["blockers"]
+    assert blockers["B1"]["type"] == "decision"
+    assert blockers["B2"]["type"] == "work"
+
+
+def test_closing_one_blocker_leaves_the_other_open(tmp_ledger):
+    ledger.record_blocker("B1", blocker_type="decision", timestamp="2026-08-11T09:00Z")
+    ledger.record_blocker("B2", blocker_type="work", timestamp="2026-08-11T09:30Z")
+    ledger.record_blocker(
+        "B1", blocker_type="decision", close=True, timestamp="2026-08-12T10:00Z"
+    )
+    blockers = ledger.read_ledger()["blockers"]
+    assert blockers["B1"]["closed_at"] == "2026-08-12T10:00Z"
+    assert "closed_at" not in blockers["B2"]
+
+
+# ---- group-gate ----------------------------------------------------------
+
+
+def test_group_gate_failed_requires_open_findings(tmp_ledger):
+    """Mirrors the wave-discipline false-pass guard: a failed record with
+    nothing to fix is indistinguishable from a pass."""
+    with pytest.raises(ValueError, match="requires at least one open finding"):
+        ledger.record_group_gate("G1", status="failed")
+    assert "groups" not in ledger.read_ledger()
+
+
+def test_group_gate_passed_round_trips(tmp_ledger):
+    ledger.record_group_gate(
+        "G1", status="passed", gates=["4.4", "4.5"], timestamp="2026-08-11T09:00Z"
+    )
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["status"] == "passed"
+    assert entry["gates"] == ["4.4", "4.5"]
+    assert entry["timestamp"] == "2026-08-11T09:00Z"
+    assert entry["open_findings"] == []
+
+
+def test_group_gate_failed_with_open_findings(tmp_ledger):
+    ledger.record_group_gate("G1", status="failed", open_findings=["F1", "F2"])
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["status"] == "failed"
+    assert entry["open_findings"] == ["F1", "F2"]
+
+
+def test_group_gate_rejects_invalid_status(tmp_ledger):
+    with pytest.raises(ValueError, match="status must be one of"):
+        ledger.record_group_gate("G1", status="maybe")
+
+
+def test_group_gate_na(tmp_ledger):
+    ledger.record_group_gate("G1", status="n_a")
+    assert ledger.read_ledger()["groups"]["G1"]["gate_stack"]["status"] == "n_a"
+
+
+def test_group_gate_passed_after_failed_clears_open_findings(tmp_ledger):
+    """The per-group counterpart of the open_rows shrink contract.
+
+    Re-recording G1 as passed after a failed run must not leave the
+    failure's findings behind: a passed gate that still carries open
+    findings is precisely the false-pass this recorder exists to close.
+    """
+    ledger.record_group_gate("G1", status="failed", open_findings=["F1", "F2"])
+    ledger.record_group_gate("G1", status="passed", gates=["4.4", "4.5"])
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["status"] == "passed"
+    assert entry["open_findings"] == []
+
+
+def test_group_gate_na_after_failed_clears_open_findings(tmp_ledger):
+    ledger.record_group_gate("G1", status="failed", open_findings=["F1"])
+    ledger.record_group_gate("G1", status="n_a")
+    assert ledger.read_ledger()["groups"]["G1"]["gate_stack"]["open_findings"] == []
+
+
+def test_group_gate_failed_guard_still_fires_after_a_prior_record(tmp_ledger):
+    """Writing open_findings unconditionally must not weaken the
+    false-pass guard, and a refusal must leave the stored entry intact.
+    """
+    ledger.record_group_gate("G1", status="failed", open_findings=["F1"])
+    with pytest.raises(ValueError, match="requires at least one open finding"):
+        ledger.record_group_gate("G1", status="failed")
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["open_findings"] == ["F1"]
+
+
+def test_group_gate_re_record_without_gates_shrinks_the_gate_list(tmp_ledger):
+    """``gates`` gets the same SHRINK treatment as the other two list fields.
+
+    ``_deep_merge`` replaces lists but never deletes keys, so a ``gates``
+    written only ``if gate_list`` is retained forever: a re-record that
+    asserted no gates at all would still read as covering 4.4/4.5, and the
+    ledger would claim coverage the re-record never asserted.
+    """
+    ledger.record_group_gate("G1", status="passed", gates=["4.4", "4.5"])
+    ledger.record_group_gate("G1", status="passed")
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["gates"] == []
+
+
+def test_group_gate_re_record_with_fewer_gates_shrinks(tmp_ledger):
+    ledger.record_group_gate("G1", status="passed", gates=["4.4", "4.5", "4.5.1"])
+    ledger.record_group_gate("G1", status="passed", gates=["4.4"])
+    assert ledger.read_ledger()["groups"]["G1"]["gate_stack"]["gates"] == ["4.4"]
+
+
+def test_group_gate_records_gates_key_even_when_never_supplied(tmp_ledger):
+    """One shrink rule across all three sibling fields: ``gates`` is
+    present on every record, empty included, exactly like ``open_findings``.
+    """
+    ledger.record_group_gate("G1", status="passed")
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["gates"] == []
+    assert entry["open_findings"] == []
+
+
+def test_two_groups_coexist(tmp_ledger):
+    ledger.record_group_gate("G1", status="passed")
+    ledger.record_group_gate("G2", status="passed")
+    groups = ledger.read_ledger()["groups"]
+    assert groups["G1"]["gate_stack"]["status"] == "passed"
+    assert groups["G2"]["gate_stack"]["status"] == "passed"
+
+
 # ---- CLI -----------------------------------------------------------------
 
 
@@ -311,6 +719,44 @@ def test_cli_set_ceremony_unknown_field_errors(tmp_ledger):
 
 
 @pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_gate_position(tmp_ledger):
+    """The proven-broken invocation from the finding: this exited 2."""
+    proc = _run_cli("set", "ceremony.gate_position", "per_group")
+    assert proc.returncode == 0, proc.stderr
+    data = json.loads(tmp_ledger.read_text())
+    assert data["ceremony"]["gate_position"] == "per_group"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_gate_position_invalid_value_errors(tmp_ledger):
+    proc = _run_cli("set", "ceremony.gate_position", "per_wave")
+    assert proc.returncode != 0
+    assert "per_task" in proc.stderr and "per_group" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_gate_position_rewrite_after_lock_refused(tmp_ledger):
+    """The CLI must not be a hole through the gate_position lock either."""
+    _run_cli("set", "ceremony.gate_position", "per_task")
+    _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
+    proc = _run_cli("set", "ceremony.gate_position", "per_group")
+    assert proc.returncode == 1
+    assert "refusing to rewrite" in proc.stderr
+    data = json.loads(tmp_ledger.read_text())
+    assert data["ceremony"]["gate_position"] == "per_task"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_group_gate_passed_after_failed_clears_open_findings(tmp_ledger):
+    _run_cli("group-gate", "G1", "--status", "failed", "--open-findings", "F1,F2")
+    proc = _run_cli("group-gate", "G1", "--status", "passed")
+    assert proc.returncode == 0, proc.stderr
+    entry = json.loads(tmp_ledger.read_text())["groups"]["G1"]["gate_stack"]
+    assert entry["status"] == "passed"
+    assert entry["open_findings"] == []
+
+
+@pytest.mark.allow("subprocess")
 def test_cli_set_ceremony_locked_at_first_time_succeeds(tmp_ledger):
     proc = _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
     assert proc.returncode == 0
@@ -332,6 +778,35 @@ def test_cli_set_ceremony_locked_at_rewrite_refused(tmp_ledger):
     assert "refusing to rewrite" in proc.stderr
     data = json.loads(tmp_ledger.read_text())
     assert data["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_archive_ceremony_requires_reason(tmp_ledger):
+    _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
+    proc = _run_cli("archive-ceremony", "--reason", "  ")
+    assert proc.returncode != 0
+    assert "reason" in proc.stderr
+    data = json.loads(tmp_ledger.read_text())
+    assert data["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_archive_ceremony_clears_and_allows_relock(tmp_ledger):
+    _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
+    proc = _run_cli(
+        "archive-ceremony", "--reason", "operator aborted",
+        "--timestamp", "2026-08-11T09:00Z",
+    )
+    assert proc.returncode == 0, proc.stderr
+
+    relock = _run_cli("set", "ceremony.locked_at", "2026-08-11T09:05Z")
+    assert relock.returncode == 0, relock.stderr
+    data = json.loads(tmp_ledger.read_text())
+    assert data["ceremony"]["locked_at"] == "2026-08-11T09:05Z"
+    assert (
+        data["ceremony_history"]["2026-08-11T09:00Z"]["ceremony"]["locked_at"]
+        == "2026-08-10T14:02Z"
+    )
 
 
 @pytest.mark.allow("subprocess")
@@ -362,7 +837,11 @@ def test_cli_wave_discipline_na_with_reason(tmp_ledger):
     )
     assert proc.returncode == 0
     entry = json.loads(tmp_ledger.read_text())["waves"]["plan"]["section_24_6_check"]
-    assert entry == {"status": "n_a", "reason": "plan has no wave structure"}
+    assert entry == {
+        "status": "n_a",
+        "reason": "plan has no wave structure",
+        "open_rows": [],
+    }
 
 
 @pytest.mark.allow("subprocess")
@@ -370,3 +849,402 @@ def test_cli_wave_discipline_failed_without_open_rows_errors(tmp_ledger):
     proc = _run_cli("wave-discipline", "3a", "--status", "failed")
     assert proc.returncode == 2
     assert "requires at least one open row" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_blocker_open_then_close(tmp_ledger):
+    proc = _run_cli(
+        "blocker", "B1", "--type", "decision",
+        "--description", "await operator", "--timestamp", "2026-08-11T09:00Z",
+    )
+    assert proc.returncode == 0, proc.stderr
+
+    proc = _run_cli(
+        "blocker", "B1", "--type", "decision", "--close",
+        "--timestamp", "2026-08-12T10:00Z",
+    )
+    assert proc.returncode == 0, proc.stderr
+    entry = json.loads(tmp_ledger.read_text())["blockers"]["B1"]
+    assert entry["opened_at"] == "2026-08-11T09:00Z"
+    assert entry["closed_at"] == "2026-08-12T10:00Z"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_blocker_close_without_type(tmp_ledger):
+    """The documented invocation in commands/feature-implement-execute.md:
+    ``blocker <id> --close``. It exited 2 on argparse before this fix."""
+    proc = _run_cli(
+        "blocker", "B1", "--type", "decision", "--timestamp", "2026-08-11T09:00Z"
+    )
+    assert proc.returncode == 0, proc.stderr
+
+    proc = _run_cli("blocker", "B1", "--close", "--timestamp", "2026-08-12T10:00Z")
+    assert proc.returncode == 0, proc.stderr
+    entry = json.loads(tmp_ledger.read_text())["blockers"]["B1"]
+    assert entry["closed_at"] == "2026-08-12T10:00Z"
+    assert entry["type"] == "decision"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_blocker_open_without_type_errors(tmp_ledger):
+    proc = _run_cli("blocker", "B1", "--description", "await operator")
+    assert proc.returncode == 2
+    assert "requires --type" in proc.stderr
+    assert not tmp_ledger.exists()
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_blocker_close_with_contradicting_type_errors(tmp_ledger):
+    _run_cli("blocker", "B1", "--type", "decision", "--timestamp", "2026-08-11T09:00Z")
+    proc = _run_cli("blocker", "B1", "--type", "work", "--close")
+    assert proc.returncode == 2
+    assert "type mismatch" in proc.stderr
+    assert "closed_at" not in json.loads(tmp_ledger.read_text())["blockers"]["B1"]
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_blocker_rejects_invalid_type(tmp_ledger):
+    proc = _run_cli("blocker", "B1", "--type", "vibes")
+    assert proc.returncode != 0
+    assert "decision" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_blocker_close_nonexistent_errors(tmp_ledger):
+    proc = _run_cli("blocker", "B9", "--type", "work", "--close")
+    assert proc.returncode == 2
+    assert "no open blocker" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_group_gate_passed(tmp_ledger):
+    proc = _run_cli(
+        "group-gate", "G1", "--status", "passed",
+        "--gates", "4.4,4.5,4.5.1", "--timestamp", "2026-08-11T09:00Z",
+    )
+    assert proc.returncode == 0, proc.stderr
+    entry = json.loads(tmp_ledger.read_text())["groups"]["G1"]["gate_stack"]
+    assert entry["status"] == "passed"
+    assert entry["gates"] == ["4.4", "4.5", "4.5.1"]
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_group_gate_failed_without_open_findings_errors(tmp_ledger):
+    proc = _run_cli("group-gate", "G1", "--status", "failed")
+    assert proc.returncode == 2
+    assert "requires at least one open finding" in proc.stderr
+
+
+# ---- standalone invocation (no `spellbook` package importable) -----------
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_runs_standalone_without_spellbook_package(tmp_path):
+    """The module docstring and every doc say invoke this directly:
+    ``python3 scripts/develop_gate_ledger.py <cmd>``. That must work even
+    when the ``spellbook`` package is not importable -- a clean shell
+    without the venv or PYTHONPATH set, which is exactly how the docs
+    describe running it.
+
+    Reproduces by scrubbing PYTHONPATH from the subprocess env and running
+    from a cwd outside the repo, so neither an inherited PYTHONPATH nor
+    implicit ``sys.path[0]`` (script directory on the module search path)
+    can rescue an accidental `spellbook` import.
+    """
+    dev_dir = tmp_path / "dev"
+    dev_dir.mkdir()
+    outside_cwd = tmp_path / "outside"
+    outside_cwd.mkdir()
+
+    env = {"PATH": "/usr/bin:/bin", "HOME": str(tmp_path), "SPELLBOOK_DEV_DIR": str(dev_dir)}
+
+    # -S disables site-packages processing, which is what makes
+    # `spellbook` importable from ``sys.executable`` even outside the
+    # repo (the venv's editable install registers a .pth file that adds
+    # the repo root to sys.path unconditionally). Combined with a cwd
+    # outside the repo (so `sys.path[0]` cannot rescue the import
+    # implicitly) and no PYTHONPATH, this reproduces "a clean shell
+    # without the venv or PYTHONPATH" from the documented invocation.
+    proc = subprocess.run(
+        [sys.executable, "-S", str(SCRIPT_PATH), "show"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+        cwd=str(outside_cwd),
+        env=env,
+    )
+    assert proc.returncode == 0, (
+        f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+    )
+    assert proc.stdout.strip() == "{}"
+
+
+_NO_HOME_DRIVER = '''
+"""Run a script with ``Path.home()`` guaranteed to raise RuntimeError.
+
+That is the state of a Windows CI runner with no USERPROFILE/HOMEDRIVE/
+HOMEPATH. POSIX hosts recover a home from the ``pwd`` database even with
+the environment cleared, and Windows has no ``pwd`` module at all, so
+blocking the import is what makes this reproduce identically on both.
+"""
+
+import os
+import runpy
+import sys
+
+for var in ("HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH"):
+    os.environ.pop(var, None)
+
+
+class _BlockPwd:
+    def find_spec(self, name, path=None, target=None):
+        if name == "pwd":
+            raise ImportError("no pwd module (simulating Windows)")
+        return None
+
+
+sys.modules.pop("pwd", None)
+sys.meta_path.insert(0, _BlockPwd())
+
+from pathlib import Path
+
+try:
+    Path.home()
+except RuntimeError:
+    pass
+else:
+    sys.exit(99)
+
+script = sys.argv[1]
+sys.argv = sys.argv[1:]
+runpy.run_path(script, run_name="__main__")
+'''
+
+
+def test_cli_starts_when_home_directory_is_unresolvable(tmp_path):
+    """A host where ``Path.home()`` raises must still run the CLI.
+
+    Windows CI has no resolvable home directory, and the state directory
+    used to be computed at module scope -- so the CLI died during import,
+    before ``main`` could read ``$SPELLBOOK_DEV_DIR``. Exercised through
+    the documented subprocess entry point rather than by patching
+    ``default_state_dir``, because the defect was in WHEN the value was
+    computed, not in what it computed: any test that imports the module
+    normally has already passed the line that raised.
+    """
+    dev_dir = tmp_path / "dev"
+    dev_dir.mkdir()
+    driver = tmp_path / "no_home_driver.py"
+    driver.write_text(_NO_HOME_DRIVER, encoding="utf-8")
+
+    env = dict(os.environ)
+    env["SPELLBOOK_DEV_DIR"] = str(dev_dir)
+
+    proc = subprocess.run(
+        [sys.executable, str(driver), str(SCRIPT_PATH), "show"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+        cwd=str(tmp_path),
+        env=env,
+    )
+    assert proc.returncode != 99, "precondition failed: Path.home() still resolved"
+    assert proc.returncode == 0, f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+    assert proc.stdout.strip() == "{}"
+
+
+def test_cli_with_explicit_path_works_without_a_home(tmp_path):
+    """``--path`` never consults the default, so no home is needed.
+
+    The sibling of the ``$SPELLBOOK_DEV_DIR`` case above: the refusal must
+    fire only for invocations that actually NEED the default directory.
+    """
+    driver = tmp_path / "no_home_driver.py"
+    driver.write_text(_NO_HOME_DRIVER, encoding="utf-8")
+    explicit = tmp_path / "explicit.json"
+
+    env = dict(os.environ)
+    env.pop("SPELLBOOK_DEV_DIR", None)
+
+    proc = subprocess.run(
+        [sys.executable, str(driver), str(SCRIPT_PATH), "--path", str(explicit), "show"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+        cwd=str(tmp_path),
+        env=env,
+    )
+    assert proc.returncode != 99, "precondition failed: Path.home() still resolved"
+    assert proc.returncode == 0, f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+    assert proc.stdout.strip() == "{}"
+
+
+def test_cli_refuses_with_a_remedy_when_the_default_is_needed_without_a_home(tmp_path):
+    """No home and no override: REFUSE, naming the remedy.
+
+    Writing the ledger into whatever directory the CLI happened to run
+    from is the silent-but-wrong shape: the run "succeeds" while the
+    ledger it consults is not the project's ledger. A user-facing
+    configuration error is reported like every other refusal in this
+    module -- ``error: ...`` on stderr, non-zero exit, no traceback.
+    """
+    driver = tmp_path / "no_home_driver.py"
+    driver.write_text(_NO_HOME_DRIVER, encoding="utf-8")
+
+    env = dict(os.environ)
+    env.pop("SPELLBOOK_DEV_DIR", None)
+
+    proc = subprocess.run(
+        [sys.executable, str(driver), str(SCRIPT_PATH), "show"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+        cwd=str(tmp_path),
+        env=env,
+    )
+    assert proc.returncode != 99, "precondition failed: Path.home() still resolved"
+    assert proc.returncode != 0, f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+    assert "Traceback" not in proc.stderr, proc.stderr
+    assert proc.stderr.startswith("error: "), proc.stderr
+    assert "SPELLBOOK_DEV_DIR" in proc.stderr
+    assert "--path" in proc.stderr
+    # The refusal must not have written a ledger beside the cwd.
+    assert not (tmp_path / ".spellbook").exists()
+
+
+def test_default_state_dir_is_unchanged_when_home_resolves(monkeypatch):
+    """The refusal must not move the ledger for real users."""
+    monkeypatch.setattr(ledger.Path, "home", classmethod(lambda cls: cls("/home/someone")))
+    assert ledger.default_state_dir() == Path("/home/someone/.local/spellbook")
+
+
+def test_default_state_dir_refuses_without_a_home(monkeypatch, tmp_path):
+    def _raise(cls):
+        raise RuntimeError("Could not determine home directory.")
+
+    monkeypatch.setattr(ledger.Path, "home", classmethod(_raise))
+    monkeypatch.chdir(tmp_path)
+    with pytest.raises(ledger.LedgerError) as excinfo:
+        ledger.default_state_dir()
+    message = str(excinfo.value)
+    assert "SPELLBOOK_DEV_DIR" in message
+    assert "--path" in message
+
+
+def test_fallback_encode_cwd_matches_real_implementation():
+    """Anti-drift guard: the fallback ``encode_cwd`` (used when the
+    ``spellbook`` package is not importable, see the module-level
+    try/except import) must byte-match ``spellbook.core.path_utils.encode_cwd``
+    for every path this script could receive. Without this test the
+    fallback is free to rot out of sync with the real implementation.
+    """
+    from spellbook.core.path_utils import encode_cwd as real_encode_cwd
+
+    fallback_encode_cwd = ledger._fallback_encode_cwd
+
+    paths = [
+        "/Users/alice/Development/spellbook",
+        "/Users/alice/Development/spellbook/",
+        "/",
+        "/a",
+        "a/b/c",
+        "C:\\Users\\alice\\project",
+        "/Users/alice/Development//spellbook",
+        "",
+    ]
+    for path in paths:
+        expected = real_encode_cwd(path, resolve_git_root=False)
+        actual = fallback_encode_cwd(path, resolve_git_root=False)
+        assert actual == expected, f"path={path!r}: real={expected!r} fallback={actual!r}"
+
+
+def _init_temp_repo(root: Path) -> None:
+    """Create a self-contained git repo at ``root`` with one commit.
+
+    Self-contained on purpose: a worktree of the spellbook checkout would
+    register itself in the operator's own repo. This repo is created and
+    discarded inside tmp_path.
+    """
+    root.mkdir(parents=True, exist_ok=True)
+    env = {
+        "PATH": "/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin",
+        "HOME": str(root),
+        "GIT_CONFIG_GLOBAL": "/dev/null",
+        "GIT_CONFIG_SYSTEM": "/dev/null",
+        "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@example.com",
+        "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@example.com",
+    }
+    (root / "f.txt").write_text("x", encoding="utf-8")
+    for cmd in (
+        ["git", "init", "-q", "-b", "main"],
+        ["git", "add", "f.txt"],
+        ["git", "commit", "-q", "-m", "init"],
+    ):
+        subprocess.run(cmd, cwd=root, env=env, check=True, capture_output=True, timeout=30)
+
+
+@pytest.mark.allow("subprocess")
+def test_fallback_encode_cwd_matches_real_implementation_with_git_root(tmp_path):
+    """The anti-drift guard on the branch that PRODUCTION actually takes.
+
+    ``default_ledger_path()`` calls ``encode_cwd(os.getcwd())`` -- the
+    DEFAULT ``resolve_git_root=True``. That path is ~35 lines of duplicated
+    ``git worktree list --porcelain`` parsing plus a ``--show-toplevel``
+    fallback, and it carries all of the drift risk. Checking only
+    ``resolve_git_root=False`` leaves it uncovered: a corrupted git-root
+    branch left the False-only guard green.
+    """
+    from spellbook.core.path_utils import encode_cwd as real_encode_cwd
+
+    fallback_encode_cwd = ledger._fallback_encode_cwd
+
+    repo_root = Path(__file__).resolve().parents[2]
+
+    temp_repo = tmp_path / "repo"
+    _init_temp_repo(temp_repo)
+    worktree = tmp_path / "wt"
+    subprocess.run(
+        ["git", "worktree", "add", "-q", "-b", "side", str(worktree)],
+        cwd=temp_repo,
+        env={
+            "PATH": "/usr/bin:/bin:/usr/local/bin:/opt/homebrew/bin",
+            "HOME": str(temp_repo),
+            "GIT_CONFIG_GLOBAL": "/dev/null",
+            "GIT_CONFIG_SYSTEM": "/dev/null",
+        },
+        check=True,
+        capture_output=True,
+        timeout=30,
+    )
+
+    not_a_repo = tmp_path / "plain"
+    not_a_repo.mkdir()
+
+    paths = [
+        str(repo_root),                      # the real repo root
+        str(repo_root / "scripts"),          # a subdirectory of it
+        str(temp_repo),                      # a freshly created repo
+        str(worktree),                       # a real linked worktree
+        str(not_a_repo),                     # not a git repo at all
+    ]
+    for path in paths:
+        expected = real_encode_cwd(path)
+        actual = fallback_encode_cwd(path)
+        assert actual == expected, f"path={path!r}: real={expected!r} fallback={actual!r}"
+
+    # Independent of agreement: the git-root branch must actually RESOLVE.
+    # Two implementations that drifted the same way would agree above and
+    # still be wrong; these assert the resolution happened at all.
+    assert fallback_encode_cwd(str(repo_root / "scripts")) == fallback_encode_cwd(
+        str(repo_root)
+    ), "a subdirectory must resolve to the repo root"
+    assert fallback_encode_cwd(str(worktree)) == fallback_encode_cwd(
+        str(temp_repo)
+    ), "a linked worktree must resolve to the main worktree"
+    assert fallback_encode_cwd(str(not_a_repo)) == fallback_encode_cwd(
+        str(not_a_repo), resolve_git_root=False
+    ), "a non-repo path must pass through unchanged"

@@ -7,6 +7,91 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `validate_schemas.py` now runs in CI as a blocking `schema-validation` job in
+  `lint.yml`. It previously ran only in pre-commit, which is how a rule module
+  crossing the 12,000-byte Antigravity per-file cap reached review. The gate was
+  verified by mutation rather than by assumption: clean tree exits 0, a
+  positional-language token exits 1, a cap breach exits 1, and reverting returns
+  to 0. The four pre-existing validation failures were fixed first so the gate
+  could go blocking against a clean tree.
+- Dispatch Protocol section in `dispatching-parallel-agents`: a fixed
+  cache-aligned prompt layout that puts invariant blocks first so they stay
+  prefix-cacheable, a pointer-passing convention (content over ~30 lines goes
+  to a file, the prompt carries `path:line-range`), a default JSON return
+  envelope, and a canonical result-vocabulary table with a defined extension
+  procedure -- a project may add a value locally but must surface it as a
+  suggestion for spellbook, and the operator decides. Shorthand/abbreviation
+  schemes are explicitly rejected: the waste targeted is repeated content,
+  not wording.
+- Thirteen develop-ceremony proposals upstreamed into `develop/SKILL.md` and
+  `rules/40-develop-discipline.md`: gate position is now a locked Phase-0
+  axis (`gate_position: per_task | per_group`) so depth gates
+  4.4/4.5/4.5.1 may run at capability-group boundaries -- repositioning,
+  never elision, with both terms now defined; capability-cut task groups
+  with file unions and end-to-end deliverables in `writing-plans`; a
+  closure-symbol claim class added to the 3.1.5 checkability pass;
+  structured attribution tags replacing provenance prose; defect-register
+  lifecycle partitions read by the wave gate; decisions must name an
+  implementing edge or declare themselves informational; ABORT-and-re-invoke
+  defined as a cheap ledger-carrying operation so the ceremony lock's escape
+  hatch is affordable; three new Phase-0 questions (task granularity,
+  external prior art as cost dimension D8, measurement subject kinds plus an
+  operator-only task lane); and three mid-run operator forks
+  (recurring-defect-shape, decision-batch, static-read-first).
+- "State, not story" invariant principle in the `handoff` command. §1.11 and
+  §1.25 are consolidated into a single Standing Constraints section feeding
+  one YAML `constraints:` key; narrative-gathering instructions are removed
+  throughout, including the User Messages/Intent Evolution and Error History
+  tables and the checklist items that fed them.
+- New `archive-ceremony`, `blocker`, and `group-gate` subcommands in
+  `scripts/develop_gate_ledger.py`, plus `ceremony.gate_position` as a
+  settable field with value validation. `ceremony_history`, `blockers`, and
+  `groups` are now maps rather than lists, because the module's merge policy
+  replaces lists wholesale. The `locked_at` no-rewrite guard is unchanged --
+  `archive-ceremony` is the only sanctioned supersede path and requires a
+  `--reason`.
+- Mechanical checks: documented `develop_gate_ledger.py` invocations in
+  markdown are now extracted and executed, failing if argparse rejects one
+  (distinguishing argparse rejection from the CLI's legitimate semantic
+  refusals); and a docs-mirror freshness check that writes nothing.
+
+### Fixed
+
+- `scripts/develop_gate_ledger.py` computed its state directory from
+  `Path.home()` at module scope, so on a host with no resolvable home the CLI
+  died during import -- before it could read `$SPELLBOOK_DEV_DIR`, the variable
+  meant to override that very path. A latent defect surfaced on the Windows CI
+  runner by the standalone-invocation test added on this branch. Resolution is
+  now lazy, and when no home resolves the CLI refuses with an error naming
+  `$SPELLBOOK_DEV_DIR` and `--path` rather than guessing a location. Behaviour
+  is byte-identical wherever `Path.home()` works, pinned by a test.
+- `record_group_gate` wrote `gates` only when a list was supplied, so
+  re-recording a group without `--gates` retained the previous list and the
+  record claimed coverage the re-record never asserted. It is now written
+  unconditionally, joining `open_findings` and `open_rows` under one shrink
+  rule: `_deep_merge` replaces lists but never deletes keys, so a conditionally
+  written field can never shrink.
+- The develop skill's ledger shape declared `gates`, `open_findings`, and
+  `open_rows` optional. All three are written unconditionally; the declaration
+  had been wrong for `open_findings` since the shrink fix landed. The
+  documented default ledger path also omitted the per-project filename suffix.
+- `writing-plans` gained a `**Subject:**` field while a test pinned the Field
+  Definitions table as an exact list, breaking CI on all three platforms.
+- `scripts/develop_gate_ledger.py` could not run under its own documented
+  invocation (`python3 scripts/develop_gate_ledger.py ...`) because a
+  module-level `spellbook` package import failed outside the venv; it now
+  falls back to an equivalent local implementation, guarded by an
+  anti-drift test.
+- `scripts/generate_docs.py` had no argument parsing, so `--help` silently
+  rewrote the mirror instead of printing usage. It now has `--help` and a
+  `--check` mode that writes nothing.
+- The OpenCode workflow-state extension still read the removed
+  `conversation.corrections` key and rendered "None" forever instead of
+  erroring; it now reads `constraints`.
+- The generated `docs/` mirror was stale.
+
 ## [0.88.0] - 2026-08-17
 
 ### Added

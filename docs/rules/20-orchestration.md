@@ -56,7 +56,7 @@ belongs in this repo. Which model a tier means is the operator's choice, recorde
 | `light` | Carrying out an already-approved plan or spec: TDD implementation against a written spec, completion/artifact verification against a checklist, precisely-specified amends, rote edits, running tests, git/PR/Jira mechanics, applying a described change | `low` |
 
 Debugging splits across tiers. Diagnosing an unknown failure is `heavy`; working through a
-TDD red-green cycle whose test and target are already specified is `light`.
+TDD red-green cycle whose test and target are already specified is `light`. Scope the dispatch to the trigger's size: a 140-line test file does not justify a build-configuration-wide toolchain investigation, and a precision lookup with a known location is a direct read, not a web-research dispatch.
 
 **The specialized agent types already declare their tier** in frontmatter (`tier: heavy`), so
 dispatching the right type gets the right tier for free:
@@ -111,13 +111,15 @@ All skills MUST adhere to these efficiency and quality standards to prevent cont
 3. **Mandatory Summarization**: Tools returning structured data (Figma, DevTools, verbose logs) MUST be wrapped in a summarization step before returning to the main orchestrator.
 4. **Subagent Strict Schema**: Dispatches via the `Task` tool MUST specify a strict JSON schema for results. Conversational subagent leak is forbidden.
 5. **Phase-Implementation Separation**: Coordination logic lives in the skill; implementation details belong in subagent prompts or phase-specific commands.
-6. **Mark Carried Figures**: A number is CARRIED if you did not measure it yourself in this session. Say so in the dispatch prompt: "This figure is carried from an earlier pass. It is not verified. Re-measure before you write it down." Never present a carried figure as a fresh measurement. The orchestrator reads reports; it does not take measurements itself. Nearly every figure it passes along is carried.
+6. **Mark Carried Figures**: A number is CARRIED if you did not measure it yourself in this session. Say so in the dispatch prompt: "This figure is carried from a prior pass. It is not verified. Re-measure before you write it down." Never present a carried figure as a fresh measurement. The orchestrator reads reports; it does not take measurements itself. Nearly every figure it passes along is carried.
 
    **Observed: seven cases in one session. The subagent's own measurement refuted all seven.** A lint baseline reported as "one finding" measured 156 on recheck. A count attributed to a code comment; the comment did not exist. A flag rule relayed without the `-R` prefix the original measurement required. A proposed fix whose mechanism failed in both directions once tested. The agents caught all seven mistakes, which is why none caused damage. But in a codebase where a written measurement is trusted by default, a carried figure written as if measured will not stay flagged. It gets copied into a source comment, and the next reader has no way to tell it apart from a real measurement.
 
 ### Context Minimization, Subagent Dispatch, and Compacting
 
 Load `dispatching-parallel-agents` skill for the full context minimization protocol, dispatch templates, subagent decision heuristics, and task output storage locations.
+
+Dispatch prompt layout (invariant blocks first, cache-aligned), the pointer-passing convention, the return envelope, and the canonical result vocabulary are defined there too. Use them verbatim rather than improvising a per-dispatch format — and never substitute an invented shorthand or abbreviation scheme for them.
 
 When dispatching subagents, provide CONTEXT only in prompts, never duplicate skill instructions.
 

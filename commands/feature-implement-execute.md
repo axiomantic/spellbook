@@ -191,6 +191,71 @@ Task:
     4. Interface contracts verified
 ```
 
+### 4.2.6 Mid-Run Structural Forks (O1 / O2 / O3)
+
+<CRITICAL>
+These are forks the orchestrator surfaces mid-run, based on evidence
+accumulating during Phase 4. All three are escalations or additions to the
+locked ceremony; none drops a gate, and none requires touching the ceremony
+lock.
+</CRITICAL>
+
+**O1 — Recurring-defect-shape fork.** Trigger: the defect register holds TWO
+open rows carrying the same `class:` tag. On the second open row of one class,
+raise an `AskUserQuestion` offering: continue as-is, or adopt the structural
+repair for that class (for the file-cut class: declare a capability group per
+`writing-plans` §"Capability Groups" and route dispatch by deliverable instead
+of by file). Adoption is an ESCALATION — it adds structure and declared
+boundaries and removes nothing — so it is legal mid-run without touching the
+ceremony lock. Cost: class tagging is judgment; a wrong tag either misses the
+trigger or fires it falsely.
+
+Changing `gate_position` (4.3.2's `per_task` / `per_group` axis) is NOT
+available as a mid-run fork. `gate_position` is set and locked at Phase 0
+(`feature-config` §0.8 Step 1a) alongside the rest of the ceremony, and
+`per_group` REDUCES gate dispatch frequency — moving to it mid-run is a
+de-escalation, not an escalation, and the ceremony lock forbids de-escalation
+regardless of framing. The only path to a different `gate_position` is
+ABORT-and-re-invoke (`feature-config` §0.5.6): a new Phase 0 with a new,
+visible selection, never a quiet mid-run switch.
+
+**O2 — Decision-batch fork.** Trigger: three or more open blockers are
+`type: decision` — the missing input is minutes of operator judgment, not code
+or research. A blocker exists in this trigger only if it was written: when the
+orchestrator opens a blocker, record it via
+`python3 scripts/develop_gate_ledger.py blocker <id> --type decision|work|external --description "<text>"`;
+when it is resolved, close it via
+`python3 scripts/develop_gate_ledger.py blocker <id> --close` (`--type` is not
+required to close). O2's trigger is
+precisely: three or more `blockers` rows with `type: decision` and no
+`closed_at`. Count open decision-typed blockers at each phase boundary and
+wave boundary. Offer: stop dispatching around them and present ONE batched
+decision session, each item with options annotated per the existing blocker
+protocol. Cost: front-loading decisions strips them of the context in which
+they would naturally arise, and an early answer can be a worse answer.
+
+**O3 — Static-read-first fork.** Trigger: a planned task's deliverable is a
+measurement of a FIXED artifact (a shipped binary, a PDF, a captured corpus —
+a subject that cannot change under test) AND the task as planned builds
+dynamic measurement infrastructure to take it. Offer: attempt the static read
+first (disassembly, direct file analysis, document extraction); the dynamic
+task stays scheduled and is consumed only if the static read cannot settle the
+value. REQUIRED: record the residual gap the static read could not establish
+in the same pass, never silently accept it — a static result presented as
+equivalent to a dynamic one without a recorded gap is a false claim, and gate
+4.5.1 / 4.6.4 (fact-checking) treats it as one. Cost: this fork never fires on
+projects with no fixed-artifact measurements, so its cost when irrelevant is
+near zero.
+
+**Operator-only lane re-surfacing.** At every wave boundary (and at session
+start), if `SESSION_PREFERENCES.measurement_tasks` holds any operator-only
+lane entries (`feature-config` §0.7.6) not yet marked complete, re-present
+them as a plain LIST of outstanding operator-resource tasks (hardware in
+hand, photographs, accounts, third-party correspondence). Repeat this at
+every subsequent wave boundary until the lane is empty. This is a SURFACED
+LIST, NEVER a blocking gate — these tasks block nothing in the main track,
+and turning them into a gate would make them noise instead of a reminder.
+
 ### 4.3 Implementation Task Subagent Template
 
 **Incidentals:** if executing this task surfaces a departure, omission, or redirection the plan didn't anticipate, STOP before continuing implementation and follow the Incidentals rule in `40-develop-discipline.md` — integrate it into the plan document first, gated like any other task, then resume.
@@ -283,10 +348,40 @@ No roundtable overlay during Phase 4. Roundtable was used only during Phases 2 a
 **Token enforcement:**
 When `token_enforcement == "gate_level"`, each gate completion is recorded in the develop gate ledger. When `token_enforcement == "every_step"`, phase transitions also require token budget validation.
 
+### 4.3.2 Gate Position (per_task / per_group)
+
+<CRITICAL>
+`develop_gate_ledger.ceremony.gate_position` is `per_task | per_group`, set and
+locked at Phase 0 (`feature-config` §0.8 Step 1a). Default `per_task`: gates 4.4,
+4.5, and 4.5.1 run after EVERY task, exactly as written below.
+
+When `gate_position` is `per_group`, gates 4.4 (Implementation Completion
+Verification), 4.5 (Code Review), and 4.5.1 (Claim Validation) run ONCE PER
+DECLARED GROUP, at the group boundary, against the group's single deliverable —
+not after each task inside the group. This is a REPOSITIONING of the gates, not
+an elision: every selected gate still runs, at the boundary recorded in the
+ledger. Per-task TDD (4.3) and per-task `Check:` lines are UNCHANGED regardless
+of `gate_position` — 4.3 is core (see the non-negotiable ceremony core) and
+`Check:` lines are cheap enough to keep per task.
+
+At `per_group`, each of 4.4/4.5/4.5.1 MUST include at least one control that
+goes RED on a known-bad input — run the gate adversarially, not as a pass-through
+confirmation of the group's own claim.
+
+At each group boundary, after the gate stack runs, record the result:
+`python3 scripts/develop_gate_ledger.py group-gate <group_id> --status passed|failed|n_a --gates 4.4,4.5,4.5.1 [--open-findings <ids>]`
+(`--status failed` requires `--open-findings`). This mirrors how the develop
+skill's §24.6 wave check names its CLI: recording is what closes the gap
+between "the boundary gate ran and passed" and "it never ran." A group-done
+claim without a `passed` `groups.<group_id>.gate_stack` entry is REFUSED, the
+same way a wave-done claim is refused without its §24.6 record.
+</CRITICAL>
+
 ### 4.4 Implementation Completion Verification
 
 <CRITICAL>
-Runs AFTER each task and BEFORE code review.
+Runs AFTER each task (or, under `gate_position: per_group`, AFTER each declared
+group) and BEFORE code review.
 Catches incomplete work early.
 </CRITICAL>
 
