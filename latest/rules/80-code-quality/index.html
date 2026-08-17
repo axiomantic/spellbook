@@ -9401,9 +9401,9 @@
 <p class="admonition-title">Optional module</p>
 <p>The installer offers this module pre-checked. Config key: <code>rules.module.code-quality</code>.</p>
 </div>
-<p>The standing quality bar for produced code and the rule against silently skipping pre-existing issues.</p>
-<p><strong>Why keep it:</strong> No <code>any</code> types, no blanket try/catch, no test shortcuts, no resource leaks.</p>
-<p><strong>If you decline:</strong> The agent applies no standing quality bar beyond the harness default and may pass over pre-existing issues without mentioning them.</p>
+<p>The standing quality bar for produced code, the comment discipline that keeps stale claims out of source files, and the rule against silently skipping pre-existing issues.</p>
+<p><strong>Why keep it:</strong> No <code>any</code> types, no blanket try/catch, no test shortcuts, no resource leaks, and no counts or coverage claims in comments that go stale on the next change.</p>
+<p><strong>If you decline:</strong> The agent applies no standing quality bar beyond the harness default, may write counts and coverage claims into comments, and may pass over pre-existing issues without mentioning them.</p>
 <p><strong>Related artifacts:</strong></p>
 <ul>
 <li><code>skills/enforcing-code-quality</code></li>
@@ -9415,7 +9415,25 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>If you encounter pre-existing issues, do NOT skip them. Ask if the user wants them fixed. Users usually say yes, so propose the fix alongside the question.
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>Load <span class="sb">`enforcing-code-quality`</span> skill for full standards and checklist.
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">### Comments</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;RULE&gt;Comments are sparse. Write one only where a reader must otherwise reconstruct a DECISION. The code says what it does. The comment says why you chose it instead of the alternative.&lt;/RULE&gt;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">-</span><span class="w"> </span>A count in a comment — cases, tests, scenarios, mutations, symbols, files, or lines. The next change makes the count wrong, and nothing catches it.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span>A present-tense claim about what the tests cover, or about what a wrong implementation would fail. If coverage matters, assert it in a test. A failing test is the only durable statement about coverage.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span>A note about history (&quot;this used to...&quot;, &quot;the previous version...&quot;). Git holds that.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="gs">**One exception, and it is the only one.**</span> A number that a mechanism reads and checks at build time or at test time may stay. The check is then the source of truth, not the comment, and it fails loudly when the number drifts. A number that no mechanism reads is a liability.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="gs">**A date does not rescue a stale claim.**</span> Within a day of churn, a date discriminates nothing.
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gs">**Applies to code you write.**</span> In a fork or a vendored tree, leave the comments that came from upstream. Repair a comment you made wrong; do not sweep comments you did not author.
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gs">**Observed.**</span> One review-and-repair loop fired four times on a single class of defect. Each repair arrived with a new claim about the tree that outran what was measured — a suite size, a coverage assertion. Two mechanisms and one prose convention were built to stop it, and none did. Every dated claim in the affected files carried the same date, because the suite changed several times in that one day. One figure had its number re-derived and its date left alone, so it advertised a measurement older than both changes it was wrong about. The machinery built to verify these claims grew larger than the code it guards. <span class="gs">**What did work was a registry that pins a mutation&#39;s red count and is CHECKED at test time**</span> — it caught a test weakened from a whole-tuple comparison to a single boolean while every other gate stayed silent. That is the one exception this module allows, and it earned its place.
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>Load <span class="sb">`enforcing-code-quality`</span> skill for full standards and checklist.
 </code></pre></div>
 
 

@@ -9416,43 +9416,79 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>self-unblocking before declaring an environment constraint is installed, this rule
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>is its mirror.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="gs">**Trigger:**</span> any step that writes a file, regenerates code, sends a message,
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>or targets a path you did not name explicitly. Before reporting it done, ask:
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="ge">*if this had silently done nothing, what would I be looking at right now?*</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>If the answer is &quot;exactly what I am looking at&quot;, you have not verified it.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>Related: <span class="sb">`92-core-philosophy.md`</span> states the design-time version of this rule — a
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>mechanism that fails silently fails exactly like a missing one. This file catches
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>that failure at check time; the other file stops you from building it in the
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>first place.
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gs">**Verify by inspecting the product:**</span>
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>Regenerated code → read the generated file, or list what it declares
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  (e.g. <span class="sb">`runme -l`</span> for test cases). Not the build&#39;s exit code.
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span>A write → read it back, or check mtime is from THIS run.
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>A message → confirm the body that arrived, not that send returned 0.
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">-</span><span class="w"> </span>A tool with a default path/target → pass the target EXPLICITLY. A default
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  that points somewhere plausible-but-wrong produces a real pass on the
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  wrong input.
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="gs">**Observed instances**</span> (all real, all reported success):
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>A waf task invoked a binary that was not on PATH, discarded the non-zero
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  return, and compiled against the STALE generated file still on disk. Tests
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  passed green — the newly added cases never ran.
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">-</span><span class="w"> </span>A harness&#39;s <span class="sb">`--elf`</span> default pointed at a different checkout. It validated
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  someone else&#39;s build and reported a pass that said nothing about the
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>  caller&#39;s branch.
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">-</span><span class="w"> </span>A message body containing backticks was command-substituted by the shell
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>  before send. The message arrived; parts of it were silently blank.
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>The shape is always the same: <span class="gs">**the operator-visible signal looks normal.**</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>That is what makes it expensive — no error to notice, no retry prompt, and a
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>false fact enters the record wearing the costume of a verified one.
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="gs">**When you cannot verify**</span>, say so explicitly rather than reporting done.
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>&quot;Ran, exit 0, artifact unverified&quot; is honest. &quot;Done&quot; is not.
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>Related: <span class="sb">`auditing-green-mirage`</span> is the test-suite specialization of this
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>rule (tests that pass without verifying behavior); the capability-claim
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>discipline in a project&#39;s <span class="sb">`AGENTS.md`</span> is its cross-session form.
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gs">**Trigger:**</span> any step that writes a file, regenerates code, sends a message,
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>or targets a path you did not name explicitly. Before reporting it done, ask:
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="ge">*if this had silently done nothing, what would I be looking at right now?*</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>If the answer is &quot;exactly what I am looking at&quot;, you have not verified it.
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gs">**Verify by inspecting the product:**</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">-</span><span class="w"> </span>Regenerated code → read the generated file, or list what it declares
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>  (e.g. <span class="sb">`runme -l`</span> for test cases). Not the build&#39;s exit code.
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">-</span><span class="w"> </span>A write → read it back, or check mtime is from THIS run.
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">-</span><span class="w"> </span>A message → confirm the body that arrived, not that send returned 0.
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">-</span><span class="w"> </span>A tool with a default path/target → pass the target EXPLICITLY. A default
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>  that points somewhere plausible-but-wrong produces a real pass on the
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>  wrong input.
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gs">**Observed instances**</span> (all real, all reported success):
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">-</span><span class="w"> </span>A waf task invoked a binary that was not on PATH, discarded the non-zero
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  return, and compiled against the STALE generated file still on disk. Tests
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>  passed green — the newly added cases never ran.
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span>A harness&#39;s <span class="sb">`--elf`</span> default pointed at a different checkout. It validated
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>  someone else&#39;s build and reported a pass that said nothing about the
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>  caller&#39;s branch.
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span>A message body containing backticks was command-substituted by the shell
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>  before send. The message arrived; parts of it were silently blank.
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span>Four agents independently hand-counted the same consumer set and returned 0, 5, 9, and 10; the computed answer was 14. A count is an artifact: compute it (grep -c, wc -l, a script), never recall or estimate it. A verification table also claimed four repositories checked when the command covered three — the table must be generated from the command&#39;s output, not written beside it.
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>The shape is always the same: <span class="gs">**the operator-visible signal looks normal.**</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>That is what makes it expensive — no error to notice, no retry prompt, and a
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>false fact enters the record wearing the costume of a verified one.
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="gs">**When you cannot verify**</span>, say so explicitly rather than reporting done.
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>&quot;Ran, exit 0, artifact unverified&quot; is honest. &quot;Done&quot; is not.
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gs">**A measurement means nothing without its conditions.**</span> Write down what you ran
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>next to the result. A rule stated more broadly than what you tested is false in a
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>way the test itself will not show you. The test result is accurate; only the
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>broader claim is wrong.
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gs">**Observed.**</span> Three passes each wrote a general rule about which CTest flags break
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>a fixture-based guard. Each rule was true only for what its author ran. The real
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>rule reverses depending on one flag: <span class="sb">`-E`</span> is safe only when paired with <span class="sb">`-R`</span> and
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">`-FS`</span>; <span class="sb">`-FS`</span>/<span class="sb">`-FA`</span> is safe only without <span class="sb">`-R`</span>. A fourth flag combination then broke
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>even that combined rule. Each pass had tested one path through a four-variable
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>space and generalized from it. **The fix: list every combination, or state exactly
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>which combination you tested and claim nothing beyond it.**
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gs">**A generated file is only evidence if it is newer than its source.**</span> Reading the
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>generated file is correct, but not enough on its own. Before you draw a conclusion
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>from it, check its timestamp against the source, or find a marker from the current
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>source inside it. A stale generated file carries the authority of the tool while
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>describing a state that no longer exists. That is worse than reading the source
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>directly — the source at least does not pretend to be current.
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="gs">**Observed, four times, three repos, two toolchains.**</span> A compile failed, left a
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>stale binary in place, and the test runner reported &quot;100% tests passed.&quot; A
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>mutation tool measured stale C code because the source-to-C step ran at configure
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>time, not build time, so edits to the source were never reflected in what got
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>tested. A test passed green against a binary that could no longer be rebuilt from
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>current source. Two review gates read a generated manifest instead of its source —
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>one of the two manifests was generated from an older version of the file the
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>reviewer thought it audited, and its own line-number reference now pointed past
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>the end of the current file.
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>Related: <span class="sb">`auditing-green-mirage`</span> is the test-suite specialization of this
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>rule (tests that pass without verifying behavior); the capability-claim
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>discipline in a project&#39;s <span class="sb">`AGENTS.md`</span> is its cross-session form.
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>&lt;/CRITICAL&gt;
 </code></pre></div>
 
 

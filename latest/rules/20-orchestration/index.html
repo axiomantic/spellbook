@@ -9451,7 +9451,7 @@
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| <span class="sb">`light`</span> | Carrying out an already-approved plan or spec: TDD implementation against a written spec, completion/artifact verification against a checklist, precisely-specified amends, rote edits, running tests, git/PR/Jira mechanics, applying a described change | <span class="sb">`low`</span> |
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>Debugging splits across tiers. Diagnosing an unknown failure is <span class="sb">`heavy`</span>; working through a
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>TDD red-green cycle whose test and target are already specified is <span class="sb">`light`</span>.
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>TDD red-green cycle whose test and target are already specified is <span class="sb">`light`</span>. Scope the dispatch to the trigger&#39;s size: a 140-line test file does not justify a build-configuration-wide toolchain investigation, and a precision lookup with a known location is a direct read, not a web-research dispatch.
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gs">**The specialized agent types already declare their tier**</span> in frontmatter (<span class="sb">`tier: heavy`</span>), so
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>dispatching the right type gets the right tier for free:
@@ -9506,22 +9506,25 @@
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">3.</span> <span class="gs">**Mandatory Summarization**</span>: Tools returning structured data (Figma, DevTools, verbose logs) MUST be wrapped in a summarization step before returning to the main orchestrator.
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">4.</span> <span class="gs">**Subagent Strict Schema**</span>: Dispatches via the <span class="sb">`Task`</span> tool MUST specify a strict JSON schema for results. Conversational subagent leak is forbidden.
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">5.</span> <span class="gs">**Phase-Implementation Separation**</span>: Coordination logic lives in the skill; implementation details belong in subagent prompts or phase-specific commands.
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="gu">### Context Minimization, Subagent Dispatch, and Compacting</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>Load <span class="sb">`dispatching-parallel-agents`</span> skill for the full context minimization protocol, dispatch templates, subagent decision heuristics, and task output storage locations.
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>When dispatching subagents, provide CONTEXT only in prompts, never duplicate skill instructions.
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>When compacting, follow <span class="sb">`/handoff`</span> command exactly. MUST retain all remaining work context in great detail, preserve active skill workflow, keep exact pending work items, and re-read any planning documents.
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">-</span><span class="w"> </span>Doing subagent work in main context (write/edit/test without Task tool)
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>Skipping skill phases because they are &quot;too long&quot;
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">6.</span> <span class="gs">**Mark Carried Figures**</span>: A number is CARRIED if you did not measure it yourself in this session. Say so in the dispatch prompt: &quot;This figure is carried from an earlier pass. It is not verified. Re-measure before you write it down.&quot; Never present a carried figure as a fresh measurement. The orchestrator reads reports; it does not take measurements itself. Nearly every figure it passes along is carried.
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>   <span class="gs">**Observed: seven cases in one session. The subagent&#39;s own measurement refuted all seven.**</span> A lint baseline reported as &quot;one finding&quot; measured 156 on recheck. A count attributed to a code comment; the comment did not exist. A flag rule relayed without the <span class="sb">`-R`</span> prefix the original measurement required. A proposed fix whose mechanism failed in both directions once tested. The agents caught all seven mistakes, which is why none caused damage. But in a codebase where a written measurement is trusted by default, a carried figure written as if measured will not stay flagged. It gets copied into a source comment, and the next reader has no way to tell it apart from a real measurement.
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="gu">### Context Minimization, Subagent Dispatch, and Compacting</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>Load <span class="sb">`dispatching-parallel-agents`</span> skill for the full context minimization protocol, dispatch templates, subagent decision heuristics, and task output storage locations.
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>When dispatching subagents, provide CONTEXT only in prompts, never duplicate skill instructions.
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>When compacting, follow <span class="sb">`/handoff`</span> command exactly. MUST retain all remaining work context in great detail, preserve active skill workflow, keep exact pending work items, and re-read any planning documents.
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">-</span><span class="w"> </span>Doing subagent work in main context (write/edit/test without Task tool)
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">-</span><span class="w"> </span>Skipping skill phases because they are &quot;too long&quot;
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 

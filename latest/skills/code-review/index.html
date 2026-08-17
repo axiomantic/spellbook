@@ -9986,33 +9986,40 @@
 <a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>
 <a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
 <a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>---
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="gs">**Test-quality scope:**</span> if the audit scope includes judging whether tests would catch regressions, dispatch a subagent invoking auditing-green-mirage for those tests; do not run mutation reasoning inline.
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="k">-</span><span class="w"> </span>Skip self-review for &quot;small&quot; changes
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="k">-</span><span class="w"> </span>Ignore Critical findings
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="k">-</span><span class="w"> </span>Dismiss feedback without evidence
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="k">-</span><span class="w"> </span>Give vague feedback without file:line
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="k">-</span><span class="w"> </span>Approve to avoid conflict
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">-</span><span class="w"> </span>Rate severity by effort instead of impact
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">-</span><span class="w"> </span>Hardcode a base ref or a default-branch name instead of shelling out to <span class="sb">`branch-context.sh`</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">-</span><span class="w"> </span>Report findings without stating the base used and how it was resolved
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="k">-</span><span class="w"> </span>Use &quot;branch diff&quot; without saying which endpoint (committed-only vs. working tree)
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="k">- [ ]</span> Correct mode identified
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">- [ ]</span> Base obtained via <span class="sb">`branch-context.sh`</span> — no hardcoded base literal
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">- [ ]</span> Base, <span class="sb">`resolved_via`</span>, and fetch status reported in output
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="k">- [ ]</span> Endpoint (committed-only vs. working tree) chosen deliberately and stated
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="k">- [ ]</span> All findings have file:line
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="k">- [ ]</span> Severity based on impact, not effort
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="k">- [ ]</span> Output matches mode spec
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>---
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="k">-</span><span class="w"> </span>Skip self-review for &quot;small&quot; changes
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="k">-</span><span class="w"> </span>Ignore Critical findings
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="k">-</span><span class="w"> </span>Dismiss feedback without evidence
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">-</span><span class="w"> </span>Give vague feedback without file:line
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">-</span><span class="w"> </span>Approve to avoid conflict
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">-</span><span class="w"> </span>Rate severity by effort instead of impact
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="k">-</span><span class="w"> </span>Hardcode a base ref or a default-branch name instead of shelling out to <span class="sb">`branch-context.sh`</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="k">-</span><span class="w"> </span>Report findings without stating the base used and how it was resolved
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="k">-</span><span class="w"> </span>Use &quot;branch diff&quot; without saying which endpoint (committed-only vs. working tree)
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="k">-</span><span class="w"> </span>Assess whether a test is a green mirage with an inline/ad hoc mutation
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>  table. Test-quality verdicts MUST come from a dispatch that invokes the
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>  auditing-green-mirage skill. An inline mutation check in this project
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>  class has already produced a false &quot;robust&quot; verdict that a dedicated
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>  audit reversed.
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="k">- [ ]</span> Correct mode identified
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="k">- [ ]</span> Base obtained via <span class="sb">`branch-context.sh`</span> — no hardcoded base literal
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="k">- [ ]</span> Base, <span class="sb">`resolved_via`</span>, and fetch status reported in output
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="k">- [ ]</span> Endpoint (committed-only vs. working tree) chosen deliberately and stated
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">- [ ]</span> All findings have file:line
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">- [ ]</span> Severity based on impact, not effort
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="k">- [ ]</span> Output matches mode spec
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>Every finding without file:line is noise. Every severity inflated by effort is a lie. Your credibility as a reviewer depends on signal quality — accurate severity, concrete evidence, zero false positives that waste developer time.
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

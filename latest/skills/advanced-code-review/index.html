@@ -10152,182 +10152,189 @@
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="gs">**Self-Check:**</span> Coverage reconciled N-of-N at hunk level with gaps disclosed, all passes complete, declined items respected, required fields present including <span class="sb">`rule`</span>.
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>---
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>Findings about test adequacy are PLAUSIBLE at best until auditing-green-mirage has run on the test in question; Phase 4 must not promote such a finding to verified without it.
 <a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="gu">## Phase 4: Verification</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>---
 <a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-verify`</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="gu">## Phase 4: Verification</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="gs">**Outputs:**</span> <span class="sb">`verification-audit.md`</span>, updated <span class="sb">`findings.json`</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-verify`</span>
 <a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="gs">**Self-Check:**</span> All findings verified, REFUTED removed, INCONCLUSIVE flagged, signal-to-noise calculated.
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="gs">**Outputs:**</span> <span class="sb">`verification-audit.md`</span>, updated <span class="sb">`findings.json`</span>
 <a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>---
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="gs">**Self-Check:**</span> All findings verified, REFUTED removed, INCONCLUSIVE flagged, signal-to-noise calculated.
 <a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gu">## Phase 5: Report Generation</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>---
 <a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-report`</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="gu">## Phase 5: Report Generation</span>
 <a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="gs">**Outputs:**</span> <span class="sb">`review-report.md`</span>, <span class="sb">`review-summary.json`</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="gs">**Execute:**</span> <span class="sb">`/advanced-code-review-report`</span>
 <a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="gs">**Self-Check:**</span> Findings filtered and sorted, verdict determined, artifacts written.
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="gs">**Outputs:**</span> <span class="sb">`review-report.md`</span>, <span class="sb">`review-summary.json`</span>
 <a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>---
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="gs">**Self-Check:**</span> Findings filtered and sorted, verdict determined, artifacts written.
 <a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="gu">## Constants and Configuration</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>---
 <a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="gu">### Severity Order</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="gu">## Constants and Configuration</span>
 <a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">```python</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="n">SEVERITY_ORDER</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>    <span class="s2">&quot;CRITICAL&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;HIGH&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;MEDIUM&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;LOW&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;NIT&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;QUESTION&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;PRAISE&quot;</span><span class="p">:</span> <span class="mi">6</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="p">}</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">```</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">`QUESTION`</span> is a legal severity and <span class="gs">**must**</span> appear in this dict. Omitting it
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>sends every QUESTION finding to the <span class="sb">`.get(..., 99)`</span> fallback, where it sorts
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>last and vanishes from <span class="sb">`review-summary.json`</span>&#39;s <span class="sb">`by_severity`</span>. This dict, the one
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>in <span class="sb">`/advanced-code-review-report`</span>, and the <span class="sb">`by_severity`</span> examples in
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="sb">`/advanced-code-review-review`</span> are ONE contract — they must agree key for key.
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="sb">`CRITICAL`</span> is reserved for security vulnerabilities, data loss, and production
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>outages. <span class="gs">**Bugs are HIGH**</span>, never CRITICAL.
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="gu">### Configurable Thresholds</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="gu">### Severity Order</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">```python</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="n">SEVERITY_ORDER</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>    <span class="s2">&quot;CRITICAL&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;HIGH&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;MEDIUM&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;LOW&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;NIT&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;QUESTION&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;PRAISE&quot;</span><span class="p">:</span> <span class="mi">6</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="p">}</span>
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">```</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">`QUESTION`</span> is a legal severity and <span class="gs">**must**</span> appear in this dict. Omitting it
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>sends every QUESTION finding to the <span class="sb">`.get(..., 99)`</span> fallback, where it sorts
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>last and vanishes from <span class="sb">`review-summary.json`</span>&#39;s <span class="sb">`by_severity`</span>. This dict, the one
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>in <span class="sb">`/advanced-code-review-report`</span>, and the <span class="sb">`by_severity`</span> examples in
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">`/advanced-code-review-review`</span> are ONE contract — they must agree key for key.
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="sb">`CRITICAL`</span> is reserved for security vulnerabilities, data loss, and production
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>outages. <span class="gs">**Bugs are HIGH**</span>, never CRITICAL.
 <a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>| Threshold | Default | Consumer |
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>|-----------|---------|----------|
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>| <span class="sb">`STALENESS_DAYS`</span> | 30 | <span class="sb">`/advanced-code-review-context`</span> 2.1 — <span class="sb">`discover_previous_review`</span> discards a review older than this |
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>| <span class="sb">`LARGE_DIFF_LINES`</span> | 10000 | <span class="sb">`/advanced-code-review-plan`</span> 1.6.1 — <span class="sb">`plan_chunks`</span> line budget per chunk |
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>| <span class="sb">`SUBAGENT_THRESHOLD_FILES`</span> | 20 | <span class="sb">`/advanced-code-review-plan`</span> 1.6.1 — <span class="sb">`plan_chunks`</span> file count that triggers chunked dispatch |
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>| <span class="sb">`VERIFICATION_TIMEOUT_SEC`</span> | 60 | Phase 4 circuit breaker — verification exceeding this stops the run |
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>Each threshold names its consumer. A threshold with no consumer is dead
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>configuration that invites false confidence: <span class="sb">`LARGE_DIFF_LINES`</span> and
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="sb">`SUBAGENT_THRESHOLD_FILES`</span> previously advertised chunked processing that did not
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>exist. If a future edit removes a consumer, remove the row.
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>---
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="gu">### Configurable Thresholds</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>| Threshold | Default | Consumer |
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>|-----------|---------|----------|
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>| <span class="sb">`STALENESS_DAYS`</span> | 30 | <span class="sb">`/advanced-code-review-context`</span> 2.1 — <span class="sb">`discover_previous_review`</span> discards a review older than this |
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>| <span class="sb">`LARGE_DIFF_LINES`</span> | 10000 | <span class="sb">`/advanced-code-review-plan`</span> 1.6.1 — <span class="sb">`plan_chunks`</span> line budget per chunk |
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>| <span class="sb">`SUBAGENT_THRESHOLD_FILES`</span> | 20 | <span class="sb">`/advanced-code-review-plan`</span> 1.6.1 — <span class="sb">`plan_chunks`</span> file count that triggers chunked dispatch |
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>| <span class="sb">`VERIFICATION_TIMEOUT_SEC`</span> | 60 | Phase 4 circuit breaker — verification exceeding this stops the run |
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>Each threshold names its consumer. A threshold with no consumer is dead
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>configuration that invites false confidence: <span class="sb">`LARGE_DIFF_LINES`</span> and
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="sb">`SUBAGENT_THRESHOLD_FILES`</span> previously advertised chunked processing that did not
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>exist. If a future edit removes a consumer, remove the row.
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="gu">## Offline Mode</span>
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>---
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>| Feature | Online Mode | Offline Mode |
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>|---------|-------------|--------------|
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>| PR metadata | Fetched | Skipped |
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>| PR comments | Fetched | Skipped |
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>| Re-check detection | Available | Not available |
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>---
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="gu">## Offline Mode</span>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>| Feature | Online Mode | Offline Mode |
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>|---------|-------------|--------------|
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>| PR metadata | Fetched | Skipped |
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>| PR comments | Fetched | Skipped |
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>| Re-check detection | Available | Not available |
 <a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">-</span><span class="w"> </span>Claim line contains X without reading line first
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">-</span><span class="w"> </span>Re-raise declined items (respect previous decisions)
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">-</span><span class="w"> </span>Skip verification phase (all findings must be verified)
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="k">-</span><span class="w"> </span>Mark finding as VERIFIED without actual verification
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="k">-</span><span class="w"> </span>Include REFUTED findings in final report
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">-</span><span class="w"> </span>Generate findings without file/line/evidence/rule
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">-</span><span class="w"> </span>Hardcode a base ref instead of shelling out to <span class="sb">`branch-context.sh`</span> / <span class="sb">`branch-context.py`</span>
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">-</span><span class="w"> </span>Report findings without stating the base used and how it was resolved
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span>Use &quot;branch diff&quot; without saying which endpoint (committed-only vs. working tree)
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>Substitute grep for reading a hunk (grep LOCATES; it never COVERS)
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>Sample the diff and treat the remainder as covered
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>Report a style or convention finding when the standards load found nothing
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">-</span><span class="w"> </span>Classify a bug as CRITICAL (bugs are HIGH)
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="k">-</span><span class="w"> </span>Guess at severity (use decision tree)
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="k">-</span><span class="w"> </span>Skip multi-pass review order
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">-</span><span class="w"> </span>Ignore previous review context when available
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">-</span><span class="w"> </span>Skip any phase self-check
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">-</span><span class="w"> </span>Proceed past failed self-check
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Read local files to verify or refute PR findings when local HEAD ≠ PR HEAD SHA**</span> — this is the most dangerous error in PR reviews; it produces confidently wrong REFUTED verdicts on real bugs
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Declare a finding REFUTED based on local file content during a PR review**</span> without first confirming SHA match via <span class="sb">`git rev-parse HEAD`</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>---
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="gu">## Circuit Breakers</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="gs">**Stop execution when:**</span>
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">-</span><span class="w"> </span>Phase 1 fails to resolve target
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="k">-</span><span class="w"> </span>No changes found between target and base
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="k">-</span><span class="w"> </span>More than 3 consecutive verification failures
-<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="k">-</span><span class="w"> </span>Verification phase exceeds timeout
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="gs">**Recovery:**</span> Network unavailable falls back to offline. Corrupt previous review starts fresh. Unreadable files skipped with warning.
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a>
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>---
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>
-<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="gu">## Final Self-Check</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>Before declaring review complete:
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="gu">### Phase Completion</span>
-<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="k">- [ ]</span> Phase 1: Target resolved, manifest written
-<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="k">- [ ]</span> Phase 2: Context loaded, previous items parsed
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="k">- [ ]</span> Phase 3: All passes complete, findings generated
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="k">- [ ]</span> Phase 4: All findings verified, REFUTED removed
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="k">- [ ]</span> Phase 5: Report rendered, artifacts written
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>---
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">-</span><span class="w"> </span>Claim line contains X without reading line first
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="k">-</span><span class="w"> </span>Re-raise declined items (respect previous decisions)
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="k">-</span><span class="w"> </span>Skip verification phase (all findings must be verified)
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">-</span><span class="w"> </span>Mark finding as VERIFIED without actual verification
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">-</span><span class="w"> </span>Include REFUTED findings in final report
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">-</span><span class="w"> </span>Generate findings without file/line/evidence/rule
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span>Hardcode a base ref instead of shelling out to <span class="sb">`branch-context.sh`</span> / <span class="sb">`branch-context.py`</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>Report findings without stating the base used and how it was resolved
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>Use &quot;branch diff&quot; without saying which endpoint (committed-only vs. working tree)
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>Substitute grep for reading a hunk (grep LOCATES; it never COVERS)
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">-</span><span class="w"> </span>Sample the diff and treat the remainder as covered
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="k">-</span><span class="w"> </span>Report a style or convention finding when the standards load found nothing
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="k">-</span><span class="w"> </span>Classify a bug as CRITICAL (bugs are HIGH)
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">-</span><span class="w"> </span>Guess at severity (use decision tree)
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">-</span><span class="w"> </span>Skip multi-pass review order
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">-</span><span class="w"> </span>Ignore previous review context when available
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">-</span><span class="w"> </span>Skip any phase self-check
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">-</span><span class="w"> </span>Proceed past failed self-check
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Read local files to verify or refute PR findings when local HEAD ≠ PR HEAD SHA**</span> — this is the most dangerous error in PR reviews; it produces confidently wrong REFUTED verdicts on real bugs
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Declare a finding REFUTED based on local file content during a PR review**</span> without first confirming SHA match via <span class="sb">`git rev-parse HEAD`</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="k">-</span><span class="w"> </span>Assess whether a test is a green mirage with an inline/ad hoc mutation
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>  table. Test-quality verdicts MUST come from a dispatch that invokes the
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>  auditing-green-mirage skill. An inline mutation check in this project
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>  class has already produced a false &quot;robust&quot; verdict that a dedicated
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>  audit reversed.
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>---
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="gu">## Circuit Breakers</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="gs">**Stop execution when:**</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="k">-</span><span class="w"> </span>Phase 1 fails to resolve target
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="k">-</span><span class="w"> </span>No changes found between target and base
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="k">-</span><span class="w"> </span>More than 3 consecutive verification failures
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="k">-</span><span class="w"> </span>Verification phase exceeds timeout
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="gs">**Recovery:**</span> Network unavailable falls back to offline. Corrupt previous review starts fresh. Unreadable files skipped with warning.
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>---
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="gu">## Final Self-Check</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>Before declaring review complete:
 <a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="gu">### Quality Gates</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="k">- [ ]</span> Every finding has: id, severity, category, file, line, evidence, <span class="gs">**rule**</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">- [ ]</span> <span class="gs">**Every `rule` names a catalogued rule (document + id) or a named correctness/logic bug**</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">- [ ]</span> <span class="gs">**Base was DETECTED (no hardcoded literal), and base + `resolved_via` + fetch status are reported**</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="k">- [ ]</span> <span class="gs">**Endpoint (committed-only vs. working tree) chosen deliberately and stated**</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="k">- [ ]</span> <span class="gs">**Standards load completed; `rule-catalogue.json` written; if nothing was found, disclosed**</span>
-<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">- [ ]</span> <span class="gs">**Coverage reconciled N-of-N at hunk level; gaps listed with reasons**</span>
-<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="k">- [ ]</span> No REFUTED findings in final report
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="k">- [ ]</span> INCONCLUSIVE findings flagged with [NEEDS VERIFICATION]
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="k">- [ ]</span> Declined items from previous review not re-raised
-<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">- [ ]</span> Signal-to-noise ratio calculated and reported
-<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>
-<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="gu">### Output Verification</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="k">- [ ]</span> All 10 artifact files exist and are valid
-<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>If ANY self-check item fails, STOP and fix before declaring complete.
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="gu">### Phase Completion</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="k">- [ ]</span> Phase 1: Target resolved, manifest written
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">- [ ]</span> Phase 2: Context loaded, previous items parsed
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="k">- [ ]</span> Phase 3: All passes complete, findings generated
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="k">- [ ]</span> Phase 4: All findings verified, REFUTED removed
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="k">- [ ]</span> Phase 5: Report rendered, artifacts written
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="gu">### Quality Gates</span>
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="k">- [ ]</span> Every finding has: id, severity, category, file, line, evidence, <span class="gs">**rule**</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="k">- [ ]</span> <span class="gs">**Every `rule` names a catalogued rule (document + id) or a named correctness/logic bug**</span>
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="k">- [ ]</span> <span class="gs">**Base was DETECTED (no hardcoded literal), and base + `resolved_via` + fetch status are reported**</span>
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="k">- [ ]</span> <span class="gs">**Endpoint (committed-only vs. working tree) chosen deliberately and stated**</span>
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="k">- [ ]</span> <span class="gs">**Standards load completed; `rule-catalogue.json` written; if nothing was found, disclosed**</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="k">- [ ]</span> <span class="gs">**Coverage reconciled N-of-N at hunk level; gaps listed with reasons**</span>
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="k">- [ ]</span> No REFUTED findings in final report
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="k">- [ ]</span> INCONCLUSIVE findings flagged with [NEEDS VERIFICATION]
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="k">- [ ]</span> Declined items from previous review not re-raised
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="k">- [ ]</span> Signal-to-noise ratio calculated and reported
 <a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>---
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="gu">## Integration Points</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="gu">### Git Commands (also used for PR analysis via `gh` CLI)</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>| Command | Phase | Usage |
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>|---------|-------|-------|
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>| <span class="sb">`branch-context.sh json`</span> | 1 | Detect base, fetch, compute merge base, report provenance |
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>| <span class="sb">`branch-context.sh files-committed`</span> | 1 | Coverage-manifest file list, committed-only endpoint |
-<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>| <span class="sb">`branch-context.sh diff-committed`</span> | 1, 3 | Diff content, committed-only endpoint |
-<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>| <span class="sb">`branch-context.sh files`</span> | 1 | Coverage-manifest file list including working tree (pre-commit review only) |
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>| <span class="sb">`branch-context.sh diff`</span> | 1, 3 | Diff content including working tree (pre-commit review only) |
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>| <span class="sb">`git show`</span> | 4 | Verify file contents at SHA |
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>
-<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="sb">`git merge-base`</span> and bare <span class="sb">`git diff &lt;base&gt;`</span> are NOT invoked directly. The script
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>owns base detection, the pre-base <span class="sb">`git fetch`</span>, and provenance reporting;
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>re-implementing that chain is how hardcoded literals get reintroduced.
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>
-<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>The file list and the diff MUST come from the SAME endpoint:
-<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="sb">`files-committed`</span> pairs with <span class="sb">`diff-committed`</span>, and <span class="sb">`files`</span> pairs with <span class="sb">`diff`</span>.
-<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>Mixing them builds a coverage manifest of files the diff does not contain, so
-<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>coverage reconciliation reports complete against zero hunks — a review that read
-<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>nothing and certified N-of-N.
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="gu">### Output Verification</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="k">- [ ]</span> All 10 artifact files exist and are valid
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>If ANY self-check item fails, STOP and fix before declaring complete.
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>---
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="gu">## Integration Points</span>
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="gu">### Git Commands (also used for PR analysis via `gh` CLI)</span>
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>| Command | Phase | Usage |
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a>|---------|-------|-------|
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>| <span class="sb">`branch-context.sh json`</span> | 1 | Detect base, fetch, compute merge base, report provenance |
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>| <span class="sb">`branch-context.sh files-committed`</span> | 1 | Coverage-manifest file list, committed-only endpoint |
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>| <span class="sb">`branch-context.sh diff-committed`</span> | 1, 3 | Diff content, committed-only endpoint |
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>| <span class="sb">`branch-context.sh files`</span> | 1 | Coverage-manifest file list including working tree (pre-commit review only) |
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a>| <span class="sb">`branch-context.sh diff`</span> | 1, 3 | Diff content including working tree (pre-commit review only) |
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>| <span class="sb">`git show`</span> | 4 | Verify file contents at SHA |
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="sb">`git merge-base`</span> and bare <span class="sb">`git diff &lt;base&gt;`</span> are NOT invoked directly. The script
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>owns base detection, the pre-base <span class="sb">`git fetch`</span>, and provenance reporting;
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>re-implementing that chain is how hardcoded literals get reintroduced.
 <a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="gu">### Fallback Chain</span>
-<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
-<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="sb">```</span>
-<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="sb">gh pr view (remote PR) -&gt; git diff (local branch only)</span>
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a><span class="sb">```</span>
-<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
-<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>---
-<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>A code review is only as valuable as its accuracy. Verify before asserting. Respect previous decisions. Prioritize by impact. Your reputation depends on being thorough AND correct.
-<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>The file list and the diff MUST come from the SAME endpoint:
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="sb">`files-committed`</span> pairs with <span class="sb">`diff-committed`</span>, and <span class="sb">`files`</span> pairs with <span class="sb">`diff`</span>.
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>Mixing them builds a coverage manifest of files the diff does not contain, so
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>coverage reconciliation reports complete against zero hunks — a review that read
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>nothing and certified N-of-N.
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a><span class="gu">### Fallback Chain</span>
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="sb">```</span>
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="sb">gh pr view (remote PR) -&gt; git diff (local branch only)</span>
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="sb">```</span>
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>---
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>A code review is only as valuable as its accuracy. Verify before asserting. Respect previous decisions. Prioritize by impact. Your reputation depends on being thorough AND correct.
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
