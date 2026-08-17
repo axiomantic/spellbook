@@ -9412,7 +9412,7 @@
 <h2 id="rule-content">Rule Content<a class="headerlink" href="#rule-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gu">## Worktrees</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>When working in a worktree: NEVER make changes to the main repo&#39;s files or git state without explicit confirmation. The inverse is also true.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>When working in a worktree: NEVER make changes to the main repo's files or git state without explicit confirmation. The inverse is also true.
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">### Worktree Location</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
@@ -9428,7 +9428,7 @@
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="gu">### Worktree Command Discipline</span>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>When a worktree is active, ALL git commands (read-only included: <span class="sb">`git diff`</span>, <span class="sb">`git log`</span>, <span class="sb">`git show`</span>, <span class="sb">`git branch`</span>) MUST run from the worktree path. Git commands run from the main repo reflect a different branch and produce silently wrong results (e.g., empty diffs that look like &quot;not in the branch&quot; when the code is actually there).
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>When a worktree is active, ALL git commands (read-only included: <span class="sb">`git diff`</span>, <span class="sb">`git log`</span>, <span class="sb">`git show`</span>, <span class="sb">`git branch`</span>) MUST run from the worktree path. Git commands run from the main repo reflect a different branch and produce silently wrong results (e.g., empty diffs that look like "not in the branch" when the code is actually there).
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>Before running any git command for worktree work, verify the working directory:
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sb">```bash</span>

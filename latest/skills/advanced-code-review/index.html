@@ -9936,7 +9936,7 @@
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Advanced Code Review</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gs">**Announce:**</span> &quot;Using advanced-code-review skill for multi-phase review with verification.&quot;
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gs">**Announce:**</span> "Using advanced-code-review skill for multi-phase review with verification."
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>You are a Senior Code Reviewer known for thorough, fair, and constructive reviews. Your reputation depends on:
@@ -9960,16 +9960,16 @@
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>After each phase, reflect:
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">-</span><span class="w"> </span>Did I verify every claim against actual code?
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">-</span><span class="w"> </span>Did I respect all previous decisions (declined, partial, alternatives)?
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>Is every finding worth the reviewer&#39;s time?
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">-</span><span class="w"> </span>Is every finding worth the reviewer's time?
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>&lt;/reflection&gt;
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">1.</span> <span class="gs">**Verification Before Assertion**</span>: Never claim &quot;line X contains Y&quot; without reading line X. Every finding must be verifiable.
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">1.</span> <span class="gs">**Verification Before Assertion**</span>: Never claim "line X contains Y" without reading line X. Every finding must be verifiable.
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">2.</span> <span class="gs">**Respect Previous Decisions**</span>: Declined items stay declined. Partial agreements note pending work. Alternatives, if accepted, are not re-raised.
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">3.</span> <span class="gs">**Severity Accuracy**</span>: Critical means data loss/security breach. High means broken functionality. Medium is quality concern. Low is polish. Nit is style.
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">4.</span> <span class="gs">**Evidence Over Opinion**</span>: &quot;This could be slow&quot; is not a finding. &quot;O(n^2) loop at line 45 with n=10000 in hot path&quot; is.
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">5.</span> <span class="gs">**Signal Maximization**</span>: Every finding in the report should be worth the reviewer&#39;s time to read.
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">4.</span> <span class="gs">**Evidence Over Opinion**</span>: "This could be slow" is not a finding. "O(n^2) loop at line 45 with n=10000 in hot path" is.
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">5.</span> <span class="gs">**Signal Maximization**</span>: Every finding in the report should be worth the reviewer's time to read.
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>---
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
@@ -10022,12 +10022,12 @@
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>Reading local files in PR mode produces silently wrong results:
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">-</span><span class="w"> </span>Changes introduced by the PR appear absent (local has the old code)
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">-</span><span class="w"> </span>Real bugs get declared &quot;not present&quot; → false REFUTED verdicts
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">-</span><span class="w"> </span>Real bugs get declared "not present" → false REFUTED verdicts
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>The review poisons findings with high confidence in wrong conclusions
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR&#39;s changed file set.
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR's changed file set.
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**Before any local file read in PR mode:**</span> confirm <span class="sb">`git rev-parse HEAD`</span> matches the PR&#39;s <span class="sb">`headRefOid`</span>. If they differ, treat the local file as unavailable for that finding.
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**Before any local file read in PR mode:**</span> confirm <span class="sb">`git rev-parse HEAD`</span> matches the PR's <span class="sb">`headRefOid`</span>. If they differ, treat the local file as unavailable for that finding.
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>---
@@ -10065,7 +10065,7 @@
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="sb">```bash</span>
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="c1"># Machine-readable provenance for the manifest</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="s2">&quot;</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh&quot;</span><span class="w"> </span>json
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="s2">"</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh"</span><span class="w"> </span>json
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="sb">```</span>
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gu">### Axis 2 — ENDPOINT (task-dependent)</span>
@@ -10078,7 +10078,7 @@
 <a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>
 <a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>This skill reviews what will merge, so <span class="sb">`diff-committed`</span> is the default. If the
 <a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>operator is reviewing before committing, switch to <span class="sb">`diff`</span> and say so.
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>&quot;Branch diff&quot; is <span class="gs">**not**</span> a name for both endpoints.
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>"Branch diff" is <span class="gs">**not**</span> a name for both endpoints.
 <a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="gu">### Reporting requirement</span>
 <a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
@@ -10182,14 +10182,14 @@
 <a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>
 <a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">```python</span>
 <a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="n">SEVERITY_ORDER</span> <span class="o">=</span> <span class="p">{</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>    <span class="s2">&quot;CRITICAL&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">&quot;HIGH&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;MEDIUM&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">&quot;LOW&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;NIT&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">&quot;QUESTION&quot;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">&quot;PRAISE&quot;</span><span class="p">:</span> <span class="mi">6</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>    <span class="s2">"CRITICAL"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"HIGH"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"MEDIUM"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s2">"LOW"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">"NIT"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span> <span class="s2">"QUESTION"</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s2">"PRAISE"</span><span class="p">:</span> <span class="mi">6</span>
 <a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="p">}</span>
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">```</span>
 <a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>
 <a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">`QUESTION`</span> is a legal severity and <span class="gs">**must**</span> appear in this dict. Omitting it
 <a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>sends every QUESTION finding to the <span class="sb">`.get(..., 99)`</span> fallback, where it sorts
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>last and vanishes from <span class="sb">`review-summary.json`</span>&#39;s <span class="sb">`by_severity`</span>. This dict, the one
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>last and vanishes from <span class="sb">`review-summary.json`</span>'s <span class="sb">`by_severity`</span>. This dict, the one
 <a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>in <span class="sb">`/advanced-code-review-report`</span>, and the <span class="sb">`by_severity`</span> examples in
 <a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="sb">`/advanced-code-review-review`</span> are ONE contract — they must agree key for key.
 <a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>&lt;/CRITICAL&gt;
@@ -10234,7 +10234,7 @@
 <a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">-</span><span class="w"> </span>Generate findings without file/line/evidence/rule
 <a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span>Hardcode a base ref instead of shelling out to <span class="sb">`branch-context.sh`</span> / <span class="sb">`branch-context.py`</span>
 <a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>Report findings without stating the base used and how it was resolved
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>Use &quot;branch diff&quot; without saying which endpoint (committed-only vs. working tree)
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>Use "branch diff" without saying which endpoint (committed-only vs. working tree)
 <a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>Substitute grep for reading a hunk (grep LOCATES; it never COVERS)
 <a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">-</span><span class="w"> </span>Sample the diff and treat the remainder as covered
 <a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="k">-</span><span class="w"> </span>Report a style or convention finding when the standards load found nothing
@@ -10249,7 +10249,7 @@
 <a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="k">-</span><span class="w"> </span>Assess whether a test is a green mirage with an inline/ad hoc mutation
 <a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>  table. Test-quality verdicts MUST come from a dispatch that invokes the
 <a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>  auditing-green-mirage skill. An inline mutation check in this project
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>  class has already produced a false &quot;robust&quot; verdict that a dedicated
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>  class has already produced a false "robust" verdict that a dedicated
 <a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>  audit reversed.
 <a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>

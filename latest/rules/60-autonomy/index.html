@@ -9416,8 +9416,8 @@
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>In autonomous mode, a single failure is a hypothesis, not a conclusion. Before
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>declaring any environmental constraint (&quot;sandbox blocks X&quot;, &quot;network down&quot;,
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&quot;tool unavailable&quot;), try at least <span class="gs">**3 distinct approaches**</span> — not 3 retries
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>declaring any environmental constraint ("sandbox blocks X", "network down",
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>"tool unavailable"), try at least <span class="gs">**3 distinct approaches**</span> — not 3 retries
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>of the same thing.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>Common failure → try next:
@@ -9426,11 +9426,11 @@
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span>Network timeout on <span class="sb">`git clone`</span> → retry once (transient) → <span class="sb">`curl -L`</span> tarball → <span class="sb">`WebFetch`</span> → package registry
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span><span class="sb">`nimble install`</span> from github fails → registry alias → manual clone + <span class="sb">`--path:`</span> → tarball
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Permission/egress failure on one tool → try adjacent tools; <span class="sb">`WebFetch`</span> / <span class="sb">`curl`</span> / <span class="sb">`git`</span> may route differently
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>Required reference doc fetch fails once → retry, alternate mirror/source, different fetch tool. A manual recorded &quot;unavailable&quot; after ONE failed fetch was obtained on the next retry days later; the false constraint nearly shipped wrong MUL/DIV semantics.
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>Required reference doc fetch fails once → retry, alternate mirror/source, different fetch tool. A manual recorded "unavailable" after ONE failed fetch was obtained on the next retry days afterward; the false constraint nearly shipped wrong MUL/DIV semantics.
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gs">**FORBIDDEN:**</span> writing an &quot;environment constraints&quot; journal/notes entry after a
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="gs">**FORBIDDEN:**</span> writing an "environment constraints" journal/notes entry after a
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>single failure, pivoting away, and never retesting. That is not autonomous — that
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>is giving up on the first &quot;no.&quot;
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>is giving up on the first "no."
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gs">**Budget:**</span> 3 distinct approaches per capability. If all 3 fail, declare the
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>constraint honestly in a journal entry that enumerates what was tried.
@@ -9445,8 +9445,8 @@
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>Autonomous mode scopes <span class="gs">**confirmations**</span>, not <span class="gs">**scope**</span>.
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>Autonomous mode means: do not pause for trivial yes/no acknowledgments
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>that an interactive user would give automatically (e.g., &quot;proceed to
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>the next phase?&quot;, &quot;apply this fix?&quot;, &quot;run the test suite?&quot;).
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>that an interactive user would give automatically (e.g., "proceed to
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>the next phase?", "apply this fix?", "run the test suite?").
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>Autonomous mode does NOT mean: license to expand the work beyond what
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>the operator described in their initial request.
@@ -9464,12 +9464,12 @@
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span>Adding authentication, authorization, or signing schemes not asked for
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>When such an expansion is contemplated — even when justified by an
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>adversarial-review finding or a &quot;what could go wrong&quot; risk surfaced by
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>adversarial-review finding or a "what could go wrong" risk surfaced by
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>the orchestrator itself — the orchestrator MUST pause and surface the
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>proposed expansion to the operator for explicit go/no-go.
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>This rule overrides any phase-local &quot;in autonomous mode, proceed
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>automatically&quot; instruction. Doing the asked work thoroughly is not the
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>This rule overrides any phase-local "in autonomous mode, proceed
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>automatically" instruction. Doing the asked work thoroughly is not the
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>same as expanding the asked work autonomously.
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
@@ -9487,13 +9487,13 @@
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>   outward-facing action (push, merge, publish, delete), or a decision
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>   whose options you cannot generate.
 <a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">2.</span> <span class="gs">**The task is fully complete**</span> and no further action is possible.
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>   Say so in those words — &quot;Complete. Nothing further possible without
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>   &lt;the specific missing thing&gt;.&quot; Do not trail off into a status inventory.
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>   Say so in those words — "Complete. Nothing further possible without
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>   &lt;the specific missing thing&gt;." Do not trail off into a status inventory.
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>Everything else is NOT a stopping point. Specifically, these are
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>completion bias, not blockers, and you continue past all of them:
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">-</span><span class="w"> </span>The session has run long, or &quot;this is a clean checkpoint.&quot;
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">-</span><span class="w"> </span>The session has run long, or "this is a clean checkpoint."
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>A subagent returned a result. A result is an input to your next
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>  action, not the end of your turn.
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span>You finished a task-list item and there are more items.
@@ -9503,14 +9503,14 @@
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>You reached a phase boundary in a skill.
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="gs">**The announce-then-stop rule.**</span> If your text says you will do
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>something — &quot;next I&#39;ll…&quot;, &quot;I&#39;m doing X now&quot;, &quot;then executing the
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>rename&quot; — the tool call that starts it MUST be in the SAME turn.
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>something — "next I'll…", "I'm doing X now", "then executing the
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>rename" — the tool call that starts it MUST be in the SAME turn.
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>Announcing an action and ending the turn is a process failure even
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>when the announcement is accurate. Either do it now or say
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>explicitly why you cannot.
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gs">**Do not claim in-flight work you have not dispatched.**</span> &quot;Poll just
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>went out&quot;, &quot;I&#39;ve asked the group&quot; are only true if a tool call in
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gs">**Do not claim in-flight work you have not dispatched.**</span> "Poll just
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>went out", "I've asked the group" are only true if a tool call in
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>this turn made them true.
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>&lt;/CRITICAL&gt;

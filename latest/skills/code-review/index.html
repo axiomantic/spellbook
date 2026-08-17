@@ -9869,7 +9869,7 @@
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>|------|------|-------------|
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| <span class="sb">`--self`</span>, <span class="sb">`-s`</span>, (default: no flag given) | Pre-PR self-review | (inline below) |
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| <span class="sb">`--feedback`</span>, <span class="sb">`-f`</span> | Process received feedback | <span class="sb">`code-review-feedback`</span> |
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>| <span class="sb">`--give &lt;target&gt;`</span> | Review someone else&#39;s code | <span class="sb">`code-review-give`</span> |
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>| <span class="sb">`--give &lt;target&gt;`</span> | Review someone else's code | <span class="sb">`code-review-give`</span> |
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>| <span class="sb">`--audit [scope]`</span> | Multi-pass deep-dive | (inline below) |
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gs">**Modifiers:**</span> <span class="sb">`--tarot`</span> (roundtable dialogue via <span class="sb">`code-review-tarot`</span>), <span class="sb">`--pr &lt;num&gt;`</span> (PR source)
@@ -9917,7 +9917,7 @@
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>| Describing what the branch does (changelog, PR body) | include working tree | <span class="sb">`diff`</span> |
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| Pre-commit self-review | include working tree | <span class="sb">`diff`</span> |
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>&quot;Branch diff&quot; is <span class="gs">**not**</span> a name for both. Say which endpoint you used.
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>"Branch diff" is <span class="gs">**not**</span> a name for both. Say which endpoint you used.
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gu">### Reporting requirement</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
@@ -9948,13 +9948,13 @@
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>&lt;/reflection&gt;
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
 <a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="gs">**Workflow:**</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">1.</span> Get the diff via <span class="sb">`branch-context.sh`</span> (see the &quot;Diff Acquisition&quot; section).
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">1.</span> Get the diff via <span class="sb">`branch-context.sh`</span> (see the "Diff Acquisition" section).
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>   Pre-commit self-review includes the working tree, so use the <span class="sb">`files`</span> /
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>   <span class="sb">`diff`</span> endpoint pair:
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
 <a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="sb">   ```bash</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="w">   </span><span class="s2">&quot;</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh&quot;</span><span class="w"> </span>files
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="w">   </span><span class="s2">&quot;</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh&quot;</span><span class="w"> </span>diff
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="w">   </span><span class="s2">"</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh"</span><span class="w"> </span>files
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="w">   </span><span class="s2">"</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh"</span><span class="w"> </span>diff
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">2.</span> Multi-pass: Logic &gt; Integration &gt; Security &gt; Style
@@ -9991,7 +9991,7 @@
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>---
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="k">-</span><span class="w"> </span>Skip self-review for &quot;small&quot; changes
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="k">-</span><span class="w"> </span>Skip self-review for "small" changes
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="k">-</span><span class="w"> </span>Ignore Critical findings
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="k">-</span><span class="w"> </span>Dismiss feedback without evidence
 <a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">-</span><span class="w"> </span>Give vague feedback without file:line
@@ -9999,11 +9999,11 @@
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">-</span><span class="w"> </span>Rate severity by effort instead of impact
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="k">-</span><span class="w"> </span>Hardcode a base ref or a default-branch name instead of shelling out to <span class="sb">`branch-context.sh`</span>
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="k">-</span><span class="w"> </span>Report findings without stating the base used and how it was resolved
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="k">-</span><span class="w"> </span>Use &quot;branch diff&quot; without saying which endpoint (committed-only vs. working tree)
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="k">-</span><span class="w"> </span>Use "branch diff" without saying which endpoint (committed-only vs. working tree)
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="k">-</span><span class="w"> </span>Assess whether a test is a green mirage with an inline/ad hoc mutation
 <a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>  table. Test-quality verdicts MUST come from a dispatch that invokes the
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>  auditing-green-mirage skill. An inline mutation check in this project
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>  class has already produced a false &quot;robust&quot; verdict that a dedicated
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>  class has already produced a false "robust" verdict that a dedicated
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>  audit reversed.
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>

@@ -9465,7 +9465,7 @@
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>   Reject an empty seed argument with an explicit error.
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">2.</span> For each entry, resolve it to a canonical absolute path via the
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>   harness Bash tool. The portable form is the subshell idiom
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>   <span class="sb">`(cd &quot;$(dirname &quot;$path&quot;)&quot; &amp;&amp; printf &#39;%s/%s\n&#39; &quot;$(pwd -P)&quot; &quot;$(basename &quot;$path&quot;)&quot;)`</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>   <span class="sb">`(cd "$(dirname "$path")" &amp;&amp; printf '%s/%s\n' "$(pwd -P)" "$(basename "$path")")`</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>   — the outer parentheses run the <span class="sb">`cd`</span> in a subshell so the working
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>   directory of the invoking shell is preserved. Where available,
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>   <span class="sb">`realpath`</span> is also acceptable (note: macOS without GNU coreutils
@@ -9491,7 +9491,7 @@
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If the entry is a file ending in <span class="sb">`.md`</span>, add it to the candidate
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>     file list.
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If the entry is a directory, walk it for <span class="sb">`*.md`</span> files
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>     (<span class="sb">`find &lt;dir&gt; -type f -name &#39;*.md&#39;`</span>).
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>     (<span class="sb">`find &lt;dir&gt; -type f -name '*.md'`</span>).
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If the entry is a file but not <span class="sb">`.md`</span>, emit a single-line warning
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>     and skip:
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
@@ -9520,13 +9520,13 @@
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">-</span><span class="w"> </span>the source file path (resolved canonical absolute);
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">-</span><span class="w"> </span>the heading chain leading to the block (or the file-stem fallback per
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>  the protocol&#39;s edge-case table);
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>  the protocol's edge-case table);
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">-</span><span class="w"> </span>the first three normalized lines of the block body;
 <a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">-</span><span class="w"> </span>the block line count;
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">-</span><span class="w"> </span>the bucket key (derived per the protocol);
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">-</span><span class="w"> </span>the <span class="sb">`finding_id`</span> (derived per the protocol via <span class="sb">`shasum -a 256`</span>, then
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>  truncated to 12 hex chars);
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span>an <span class="sb">`oversized`</span> flag (true if the block exceeds the protocol&#39;s max
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span>an <span class="sb">`oversized`</span> flag (true if the block exceeds the protocol's max
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>  line cap and the protocol could not chunk it at a sub-heading).
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="sb">`shasum -a 256`</span> is invoked via the harness Bash tool. No Python.
@@ -9542,7 +9542,7 @@
 <a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>   <span class="sb">`skills/dedupe/references/safety-markers.md`</span> mechanically. The
 <a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>   reference file is the canonical home for the pattern set; this
 <a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>   command does not restate any pattern.
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">3.</span> If the block body matches any pattern, force the block&#39;s
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">3.</span> If the block body matches any pattern, force the block's
 <a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>   <span class="sb">`inline_mandatory_mechanical`</span> field to <span class="sb">`true`</span>. Otherwise the field
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>   is <span class="sb">`false`</span>.
 <a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
@@ -9556,13 +9556,13 @@
 <a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="gu">## Phase 1.5 — Compute the artifact path and the seed slug</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>The blocks manifest lives in the project-encoded artifact directory.
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>&quot;Project-encoded&quot; means the spellbook repository absolute path with the
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>"Project-encoded" means the spellbook repository absolute path with the
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>leading <span class="sb">`/`</span> stripped and remaining <span class="sb">`/`</span> characters replaced by <span class="sb">`-`</span>. The
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>project-encoded path is computed with <span class="sb">`printf`</span> + <span class="sb">`sed`</span> via the harness
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>Bash tool — no Python:
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">```sh</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;%s&#39;</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$REPO_ROOT</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s|^/||; s|/|-|g&#39;</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="nv">PROJECT_ENCODED</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span><span class="nb">printf</span><span class="w"> </span><span class="s1">'%s'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$REPO_ROOT</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">'s|^/||; s|/|-|g'</span><span class="k">)</span><span class="s2">"</span>
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="sb">```</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>The seed slug is derived from the seed argument: lowercase, replace any
@@ -9580,7 +9580,7 @@
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="sb">~/.local/spellbook/docs/&lt;project-encoded&gt;/dedupe-manifest-YYYY-MM-DD-&lt;seed-slug&gt;.md</span>
 <a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">```</span>
 <a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="k">-</span><span class="w"> </span><span class="sb">`YYYY-MM-DD`</span> is today&#39;s date in UTC, obtained via <span class="sb">`date -u +%Y-%m-%d`</span>.
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="k">-</span><span class="w"> </span><span class="sb">`YYYY-MM-DD`</span> is today's date in UTC, obtained via <span class="sb">`date -u +%Y-%m-%d`</span>.
 <a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">-</span><span class="w"> </span>The parent directory is created with <span class="sb">`mkdir -p`</span> if it does not exist.
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>
 <a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>---

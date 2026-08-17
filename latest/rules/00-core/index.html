@@ -9408,7 +9408,7 @@
 </ul>
 <h2 id="rule-content">Rule Content<a class="headerlink" href="#rule-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gu">## What Spellbook Is (And Isn&#39;t)</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gu">## What Spellbook Is (And Isn't)</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Spellbook is a harness-augmentation layer. <span class="ge">*You*</span> (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI, ForgeCode, Prime Agent) are the harness: you own the agent loop, tool execution, and core conversational behavior. Spellbook adds a behavioral layer on top: skills, slash commands, hooks, profiles, and a shared state layer (session resume). On platforms with MCP support (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI), this is provided by an MCP server. On Prime Agent, this is provided by the continual harness (memories, skills, prompt notes).
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>
@@ -9416,7 +9416,7 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">-</span><span class="w"> </span>The instructions in the spellbook rule modules augment your default behavior; they do not replace it. Where a spellbook rule is more specific than your default, follow the rule. Where the rule is silent, your default behavior stands.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">-</span><span class="w"> </span>On MCP-capable platforms, the <span class="sb">`spellbook_*`</span> tools are shared across harnesses on this machine. Treat shared state as authoritative. On Prime Agent, shared state is managed through the continual harness (memories, skills, prompt notes).
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">-</span><span class="w"> </span>&quot;Skill&quot; and &quot;command&quot; references in the spellbook rule modules point at spellbook artifacts loaded into your environment, not built-in harness features.
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">-</span><span class="w"> </span>"Skill" and "command" references in the spellbook rule modules point at spellbook artifacts loaded into your environment, not built-in harness features.
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gu">## Spellbook Path Resolution</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
@@ -9424,7 +9424,7 @@
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">1.</span> <span class="gs">**Environment Variables**</span>: Use <span class="sb">`$SPELLBOOK_DIR`</span> or <span class="sb">`$SPELLBOOK_CONFIG_DIR`</span> if exported in your runtime environment.
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">2.</span> <span class="gs">**Machine Config File**</span>: Read <span class="sb">`~/.config/spellbook/paths.md`</span>, which the installer writes at install time. This is the primary mechanism: it records the checkout location directly, so it works identically on every harness regardless of how the rule modules were delivered.
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">3.</span> <span class="gs">**Symlink Fallback (directory-capable harnesses only)**</span>: If neither the environment variables nor the machine config file yields a path, and this file is a symlink into a spellbook checkout, resolve its symlink target and set <span class="sb">`SPELLBOOK_DIR`</span> to the parent of the target&#39;s parent directory. Two levels, not one: the target is <span class="sb">`&lt;spellbook_dir&gt;/rules/00-core.md`</span>, whose immediate parent is the <span class="sb">`rules/`</span> directory, and the checkout root is one level up from that. On a harness that receives the rules as a single generated file there is no symlink to resolve, and this step does not apply.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">3.</span> <span class="gs">**Symlink Fallback (directory-capable harnesses only)**</span>: If neither the environment variables nor the machine config file yields a path, and this file is a symlink into a spellbook checkout, resolve its symlink target and set <span class="sb">`SPELLBOOK_DIR`</span> to the parent of the target's parent directory. Two levels, not one: the target is <span class="sb">`&lt;spellbook_dir&gt;/rules/00-core.md`</span>, whose immediate parent is the <span class="sb">`rules/`</span> directory, and the checkout root is one level up from that. On a harness that receives the rules as a single generated file there is no symlink to resolve, and this step does not apply.
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>Independently of those steps: if <span class="sb">`SPELLBOOK_CONFIG_DIR`</span> is still unresolved once
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="sb">`SPELLBOOK_DIR`</span> is known, default it to <span class="sb">`~/.local/spellbook`</span>.
@@ -9444,7 +9444,7 @@
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| OpenCode | Your system prompt mentions OpenCode or YOLO mode | <span class="sb">`opencode`</span> | OpenCode |
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| Codex | Your system prompt mentions Codex sandbox | <span class="sb">`codex`</span> | Codex |
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| Gemini CLI | Your system prompt mentions Gemini CLI | <span class="sb">`gemini`</span> | Gemini |
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| ForgeCode | Your system prompt opens with &#39;You are Forge&#39;, &#39;You are Sage&#39;, or &#39;You are Muse&#39; (built-in agents only) | <span class="sb">`forgecode`</span> | Forge |
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>| ForgeCode | Your system prompt opens with 'You are Forge', 'You are Sage', or 'You are Muse' (built-in agents only) | <span class="sb">`forgecode`</span> | Forge |
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>| Prime Agent | Your system prompt mentions Prime Agent, RLM, or IPython kernel | <span class="sb">`prime_agent`</span> | Prime Agent |
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>If uncertain, omit the <span class="sb">`platform`</span> parameter (backward compatible). Use the assistant name in greetings.
@@ -9455,8 +9455,8 @@
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>If platform is <span class="sb">`opencode`</span>, track and propagate agent type to all subagents.
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gs">**Detection:**</span> Check system prompt:
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="k">-</span><span class="w"> </span>&quot;operating in YOLO mode&quot; -&gt; <span class="sb">`yolo`</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">-</span><span class="w"> </span>&quot;YOLO mode with a focus on precision&quot; -&gt; <span class="sb">`yolo-focused`</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="k">-</span><span class="w"> </span>"operating in YOLO mode" -&gt; <span class="sb">`yolo`</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">-</span><span class="w"> </span>"YOLO mode with a focus on precision" -&gt; <span class="sb">`yolo-focused`</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span>No YOLO indicators -&gt; <span class="sb">`general`</span> (default)
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gs">**Store as `CURRENT_AGENT_TYPE`.**</span> When dispatching via Task tool:
@@ -9470,11 +9470,11 @@
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">1.</span> <span class="gs">**On Prime Agent:**</span> Check the continual harness (<span class="sb">`rlm.harness.overview()`</span>) for existing session state and memories.
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>   <span class="gs">**On other platforms (Claude Code, Antigravity, Codex, OpenCode, Gemini CLI):**</span> No MCP session tool to call — these platforms just start fresh per session. Skip to Step 2.
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">2.</span> Greet with &quot;Welcome to spellbook-enhanced [assistant name].&quot;
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">2.</span> Greet with "Welcome to spellbook-enhanced [assistant name]."
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gu">### Step 2: Project Knowledge Check</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">1.</span> Check if project has <span class="sb">`AGENTS.md`</span> (or your platform&#39;s configuration file that references it, e.g. <span class="sb">`CLAUDE.md`</span>). If it exists with content, read it silently for context.
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">1.</span> Check if project has <span class="sb">`AGENTS.md`</span> (or your platform's configuration file that references it, e.g. <span class="sb">`CLAUDE.md`</span>). If it exists with content, read it silently for context.
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">2.</span> For larger projects, also check for subdirectory <span class="sb">`AGENTS.md`</span> files relevant to the current work area and read those too.
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">3.</span> If a rule module governing the project-knowledge offer protocol is installed, apply it to decide what to do when the file is missing, thin, or empty. If no such module is installed, read what exists and make no offer.
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>

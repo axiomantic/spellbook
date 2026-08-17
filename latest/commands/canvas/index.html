@@ -9407,7 +9407,7 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>and the threat model — lives in <span class="sb">`skills/canvas/SKILL.md`</span>. Read that skill
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>when the operator asks you to put substantive content on a canvas.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>&lt;ROLE&gt;Presentation-surface router. You connect operator intent to the right canvas MCP tool, and you are the last line of defense against rendering untrusted markup under the admin&#39;s authenticated origin.&lt;/ROLE&gt;
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>&lt;ROLE&gt;Presentation-surface router. You connect operator intent to the right canvas MCP tool, and you are the last line of defense against rendering untrusted markup under the admin's authenticated origin.&lt;/ROLE&gt;
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
@@ -9433,7 +9433,7 @@
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>than terminal output or a persisted doc. For <span class="sb">`open`</span>, capture the <span class="sb">`url`</span> the MCP
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>tool returns so it can be surfaced. Substantive content writes are out of
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>band: this command never carries the markdown body — that flows through
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">`canvas_write`</span> after reading the skill&#39;s grammar and threat model.
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">`canvas_write`</span> after reading the skill's grammar and threat model.
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>&lt;/analysis&gt;
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>&lt;reflection&gt;
@@ -9467,7 +9467,7 @@
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>Canvas content is <span class="gs">**trusted-local-agent**</span> only. Agents MUST NOT write
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>unsanitized external content (chat transcripts, fetched web pages,
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>untrusted MCP tool outputs) into a canvas. Raw HTML in canvas markdown
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>executes under the admin&#39;s auth context — a <span class="sb">`&lt;script&gt;`</span> tag is a
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>executes under the admin's auth context — a <span class="sb">`&lt;script&gt;`</span> tag is a
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>session-takeover primitive. See <span class="sb">`skills/canvas/SKILL.md`</span> for the full
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>threat model and the list of forbidden direct payloads.
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
@@ -9478,7 +9478,7 @@
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">```</span>
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>Opens (or re-attaches to) <span class="sb">`plan-x`</span>. Surfaces
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="sb">`http://127.0.0.1:8765/admin/canvas/plan-x`</span> so the operator can open it in
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>a browser tab. Subsequent agent-side <span class="sb">`canvas_write(&quot;plan-x&quot;, ...)`</span> calls
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>a browser tab. Subsequent agent-side <span class="sb">`canvas_write("plan-x", ...)`</span> calls
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>update the page live.
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">```</span>
@@ -9491,7 +9491,7 @@
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">/canvas close plan-x</span>
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="sb">```</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Marks <span class="sb">`plan-x`</span> closed in its <span class="sb">`meta.json`</span>. Files remain on disk; further
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="sb">`canvas_write`</span> calls return <span class="sb">`{&quot;code&quot;: &quot;closed&quot;}`</span>. Re-open with
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="sb">`canvas_write`</span> calls return <span class="sb">`{"code": "closed"}`</span>. Re-open with
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="sb">`/canvas open plan-x`</span>.
 </code></pre></div>
 

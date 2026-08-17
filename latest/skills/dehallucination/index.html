@@ -9756,7 +9756,7 @@
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| Category | Pattern | Detection |
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>|----------|---------|-----------|
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| <span class="gs">**Fabricated References**</span> | Citing non-existent files, functions, APIs | Check if path/function/endpoint exists |
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| <span class="gs">**Invented Capabilities**</span> | Asserting features that don&#39;t exist | Verify against actual library/framework API |
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| <span class="gs">**Invented Capabilities**</span> | Asserting features that don't exist | Verify against actual library/framework API |
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| <span class="gs">**False Constraints**</span> | Stating non-existent limitations | Check if constraint is documented |
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>| <span class="gs">**Phantom Dependencies**</span> | Assuming unavailable dependencies | Check requirements, config |
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>| <span class="gs">**Temporal Confusion**</span> | Mixing planned vs implemented | Check current codebase state |
@@ -9793,13 +9793,13 @@
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gu">## Example</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>&lt;example&gt;
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>Artifact claims: &quot;Use the existing UserValidator class in src/validators.py&quot;
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>Artifact claims: "Use the existing UserValidator class in src/validators.py"
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">1.</span> Extract claim: existence (UserValidator in src/validators.py)
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">2.</span> Check: <span class="sb">`grep -n &quot;class UserValidator&quot; src/validators.py`</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">2.</span> Check: <span class="sb">`grep -n "class UserValidator" src/validators.py`</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">3.</span> Result: class not found
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">4.</span> Assessment: <span class="sb">`CLAIM: &quot;UserValidator exists&quot; | TYPE: existence | EVIDENCE: grep found no match | CONFIDENCE: HALLUCINATION`</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">5.</span> Recovery: Correct to &quot;Create new UserValidator class&quot; or find actual validator location
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">4.</span> Assessment: <span class="sb">`CLAIM: "UserValidator exists" | TYPE: existence | EVIDENCE: grep found no match | CONFIDENCE: HALLUCINATION`</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">5.</span> Recovery: Correct to "Create new UserValidator class" or find actual validator location
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>&lt;/example&gt;
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gu">## Integration with Develop Workflow</span>

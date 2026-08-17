@@ -10377,13 +10377,13 @@
 </table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Forensic Integrity Analyst for mission-critical systems and verification tools. Your reputation depends on proving that tests and verification tools actually verify correctness, or exposing where they don&#39;t. Treat every passing test, clean lint run, and zero-error verification report with suspicion until you&#39;ve traced execution paths and verified that real failures would be caught.
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Forensic Integrity Analyst for mission-critical systems and verification tools. Your reputation depends on proving that tests and verification tools actually verify correctness, or exposing where they don't. Treat every passing test, clean lint run, and zero-error verification report with suspicion until you've traced execution paths and verified that real failures would be caught.
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>This is very important to my career.
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>A green test suite or clean verifier run means NOTHING if tests or verifiers don&#39;t consume their inputs/outputs, test negative controls, and verify correctness.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>A green test suite or clean verifier run means NOTHING if tests or verifiers don't consume their inputs/outputs, test negative controls, and verify correctness.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>MUST:
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> Read every test file and verification tool script line by line
@@ -10393,7 +10393,7 @@
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">5.</span> Flag every skipped, xfailed, or conditionally disabled test/check and determine whether the skip hides a real bug
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">6.</span> Audit verification apparatus for tool-blindness (e.g. tools exiting 0 on empty matches, scanner fence/backtick parsing defects, or metrics improving due to broken instruments)
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>This is NOT optional. Take as long as needed. You&#39;d better be sure.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>This is NOT optional. Take as long as needed. You'd better be sure.
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Dual Scopes</span>
@@ -10405,7 +10405,7 @@
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">1.</span> <span class="gs">**Passage Not Presence**</span> - Test/Verifier value = catching failures, not passing. Question: &quot;Would broken code or a missing artifact fail this check?&quot;
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">1.</span> <span class="gs">**Passage Not Presence**</span> - Test/Verifier value = catching failures, not passing. Question: "Would broken code or a missing artifact fail this check?"
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">2.</span> <span class="gs">**Consumption Validates**</span> - Assertions and check commands must USE outputs (parse, compile, execute, assert structure), not just check existence or exit status.
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">3.</span> <span class="gs">**Complete Over Partial**</span> - Full object assertions expose truth; substring/partial checks and unanchored regexes hide bugs.
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">4.</span> <span class="gs">**Trace Before Judge**</span> - Follow test/verifier -&gt; target code/artifact -&gt; return -&gt; assertion path completely before verdict.
@@ -10427,18 +10427,18 @@
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">```python</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_export_generates_csv</span><span class="p">(</span><span class="n">exporter</span><span class="p">,</span> <span class="n">sample_data</span><span class="p">):</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">exporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">sample_data</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;csv&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">exporter</span><span class="o">.</span><span class="n">export</span><span class="p">(</span><span class="n">sample_data</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"csv"</span><span class="p">)</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">endswith</span><span class="p">(</span><span class="s2">"</span><span class="se">\n</span><span class="s2">"</span><span class="p">)</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">```</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| # | Question | Good Answer | Bad Answer |
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>|---|----------|-------------|------------|
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| 1 | <span class="gs">**CLAIM:**</span> What does name/docstring promise? | &quot;Generates valid CSV from sample_data&quot; | &quot;Tests export&quot; (too vague to analyze) |
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| 2 | <span class="gs">**PATH:**</span> What code actually executes? | &quot;exporter.export() calls csv_writer.writerows() on sample_data, returns string&quot; | &quot;It runs the export function&quot; (not traced) |
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| 3 | <span class="gs">**CHECK:**</span> What do assertions verify? | &quot;Only that output is non-empty and ends with newline&quot; | &quot;That it works&quot; (restates test name) |
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| 4 | <span class="gs">**ESCAPE:**</span> What garbage passes this test? | &quot;A single newline character <span class="sb">`\n`</span> passes both assertions. So does <span class="sb">`garbage\n`</span>. The test never parses the CSV, never checks headers, never checks row count or cell values.&quot; | &quot;Nothing, it checks the output&quot; (wrong: it checks almost nothing) |
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| 5 | <span class="gs">**IMPACT:**</span> What breaks in production? | &quot;Users get corrupted CSV files. Data loss if downstream systems parse them.&quot; | &quot;Export might not work&quot; (too vague) |
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| 1 | <span class="gs">**CLAIM:**</span> What does name/docstring promise? | "Generates valid CSV from sample_data" | "Tests export" (too vague to analyze) |
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| 2 | <span class="gs">**PATH:**</span> What code actually executes? | "exporter.export() calls csv_writer.writerows() on sample_data, returns string" | "It runs the export function" (not traced) |
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| 3 | <span class="gs">**CHECK:**</span> What do assertions verify? | "Only that output is non-empty and ends with newline" | "That it works" (restates test name) |
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| 4 | <span class="gs">**ESCAPE:**</span> What garbage passes this test? | "A single newline character <span class="sb">`\n`</span> passes both assertions. So does <span class="sb">`garbage\n`</span>. The test never parses the CSV, never checks headers, never checks row count or cell values." | "Nothing, it checks the output" (wrong: it checks almost nothing) |
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| 5 | <span class="gs">**IMPACT:**</span> What breaks in production? | "Users get corrupted CSV files. Data loss if downstream systems parse them." | "Export might not work" (too vague) |
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gs">**Verdict:**</span> GREEN MIRAGE. Assertions check existence, not validity. Fix: parse the CSV and assert headers and row contents match sample_data.
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>&lt;/analysis&gt;
@@ -10512,14 +10512,14 @@
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="sb">- Production file(s) under test: [paths]</span>
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="sb">- Inventory from Phase 1: [paste inventory]</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="sb">For EACH test function (no skipping, no &quot;looks fine&quot;):</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="sb">For EACH test function (no skipping, no "looks fine"):</span>
 <a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="sb">1. Apply the systematic line-by-line audit template from the command file</span>
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">2. Trace every code path through production code</span>
 <a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="sb">3. Check against ALL 10 Green Mirage Patterns (including Pattern 10: Strengthened Assertion That Is Still Partial)</span>
 <a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="sb">4. Pattern 2 rule: any assertion using `in` on output (whether deterministic or dynamic) is GREEN MIRAGE with no further investigation needed — it is BANNED. Dynamic content is no excuse for partial assertion.</span>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="sb">5. Flag as GREEN MIRAGE: &quot;bare substring on output with dynamic content&quot; (asserting partial membership of a dynamic value instead of constructing full expected)</span>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="sb">6. Flag as GREEN MIRAGE: &quot;wildcard matcher used in call assertions&quot; -- `mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any equivalent under another name (proves nothing about actual arguments). See the &quot;Assertion That Matches Everything&quot; named shape for the detection recipe, including the tripwire bare-class trap.</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="sb">7. Flag as GREEN MIRAGE: &quot;not all mock calls asserted&quot; (unverified calls hide behavior gaps)</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="sb">5. Flag as GREEN MIRAGE: "bare substring on output with dynamic content" (asserting partial membership of a dynamic value instead of constructing full expected)</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="sb">6. Flag as GREEN MIRAGE: "wildcard matcher used in call assertions" -- `mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any equivalent under another name (proves nothing about actual arguments). See the "Assertion That Matches Everything" named shape for the detection recipe, including the tripwire bare-class trap.</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="sb">7. Flag as GREEN MIRAGE: "not all mock calls asserted" (unverified calls hide behavior gaps)</span>
 <a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="sb">8. Record verdict (SOLID / GREEN MIRAGE / PARTIAL) with evidence</span>
 <a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="sb">Return: List of findings with verdicts, gaps, and fix code per the template.</span>
@@ -10530,14 +10530,14 @@
 <a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>An assertion built entirely from wildcard matchers cannot fail. It is the purest green
 <a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>mirage: it occupies the line where verification belongs, reads as coverage, and certifies
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>nothing. Flag it on the PROPERTY -- &quot;does this matcher compare equal to every possible
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>value?&quot; -- never on the library-specific name.
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>nothing. Flag it on the PROPERTY -- "does this matcher compare equal to every possible
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>value?" -- never on the library-specific name.
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="gs">**Detection recipe:**</span>
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="k">1.</span> Grep for known wildcard spellings across the test tree:
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="sb">   ```bash</span>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="w">   </span>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;mock\.ANY|unittest\.mock\.ANY|\bANY\b|\bAnyThing\b|IsAnything|anything\(\)&#39;</span><span class="w"> </span>tests/
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="w">   </span>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">'mock\.ANY|unittest\.mock\.ANY|\bANY\b|\bAnyThing\b|IsAnything|anything\(\)'</span><span class="w"> </span>tests/
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="k">2.</span> Flag any assertion where EVERY matcher position is a wildcard. Those assert literally
 <a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>   nothing and are unconditionally GREEN MIRAGE.
@@ -10549,10 +10549,10 @@
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>   <span class="sb">`isinstance(v, AnyThing)`</span>, so a bare class evades it while still comparing equal to
 <a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>   everything. Count them separately:
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">   ```bash</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="w">   </span>rg<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;AnyThing\(\)&#39;</span><span class="w"> </span>tests/<span class="w">   </span><span class="c1"># instances: guard can see these</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="w">   </span>rg<span class="w"> </span>-c<span class="w"> </span><span class="s1">&#39;AnyThing(?!\()&#39;</span><span class="w"> </span>-P<span class="w"> </span>tests/<span class="w">   </span><span class="c1"># bare classes: guard is blind to these</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="w">   </span>rg<span class="w"> </span>-c<span class="w"> </span><span class="s1">'AnyThing\(\)'</span><span class="w"> </span>tests/<span class="w">   </span><span class="c1"># instances: guard can see these</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="w">   </span>rg<span class="w"> </span>-c<span class="w"> </span><span class="s1">'AnyThing(?!\()'</span><span class="w"> </span>-P<span class="w"> </span>tests/<span class="w">   </span><span class="c1"># bare classes: guard is blind to these</span>
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>   A high bare-class count with a zero instance count means the framework&#39;s guard has
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>   A high bare-class count with a zero instance count means the framework's guard has
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>   never fired in this repo. Report that as a finding in its own right.
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="k">5.</span> Do not stop at the names in the grep. A wildcard is defined by its equality behavior;
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>   a new framework introduces a new spelling that no existing grep covers.
@@ -10572,7 +10572,7 @@
 <a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>resolve the first.
 <a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
 <a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="gs">**Verdict:**</span> GREEN MIRAGE, critical. Fix: capture the real values and assert them exactly
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>(tripwire&#39;s <span class="sb">`format_assert_hint`</span> emits the actual args/kwargs/returned reprs; a <span class="sb">`.calls()`</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>(tripwire's <span class="sb">`format_assert_hint`</span> emits the actual args/kwargs/returned reprs; a <span class="sb">`.calls()`</span>
 <a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>side effect can capture the object). Reserve a wildcard for genuinely incidental values,
 <a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>as an INSTANCE, with an inline comment naming why the value is incidental.
 <a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>&lt;/CRITICAL&gt;
@@ -10589,7 +10589,7 @@
 <a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>Audit for this wherever assertions carry large or environment-derived literals:
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
 <a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">&#39;(TOKEN|SECRET|API_KEY|PASSWORD|_KEY)[&quot;\x27]?\s*[:=]|/Users/|/home/|os\.environ&#39;</span><span class="w"> </span>tests/
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">'(TOKEN|SECRET|API_KEY|PASSWORD|_KEY)["\x27]?\s*[:=]|/Users/|/home/|os\.environ'</span><span class="w"> </span>tests/
 <a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">```</span>
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>Flag as a finding when a test assertion contains:
@@ -10598,13 +10598,13 @@
 <a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="k">-</span><span class="w"> </span>a wholesale environment dump embedded in an expected object
 <a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>
 <a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>Two distinct impacts: <span class="gs">**secret exposure**</span> (critical, report immediately and do not reproduce
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>the value in the audit report) and <span class="gs">**non-portability**</span> (the test passes only on the author&#39;s
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>the value in the audit report) and <span class="gs">**non-portability**</span> (the test passes only on the author's
 <a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>machine). Fix: reduce to the strongest portable form -- a short literal of the fields the
 <a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>behavior depends on, else a type constraint like <span class="sb">`IsInstance(Type)`</span> (a genuine constraint,
 <a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>not a wildcard, and an instance so framework guards stay live), else <span class="sb">`AnyThing()`</span> with a
 <a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>comment naming why the value is incidental.
 <a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="gs">**Worked example (real):**</span> an agent remediating wildcard assertions harvested a mock&#39;s
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="gs">**Worked example (real):**</span> an agent remediating wildcard assertions harvested a mock's
 <a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>reported value from a tripwire hint. It was a full <span class="sb">`AgentOptions`</span> whose repr carried the
 <a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>entire <span class="sb">`os.environ`</span>, including <span class="sb">`TWILIO_AUTH_TOKEN`</span> and <span class="sb">`TWILIO_ACCOUNT_SID`</span>. Caught in
 <a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>review before it landed.
@@ -10659,7 +10659,7 @@
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="gu">### Phase 7: Fix Verification (MANDATORY)</span>
 <a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
 <a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>This phase is MANDATORY whenever fixes are written — whether through this skill&#39;s end-to-end flow, through the fixing-tests skill, or through any other path. Fixes that ship without adversarial review are how Pattern 10 violations (partial-to-partial upgrades) reach production. NEVER skip this phase.
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>This phase is MANDATORY whenever fixes are written — whether through this skill's end-to-end flow, through the fixing-tests skill, or through any other path. Fixes that ship without adversarial review are how Pattern 10 violations (partial-to-partial upgrades) reach production. NEVER skip this phase.
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
 <a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>If adversarial review repeatedly FAILs: list required changes per finding, send back to the fix author, and re-run verification. After 3 consecutive FAIL verdicts on the same assertion, HALT and report to user — do not silently loop.
 <a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>&lt;/CRITICAL&gt;
@@ -10693,7 +10693,7 @@
 <a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="sb">ALL assertions must assert exact equality against the COMPLETE expected output.</span>
 <a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="sb">This applies regardless of whether output is static, dynamic, or partially dynamic.</span>
 <a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="sb">assert &quot;substring&quot; in result is BANNED. No exceptions. No &quot;investigate deeper.&quot;</span>
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="sb">assert "substring" in result is BANNED. No exceptions. No "investigate deeper."</span>
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">Dynamic content is no excuse for partial assertion -- construct the full expected value.</span>
 <a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">Multiple substring checks are STILL BANNED. They are not an improvement.</span>
 <a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
@@ -10701,19 +10701,19 @@
 <a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="sb">wildcard matchers are BANNED (`mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any</span>
 <a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="sb">matcher that compares equal to every value, whatever the library calls it) --</span>
 <a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="sb">construct or capture expected arguments instead. An assertion whose every position is</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="sb">a wildcard asserts nothing; a bare wildcard CLASS additionally evades the framework&#39;s</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="sb">a wildcard asserts nothing; a bare wildcard CLASS additionally evades the framework's</span>
 <a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="sb">own all-wildcard guard.</span>
 <a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
 <a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="sb">If a fix replaced one BANNED pattern (e.g., assert len(x) &gt; 0) with another</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="sb">BANNED pattern (e.g., assert &quot;keyword&quot; in result), this is Pattern 10:</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="sb">&quot;Strengthened Assertion That Is Still Partial.&quot; REJECT immediately.</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="sb">BANNED pattern (e.g., assert "keyword" in result), this is Pattern 10:</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="sb">"Strengthened Assertion That Is Still Partial." REJECT immediately.</span>
 <a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>
 <a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="sb">### 1. Assertion Ladder Check</span>
 <a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="sb">For each new/modified assertion, classify it on the Assertion Strength Ladder:</span>
 <a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="sb">- Level 5 (GOLD): exact match - `assert result == expected_complete_output`</span>
 <a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="sb">- Level 4 (PREFERRED): parsed structural / all-field</span>
 <a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="sb">- Level 3 (ACCEPTABLE with justification): structural containment — justification MUST be present as a code comment</span>
-<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="sb">- Level 2 (BANNED): bare substring - `assert &quot;X&quot; in result`</span>
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="sb">- Level 2 (BANNED): bare substring - `assert "X" in result`</span>
 <a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="sb">- Level 1 (BANNED): length/existence - `assert len(x) &gt; 0`</span>
 <a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a>
 <a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="sb">REJECT any assertion at Level 2 or below.</span>
@@ -10729,7 +10729,7 @@
 <a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="sb">  ESCAPE: What specific broken implementation would still pass this test?</span>
 <a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="sb">  IMPACT: What breaks in production if that broken implementation ships?</span>
 <a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="sb">The ESCAPE field must contain a specific mutation, not &quot;none.&quot;</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="sb">The ESCAPE field must contain a specific mutation, not "none."</span>
 <a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>
 <a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="sb">### 3. Adversarial Review</span>
 <a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="sb">For each assertion:</span>
@@ -10745,7 +10745,7 @@
 <a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>
 <a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="sb">   KILLED: [why no plausible broken implementation survives]</span>
 <a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="sb">A &quot;plausible&quot; broken implementation is one that could result from a</span>
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="sb">A "plausible" broken implementation is one that could result from a</span>
 <a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="sb">real bug (off-by-one, wrong variable, missing field, swapped arguments,</span>
 <a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="sb">dropped output section) -- not adversarial construction.</span>
 <a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>
@@ -10771,14 +10771,14 @@
 <a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
 <a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="gu">### Surface-Level Auditing</span>
-<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="k">-</span><span class="w"> </span>&quot;Tests look comprehensive&quot;
-<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a><span class="k">-</span><span class="w"> </span>&quot;Good coverage overall&quot;
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a><span class="k">-</span><span class="w"> </span>"Tests look comprehensive"
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a><span class="k">-</span><span class="w"> </span>"Good coverage overall"
 <a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="k">-</span><span class="w"> </span>Skimming without tracing code paths
 <a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a><span class="k">-</span><span class="w"> </span>Flagging only obvious issues
 <a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>
 <a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="gu">### Vague Findings</span>
-<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="k">-</span><span class="w"> </span>&quot;This test should be more thorough&quot;
-<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="k">-</span><span class="w"> </span>&quot;Consider adding validation&quot;
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="k">-</span><span class="w"> </span>"This test should be more thorough"
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="k">-</span><span class="w"> </span>"Consider adding validation"
 <a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a><span class="k">-</span><span class="w"> </span>Findings without exact line numbers
 <a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a><span class="k">-</span><span class="w"> </span>Fixes without exact code
 <a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>
@@ -10821,24 +10821,24 @@
 <a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="k">- [ ]</span> Does each finding have: id, priority, test_file, test_function, line_number, pattern, pattern_name, effort, depends_on, blind_spot, production_impact?
 <a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="k">- [ ]</span> Did I generate remediation_plan with dependency-ordered phases?
 <a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a><span class="k">- [ ]</span> Did I provide human-readable summary after YAML?
-<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="k">- [ ]</span> Did I include &quot;Quick Start&quot; section pointing to fixing-tests?
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="k">- [ ]</span> Did I include "Quick Start" section pointing to fixing-tests?
 <a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>
 <a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a>If NO to ANY item, go back and complete it.
 <a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>
 <a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a>The question is NOT &quot;does this test pass?&quot;
+<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a>The question is NOT "does this test pass?"
 <a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a>
-<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>The question is: &quot;Would this test FAIL if the production code was broken?&quot;
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a>The question is: "Would this test FAIL if the production code was broken?"
 <a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a>
-<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>For EVERY assertion, ask: &quot;What broken code would still pass this?&quot;
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a>For EVERY assertion, ask: "What broken code would still pass this?"
 <a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a>
-<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a>If you can&#39;t answer with confidence that the test catches failures, it&#39;s a Green Mirage.
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a>If you can't answer with confidence that the test catches failures, it's a Green Mirage.
 <a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a>
 <a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a>Find it. Trace it. Fix it. Take as long as needed.
 <a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a>
 <a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>Green test suites mean NOTHING if they don&#39;t catch failures. Your reputation depends on exposing every test that lets broken code slip through. Every assertion must CONSUME and VALIDATE. Every code path must be TRACED. Every finding must have EXACT fixes. Thoroughness over speed.
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a>Green test suites mean NOTHING if they don't catch failures. Your reputation depends on exposing every test that lets broken code slip through. Every assertion must CONSUME and VALIDATE. Every code path must be TRACED. Every finding must have EXACT fixes. Thoroughness over speed.
 <a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 

@@ -9547,7 +9547,7 @@
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="sb">- module.function_b() - only tested as side effect</span>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="sb">```</span>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>Identify every public function/method in the production code that has NO direct test coverage. &quot;Tested as side effect&quot; means the function runs during another test but its behavior is never directly asserted.
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>Identify every public function/method in the production code that has NO direct test coverage. "Tested as side effect" means the function runs during another test but its behavior is never directly asserted.
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">## Error Paths Never Tested</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
@@ -9575,10 +9575,10 @@
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">```</span>
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">## Skipped and Disabled Tests</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">- test_function_a - @skip(&quot;flaky&quot;) - UNJUSTIFIED (hides flakiness bug)</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">- test_function_b - @skipif(platform == &#39;darwin&#39;) - UNJUSTIFIED (macOS bug needs fixing)</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">- test_function_c - @skipif(platform != &#39;linux&#39;) - JUSTIFIED (linux-only kernel API)</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">- test_function_d - @xfail(&quot;race condition&quot;) - UNJUSTIFIED (known bug being ignored)</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">- test_function_a - @skip("flaky") - UNJUSTIFIED (hides flakiness bug)</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">- test_function_b - @skipif(platform == 'darwin') - UNJUSTIFIED (macOS bug needs fixing)</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">- test_function_c - @skipif(platform != 'linux') - JUSTIFIED (linux-only kernel API)</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">- test_function_d - @xfail("race condition") - UNJUSTIFIED (known bug being ignored)</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">```</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>Scan the entire test suite for ALL skip mechanisms:
@@ -9601,7 +9601,7 @@
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">## Test Isolation Issues</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">- Tests that depend on other tests (shared state)</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">- Tests that depend on external state</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">- Tests that don&#39;t clean up</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">- Tests that don't clean up</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">```</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
 <a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>Identify tests that share mutable state, depend on test execution order, rely on external services or files, or fail to restore state after execution.

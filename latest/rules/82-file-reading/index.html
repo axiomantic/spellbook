@@ -9413,13 +9413,13 @@
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;RULE&gt;Before reading any file or command output of unknown size, check line count first (<span class="sb">`wc -l`</span>). Never truncate with <span class="sb">`head`</span>, <span class="sb">`tail -n`</span>, or pipes that discard data.&lt;/RULE&gt;
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;RULE&gt;A negative search result is evidence only if the tool could see the file. <span class="sb">`git grep`</span> skips untracked files. Use <span class="sb">`grep -r`</span>, <span class="sb">`rg`</span>, or <span class="sb">`git grep --untracked`</span>, and NAME the tool beside any &quot;appears nowhere&quot; claim.&lt;/RULE&gt;
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;RULE&gt;A negative search result is evidence only if the tool could see the file. <span class="sb">`git grep`</span> skips untracked files. Use <span class="sb">`grep -r`</span>, <span class="sb">`rg`</span>, or <span class="sb">`git grep --untracked`</span>, and NAME the tool beside any "appears nowhere" claim.&lt;/RULE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>An empty result and an unsearched file produce the same output. This is the
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>silent-failure shape arriving in a search tool instead of in a check: nothing
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>reports an error, and the absence looks measured.
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gs">**Observed.**</span> In one day, <span class="sb">`git grep`</span> produced two false &quot;appears nowhere&quot; findings.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gs">**Observed.**</span> In one day, <span class="sb">`git grep`</span> produced two false "appears nowhere" findings.
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>Every file of the task under review was untracked at the time, so the tool returned
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>an empty result that reads exactly as an absence. One of the two claims was re-run
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>with a tool that reads untracked files, and the answer moved. The claim had already

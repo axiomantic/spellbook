@@ -9751,7 +9751,7 @@
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">4.</span> <span class="gs">**Deduplicate within run**</span> - Re-running the same fact-check on an unchanged
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>   scope returns the same verdicts (the <span class="sb">`.fact-checking/state.json`</span> checkpoint
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>   tracks per-claim completion; resumption checks it before re-verifying).
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">5.</span> <span class="gs">**Learn from trajectories**</span> - Store verification trajectories in the run&#39;s
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">5.</span> <span class="gs">**Learn from trajectories**</span> - Store verification trajectories in the run's
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>   checkpoint state for in-session resume; cross-session reuse is a future
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>   concern, not a current invariant.
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
@@ -9761,10 +9761,10 @@
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| Pattern | Action |
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>|---------|--------|
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| RESEARCH_REQUEST (&quot;research&quot;, &quot;check&quot;, &quot;verify&quot;) | Dispatch research subagent |
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| UNKNOWN (&quot;don&#39;t know&quot;, &quot;not sure&quot;) | Dispatch analysis subagent |
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| RESEARCH_REQUEST ("research", "check", "verify") | Dispatch research subagent |
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>| UNKNOWN ("don't know", "not sure") | Dispatch analysis subagent |
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>| CLARIFICATION (ends with ?) | Answer, then re-ask |
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| SKIP (&quot;skip&quot;, &quot;move on&quot;) | Proceed to next item |
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>| SKIP ("skip", "move on") | Proceed to next item |
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>&lt;/ARH_INTEGRATION&gt;
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
@@ -9772,7 +9772,7 @@
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>Before ANY action:
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span>Current phase? (config/scope/extract/triage/verify/report/learn/fix)
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">-</span><span class="w"> </span>What EXACTLY is claimed? What proves TRUE? What proves FALSE?
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span>Checkpoint read from <span class="sb">`.fact-checking/state.json`</span> (the run&#39;s existing
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span>Checkpoint read from <span class="sb">`.fact-checking/state.json`</span> (the run's existing
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>  findings and completed-claim list); appropriate verification depth.
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>&lt;/analysis&gt;
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
@@ -9815,7 +9815,7 @@
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>|------|--------|
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>| Code trace | <span class="sb">`file:lines - finding`</span> |
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>| Test | <span class="sb">`command - result`</span> |
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| Web source | <span class="sb">`Title - URL - &quot;excerpt&quot;`</span> |
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>| Web source | <span class="sb">`Title - URL - "excerpt"`</span> |
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>| Git history | <span class="sb">`commit/issue - finding`</span> |
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>| Documentation | <span class="sb">`Docs: source section - URL`</span> |
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>| Benchmark | <span class="sb">`Benchmark: method - results`</span> |
@@ -9832,7 +9832,7 @@
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Extraneous Info Detection**</span> - redundant/LLM-style over-commenting
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Clarity Mode**</span> - generate glossaries for AI config files
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>Autonomous mode detected (&quot;Mode: AUTONOMOUS&quot;)? Enable all automatically.
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>Autonomous mode detected ("Mode: AUTONOMOUS")? Enable all automatically.
 <a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="gu">### Phase 1: Scope Selection</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
@@ -9861,7 +9861,7 @@
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">2.</span> Surrounding code context (minimum 50 lines)
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">3.</span> AGENTS.md content (project conventions, glossary, architecture)
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">4.</span> Any project-specific glossary terms relevant to the claim
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">5.</span> The list of ALL files in scope (not just the claim&#39;s file)
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">5.</span> The list of ALL files in scope (not just the claim's file)
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>&lt;RULE&gt;Verification agents MUST NOT make verdicts based on general knowledge that contradicts project-specific conventions documented in AGENTS.md.&lt;/RULE&gt;
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
@@ -9889,7 +9889,7 @@
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">3.</span> Show proposed change WITH verification result to user
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="k">4.</span> Apply only user-approved fixes
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>&lt;FORBIDDEN&gt;Proposing a &quot;correction&quot; that has not itself been verified. A wrong fix is worse than leaving the original claim.&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>&lt;FORBIDDEN&gt;Proposing a "correction" that has not itself been verified. A wrong fix is worse than leaving the original claim.&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>---
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>
@@ -9898,12 +9898,12 @@
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>Checkpoint to <span class="sb">`.fact-checking/state.json`</span> after each claim:
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">```json</span>
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="p">{</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="w">  </span><span class="nt">&quot;scope&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;branch&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="w">  </span><span class="nt">&quot;claims&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="w">  </span><span class="nt">&quot;completed&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">],</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="w">  </span><span class="nt">&quot;pending&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">],</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="w">  </span><span class="nt">&quot;findings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="w">  </span><span class="nt">&quot;bibliography&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="w">  </span><span class="nt">"scope"</span><span class="p">:</span><span class="w"> </span><span class="s2">"branch"</span><span class="p">,</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="w">  </span><span class="nt">"claims"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">],</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="w">  </span><span class="nt">"completed"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="w"> </span><span class="mi">2</span><span class="p">],</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="w">  </span><span class="nt">"pending"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="mi">3</span><span class="p">,</span><span class="w"> </span><span class="mi">4</span><span class="p">,</span><span class="w"> </span><span class="mi">5</span><span class="p">],</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="w">  </span><span class="nt">"findings"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="err">...</span><span class="p">},</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="w">  </span><span class="nt">"bibliography"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="err">...</span><span class="p">]</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="p">}</span>
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">```</span>
 <a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>
@@ -9913,11 +9913,11 @@
 <a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
 <a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="gs">**Verdicts Without Evidence**</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">-</span><span class="w"> </span>&quot;it looks correct&quot; or &quot;code seems fine&quot; without trace
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">-</span><span class="w"> </span>"it looks correct" or "code seems fine" without trace
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">-</span><span class="w"> </span>Every verdict requires concrete, citable evidence
 <a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="gs">**Skipping Claims**</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="k">-</span><span class="w"> </span>No claim is &quot;trivial&quot; - verify individually
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="k">-</span><span class="w"> </span>No claim is "trivial" - verify individually
 <a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="k">-</span><span class="w"> </span>No batching similar claims without individual verification
 <a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="gs">**Applying Fixes Without Approval**</span>
@@ -9934,17 +9934,17 @@
 <a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>---
 <a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
 <a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>&lt;EXAMPLE&gt;
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="gs">**User**</span>: &quot;Factcheck my current branch&quot;
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="gs">**User**</span>: "Factcheck my current branch"
 <a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="gs">**Phase 1**</span>: Scope selection -&gt; User selects &quot;A. Branch changes&quot;
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="gs">**Phase 1**</span>: Scope selection -&gt; User selects "A. Branch changes"
 <a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="gs">**Phase 2**</span>: Extract claims -&gt; Found 8 claims in 5 files
 <a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="gs">**Phase 3**</span>: Triage display:
 <a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="sb">```</span>
 <a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">### Security (2 claims)</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">1. [MEDIUM] src/auth/password.ts:34 - &quot;passwords hashed with bcrypt&quot;</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">2. [DEEP] src/auth/session.ts:78 - &quot;session tokens cryptographically random&quot;</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">1. [MEDIUM] src/auth/password.ts:34 - "passwords hashed with bcrypt"</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">2. [DEEP] src/auth/session.ts:78 - "session tokens cryptographically random"</span>
 <a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">```</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="gs">**Phase 4**</span>: Verify claim 1: Read src/auth/password.ts:34-60, found <span class="sb">`import { hash } from &#39;bcryptjs&#39;`</span> and <span class="sb">`await hash(password, 12)`</span>. Cost factor 12 meets OWASP.
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="gs">**Phase 4**</span>: Verify claim 1: Read src/auth/password.ts:34-60, found <span class="sb">`import { hash } from 'bcryptjs'`</span> and <span class="sb">`await hash(password, 12)`</span>. Cost factor 12 meets OWASP.
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>Verdict: <span class="gs">**VERIFIED**</span> | Evidence: bcryptjs.hash() cost factor 12 | Sources: [1] Code trace, [2] OWASP Password Storage
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="gs">**Phase 6**</span>: Report excerpt:

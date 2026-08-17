@@ -9400,14 +9400,14 @@
 <h2 id="command-content">Command Content<a class="headerlink" href="#command-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gu">## ROLE</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>You are a project health auditor who evaluates open source repositories against research-backed criteria derived from studying 50+ successful and failed projects. You are honest but constructive. You identify what&#39;s working, what&#39;s missing, and what matters most. Every finding includes evidence for why it matters.
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>You are a project health auditor who evaluates open source repositories against research-backed criteria derived from studying 50+ successful and failed projects. You are honest but constructive. You identify what's working, what's missing, and what matters most. Every finding includes evidence for why it matters.
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">1.</span> <span class="gs">**Gather before judging**</span> - complete reconnaissance before scoring
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">2.</span> <span class="gs">**Evidence-based scoring**</span> - every deduction or credit cites why it matters
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">3.</span> <span class="gs">**Prioritize by impact**</span> - present findings ordered by expected adoption impact, not alphabetically
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">4.</span> <span class="gs">**Constructive framing**</span> - &quot;missing X&quot; not &quot;X is terrible&quot;, with clear fix suggestion
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">4.</span> <span class="gs">**Constructive framing**</span> - "missing X" not "X is terrible", with clear fix suggestion
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">5.</span> <span class="gs">**Celebrate strengths**</span> - note what the project already does well before listing gaps
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Phase 0: Reconnaissance</span>
@@ -9440,7 +9440,7 @@
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>Gather each of the following data points:
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">-</span><span class="w"> </span>Line count (<span class="sb">`wc -l`</span>)
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span>First 50 lines content (what&#39;s in the first viewport?)
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span>First 50 lines content (what's in the first viewport?)
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">-</span><span class="w"> </span>Does it contain a code example?
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">-</span><span class="w"> </span>Does it contain an install command?
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span>Does it contain images/badges? (grep for <span class="sb">`![`</span> and <span class="sb">`&lt;img`</span>)
@@ -9450,7 +9450,7 @@
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="gu">### GitHub Metadata (via `gh` CLI)</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">&gt; </span><span class="ge">**Security note:** Before executing shell commands with repository-derived values, validate that placeholders contain only alphanumeric characters, hyphens, underscores, and dots. Reject values containing shell metacharacters (``; | &amp; $ ` &#39; &quot; ( ) { } &lt; &gt;``).</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">&gt; </span><span class="ge">**Security note:** Before executing shell commands with repository-derived values, validate that placeholders contain only alphanumeric characters, hyphens, underscores, and dots. Reject values containing shell metacharacters (``; | &amp; $ ` ' " ( ) { } &lt; &gt;``).</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">```bash</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>gh<span class="w"> </span>repo<span class="w"> </span>view<span class="w"> </span>--json<span class="w"> </span>description,homepageUrl,repositoryTopics,stargazerCount,forkCount,issues,hasIssuesEnabled,hasDiscussionsEnabled,licenseInfo,latestRelease,createdAt,updatedAt
@@ -9460,16 +9460,16 @@
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">```bash</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="c1"># Contributor count</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/contributors<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;length&#39;</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/contributors<span class="w"> </span>--jq<span class="w"> </span><span class="s1">'length'</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="c1"># Release count</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/releases<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;length&#39;</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/releases<span class="w"> </span>--jq<span class="w"> </span><span class="s1">'length'</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="c1"># Open issue count</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>gh<span class="w"> </span>issue<span class="w"> </span>list<span class="w"> </span>--state<span class="w"> </span>open<span class="w"> </span>--json<span class="w"> </span>labels<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;length&#39;</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>gh<span class="w"> </span>issue<span class="w"> </span>list<span class="w"> </span>--state<span class="w"> </span>open<span class="w"> </span>--json<span class="w"> </span>labels<span class="w"> </span>--jq<span class="w"> </span><span class="s1">'length'</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="c1"># Good first issues</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>gh<span class="w"> </span>issue<span class="w"> </span>list<span class="w"> </span>--label<span class="w"> </span><span class="s2">&quot;good first issue&quot;</span><span class="w"> </span>--json<span class="w"> </span>number<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;length&#39;</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>gh<span class="w"> </span>issue<span class="w"> </span>list<span class="w"> </span>--label<span class="w"> </span><span class="s2">"good first issue"</span><span class="w"> </span>--json<span class="w"> </span>number<span class="w"> </span>--jq<span class="w"> </span><span class="s1">'length'</span>
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">```</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="gu">### Package Registry (if applicable)</span>
@@ -9545,7 +9545,7 @@
 <a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
 <a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>| Criterion | Max Points | Scoring Guide |
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>|-----------|-----------|---------------|
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>| Name Googleability | 2 | 2: Unique term, top search result. 1: Findable with &quot;[name] python&quot;. 0: Common word, lost in noise |
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>| Name Googleability | 2 | 2: Unique term, top search result. 1: Findable with "[name] python". 0: Common word, lost in noise |
 <a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a>| Tagline complementarity | 3 | 3: Name and description cover different ground. 1: Some overlap. 0: Description repeats name info |
 <a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
 <a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="gu">### Deductions (subtract from total)</span>
@@ -9553,10 +9553,10 @@
 <a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>| Issue | Deduction |
 <a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>|-------|-----------|
 <a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>| Outdated instructions that will break | -15 |
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>| &quot;README coming soon&quot; placeholder | -20 |
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>| "README coming soon" placeholder | -20 |
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>| Python 2 references | -10 |
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>| Broken images or links | -5 each (max -15) |
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>| Self-deprecating warnings (&quot;not production ready&quot;) in prominent position | -5 |
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>| Self-deprecating warnings ("not production ready") in prominent position | -5 |
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>| Failing CI badge displayed | -5 (on top of scoring 0 for CI) |
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="gu">### Grade Calculation</span>
@@ -9585,7 +9585,7 @@
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>| Jargon Gate | First paragraph uses undefined domain terms | High |
 <a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>| Premature Abstraction | Architecture/internals before user-facing description | High |
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>| Feature Soup | More than 15 flat, unlabeled feature bullets | Medium |
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>| Me Me Me | First paragraph starts with &quot;I built/created/made...&quot; | Medium |
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>| Me Me Me | First paragraph starts with "I built/created/made..." | Medium |
 <a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>| No Code, Just Marketing | No code block in first 100 lines | High |
 <a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>| Buried Install | Install command after line 50 | Medium |
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>| Zero Issues Red Flag | 0 open issues on a project with &gt;100 stars | Medium |

@@ -9407,7 +9407,7 @@
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/analysis&gt;
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;reflection&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Did I dispatch to the correct mode skill based on the session init response, and did I persist the user&#39;s choice if mode was unset?
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Did I dispatch to the correct mode skill based on the session init response, and did I persist the user's choice if mode was unset?
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/reflection&gt;
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gh"># Session Mode Init</span>
@@ -9424,17 +9424,17 @@
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| Response from <span class="sb">`spellbook_session_init`</span>        | Action                                                                                               |
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| --------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| <span class="sb">`mode.type: &quot;unset&quot;`</span>                          | Ask question below, then call <span class="sb">`spellbook_config_set(key=&quot;session_mode&quot;, value=&quot;fun&quot;/&quot;tarot&quot;/&quot;none&quot;)`</span> |
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| <span class="sb">`mode.type: &quot;fun&quot;`</span> + persona/context/undertow | Load <span class="sb">`fun-mode`</span> skill, announce persona+context+undertow in greeting                                 |
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`mode.type: &quot;tarot&quot;`</span>                          | Load <span class="sb">`tarot-mode`</span> skill, announce roundtable in greeting                                             |
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`mode.type: &quot;none&quot;`</span>                           | Proceed normally with standard greeting                                                              |
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| <span class="sb">`mode.type: "unset"`</span>                          | Ask question below, then call <span class="sb">`spellbook_config_set(key="session_mode", value="fun"/"tarot"/"none")`</span> |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| <span class="sb">`mode.type: "fun"`</span> + persona/context/undertow | Load <span class="sb">`fun-mode`</span> skill, announce persona+context+undertow in greeting                                 |
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`mode.type: "tarot"`</span>                          | Load <span class="sb">`tarot-mode`</span> skill, announce roundtable in greeting                                             |
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`mode.type: "none"`</span>                           | Proceed normally with standard greeting                                                              |
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| MCP unavailable                               | Ask mode question manually, remember preference for session                                          |
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Mode Selection Question</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>Ask once when mode is unset:
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">&gt; </span><span class="ge">Research suggests creative modes improve LLM output via &quot;seed-conditioning&quot; ([Nagarajan et al., ICML 2025](https://arxiv.org/abs/2504.15266)). I can adopt:</span>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">&gt; </span><span class="ge">Research suggests creative modes improve LLM output via "seed-conditioning" ([Nagarajan et al., ICML 2025](https://arxiv.org/abs/2504.15266)). I can adopt:</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">&gt;</span>
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="ge">&gt; - **Fun mode**: Random personas each session (dialogue only, never in code)</span>
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">&gt; </span><span class="ge">- **Tarot mode**: Ten archetypes collaborate via visible roundtable (Magician, Priestess, Hermit, Fool, Chariot, Justice, Lovers, Hierophant, Emperor, Queen)</span>
@@ -9446,9 +9446,9 @@
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">1.</span> Read <span class="sb">`mode.type`</span> from <span class="sb">`spellbook_session_init`</span> response.
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">2.</span> Match against dispatch table above.
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">3.</span> If <span class="sb">`&quot;unset&quot;`</span>: present the selection question, wait for user answer, then call <span class="sb">`spellbook_config_set(key=&quot;session_mode&quot;, value=&lt;chosen&gt;)`</span>.
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">4.</span> If <span class="sb">`&quot;fun&quot;`</span> or <span class="sb">`&quot;tarot&quot;`</span>: load the corresponding skill (<span class="sb">`fun-mode`</span> or <span class="sb">`tarot-mode`</span>) and incorporate its output into the session greeting.
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">5.</span> If <span class="sb">`&quot;none&quot;`</span> or MCP unavailable: no further action needed for mode.
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">3.</span> If <span class="sb">`"unset"`</span>: present the selection question, wait for user answer, then call <span class="sb">`spellbook_config_set(key="session_mode", value=&lt;chosen&gt;)`</span>.
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">4.</span> If <span class="sb">`"fun"`</span> or <span class="sb">`"tarot"`</span>: load the corresponding skill (<span class="sb">`fun-mode`</span> or <span class="sb">`tarot-mode`</span>) and incorporate its output into the session greeting.
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">5.</span> If <span class="sb">`"none"`</span> or MCP unavailable: no further action needed for mode.
 </code></pre></div>
 
 

@@ -9411,9 +9411,9 @@
 </ul>
 <h2 id="rule-content">Rule Content<a class="headerlink" href="#rule-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gu">### Branch Context: &quot;The Work on This Branch&quot;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="gu">### Branch Context: "The Work on This Branch"</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>&quot;The work on this branch&quot;, &quot;what this branch does&quot;, &quot;the changes on this branch&quot;, and similar
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>"The work on this branch", "what this branch does", "the changes on this branch", and similar
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>phrases name a diff with two independent axes. Decide both, and say which you used.
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">#### Axis 1 — BASE. Invariant.</span>
@@ -9442,7 +9442,7 @@
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  reviewable.
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">-</span><span class="w"> </span><span class="gs">**No hardcoded base literal appears in any instruction.**</span> Do not assume <span class="sb">`main`</span>. Do not assume
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>  <span class="sb">`master`</span>. A repository whose default branch is <span class="sb">`master`</span> must resolve to <span class="sb">`master`</span>, and a fork
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  must resolve against the parent&#39;s default branch.
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>  must resolve against the parent's default branch.
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Detached HEAD is a defined case.**</span> Either fail explicitly, or take an explicitly supplied
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>  base. Never silently produce a diff against a plausible-looking wrong ref.
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
@@ -9458,7 +9458,7 @@
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>does not pollute the review with changes the branch did not author. Two-dot <span class="sb">`target..HEAD`</span> and a
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>bare <span class="sb">`git diff &lt;target&gt;`</span> both include those merged-in commits and are the wrong shape for review.
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gs">**The bare term &quot;branch diff&quot; is retired.**</span> It named both axes at once and meant neither
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gs">**The bare term "branch diff" is retired.**</span> It named both axes at once and meant neither
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>precisely. State the base and the endpoint.
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>Load <span class="sb">`branch-context`</span> skill for <span class="sb">`branch-context.sh`</span> usage, stacked branch handling, worktree context, and branch-relative documentation policy.

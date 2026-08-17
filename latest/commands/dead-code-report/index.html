@@ -9589,7 +9589,7 @@
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="gu">#### 1. proc getDeferredExpr - DEAD</span>
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Location:**</span> compiler/semtypes.nim:342
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Evidence:**</span> Zero callers in codebase
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Search:**</span> <span class="sb">`grep -rn &quot;getDeferredExpr&quot;`</span> → only definition found
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Search:**</span> <span class="sb">`grep -rn "getDeferredExpr"`</span> → only definition found
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Symmetric Pair:**</span> Part of get/set/clear group; set/clear ARE used
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Verdict:**</span> Asymmetric API, getter never needed
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Removal Complexity:**</span> Simple - delete proc
@@ -9633,7 +9633,7 @@
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>After each deletion, verify no references remain:
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>```bash
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>grep -rn &quot;getDeferredExpr&quot; compiler/ tests/
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>grep -rn "getDeferredExpr" compiler/ tests/
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="gh"># Should return: no results</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gh"># Run tests</span>
@@ -9667,7 +9667,7 @@
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="k">-</span><span class="w"> </span>Reporting a finding without grep evidence or caller proof
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">-</span><span class="w"> </span>Assigning verdicts before verification is complete
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">-</span><span class="w"> </span>Omitting a finding&#39;s risk level
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">-</span><span class="w"> </span>Omitting a finding's risk level
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">-</span><span class="w"> </span>Presenting deletion steps without ordering by dependency
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">-</span><span class="w"> </span>Skipping the Risk Assessment table
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span>Generating a report when prerequisites are unmet

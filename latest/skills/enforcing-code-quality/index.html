@@ -9681,16 +9681,16 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Code Quality Enforcement</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Senior Engineer with zero-tolerance for technical debt. Reputation depends on code that survives production without hotfixes or &quot;we&#39;ll fix it later&quot; rework.
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Senior Engineer with zero-tolerance for technical debt. Reputation depends on code that survives production without hotfixes or "we'll fix it later" rework.
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Shortcuts compound**</span> - Every <span class="sb">`any`</span> type, swallowed error, and skipped test becomes someone&#39;s 3am incident.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Shortcuts compound**</span> - Every <span class="sb">`any`</span> type, swallowed error, and skipped test becomes someone's 3am incident.
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Pre-existing issues are your issues**</span> - Discovering a bug during work means fixing it, not routing around it.
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Tests prove behavior**</span> - Coverage metrics mean nothing. Assertions that verify actual outcomes mean everything.
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> <span class="gs">**Patterns before invention**</span> - Read existing code first. Match conventions. Novel approaches require justification.
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">5.</span> <span class="gs">**Production-quality, not &quot;works&quot;**</span> - &quot;Technically passes&quot; is not the bar. &quot;Confidently deployable&quot; is.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">5.</span> <span class="gs">**Production-quality, not "works"**</span> - "Technically passes" is not the bar. "Confidently deployable" is.
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Inputs</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
@@ -9754,7 +9754,7 @@
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>When discovering issues in touched code:
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
 <a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">1.</span> <span class="gs">**Flag immediately**</span> - Note the issue in your response
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">2.</span> <span class="gs">**Ask about fixing**</span> - &quot;Found X issue. Fix now or track separately?&quot;
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">2.</span> <span class="gs">**Ask about fixing**</span> - "Found X issue. Fix now or track separately?"
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">3.</span> <span class="gs">**Default to fix**</span> - User usually wants it fixed
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">4.</span> <span class="gs">**Never silently ignore**</span> - Routing around bugs creates more bugs
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
@@ -9777,7 +9777,7 @@
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">- [ ]</span> Tests have meaningful assertions
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">- [ ]</span> Test assertions are Level 4+ on the Assertion Strength Ladder (<span class="sb">`patterns/assertion-quality-standard.md`</span>)
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">- [ ]</span> Full Assertion Principle enforced: ALL output tested with exact equality (<span class="sb">`assert result == expected`</span>), never substring checks; for dynamic output, construct full expected value dynamically
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">- [ ]</span> No bare substring checks on any output (<span class="sb">`assert &quot;X&quot; in result`</span> is BANNED -- static or dynamic)
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">- [ ]</span> No bare substring checks on any output (<span class="sb">`assert "X" in result`</span> is BANNED -- static or dynamic)
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">- [ ]</span> No partial assertions on dynamic output (construct full expected, do not use membership checks)
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">- [ ]</span> No mock.ANY in call assertions (BANNED -- construct expected argument)
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">- [ ]</span> Every mock call asserted with ALL args; call count verified
@@ -9800,7 +9800,7 @@
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="k">- [ ]</span> Tests verify behavior, not just run
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">- [ ]</span> Test assertions are Level 4+ on the Assertion Strength Ladder (<span class="sb">`patterns/assertion-quality-standard.md`</span>)
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">- [ ]</span> ALL output tested with exact equality (<span class="sb">`assert result == expected_complete_output`</span>); for dynamic output, construct full expected value dynamically
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="k">- [ ]</span> No bare substring checks on any output (<span class="sb">`assert &quot;X&quot; in result`</span> is BANNED -- static or dynamic)
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="k">- [ ]</span> No bare substring checks on any output (<span class="sb">`assert "X" in result`</span> is BANNED -- static or dynamic)
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">- [ ]</span> No mock.ANY in call assertions (BANNED -- construct expected argument dynamically)
 <a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">- [ ]</span> Every mock call asserted with ALL args; call count verified
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">- [ ]</span> No length/existence-only assertions

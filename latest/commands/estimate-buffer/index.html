@@ -9401,16 +9401,16 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Estimate Buffer (Phases 6-7)</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Risk Quantifier. Uncertainty does not disappear when you ignore it — it just stops being legible to the audience. Your reputation rests on producing confidence intervals that survive the project&#39;s actual variance, not on producing a single number that feels confident.
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>Risk Quantifier. Uncertainty does not disappear when you ignore it — it just stops being legible to the audience. Your reputation rests on producing confidence intervals that survive the project's actual variance, not on producing a single number that feels confident.
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>This phase converts adjusted_hours into a distribution. The output is NOT a number — it is E<span class="ge">_total plus sigma_</span>total, from which the report phase produces 80/90/95% bands. If you find yourself collapsing to &quot;the estimate is X hours,&quot; you are skipping PERT.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>This phase converts adjusted_hours into a distribution. The output is NOT a number — it is E<span class="ge">_total plus sigma_</span>total, from which the report phase produces 80/90/95% bands. If you find yourself collapsing to "the estimate is X hours," you are skipping PERT.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;RULE&gt;Arbitrary fudge factors (e.g. &quot;multiply by 1.5 to be safe&quot;) are FORBIDDEN. The buffer comes from PERT sigma, not from gut feel.&lt;/RULE&gt;
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;RULE&gt;Arbitrary fudge factors (e.g. "multiply by 1.5 to be safe") are FORBIDDEN. The buffer comes from PERT sigma, not from gut feel.&lt;/RULE&gt;
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;RULE&gt;N-engineer scaling is NOT linear. Apply Brooks&#39;s Law constants explicitly.&lt;/RULE&gt;
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;RULE&gt;N-engineer scaling is NOT linear. Apply Brooks's Law constants explicitly.&lt;/RULE&gt;
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;analysis&gt;
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>Before generating bounds: Which risk signals justify pushing P beyond the 1.65x default (webhooks, schema backfill, undocumented legacy, rate-limit unknowns)? Which tickets are pair-program-suitable versus parallel-suitable for Brooks scaling? A P that hugs M hides the variance the audience needs to see.
@@ -9422,10 +9422,10 @@
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">1.</span> <span class="gs">**Buffer is a distribution, not a number**</span>: The output is E<span class="ge">_total plus sigma_</span>total feeding 80/90/95% bands; collapsing to &quot;the estimate is X hours&quot; skips PERT entirely.
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">2.</span> <span class="gs">**Sigma replaces fudge factors**</span>: All buffer comes from PERT three-point sigma; arbitrary multipliers (&quot;times 1.5 to be safe&quot;) are forbidden.
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">1.</span> <span class="gs">**Buffer is a distribution, not a number**</span>: The output is E<span class="ge">_total plus sigma_</span>total feeding 80/90/95% bands; collapsing to "the estimate is X hours" skips PERT entirely.
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">2.</span> <span class="gs">**Sigma replaces fudge factors**</span>: All buffer comes from PERT three-point sigma; arbitrary multipliers ("times 1.5 to be safe") are forbidden.
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">3.</span> <span class="gs">**Variance adds, deviations do not**</span>: Aggregate as sigma_total = sqrt(sum of per-ticket variances), never sum of per-ticket sigmas.
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">4.</span> <span class="gs">**Brooks&#39;s Law bounds the second engineer**</span>: N=2 calendar uses explicit pair (15%) and parallel (10%) overhead constants, never linear calendar/N compression.
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">4.</span> <span class="gs">**Brooks's Law bounds the second engineer**</span>: N=2 calendar uses explicit pair (15%) and parallel (10%) overhead constants, never linear calendar/N compression.
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">5.</span> <span class="gs">**Roundtable gates the handoff**</span>: Skeptic, Pragmatist, and Optimist challenge the numbers in parallel before the report; any pause/revise verdict goes to the user before proceeding.
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>---
@@ -9436,7 +9436,7 @@
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">```</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">  description: &quot;PERT three-point: [ticket id]&quot;</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">  description: "PERT three-point: [ticket id]"</span>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">  prompt: |</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="sb">    First, READ:</span>
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">    $SPELLBOOK_DIR/skills/estimating-tickets/pert-and-brooks.md</span>
@@ -9469,14 +9469,14 @@
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">    Return strict JSON:</span>
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">    {</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">      &quot;ticket_id&quot;: &quot;[id]&quot;,</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">      &quot;O&quot;: &lt;hours&gt;,</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">      &quot;M&quot;: &lt;hours&gt;,</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">      &quot;P&quot;: &lt;hours&gt;,</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">      &quot;P_adjustment_reason&quot;: &quot;default 1.65x&quot; or &quot;bumped to 2.0x for webhook ordering&quot;,</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">      &quot;E&quot;: &lt;hours&gt;,</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">      &quot;sigma&quot;: &lt;hours&gt;,</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">      &quot;brooks_class&quot;: &quot;pair_program_suitable&quot; | &quot;parallel_suitable&quot;</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">      "ticket_id": "[id]",</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">      "O": &lt;hours&gt;,</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">      "M": &lt;hours&gt;,</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">      "P": &lt;hours&gt;,</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">      "P_adjustment_reason": "default 1.65x" or "bumped to 2.0x for webhook ordering",</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">      "E": &lt;hours&gt;,</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">      "sigma": &lt;hours&gt;,</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">      "brooks_class": "pair_program_suitable" | "parallel_suitable"</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="sb">    }</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="sb">    Return summary MUST include:</span>
@@ -9509,7 +9509,7 @@
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">calendar_days_X = upper_X / 8</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">```</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="gu">### Step 4: Brooks&#39;s Law (N=2)</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="gu">### Step 4: Brooks's Law (N=2)</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>Partition tickets by brooks_class.
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>
@@ -9541,7 +9541,7 @@
 <a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="sb">E_total_with_overhead = E_pair + E_parallel</span>
 <a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="sb">```</span>
 <a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>and <span class="sb">`sigma_total_with_overhead`</span> scales each partition&#39;s variance by the SAME constant squared (variance scales by c^2 when effort scales by c):
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>and <span class="sb">`sigma_total_with_overhead`</span> scales each partition's variance by the SAME constant squared (variance scales by c^2 when effort scales by c):
 <a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
 <a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="sb">```</span>
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="sb">sigma_pair = sum(sigma_i^2 for i in pair_program_suitable) * 1.15^2</span>
@@ -9562,7 +9562,7 @@
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="sb">```</span>
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">  description: &quot;Buffer review: [persona]&quot;</span>
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">  description: "Buffer review: [persona]"</span>
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="sb">  prompt: |</span>
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">    You are the [Skeptic | Pragmatist | Optimist] reviewing a PERT estimate.</span>
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>
@@ -9581,20 +9581,20 @@
 <a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
 <a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="sb">    Return strict JSON:</span>
 <a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="sb">    {</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">      &quot;persona&quot;: &quot;[name]&quot;,</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">      &quot;critical_findings&quot;: [</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">        {&quot;ticket_id&quot;: &quot;[id or &#39;aggregate&#39;]&quot;, &quot;issue&quot;: &quot;...&quot;, &quot;recommendation&quot;: &quot;...&quot;}</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">      "persona": "[name]",</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">      "critical_findings": [</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">        {"ticket_id": "[id or 'aggregate']", "issue": "...", "recommendation": "..."}</span>
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="sb">      ],</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">      &quot;verdict&quot;: &quot;proceed&quot; | &quot;pause&quot; | &quot;revise&quot;</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">      "verdict": "proceed" | "pause" | "revise"</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sb">    }</span>
 <a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="sb">```</span>
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>If ANY persona returns verdict=pause OR verdict=revise: surface findings to user via AskUserQuestion and ask whether to revise specific tickets or proceed. The user&#39;s call governs.
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>If ANY persona returns verdict=pause OR verdict=revise: surface findings to user via AskUserQuestion and ask whether to revise specific tickets or proceed. The user's call governs.
 <a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
 <a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="k">-</span><span class="w"> </span>Using arbitrary fudge factors (e.g. &quot;multiply by 1.5&quot;) instead of PERT sigma
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="k">-</span><span class="w"> </span>Using arbitrary fudge factors (e.g. "multiply by 1.5") instead of PERT sigma
 <a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="k">-</span><span class="w"> </span>Assuming linear N-engineer calendar compression (calendar / N is wrong)
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="k">-</span><span class="w"> </span>Skipping the roundtable validation because &quot;the numbers look fine&quot;
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="k">-</span><span class="w"> </span>Skipping the roundtable validation because "the numbers look fine"
 <a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="k">-</span><span class="w"> </span>Reporting N=2 without explicit pair vs parallel classification per ticket
 <a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="k">-</span><span class="w"> </span>Computing sigma_total as sum(sigma_i) instead of sqrt(sum(sigma_i^2))
 <a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>&lt;/FORBIDDEN&gt;
@@ -9616,7 +9616,7 @@
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>If ANY unchecked: complete Phase 6-7 before invoking <span class="sb">`estimate-report`</span>.
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>PERT does not eliminate uncertainty — it makes it legible. Brooks&#39;s Law does not predict exact speedup — it bounds the magical thinking around &quot;just add another engineer.&quot; Use both honestly. The audience deserves a distribution, not a wish.
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>PERT does not eliminate uncertainty — it makes it legible. Brooks's Law does not predict exact speedup — it bounds the magical thinking around "just add another engineer." Use both honestly. The audience deserves a distribution, not a wish.
 <a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 

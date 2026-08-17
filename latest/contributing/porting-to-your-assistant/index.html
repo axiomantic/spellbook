@@ -9898,14 +9898,14 @@ If you do not have spellbook's MCP server installed, read skills directly from t
 You cannot read spellbook skills without first having the repository locally. This step is mandatory.
 </CRITICAL></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1"># 1. Fork the repository on GitHub</span>
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Go to https://github.com/axiomantic/spellbook and click &quot;Fork&quot;</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># Go to https://github.com/axiomantic/spellbook and click "Fork"</span>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="c1"># 2. Clone your fork</span>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/&lt;YOUR_USERNAME&gt;/spellbook.git
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nb">cd</span><span class="w"> </span>spellbook
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1"># 3. Set the spellbook directory variable (use this path in all subsequent steps)</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nb">export</span><span class="w"> </span><span class="nv">SPELLBOOK_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="nb">export</span><span class="w"> </span><span class="nv">SPELLBOOK_DIR</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span><span class="nb">pwd</span><span class="k">)</span><span class="s2">"</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1"># 4. Create a feature branch for your platform</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>feat/add-&lt;platform&gt;-support
@@ -9936,7 +9936,7 @@ This workflow follows the <code>develop</code> skill pattern. Read that skill fi
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="gs">**Constraints:**</span>
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="k">-</span><span class="w"> </span>Must follow existing installer patterns (see <span class="sb">`installer/platforms/gemini.py`</span>)
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="k">-</span><span class="w"> </span>Must integrate with spellbook&#39;s component system (<span class="sb">`installer/components/`</span>)
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="k">-</span><span class="w"> </span>Must integrate with spellbook's component system (<span class="sb">`installer/components/`</span>)
 <a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="k">-</span><span class="w"> </span>Must be detectable without user configuration when possible
 </code></pre></div>
 <h3 id="phase-1-research">Phase 1: Research<a class="headerlink" href="#phase-1-research" title="Permanent link">&para;</a></h3>
@@ -10036,24 +10036,24 @@ Spellbook has specific testing standards. Read these resources before writing te
 <h4 id="integration-tests">Integration Tests<a class="headerlink" href="#integration-tests" title="Permanent link">&para;</a></h4>
 <p>Create bash integration tests in <code>tests/claude-code/</code>:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="ch">#!/bin/bash</span>
-<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">SCRIPT_DIR</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span><span class="nb">cd</span><span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">BASH_SOURCE</span><span class="p">[0]</span><span class="si">}</span><span class="s2">&quot;</span><span class="k">)</span><span class="s2">&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">pwd</span><span class="k">)</span><span class="s2">&quot;</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">source</span><span class="w"> </span><span class="s2">&quot;</span><span class="nv">$SCRIPT_DIR</span><span class="s2">/test-helpers.sh&quot;</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nv">SCRIPT_DIR</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span><span class="nb">cd</span><span class="w"> </span><span class="s2">"</span><span class="k">$(</span>dirname<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">BASH_SOURCE</span><span class="p">[0]</span><span class="si">}</span><span class="s2">"</span><span class="k">)</span><span class="s2">"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">pwd</span><span class="k">)</span><span class="s2">"</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nb">source</span><span class="w"> </span><span class="s2">"</span><span class="nv">$SCRIPT_DIR</span><span class="s2">/test-helpers.sh"</span>
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nv">REPO_ROOT</span><span class="o">=</span><span class="s2">&quot;</span><span class="nv">$SCRIPT_DIR</span><span class="s2">/../..&quot;</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="nv">REPO_ROOT</span><span class="o">=</span><span class="s2">"</span><span class="nv">$SCRIPT_DIR</span><span class="s2">/../.."</span>
 <a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;Testing [Platform] integration...&quot;</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"Testing [Platform] integration..."</span>
 <a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>
 <a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="c1"># Test detection</span>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>assert_exit_code<span class="w"> </span><span class="s2">&quot;uv run install.py --detect &lt;platform&gt;&quot;</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="s2">&quot;Platform detection&quot;</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>assert_exit_code<span class="w"> </span><span class="s2">"uv run install.py --detect &lt;platform&gt;"</span><span class="w"> </span><span class="m">0</span><span class="w"> </span><span class="s2">"Platform detection"</span>
 <a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
 <a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="c1"># Test dry-run installation</span>
-<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>assert_output_matches<span class="w"> </span><span class="s2">&quot;uv run install.py --dry-run &lt;platform&gt;&quot;</span><span class="w"> </span><span class="s2">&quot;Would create&quot;</span><span class="w"> </span><span class="s2">&quot;Dry run shows actions&quot;</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a>assert_output_matches<span class="w"> </span><span class="s2">"uv run install.py --dry-run &lt;platform&gt;"</span><span class="w"> </span><span class="s2">"Would create"</span><span class="w"> </span><span class="s2">"Dry run shows actions"</span>
 <a id="__codelineno-5-14" name="__codelineno-5-14" href="#__codelineno-5-14"></a>
 <a id="__codelineno-5-15" name="__codelineno-5-15" href="#__codelineno-5-15"></a><span class="c1"># Test actual installation (in isolated environment)</span>
 <a id="__codelineno-5-16" name="__codelineno-5-16" href="#__codelineno-5-16"></a><span class="c1"># ...</span>
 <a id="__codelineno-5-17" name="__codelineno-5-17" href="#__codelineno-5-17"></a>
-<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;&quot;</span>
-<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;[Platform] integration tests complete&quot;</span>
+<a id="__codelineno-5-18" name="__codelineno-5-18" href="#__codelineno-5-18"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">""</span>
+<a id="__codelineno-5-19" name="__codelineno-5-19" href="#__codelineno-5-19"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"[Platform] integration tests complete"</span>
 </code></pre></div>
 <p><RULE>
 All tests must pass before proceeding:</p>
@@ -10074,8 +10074,8 @@ Do NOT automatically create a PR. Stop and ask the user first.
 <a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>
 <a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>Implementation is complete with passing tests.
 <a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>
-<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Header: &quot;Next step&quot;
-<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>Question: &quot;How would you like to proceed?&quot;
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>Header: "Next step"
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>Question: "How would you like to proceed?"
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>Options:
 <a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="k">-</span><span class="w"> </span>Create PR (Recommended)
@@ -10087,9 +10087,9 @@ Do NOT automatically create a PR. Stop and ask the user first.
 </code></pre></div>
 <p><strong>If user chooses "Create PR":</strong></p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>git<span class="w"> </span>add<span class="w"> </span>-A
-<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;feat: add [Platform] support&quot;</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"feat: add [Platform] support"</span>
 <a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>feat/add-&lt;platform&gt;-support
-<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>gh<span class="w"> </span>pr<span class="w"> </span>create<span class="w"> </span>--repo<span class="w"> </span>axiomantic/spellbook<span class="w"> </span>--title<span class="w"> </span><span class="s2">&quot;feat: add [Platform] support&quot;</span><span class="w"> </span>--body<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>cat<span class="w"> </span><span class="s">&lt;&lt;&#39;EOF&#39;</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>gh<span class="w"> </span>pr<span class="w"> </span>create<span class="w"> </span>--repo<span class="w"> </span>axiomantic/spellbook<span class="w"> </span>--title<span class="w"> </span><span class="s2">"feat: add [Platform] support"</span><span class="w"> </span>--body<span class="w"> </span><span class="s2">"</span><span class="k">$(</span>cat<span class="w"> </span><span class="s">&lt;&lt;'EOF'</span>
 <a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="s">## Summary</span>
 <a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="s">- Adds platform installer for [Platform]</span>
 <a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="s">- Creates context file at [path]</span>
@@ -10100,7 +10100,7 @@ Do NOT automatically create a PR. Stop and ask the user first.
 <a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a><span class="s">- [ ] Integration tests pass: `tests/claude-code/run-all-tests.sh`</span>
 <a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="s">- [ ] Manual verification on [Platform]</span>
 <a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="s">EOF</span>
-<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="k">)</span><span class="s2">&quot;</span>
+<a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a><span class="k">)</span><span class="s2">"</span>
 </code></pre></div>
 <p><strong>If user chooses "Review changes first":</strong></p>
 <p>Show <code>git diff</code> and <code>git status</code>, then ask again.</p>

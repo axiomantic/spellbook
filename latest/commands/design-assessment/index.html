@@ -9542,7 +9542,7 @@
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>| Input | Source | Required | Description |
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>|-------|--------|----------|-------------|
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| <span class="sb">`target_description`</span> | User message | Yes | What is being assessed (e.g., &quot;code review skill&quot;, &quot;design doc validator&quot;) |
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>| <span class="sb">`target_description`</span> | User message | Yes | What is being assessed (e.g., "code review skill", "design doc validator") |
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| <span class="sb">`target_type`</span> | User message or auto-detect | No | Override: <span class="sb">`code`</span>, <span class="sb">`document`</span>, <span class="sb">`api`</span>, <span class="sb">`test`</span>, <span class="sb">`claim`</span>, <span class="sb">`artifact`</span>, <span class="sb">`readiness`</span> |
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>| <span class="sb">`mode`</span> | User message | No | <span class="sb">`autonomous`</span> (default) or <span class="sb">`interactive`</span> |
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| <span class="sb">`existing_file`</span> | User message | No | Path to skill/command being updated - read for context |
@@ -9563,15 +9563,15 @@
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>| Type | Indicators |
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>|------|------------|
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| <span class="sb">`readiness`</span> | &quot;production ready&quot;, &quot;deploy&quot;, &quot;release&quot;, &quot;launch&quot;, &quot;go/no-go&quot; |
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| <span class="sb">`claim`</span> | &quot;verify&quot;, &quot;factcheck&quot;, &quot;claim&quot;, &quot;assertion&quot;, &quot;accuracy&quot; |
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| <span class="sb">`test`</span> | &quot;test suite&quot;, &quot;coverage&quot;, &quot;test quality&quot;, &quot;.test.&quot;, &quot;_test.&quot; |
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| <span class="sb">`api`</span> | &quot;MCP tool&quot;, &quot;endpoint&quot;, &quot;REST API&quot;, &quot;function signature&quot;, &quot;tool docs&quot; |
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| <span class="sb">`document`</span> | &quot;design doc&quot;, &quot;spec&quot;, &quot;RFC&quot;, &quot;proposal&quot;, &quot;.md&quot; |
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| <span class="sb">`code`</span> | &quot;.ts&quot;, &quot;.py&quot;, &quot;.js&quot;, &quot;review&quot;, &quot;audit&quot;, &quot;PR&quot;, &quot;diff&quot; |
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| <span class="sb">`readiness`</span> | "production ready", "deploy", "release", "launch", "go/no-go" |
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| <span class="sb">`claim`</span> | "verify", "factcheck", "claim", "assertion", "accuracy" |
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| <span class="sb">`test`</span> | "test suite", "coverage", "test quality", ".test.", "_test." |
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| <span class="sb">`api`</span> | "MCP tool", "endpoint", "REST API", "function signature", "tool docs" |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| <span class="sb">`document`</span> | "design doc", "spec", "RFC", "proposal", ".md" |
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| <span class="sb">`code`</span> | ".ts", ".py", ".js", "review", "audit", "PR", "diff" |
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| <span class="sb">`artifact`</span> | (default fallback) |
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gs">**Output:**</span> Announce detected type: &quot;Target type: [type]&quot;
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gs">**Output:**</span> Announce detected type: "Target type: [type]"
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="gu">## Phase 2: Select Dimensions</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
@@ -9597,15 +9597,15 @@
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">```</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="sb">mcp_question(questions=[{</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">    &quot;header&quot;: &quot;Assessment Dimensions&quot;,</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">    &quot;question&quot;: &quot;Which dimensions should this assessment evaluate?&quot;,</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">    &quot;multiple&quot;: True,</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">    &quot;options&quot;: [dimension options for detected type with &quot;(Recommended)&quot; suffix on defaults]</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">    "header": "Assessment Dimensions",</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">    "question": "Which dimensions should this assessment evaluate?",</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">    "multiple": True,</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">    "options": [dimension options for detected type with "(Recommended)" suffix on defaults]</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="sb">}])</span>
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="sb">```</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gs">**Response handling:**</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>Strip &quot; (Recommended)&quot; suffix from selected labels
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">-</span><span class="w"> </span>Strip " (Recommended)" suffix from selected labels
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span>Convert to lowercase for dimension IDs
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span>Minimum 1 dimension required - re-prompt if empty
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">-</span><span class="w"> </span>Custom answers become custom dimensions (non-blocking in verdict logic by default)
@@ -9659,7 +9659,7 @@
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
 <a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="sb">\`\`\`yaml</span>
 <a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="sb">finding:</span>
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="sb">  id: string          # Unique identifier (e.g., &quot;[PREFIX]-001&quot;)</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="sb">  id: string          # Unique identifier (e.g., "[PREFIX]-001")</span>
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">  dimension: string   # Which dimension this relates to</span>
 <a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="sb">  severity: enum      # CRITICAL | HIGH | MEDIUM | LOW | NIT</span>
 <a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="sb">  confidence: enum    # VERIFIED | HIGH | MEDIUM | LOW | UNVERIFIED</span>
@@ -9753,7 +9753,7 @@
 <a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>| assertion_quality | No meaningful assertions | Basic assertions | Precise, behavior-verifying assertions | Yes |
 <a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>| isolation | Tests interfere with each other | Tests mostly independent | Fully isolated tests | Conditional |
 <a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>| determinism | Flaky tests | Usually deterministic | Always deterministic | Yes |
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>| readability | Cannot understand what&#39;s tested | Understandable tests | Self-documenting tests | No |
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>| readability | Cannot understand what's tested | Understandable tests | Self-documenting tests | No |
 <a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>| edge_cases | No edge case testing | Some edge cases | Comprehensive edge cases | Conditional |
 <a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
 <a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="gu">### Claim Dimensions</span>

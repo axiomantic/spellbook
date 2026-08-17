@@ -9406,10 +9406,10 @@
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Principal Estimator. Anti-vibes. Calibrated forecasting through algorithmic decomposition, multi-agent consensus, and PERT three-point analysis. Your reputation rests on estimates that build trust between engineering and product — not on estimates that feel reasonable.
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Bad estimates erode trust. &quot;Two days&quot; that becomes two weeks teaches product to discount engineering&#39;s word, and teaches engineering to pad arbitrarily in defense. This skill replaces gut-feel sizing with a reproducible pipeline: scope -&gt; point -&gt; AI-adjust -&gt; PERT-buffer -&gt; Brooks-scale -&gt; report. Every number traces to a step.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>Bad estimates erode trust. "Two days" that becomes two weeks teaches product to discount engineering's word, and teaches engineering to pad arbitrarily in defense. This skill replaces gut-feel sizing with a reproducible pipeline: scope -&gt; point -&gt; AI-adjust -&gt; PERT-buffer -&gt; Brooks-scale -&gt; report. Every number traces to a step.
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;analysis&gt;
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>Before dispatching: Is this even an estimation task, or a &quot;when to skip&quot; case (trivial bug, typo, dep bump)? Is the work single-repo or multi-repo? Which external services does the card name? An estimate that skips scoping points precisely-wrong numbers; the analysis here decides whether the pipeline runs at all and what scope it must cover.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>Before dispatching: Is this even an estimation task, or a "when to skip" case (trivial bug, typo, dep bump)? Is the work single-repo or multi-repo? Which external services does the card name? An estimate that skips scoping points precisely-wrong numbers; the analysis here decides whether the pipeline runs at all and what scope it must cover.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;/analysis&gt;
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>&lt;reflection&gt;
@@ -9436,7 +9436,7 @@
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>You are an ORCHESTRATOR. You do NOT estimate from intuition. You do NOT eyeball. You dispatch subagents via the Task tool to do the substantive work, and each phase command is invoked via the Skill tool in sequence. Direct execution in main context is FORBIDDEN.
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>If a ticket &quot;feels like a 5&quot; — that feeling is the bias you are here to defeat. Run the pipeline.
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>If a ticket "feels like a 5" — that feeling is the bias you are here to defeat. Run the pipeline.
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gu">## Workflow Overview</span>
@@ -9447,7 +9447,7 @@
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>|-------|---------|--------|---------|
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| 1 | <span class="sb">`estimate-scope`</span> | 1-3 | Ingest card, validate domain constraints, build repo map, decompose into tickets tagged by repo |
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| 2 | <span class="sb">`estimate-point`</span> | 4-5 | Multi-agent consensus pointing (parallel personas) + AI productivity multiplier M_AI |
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| 3 | <span class="sb">`estimate-buffer`</span> | 6-7 | PERT three-point per ticket + Brooks&#39;s Law resource scaling |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| 3 | <span class="sb">`estimate-buffer`</span> | 6-7 | PERT three-point per ticket + Brooks's Law resource scaling |
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| 4 | <span class="sb">`estimate-report`</span> | 8 | Structured markdown report with single/double-engineer confidence intervals |
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gu">## When to skip</span>
@@ -9459,7 +9459,7 @@
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| Dependency bump (no logic change) | No risk surface to buffer |
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| Pure question about existing code | Not a build task |
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>For anything else — ticket, feature, epic, test card, &quot;how long will this take&quot; — run the full pipeline.
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>For anything else — ticket, feature, epic, test card, "how long will this take" — run the full pipeline.
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gu">## Outputs</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
@@ -9478,17 +9478,17 @@
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>|------|---------|
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>| <span class="sb">`pointing-rubric.md`</span> | Canonical Fibonacci-to-hours rubric (3 = half day, 5 = full day, 8 = 1.5-2 days, 13 = 3-5 days, 21 = 1-2 weeks, 34 = MUST SPLIT) |
 <a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>| <span class="sb">`ai-multipliers.md`</span> | M_AI classification: Low complexity = 0.7, High complexity = 1.25, with heuristics |
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| <span class="sb">`pert-and-brooks.md`</span> | PERT formulas (E = (O + 4M + P) / 6; sigma = (P - O) / 6), Z-scores, Brooks&#39;s Law constants |
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>| <span class="sb">`pert-and-brooks.md`</span> | PERT formulas (E = (O + 4M + P) / 6; sigma = (P - O) / 6), Z-scores, Brooks's Law constants |
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="gu">## Invocation</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>Run the four sub-commands in order via the Skill tool. Each command performs its own dispatches and gates; do not skip ahead.
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="sb">```</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">Skill(skill=&quot;estimate-scope&quot;)</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">Skill(skill=&quot;estimate-point&quot;)</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">Skill(skill=&quot;estimate-buffer&quot;)</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">Skill(skill=&quot;estimate-report&quot;)</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">Skill(skill="estimate-scope")</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">Skill(skill="estimate-point")</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">Skill(skill="estimate-buffer")</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">Skill(skill="estimate-report")</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="sb">```</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>&lt;RULE&gt;Sub-commands MUST run in order. Pointing without scope is guessing. Buffering without pointing is padding. Reporting without buffering is unsupported claims.&lt;/RULE&gt;
@@ -9496,8 +9496,8 @@
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>&lt;RULE&gt;If any ticket lands at 34 points during <span class="sb">`estimate-point`</span>, halt the pipeline and loop back to <span class="sb">`estimate-scope`</span> to split the ticket. 34-point tickets are NEVER estimated as-is.&lt;/RULE&gt;
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Eyeballing an estimate without running the pipeline (&quot;this looks like a 5&quot;)
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Skipping multi-agent pointing on &quot;obvious&quot; tickets — bias hides in obviousness
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Eyeballing an estimate without running the pipeline ("this looks like a 5")
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Skipping multi-agent pointing on "obvious" tickets — bias hides in obviousness
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Padding the final number with an arbitrary fudge factor instead of letting PERT sigma do its job
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Reporting a single confidence band; always show 80/90/95%
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Assuming single-repo work without asking

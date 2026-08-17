@@ -9882,7 +9882,7 @@
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="gs">**If ANY check fails:**</span> STOP. Return to Phase 1.
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gs">**Anti-rationalization:**</span> &quot;Research was thorough enough&quot; and &quot;we already understand the codebase&quot; are known bypass rationalizations (Pattern 4: Similarity Shortcut, Pattern 2: Expertise Override). Run the check. Trust the process.
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="gs">**Anti-rationalization:**</span> "Research was thorough enough" and "we already understand the codebase" are known bypass rationalizations (Pattern 4: Similarity Shortcut, Pattern 2: Expertise Override). Run the check. Trust the process.
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="gu">## Invariant Principles</span>
@@ -9890,7 +9890,7 @@
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">1.</span> <span class="gs">**Research informs questions**</span> — Questions derive from research findings; never ask what research already answered
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">2.</span> <span class="gs">**100% completeness required**</span> — Proceed to design only when all 13 validation functions pass; no exceptions without explicit bypass
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">3.</span> <span class="gs">**Adaptive response handling**</span> — User responses trigger appropriate actions; never force exact answers
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">4.</span> <span class="gs">**Understanding document is the gate**</span> — Devil&#39;s advocate reviews the understanding document; approval unlocks design
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">4.</span> <span class="gs">**Understanding document is the gate**</span> — Devil's advocate reviews the understanding document; approval unlocks design
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>Use research findings to generate informed questions. Apply ARH pattern to all discovery questions. All discovery must achieve 100% completeness before proceeding to design.
@@ -9901,12 +9901,12 @@
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| Response Type    | Detection Pattern                              | Action                                                          |
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| ---------------- | ---------------------------------------------- | --------------------------------------------------------------- |
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| DIRECT_ANSWER    | Matches option (A, B, C, D) or clear selection | Accept answer, update context, continue                         |
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| RESEARCH_REQUEST | &quot;research this&quot;, &quot;look into&quot;, &quot;find out&quot;       | Dispatch research subagent, regenerate question with findings   |
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>| UNKNOWN          | &quot;I don&#39;t know&quot;, &quot;not sure&quot;, &quot;unclear&quot;          | Dispatch subagent to research, rephrase with additional context |
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| CLARIFICATION    | &quot;what do you mean&quot;, &quot;can you explain&quot;, &quot;?&quot;     | Rephrase question with more context, examples, re-ask           |
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| SKIP             | &quot;skip&quot;, &quot;not relevant&quot;, &quot;doesn&#39;t apply&quot;        | Mark as out-of-scope, add to explicit_exclusions, continue      |
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| USER_ABORT       | &quot;stop&quot;, &quot;cancel&quot;, &quot;exit&quot;                       | Save current state, exit cleanly with resume instructions       |
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| SCOPE_EXPANSION | &quot;include X in scope&quot;, &quot;let&#39;s also&quot;, &quot;and while we&#39;re at it&quot;, &quot;we should also&quot;, user adds new workstream | Defer to end of current category, then run Scope Drift Check |
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| RESEARCH_REQUEST | "research this", "look into", "find out"       | Dispatch research subagent, regenerate question with findings   |
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>| UNKNOWN          | "I don't know", "not sure", "unclear"          | Dispatch subagent to research, rephrase with additional context |
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| CLARIFICATION    | "what do you mean", "can you explain", "?"     | Rephrase question with more context, examples, re-ask           |
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| SKIP             | "skip", "not relevant", "doesn't apply"        | Mark as out-of-scope, add to explicit_exclusions, continue      |
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| USER_ABORT       | "stop", "cancel", "exit"                       | Save current state, exit cleanly with resume instructions       |
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| SCOPE_EXPANSION | "include X in scope", "let's also", "and while we're at it", "we should also", user adds new workstream | Defer to end of current category, then run Scope Drift Check |
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>Apply to ALL discovery questions in Phase 1.5.
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
@@ -9915,7 +9915,7 @@
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>This mechanic detects when discovery answers reveal new design or infrastructure
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>needs that were not flagged in Phase 0. The response is <span class="gs">**re-flag-and-continue**</span>:
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>set the corresponding need-flag and keep going. There is no scope &quot;upgrade&quot; and no
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>set the corresponding need-flag and keep going. There is no scope "upgrade" and no
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>work-item decomposition — the need-flags drive which phases and gates run.
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>Referenced from: Phase 1.5.2.5, Post-1.6, and inline via ARH during wizard.
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>&lt;/CRITICAL&gt;
@@ -9940,14 +9940,14 @@
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">missing</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[]</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[];</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="w">  </span><span class="k">for</span><span class="w"> </span><span class="p">(</span><span class="kd">const</span><span class="w"> </span><span class="nx">s</span><span class="w"> </span><span class="k">of</span><span class="w"> </span><span class="nx">signals</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">implies</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;needs_infrastructure&quot;</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">flags</span><span class="p">.</span><span class="nx">needs_infrastructure</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="w">      </span><span class="nx">missing</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s2">&quot;needs_infrastructure&quot;</span><span class="p">);</span><span class="w"> </span><span class="c1">// implies needs_design below</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">implies</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">"needs_infrastructure"</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">!</span><span class="nx">flags</span><span class="p">.</span><span class="nx">needs_infrastructure</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="w">      </span><span class="nx">missing</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s2">"needs_infrastructure"</span><span class="p">);</span><span class="w"> </span><span class="c1">// implies needs_design below</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="w">      </span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">implies</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;needs_design&quot;</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">implies</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">&quot;needs_infrastructure&quot;</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="w">      </span><span class="p">(</span><span class="nx">s</span><span class="p">.</span><span class="nx">implies</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">"needs_design"</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="nx">s</span><span class="p">.</span><span class="nx">implies</span><span class="w"> </span><span class="o">===</span><span class="w"> </span><span class="s2">"needs_infrastructure"</span><span class="p">)</span><span class="w"> </span><span class="o">&amp;&amp;</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="w">      </span><span class="o">!</span><span class="nx">flags</span><span class="p">.</span><span class="nx">needs_design</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="w">    </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="w">      </span><span class="nx">missing</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s2">&quot;needs_design&quot;</span><span class="p">);</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="w">      </span><span class="nx">missing</span><span class="p">.</span><span class="nx">push</span><span class="p">(</span><span class="s2">"needs_design"</span><span class="p">);</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
@@ -9957,7 +9957,7 @@
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gs">**When drift detected (re-flag-and-continue):**</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">1.</span> Do NOT stop the workflow or &quot;upgrade&quot; scope. Briefly note the new need to the user:
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">1.</span> Do NOT stop the workflow or "upgrade" scope. Briefly note the new need to the user:
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">   Scope Drift Detected — re-flagging</span>
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
@@ -10007,37 +10007,37 @@
 <a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>| Response Type    | Pattern            | Action                                           |
 <a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>| ---------------- | ------------------ | ------------------------------------------------ |
 <a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>| DIRECT_ANSWER    | A, B, C, D         | Update disambiguation_results, continue          |
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>| RESEARCH_REQUEST | &quot;research this&quot;    | Dispatch subagent, regenerate ALL questions      |
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>| UNKNOWN          | &quot;I don&#39;t know&quot;     | Dispatch subagent, rephrase with findings        |
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>| CLARIFICATION    | &quot;what do you mean&quot; | Rephrase with more context, re-ask               |
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>| SKIP             | &quot;skip&quot;             | Mark as out-of-scope, add to explicit_exclusions |
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>| USER_ABORT       | &quot;stop&quot;             | Save state, exit cleanly                         |
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>| RESEARCH_REQUEST | "research this"    | Dispatch subagent, regenerate ALL questions      |
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>| UNKNOWN          | "I don't know"     | Dispatch subagent, rephrase with findings        |
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>| CLARIFICATION    | "what do you mean" | Rephrase with more context, re-ask               |
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>| SKIP             | "skip"             | Mark as out-of-scope, add to explicit_exclusions |
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>| USER_ABORT       | "stop"             | Save state, exit cleanly                         |
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="gs">**Fractal exploration (conditional):**</span> When the user responds UNKNOWN or RESEARCH_REQUEST on a HIGH-impact ambiguity, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What are the full implications of [Interpretation A] vs [Interpretation B]?&quot;. Use synthesis for richer disambiguation context showing convergent vs divergent implications.
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="gs">**Fractal exploration (conditional):**</span> When the user responds UNKNOWN or RESEARCH_REQUEST on a HIGH-impact ambiguity, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: "What are the full implications of [Interpretation A] vs [Interpretation B]?". Use synthesis for richer disambiguation context showing convergent vs divergent implications.
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="gs">**Fractal failure fallback:**</span> If fractal-thinking invocation fails, LOG warning and continue disambiguation with available context.
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
 <a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="gs">**Example Flow:**</span>
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="sb">```</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">Question: &quot;Research found JWT (8 files) and OAuth (5 files). Which should we use?&quot;</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">User: &quot;What&#39;s the difference? I don&#39;t know which is better.&quot;</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">Question: "Research found JWT (8 files) and OAuth (5 files). Which should we use?"</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">User: "What's the difference? I don't know which is better."</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">ARH Processing:</span>
 <a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">→ Detect: UNKNOWN type</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">→ Action: Dispatch research subagent</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">  &quot;Compare JWT vs OAuth in our codebase. Return pros/cons.&quot;</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">  "Compare JWT vs OAuth in our codebase. Return pros/cons."</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">→ Subagent returns comparison</span>
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">→ Regenerate question with new context:</span>
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">  &quot;Research shows:</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">  "Research shows:</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">   - JWT: Stateless, used in API endpoints, mobile-friendly</span>
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">   - OAuth: Third-party integration, complex setup</span>
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
 <a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">   For mobile API auth, which fits better?</span>
 <a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="sb">   A) JWT (stateless, mobile-friendly)</span>
 <a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="sb">   B) OAuth (third-party logins)</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">   C) Something else&quot;</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">→ User: &quot;A - JWT makes sense&quot;</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">   C) Something else"</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">→ User: "A - JWT makes sense"</span>
 <a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="sb">→ Update disambiguation_results</span>
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="sb">```</span>
 <a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>
@@ -10065,7 +10065,7 @@
 <a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>
 <a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="k">-</span><span class="w"> </span>Research shows [N] similar features. Should this match their scope?
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="k">-</span><span class="w"> </span>Explicit exclusions: What should this NOT do?
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="k">-</span><span class="w"> </span>MVP definition: What&#39;s the minimum for success?
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="k">-</span><span class="w"> </span>MVP definition: What's the minimum for success?
 <a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="k">-</span><span class="w"> </span>ASSUMPTION CHECK: Are we building for [discovered use case]?
 <a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="gs">**3. Integration &amp; Constraints**</span>
@@ -10100,7 +10100,7 @@
 <a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="gs">**Example Questions (Architecture):**</span>
 <a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>
 <a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">```</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">Feature: &quot;Add JWT authentication for mobile API&quot;</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">Feature: "Add JWT authentication for mobile API"</span>
 <a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
 <a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="sb">After research found JWT in 8 files and OAuth in 5 files,</span>
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="sb">and user clarified JWT is preferred:</span>
@@ -10135,7 +10135,7 @@
 <a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>[Continue...]
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="sb">```</span>
 <a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>Progress tracking: &quot;[Category N/7]: X/Y questions answered&quot;
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>Progress tracking: "[Category N/7]: X/Y questions answered"
 <a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="gu">### 1.5.2.5 Post-Discovery Scope Drift Check</span>
 <a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>
@@ -10144,7 +10144,7 @@
 <a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>This catches scope expansion that occurred gradually across multiple questions.
 <a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>Run <span class="sb">`detect_missing_flags()`</span>. If it returns a non-empty set, follow the &quot;When drift detected (re-flag-and-continue)&quot; protocol from the Scope Drift Check section above: set the implied need-flags, update the understanding document, and continue.
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>Run <span class="sb">`detect_missing_flags()`</span>. If it returns a non-empty set, follow the "When drift detected (re-flag-and-continue)" protocol from the Scope Drift Check section above: set the implied need-flags, update the understanding document, and continue.
 <a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
 <a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="gu">### 1.5.2.6 Project-Standards Cross-Check (operator)</span>
 <a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>
@@ -10152,8 +10152,8 @@
 <a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>operator. The cross-check has two modes, keyed on <span class="sb">`none_found`</span>:
 <a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>
 <a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Sources found**</span> → <span class="gs">**light**</span> reinforcement (AskUserQuestion):
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>  &quot;I found these standards docs: [list with kind + summary]. Anything I&#39;m missing
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>  or that doesn&#39;t apply?&quot;
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>  "I found these standards docs: [list with kind + summary]. Anything I'm missing
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>  or that doesn't apply?"
 <a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span><span class="gs">**`none_found: true`**</span> → <span class="gs">**REQUIRED**</span> cross-check (not light): the operator MUST
 <a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>  be asked to name any governance/doctrine doc the heuristic layers missed. Both
 <a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>  the conventional glob net and the content classifier can miss (doctrine buried in
@@ -10171,7 +10171,7 @@
 <a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="k">4.</span> Ask user ONCE about persistence
 <a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
 <a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="sb">```</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">I&#39;ve built a glossary with [N] terms:</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">I've built a glossary with [N] terms:</span>
 <a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">[Show glossary preview]</span>
 <a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
 <a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="sb">Would you like to:</span>
@@ -10217,13 +10217,13 @@
 <a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="gs">**ERROR HANDLING:**</span>
 <a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>
 <a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="k">-</span><span class="w"> </span>If write fails (permission denied, read-only): Fallback to <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/glossary-[feature-slug].md`</span>
-<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="k">-</span><span class="w"> </span>Show location: &quot;Glossary saved to: [path]&quot;
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="k">-</span><span class="w"> </span>Suggest: &quot;Manually append to CLAUDE.md when ready&quot;
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="k">-</span><span class="w"> </span>Show location: "Glossary saved to: [path]"
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="k">-</span><span class="w"> </span>Suggest: "Manually append to CLAUDE.md when ready"
 <a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>
 <a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="gs">**COLLISION HANDLING:**</span>
 <a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>
-<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="k">-</span><span class="w"> </span>Check for existing &quot;## Feature Glossary: [Feature Name]&quot; section
-<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="k">-</span><span class="w"> </span>If same feature glossary exists: Skip, warn &quot;Glossary for this feature already exists in CLAUDE.md&quot;
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="k">-</span><span class="w"> </span>Check for existing "## Feature Glossary: [Feature Name]" section
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="k">-</span><span class="w"> </span>If same feature glossary exists: Skip, warn "Glossary for this feature already exists in CLAUDE.md"
 <a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="k">-</span><span class="w"> </span>If different feature glossary exists: Append as new section (multiple feature glossaries allowed)
 <a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>
 <a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="gu">### 1.5.4 Synthesize design_context</span>
@@ -10235,8 +10235,8 @@
 <a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="gs">**Validation:**</span>
 <a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>
 <a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="k">-</span><span class="w"> </span>No null values (except explicitly optional fields)
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">-</span><span class="w"> </span>No &quot;TBD&quot; or &quot;unknown&quot; strings
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="k">-</span><span class="w"> </span>All arrays with content or explicit &quot;N/A&quot;
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">-</span><span class="w"> </span>No "TBD" or "unknown" strings
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="k">-</span><span class="w"> </span>All arrays with content or explicit "N/A"
 <a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
 <a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="gu">### 1.5.5 Completeness Checklist (13 Validation Functions)</span>
 <a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>
@@ -10313,7 +10313,7 @@
 <a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="kd">function</span><span class="w"> </span><span class="nx">no_tbd_items</span><span class="p">()</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">contextJSON</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">design_context</span><span class="p">);</span>
 <a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">forbiddenTerms</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="sr">/\bTBD\b/i</span><span class="p">,</span><span class="w"> </span><span class="sr">/\bto be determined\b/i</span><span class="p">,</span><span class="w"> </span><span class="sr">/\bunknown\b/i</span><span class="p">];</span>
-<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">filtered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">contextJSON</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/&quot;confidence&quot;:\s*&quot;[^&quot;]*&quot;/g</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&quot;</span><span class="p">);</span>
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">filtered</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">contextJSON</span><span class="p">.</span><span class="nx">replace</span><span class="p">(</span><span class="sr">/"confidence":\s*"[^"]*"/g</span><span class="p">,</span><span class="w"> </span><span class="s2">""</span><span class="p">);</span>
 <a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a><span class="w">  </span><span class="k">return</span><span class="w"> </span><span class="o">!</span><span class="nx">forbiddenTerms</span><span class="p">.</span><span class="nx">some</span><span class="p">((</span><span class="nx">regex</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">regex</span><span class="p">.</span><span class="nx">test</span><span class="p">(</span><span class="nx">filtered</span><span class="p">));</span>
 <a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a><span class="p">}</span>
 <a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>
@@ -10366,7 +10366,7 @@
 <a id="__codelineno-0-511" name="__codelineno-0-511" href="#__codelineno-0-511"></a><span class="sb">[✓/✗] Success criteria defined with measurable thresholds</span>
 <a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a><span class="sb">[✓/✗] Glossary complete for all domain terms</span>
 <a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a><span class="sb">[✓/✗] All assumptions validated with user</span>
-<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a><span class="sb">[✓/✗] No &quot;we&#39;ll figure it out later&quot; items remain</span>
+<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a><span class="sb">[✓/✗] No "we'll figure it out later" items remain</span>
 <a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a><span class="sb">[✓/✗] Need-flags consistent with discovered scope (any new design/infra need re-flagged)</span>
 <a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a><span class="sb">[✓/✗] Project standards discovered (sweep ran; ≥1 source recorded OR none_found with globs recorded)</span>
 <a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a>
@@ -10458,10 +10458,10 @@
 <a id="__codelineno-0-603" name="__codelineno-0-603" href="#__codelineno-0-603"></a>Present to user:
 <a id="__codelineno-0-604" name="__codelineno-0-604" href="#__codelineno-0-604"></a>
 <a id="__codelineno-0-605" name="__codelineno-0-605" href="#__codelineno-0-605"></a><span class="sb">```</span>
-<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a><span class="sb">I&#39;ve synthesized research and discovery into the Understanding Document above.</span>
+<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a><span class="sb">I've synthesized research and discovery into the Understanding Document above.</span>
 <a id="__codelineno-0-607" name="__codelineno-0-607" href="#__codelineno-0-607"></a>
 <a id="__codelineno-0-608" name="__codelineno-0-608" href="#__codelineno-0-608"></a><span class="sb">Please review and:</span>
-<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a><span class="sb">A) Approve (proceed to Devil&#39;s Advocate review)</span>
+<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a><span class="sb">A) Approve (proceed to Devil's Advocate review)</span>
 <a id="__codelineno-0-610" name="__codelineno-0-610" href="#__codelineno-0-610"></a><span class="sb">B) Request changes (specify what to revise)</span>
 <a id="__codelineno-0-611" name="__codelineno-0-611" href="#__codelineno-0-611"></a><span class="sb">C) Return to discovery (need more information)</span>
 <a id="__codelineno-0-612" name="__codelineno-0-612" href="#__codelineno-0-612"></a>
@@ -10470,13 +10470,13 @@
 <a id="__codelineno-0-615" name="__codelineno-0-615" href="#__codelineno-0-615"></a>
 <a id="__codelineno-0-616" name="__codelineno-0-616" href="#__codelineno-0-616"></a><span class="gs">**BLOCK design phase until user approves (A).**</span>
 <a id="__codelineno-0-617" name="__codelineno-0-617" href="#__codelineno-0-617"></a>
-<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a><span class="gu">### 1.6 Devil&#39;s Advocate Review</span>
+<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a><span class="gu">### 1.6 Devil's Advocate Review</span>
 <a id="__codelineno-0-619" name="__codelineno-0-619" href="#__codelineno-0-619"></a>
 <a id="__codelineno-0-620" name="__codelineno-0-620" href="#__codelineno-0-620"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-621" name="__codelineno-0-621" href="#__codelineno-0-621"></a>The devils-advocate skill is a REQUIRED dependency. Check availability before attempting invocation.
 <a id="__codelineno-0-622" name="__codelineno-0-622" href="#__codelineno-0-622"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-623" name="__codelineno-0-623" href="#__codelineno-0-623"></a>
-<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a><span class="gu">#### 1.6.1 Check Devil&#39;s Advocate Availability</span>
+<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a><span class="gu">#### 1.6.1 Check Devil's Advocate Availability</span>
 <a id="__codelineno-0-625" name="__codelineno-0-625" href="#__codelineno-0-625"></a>
 <a id="__codelineno-0-626" name="__codelineno-0-626" href="#__codelineno-0-626"></a><span class="gs">**Verify skill exists in available skills list.**</span>
 <a id="__codelineno-0-627" name="__codelineno-0-627" href="#__codelineno-0-627"></a>
@@ -10485,34 +10485,34 @@
 <a id="__codelineno-0-630" name="__codelineno-0-630" href="#__codelineno-0-630"></a><span class="sb">```</span>
 <a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a><span class="sb">WARNING: devils-advocate skill not found in available skills.</span>
 <a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a>
-<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a><span class="sb">The Devil&#39;s Advocate review is REQUIRED for quality assurance.</span>
+<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a><span class="sb">The Devil's Advocate review is REQUIRED for quality assurance.</span>
 <a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a>
 <a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a><span class="sb">OPTIONS:</span>
 <a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a><span class="sb">A) Install skill first (recommended)</span>
-<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="sb">   Run &#39;uv run install.py&#39; from spellbook directory, then restart session</span>
+<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="sb">   Run 'uv run install.py' from spellbook directory, then restart session</span>
 <a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a>
 <a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a><span class="sb">B) Skip review for this session (not recommended)</span>
 <a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a><span class="sb">   Proceed without adversarial review - higher risk of missed issues</span>
 <a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a>
 <a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a><span class="sb">C) Manual review</span>
-<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a><span class="sb">   I&#39;ll present the Understanding Document for YOUR critique instead</span>
+<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a><span class="sb">   I'll present the Understanding Document for YOUR critique instead</span>
 <a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a>
 <a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a><span class="sb">Your choice: ___</span>
 <a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a><span class="sb">```</span>
 <a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a>
 <a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a><span class="gs">**Handle user choice:**</span>
 <a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a>
-<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a><span class="k">-</span><span class="w"> </span><span class="gs">**A (Install):**</span> Exit with instructions: &quot;Run &#39;uv run install.py&#39; from spellbook directory, then restart this session&quot;
+<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a><span class="k">-</span><span class="w"> </span><span class="gs">**A (Install):**</span> Exit with instructions: "Run 'uv run install.py' from spellbook directory, then restart this session"
 <a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a><span class="k">-</span><span class="w"> </span><span class="gs">**B (Skip):**</span> Set <span class="sb">`skip_devils_advocate = true`</span>, log warning, proceed to Phase 2
-<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="k">-</span><span class="w"> </span><span class="gs">**C (Manual):**</span> Present Understanding Document, collect user&#39;s critique, add to <span class="sb">`devils_advocate_critique`</span> field, proceed
+<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="k">-</span><span class="w"> </span><span class="gs">**C (Manual):**</span> Present Understanding Document, collect user's critique, add to <span class="sb">`devils_advocate_critique`</span> field, proceed
 <a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a>
-<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a><span class="gu">#### 1.6.2 Invoke Devil&#39;s Advocate Skill</span>
+<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a><span class="gu">#### 1.6.2 Invoke Devil's Advocate Skill</span>
 <a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a>
 <a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a>&lt;RULE&gt;Subagent MUST invoke devils-advocate skill using the Skill tool.&lt;/RULE&gt;
 <a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a>
 <a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a><span class="sb">```</span>
 <a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a><span class="sb">  description: &quot;Devil&#39;s Advocate Review&quot;</span>
+<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a><span class="sb">  description: "Devil's Advocate Review"</span>
 <a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a><span class="sb">  prompt: |</span>
 <a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a><span class="sb">    First, invoke the devils-advocate skill using the Skill tool.</span>
 <a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a><span class="sb">    Then follow its complete workflow.</span>
@@ -10537,15 +10537,15 @@
 <a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a>MUST make an explicit triage decision per finding using the same three
 <a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a>values. Triaging silently as <span class="sb">`address`</span> is forbidden. A finding that
 <a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a>expands scope (introduces capabilities, infrastructure, or external
-<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a>integrations not in the operator&#39;s initial request) MUST be triaged
+<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a>integrations not in the operator's initial request) MUST be triaged
 <a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a><span class="sb">`note_only`</span> or <span class="sb">`out_of_scope`</span>, never <span class="sb">`address`</span>, without operator
-<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>confirmation. See <span class="sb">`~/.claude/CLAUDE.md`</span> &quot;Autonomous Mode and Scope
-<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a>Discipline&quot;.
+<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>confirmation. See <span class="sb">`~/.claude/CLAUDE.md`</span> "Autonomous Mode and Scope
+<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a>Discipline".
 <a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a>
 <a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a>After dispositions are assigned, present the meta-action choice:
 <a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a>
 <a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="gu">## Devil&#39;s Advocate Critique</span>
+<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="gu">## Devil's Advocate Critique</span>
 <a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a>
 <a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a>[Full critique output from skill, with dispositions filled in]
 <a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a>
@@ -10564,15 +10564,15 @@
 <a id="__codelineno-0-709" name="__codelineno-0-709" href="#__codelineno-0-709"></a>
 <a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a><span class="gu">### Post-1.6 Scope Drift Recheck</span>
 <a id="__codelineno-0-711" name="__codelineno-0-711" href="#__codelineno-0-711"></a>
-<a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a>After devil&#39;s advocate review, re-run the Scope Drift Check. The devil&#39;s advocate may have surfaced scope expansions not visible during initial discovery.
+<a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a>After devil's advocate review, re-run the Scope Drift Check. The devil's advocate may have surfaced scope expansions not visible during initial discovery.
 <a id="__codelineno-0-713" name="__codelineno-0-713" href="#__codelineno-0-713"></a>
-<a id="__codelineno-0-714" name="__codelineno-0-714" href="#__codelineno-0-714"></a>Run <span class="sb">`detect_missing_flags()`</span>. If it returns a non-empty set, follow the &quot;When drift detected (re-flag-and-continue)&quot; protocol: set the implied need-flags, update the understanding document, and continue.
+<a id="__codelineno-0-714" name="__codelineno-0-714" href="#__codelineno-0-714"></a>Run <span class="sb">`detect_missing_flags()`</span>. If it returns a non-empty set, follow the "When drift detected (re-flag-and-continue)" protocol: set the implied need-flags, update the understanding document, and continue.
 <a id="__codelineno-0-715" name="__codelineno-0-715" href="#__codelineno-0-715"></a>
 <a id="__codelineno-0-716" name="__codelineno-0-716" href="#__codelineno-0-716"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-717" name="__codelineno-0-717" href="#__codelineno-0-717"></a><span class="k">-</span><span class="w"> </span>Asking questions that Phase 1 research already answered
 <a id="__codelineno-0-718" name="__codelineno-0-718" href="#__codelineno-0-718"></a><span class="k">-</span><span class="w"> </span>Proceeding to design with completeness_score &lt; 100% without explicit user bypass
 <a id="__codelineno-0-719" name="__codelineno-0-719" href="#__codelineno-0-719"></a><span class="k">-</span><span class="w"> </span>Blocking on glossary persistence when user chose session-only (A)
-<a id="__codelineno-0-720" name="__codelineno-0-720" href="#__codelineno-0-720"></a><span class="k">-</span><span class="w"> </span>Running devil&#39;s advocate review in main context instead of dispatching subagent
+<a id="__codelineno-0-720" name="__codelineno-0-720" href="#__codelineno-0-720"></a><span class="k">-</span><span class="w"> </span>Running devil's advocate review in main context instead of dispatching subagent
 <a id="__codelineno-0-721" name="__codelineno-0-721" href="#__codelineno-0-721"></a><span class="k">-</span><span class="w"> </span>Treating DesignContext structure as defined here — always reference develop skill for field definitions
 <a id="__codelineno-0-722" name="__codelineno-0-722" href="#__codelineno-0-722"></a><span class="k">-</span><span class="w"> </span>Continuing Phase 1.5 if prerequisite check fails
 <a id="__codelineno-0-723" name="__codelineno-0-723" href="#__codelineno-0-723"></a>&lt;/FORBIDDEN&gt;
@@ -10594,7 +10594,7 @@
 <a id="__codelineno-0-739" name="__codelineno-0-739" href="#__codelineno-0-739"></a><span class="k">- [ ]</span> design_context synthesized (no null values, no TBD)
 <a id="__codelineno-0-740" name="__codelineno-0-740" href="#__codelineno-0-740"></a><span class="k">- [ ]</span> Completeness Score = 100% (13/13 validation functions)
 <a id="__codelineno-0-741" name="__codelineno-0-741" href="#__codelineno-0-741"></a><span class="k">- [ ]</span> Understanding Document created and saved
-<a id="__codelineno-0-742" name="__codelineno-0-742" href="#__codelineno-0-742"></a><span class="k">- [ ]</span> Devil&#39;s advocate subagent DISPATCHED (not done in main context)
+<a id="__codelineno-0-742" name="__codelineno-0-742" href="#__codelineno-0-742"></a><span class="k">- [ ]</span> Devil's advocate subagent DISPATCHED (not done in main context)
 <a id="__codelineno-0-743" name="__codelineno-0-743" href="#__codelineno-0-743"></a><span class="k">- [ ]</span> User approved Understanding Document
 <a id="__codelineno-0-744" name="__codelineno-0-744" href="#__codelineno-0-744"></a>
 <a id="__codelineno-0-745" name="__codelineno-0-745" href="#__codelineno-0-745"></a>If ANY unchecked: Complete Phase 1.5. Do NOT proceed.

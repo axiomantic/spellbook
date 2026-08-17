@@ -9420,7 +9420,7 @@
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>   the operator after they review the report. This command never
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>   triggers it.
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">3.</span> <span class="gs">**Per-finding disposition is gated**</span> — EXTRACT candidates each receive
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>   one <span class="sb">`AskUserQuestion`</span> prompt. There is no &quot;apply all&quot; affordance at
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>   one <span class="sb">`AskUserQuestion`</span> prompt. There is no "apply all" affordance at
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>   this phase.
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">4.</span> <span class="gs">**Drift is surfaced, never auto-resolved**</span> — RECONCILE-drifted
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>   findings appear in their own section with no apply option.
@@ -9495,7 +9495,7 @@
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="sb">```</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>The project-encoded prefix and seed slug are inherited from the
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>verdicts artifact header. <span class="sb">`YYYY-MM-DD`</span> is today&#39;s date in UTC, obtained
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>verdicts artifact header. <span class="sb">`YYYY-MM-DD`</span> is today's date in UTC, obtained
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>via <span class="sb">`date -u +%Y-%m-%d`</span>. Create the parent directory with <span class="sb">`mkdir -p`</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>if it does not exist.
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
@@ -9542,8 +9542,8 @@
 <a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="gu">### Section 3 — Drift candidates</span>
 <a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
 <a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>For each RECONCILE-drifted finding, one subsection mirroring Section 1
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>in shape, but with NO &quot;Proposed canonical home&quot; and NO &quot;Reference
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>plumbing&quot; and NO &quot;Disposition&quot; line. Drift is surfaced for human
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>in shape, but with NO "Proposed canonical home" and NO "Reference
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>plumbing" and NO "Disposition" line. Drift is surfaced for human
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>reconciliation only.
 <a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
 <a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="gu">### Section 4 — Halt / failure summary</span>
@@ -9572,7 +9572,7 @@
 <a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>makes the workflow resumable: if the operator interrupts, the dispositions
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>recorded so far are durable.
 <a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>There is no &quot;apply all&quot; affordance at this phase. Bulk approval is
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>There is no "apply all" affordance at this phase. Bulk approval is
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>intentionally absent. If the operator wants to defer most of the work,
 <a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>they should narrow the cost ceiling during <span class="sb">`/dedupe-analyze`</span> (Stage 5)
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>rather than rubber-stamping at this phase.
@@ -9587,7 +9587,7 @@
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="sb">~/.local/spellbook/docs/&lt;project-encoded&gt;/dedupe-report-YYYY-MM-DD-&lt;seed-slug&gt;.md</span>
 <a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="sb">```</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>with every EXTRACT candidate&#39;s <span class="sb">`Disposition`</span> line populated.
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>with every EXTRACT candidate's <span class="sb">`Disposition`</span> line populated.
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>
 <a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="gs">**Next:**</span> Operator reviews the report. When ready, runs
 <a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sb">`/dedupe-apply &lt;report-path&gt;`</span>. This command does NOT auto-chain.

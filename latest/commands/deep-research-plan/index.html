@@ -9590,11 +9590,11 @@
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Thread independence is non-negotiable**</span>: No two threads may share mutable state or depend on each other&#39;s intermediate output. Merge threads rather than allow dependencies.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Thread independence is non-negotiable**</span>: No two threads may share mutable state or depend on each other's intermediate output. Merge threads rather than allow dependencies.
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Planning does not search**</span>: This phase produces a plan. It does NOT execute any web searches, API calls, or source retrieval. All searching happens in Phase 2.
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Every subject gets coverage**</span>: Each entry in the Subject Registry must appear in at least one thread. Orphaned subjects are a planning failure.
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> <span class="gs">**Round budgets are ceilings, not targets**</span>: Threads that converge early MUST stop. Spending rounds &quot;because we budgeted them&quot; wastes resources and dilutes signal.
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">5.</span> <span class="gs">**Explicit convergence**</span>: Every thread needs machine-checkable &quot;done&quot; criteria. &quot;I feel like we have enough&quot; is not convergence.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> <span class="gs">**Round budgets are ceilings, not targets**</span>: Threads that converge early MUST stop. Spending rounds "because we budgeted them" wastes resources and dilutes signal.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">5.</span> <span class="gs">**Explicit convergence**</span>: Every thread needs machine-checkable "done" criteria. "I feel like we have enough" is not convergence.
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gs">**Purpose:**</span> Decompose a Research Brief (Phase 0 output) into a Research Plan: independent parallel threads, each with source strategies, round budgets, and convergence criteria. A <span class="gs">**round**</span> is one search-execute-extract cycle against a defined source type.
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
@@ -9643,8 +9643,8 @@
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| Condition | Check | Failure Action |
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>|-----------|-------|----------------|
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| No source collision | No two threads research the same entity at the same source type | Reassign source phases between threads |
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| No input dependency | No thread depends on another thread&#39;s output to begin | Merge dependent threads into one |
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| No shared artifacts | No thread modifies another thread&#39;s research artifacts | Assign separate artifact namespaces |
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| No input dependency | No thread depends on another thread's output to begin | Merge dependent threads into one |
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| No shared artifacts | No thread modifies another thread's research artifacts | Assign separate artifact namespaces |
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gs">**Verification procedure:**</span>
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
@@ -9691,7 +9691,7 @@
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="gu">### 2.3 Phase Applicability</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>Not every thread needs all four search phases. Assign phases based on what the thread&#39;s sub-questions actually require:
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>Not every thread needs all four search phases. Assign phases based on what the thread's sub-questions actually require:
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="sb">```</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="sb">IF thread requires factual claims   -&gt; SURVEY + VERIFY (mandatory)</span>
@@ -9899,7 +9899,7 @@
 <a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="k">-</span><span class="w"> </span>Executing web searches, API calls, or source retrieval during Phase 1 (planning only)
 <a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="k">-</span><span class="w"> </span>Allowing thread dependencies to persist instead of merging threads
-<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">-</span><span class="w"> </span>Using generic source categories (&quot;various sources&quot;, &quot;TBD&quot;) instead of named source types
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="k">-</span><span class="w"> </span>Using generic source categories ("various sources", "TBD") instead of named source types
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="k">-</span><span class="w"> </span>Leaving any Subject Registry entry unassigned to a thread
 <a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="k">-</span><span class="w"> </span>Creating more than 5 threads
 <a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="k">-</span><span class="w"> </span>Reducing SURVEY or VERIFY round budgets during overflow handling
@@ -9916,7 +9916,7 @@
 <a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="k">- [ ]</span> No thread has zero assigned sub-questions
 <a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="k">- [ ]</span> No thread has zero assigned subjects
 <a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="k">- [ ]</span> Independence verification passed for all thread pairs
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="k">- [ ]</span> Each search phase has named source types (not &quot;TBD&quot; or &quot;various&quot;)
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="k">- [ ]</span> Each search phase has named source types (not "TBD" or "various")
 <a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="k">- [ ]</span> Budget arithmetic correct (thread budgets sum to total; total &lt;= 30)
 <a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="k">- [ ]</span> Convergence criteria reference specific confidence levels
 <a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="k">- [ ]</span> Plan file written to <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/research-&lt;topic&gt;/research-plan.md`</span>

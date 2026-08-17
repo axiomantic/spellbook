@@ -9388,11 +9388,11 @@ run it while another session holds uncommitted work there.</p>
 <h2 id="1-for-rules45-verificationmd">1. For <code>rules/45-verification.md</code><a class="headerlink" href="#1-for-rules45-verificationmd" title="Permanent link">&para;</a></h2>
 <p>Place after the "Verify by inspecting the product" bullet list, before "When you
 cannot verify".</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>**A dispatch&#39;s completion notification is not evidence that its writes have
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>**A dispatch's completion notification is not evidence that its writes have
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>stopped.** A report describes a tree the reader does not control, and the report
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>cannot say so. Only file modification times can. Two clauses follow:
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">-</span><span class="w"> </span>A dispatch brief that permits writes states &quot;do not dispatch sub-agents&quot;.
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="k">-</span><span class="w"> </span>A dispatch brief that permits writes states "do not dispatch sub-agents".
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>  Nothing else bounds what a second-level dispatch may touch.
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">-</span><span class="w"> </span>Before you commit after a dispatch, re-check <span class="sb">`git status`</span> AND the modification
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>  times of the paths in scope. In the observed case the completion signal was
@@ -9420,7 +9420,7 @@ implementation plan. Do not restate the incident there.</p>
 <p>Then append to that section's <code>**Observed.**</code> paragraph, or add a second one:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="gs">**Observed.**</span> One test file carried bare assertions that compiled away under
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="sb">`NDEBUG`</span>. It printed its success line and returned 0 whatever the model did, for
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>its whole life, while its own comments claimed a named refactor &quot;would fail here&quot;.
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>its whole life, while its own comments claimed a named refactor "would fail here".
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>After conversion to a reporting check, perturbing each expected value proved every
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>assertion live — necessary, and not sufficient. Only mutating the production code
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>proved the assertions detect anything, and one mutation reddened a majority of the
@@ -9432,27 +9432,27 @@ implementation plan. Do not restate the incident there.</p>
 <h2 id="3-for-rules80-code-qualitymd-the-comments-section">3. For <code>rules/80-code-quality.md</code>, the <code>### Comments</code> section<a class="headerlink" href="#3-for-rules80-code-qualitymd-the-comments-section" title="Permanent link">&para;</a></h2>
 <p>Add two entries to the existing <code>&lt;FORBIDDEN&gt;</code> list:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">-</span><span class="w"> </span>An ENUMERATION whose length is the claim. **A stale enumeration is a stale count
-<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  with the number spelled out.** Deleting the word &quot;four&quot; from &quot;any of those four
-<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  values&quot; leaves the four-item list standing, and the list then goes wrong by the
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>  with the number spelled out.** Deleting the word "four" from "any of those four
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>  values" leaves the four-item list standing, and the list then goes wrong by the
 <a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>  mechanism the word did.
 <a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">-</span><span class="w"> </span>A path that does not resolve. A comment or a document that NAMES a file, a
 <a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>  script, a test, or a type must name one that exists.
 </code></pre></div>
 <p>Then add, after the existing "One exception" paragraph:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>**The path clause is the first one a machine can decide, and it is stated
-<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>separately for that reason.** Every other class in this section needs a reader&#39;s
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>separately for that reason.** Every other class in this section needs a reader's
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>judgement. A check that every path-shaped token in a changed comment resolves is a
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>regular expression and a file test. Write that check rather than trusting a sweep
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>to hold.
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="gs">**&quot;Delete, do not correct&quot; has no sensible reading for a path.**</span> A moved path has a
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="gs">**"Delete, do not correct" has no sensible reading for a path.**</span> A moved path has a
 <a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>correct target, so it gets one. A named script that exists nowhere has no target,
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>so the sentence goes — UNLESS the sentence records a known GAP, in which case the
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>gap moves to a tracked item BEFORE the comment is deleted. Deleting it turns a
 <a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a>known gap into an unknown one, which is worse than the stale comment it removes.
 </code></pre></div>
 <p>And append to that section's <code>**Observed.**</code> paragraph:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>The sweep that installed this rule removed digits and the word &quot;count&quot; and left
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>The sweep that installed this rule removed digits and the word "count" and left
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>spelled-out enumerations standing in two files. Separately, a README named three
 <a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>script invocations, not one of which resolves as written, and every test path in
 <a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>that same file had moved one directory down. Each named path still read as current.
@@ -9470,10 +9470,10 @@ list:</p>
 <a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>  goes stale the moment another task moves, and records no decision.
 </code></pre></div>
 <p>Then add, after the path-clause paragraphs from block 3:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="gs">**A cross-reference that helps a reader NAVIGATE still stands.**</span> &quot;The frame layout
-<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>is also computed in <span class="sb">`machine.nim`</span>&quot; earns its place and stays, provided it asserts
-<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>no exclusivity and no sequence. What goes is ONLY, FIRST, NEXT, and &quot;does not
-<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>name&quot;: those are the falsifiable forms, and that difference is the whole of the
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="gs">**A cross-reference that helps a reader NAVIGATE still stands.**</span> "The frame layout
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>is also computed in <span class="sb">`machine.nim`</span>" earns its place and stays, provided it asserts
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>no exclusivity and no sequence. What goes is ONLY, FIRST, NEXT, and "does not
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>name": those are the falsifiable forms, and that difference is the whole of the
 <a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>rule. The narrow form survives because it points somewhere; the broad form fails
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>because it quantifies over a tree that keeps moving.
 </code></pre></div>

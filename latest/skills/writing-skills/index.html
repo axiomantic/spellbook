@@ -9694,7 +9694,7 @@
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">3.</span> <span class="gs">**One Excellent Example Beats Many**</span>: Single complete, runnable example in relevant language.
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">4.</span> <span class="gs">**Keywords Enable Discovery**</span>: Error messages, symptoms, synonyms throughout. Future Claude must FIND this.
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">5.</span> <span class="gs">**Close Every Loophole Explicitly**</span>: Agents rationalize under pressure. Each excuse needs explicit counter.
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">6.</span> <span class="gs">**Rules Bind to Properties, Not Names**</span>: State what makes a thing wrong, then list library-specific spellings as non-exhaustive examples. A rule naming only one library&#39;s API voids itself at the next migration. (See: Express Rules Against Properties, Not Library Names.)
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">6.</span> <span class="gs">**Rules Bind to Properties, Not Names**</span>: State what makes a thing wrong, then list library-specific spellings as non-exhaustive examples. A rule naming only one library's API voids itself at the next migration. (See: Express Rules Against Properties, Not Library Names.)
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">7.</span> <span class="gs">**Model Versioning Strategy**</span>: Prefer general model aliases (e.g. <span class="sb">`sonnet`</span>, <span class="sb">`flash`</span>, <span class="sb">`pro`</span>) over hardcoded version numbers (e.g. <span class="sb">`claude-3-5-sonnet`</span>, <span class="sb">`gemini-2.5-flash`</span>). Hardcoded versions are permitted ONLY when a specific behavior is required that differs between versions.
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="gu">## Inputs</span>
@@ -9793,7 +9793,7 @@
 <a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">1.</span> <span class="sb">`### Autonomous Mode Behavior`</span> — what changes when running autonomously
 <a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">2.</span> <span class="sb">`### Circuit Breakers (Still Pause For)`</span> — the skill-specific halt conditions
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="k">3.</span> The circuit-breaker output format it emits when halting, or an explicit reference to the
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>   <span class="sb">`develop`</span> skill&#39;s Circuit Breaker Output Format
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>   <span class="sb">`develop`</span> skill's Circuit Breaker Output Format
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
 <a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>The governing principle: autonomous mode eliminates unnecessary interruption, not judgment.
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>When a circuit breaker fires, halt completely, report fully, and wait.
@@ -9810,11 +9810,11 @@
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>
 <a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="gu">## Writing Effective Skill Descriptions</span>
 <a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>The <span class="sb">`description`</span> field is the most important line in your skill. At startup, only the name and description from every skill are pre-loaded into the system prompt. The skill body is NOT loaded until the agent decides it&#39;s relevant. That decision is made entirely from the description.
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>The <span class="sb">`description`</span> field is the most important line in your skill. At startup, only the name and description from every skill are pre-loaded into the system prompt. The skill body is NOT loaded until the agent decides it's relevant. That decision is made entirely from the description.
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>This makes the description an instruction engineering problem, not just a search optimization problem. You are writing a micro-prompt that tells the agent: &quot;when you see these conditions, load me.&quot; Every token in the description competes with 100+ other skill descriptions for the agent&#39;s attention. A vague description drowns in the noise. A precise one acts as a reliable classifier.
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>This makes the description an instruction engineering problem, not just a search optimization problem. You are writing a micro-prompt that tells the agent: "when you see these conditions, load me." Every token in the description competes with 100+ other skill descriptions for the agent's attention. A vague description drowns in the noise. A precise one acts as a reliable classifier.
 <a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="gs">**The mental model:**</span> Think of descriptions as <span class="sb">`if`</span> conditions in the agent&#39;s routing logic. The agent scans all descriptions on every user message and asks &quot;does this apply right now?&quot; Your description must answer that question unambiguously in one pass.
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="gs">**The mental model:**</span> Think of descriptions as <span class="sb">`if`</span> conditions in the agent's routing logic. The agent scans all descriptions on every user message and asks "does this apply right now?" Your description must answer that question unambiguously in one pass.
 <a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>
 <a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>Description = WHEN to load, NEVER what it does. Workflow in description causes agents to follow the description instead of reading the skill body. If the agent can extract a plan of action from the description alone, it will skip loading the skill entirely.
@@ -9830,24 +9830,24 @@
 <a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="gu">### The Golden Rule: User Phrasings, Not Abstract Situations</span>
 <a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>Descriptions must contain the words users actually say, not abstract descriptions of situations. Users say &quot;this is broken&quot; far more often than &quot;I need to debug.&quot; Write for the words they use, not the situation you observe.
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>Descriptions must contain the words users actually say, not abstract descriptions of situations. Users say "this is broken" far more often than "I need to debug." Write for the words they use, not the situation you observe.
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="gu">### Keyword Coverage</span>
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>Spread discoverable terms across the description to maximize match surface:
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Error messages**</span>: &quot;Hook timed out&quot;, &quot;ENOTEMPTY&quot;, &quot;race condition&quot;
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Symptoms**</span>: &quot;flaky&quot;, &quot;hanging&quot;, &quot;zombie&quot;, &quot;pollution&quot;
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Synonyms**</span>: &quot;timeout/hang/freeze&quot;, &quot;cleanup/teardown/afterEach&quot;
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Error messages**</span>: "Hook timed out", "ENOTEMPTY", "race condition"
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Symptoms**</span>: "flaky", "hanging", "zombie", "pollution"
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Synonyms**</span>: "timeout/hang/freeze", "cleanup/teardown/afterEach"
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Tools**</span>: Actual commands, library names, file types
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="gu">### Checklist for Every Description</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="k">- [ ]</span> <span class="gs">**Contains 3-10 trigger phrases**</span> in quotes that match how users actually talk
 <a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="k">- [ ]</span> <span class="gs">**Leads with user intent**</span>, not implementation details or internal workflow jargon
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="k">- [ ]</span> <span class="gs">**Disambiguates from overlapping skills**</span> with &quot;NOT for&quot; or &quot;For X instead, use Y&quot;
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">- [ ]</span> <span class="gs">**Notes invocation path**</span> if primarily called by other skills (&quot;Also invoked by X&quot;)
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">- [ ]</span> <span class="gs">**Avoids being too broad**</span> (&quot;Use when writing code&quot; matches everything) or too narrow (&quot;Use only during Phase 2.1 of the develop workflow&quot;)
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="k">- [ ]</span> <span class="gs">**Disambiguates from overlapping skills**</span> with "NOT for" or "For X instead, use Y"
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">- [ ]</span> <span class="gs">**Notes invocation path**</span> if primarily called by other skills ("Also invoked by X")
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">- [ ]</span> <span class="gs">**Avoids being too broad**</span> ("Use when writing code" matches everything) or too narrow ("Use only during Phase 2.1 of the develop workflow")
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="k">- [ ]</span> <span class="gs">**No internal jargon**</span> that only spellbook developers would know
 <a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="k">- [ ]</span> <span class="gs">**No workflow leakage**</span>: description contains zero information about what the skill does internally
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>
@@ -9855,8 +9855,8 @@
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
 <a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="gs">**Workflow leakage (agent skips body because description contains the plan):**</span>
 <a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="sb">```yaml</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="c1"># BAD: Leaks internal structure. Agent reads &quot;5-phase process: strategic planning,</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="c1"># context analysis, deep review, verification, report generation&quot; and executes</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="c1"># BAD: Leaks internal structure. Agent reads "5-phase process: strategic planning,</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="c1"># context analysis, deep review, verification, report generation" and executes</span>
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="c1"># that plan directly without loading the skill.</span>
 <a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="w">  </span><span class="no">Use when performing thorough multi-phase code review. 5-phase process:</span>
@@ -9866,43 +9866,43 @@
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="c1"># GOOD: Triggers only. Agent knows WHEN to load but must read body to learn HOW.</span>
 <a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
 <a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="w">  </span><span class="no">Use when performing thorough code review with historical context tracking.</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="w">  </span><span class="no">Triggers: &#39;thorough review&#39;, &#39;deep review&#39;, &#39;review this branch in detail&#39;,</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="w">  </span><span class="no">&#39;full code review with report&#39;. More heavyweight than code-review; for quick</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="w">  </span><span class="no">Triggers: 'thorough review', 'deep review', 'review this branch in detail',</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="w">  </span><span class="no">'full code review with report'. More heavyweight than code-review; for quick</span>
 <a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="w">  </span><span class="no">review, use code-review instead.</span>
 <a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sb">```</span>
 <a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>
 <a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="gs">**Abstract situation vs. user phrasings:**</span>
 <a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sb">```yaml</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="c1"># BAD: No trigger phrases. Matches &quot;debug&quot; but misses &quot;this is broken&quot;,</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="c1"># &quot;getting an error&quot;, &quot;why isn&#39;t this working&quot; - what users actually say.</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="c1"># BAD: No trigger phrases. Matches "debug" but misses "this is broken",</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="c1"># "getting an error", "why isn't this working" - what users actually say.</span>
 <a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Use when debugging bugs or unexpected behavior</span>
 <a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
 <a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="c1"># GOOD: Packed with the exact words users type.</span>
 <a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
 <a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="w">  </span><span class="no">Use when debugging bugs, test failures, or unexpected behavior. Triggers:</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="w">  </span><span class="no">&#39;why isn&#39;t this working&#39;, &#39;this doesn&#39;t work&#39;, &#39;X is broken&#39;, &#39;getting an</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="w">  </span><span class="no">error&#39;, &#39;stopped working&#39;, &#39;regression&#39;, &#39;crash&#39;, &#39;flaky test&#39;, or when</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="w">  </span><span class="no">'why isn't this working', 'this doesn't work', 'X is broken', 'getting an</span>
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="w">  </span><span class="no">error', 'stopped working', 'regression', 'crash', 'flaky test', or when</span>
 <a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="w">  </span><span class="no">user pastes a stack trace. NOT for: test quality issues (use fixing-tests),</span>
 <a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="w">  </span><span class="no">adding new behavior (use develop).</span>
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">```</span>
 <a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>
 <a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="gs">**Too thin (no trigger surface):**</span>
 <a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">```yaml</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="c1"># BAD: Only matches if user literally says &quot;execute implementation plan.&quot;</span>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="c1"># Misses &quot;run the plan&quot;, &quot;start building&quot;, &quot;implement the tasks&quot;, &quot;next step.&quot;</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="c1"># BAD: Only matches if user literally says "execute implementation plan."</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="c1"># Misses "run the plan", "start building", "implement the tasks", "next step."</span>
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Use when you have a written implementation plan to execute</span>
 <a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>
 <a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="c1"># GOOD: Covers the ways this situation actually arises.</span>
 <a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="w">  </span><span class="no">Use when you have an implementation plan ready to execute. Triggers: &#39;run</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="w">  </span><span class="no">the plan&#39;, &#39;start building from the plan&#39;, &#39;execute tasks&#39;, &#39;implement</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="w">  </span><span class="no">the steps&#39;, &#39;next task&#39;. Also invoked by develop after planning phase.</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="w">  </span><span class="no">Use when you have an implementation plan ready to execute. Triggers: 'run</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="w">  </span><span class="no">the plan', 'start building from the plan', 'execute tasks', 'implement</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="w">  </span><span class="no">the steps', 'next task'. Also invoked by develop after planning phase.</span>
 <a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="sb">```</span>
 <a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
 <a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="gs">**Pure workflow summary with zero triggers:**</span>
 <a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">```yaml</span>
 <a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="c1"># BAD: Describes what the skill does internally. Zero user-facing phrases.</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="c1"># An agent will never match this to a user saying &quot;how are my skills performing?&quot;</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="c1"># An agent will never match this to a user saying "how are my skills performing?"</span>
 <a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="w">  </span><span class="no">Analyze session transcripts to extract skill invocation patterns, score</span>
 <a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="w">  </span><span class="no">invocations, and produce comparative metrics for skill improvement decisions.</span>
@@ -9910,51 +9910,51 @@
 <a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="c1"># GOOD: Leads with when/why, includes what users actually ask.</span>
 <a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">&gt;</span>
 <a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="w">  </span><span class="no">Use when evaluating skill effectiveness or comparing skill versions.</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="w">  </span><span class="no">Triggers: &#39;how are skills performing&#39;, &#39;skill metrics&#39;, &#39;which skills fire</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="w">  </span><span class="no">correctly&#39;, &#39;skill invocation analysis&#39;, &#39;compare skill versions&#39;.</span>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="w">  </span><span class="no">Triggers: 'how are skills performing', 'skill metrics', 'which skills fire</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="w">  </span><span class="no">correctly', 'skill invocation analysis', 'compare skill versions'.</span>
 <a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="sb">```</span>
 <a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
 <a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="gu">### Model Descriptions</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>
 <a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="gs">**`verifying-hunches`**</span> -- Natural speech triggers:
 <a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">```</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">&quot;Use when about to claim discovery during debugging. Triggers: &#39;I found&#39;, &#39;this is the issue&#39;,</span>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">&#39;root cause&#39;, &#39;smoking gun&#39;, &#39;aha&#39;, &#39;got it&#39;, &#39;the fix is&#39;, &#39;should fix&#39;, &#39;this will fix&#39;.</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">Also invoked by debugging before any root cause claim.&quot;</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">"Use when about to claim discovery during debugging. Triggers: 'I found', 'this is the issue',</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">'root cause', 'smoking gun', 'aha', 'got it', 'the fix is', 'should fix', 'this will fix'.</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="sb">Also invoked by debugging before any root cause claim."</span>
 <a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="sb">```</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>Covers excited discovery (&quot;aha!&quot;, &quot;got it&quot;) and confident claims (&quot;root cause&quot;, &quot;the fix is&quot;). Notes auto-invocation path. Narrow enough to avoid false positives.
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>Covers excited discovery ("aha!", "got it") and confident claims ("root cause", "the fix is"). Notes auto-invocation path. Narrow enough to avoid false positives.
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
 <a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="gs">**`develop`**</span> -- Scope with anti-triggers:
 <a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="sb">```</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">&quot;Use when building, creating, or adding functionality. Triggers: &#39;implement X&#39;, &#39;build Y&#39;,</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb">&#39;add feature Z&#39;, &#39;Would be great to...&#39;, &#39;I want to...&#39;, &#39;We need...&#39;.</span>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="sb">NOT for: bug fixes, pure research, or questions about existing code.&quot;</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="sb">"Use when building, creating, or adding functionality. Triggers: 'implement X', 'build Y',</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="sb">'add feature Z', 'Would be great to...', 'I want to...', 'We need...'.</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="sb">NOT for: bug fixes, pure research, or questions about existing code."</span>
 <a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="sb">```</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>Covers direct commands (&quot;implement X&quot;) and wish-phrasing (&quot;Would be great to...&quot;). &quot;NOT for&quot; section prevents false matches on debugging or research.
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>Covers direct commands ("implement X") and wish-phrasing ("Would be great to..."). "NOT for" section prevents false matches on debugging or research.
 <a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>
 <a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="gs">**`isolated-testing`**</span> -- Behavioral triggers:
 <a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="sb">```</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="sb">&quot;Use when testing theories during debugging, or when chaos is detected.</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="sb">Triggers: &#39;let me try&#39;, &#39;maybe if I&#39;, &#39;quick test&#39;, rapid context switching,</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="sb">multiple changes without isolation.&quot;</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="sb">"Use when testing theories during debugging, or when chaos is detected.</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="sb">Triggers: 'let me try', 'maybe if I', 'quick test', rapid context switching,</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="sb">multiple changes without isolation."</span>
 <a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="sb">```</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>Includes behavioral patterns (rapid context switching, multiple changes without isolation) detectable in the agent&#39;s own actions, not just user text.
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>Includes behavioral patterns (rapid context switching, multiple changes without isolation) detectable in the agent's own actions, not just user text.
 <a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>
 <a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="gu">### Common Description Anti-Patterns</span>
 <a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>
 <a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>| Anti-Pattern | Example | Problem |
 <a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>|-------------|---------|---------|
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>| <span class="gs">**Workflow leakage**</span> | &quot;3-phase process: plan, execute, verify&quot; | Agent extracts a plan from description and skips loading the skill body entirely. |
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>| <span class="gs">**Abstract-only**</span> | &quot;Use when reviewing code&quot; | No trigger phrases. &quot;Review code&quot; matches but &quot;look at my changes&quot; doesn&#39;t. |
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>| <span class="gs">**Jargon-first**</span> | &quot;Use when roundtable returns ITERATE verdict&quot; | Users never say this. Internal workflow trigger with no user-facing phrases. |
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>| <span class="gs">**Too broad**</span> | &quot;Use when writing or modifying code&quot; | Matches every coding task. Will fire constantly as a false positive. |
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>| <span class="gs">**Too narrow**</span> | &quot;Use before design phase only&quot; | Limits to one temporal moment when the skill is useful at many stages. |
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>| <span class="gs">**Implementation detail**</span> | &quot;Modes: --self, --feedback, --give&quot; | Users don&#39;t think in flags. They think &quot;review my code&quot; or &quot;I got feedback.&quot; |
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>| <span class="gs">**Missing disambiguation**</span> | &quot;Use for code review&quot; | Which of the 4 review skills? No &quot;NOT for&quot; or &quot;instead use&quot; guidance. |
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>| <span class="gs">**Workflow leakage**</span> | "3-phase process: plan, execute, verify" | Agent extracts a plan from description and skips loading the skill body entirely. |
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>| <span class="gs">**Abstract-only**</span> | "Use when reviewing code" | No trigger phrases. "Review code" matches but "look at my changes" doesn't. |
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>| <span class="gs">**Jargon-first**</span> | "Use when roundtable returns ITERATE verdict" | Users never say this. Internal workflow trigger with no user-facing phrases. |
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>| <span class="gs">**Too broad**</span> | "Use when writing or modifying code" | Matches every coding task. Will fire constantly as a false positive. |
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>| <span class="gs">**Too narrow**</span> | "Use before design phase only" | Limits to one temporal moment when the skill is useful at many stages. |
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>| <span class="gs">**Implementation detail**</span> | "Modes: --self, --feedback, --give" | Users don't think in flags. They think "review my code" or "I got feedback." |
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>| <span class="gs">**Missing disambiguation**</span> | "Use for code review" | Which of the 4 review skills? No "NOT for" or "instead use" guidance. |
 <a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>
 <a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="gu">### System-Triggered vs. User-Triggered Skills</span>
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">-</span><span class="w"> </span><span class="gs">**System-only**</span> (e.g., <span class="sb">`reflexion`</span>): Description should state &quot;Invoked by [system/skill], not directly by users&quot;
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">-</span><span class="w"> </span><span class="gs">**System-only**</span> (e.g., <span class="sb">`reflexion`</span>): Description should state "Invoked by [system/skill], not directly by users"
 <a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Dual-triggered**</span> (e.g., <span class="sb">`tarot-mode`</span>): Description should cover both the system trigger AND user-facing triggers
 <a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">-</span><span class="w"> </span><span class="gs">**User-only**</span> (e.g., <span class="sb">`debugging`</span>): Description should focus entirely on user phrasings
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
@@ -9963,9 +9963,9 @@
 <a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>When multiple skills overlap, each description MUST state why THIS skill and when to use a different one instead:
 <a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
 <a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>Example:
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">-</span><span class="w"> </span><span class="sb">`code-review`</span>: &quot;For focused single-pass review. NOT for: heavy multi-phase analysis (use advanced-code-review) or PR triage (use distilling-prs).&quot;
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">-</span><span class="w"> </span><span class="sb">`advanced-code-review`</span>: &quot;For thorough 5-phase analysis with historical context. NOT for: quick review (use code-review) or PR categorization (use distilling-prs).&quot;
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">-</span><span class="w"> </span><span class="sb">`distilling-prs`</span>: &quot;For triaging and categorizing PR changes. NOT for: deep code analysis (use advanced-code-review).&quot;
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">-</span><span class="w"> </span><span class="sb">`code-review`</span>: "For focused single-pass review. NOT for: heavy multi-phase analysis (use advanced-code-review) or PR triage (use distilling-prs)."
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">-</span><span class="w"> </span><span class="sb">`advanced-code-review`</span>: "For thorough 5-phase analysis with historical context. NOT for: quick review (use code-review) or PR categorization (use distilling-prs)."
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">-</span><span class="w"> </span><span class="sb">`distilling-prs`</span>: "For triaging and categorizing PR changes. NOT for: deep code analysis (use advanced-code-review)."
 <a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>
 <a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="gu">## Iron Law</span>
 <a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>
@@ -9974,14 +9974,14 @@
 <a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="sb">```</span>
 <a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>
 <a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>Applies to NEW skills AND EDITS, with no waiver. It is NOT a selectable component of
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>develop&#39;s ceremony picker (<span class="sb">`feature-config`</span> §0.8) — it belongs to the non-negotiable
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>develop's ceremony picker (<span class="sb">`feature-config`</span> §0.8) — it belongs to the non-negotiable
 <a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>core at every ceremony level, including Core-only and the zero-flag fast path. See
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="sb">`write-skill-test`</span> (&quot;The Iron Law is NOT a ceremony component&quot;) for the full rationale.
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="sb">`write-skill-test`</span> ("The Iron Law is NOT a ceremony component") for the full rationale.
 <a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>
 <a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="gu">## Express Rules Against Properties, Not Library Names</span>
 <a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>
 <a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>A rule written in one library&#39;s vocabulary dies at the next migration. When a skill or
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>A rule written in one library's vocabulary dies at the next migration. When a skill or
 <a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>standard forbids or requires something, state the PROPERTY that makes it wrong or right,
 <a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>then list library-specific spellings as NON-EXHAUSTIVE examples.
 <a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
@@ -9992,7 +9992,7 @@
 <a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="gh"># GOOD: the rule is the property. New spellings are covered the day they appear.</span>
 <a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>Never use a wildcard matcher -- any value that compares equal to every possible value,
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>because an assertion built from one cannot fail. Known spellings (not exhaustive):
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">`mock.ANY`</span>, <span class="sb">`unittest.mock.ANY`</span>, tripwire&#39;s <span class="sb">`AnyThing`</span>/<span class="sb">`AnyThing()`</span>.
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">`mock.ANY`</span>, <span class="sb">`unittest.mock.ANY`</span>, tripwire's <span class="sb">`AnyThing`</span>/<span class="sb">`AnyThing()`</span>.
 <a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="sb">```</span>
 <a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>
 <a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="gs">**Migration obligation:**</span> when a project changes frameworks, every standard that names the
@@ -10019,14 +10019,14 @@
 <a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
 <a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="gs">**Good example:**</span> Complete, runnable, well-commented explaining WHY, from real scenario, ready to adapt.
 <a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a>
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="gs">**Don&#39;t:**</span> Implement in 5+ languages, create fill-in-the-blank templates, write contrived examples.
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="gs">**Don't:**</span> Implement in 5+ languages, create fill-in-the-blank templates, write contrived examples.
 <a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>
 <a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="gu">## Flowchart Usage</span>
 <a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>
 <a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="gs">**Use ONLY for:**</span>
 <a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="k">-</span><span class="w"> </span>Non-obvious decision points
 <a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="k">-</span><span class="w"> </span>Process loops where you might stop too early
-<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="k">-</span><span class="w"> </span>&quot;When to use A vs B&quot; decisions
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="k">-</span><span class="w"> </span>"When to use A vs B" decisions
 <a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>
 <a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="gs">**Never use for:**</span> Reference material (use tables), Code examples (use markdown), Linear instructions (use numbered lists).
 <a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>
@@ -10034,14 +10034,14 @@
 <a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>
 <a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>| Pattern | Why Bad |
 <a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>|---------|---------|
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>| Narrative (&quot;In session 2025-10-03, we found...&quot;) | Too specific, not reusable |
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a>| Narrative ("In session 2025-10-03, we found...") | Too specific, not reusable |
 <a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>| Multi-language dilution | Mediocre quality, maintenance burden |
-<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>| Code in flowcharts | Can&#39;t copy-paste, hard to read |
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>| Code in flowcharts | Can't copy-paste, hard to read |
 <a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a>| Generic labels (helper1, step3) | Labels need semantic meaning |
 <a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>
 <a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a><span class="gu">## Discovery Workflow</span>
 <a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>
-<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="k">1.</span> Encounters problem (&quot;tests are flaky&quot;)
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="k">1.</span> Encounters problem ("tests are flaky")
 <a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a><span class="k">2.</span> Finds SKILL (description matches)
 <a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="k">3.</span> Scans overview (is this relevant?)
 <a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="k">4.</span> Reads patterns (quick reference table)
@@ -10056,7 +10056,7 @@
 <a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a><span class="k">-</span><span class="w"> </span>Deploying without verification run (GREEN phase skipped)
 <a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="k">-</span><span class="w"> </span>Ignoring new rationalizations discovered during testing
 <a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="k">-</span><span class="w"> </span>Creating multiple skills in batch without testing each
-<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="k">-</span><span class="w"> </span>Keeping untested changes as &quot;reference&quot;
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="k">-</span><span class="w"> </span>Keeping untested changes as "reference"
 <a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`@`</span> links that force-load and burn context
 <a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="k">-</span><span class="w"> </span>Generic labels without semantic meaning
 <a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a><span class="k">-</span><span class="w"> </span>Narrative storytelling about specific sessions
@@ -10082,7 +10082,7 @@
 <a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>| Quality gate thresholds | Detailed checklists and protocols |
 <a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>| Anti-patterns / FORBIDDEN section | Review and verification steps |
 <a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a>
-<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="gs">**Data structure placement:**</span> If referenced by 2+ phases, define in orchestrator. If referenced by 1 phase only, define in that phase&#39;s command.
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="gs">**Data structure placement:**</span> If referenced by 2+ phases, define in orchestrator. If referenced by 1 phase only, define in that phase's command.
 <a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>
 <a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="gs">**Soft target:**</span> ~300 lines for orchestrator SKILL.md. The hard rule is about content types: orchestrators contain coordination logic, never implementation logic.
 <a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>
@@ -10116,7 +10116,7 @@
 <a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a>Before completing:
 <a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="k">- [ ]</span> RED phase documented: baseline agent behavior captured verbatim
 <a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a><span class="k">- [ ]</span> GREEN phase verified: skill changes behavior in re-run
-<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; and contains only triggers
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="k">- [ ]</span> Description starts "Use when..." and contains only triggers
 <a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a><span class="k">- [ ]</span> YAML frontmatter has <span class="sb">`name`</span> and <span class="sb">`description`</span>
 <a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="k">- [ ]</span> Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
 <a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a><span class="k">- [ ]</span> Token budget met: &lt;500 words core instructions (&lt;200 words for frequently-loaded skills)

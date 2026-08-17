@@ -9741,7 +9741,7 @@
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>Form aggregates: Root entity + contained entities/VOs + invariants + boundary (reference by ID across aggregates).
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gs">**Fractal exploration (triggered when invariants span 3+ entities):**</span> Invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What are the correct aggregate boundaries for [domain] given these invariants?&quot;. Use the synthesis for multi-angle boundary validation.
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gs">**Fractal exploration (triggered when invariants span 3+ entities):**</span> Invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: "What are the correct aggregate boundaries for [domain] given these invariants?". Use the synthesis for multi-angle boundary validation.
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="gu">### Phase 5: Domain Event Identification</span>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
@@ -9767,10 +9767,10 @@
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="gu">## Example</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>&lt;example&gt;
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Problem: &quot;E-commerce order management&quot;
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Problem: "E-commerce order management"
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">1.</span> <span class="gs">**Language**</span>: Order, LineItem, Customer, Product, Cart, Checkout, Payment, Shipment
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">2.</span> <span class="gs">**Synonyms**</span>: Customer = User = Buyer → canonical: &quot;Customer&quot;
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">2.</span> <span class="gs">**Synonyms**</span>: Customer = User = Buyer → canonical: "Customer"
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">3.</span> <span class="gs">**Entities**</span>: Order (tracked by ID), Customer (tracked by ID)
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">4.</span> <span class="gs">**Value Objects**</span>: Money, Address, LineItem (immutable snapshot)
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">5.</span> <span class="gs">**Aggregates**</span>: Order (root) contains LineItems; Invariant: total = sum of line items
@@ -9802,7 +9802,7 @@
 <a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">-</span><span class="w"> </span>Modeling implementation concepts as domain concepts (Repository is not domain)
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">-</span><span class="w"> </span>Leaving synonym/homonym conflicts unresolved
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">-</span><span class="w"> </span>Creating aggregates without invariant justification
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span>Naming events in present tense (use past: &quot;Placed&quot; not &quot;Place&quot;)
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">-</span><span class="w"> </span>Naming events in present tense (use past: "Placed" not "Place")
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">-</span><span class="w"> </span>Recommending skills without citing domain characteristics
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>

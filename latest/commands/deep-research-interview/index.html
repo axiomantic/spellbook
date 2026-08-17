@@ -9602,7 +9602,7 @@
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gu">### 1.1 Assumption Extraction</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>For each factual claim in the user&#39;s request, classify and surface:
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>For each factual claim in the user's request, classify and surface:
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| Claim Type | Questions to Surface |
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>|-----------|---------------------|
@@ -9635,7 +9635,7 @@
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">```</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">## Prompt Analysis</span>
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">**Your request:** &quot;${VERBATIM_REQUEST}&quot;</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">**Your request:** "${VERBATIM_REQUEST}"</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">**Assumptions I detected:**</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="sb">1. [Assumption] - [Why this matters]</span>
@@ -9646,7 +9646,7 @@
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">2. ...</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">**Suggested improved question:**</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">&quot;${REWRITTEN_QUESTION}&quot;</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">"${REWRITTEN_QUESTION}"</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">Does this improved framing capture your intent? Any corrections before we proceed?</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">```</span>
@@ -9716,7 +9716,7 @@
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>| User Response | Action |
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>|---------------|--------|
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>| Direct answer | Record, proceed to next question |
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>| &quot;I don&#39;t know&quot; | Expand search range for that dimension; add conditional verification to plan; flag as higher-risk for wrong-target match |
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>| "I don't know" | Expand search range for that dimension; add conditional verification to plan; flag as higher-risk for wrong-target match |
 <a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>| Provides new info | Update assumption analysis; may unlock skipping later questions |
 <a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>| Redirects scope | Adjust brief boundaries; confirm new scope before continuing |
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
@@ -9740,7 +9740,7 @@
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="gh"># Research Brief: ${TITLE}</span>
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="gs">**Date:**</span> ${DATE}
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="gs">**Original request:**</span> &quot;${VERBATIM_USER_REQUEST}&quot;
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="gs">**Original request:**</span> "${VERBATIM_USER_REQUEST}"
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="gu">## 1. Research Question (Improved)</span>
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>${REWRITTEN_QUESTION}
@@ -9806,7 +9806,7 @@
 <a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>|-----------|-------------|
 <a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>| Research question is specific, measurable, and answerable | Question contains concrete nouns, verbs, and scope boundaries |
 <a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>| All subjects registered with 2+ disambiguation keys | Subject Registry has no single-key entries |
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>| Success criteria define &quot;done&quot; | At least 3 checkable success criteria exist |
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>| Success criteria define "done" | At least 3 checkable success criteria exist |
 <a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>| Known facts have sources; unknowns cataloged | No unattributed facts in Section 4; all gaps in Section 5 |
 <a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>| Deliverable format specified | Section 7 has format, sections, and any needed templates |
 <a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>| User has approved the Research Brief | Explicit user confirmation received |

@@ -9403,7 +9403,7 @@
 </blockquote>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>&lt;analysis&gt;
-<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Re-runnable workflow that reads Claude Code JSONL transcripts, classifies recorded Bash commands by safety category, and emits a reviewable proposal for the project&#39;s <span class="sb">`permissions.allow`</span>. Backed by <span class="sb">`spellbook.gates.transcript_analyzer`</span> so the same classification powers this skill and the underlying script.
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Re-runnable workflow that reads Claude Code JSONL transcripts, classifies recorded Bash commands by safety category, and emits a reviewable proposal for the project's <span class="sb">`permissions.allow`</span>. Backed by <span class="sb">`spellbook.gates.transcript_analyzer`</span> so the same classification powers this skill and the underlying script.
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/analysis&gt;
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;reflection&gt;
@@ -9419,12 +9419,12 @@
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="sb">`settings.json`</span>. It produces a JSON proposal under
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="sb">`~/.local/spellbook/state/proposed_allow_list.json`</span> (unless <span class="sb">`--dry-run`</span>)
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>plus a human-readable summary on stdout. The operator reviews the proposal
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>and decides what to merge into the project&#39;s settings.
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>and decides what to merge into the project's settings.
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">1.</span> <span class="gs">**Never write settings.json**</span> - The skill writes only to the proposal
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>   path. Promotion into the project&#39;s <span class="sb">`permissions.allow`</span> is a separate,
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>   path. Promotion into the project's <span class="sb">`permissions.allow`</span> is a separate,
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>   manually approved step. Mutating commands MUST stay in the
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>   <span class="sb">`rejected_mutating`</span> bucket.
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">2.</span> <span class="gs">**Successful invocations only**</span> - A Bash tool_use is considered only
@@ -9446,7 +9446,7 @@
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| <span class="sb">`--config-dir PATH`</span> | <span class="sb">`~/.claude-work/projects`</span> and <span class="sb">`~/.claude/projects`</span> | Repeatable. Root directory to scan. |
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| <span class="sb">`--output PATH`</span> | <span class="sb">`~/.local/spellbook/state/proposed_allow_list.json`</span> | Where the proposal is written when not dry-running. |
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>The skill&#39;s <span class="sb">`--dry-run`</span> default is <span class="sb">`true`</span> to match the safe-by-default
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>The skill's <span class="sb">`--dry-run`</span> default is <span class="sb">`true`</span> to match the safe-by-default
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>posture: callers must opt in to writing the proposal file. The underlying
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>script defaults to writing because that is the canonical operator flow;
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>when invoked through the skill, always pass <span class="sb">`--dry-run`</span> first and only
@@ -9462,7 +9462,7 @@
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>The <span class="sb">`unclassified`</span> block - manually decide whether each entry
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>     belongs in an allow category, the reject list, or stays
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>     unclassified.
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">2.</span> <span class="gs">**Review and approve.**</span> Compare the proposal against the project&#39;s
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">2.</span> <span class="gs">**Review and approve.**</span> Compare the proposal against the project's
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>   current <span class="sb">`.claude/settings.json`</span> <span class="sb">`permissions.allow`</span>. Decide which
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>   patterns to add. Mutating entries are NEVER promoted.
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">3.</span> <span class="gs">**Persist (optional).**</span> Re-run without <span class="sb">`--dry-run`</span> to write the
@@ -9506,7 +9506,7 @@
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Editing `permissions.allow` directly**</span> - use the <span class="sb">`update-config`</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>  skill.
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Live permission grants during a session**</span> - use the platform&#39;s
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Live permission grants during a session**</span> - use the platform's
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>  <span class="sb">`/permissions`</span> command.
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Auditing skills/commands for security issues**</span> - use
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>  <span class="sb">`security-auditing`</span>.

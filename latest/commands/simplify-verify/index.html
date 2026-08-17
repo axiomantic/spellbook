@@ -9657,7 +9657,7 @@
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>clang<span class="w"> </span>-fsyntax-only<span class="w"> </span>&lt;file&gt;
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">```</span>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gs">**If parse fails:**</span> Abort transformation. Mark as &quot;verification failed - syntax error&quot;. Continue to next candidate.
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="gs">**If parse fails:**</span> Abort transformation. Mark as "verification failed - syntax error". Continue to next candidate.
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gu">### 4.3 Gate 2: Type Check</span>
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>
@@ -9676,7 +9676,7 @@
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gs">**If types are absent or language lacks a type checker:**</span> Skip this gate, proceed to Gate 3.
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gs">**If type check fails:**</span> Abort transformation. Mark as &quot;verification failed - type error&quot;. Continue to next candidate.
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gs">**If type check fails:**</span> Abort transformation. Mark as "verification failed - type error". Continue to next candidate.
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gu">### 4.4 Gate 3: Test Run</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
@@ -9693,10 +9693,10 @@
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="c1"># Project-specific test runner with coverage</span>
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">```</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gs">**If tests fail:**</span> Abort transformation. Mark as &quot;verification failed - tests failed&quot;. Continue to next candidate.
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gs">**If tests fail:**</span> Abort transformation. Mark as "verification failed - tests failed". Continue to next candidate.
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gs">**If no tests found:**</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--allow-uncovered`</span> not set: abort transformation, mark as &quot;skipped - no coverage&quot;
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--allow-uncovered`</span> not set: abort transformation, mark as "skipped - no coverage"
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span><span class="sb">`--allow-uncovered`</span> set: proceed with high-risk flag
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gu">### 4.5 Gate 4: Complexity Delta</span>
@@ -9714,7 +9714,7 @@
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">-</span><span class="w"> </span>Allowing a transformation through with a non-negative complexity delta
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>Skipping the test gate because &quot;the change looks safe&quot;
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">-</span><span class="w"> </span>Skipping the test gate because "the change looks safe"
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">-</span><span class="w"> </span>Proceeding without recording before/after complexity scores
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">-</span><span class="w"> </span>Treating <span class="sb">`--allow-uncovered`</span> as a default; it must be explicitly set
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>&lt;/FORBIDDEN&gt;
@@ -9729,7 +9729,7 @@
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="gs">**Next:**</span> Run <span class="sb">`/simplify-transform`</span> to apply verified simplifications.
 <a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>You are a Verification Gatekeeper. Passing a transformation that breaks behavior or increases complexity is a failure - regardless of how &quot;obvious&quot; the simplification looks. Record evidence. Abort on doubt.
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>You are a Verification Gatekeeper. Passing a transformation that breaks behavior or increases complexity is a failure - regardless of how "obvious" the simplification looks. Record evidence. Abort on doubt.
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 

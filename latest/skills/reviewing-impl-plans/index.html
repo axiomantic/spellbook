@@ -9692,7 +9692,7 @@
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">2.</span> <span class="gs">**Assumed behavior causes debugging loops.**</span> Plans referencing existing code must cite source, not infer from method names. Parameters like <span class="sb">`partial=True`</span> or <span class="sb">`strict=False`</span> are fabricated until verified.
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">3.</span> <span class="gs">**Implementation plans must exceed design doc specificity.**</span> Design says &quot;user endpoint&quot;; impl plan specifies method, path, request/response schema, error codes, auth mechanism.
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">3.</span> <span class="gs">**Implementation plans must exceed design doc specificity.**</span> Design says "user endpoint"; impl plan specifies method, path, request/response schema, error codes, auth mechanism.
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">4.</span> <span class="gs">**Test quality claims require verification.**</span> Passing tests prove nothing without auditing-green-mirage. Test failures require systematic-debugging, not ad-hoc fixes.
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
@@ -9747,8 +9747,8 @@
 <a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">```</span>
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>Write <span class="sb">`Linter: UNAVAILABLE (see error below)`</span> on the Report Assembly line, then paste
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>the printed <span class="sb">`report.report()`</span> traceback directly beneath that line so &quot;below&quot; points at
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>real content. List every rule under &quot;Claims NOT decided&quot; with the crash as the reason,
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>the printed <span class="sb">`report.report()`</span> traceback directly beneath that line so "below" points at
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>real content. List every rule under "Claims NOT decided" with the crash as the reason,
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>and CONTINUE to Phase 1. Both
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>halves matter and they pull in opposite directions on purpose. Failing closed on the
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>claims is non-negotiable: a review gate must never report a claim as machine-decided
@@ -9764,14 +9764,14 @@
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>**If the linter DECLINES to lint, that is a third state — distinct from both a clean
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>RUN and a CRASH.** <span class="sb">`report.linted is False`</span> with <span class="sb">`report.internal_errors`</span> EMPTY and
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="sb">`report.findings`</span> EMPTY means the linter never examined the plan at all: it hit
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="sb">`SKIP_UNREADABLE`</span>, <span class="sb">`SKIP_NOT_UTF8`</span>, or <span class="sb">`SKIP_NO_SCHEMA`</span> (design §5.4, &quot;Errors that are
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>not exceptions&quot;). This is reachable even when the Phase 0 Gate above judged the plan
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>IN SCOPE, because the Gate&#39;s <span class="sb">`declares_schema(plan_text)`</span> reads the in-context draft
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="sb">`SKIP_UNREADABLE`</span>, <span class="sb">`SKIP_NOT_UTF8`</span>, or <span class="sb">`SKIP_NO_SCHEMA`</span> (design §5.4, "Errors that are
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>not exceptions"). This is reachable even when the Phase 0 Gate above judged the plan
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>IN SCOPE, because the Gate's <span class="sb">`declares_schema(plan_text)`</span> reads the in-context draft
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>TEXT while <span class="sb">`lint_for_review(plan_path)`</span> reads the on-disk PATH — the two can drift
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>apart (file not found at that path, a permissions issue, a stale draft versus the
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>actual file on disk). Design §5.4 documents this same class of gap for the
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="sb">`unreadable`</span>/<span class="sb">`not UTF-8`</span> skip reasons. Do not read an empty <span class="sb">`decided_claims()`</span> as
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>&quot;nothing to decide&quot; in this state — it means the linter never ran, not that it ran and
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>"nothing to decide" in this state — it means the linter never ran, not that it ran and
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>found nothing:
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">```python</span>
@@ -9783,7 +9783,7 @@
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="sb">```</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>Write <span class="sb">`Linter: UNAVAILABLE (not linted: &lt;report.skip_reason&gt;)`</span> on the Report Assembly
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>line, list every rule under &quot;Claims NOT decided&quot; with the skip reason as the cause, and
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>line, list every rule under "Claims NOT decided" with the skip reason as the cause, and
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>CONTINUE to Phase 1.
 <a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
 <a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="gu">## Phase 1: Context and Inventory</span>
@@ -9829,14 +9829,14 @@
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>When this skill runs on a plan it has reviewed before:
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="k">1.</span> <span class="gs">**Delta-only verification.**</span> Re-verify ONLY claims, citations, and
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>   sections changed since the last verified pass. Record the prior pass&#39;s
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>   sections changed since the last verified pass. Record the prior pass's
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>   verified set and diff against it. A full-corpus re-verification is
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>   permitted only on the first pass, or when the prior pass&#39;s record is
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>   permitted only on the first pass, or when the prior pass's record is
 <a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>   lost. Re-verifying an unchanged, previously-verified citation is
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>   duplicated work, not added rigor.
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">2.</span> <span class="gs">**Convergence check.**</span> Before scheduling round N+1, classify round N&#39;s
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">2.</span> <span class="gs">**Convergence check.**</span> Before scheduling round N+1, classify round N's
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>   Critical findings: NEW (pre-existing defect newly found) vs INDUCED
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>   (introduced by round N-1&#39;s own repairs). If more than half are INDUCED,
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>   (introduced by round N-1's own repairs). If more than half are INDUCED,
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>   another same-style round is FORBIDDEN. Switch method: build or extend a
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>   mechanical check (a planlint rule, a compile check, a symbol-table
 <a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>   diff) for the oscillating defect class, run it, and only then resume
@@ -9901,31 +9901,31 @@
 <a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">```</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
 <a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>Surface-level reviews are professional negligence. They create false confidence that leads to catastrophic integration failures. A superficial &quot;looks good&quot; is worse than no review at all because it removes the safety net of uncertainty.
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>Surface-level reviews are professional negligence. They create false confidence that leads to catastrophic integration failures. A superficial "looks good" is worse than no review at all because it removes the safety net of uncertainty.
 <a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>
 <a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="gu">### Surface-Level Reviews</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span>&quot;Plan looks well-organized&quot;
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">-</span><span class="w"> </span>&quot;Good level of detail&quot;
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span>"Plan looks well-organized"
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">-</span><span class="w"> </span>"Good level of detail"
 <a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">-</span><span class="w"> </span>Accepting vague interface descriptions
 <a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">-</span><span class="w"> </span>Skipping interface contract verification
 <a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
 <a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="gu">### Vague Feedback</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="k">-</span><span class="w"> </span>&quot;Needs more interface detail&quot;
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="k">-</span><span class="w"> </span>&quot;Consider specifying contracts&quot;
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="k">-</span><span class="w"> </span>"Needs more interface detail"
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="k">-</span><span class="w"> </span>"Consider specifying contracts"
 <a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="k">-</span><span class="w"> </span>Findings without exact locations
 <a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="k">-</span><span class="w"> </span>Remediation without concrete specifications
 <a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
 <a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="gu">### Parallel Work Assumptions</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="k">-</span><span class="w"> </span>Assuming agents will &quot;coordinate&quot;
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">-</span><span class="w"> </span>Assuming interfaces are &quot;obvious&quot;
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="k">-</span><span class="w"> </span>Assuming data shapes can be &quot;worked out&quot;
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="k">-</span><span class="w"> </span>Assuming agents will "coordinate"
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">-</span><span class="w"> </span>Assuming interfaces are "obvious"
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="k">-</span><span class="w"> </span>Assuming data shapes can be "worked out"
 <a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>
 <a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="gu">### Interface Behavior Fabrication</span>
 <a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="k">-</span><span class="w"> </span>Assuming method behavior from names without verification
 <a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">-</span><span class="w"> </span>Referencing parameters that may not exist
 <a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="k">-</span><span class="w"> </span>Claiming library behavior without citing documentation
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="k">-</span><span class="w"> </span>Assuming test utilities work &quot;conveniently&quot;
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">-</span><span class="w"> </span>Accepting &quot;try X, if fails try Y&quot; patterns
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="k">-</span><span class="w"> </span>Assuming test utilities work "conveniently"
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">-</span><span class="w"> </span>Accepting "try X, if fails try Y" patterns
 <a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">-</span><span class="w"> </span>Stopping before complete audit
 <a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>
@@ -9962,13 +9962,13 @@
 <a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>&lt;/reflection&gt;
 <a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
 <a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>&lt;CRITICAL_REMINDER&gt;
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>The question is NOT &quot;does this plan look organized?&quot;
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>The question is NOT "does this plan look organized?"
 <a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>The question is: &quot;Could multiple agents execute this plan IN PARALLEL and produce COMPATIBLE, INTEGRABLE components?&quot;
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>The question is: "Could multiple agents execute this plan IN PARALLEL and produce COMPATIBLE, INTEGRABLE components?"
 <a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>For EVERY interface between parallel work, ask: &quot;Is this specified precisely enough that both sides will produce matching code?&quot;
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>For EVERY interface between parallel work, ask: "Is this specified precisely enough that both sides will produce matching code?"
 <a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>If you can&#39;t answer with confidence, it&#39;s under-specified. Find it. Flag it. Specify what&#39;s needed.
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>If you can't answer with confidence, it's under-specified. Find it. Flag it. Specify what's needed.
 <a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>
 <a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>Parallel work without explicit contracts produces incompatible components. This is the primary failure mode. Hunt for it relentlessly.
 <a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>&lt;/CRITICAL_REMINDER&gt;

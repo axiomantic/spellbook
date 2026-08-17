@@ -9479,7 +9479,7 @@
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>When reviewing a PR via diff, local files are on a <span class="gs">**different branch**</span>. Reading them produces silently wrong results:
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">-</span><span class="w"> </span>PR-introduced changes appear absent (local has old code)
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span>Real bugs get declared &quot;not present&quot; → false REFUTED verdicts
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span>Real bugs get declared "not present" → false REFUTED verdicts
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>Findings carry high confidence in factually wrong conclusions
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>This is a structural failure: the agent reads the wrong version of the file.
@@ -9496,10 +9496,10 @@
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>Before dispatching any code review subagent, determine <span class="sb">`review_source`</span>:
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="nv">PR_HEAD_SHA</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>headRefOid<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.headRefOid&#39;</span><span class="k">)</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="nv">PR_HEAD_SHA</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>headRefOid<span class="w"> </span>--jq<span class="w"> </span><span class="s1">'.headRefOid'</span><span class="k">)</span>
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="nv">LOCAL_HEAD</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>rev-parse<span class="w"> </span>HEAD<span class="k">)</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="nv">PR_BRANCH</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>headRefName<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.headRefName&#39;</span><span class="k">)</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="nv">WORKTREE_PATH</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>worktree<span class="w"> </span>list<span class="w"> </span>--porcelain<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-B1<span class="w"> </span><span class="s2">&quot;branch refs/heads/</span><span class="nv">$PR_BRANCH</span><span class="s2">&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;^worktree&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">&#39;{print $2}&#39;</span><span class="k">)</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="nv">PR_BRANCH</span><span class="o">=</span><span class="k">$(</span>gh<span class="w"> </span>pr<span class="w"> </span>view<span class="w"> </span>&lt;PR_NUMBER&gt;<span class="w"> </span>--json<span class="w"> </span>headRefName<span class="w"> </span>--jq<span class="w"> </span><span class="s1">'.headRefName'</span><span class="k">)</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="nv">WORKTREE_PATH</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>worktree<span class="w"> </span>list<span class="w"> </span>--porcelain<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-B1<span class="w"> </span><span class="s2">"branch refs/heads/</span><span class="nv">$PR_BRANCH</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">"^worktree"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>awk<span class="w"> </span><span class="s1">'{print $2}'</span><span class="k">)</span>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="sb">```</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| Condition | <span class="sb">`review_source`</span> | Working Directory |
@@ -9537,11 +9537,11 @@
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>PR: #&lt;NUMBER&gt;
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>PR HEAD SHA: &lt;SHA&gt;
 <a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Review mode: &lt;LOCAL_FILES | DIFF_ONLY&gt;
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>Working directory: &lt;path if LOCAL_FILES, &quot;N/A — use diff only&quot; if DIFF_ONLY&gt;
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>Working directory: &lt;path if LOCAL_FILES, "N/A — use diff only" if DIFF_ONLY&gt;
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">-</span><span class="w"> </span>Changed files: &lt;list&gt;
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>If review mode is DIFF_ONLY:
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Do NOT read any files listed under &quot;Changed files&quot; from the local filesystem
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Do NOT read any files listed under "Changed files" from the local filesystem
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>The diff is the only authoritative source for those files
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Mark any finding you cannot verify from the diff as [NEEDS VERIFICATION]
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Do NOT mark a finding REFUTED based on local file content
@@ -9573,7 +9573,7 @@
 <a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">- [ ]</span> <span class="sb">`review_source`</span> determined: <span class="sb">`LOCAL_FILES`</span> or <span class="sb">`DIFF_ONLY`</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">- [ ]</span> If <span class="sb">`LOCAL_FILES`</span>: exact working directory specified in prompt
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">- [ ]</span> If <span class="sb">`DIFF_ONLY`</span>: prompt explicitly forbids local file reads on changed files
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">- [ ]</span> Changed file list included so agent knows what is &quot;in scope&quot;
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">- [ ]</span> Changed file list included so agent knows what is "in scope"
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">-</span><span class="w"> </span>Dispatching a PR review subagent without computing <span class="sb">`review_source`</span> first
@@ -9583,7 +9583,7 @@
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>The wrong-branch problem produces confident wrong answers, not obvious errors. An agent that reads the wrong version of a file will declare &quot;this bug does not exist&quot; with full conviction. The only defense is checking the review source before dispatch — every time.
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>The wrong-branch problem produces confident wrong answers, not obvious errors. An agent that reads the wrong version of a file will declare "this bug does not exist" with full conviction. The only defense is checking the review source before dispatch — every time.
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 

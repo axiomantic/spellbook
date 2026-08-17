@@ -9659,7 +9659,7 @@
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gu">### 2. Detect Skill Invocation Boundaries</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="gs">**Start Event**</span>: Tool call where <span class="sb">`name == &quot;Skill&quot;`</span>. <span class="sb">`extract_skill_invocations`</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="gs">**Start Event**</span>: Tool call where <span class="sb">`name == "Skill"`</span>. <span class="sb">`extract_skill_invocations`</span>
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>handles boundary detection for you, returning <span class="sb">`SkillInvocation`</span> objects with
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">`skill`</span>, <span class="sb">`version`</span>, <span class="sb">`start_idx`</span>, <span class="sb">`end_idx`</span>, and <span class="sb">`timestamp`</span> already populated:
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">```python</span>
@@ -9669,7 +9669,7 @@
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>    <span class="n">start</span> <span class="o">=</span> <span class="n">inv</span><span class="o">.</span><span class="n">start_idx</span>             <span class="c1"># message index where the Skill call fired</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="sb">```</span>
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gs">**End Event**</span> (first match): another Skill tool call (superseded), session end, or compact boundary (<span class="sb">`type == &quot;system&quot;`</span>, <span class="sb">`subtype == &quot;compact_boundary&quot;`</span>)
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gs">**End Event**</span> (first match): another Skill tool call (superseded), session end, or compact boundary (<span class="sb">`type == "system"`</span>, <span class="sb">`subtype == "compact_boundary"`</span>)
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gu">### 3. Score Each Invocation</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
@@ -9688,13 +9688,13 @@
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gs">**Correction Detection Patterns**</span>:
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">```python</span>
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="n">CORRECTION_PATTERNS</span> <span class="o">=</span> <span class="p">[</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    <span class="sa">r</span><span class="s2">&quot;\bno\b(?!t)&quot;</span><span class="p">,</span>           <span class="c1"># &quot;no&quot; but not &quot;not&quot;</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    <span class="sa">r</span><span class="s2">&quot;\bstop\b&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    <span class="sa">r</span><span class="s2">&quot;\bwrong\b&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    <span class="sa">r</span><span class="s2">&quot;\bactually\b&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    <span class="sa">r</span><span class="s2">&quot;\bdon&#39;?t\b&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    <span class="sa">r</span><span class="s2">&quot;\binstead\b&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    <span class="sa">r</span><span class="s2">&quot;\bthat&#39;?s not\b&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>    <span class="sa">r</span><span class="s2">"\bno\b(?!t)"</span><span class="p">,</span>           <span class="c1"># "no" but not "not"</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>    <span class="sa">r</span><span class="s2">"\bstop\b"</span><span class="p">,</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>    <span class="sa">r</span><span class="s2">"\bwrong\b"</span><span class="p">,</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>    <span class="sa">r</span><span class="s2">"\bactually\b"</span><span class="p">,</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>    <span class="sa">r</span><span class="s2">"\bdon'?t\b"</span><span class="p">,</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>    <span class="sa">r</span><span class="s2">"\binstead\b"</span><span class="p">,</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>    <span class="sa">r</span><span class="s2">"\bthat'?s not\b"</span><span class="p">,</span>
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="p">]</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">```</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
@@ -9703,16 +9703,16 @@
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Per skill, produce:
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="sb">```python</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="p">{</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    <span class="s2">&quot;skill&quot;</span><span class="p">:</span> <span class="s2">&quot;develop&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>    <span class="s2">&quot;version&quot;</span><span class="p">:</span> <span class="s2">&quot;v1&quot;</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>      <span class="c1"># If version marker detected</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    <span class="s2">&quot;invocations&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>    <span class="s2">&quot;completions&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>           <span class="c1"># Ran to end without supersede</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    <span class="s2">&quot;corrections&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>            <span class="c1"># User corrected during</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    <span class="s2">&quot;retries&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>                <span class="c1"># Same skill re-invoked</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>    <span class="s2">&quot;avg_tokens&quot;</span><span class="p">:</span> <span class="mi">4500</span><span class="p">,</span>          <span class="c1"># Tokens in skill window</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>    <span class="s2">&quot;completion_rate&quot;</span><span class="p">:</span> <span class="mf">0.80</span><span class="p">,</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>    <span class="s2">&quot;correction_rate&quot;</span><span class="p">:</span> <span class="mf">0.20</span><span class="p">,</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>    <span class="s2">&quot;score&quot;</span><span class="p">:</span> <span class="mf">0.60</span><span class="p">,</span>               <span class="c1"># Composite score</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>    <span class="s2">"skill"</span><span class="p">:</span> <span class="s2">"develop"</span><span class="p">,</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>    <span class="s2">"version"</span><span class="p">:</span> <span class="s2">"v1"</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>      <span class="c1"># If version marker detected</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    <span class="s2">"invocations"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>    <span class="s2">"completions"</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>           <span class="c1"># Ran to end without supersede</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>    <span class="s2">"corrections"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>            <span class="c1"># User corrected during</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>    <span class="s2">"retries"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>                <span class="c1"># Same skill re-invoked</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>    <span class="s2">"avg_tokens"</span><span class="p">:</span> <span class="mi">4500</span><span class="p">,</span>          <span class="c1"># Tokens in skill window</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>    <span class="s2">"completion_rate"</span><span class="p">:</span> <span class="mf">0.80</span><span class="p">,</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>    <span class="s2">"correction_rate"</span><span class="p">:</span> <span class="mf">0.20</span><span class="p">,</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>    <span class="s2">"score"</span><span class="p">:</span> <span class="mf">0.60</span><span class="p">,</span>               <span class="c1"># Composite score</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="p">}</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="sb">```</span>
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
@@ -9765,7 +9765,7 @@
 <a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>
 <a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="gu">## Version Detection</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>Look for version markers: skill name suffix (<span class="sb">`develop:v2`</span>), args containing version (<span class="sb">`&quot;--version v2&quot;`</span>, <span class="sb">`&quot;[v2]&quot;`</span>), or session date ranges.
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>Look for version markers: skill name suffix (<span class="sb">`develop:v2`</span>), args containing version (<span class="sb">`"--version v2"`</span>, <span class="sb">`"[v2]"`</span>), or session date ranges.
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>When comparing versions, require:

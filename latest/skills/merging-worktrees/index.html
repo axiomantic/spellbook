@@ -9700,10 +9700,10 @@
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;ARH_INTEGRATION&gt;
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>Adaptive Response Handler for conflict resolution dialogue:
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">-</span><span class="w"> </span>RESEARCH_REQUEST (&quot;research&quot;, &quot;check&quot;, &quot;verify&quot;) -&gt; Dispatch subagent to analyze git history
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">-</span><span class="w"> </span>UNKNOWN (&quot;don&#39;t know&quot;, &quot;not sure&quot;) -&gt; Dispatch analysis subagent to show context
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">-</span><span class="w"> </span>RESEARCH_REQUEST ("research", "check", "verify") -&gt; Dispatch subagent to analyze git history
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">-</span><span class="w"> </span>UNKNOWN ("don't know", "not sure") -&gt; Dispatch analysis subagent to show context
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span>CLARIFICATION (ends with ?) -&gt; Answer, then re-ask original question
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span>SKIP (&quot;skip&quot;, &quot;move on&quot;) -&gt; Mark as manual resolution needed
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span>SKIP ("skip", "move on") -&gt; Mark as manual resolution needed
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>&lt;/ARH_INTEGRATION&gt;
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;CRITICAL&gt;
@@ -9722,14 +9722,14 @@
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">1.</span> <span class="gs">**Interface contracts are law**</span> - Parallel work built against explicit contracts. Violations block merge.
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">2.</span> <span class="gs">**3-way analysis mandatory**</span> - Base vs ours vs theirs. No blind ours/theirs acceptance.
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">3.</span> <span class="gs">**Test after each round**</span> - Catch integration failures immediately. No &quot;test at end&quot; batching.
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">3.</span> <span class="gs">**Test after each round**</span> - Catch integration failures immediately. No "test at end" batching.
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">4.</span> <span class="gs">**Dependency order prevents cascading conflicts**</span> - Merge foundations first.
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">5.</span> <span class="gs">**Document every decision**</span> - Reasoning trail for each conflict resolution.
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="gu">## Pre-Conflict Gate</span>
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>Before resolving ANY merge conflict, the subagent handling resolution MUST have the <span class="sb">`resolving-merge-conflicts`</span> skill loaded. Conflicts resolved without it default to LLM base-model bias toward &quot;pick the simpler option&quot; (ours/theirs selection, not synthesis).
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>Before resolving ANY merge conflict, the subagent handling resolution MUST have the <span class="sb">`resolving-merge-conflicts`</span> skill loaded. Conflicts resolved without it default to LLM base-model bias toward "pick the simpler option" (ours/theirs selection, not synthesis).
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>When dispatching a conflict resolution subagent:
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">1.</span> Subagent prompt MUST instruct it to invoke <span class="sb">`resolving-merge-conflicts`</span> via the Skill tool
@@ -9820,9 +9820,9 @@
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>| Error | Response |
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>|-------|----------|
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>| <span class="gs">**Uncommitted changes in worktree**</span> | AskUserQuestion: &quot;Worktree [path] has uncommitted changes. Options: (1) Commit with message &#39;[suggested]&#39;, (2) Stash and proceed, (3) Abort for manual handling&quot; |
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>| <span class="gs">**Uncommitted changes in worktree**</span> | AskUserQuestion: "Worktree [path] has uncommitted changes. Options: (1) Commit with message '[suggested]', (2) Stash and proceed, (3) Abort for manual handling" |
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>| <span class="gs">**Tests fail after merge**</span> | STOP. Do NOT proceed to next round. Invoke systematic-debugging. Fix. Retest. Only continue when passing. |
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>| <span class="gs">**Interface contract violation**</span> | CRITICAL: &quot;Contract violation detected. Contract: [spec]. Expected: [X]. Actual: [Y]. Location: [file:line]. MUST fix before merge proceeds.&quot; |
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>| <span class="gs">**Interface contract violation**</span> | CRITICAL: "Contract violation detected. Contract: [spec]. Expected: [X]. Actual: [Y]. Location: [file:line]. MUST fix before merge proceeds." |
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gu">## Rollback Procedure</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
@@ -9843,7 +9843,7 @@
 <a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
 <a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="k">-</span><span class="w"> </span>Blind ours/theirs acceptance without 3-way analysis
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="k">-</span><span class="w"> </span>Skipping tests between rounds (&quot;I&#39;ll test at the end&quot;)
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="k">-</span><span class="w"> </span>Skipping tests between rounds ("I'll test at the end")
 <a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="k">-</span><span class="w"> </span>Treating interface contracts as suggestions
 <a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">-</span><span class="w"> </span>Merging code that violates contracts
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">-</span><span class="w"> </span>Ignoring type signature mismatches
@@ -9879,7 +9879,7 @@
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="k">-</span><span class="w"> </span>Single unified branch ready for next steps
 <a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>
 <a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict requires 3-way analysis. Every round requires testing. Every merge requires verification. Interface contracts are mandatory, not suggestions. No feature left behind. No bug introduced. You&#39;d better be sure.
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict requires 3-way analysis. Every round requires testing. Every merge requires verification. Interface contracts are mandatory, not suggestions. No feature left behind. No bug introduced. You'd better be sure.
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 

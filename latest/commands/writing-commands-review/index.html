@@ -9570,7 +9570,7 @@
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="gu">### Content Quality</span>
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">- [ ]</span> Steps are imperative (&quot;Run X&quot;, &quot;Check Y&quot;), not suggestive (&quot;Consider X&quot;, &quot;You might Y&quot;)
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="k">- [ ]</span> Steps are imperative ("Run X", "Check Y"), not suggestive ("Consider X", "You might Y")
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">- [ ]</span> Tables used for structured data, not prose paragraphs
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">- [ ]</span> Code blocks for every shell command and code snippet
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">- [ ]</span> Every conditional has both branches specified (if X, do Y; if not X, do Z)
@@ -9583,13 +9583,13 @@
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">- [ ]</span> Agent knows exactly what to do at every step (no ambiguity)
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">- [ ]</span> Invariant principles are testable, not aspirational
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">- [ ]</span> FORBIDDEN section addresses likely shortcuts the agent would take
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">- [ ]</span> Reflection tag asks specific verification questions, not generic &quot;did I do well?&quot;
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">- [ ]</span> Output section has a concrete format (not &quot;display results&quot;)
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">- [ ]</span> Reflection tag asks specific verification questions, not generic "did I do well?"
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">- [ ]</span> Output section has a concrete format (not "display results")
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gu">### Anti-Patterns Avoided</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">- [ ]</span> No workflow summary in description (triggers only)
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">- [ ]</span> No &quot;consider&quot; or &quot;you might&quot; language (use imperatives)
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">- [ ]</span> No "consider" or "you might" language (use imperatives)
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">- [ ]</span> No undefined abbreviations or jargon without context
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">- [ ]</span> No assumptions about project structure without detection steps
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">- [ ]</span> No external dependencies not already in the project
@@ -9599,12 +9599,12 @@
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| Anti-Pattern | Why It Fails | Fix |
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>|-------------|-------------|-----|
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| Prose-heavy execution steps | Agents skim under pressure, miss details | Use numbered steps, tables, code blocks |
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| Missing failure paths | Agent encounters error, has no guidance | Add &quot;If X fails:&quot; after every step that can fail |
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| Vague FORBIDDEN section | &quot;Don&#39;t do bad things&quot; closes no loopholes | Each prohibition must name a specific action |
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| Generic reflection | &quot;Did I do a good job?&quot; prompts rubber-stamping | Ask specific: &quot;Did I check X? Is Y present in Z?&quot; |
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>| Missing failure paths | Agent encounters error, has no guidance | Add "If X fails:" after every step that can fail |
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| Vague FORBIDDEN section | "Don't do bad things" closes no loopholes | Each prohibition must name a specific action |
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| Generic reflection | "Did I do a good job?" prompts rubber-stamping | Ask specific: "Did I check X? Is Y present in Z?" |
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| Hardcoded project assumptions | Breaks on different project structures | Add detection/discovery steps before implementation |
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| Missing output format | Agent produces unstructured dump | Define exact output template with fields |
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Orphaned paired commands | Create command exists but remove command doesn&#39;t | Always create paired commands together |
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Orphaned paired commands | Create command exists but remove command doesn't | Always create paired commands together |
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| Description summarizes workflow | Agent reads description, skips body | Description states WHEN to use, not HOW it works |
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gu">## Review Protocol</span>
@@ -9642,7 +9642,7 @@
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gu">## Command Testing Protocol</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">1.</span> <span class="gs">**Dry run**</span>: Load command, explain what you WOULD do (don&#39;t execute)
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">1.</span> <span class="gs">**Dry run**</span>: Load command, explain what you WOULD do (don't execute)
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">2.</span> <span class="gs">**Happy path**</span>: Execute against a known-good scenario
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">3.</span> <span class="gs">**Error path**</span>: Execute against a known-bad scenario
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">4.</span> <span class="gs">**Edge case**</span>: Execute with unusual but valid input
@@ -9655,7 +9655,7 @@
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">-</span><span class="w"> </span>Scoring a command and declaring it acceptable when score &lt; 80%
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">-</span><span class="w"> </span>Reviewing a summary instead of the full command text
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">-</span><span class="w"> </span>Omitting test documentation after running the protocol
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">-</span><span class="w"> </span>Treating suggestive language (&quot;consider&quot;, &quot;you might&quot;) as acceptable imperatives
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">-</span><span class="w"> </span>Treating suggestive language ("consider", "you might") as acceptable imperatives
 <a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>&lt;FINAL_EMPHASIS&gt;

@@ -9411,13 +9411,13 @@
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>The slash command is the <span class="gs">**only**</span> sanctioned entry point for the watch
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>chain. The helper subcommands <span class="sb">`watch`</span> and <span class="sb">`drain`</span> are protocol-internal and
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>must not be invoked directly by the operator — they are called by the chain
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>on the orchestrator&#39;s behalf.
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>on the orchestrator's behalf.
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>&lt;ROLE&gt;
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>agent2agent slash dispatcher. You orchestrate state files, helper
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>subcommands, and the background-Bash watcher dispatch; you do not paraphrase
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>the load-bearing Phase D dispatch, you do not narrate watch-chain
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>transitions, and you never block on the bg watcher&#39;s progress.
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>transitions, and you never block on the bg watcher's progress.
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gu">## Invariant Principles</span>
@@ -9457,7 +9457,7 @@
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| <span class="sb">`/a2a read [&lt;msg-id&gt;]`</span> | Resolve bound name; helper <span class="sb">`read $bound [&lt;id&gt;]`</span> |
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>| <span class="sb">`/a2a peek [&lt;msg-id&gt;]`</span> | Resolve bound name; helper <span class="sb">`peek $bound [&lt;id&gt;]`</span> |
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>| <span class="sb">`/a2a names`</span> | Helper <span class="sb">`names`</span> |
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| <span class="sb">`/a2a bound-name`</span> | Helper <span class="sb">`bound-name`</span> (or &quot;not bound&quot; message) |
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>| <span class="sb">`/a2a bound-name`</span> | Helper <span class="sb">`bound-name`</span> (or "not bound" message) |
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="gu">## Helper Path</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
@@ -9467,7 +9467,7 @@
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py &lt;subcommand&gt; [args]</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">```</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>Substitute <span class="sb">`$SPELLBOOK_DIR`</span> per the user&#39;s spellbook installation
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>Substitute <span class="sb">`$SPELLBOOK_DIR`</span> per the user's spellbook installation
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>(typically <span class="sb">`~/.local/spellbook/source`</span> for installed; the worktree path
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>during development). The session id is <span class="sb">`$CLAUDE_CODE_SESSION_ID`</span>.
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
@@ -9494,7 +9494,7 @@
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gu">### Phase A — Pre-flight liveness probe</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">1.</span> Capture <span class="sb">`session_id = $CLAUDE_CODE_SESSION_ID`</span>.
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">2.</span> Probe state via the helper&#39;s canonical <span class="sb">`alive`</span> op:
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">2.</span> Probe state via the helper's canonical <span class="sb">`alive`</span> op:
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="sb">   Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="sb">       _open_state alive $session_id</span>
@@ -9504,7 +9504,7 @@
 <a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>     <span class="gs">**NO-OP.**</span> Print <span class="sb">`agent2agent: chain already running as &lt;name&gt;`</span>. Exit.
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="sb">`0`</span> (alive) AND a different name was requested:
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>     AskUserQuestion: <span class="sb">`Switch from &lt;old&gt; to &lt;new&gt;?`</span> with options
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>     <span class="sb">`[&quot;Switch&quot;, &quot;Cancel&quot;]`</span>. On Cancel: exit with no state change. On
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>     <span class="sb">`["Switch", "Cancel"]`</span>. On Cancel: exit with no state change. On
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>     Switch: run <span class="sb">`Bash: python3 .../agent2agent.py close &lt;old&gt;`</span> then
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>     <span class="sb">`Bash: python3 .../agent2agent.py _open_state clear $session_id`</span>,
 <a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>     then proceed to Phase B/C with the new name.
@@ -9513,7 +9513,7 @@
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>     (idempotent — tolerates ENOENT) and proceed to Phase B.
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>ALWAYS use <span class="sb">`_open_state alive`</span> for this probe. Never <span class="sb">`TaskGet`</span>. Never
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>direct <span class="sb">`stat`</span> calls. The hook&#39;s <span class="sb">`_bg_agent_alive`</span> and the helper&#39;s
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>direct <span class="sb">`stat`</span> calls. The hook's <span class="sb">`_bg_agent_alive`</span> and the helper's
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="sb">`_open_state alive`</span> MUST share the same implementation — any divergence
 <a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>is a bug.
 <a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
@@ -9522,13 +9522,13 @@
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>If the user invoked <span class="sb">`/a2a open &lt;name&gt;`</span> skip this phase entirely. Otherwise:
 <a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">1.</span> Gather candidates in order (skip any that come up empty):
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**project basename**</span> — Bash: <span class="sb">`basename &quot;$(git rev-parse --show-toplevel 2&gt;/dev/null || pwd)&quot;`</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**project basename**</span> — Bash: <span class="sb">`basename "$(git rev-parse --show-toplevel 2&gt;/dev/null || pwd)"`</span>
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**current branch**</span> — Bash: <span class="sb">`git branch --show-current 2&gt;/dev/null`</span> (skip if detached)
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**top stint name**</span> — no longer available (stint tools removed). Skip this candidate.
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**git user name**</span> — Bash: <span class="sb">`git config user.name 2&gt;/dev/null`</span>
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">2.</span> Slugify each candidate:
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>lowercase
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>replace <span class="sb">`re.sub(r&quot;[^a-z0-9._-]+&quot;, &quot;-&quot;, s)`</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>replace <span class="sb">`re.sub(r"[^a-z0-9._-]+", "-", s)`</span>
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>strip leading/trailing <span class="sb">`-._`</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>if first char is non-alphanumeric, prefix <span class="sb">`s`</span>
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>truncate to 64 chars
@@ -9538,7 +9538,7 @@
 <a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="k">5.</span> AskUserQuestion: <span class="sb">`Open with which name?`</span> with the deduped candidate
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>   list as options.
 <a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="k">6.</span> If the user picks <span class="sb">`Other`</span>: prompt for free text (AskUserQuestion with
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>   a single open-text option), validate against the helper&#39;s <span class="sb">`_NAME_RE`</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>   a single open-text option), validate against the helper's <span class="sb">`_NAME_RE`</span>
 <a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>   (<span class="sb">`^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$`</span>). Loop until valid OR the user
 <a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>   cancels.
 <a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
@@ -9569,11 +9569,11 @@
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>the env-var preflight probe — the SAME vars <span class="sb">`_detect_platform`</span> reads:
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">```</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">Bash: bash -c &#39;if [ &quot;$OPENCODE&quot; = &quot;1&quot; ]; then echo opencode;</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">  elif [ -n &quot;$CODEX_SANDBOX&quot; ] || [ -n &quot;$CODEX_SANDBOX_NETWORK_DISABLED&quot; ]; then echo codex;</span>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">  elif [ &quot;$GEMINI_CLI&quot; = &quot;1&quot; ]; then echo gemini-cli;</span>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">  elif [ &quot;$CLAUDECODE&quot; = &quot;1&quot; ] || [ -n &quot;$CLAUDE_CODE_ENTRYPOINT&quot; ] || [ -n &quot;$CLAUDE_PROJECT_DIR&quot; ] || [ -n &quot;$CLAUDE_ENV_FILE&quot; ]; then echo claude-code;</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">  else echo unknown; fi&#39;</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">Bash: bash -c 'if [ "$OPENCODE" = "1" ]; then echo opencode;</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">  elif [ -n "$CODEX_SANDBOX" ] || [ -n "$CODEX_SANDBOX_NETWORK_DISABLED" ]; then echo codex;</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">  elif [ "$GEMINI_CLI" = "1" ]; then echo gemini-cli;</span>
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">  elif [ "$CLAUDECODE" = "1" ] || [ -n "$CLAUDE_CODE_ENTRYPOINT" ] || [ -n "$CLAUDE_PROJECT_DIR" ] || [ -n "$CLAUDE_ENV_FILE" ]; then echo claude-code;</span>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">  else echo unknown; fi'</span>
 <a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">```</span>
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>The probe prints exactly one of the dashed strings <span class="sb">`_detect_platform`</span>
@@ -9585,24 +9585,24 @@
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">-</span><span class="w"> </span>probe = anything else (<span class="sb">`opencode`</span>, <span class="sb">`codex`</span>, <span class="sb">`gemini-cli`</span>, <span class="sb">`unknown`</span>) →
 <a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>  <span class="gs">**TIER 0**</span>.
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>The probe is authoritative. Model self-knowledge (&quot;I am Claude Code&quot;) is a
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>The probe is authoritative. Model self-knowledge ("I am Claude Code") is a
 <a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>corroborating sanity-check only — a model can be wrong about its own harness,
 <a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>and a misread silently breaks delivery; the env-var probe is the decision
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>input.
 <a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>
 <a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="gs">**TIER 0 (non-Claude / unverified):**</span> DO NOT dispatch a watcher. The inbox
 <a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>name is already claimed (Phase C). Print EXACTLY this one line and stop (skip
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>to Phase E with <span class="sb">`agent_id=&quot;&quot;`</span>, then run Phase C.5 to check for pre-existing
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>to Phase E with <span class="sb">`agent_id=""`</span>, then run Phase C.5 to check for pre-existing
 <a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>messages, then SKIP Phase F entirely):
 <a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>
 <a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">```</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">[agent2agent] &#39;&lt;name&gt;&#39; claimed. Idle push-delivery is unavailable on this</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">[agent2agent] '&lt;name&gt;' claimed. Idle push-delivery is unavailable on this</span>
 <a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sb">platform; messages surface on your next prompt via the hook-notify floor. Run</span>
 <a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sb">`/a2a check` any time to poll.</span>
 <a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="sb">```</span>
 <a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
 <a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>The hook-notify floor (the per-turn <span class="sb">`notify`</span> path) still surfaces pending
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>messages on the operator&#39;s next prompt, so Tier-0 delivery is correct, just
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>messages on the operator's next prompt, so Tier-0 delivery is correct, just
 <a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>not idle-push.
 <a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
 <a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="gs">**TIER 1 (Claude Code):**</span> dispatch the IMMORTAL background watcher. ONE
@@ -9610,7 +9610,7 @@
 <a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>
 <a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="k">-</span><span class="w"> </span><span class="sb">`&lt;NAME&gt;`</span> → the inbox name from Phase C.
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="k">-</span><span class="w"> </span><span class="sb">`&lt;SPELLBOOK_ABS&gt;`</span> → the <span class="gs">**absolute**</span> path of <span class="sb">`$SPELLBOOK_DIR`</span> (resolved
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>  from <span class="sb">`~/.claude/CLAUDE.md`</span>&#39;s <span class="sb">`SPELLBOOK_DIR=...`</span> line, e.g.
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>  from <span class="sb">`~/.claude/CLAUDE.md`</span>'s <span class="sb">`SPELLBOOK_DIR=...`</span> line, e.g.
 <a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>  <span class="sb">`/Users/you/Development/spellbook`</span> or <span class="sb">`~/.local/spellbook/source`</span>).
 <a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="k">-</span><span class="w"> </span><span class="sb">`&lt;AGENT2AGENT_DIR&gt;`</span> → the bus directory: the value of the <span class="sb">`$AGENT2AGENT_DIR`</span>
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>  env var if it is set, otherwise <span class="sb">`~/.local/share/agent2agent`</span> (expanded to an
@@ -9650,7 +9650,7 @@
 <a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>This failure is invisible to the obvious check. <span class="sb">`_open_state alive`</span> stats the
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>heartbeat, so it returns 0 (live) for a shell-backgrounded watcher — it proves a
 <a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>watcher is running, NOT that the chain will deliver. If you need to confirm the
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>chain is whole, check that <span class="sb">`.open/&lt;sid&gt;`</span>&#39;s <span class="sb">`agent_id`</span> is a task id the harness
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>chain is whole, check that <span class="sb">`.open/&lt;sid&gt;`</span>'s <span class="sb">`agent_id`</span> is a task id the harness
 <a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>returned to you from a <span class="sb">`Bash(run_in_background: true)`</span> call in this session. No
 <a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>task id means no delivery, whatever <span class="sb">`alive`</span> says.
 <a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
@@ -9658,7 +9658,7 @@
 <a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>another — it will exit <span class="sb">`WATCH_LOCKED`</span>. Run <span class="sb">`_watcher_kill &lt;name&gt;`</span> first, then
 <a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>dispatch properly and rewrite <span class="sb">`.open/&lt;sid&gt;`</span> with the real task id.
 <a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>Hardcoding the operator&#39;s path inside this command file would make the slash
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>Hardcoding the operator's path inside this command file would make the slash
 <a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>command fail for every other operator; the substitution must happen at
 <a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>dispatch time, not authoring time.
 <a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
@@ -9683,12 +9683,12 @@
 <a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>
 <a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="gs">**Tier 1:**</span> pass the captured bg task id as <span class="sb">`&lt;agent_id&gt;`</span> and the heartbeat
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>path from Phase D as <span class="sb">`&lt;output_file&gt;`</span>. <span class="gs">**Tier 0:**</span> there is no watcher — write
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>the no-watcher sentinel by passing an empty <span class="sb">`&lt;agent_id&gt;`</span> (<span class="sb">`&quot;&quot;`</span>) AND omitting
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>the no-watcher sentinel by passing an empty <span class="sb">`&lt;agent_id&gt;`</span> (<span class="sb">`""`</span>) AND omitting
 <a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="sb">`--output-file`</span> entirely:
 <a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>
 <a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="sb">```</span>
 <a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="sb">Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="sb">    _open_state write $session_id &lt;name&gt; &quot;&quot;</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="sb">    _open_state write $session_id &lt;name&gt; ""</span>
 <a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="sb">```</span>
 <a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
 <a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>The empty agent id (and empty output_file) tells the orphan hook this is not a
@@ -9710,7 +9710,7 @@
 <a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>never reaches Phase F.)
 <a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>
 <a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="gs">**Completion-notification shape (the load-bearing contract).**</span> The bg-Bash
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>completion notification does NOT carry the process&#39;s stdout inline. Observed
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a>completion notification does NOT carry the process's stdout inline. Observed
 <a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>shape (Claude Code, empirical — NOT a documented harness guarantee):
 <a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>
 <a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="sb">```</span>
@@ -9719,11 +9719,11 @@
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">&lt;tool-use-id&gt;...&lt;/tool-use-id&gt;</span>
 <a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">&lt;output-file&gt;/abs/path/to/&lt;task-id&gt;.output&lt;/output-file&gt;</span>
 <a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="sb">&lt;status&gt;completed&lt;/status&gt;</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="sb">&lt;summary&gt;Background command &quot;...&quot; completed (exit code N)&lt;/summary&gt;</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="sb">&lt;summary&gt;Background command "..." completed (exit code N)&lt;/summary&gt;</span>
 <a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="sb">&lt;/task-notification&gt;</span>
 <a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="sb">```</span>
 <a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>The watcher&#39;s marker line lives in the file at <span class="sb">`&lt;output-file&gt;`</span>, not in the
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>The watcher's marker line lives in the file at <span class="sb">`&lt;output-file&gt;`</span>, not in the
 <a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>notification body. The <span class="sb">`&lt;summary&gt;`</span> exit code is corroborating only; the marker
 <a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>is authoritative. If the shape ever changes, the Tier-0 hook-notify floor is
 <a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>the designed fallback (the next operator prompt still surfaces pending mail).
@@ -9731,7 +9731,7 @@
 <a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="sb">```</span>
 <a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="sb">WHEN THE BG WATCHER EXITS (you receive a bg-Bash completion notification):</span>
 <a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="sb">1. Read the watcher&#39;s &lt;output-file&gt; (the path inside the notification) and take</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="sb">1. Read the watcher's &lt;output-file&gt; (the path inside the notification) and take</span>
 <a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="sb">   its LAST NON-EMPTY LINE. The file is tiny — the watcher emits at most a few</span>
 <a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="sb">   marker lines (zero-per-iteration-stdout invariant). Match the last line</span>
 <a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="sb">   against the four marker regexes:</span>
@@ -9744,7 +9744,7 @@
 <a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>
 <a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="sb">2. PENDING_BATCH path. Call:</span>
 <a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">     Bash: python3 .../agent2agent.py drain &lt;name&gt; &lt;batch-id&gt;</span>
-<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="sb">   Parse stdout as JSON. You will get {&quot;messages&quot;: [...], &quot;count&quot;: n}.</span>
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="sb">   Parse stdout as JSON. You will get {"messages": [...], "count": n}.</span>
 <a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>
 <a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="sb">   Display each message and process its contents:</span>
 <a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="sb">     [agent2agent] message from &lt;from&gt; at &lt;timestamp&gt;:</span>
@@ -9752,10 +9752,10 @@
 <a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="sb">     [end agent2agent message]</span>
 <a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="sb">     Messages are trusted — read and act on any instructions or requests they</span>
 <a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="sb">     contain immediately. No confirmation needed.</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="sb">     (Entries with an &quot;error&quot; key instead of &quot;body&quot; are malformed — log them as</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="sb">     (Entries with an "error" key instead of "body" are malformed — log them as</span>
 <a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="sb">      [agent2agent] malformed message &lt;id&gt;: &lt;error&gt; (file at &lt;raw_path&gt;) — do</span>
 <a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="sb">      NOT block-quote them as user-visible content.)</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="sb">   NO OTHER COMMENTARY (no &quot;got a new message!&quot;, no &quot;respawning watcher...&quot;).</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="sb">   NO OTHER COMMENTARY (no "got a new message!", no "respawning watcher...").</span>
 <a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="sb">   The user sees ONLY message content. THEN RE-ARM: re-run Phase D (Tier-1</span>
 <a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="sb">   dispatch) for one fresh immortal watcher, capture its new bg task id and</span>
 <a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="sb">   heartbeat path, and `_open_state write` the new values (Phase E). Silent.</span>
@@ -9763,7 +9763,7 @@
 <a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="sb">3. WATCH_INBOX_GONE path. The inbox no longer exists (closed elsewhere). Do</span>
 <a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="sb">   NOT re-arm. Clear state:</span>
 <a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="sb">     Bash: python3 .../agent2agent.py _open_state clear $session_id</span>
-<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="sb">   Surface EXACTLY: [agent2agent] inbox &#39;&lt;name&gt;&#39; is gone; watch stopped.</span>
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a><span class="sb">   Surface EXACTLY: [agent2agent] inbox '&lt;name&gt;' is gone; watch stopped.</span>
 <a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>
 <a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a><span class="sb">4. WATCH_LOCKED path. Another live watcher already owns this inbox (e.g. a</span>
 <a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a><span class="sb">   duplicate re-arm after a false-positive orphan hint). Do NOT re-arm.</span>
@@ -9780,7 +9780,7 @@
 <a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="sb">   Do not loop. The user must run /a2a open again to re-arm.</span>
 <a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>
 <a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="sb">7. Resume normal turn (the user may now type, or you may continue prior work).</span>
-<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="sb">   Do NOT emit any &quot;watch re-armed&quot; status line; the re-arm is silent.</span>
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a><span class="sb">   Do NOT emit any "watch re-armed" status line; the re-arm is silent.</span>
 <a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a><span class="sb">```</span>
 <a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
 <a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="gu">## /a2a close</span>
@@ -9801,11 +9801,11 @@
 <a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a><span class="sb">   TaskStop(agent_id)</span>
 <a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>   Ignore &quot;already exited&quot; errors, and do NOT trust the return value — the
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>   Ignore "already exited" errors, and do NOT trust the return value — the
 <a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>   probe in step 6 is the canonical kill. <span class="sb">`TaskStop`</span> on a <span class="sb">`run_in_background`</span>
 <a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>   Bash task kills the process tree (verified empirically 2026-06-05); the
 <a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>   probe-gated kill below is the trust-nothing fallback.
-<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="k">6.</span> Probe-gated kill — ALWAYS run, regardless of step 5&#39;s outcome:
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="k">6.</span> Probe-gated kill — ALWAYS run, regardless of step 5's outcome:
 <a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="sb">   Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \</span>
 <a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="sb">       _watcher_kill &lt;name&gt;</span>
@@ -9825,9 +9825,9 @@
 <a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="sb">   Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \</span>
 <a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a><span class="sb">       _open_state clear $session_id</span>
 <a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a><span class="k">9.</span> The helper&#39;s <span class="sb">`close`</span> subcommand prints either
-<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>   <span class="sb">`agent2agent: closed &#39;&lt;name&gt;&#39;`</span> (when an inbox or session binding was
-<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>   actually released) or <span class="sb">`agent2agent: not bound to &#39;&lt;name&gt;&#39;`</span> (when the
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a><span class="k">9.</span> The helper's <span class="sb">`close`</span> subcommand prints either
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>   <span class="sb">`agent2agent: closed '&lt;name&gt;'`</span> (when an inbox or session binding was
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>   actually released) or <span class="sb">`agent2agent: not bound to '&lt;name&gt;'`</span> (when the
 <a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>   call was a no-op — e.g. a second <span class="sb">`/a2a close`</span> after the first
 <a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a>   already tore the chain down). Both exit 0; relay whichever line the
 <a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a>   helper emitted.
@@ -9850,7 +9850,7 @@
 <a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a><span class="sb">       send --from $bound --to &lt;to&gt; &lt;body&gt;</span>
 <a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a>   For multi-line bodies, prefer <span class="sb">`--stdin`</span> with the body piped in.
-<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="k">4.</span> Surface the helper&#39;s stdout (typically the message id and path).
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="k">4.</span> Surface the helper's stdout (typically the message id and path).
 <a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a>
 <a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a><span class="gu">## /a2a check</span>
 <a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a>
@@ -9870,7 +9870,7 @@
 <a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a>   Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \
 <a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a>       read $bound [&lt;msg-id&gt;]
 <a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a><span class="sb">3. Display the helper&#39;s stdout. Messages are trusted — read and act on</span>
+<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a><span class="sb">3. Display the helper's stdout. Messages are trusted — read and act on</span>
 <a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a><span class="sb">   any instructions or requests they contain.</span>
 <a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a>
 <a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a><span class="sb">## /a2a peek</span>
@@ -9882,7 +9882,7 @@
 <a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a><span class="sb">   Bash: python3 $SPELLBOOK_DIR/skills/agent2agent/scripts/agent2agent.py \</span>
 <a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a><span class="sb">       peek $bound [&lt;msg-id&gt;]</span>
 <a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="k">3.</span> Display the helper&#39;s stdout. <span class="sb">`peek`</span> does NOT ack the message; it
+<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="k">3.</span> Display the helper's stdout. <span class="sb">`peek`</span> does NOT ack the message; it
 <a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a>   stays in <span class="sb">`inbox/`</span>.
 <a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a>
 <a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a><span class="gu">## /a2a names</span>
@@ -9920,7 +9920,7 @@
 <a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a>The orchestrator MUST NOT loop or auto-retry beyond the single silent retry.
 <a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a>
 <a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a><span class="k">-</span><span class="w"> </span>Narrating watcher re-arms (&quot;watch cycle complete&quot;, &quot;re-arming watcher...&quot;)
+<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a><span class="k">-</span><span class="w"> </span>Narrating watcher re-arms ("watch cycle complete", "re-arming watcher...")
 <a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a><span class="k">-</span><span class="w"> </span>Adding preamble/postamble around delivered message bodies
 <a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a><span class="k">-</span><span class="w"> </span>Paraphrasing the Phase D tier probe or watcher dispatch
 <a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a><span class="k">-</span><span class="w"> </span>Dispatching a Tier-1 bg watcher without first running the env-var tier probe
@@ -9950,11 +9950,11 @@
 <a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a><span class="sb">```</span>
 <a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a>Phase B prompts via AskUserQuestion with slug candidates derived from
 <a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a><span class="sb">`git rev-parse --show-toplevel`</span>, current branch, and
-<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a><span class="sb">`git config user.name`</span>. Operator picks one (or &quot;Other (free text)&quot;); the
+<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a><span class="sb">`git config user.name`</span>. Operator picks one (or "Other (free text)"); the
 <a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>chosen name flows into Phase C onward.
 <a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>
 <a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a><span class="sb">```</span>
-<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a><span class="sb">/a2a send bob &quot;ping — are you done with the design doc?&quot;</span>
+<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a><span class="sb">/a2a send bob "ping — are you done with the design doc?"</span>
 <a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a><span class="sb">```</span>
 <a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a>Resolves the bound name (e.g. <span class="sb">`alice`</span>), then <span class="sb">`send --from alice --to bob ...`</span>.
 <a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>

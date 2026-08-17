@@ -9643,7 +9643,7 @@
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>The canonical Rules section is the FIRST <span class="sb">`## Rules`</span> heading after the <span class="sb">`&lt;ROLE&gt;`</span> block (or the first <span class="sb">`## Rules`</span> heading if no <span class="sb">`&lt;ROLE&gt;`</span> block exists). Any later <span class="sb">`## Rules`</span> heading is treated as ordinary content, not the canonical section.
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>Rationale: silently compressing a file with a canonical Rules section
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>would defeat <span class="sb">`/crystallize`</span>&#39;s rule-preservation contract by mutating
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>would defeat <span class="sb">`/crystallize`</span>'s rule-preservation contract by mutating
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>rule text from a sibling tool. The guard makes the contract holistic
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>across the prompt-compression toolset.
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
@@ -9669,7 +9669,7 @@
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>|-----------|-------------|
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Semantic deduplication | Same meaning stated N times → state once |
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| Example consolidation | Multiple examples of same pattern → one with variants noted |
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>| Verbose phrase elimination | &quot;In order to&quot; → &quot;To&quot;; &quot;It is important to note that&quot; → [delete] |
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>| Verbose phrase elimination | "In order to" → "To"; "It is important to note that" → [delete] |
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>| Section collapse | Overlapping sections → merge under single heading |
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| Implicit context removal | Obvious-from-title content → delete |
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| Conditional flattening | Nested if-chains → single compound condition |
@@ -9677,14 +9677,14 @@
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="gu">## Compression Patterns</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
 <a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="sb">```</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">&quot;In order to&quot;          → &quot;To&quot;</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">&quot;Make sure to&quot;         → [delete]</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">&quot;You should always&quot;    → &quot;Always&quot;</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="sb">&quot;Prior to doing X&quot;     → &quot;Before X&quot;</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="sb">&quot;In the event that&quot;    → &quot;If&quot;</span>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="sb">&quot;Due to the fact that&quot; → &quot;Because&quot;</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="sb">&quot;At this point in time&quot;→ &quot;Now&quot;</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">&quot;For the purpose of&quot;   → &quot;To&quot;</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="sb">"In order to"          → "To"</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="sb">"Make sure to"         → [delete]</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">"You should always"    → "Always"</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="sb">"Prior to doing X"     → "Before X"</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="sb">"In the event that"    → "If"</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="sb">"Due to the fact that" → "Because"</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="sb">"At this point in time"→ "Now"</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">"For the purpose of"   → "To"</span>
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">```</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="gu">## Process</span>
@@ -9699,8 +9699,8 @@
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="gu">## Architecture for Efficiency</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">1.</span> <span class="gs">**Orchestrator vs. Implementation**</span>: If a skill has implementation steps, move them to a separate sub-instruction or subagent prompt. The orchestrator should only see the &quot;Trigger&quot; and &quot;Dispatch Template&quot;.
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">2.</span> <span class="gs">**Minimal Loops**</span>: Avoid instructions that force the model to re-analyze its entire history every turn (e.g., &quot;Always check if X happened in turn Y&quot;).
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">1.</span> <span class="gs">**Orchestrator vs. Implementation**</span>: If a skill has implementation steps, move them to a separate sub-instruction or subagent prompt. The orchestrator should only see the "Trigger" and "Dispatch Template".
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">2.</span> <span class="gs">**Minimal Loops**</span>: Avoid instructions that force the model to re-analyze its entire history every turn (e.g., "Always check if X happened in turn Y").
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">3.</span> <span class="gs">**Selective Snapshotting**</span>: If a skill modifies many files, use a single summary snapshot instead of individual file history entries if possible.
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gu">## Large File Strategy (&gt;500 lines)</span>
@@ -9710,11 +9710,11 @@
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">1.</span> <span class="gs">**Split into sections**</span>: Identify logical boundaries (phases, categories)
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">2.</span> <span class="gs">**Dispatch parallel subagents**</span>: Each analyzes one section
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">   Task: &quot;Analyze lines 1-200 of [file] for compression. Return: redundancies, suggested compressions, estimated savings.&quot;</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">   Task: &quot;Analyze lines 201-400 of [file] for compression. Return: redundancies, suggested compressions, estimated savings.&quot;</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="sb">   Task: "Analyze lines 1-200 of [file] for compression. Return: redundancies, suggested compressions, estimated savings."</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">   Task: "Analyze lines 201-400 of [file] for compression. Return: redundancies, suggested compressions, estimated savings."</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="sb">   ```</span>
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">3.</span> <span class="gs">**Orchestrator merges**</span>: Collect findings, check for cross-section dependencies
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">4.</span> <span class="gs">**Resolve conflicts**</span>: Coordinate changes where Section A references Section B&#39;s content
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">4.</span> <span class="gs">**Resolve conflicts**</span>: Coordinate changes where Section A references Section B's content
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">5.</span> <span class="gs">**Apply atomically**</span>: Make all changes in a single edit for consistency
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="gu">## Verification Protocol</span>

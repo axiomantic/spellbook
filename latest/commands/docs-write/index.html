@@ -9403,7 +9403,7 @@
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Generate documentation files according to the approved plan, enforcing Diataxis structure and tone profiles per section. Write files directly to the project repository. For each section, assemble source code context, load the matching tone profile and template skeleton, apply writing guide rules during generation, and dispatch a writing subagent. Record all generation results for the review phase. Support selective regeneration via sections_filter for iteration loops.
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Documentation Writer. Your reputation depends on documentation that readers cannot distinguish from the best human-authored OSS docs. Generated docs that &quot;smell like AI&quot; are a career-ending failure. Every banned phrase, every info-dump paragraph, every hedging sentence is a tell that undermines the project&#39;s credibility.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Documentation Writer. Your reputation depends on documentation that readers cannot distinguish from the best human-authored OSS docs. Generated docs that "smell like AI" are a career-ending failure. Every banned phrase, every info-dump paragraph, every hedging sentence is a tell that undermines the project's credibility.
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;analysis&gt;
@@ -9462,11 +9462,11 @@
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>Read <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/plan.json`</span> via Read tool.
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">-</span><span class="w"> </span><span class="gs">**File does not exist:**</span> STOP. Report: &quot;No documentation plan found. Run <span class="sb">`/docs-plan`</span> first.&quot;
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">-</span><span class="w"> </span><span class="gs">**File does not exist:**</span> STOP. Report: "No documentation plan found. Run <span class="sb">`/docs-plan`</span> first."
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>Read <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`</span> via Read tool.
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span><span class="gs">**File exists and no sections-filter:**</span> Present to the user: &quot;Previous generation results found at [path]. Reuse existing results or regenerate?&quot; Use AskUserQuestion with options: <span class="sb">`Reuse`</span> / <span class="sb">`Regenerate`</span>.
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span><span class="gs">**File exists and no sections-filter:**</span> Present to the user: "Previous generation results found at [path]. Reuse existing results or regenerate?" Use AskUserQuestion with options: <span class="sb">`Reuse`</span> / <span class="sb">`Regenerate`</span>.
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>If Reuse: skip to Output (return existing manifest).
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>If Regenerate: proceed to Step 2.
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">-</span><span class="w"> </span><span class="gs">**File exists and sections-filter present:**</span> Proceed to Step 2 (selective regeneration merges into existing manifest).
@@ -9483,13 +9483,13 @@
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">2.</span> Read <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/audit-result.json`</span> for source hints and existing docs mode.
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">3.</span> Check for sections filter at <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/sections-filter.json`</span>:
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**File exists:**</span> Parse as <span class="sb">`string[]`</span> of output paths. Only generate sections whose <span class="sb">`output_path`</span> appears in this list. Log: &quot;Selective regeneration: regenerating [N] sections from review feedback.&quot;
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**File exists:**</span> Parse as <span class="sb">`string[]`</span> of output paths. Only generate sections whose <span class="sb">`output_path`</span> appears in this list. Log: "Selective regeneration: regenerating [N] sections from review feedback."
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**File does not exist:**</span> Generate all sections matching current tier.
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="k">4.</span> Filter plan TOC entries:
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Include entries with <span class="sb">`priority == &quot;mvp&quot;`</span> (for MVP execution).
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Include entries with <span class="sb">`priority == "mvp"`</span> (for MVP execution).
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Exclude entries filtered out by sections_filter (if present).
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Log skipped sections with reason: &quot;Skipped: [title] (priority: [tier], not in current scope)&quot;.
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Log skipped sections with reason: "Skipped: [title] (priority: [tier], not in current scope)".
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gu">### Step 3: Generate Documentation Sections</span>
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
@@ -9512,10 +9512,10 @@
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="sb">```</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="sb">  description: &quot;Generate documentation: {section.title}&quot;</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="sb">  subagent_type: &quot;general&quot;</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="sb">  description: "Generate documentation: {section.title}"</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="sb">  subagent_type: "general"</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="sb">  prompt: |</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="sb">    Write a {section.diataxis_type} document titled &quot;{section.title}&quot;.</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="sb">    Write a {section.diataxis_type} document titled "{section.title}".</span>
 <a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="sb">    ## Tone Profile: {section.tone_profile}</span>
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>
@@ -9569,7 +9569,7 @@
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">         (a) grep the project source for the candidate name and use</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">             the verified result, OR</span>
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">         (b) rephrase to describe behavior without naming a specific</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">             symbol (e.g. &quot;the Lua script invoked by the registry&quot;</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">             symbol (e.g. "the Lua script invoked by the registry"</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">             instead of a fabricated method name), OR</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">         (c) leave a `&lt;!-- TODO: verify symbol name in source --&gt;`</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">             comment inline so review can catch it.</span>
@@ -9578,7 +9578,7 @@
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">       them; only source verification will.</span>
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">    5. Apply every rule from Writing Guide Rules during writing.</span>
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="sb">    6. Keep total output under 6K tokens.</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">    7. For tutorials: add &quot;Last verified: {today&#39;s date}&quot; at the end.</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="sb">    7. For tutorials: add "Last verified: {today's date}" at the end.</span>
 <a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="sb">    8. Write the complete document to: {project_root}/{section.output_path}</span>
 <a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
 <a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">  result_schema:</span>
@@ -9599,7 +9599,7 @@
 <a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="k">-</span><span class="w"> </span><span class="sb">`diataxis_type`</span>: from the plan entry
 <a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="k">-</span><span class="w"> </span><span class="sb">`tone_profile`</span>: from the plan entry
 <a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="k">-</span><span class="w"> </span><span class="sb">`word_count`</span>: from the subagent result
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="k">-</span><span class="w"> </span><span class="sb">`last_verified_date`</span>: today&#39;s date (ISO format) for tutorials; empty string for other types
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="k">-</span><span class="w"> </span><span class="sb">`last_verified_date`</span>: today's date (ISO format) for tutorials; empty string for other types
 <a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
 <a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>If a subagent fails:
 <a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="k">-</span><span class="w"> </span>Log the failure with section title and error.
@@ -9612,10 +9612,10 @@
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
 <a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">```</span>
 <a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">  description: &quot;Generate project README&quot;</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">  subagent_type: &quot;general&quot;</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">  description: "Generate project README"</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">  subagent_type: "general"</span>
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">  prompt: |</span>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">    Write a README.md for the project &quot;{project_metadata.name}&quot;.</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">    Write a README.md for the project "{project_metadata.name}".</span>
 <a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>
 <a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="sb">    ## Tone Profile: Adaptive</span>
 <a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>
@@ -9750,11 +9750,11 @@
 <a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>| Scenario | Response |
 <a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>|----------|----------|
 <a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>| No docstrings or type hints in source | Generate stub reference from function/class signatures. Add a <span class="sb">`&lt;!-- NEEDS HUMAN REVIEW: No docstrings found in source --&gt;`</span> comment at the top of the generated file. |
-<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>| Source file from source_hints not found | Skip the missing file. Log warning. If all source hints for a section are missing, add to <span class="sb">`skipped_sections`</span> with reason &quot;all source files missing&quot;. Continue with next section. |
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a>| Source file from source_hints not found | Skip the missing file. Log warning. If all source hints for a section are missing, add to <span class="sb">`skipped_sections`</span> with reason "all source files missing". Continue with next section. |
 <a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a>| Very large module (&gt;200 public exports or &gt;5K source lines) | Focus on public API surface only. Split into sub-sections if the plan calls for a single reference doc. Generate a top-level overview with links to sub-sections. |
 <a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a>| Cross-reference target not yet written | Insert <span class="sb">`[CROSS-REF: section-name]`</span> placeholder during generation. Resolve in Step 7 after all sections are complete. |
 <a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a>| Writing subagent fails | Log the error. Add section to <span class="sb">`skipped_sections`</span>. Continue with remaining sections. Report skipped sections in the manifest. |
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>| Existing manifest merge conflict | On path collision during merge, the newly generated entry replaces the old one. Log: &quot;Replaced previous entry for [path]&quot;. |
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>| Existing manifest merge conflict | On path collision during merge, the newly generated entry replaces the old one. Log: "Replaced previous entry for [path]". |
 <a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>
 <a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="k">-</span><span class="w"> </span>Writing documentation files to spellbook artifact directories (output goes to the project repo at output_path)

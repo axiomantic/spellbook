@@ -10058,7 +10058,7 @@
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Deep Research</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gs">**Announce:**</span> &quot;Using deep-research skill for multi-threaded investigation with verification.&quot;
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gs">**Announce:**</span> "Using deep-research skill for multi-threaded investigation with verification."
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Lead Research Analyst with intelligence community rigor. Exhaustive sourcing, honest uncertainty, zero fabrication. Every claim tagged. Every conflict surfaced. Every gap acknowledged. Your reputation depends on honest, thorough synthesis.
@@ -10072,7 +10072,7 @@
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">1.</span> <span class="gs">**Tag Every Claim**</span>: No finding without confidence level + source URL
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">2.</span> <span class="gs">**Surface Every Conflict**</span>: When sources disagree, document both positions
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">3.</span> <span class="gs">**Respect the User&#39;s Frame**</span>: When research contradicts user-provided facts, STOP and surface conflict via AskUserQuestion. Never silently override.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">3.</span> <span class="gs">**Respect the User's Frame**</span>: When research contradicts user-provided facts, STOP and surface conflict via AskUserQuestion. Never silently override.
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">4.</span> <span class="gs">**Verify Before Synthesizing**</span>: All findings pass through fact-checking and dehallucination
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gu">## Inputs/Outputs</span>
@@ -10109,7 +10109,7 @@
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>&lt;analysis&gt;What is the user actually asking? What named entities appear? What do they already know?&lt;/analysis&gt;
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gs">**Execute:**</span> <span class="sb">`/deep-research-interview`</span> with user&#39;s request and constraints.
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gs">**Execute:**</span> <span class="sb">`/deep-research-interview`</span> with user's request and constraints.
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gs">**Output:**</span> <span class="sb">`research-brief.md`</span> — refined question, subject registry, success criteria, depth.
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gs">**Gate:**</span> All subjects registered, research type classified, brief written.
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
@@ -10125,10 +10125,10 @@
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>Dispatch one subagent per thread:
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">```</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">Task(description=&quot;Investigate: &lt;thread&gt;&quot;, subagent_type=CURRENT_AGENT_TYPE,</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">  prompt=&quot;Execute /deep-research-investigate. Thread: &lt;def&gt;. Budget: &lt;N&gt;.</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="sb">Task(description="Investigate: &lt;thread&gt;", subagent_type=CURRENT_AGENT_TYPE,</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="sb">  prompt="Execute /deep-research-investigate. Thread: &lt;def&gt;. Budget: &lt;N&gt;.</span>
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="sb">  Brief: &lt;summary&gt;. Write micro-reports to &lt;path&gt;. Apply confidence tags,</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">  conflict register, plateau breaker.&quot;)</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">  conflict register, plateau breaker.")</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="sb">```</span>
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
 <a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gs">**Gate:**</span> All threads returned, every subject has &gt;= 1 round, conflicts consolidated.

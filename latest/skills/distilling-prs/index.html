@@ -9840,8 +9840,8 @@
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="k">1.</span> <span class="gs">**Heuristics First, AI Second**</span>: Always run heuristic pattern matching before invoking AI analysis. Heuristics are fast and deterministic.
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">2.</span> <span class="gs">**Confidence Requires Evidence**</span>: Never mark a change as &quot;safe to skip&quot; without a pattern match or AI explanation justifying the confidence level.
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">3.</span> <span class="gs">**Surface Uncertainty**</span>: When confidence is low, categorize as &quot;uncertain&quot; rather than guessing. Humans decide ambiguous cases.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="k">2.</span> <span class="gs">**Confidence Requires Evidence**</span>: Never mark a change as "safe to skip" without a pattern match or AI explanation justifying the confidence level.
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">3.</span> <span class="gs">**Surface Uncertainty**</span>: When confidence is low, categorize as "uncertain" rather than guessing. Humans decide ambiguous cases.
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">4.</span> <span class="gs">**Preserve Context**</span>: Report must include enough diff context for reviewers to understand changes without switching to the PR itself.
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="gu">## Tool Integration</span>
@@ -9927,7 +9927,7 @@
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="c1"># Add a discovered pattern to config (manual)</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="c1"># Edit ~/.local/spellbook/docs/&lt;project&gt;/distilling-prs-config.json</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="c1"># and add to &quot;blessed_patterns&quot; array</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="c1"># and add to "blessed_patterns" array</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="sb">```</span>
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="gu">## Configuration</span>
@@ -9936,11 +9936,11 @@
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="sb">```json</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="p">{</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="w">  </span><span class="nt">&quot;blessed_patterns&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;query-count-json&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;import-cleanup&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="w">  </span><span class="nt">&quot;always_review_paths&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;**/migrations/**&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;**/permissions.py&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="w">  </span><span class="nt">&quot;query_count_thresholds&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="w">    </span><span class="nt">&quot;relative_percent&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="w">    </span><span class="nt">&quot;absolute_delta&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="w">  </span><span class="nt">"blessed_patterns"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"query-count-json"</span><span class="p">,</span><span class="w"> </span><span class="s2">"import-cleanup"</span><span class="p">],</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="w">  </span><span class="nt">"always_review_paths"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"**/migrations/**"</span><span class="p">,</span><span class="w"> </span><span class="s2">"**/permissions.py"</span><span class="p">],</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="w">  </span><span class="nt">"query_count_thresholds"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="w">    </span><span class="nt">"relative_percent"</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span>
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="w">    </span><span class="nt">"absolute_delta"</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span>
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="p">}</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="sb">```</span>
@@ -9956,14 +9956,14 @@
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="gs">**Medium Confidence**</span> (5): backfill commands, decorator removals, factory setup, test renames, test assertion updates
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
 <a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">-</span><span class="w"> </span>Marking changes as &quot;safe to skip&quot; without pattern match or AI justification
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">-</span><span class="w"> </span>Marking changes as "safe to skip" without pattern match or AI justification
 <a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">-</span><span class="w"> </span>Skipping Phase 1 heuristics and going straight to AI analysis
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">-</span><span class="w"> </span>Collapsing &quot;review required&quot; changes to save space
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">-</span><span class="w"> </span>Collapsing "review required" changes to save space
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">-</span><span class="w"> </span>Blessing patterns automatically without user confirmation
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>Heuristics before AI, always. A mis-categorized &quot;safe to skip&quot; sends a reviewer past a breaking change. Surface uncertainty rather than hide it.
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>Heuristics before AI, always. A mis-categorized "safe to skip" sends a reviewer past a breaking change. Surface uncertainty rather than hide it.
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 

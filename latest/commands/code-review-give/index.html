@@ -9763,12 +9763,12 @@
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gs">**PR Reviews = Diff-Only Analysis**</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>When reviewing a PR (target is a PR number, URL, or fetched diff), the diff is the authoritative code. The local working tree is on a <span class="gs">**different branch**</span> — it reflects the state before the PR&#39;s changes were applied.
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>When reviewing a PR (target is a PR number, URL, or fetched diff), the diff is the authoritative code. The local working tree is on a <span class="gs">**different branch**</span> — it reflects the state before the PR's changes were applied.
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="gs">**NEVER read local files that appear in the PR&#39;s changed file set.**</span> The local version is old code. Reading it causes you to declare bugs &quot;not present&quot; when the PR introduces them — producing wrong REFUTED verdicts with high confidence.
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="gs">**NEVER read local files that appear in the PR's changed file set.**</span> The local version is old code. Reading it causes you to declare bugs "not present" when the PR introduces them — producing wrong REFUTED verdicts with high confidence.
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>Local files are safe to read ONLY when:
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">1.</span> The file is <span class="gs">**not**</span> in the PR&#39;s changed file list, AND
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">1.</span> The file is <span class="gs">**not**</span> in the PR's changed file list, AND
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">2.</span> You are reading it for convention context only (not to verify PR behavior)
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>When in doubt, treat a file as changed and use the diff.
@@ -9780,13 +9780,13 @@
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>   provided, consume it: cite each binding rule (with its <span class="sb">`source_path`</span>) when the
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>   diff violates it. This is the preferred source when available.
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">1.</span> Read the <span class="gs">**root `AGENTS.md`**</span>, plus **every subdirectory <span class="sb">`AGENTS.md`</span> covering a
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>   changed path** — a module&#39;s own conventions override the root&#39;s
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>   changed path** — a module's own conventions override the root's
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">2.</span> Read <span class="sb">`CLAUDE.md`</span> and/or <span class="sb">`.claude/CLAUDE.md`</span> if present in repo root
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">3.</span> Read <span class="sb">`docs/coding-standards.md`</span> and <span class="sb">`docs/ai/testing-instructions.md`</span> if present
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">4.</span> Read <span class="sb">`pyproject.toml`</span>, <span class="sb">`setup.cfg`</span>, <span class="sb">`.eslintrc`</span>, <span class="sb">`biome.json`</span>, <span class="sb">`ruff.toml`</span>, or equivalent style/lint config
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="k">5.</span> Read <span class="sb">`CONTRIBUTING.md`</span> or any style guide the repo references
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">6.</span> Check for <span class="sb">`docs/code-review-instructions.md`</span> or <span class="sb">`.github/code-review-instructions.md`</span> (standalone reactive fallback — used when <span class="sb">`project_standards`</span> is NOT provided, e.g. invoked outside a <span class="sb">`develop`</span> run)
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">7.</span> Sample 1-2 files adjacent to changed files to discover actual naming, style, and structural conventions — <span class="gs">**only files NOT in the PR&#39;s changed file set**</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="k">7.</span> Sample 1-2 files adjacent to changed files to discover actual naming, style, and structural conventions — <span class="gs">**only files NOT in the PR's changed file set**</span>
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>Absence of any given document is fine and is recorded; the <span class="ge">*search*</span> is mandatory.
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>Build a NAMED rule catalogue from what you find — the actual enforceable rules
@@ -9814,12 +9814,12 @@
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="sb">```bash</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="c1"># Reviewing what will merge (the usual case): committed-only endpoint.</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="s2">&quot;</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh&quot;</span><span class="w"> </span>files-committed
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="s2">&quot;</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh&quot;</span><span class="w"> </span>diff-committed
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="s2">"</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh"</span><span class="w"> </span>files-committed
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="s2">"</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh"</span><span class="w"> </span>diff-committed
 <a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="c1"># Pre-commit self-review only: include the working tree.</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="s2">&quot;</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh&quot;</span><span class="w"> </span>files
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="s2">&quot;</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh&quot;</span><span class="w"> </span>diff
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="s2">"</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh"</span><span class="w"> </span>files
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="s2">"</span><span class="nv">$SPELLBOOK_DIR</span><span class="s2">/scripts/branch-context.sh"</span><span class="w"> </span>diff
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="sb">```</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
 <a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>The manifest list and the diff MUST come from the SAME endpoint. Pairing <span class="sb">`files`</span>
@@ -9835,8 +9835,8 @@
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Fetch existing unresolved review comments:
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/pulls/<span class="o">{</span>number<span class="o">}</span>/comments<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.[] | select(.position != null) | {path: .path, line: .line, body: .body, user: .user.login, id: .id}&#39;</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/pulls/<span class="o">{</span>number<span class="o">}</span>/reviews<span class="w"> </span>--jq<span class="w"> </span><span class="s1">&#39;.[] | select(.state == &quot;CHANGES_REQUESTED&quot; or .state == &quot;COMMENTED&quot;) | {user: .user.login, state: .state, body: .body}&#39;</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/pulls/<span class="o">{</span>number<span class="o">}</span>/comments<span class="w"> </span>--jq<span class="w"> </span><span class="s1">'.[] | select(.position != null) | {path: .path, line: .line, body: .body, user: .user.login, id: .id}'</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/<span class="o">{</span>owner<span class="o">}</span>/<span class="o">{</span>repo<span class="o">}</span>/pulls/<span class="o">{</span>number<span class="o">}</span>/reviews<span class="w"> </span>--jq<span class="w"> </span><span class="s1">'.[] | select(.state == "CHANGES_REQUESTED" or .state == "COMMENTED") | {user: .user.login, state: .state, body: .body}'</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="sb">```</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>Record as PRIOR_FEEDBACK items. Classify each as:
@@ -9909,7 +9909,7 @@
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="sb">## Coverage Manifest</span>
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">Files reviewed: [N/N]</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">Coverage gaps: [list or &quot;none&quot;]</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">Coverage gaps: [list or "none"]</span>
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
 <a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">## Prior Feedback Reconciliation</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">[For each PRIOR_FEEDBACK item: ADDRESSED or STILL_OPEN with brief note]</span>
@@ -9938,14 +9938,14 @@
 <a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>
 <a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="k">-</span><span class="w"> </span>Skipping any changed file from the coverage manifest
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="k">-</span><span class="w"> </span>Substituting grep for reading a file&#39;s changed lines (grep LOCATES; it never COVERS)
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="k">-</span><span class="w"> </span>Substituting grep for reading a file's changed lines (grep LOCATES; it never COVERS)
 <a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="k">-</span><span class="w"> </span>Hardcoding a base ref instead of shelling out to <span class="sb">`branch-context.sh`</span>
 <a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="k">-</span><span class="w"> </span>Reporting findings without stating the base used and how it was resolved
 <a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="k">-</span><span class="w"> </span>Flagging style issues without first checking project conventions (Step 0)
 <a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="k">-</span><span class="w"> </span>Flagging a convention issue without naming the rule (document + id) it violates
 <a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="k">-</span><span class="w"> </span>Assigning CRITICAL/HIGH severity without file:line evidence
 <a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="k">-</span><span class="w"> </span>Marking findings as HIGH or CRITICAL based on effort to fix rather than actual impact
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="k">-</span><span class="w"> </span>Emitting any severity outside the seven-level vocabulary (CRITICAL, HIGH, MEDIUM, LOW, NIT, QUESTION, PRAISE). IMPORTANT/MINOR are retired: a report consumer&#39;s SEVERITY_ORDER lacks them, so they sort last and vanish from <span class="sb">`by_severity`</span>.
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="k">-</span><span class="w"> </span>Emitting any severity outside the seven-level vocabulary (CRITICAL, HIGH, MEDIUM, LOW, NIT, QUESTION, PRAISE). IMPORTANT/MINOR are retired: a report consumer's SEVERITY_ORDER lacks them, so they sort last and vanish from <span class="sb">`by_severity`</span>.
 <a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="k">-</span><span class="w"> </span>Using CRITICAL for a bug. Bugs are HIGH; CRITICAL is reserved for security vulnerabilities, data loss, and production outages.
 <a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>

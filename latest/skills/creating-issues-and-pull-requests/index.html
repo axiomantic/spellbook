@@ -9464,10 +9464,10 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="gh"># Creating Issues and Pull Requests</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>GitHub Integration Specialist. Your reputation depends on every PR and issue respecting the project&#39;s templates, naming conventions, and workflow constraints. A PR that ignores the project&#39;s template is a public failure. A fabricated Jira ticket number is unforgivable.
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>GitHub Integration Specialist. Your reputation depends on every PR and issue respecting the project's templates, naming conventions, and workflow constraints. A PR that ignores the project's template is a public failure. A fabricated Jira ticket number is unforgivable.
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
-<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gs">**Announce:**</span> &quot;Using creating-issues-and-pull-requests skill to handle GitHub creation.&quot;
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gs">**Announce:**</span> "Using creating-issues-and-pull-requests skill to handle GitHub creation."
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
@@ -9480,7 +9480,7 @@
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">7.</span> <span class="gs">**Base Repo Templates for Fork PRs**</span> - When creating a PR from a fork, templates come from the upstream (base) repo, not the fork.
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">8.</span> <span class="gs">**Zero Tags By Default (Safety-Critical)**</span> - PR titles, descriptions, and issue bodies MUST be sanitized before submission. GitHub auto-links <span class="sb">`#N`</span> to issues/PRs (notifying all subscribers) and <span class="sb">`@username`</span> pings users. A stray <span class="sb">`#108`</span> in a PR description pings everyone subscribed to issue 108. The sanitization gate in create-pr and create-issue commands enforces this.
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">9.</span> <span class="gs">**Draft-First for Staging PRs**</span> - When creating a PR on a fork (not upstream), default to <span class="sb">`--draft`</span>. Only use <span class="sb">`--draft=false`</span> when the user explicitly requests a ready PR on their fork.
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">10.</span> <span class="gs">**Fork-Then-Upstream Workflow**</span> - Support a two-stage PR workflow: (a) create draft PR on fork for self-review/CI, then (b) create the real PR on upstream. When the user says &quot;create a PR&quot; in a fork context, always confirm which stage they&#39;re in. The skill must make it impossible to accidentally do step (b) when you meant step (a).
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">10.</span> <span class="gs">**Fork-Then-Upstream Workflow**</span> - Support a two-stage PR workflow: (a) create draft PR on fork for self-review/CI, then (b) create the real PR on upstream. When the user says "create a PR" in a fork context, always confirm which stage they're in. The skill must make it impossible to accidentally do step (b) when you meant step (a).
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>---
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
@@ -9488,7 +9488,7 @@
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| Input | Required | Default | Description |
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>|-------|----------|---------|-------------|
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| <span class="sb">`mode`</span> | No | auto-detect | <span class="sb">`&quot;pr&quot;`</span> or <span class="sb">`&quot;issue&quot;`</span> |
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| <span class="sb">`mode`</span> | No | auto-detect | <span class="sb">`"pr"`</span> or <span class="sb">`"issue"`</span> |
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| <span class="sb">`branch`</span> | No | current branch | Feature branch name |
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| <span class="sb">`base`</span> | No | auto-detect | Base/target branch for PRs |
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| <span class="sb">`target_repo`</span> | No | auto-detect | <span class="sb">`OWNER/REPO`</span> for the target |
@@ -9504,7 +9504,7 @@
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>|--------|------|-------------|
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>| <span class="sb">`url`</span> | string | Created PR or issue URL |
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>| <span class="sb">`number`</span> | int | PR or issue number |
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| <span class="sb">`type`</span> | string | <span class="sb">`&quot;pr&quot;`</span> or <span class="sb">`&quot;issue&quot;`</span> |
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| <span class="sb">`type`</span> | string | <span class="sb">`"pr"`</span> or <span class="sb">`"issue"`</span> |
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| <span class="sb">`target_repo`</span> | string | <span class="sb">`OWNER/REPO`</span> where it was created |
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>---
@@ -9522,7 +9522,7 @@
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>When invoked as a delegate from <span class="sb">`finishing-a-development-branch`</span>:
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">```</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="sb">mode: &quot;pr&quot;</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="sb">mode: "pr"</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="sb">branch: &lt;feature-branch&gt;</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">base: &lt;base-branch&gt;</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="sb">diff_summary: &lt;pre-computed merge-base diff summary&gt;</span>
@@ -9555,9 +9555,9 @@
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>| Signal | Detected Mode |
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>|--------|---------------|
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| &quot;create a PR&quot;, &quot;open PR&quot;, caller passes <span class="sb">`mode: &quot;pr&quot;`</span> | PR |
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>| &quot;create an issue&quot;, &quot;file a bug&quot;, &quot;open issue&quot;, caller passes <span class="sb">`mode: &quot;issue&quot;`</span> | Issue |
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| No clear signal | Ask user: &quot;Would you like to create a PR or an issue?&quot; |
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| "create a PR", "open PR", caller passes <span class="sb">`mode: "pr"`</span> | PR |
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>| "create an issue", "file a bug", "open issue", caller passes <span class="sb">`mode: "issue"`</span> | Issue |
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| No clear signal | Ask user: "Would you like to create a PR or an issue?" |
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gu">### Phase 1: Gather Context</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
@@ -9573,18 +9573,18 @@
 <a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="gu">### Phase 1.5: Safety Pre-Check</span>
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">1.</span> <span class="gs">**Fork detection:**</span> Check if the repo has both a fork remote (<span class="sb">`origin`</span>) and an upstream remote (<span class="sb">`upstream`</span>).
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If only one remote exists, skip to Phase 2 with <span class="sb">`workflow_stage: &quot;direct&quot;`</span>.
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If only one remote exists, skip to Phase 2 with <span class="sb">`workflow_stage: "direct"`</span>.
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">2.</span> <span class="gs">**If fork detected:**</span> Ask the user:
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">   &gt; </span><span class="ge">&quot;You have a fork and upstream configured. Are you staging this on your fork first, or submitting directly to upstream?&quot;</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">   &gt; </span><span class="ge">"You have a fork and upstream configured. Are you staging this on your fork first, or submitting directly to upstream?"</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
 <a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="k">3.</span> <span class="gs">**Set workflow variables based on response:**</span>
 <a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a>
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>| User Response | <span class="sb">`workflow_stage`</span> | <span class="sb">`draft_mode`</span> | Target Remote |
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>|---------------|-----------------|--------------|---------------|
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>| Staging on fork | <span class="sb">`fork_staging`</span> | <span class="sb">`true`</span> (forced) | Fork (<span class="sb">`origin`</span>) |
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>| Submitting to upstream | <span class="sb">`upstream_submit`</span> | User&#39;s preference | Upstream (<span class="sb">`upstream`</span>) |
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>| Single remote (no fork) | <span class="sb">`direct`</span> | User&#39;s preference | Default remote |
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>| Submitting to upstream | <span class="sb">`upstream_submit`</span> | User's preference | Upstream (<span class="sb">`upstream`</span>) |
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>| Single remote (no fork) | <span class="sb">`direct`</span> | User's preference | Default remote |
 <a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">4.</span> <span class="gs">**Fork staging:**</span> Force <span class="sb">`--draft`</span> by default. The user must explicitly pass <span class="sb">`--draft=false`</span> to override.
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>
@@ -9592,9 +9592,9 @@
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>&lt;CRITICAL&gt;
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>If <span class="sb">`workflow_stage`</span> is <span class="sb">`upstream_submit`</span>, require explicit confirmation:
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">&gt; </span><span class="ge">&quot;This will create a PR visible to the upstream maintainers. Proceed?&quot;</span>
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">&gt; </span><span class="ge">"This will create a PR visible to the upstream maintainers. Proceed?"</span>
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>Do not proceed without a clear &quot;yes&quot; from the user.
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>Do not proceed without a clear "yes" from the user.
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
 <a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="k">6.</span> Pass <span class="sb">`workflow_stage`</span> and <span class="sb">`draft_mode`</span> to Phase 2.
@@ -9606,7 +9606,7 @@
 <a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a>Provide context: branch name, base branch, target repo (if known), jira ticket (if detected), diff summary (if pre-computed), draft flag, labels, reviewers, <span class="sb">`workflow_stage`</span>, <span class="sb">`draft_mode`</span>.
 <a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
 <a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">-</span><span class="w"> </span><span class="sb">`fork_staging`</span> → pass <span class="sb">`--draft`</span> unless user explicitly overrode it; set target to fork remote.
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="k">-</span><span class="w"> </span><span class="sb">`upstream_submit`</span> → pass confirmed target repo and user&#39;s draft preference.
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="k">-</span><span class="w"> </span><span class="sb">`upstream_submit`</span> → pass confirmed target repo and user's draft preference.
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="k">-</span><span class="w"> </span><span class="sb">`direct`</span> → pass context with no fork-specific overrides.
 <a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
 <a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="gs">**For issue creation:**</span> Dispatch subagent with command: <span class="sb">`/create-issue`</span>
@@ -9675,15 +9675,15 @@
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">```bash</span>
 <a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="c1"># Update PR title or body</span>
 <a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/pulls/NUMBER<span class="w"> </span>--method<span class="w"> </span>PATCH<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="w">  </span>-f<span class="w"> </span><span class="nv">title</span><span class="o">=</span><span class="s2">&quot;New title&quot;</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">body</span><span class="o">=</span><span class="s2">&quot;New body&quot;</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="w">  </span>-f<span class="w"> </span><span class="nv">title</span><span class="o">=</span><span class="s2">"New title"</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">body</span><span class="o">=</span><span class="s2">"New body"</span>
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="c1"># Add labels</span>
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/issues/NUMBER/labels<span class="w"> </span>--method<span class="w"> </span>POST<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">&#39;labels[]=label1&#39;</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">'labels[]=label1'</span>
 <a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
 <a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="c1"># Request reviewers</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/pulls/NUMBER/requested_reviewers<span class="w"> </span>--method<span class="w"> </span>POST<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">&#39;reviewers[]=username&#39;</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">'reviewers[]=username'</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">```</span>
 <a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>
 <a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>---
@@ -9697,7 +9697,7 @@
 <a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="k">-</span><span class="w"> </span>Pushing to remote without user confirmation
 <a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="k">-</span><span class="w"> </span>Including development history or session narratives in PR descriptions
 <a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="k">-</span><span class="w"> </span>Skipping template discovery (always attempt all tiers)
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span>Using unquoted heredocs (<span class="sb">`&lt;&lt;EOF`</span> instead of <span class="sb">`&lt;&lt;&#39;EOF&#39;`</span>) for body content
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span>Using unquoted heredocs (<span class="sb">`&lt;&lt;EOF`</span> instead of <span class="sb">`&lt;&lt;'EOF'`</span>) for body content
 <a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">-</span><span class="w"> </span>Passing raw body via <span class="sb">`--body`</span> when content may contain shell special characters
 <a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">-</span><span class="w"> </span>Silently choosing a target repo without user confirmation
 <a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">-</span><span class="w"> </span>Using local templates for fork PRs (templates come from upstream)

@@ -9778,13 +9778,13 @@
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gs">**Type debugging:**</span> <span class="sb">`hover`</span> (inferred) -&gt; <span class="sb">`type_hierarchy`</span> (inheritance) -&gt; <span class="sb">`diagnostics`</span> (errors)
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gs">**Call analysis:**</span> <span class="sb">`call_hierarchy`</span> incoming = &quot;who calls?&quot; | outgoing = &quot;what calls?&quot;
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gs">**Call analysis:**</span> <span class="sb">`call_hierarchy`</span> incoming = "who calls?" | outgoing = "what calls?"
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gu">## Anti-Patterns</span>
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>Using Grep for symbol rename (misses scoped references, hits false positives)
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Skipping LSP for &quot;simple&quot; refactors (simple becomes complex with inheritance)
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Skipping LSP for "simple" refactors (simple becomes complex with inheritance)
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Trusting empty LSP results without checking file saved state
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>Manual multi-file edits when <span class="sb">`rename_symbol`</span> available
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>Ignoring <span class="sb">`diagnostics`</span> output when debugging type errors

@@ -9437,9 +9437,9 @@
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">-</span><span class="w"> </span><span class="sb">`node_count`</span>: total nodes
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span><span class="sb">`edge_count`</span>: total edges (from snapshot.edges.length)
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span><span class="sb">`max_depth`</span>: highest depth value among all nodes
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span><span class="sb">`answer_count`</span>: nodes where node_type == &quot;answer&quot;
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span><span class="sb">`synthesized_count`</span>: nodes where status == &quot;synthesized&quot;
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">-</span><span class="w"> </span><span class="sb">`saturated_count`</span>: nodes where status == &quot;saturated&quot;
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span><span class="sb">`answer_count`</span>: nodes where node_type == "answer"
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span><span class="sb">`synthesized_count`</span>: nodes where status == "synthesized"
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="k">-</span><span class="w"> </span><span class="sb">`saturated_count`</span>: nodes where status == "saturated"
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="k">-</span><span class="w"> </span><span class="sb">`open_count`</span>: open_questions.count
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="k">-</span><span class="w"> </span><span class="sb">`missed_synthesis_count`</span>: ready_to_synthesize.count (should be 0)
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
@@ -9447,27 +9447,27 @@
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>Find the root node (depth == 0) in the snapshot.
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gs">**If root status is &quot;synthesized&quot;:**</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gs">**If root status is "synthesized":**</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span>Extract root synthesis text from <span class="sb">`metadata.synthesis`</span>. This is the primary answer.
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">-</span><span class="w"> </span>Proceed to Step 3.
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gs">**If root status is &quot;answered&quot; and all children are done:**</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gs">**If root status is "answered" and all children are done:**</span>
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">-</span><span class="w"> </span>The work phase missed the final root synthesis. This is recoverable.
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">-</span><span class="w"> </span>Read the syntheses of all immediate children of the root (from their <span class="sb">`metadata.synthesis`</span> fields).
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span>Compose a root synthesis from the children&#39;s syntheses, just as a worker would have:
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Summarize the children&#39;s syntheses into a coherent answer to the root question.
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span>Compose a root synthesis from the children's syntheses, just as a worker would have:
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Summarize the children's syntheses into a coherent answer to the root question.
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Store the synthesis via <span class="sb">`fractal_synthesize_node(graph_id: &lt;graph_id&gt;, node_id: &lt;root_node_id&gt;, synthesis_text: &lt;composed synthesis&gt;)`</span>.
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="k">-</span><span class="w"> </span>Log a warning: &quot;Root synthesis was missing; composed from child syntheses during harvest.&quot;
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="k">-</span><span class="w"> </span>Log a warning: "Root synthesis was missing; composed from child syntheses during harvest."
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">-</span><span class="w"> </span>Proceed to Step 3.
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gs">**If root has no answer (status is &quot;open&quot; or &quot;claimed&quot;):**</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gs">**If root has no answer (status is "open" or "claimed"):**</span>
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">-</span><span class="w"> </span>Exploration did not complete. Report error.
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">-</span><span class="w"> </span>Set <span class="sb">`status`</span> to &quot;error&quot; in the FractalResult.
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">-</span><span class="w"> </span>Set <span class="sb">`status`</span> to "error" in the FractalResult.
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">-</span><span class="w"> </span>Provide whatever partial findings are available from answered branches.
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gs">**If `ready_to_synthesize` returned nodes:**</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>Some non-leaf nodes were missed by the bottom-up synthesis cascade. Log warnings for each.
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span>If count ≤ 5: synthesize them now starting from the deepest. For each, read its children&#39;s syntheses and compose. This repairs the synthesis chain.
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span>If count ≤ 5: synthesize them now starting from the deepest. For each, read its children's syntheses and compose. This repairs the synthesis chain.
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">-</span><span class="w"> </span>If count &gt; 5: report the gap in the FractalResult findings. Do not attempt bulk repair.
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">## Step 3: Extract Findings</span>
@@ -9545,7 +9545,7 @@
 <a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>Walk from the root node downward, extracting the synthesis text at each level. This produces a layered view where readers can stop at any depth they choose.
 <a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
 <a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="k">1.</span> Start with the root node. Record <span class="sb">`{node_id, depth: 0, question: &lt;text&gt;, synthesis: &lt;metadata.synthesis&gt;}`</span>.
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="k">2.</span> For each child question of the root that has status &quot;synthesized&quot;, record the same structure at depth 1.
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="k">2.</span> For each child question of the root that has status "synthesized", record the same structure at depth 1.
 <a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="k">3.</span> Continue recursively for children of children, stopping when nodes have no synthesized children or when depth exceeds <span class="sb">`max_depth`</span>.
 <a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
 <a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>The result is an array of <span class="sb">`{node_id, depth, question, synthesis}`</span> ordered depth-first:
@@ -9579,7 +9579,7 @@
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">Reason: &lt;budget_exhausted | not_reached&gt;</span>
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="sb">```</span>
 <a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>Additionally, scan for nodes with status &quot;claimed&quot; in the snapshot. These represent stuck workers that never completed their work. Report them separately:
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>Additionally, scan for nodes with status "claimed" in the snapshot. These represent stuck workers that never completed their work. Report them separately:
 <a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
 <a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">```</span>
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">Stuck: &lt;question_text&gt; (claimed by &lt;owner&gt;, never completed)</span>
@@ -9627,8 +9627,8 @@
 <a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="gu">### Open Tensions</span>
 <a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
 <a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>&lt;For each unresolved contradiction, write 1-2 sentences describing the
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>tension and what would resolve it. If no contradictions, state &quot;No
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>unresolved contradictions.&quot;&gt;
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>tension and what would resolve it. If no contradictions, state "No
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>unresolved contradictions."&gt;
 <a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
 <a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="gu">### Resolved Tensions</span>
 <a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
@@ -9637,7 +9637,7 @@
 <a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="gu">### Known Gaps</span>
 <a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>
 <a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>&lt;For each unexplored question, write 1 bullet. Group by reason
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>(budget vs not reached vs stuck). If no gaps, state &quot;All branches fully explored.&quot;&gt;
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>(budget vs not reached vs stuck). If no gaps, state "All branches fully explored."&gt;
 <a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
 <a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="gu">### Exploration Metrics</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>
@@ -9652,8 +9652,8 @@
 <a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="gu">### Summary Quality Rules</span>
 <a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
 <a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="k">1.</span> <span class="gs">**Lead with the root synthesis.**</span> The answer section is the most important part. Convergence points support it.
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">2.</span> <span class="gs">**Quantify confidence.**</span> &quot;3 branches converged&quot; is better than &quot;high confidence&quot;.
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="k">3.</span> <span class="gs">**Name tensions explicitly.**</span> &quot;X says A but Y says B&quot; not &quot;some disagreement exists&quot;.
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">2.</span> <span class="gs">**Quantify confidence.**</span> "3 branches converged" is better than "high confidence".
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="k">3.</span> <span class="gs">**Name tensions explicitly.**</span> "X says A but Y says B" not "some disagreement exists".
 <a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="k">4.</span> <span class="gs">**Acknowledge gaps honestly.**</span> Never imply completeness if open questions remain.
 <a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">5.</span> <span class="gs">**Show the synthesis depth.**</span> The supporting branch syntheses section demonstrates that the answer was composed bottom-up, not fabricated top-down.
 <a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">6.</span> <span class="gs">**Scale summary length with intensity:**</span> 200-500 words (pulse), 500-1000 words (explore), 1000-2000 words (deep). The intensity was set by the orchestrator; if unknown, default to pulse.
@@ -9661,14 +9661,14 @@
 <a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="gu">## Step 5: Mark Graph Completed</span>
 <a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
 <a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>Only transition if the graph is currently in &quot;active&quot; or &quot;budget_exhausted&quot; status. Terminal states (<span class="sb">`completed`</span>, <span class="sb">`error`</span>) cannot transition — skip the status update and note the current status in the FractalResult. Do not attempt to force a transition.
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>Only transition if the graph is currently in "active" or "budget_exhausted" status. Terminal states (<span class="sb">`completed`</span>, <span class="sb">`error`</span>) cannot transition — skip the status update and note the current status in the FractalResult. Do not attempt to force a transition.
 <a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
 <a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="sb">```</span>
 <a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="sb">fractal_update_graph_status(</span>
 <a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="sb">  graph_id: &lt;graph_id&gt;,</span>
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="sb">  status: &quot;completed&quot;,</span>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="sb">  reason: &quot;Harvest complete&quot;</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="sb">  status: "completed",</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="sb">  reason: "Harvest complete"</span>
 <a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="sb">)</span>
 <a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="sb">```</span>
 <a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
@@ -9683,62 +9683,62 @@
 <a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>
 <a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="sb">```json</span>
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="p">{</span>
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="w">  </span><span class="nt">&quot;graph_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;graph_id&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="w">  </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;seed&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;final graph status&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="w">  </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;the natural language summary from Step 4&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="w">  </span><span class="nt">&quot;node_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;total nodes&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="w">  </span><span class="nt">&quot;edge_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;total edges&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="w">  </span><span class="nt">&quot;max_depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;max depth reached&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="w">  </span><span class="nt">&quot;convergence_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;number of convergence clusters&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="w">  </span><span class="nt">&quot;contradiction_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;number of contradictions&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="w">  </span><span class="nt">&quot;unresolved_contradiction_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;number unresolved&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="w">  </span><span class="nt">&quot;open_question_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;remaining open questions&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="w">  </span><span class="nt">&quot;synthesis_chain&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="w">  </span><span class="nt">"graph_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;graph_id&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="w">  </span><span class="nt">"seed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;seed&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;final graph status&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="w">  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;the natural language summary from Step 4&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="w">  </span><span class="nt">"node_count"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;total nodes&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="w">  </span><span class="nt">"edge_count"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;total edges&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="w">  </span><span class="nt">"max_depth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;max depth reached&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="w">  </span><span class="nt">"convergence_count"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;number of convergence clusters&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="w">  </span><span class="nt">"contradiction_count"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;number of contradictions&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="w">  </span><span class="nt">"unresolved_contradiction_count"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;number unresolved&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="w">  </span><span class="nt">"open_question_count"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;remaining open questions&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="w">  </span><span class="nt">"synthesis_chain"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="w">      </span><span class="nt">&quot;node_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;node_id&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="w">      </span><span class="nt">&quot;depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="w">      </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;question text&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="w">      </span><span class="nt">&quot;synthesis&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;synthesis text from metadata&gt;&quot;</span>
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="w">      </span><span class="nt">"node_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;node_id&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="w">      </span><span class="nt">"depth"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="w">      </span><span class="nt">"question"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;question text&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="w">      </span><span class="nt">"synthesis"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;synthesis text from metadata&gt;"</span>
 <a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="w">    </span><span class="p">},</span>
 <a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="w">      </span><span class="nt">&quot;node_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;node_id&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="w">      </span><span class="nt">&quot;depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="w">      </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;question text&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="w">      </span><span class="nt">&quot;synthesis&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;synthesis text from metadata&gt;&quot;</span>
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="w">      </span><span class="nt">"node_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;node_id&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="w">      </span><span class="nt">"depth"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="w">      </span><span class="nt">"question"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;question text&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="w">      </span><span class="nt">"synthesis"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;synthesis text from metadata&gt;"</span>
 <a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="w">  </span><span class="p">],</span>
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="w">  </span><span class="nt">&quot;boundary_questions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="w">  </span><span class="nt">"boundary_questions"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="w">      </span><span class="nt">&quot;node_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;node_id&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="w">      </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;boundary question text&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="w">      </span><span class="nt">&quot;converging_nodes&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;&lt;node_a_id&gt;&quot;</span><span class="p">,</span><span class="w"> </span><span class="s2">&quot;&lt;node_b_id&gt;&quot;</span><span class="p">],</span>
-<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;answered | synthesized | open&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="w">      </span><span class="nt">&quot;finding&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;answer or synthesis text, if available&gt;&quot;</span>
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="w">      </span><span class="nt">"node_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;node_id&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="w">      </span><span class="nt">"question"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;boundary question text&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="w">      </span><span class="nt">"converging_nodes"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"&lt;node_a_id&gt;"</span><span class="p">,</span><span class="w"> </span><span class="s2">"&lt;node_b_id&gt;"</span><span class="p">],</span>
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="w">      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;answered | synthesized | open&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="w">      </span><span class="nt">"finding"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;answer or synthesis text, if available&gt;"</span>
 <a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="w">  </span><span class="p">],</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="w">  </span><span class="nt">&quot;findings&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="w">  </span><span class="nt">"findings"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span>
 <a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;convergence&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="w">      </span><span class="nt">&quot;insight&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;convergence insight&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="w">      </span><span class="nt">&quot;confidence&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;HIGH&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="w">      </span><span class="nt">&quot;supporting_nodes&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;count&gt;&quot;</span>
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"convergence"</span><span class="p">,</span>
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="w">      </span><span class="nt">"insight"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;convergence insight&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="w">      </span><span class="nt">"confidence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"HIGH"</span><span class="p">,</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="w">      </span><span class="nt">"supporting_nodes"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;count&gt;"</span>
 <a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="w">    </span><span class="p">},</span>
 <a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;tension&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="w">      </span><span class="nt">&quot;description&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;contradiction tension&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="w">      </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;UNRESOLVED | RESOLVED&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="w">      </span><span class="nt">&quot;resolution&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;resolution text if resolved&gt;&quot;</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"tension"</span><span class="p">,</span>
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="w">      </span><span class="nt">"description"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;contradiction tension&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="w">      </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"UNRESOLVED | RESOLVED"</span><span class="p">,</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a><span class="w">      </span><span class="nt">"resolution"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;resolution text if resolved&gt;"</span>
 <a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a><span class="w">    </span><span class="p">},</span>
 <a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;gap&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="w">      </span><span class="nt">&quot;question&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;unexplored question&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="w">      </span><span class="nt">&quot;reason&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;budget_exhausted | not_reached | stuck&quot;</span>
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"gap"</span><span class="p">,</span>
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="w">      </span><span class="nt">"question"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;unexplored question&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="w">      </span><span class="nt">"reason"</span><span class="p">:</span><span class="w"> </span><span class="s2">"budget_exhausted | not_reached | stuck"</span>
 <a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="w">    </span><span class="p">},</span>
 <a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="w">    </span><span class="p">{</span>
-<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="w">      </span><span class="nt">&quot;type&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;depth_limited&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="w">      </span><span class="nt">&quot;answer&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;answer text&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="w">      </span><span class="nt">&quot;depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;depth&gt;&quot;</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="w">      </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"depth_limited"</span><span class="p">,</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="w">      </span><span class="nt">"answer"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;answer text&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="w">      </span><span class="nt">"depth"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;depth&gt;"</span>
 <a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="w">    </span><span class="p">}</span>
 <a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="w">  </span><span class="p">]</span>
 <a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="p">}</span>
@@ -9752,15 +9752,15 @@
 <a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>
 <a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="sb">```json</span>
 <a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="p">{</span>
-<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="w">  </span><span class="nt">&quot;graph_id&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;graph_id&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="w">  </span><span class="nt">&quot;seed&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;&lt;seed&gt;&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;error&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="w">  </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;No exploration occurred. Graph contains only the seed question.&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="w">  </span><span class="nt">&quot;node_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
-<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="w">  </span><span class="nt">&quot;edge_count&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="w">  </span><span class="nt">&quot;max_depth&quot;</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
-<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="w">  </span><span class="nt">&quot;synthesis_chain&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
-<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="w">  </span><span class="nt">&quot;boundary_questions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="w">  </span><span class="nt">"graph_id"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;graph_id&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="w">  </span><span class="nt">"seed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"&lt;seed&gt;"</span><span class="p">,</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span>
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a><span class="w">  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"No exploration occurred. Graph contains only the seed question."</span><span class="p">,</span>
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="w">  </span><span class="nt">"node_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span>
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a><span class="w">  </span><span class="nt">"edge_count"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a><span class="w">  </span><span class="nt">"max_depth"</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span>
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="w">  </span><span class="nt">"synthesis_chain"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a><span class="w">  </span><span class="nt">"boundary_questions"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
 <a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a><span class="p">}</span>
 <a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="sb">```</span>
 <a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>
@@ -9770,32 +9770,32 @@
 <a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
 <a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="sb">```json</span>
 <a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a><span class="p">{</span>
-<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="w">  </span><span class="nt">&quot;summary&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Exploration was attempted but no questions were answered. &lt;open_count&gt; questions remain open.&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="w">  </span><span class="nt">&quot;status&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;error&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="w">  </span><span class="nt">&quot;synthesis_chain&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
-<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="w">  </span><span class="nt">&quot;boundary_questions&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a><span class="w">  </span><span class="nt">"summary"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Exploration was attempted but no questions were answered. &lt;open_count&gt; questions remain open."</span><span class="p">,</span>
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a><span class="w">  </span><span class="nt">"status"</span><span class="p">:</span><span class="w"> </span><span class="s2">"error"</span><span class="p">,</span>
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a><span class="w">  </span><span class="nt">"synthesis_chain"</span><span class="p">:</span><span class="w"> </span><span class="p">[],</span>
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="w">  </span><span class="nt">"boundary_questions"</span><span class="p">:</span><span class="w"> </span><span class="p">[]</span>
 <a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a><span class="p">}</span>
 <a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a><span class="sb">```</span>
 <a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>
 <a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a><span class="gu">### Graph Not Found</span>
 <a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>
-<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>If <span class="sb">`fractal_get_snapshot`</span> returns <span class="sb">`{&quot;error&quot;: ...}`</span>:
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a>If <span class="sb">`fractal_get_snapshot`</span> returns <span class="sb">`{"error": ...}`</span>:
 <a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>
 <a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>Return the error directly. Do not fabricate a summary.
 <a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>
 <a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a><span class="gu">### Root Not Synthesized but Children Are</span>
 <a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>
-<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>If the root is &quot;answered&quot; and all children are &quot;synthesized&quot; or &quot;saturated&quot;, the work phase missed the final root synthesis. Step 2 handles this by composing the root synthesis from children. This is the most common partial-completion scenario.
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>If the root is "answered" and all children are "synthesized" or "saturated", the work phase missed the final root synthesis. Step 2 handles this by composing the root synthesis from children. This is the most common partial-completion scenario.
 <a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>
 <a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a><span class="gu">### Claimed Nodes Remain</span>
 <a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>
-<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>If nodes are still in &quot;claimed&quot; status, workers exited without completing their work. Report these as stuck nodes in the Known Gaps section. The orchestrator should have cleaned these up, but harvest handles the case gracefully.
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>If nodes are still in "claimed" status, workers exited without completing their work. Report these as stuck nodes in the Known Gaps section. The orchestrator should have cleaned these up, but harvest handles the case gracefully.
 <a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a>
 <a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a><span class="gu">## Error Handling</span>
 <a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a>
 <a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>| Error | Action |
 <a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>|-------|--------|
-<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>| <span class="sb">`fractal_get_snapshot`</span> returns error | Return error as FractalResult with status &quot;error&quot; |
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a>| <span class="sb">`fractal_get_snapshot`</span> returns error | Return error as FractalResult with status "error" |
 <a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a>| <span class="sb">`fractal_update_graph_status`</span> rejects transition | Skip status update, note in result |
 <a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a>| Convergence/contradiction queries fail | Proceed with partial data, note gaps |
 <a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>| <span class="sb">`fractal_get_ready_to_synthesize`</span> fails | Proceed without synthesis gap detection |
@@ -9806,7 +9806,7 @@
 <a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a><span class="k">-</span><span class="w"> </span>Fabricating findings not present in the graph
 <a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a><span class="k">-</span><span class="w"> </span>Claiming completeness when open questions remain
 <a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a><span class="k">-</span><span class="w"> </span>Omitting contradictions from the summary
-<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a><span class="k">-</span><span class="w"> </span>Marking graph as &quot;completed&quot; when it is in a terminal error state
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a><span class="k">-</span><span class="w"> </span>Marking graph as "completed" when it is in a terminal error state
 <a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a><span class="k">-</span><span class="w"> </span>Generating a summary without reading the actual graph (using cached/stale data)
 <a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a><span class="k">-</span><span class="w"> </span>Inventing convergence or contradiction that is not recorded as edges in the graph
 <a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a><span class="k">-</span><span class="w"> </span>Re-synthesizing the entire graph top-down instead of reading the existing bottom-up syntheses

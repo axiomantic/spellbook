@@ -9624,7 +9624,7 @@
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Plan assumes method does X based on name
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  -&gt; Agent writes code, fails (method does Y)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>    -&gt; Agent INVENTS parameter (partial=True)
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>      -&gt; Fails (parameter doesn&#39;t exist)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>      -&gt; Fails (parameter doesn't exist)
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>        -&gt; Debugging loop, never reads source
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>          -&gt; Hours wasted on fabricated solutions
 </code></pre></div>
@@ -9653,12 +9653,12 @@
 <a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="sb">1. Plan assumes method does X based on name</span>
 <a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="sb">2. Agent writes code, fails because method actually does Y</span>
 <a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a><span class="sb">3. Agent INVENTS parameter: method(..., partial=True)</span>
-<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="sb">4. Fails because parameter doesn&#39;t exist</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a><span class="sb">4. Fails because parameter doesn't exist</span>
 <a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a><span class="sb">5. Agent enters debugging loop, never reads source</span>
 <a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="sb">6. Hours wasted on fabricated solutions</span>
 <a id="__codelineno-1-27" name="__codelineno-1-27" href="#__codelineno-1-27"></a>
 <a id="__codelineno-1-28" name="__codelineno-1-28" href="#__codelineno-1-28"></a><span class="sb"># REQUIRED in Plan</span>
-<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="sb">1. &quot;Behavior verified by reading [file:line]&quot;</span>
+<a id="__codelineno-1-29" name="__codelineno-1-29" href="#__codelineno-1-29"></a><span class="sb">1. "Behavior verified by reading [file:line]"</span>
 <a id="__codelineno-1-30" name="__codelineno-1-30" href="#__codelineno-1-30"></a><span class="sb">2. Actual method signatures from source</span>
 <a id="__codelineno-1-31" name="__codelineno-1-31" href="#__codelineno-1-31"></a><span class="sb">3. Constraints discovered from reading source</span>
 <a id="__codelineno-1-32" name="__codelineno-1-32" href="#__codelineno-1-32"></a><span class="sb">4. Executing agents follow verified behavior, no guessing</span>
@@ -9669,20 +9669,20 @@
 <a id="__codelineno-1-37" name="__codelineno-1-37" href="#__codelineno-1-37"></a>Flag when plan exhibits any of:
 <a id="__codelineno-1-38" name="__codelineno-1-38" href="#__codelineno-1-38"></a>
 <a id="__codelineno-1-39" name="__codelineno-1-39" href="#__codelineno-1-39"></a><span class="gs">**1. Assumes convenience parameters exist:**</span>
-<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">-</span><span class="w"> </span>&quot;Pass <span class="sb">`partial=True`</span> to allow partial matching&quot; (VERIFY THIS EXISTS)
-<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="k">-</span><span class="w"> </span>&quot;Use <span class="sb">`strict_mode=False`</span> to relax validation&quot; (VERIFY THIS EXISTS)
+<a id="__codelineno-1-40" name="__codelineno-1-40" href="#__codelineno-1-40"></a><span class="k">-</span><span class="w"> </span>"Pass <span class="sb">`partial=True`</span> to allow partial matching" (VERIFY THIS EXISTS)
+<a id="__codelineno-1-41" name="__codelineno-1-41" href="#__codelineno-1-41"></a><span class="k">-</span><span class="w"> </span>"Use <span class="sb">`strict_mode=False`</span> to relax validation" (VERIFY THIS EXISTS)
 <a id="__codelineno-1-42" name="__codelineno-1-42" href="#__codelineno-1-42"></a>
 <a id="__codelineno-1-43" name="__codelineno-1-43" href="#__codelineno-1-43"></a><span class="gs">**2. Assumes flexible behavior from strict interfaces:**</span>
-<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>&quot;The test context allows partial assertions&quot; (VERIFY: many require exhaustive assertions)
-<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span>&quot;The validator accepts subset of fields&quot; (VERIFY: many require complete objects)
+<a id="__codelineno-1-44" name="__codelineno-1-44" href="#__codelineno-1-44"></a><span class="k">-</span><span class="w"> </span>"The test context allows partial assertions" (VERIFY: many require exhaustive assertions)
+<a id="__codelineno-1-45" name="__codelineno-1-45" href="#__codelineno-1-45"></a><span class="k">-</span><span class="w"> </span>"The validator accepts subset of fields" (VERIFY: many require complete objects)
 <a id="__codelineno-1-46" name="__codelineno-1-46" href="#__codelineno-1-46"></a>
 <a id="__codelineno-1-47" name="__codelineno-1-47" href="#__codelineno-1-47"></a><span class="gs">**3. Assumes library behavior from method names:**</span>
-<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="k">-</span><span class="w"> </span>&quot;The <span class="sb">`update()`</span> method will merge fields&quot; (VERIFY: might replace entirely)
-<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="k">-</span><span class="w"> </span>&quot;The <span class="sb">`validate()`</span> method returns errors&quot; (VERIFY: might raise exceptions)
+<a id="__codelineno-1-48" name="__codelineno-1-48" href="#__codelineno-1-48"></a><span class="k">-</span><span class="w"> </span>"The <span class="sb">`update()`</span> method will merge fields" (VERIFY: might replace entirely)
+<a id="__codelineno-1-49" name="__codelineno-1-49" href="#__codelineno-1-49"></a><span class="k">-</span><span class="w"> </span>"The <span class="sb">`validate()`</span> method returns errors" (VERIFY: might raise exceptions)
 <a id="__codelineno-1-50" name="__codelineno-1-50" href="#__codelineno-1-50"></a>
-<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="gs">**4. Assumes test utilities work &quot;conveniently&quot;:**</span>
-<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="k">-</span><span class="w"> </span>&quot;Our <span class="sb">`assert_model_updated()`</span> checks specified fields&quot; (VERIFY: might require ALL changes)
-<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="k">-</span><span class="w"> </span>&quot;Our <span class="sb">`mock_service()`</span> auto-mocks everything&quot; (VERIFY: might require explicit setup)
+<a id="__codelineno-1-51" name="__codelineno-1-51" href="#__codelineno-1-51"></a><span class="gs">**4. Assumes test utilities work "conveniently":**</span>
+<a id="__codelineno-1-52" name="__codelineno-1-52" href="#__codelineno-1-52"></a><span class="k">-</span><span class="w"> </span>"Our <span class="sb">`assert_model_updated()`</span> checks specified fields" (VERIFY: might require ALL changes)
+<a id="__codelineno-1-53" name="__codelineno-1-53" href="#__codelineno-1-53"></a><span class="k">-</span><span class="w"> </span>"Our <span class="sb">`mock_service()`</span> auto-mocks everything" (VERIFY: might require explicit setup)
 <a id="__codelineno-1-54" name="__codelineno-1-54" href="#__codelineno-1-54"></a>
 <a id="__codelineno-1-55" name="__codelineno-1-55" href="#__codelineno-1-55"></a><span class="gu">## Verification Requirements</span>
 <a id="__codelineno-1-56" name="__codelineno-1-56" href="#__codelineno-1-56"></a>
@@ -9695,9 +9695,9 @@
 <a id="__codelineno-1-63" name="__codelineno-1-63" href="#__codelineno-1-63"></a><span class="gu">## Loop Detection</span>
 <a id="__codelineno-1-64" name="__codelineno-1-64" href="#__codelineno-1-64"></a>
 <a id="__codelineno-1-65" name="__codelineno-1-65" href="#__codelineno-1-65"></a>Flag when plan describes:
-<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">-</span><span class="w"> </span>&quot;Try X, if that fails try Y, if that fails try Z&quot;
-<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">-</span><span class="w"> </span>&quot;Experiment with different parameter combinations&quot;
-<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="k">-</span><span class="w"> </span>&quot;Adjust until tests pass&quot;
+<a id="__codelineno-1-66" name="__codelineno-1-66" href="#__codelineno-1-66"></a><span class="k">-</span><span class="w"> </span>"Try X, if that fails try Y, if that fails try Z"
+<a id="__codelineno-1-67" name="__codelineno-1-67" href="#__codelineno-1-67"></a><span class="k">-</span><span class="w"> </span>"Experiment with different parameter combinations"
+<a id="__codelineno-1-68" name="__codelineno-1-68" href="#__codelineno-1-68"></a><span class="k">-</span><span class="w"> </span>"Adjust until tests pass"
 <a id="__codelineno-1-69" name="__codelineno-1-69" href="#__codelineno-1-69"></a>
 <a id="__codelineno-1-70" name="__codelineno-1-70" href="#__codelineno-1-70"></a><span class="gs">**RED FLAG**</span>: Plan author did not verify behavior. Require source citation instead.
 <a id="__codelineno-1-71" name="__codelineno-1-71" href="#__codelineno-1-71"></a>

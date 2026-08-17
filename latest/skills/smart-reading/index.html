@@ -9667,7 +9667,7 @@
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="gu">## The Problem</span>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>Claude often pipes output through <span class="sb">`head -100`</span> to &quot;save tokens.&quot; This causes:
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>Claude often pipes output through <span class="sb">`head -100`</span> to "save tokens." This causes:
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span>Silent data loss
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>Missed errors (which often appear at the END)
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">-</span><span class="w"> </span>Wrong conclusions based on incomplete information
@@ -9687,7 +9687,7 @@
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="gu">## Before Reading Any File</span>
 <a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>wc<span class="w"> </span>-l<span class="w"> </span>&lt;<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$FILE</span><span class="s2">&quot;</span><span class="w">  </span><span class="c1"># Get line count first</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>wc<span class="w"> </span>-l<span class="w"> </span>&lt;<span class="w"> </span><span class="s2">"</span><span class="nv">$FILE</span><span class="s2">"</span><span class="w">  </span><span class="c1"># Get line count first</span>
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">```</span>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gu">## Command Output Capture</span>
@@ -9716,7 +9716,7 @@
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| Scenario | Approach |
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>|----------|----------|
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| Need to see output streaming AND analyze after | <span class="sb">`tee`</span> to temp file |
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Pure analysis, don&#39;t need streaming | Delegate entire command to subagent |
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Pure analysis, don't need streaming | Delegate entire command to subagent |
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| Interactive command or watching for specific event | Run directly, no capture |
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gu">### Cleanup Rules</span>
@@ -9725,7 +9725,7 @@
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>Always clean up temp files. Use one of:
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
 <a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">1.</span> <span class="gs">**Immediate cleanup**</span> after analysis: <span class="sb">`rm /tmp/cmd-$$-output.txt`</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">2.</span> <span class="gs">**Trap-based cleanup**</span> for complex flows: <span class="sb">`trap &#39;rm -f /tmp/cmd-$$-output.txt&#39; EXIT`</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">2.</span> <span class="gs">**Trap-based cleanup**</span> for complex flows: <span class="sb">`trap 'rm -f /tmp/cmd-$$-output.txt' EXIT`</span>
 <a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">3.</span> <span class="gs">**Delegate to subagent**</span> - subagent handles its own cleanup
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
@@ -9759,11 +9759,11 @@
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>| Intent | Subagent Behavior | Example Prompt |
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>|--------|-------------------|----------------|
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>| <span class="gs">**Error extraction**</span> | Find all errors, warnings, failures. Return with context. | &quot;Read the test output and extract all failures with their stack traces&quot; |
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>| <span class="gs">**Technical summary**</span> | Comprehensive but condensed overview preserving structure | &quot;Summarize this config file&#39;s structure and key settings&quot; |
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>| <span class="gs">**Presence check**</span> | Does concept X exist? Where? | &quot;Does this file implement rate limiting? If so, where and how?&quot; |
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>| <span class="gs">**Diff-aware**</span> | What changed and why does it matter? | &quot;Compare these two versions and explain the significant changes&quot; |
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>| <span class="gs">**Structure overview**</span> | What&#39;s in this file, how is it organized | &quot;Outline the structure of this module - classes, functions, their purposes&quot; |
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>| <span class="gs">**Error extraction**</span> | Find all errors, warnings, failures. Return with context. | "Read the test output and extract all failures with their stack traces" |
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>| <span class="gs">**Technical summary**</span> | Comprehensive but condensed overview preserving structure | "Summarize this config file's structure and key settings" |
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>| <span class="gs">**Presence check**</span> | Does concept X exist? Where? | "Does this file implement rate limiting? If so, where and how?" |
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>| <span class="gs">**Diff-aware**</span> | What changed and why does it matter? | "Compare these two versions and explain the significant changes" |
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>| <span class="gs">**Structure overview**</span> | What's in this file, how is it organized | "Outline the structure of this module - classes, functions, their purposes" |
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="gu">## Delegation Template</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a>
@@ -9817,13 +9817,13 @@
 <a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>| Build logs (errors often at end) | No | Yes |
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>| Large source file, need understanding | No | Yes |
 <a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>| Multiple files to cross-reference | No | Yes |
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>| Output where you don&#39;t know what you&#39;re looking for | No | Yes |
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>| Output where you don't know what you're looking for | No | Yes |
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="gu">## Reasoning Schema</span>
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
 <a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>&lt;analysis&gt;
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>Before reading any file or command output:
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">1.</span> Size known? If not: <span class="sb">`wc -l &lt; &quot;$FILE&quot;`</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">1.</span> Size known? If not: <span class="sb">`wc -l &lt; "$FILE"`</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">2.</span> ≤200 lines? Read directly
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="k">3.</span> &gt;200 AND need exact text? Read with targeted offset/limit
 <a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="k">4.</span> &gt;200 AND need understanding? Delegate with explicit intent

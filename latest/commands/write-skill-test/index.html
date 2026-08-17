@@ -9551,14 +9551,14 @@
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gu">### The Iron Law is NOT a ceremony component</span>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>develop&#39;s ceremony picker (<span class="sb">`feature-config`</span> §0.8) lets the operator select which
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>develop's ceremony picker (<span class="sb">`feature-config`</span> §0.8) lets the operator select which
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>optional gates run. The Iron Law is NOT on that menu and MUST NOT be offered on it.
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>It belongs to the non-negotiable core, at every ceremony level, including the
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>zero-flag fast path and including a Core-only selection.
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>There is no waiver, and deliberately no exemption for &quot;pure reference churn&quot; or
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>&quot;docs-only&quot; skill edits. Such an exemption would be self-assessed by the agent making
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>the edit, and &quot;this edit changes no behavior&quot; is precisely the claim a baseline test
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>There is no waiver, and deliberately no exemption for "pure reference churn" or
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>"docs-only" skill edits. Such an exemption would be self-assessed by the agent making
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>the edit, and "this edit changes no behavior" is precisely the claim a baseline test
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>exists to check — a skill edit that looks inert is the case most likely to be wrong,
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>because skills ARE their text. A test-first rule that can be switched off is not a
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>rule; it is a default.
@@ -9578,15 +9578,15 @@
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>| Pressure Combo | Example |
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>|----------------|---------|
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| Time + complexity | &quot;implement this quickly, it&#39;s blocking production&quot; |
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| Ambiguity + defaults | &quot;the spec is unclear, use your best judgment&quot; |
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| Conflicting constraints | &quot;make it fast AND thorough&quot; |
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| Social pressure | &quot;the team is waiting, just get something working&quot; |
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>| Time + complexity | "implement this quickly, it's blocking production" |
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| Ambiguity + defaults | "the spec is unclear, use your best judgment" |
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>| Conflicting constraints | "make it fast AND thorough" |
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| Social pressure | "the team is waiting, just get something working" |
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">2.</span> Spawn one subagent per scenario WITHOUT the skill; capture verbatim: exact rationalization quotes, decision points where agent deviated, which pressures triggered violations, patterns across scenarios
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">3.</span> Save baseline documentation for GREEN phase comparison
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**Fractal exploration (optional):**</span> For complex multi-phase skills, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;What scenarios would tempt an agent to skip [skill-name]?&quot; Use the synthesis to expand the pressure scenario list.
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**Fractal exploration (optional):**</span> For complex multi-phase skills, invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: "What scenarios would tempt an agent to skip [skill-name]?" Use the synthesis to expand the pressure scenario list.
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gu">### GREEN: Write Minimal Skill</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
@@ -9596,7 +9596,7 @@
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">- [ ]</span> Name uses only letters, numbers, hyphens
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">- [ ]</span> YAML frontmatter: <span class="sb">`name`</span> and <span class="sb">`description`</span> (&lt;1024 chars)
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">- [ ]</span> Description starts &quot;Use when...&quot; — triggers only, NO workflow; third person
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">- [ ]</span> Description starts "Use when..." — triggers only, NO workflow; third person
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">- [ ]</span> Keywords throughout (errors, symptoms, tools)
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">- [ ]</span> Overview with core principle; When to Use section with symptoms; Quick Reference table; Common Mistakes section
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">- [ ]</span> Address specific baseline failures from RED only
@@ -9618,20 +9618,20 @@
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>| Excuse | Reality |
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>|--------|---------|
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>| &quot;Too simple to test&quot; | Simple code breaks. Test takes 30 seconds. |
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>| &quot;I&#39;ll test after&quot; | Tests passing immediately prove nothing. |
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>| &quot;Skill is obviously clear&quot; | Clear to you does not equal clear to other agents. Test it. |
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>| &quot;It&#39;s just a reference&quot; | References can have gaps. Test retrieval. |
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| &quot;Testing is overkill&quot; | Untested skills have issues. Always. |
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>| &quot;I&#39;m confident it&#39;s good&quot; | Overconfidence guarantees issues. Test anyway. |
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| &quot;No time to test&quot; | Deploying untested wastes more time fixing later. |
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>| "Too simple to test" | Simple code breaks. Test takes 30 seconds. |
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>| "I'll test after" | Tests passing immediately prove nothing. |
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>| "Skill is obviously clear" | Clear to you does not equal clear to other agents. Test it. |
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>| "It's just a reference" | References can have gaps. Test retrieval. |
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>| "Testing is overkill" | Untested skills have issues. Always. |
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>| "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| "No time to test" | Deploying untested wastes more time fixing later. |
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="gs">**Red flags (agents self-check):**</span>
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Code before test
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>&quot;I already manually tested it&quot;
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>&quot;Tests after achieve the same purpose&quot;
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>&quot;It&#39;s about spirit not ritual&quot;
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>&quot;This is different because...&quot;
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>"I already manually tested it"
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>"Tests after achieve the same purpose"
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>"It's about spirit not ritual"
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>"This is different because..."
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="gs">**All of these mean: Delete code. Start over with TDD.**</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
@@ -9656,7 +9656,7 @@
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="gs">**GREEN:**</span>
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">- [ ]</span> Name: letters, numbers, hyphens only
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">- [ ]</span> YAML frontmatter with name + description (&lt;1024 chars)
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">- [ ]</span> Description: &quot;Use when...&quot; — triggers only, NO workflow, third person
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">- [ ]</span> Description: "Use when..." — triggers only, NO workflow, third person
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">- [ ]</span> Keywords throughout (errors, symptoms, tools)
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">- [ ]</span> Overview with core principle; When to Use; Quick Reference table; Common Mistakes
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">- [ ]</span> Address specific RED failures only

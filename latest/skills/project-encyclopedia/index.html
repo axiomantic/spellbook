@@ -9595,7 +9595,7 @@
 </tbody>
 </table>
 <h2 id="skill-content">Skill Content<a class="headerlink" href="#skill-content" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">&gt; </span><span class="ge">**DEPRECATED (v0.23.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the &quot;Project Knowledge (AGENTS.md)&quot; section in the spellbook rule modules. This skill will be removed in a future version.</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">&gt; </span><span class="ge">**DEPRECATED (v0.23.0):** This skill is deprecated. Project knowledge now belongs in `AGENTS.md` files within the project repository. See the "Project Knowledge (AGENTS.md)" section in the spellbook rule modules. This skill will be removed in a future version.</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="gh"># Project Encyclopedia</span>
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
@@ -9605,11 +9605,11 @@
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Overview Only**</span>: Encyclopedias contain key abstractions, not implementation details. If it could go stale within a sprint, it doesn&#39;t belong.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Overview Only**</span>: Encyclopedias contain key abstractions, not implementation details. If it could go stale within a sprint, it doesn't belong.
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">2.</span> <span class="gs">**Offer, Don&#39;t Force**</span>: Always ask before creating. &quot;Would you like me to create an encyclopedia?&quot; Never auto-generate.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">2.</span> <span class="gs">**Offer, Don't Force**</span>: Always ask before creating. "Would you like me to create an encyclopedia?" Never auto-generate.
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">3.</span> <span class="gs">**Reference, Don&#39;t Duplicate**</span>: If README/CLAUDE.md/configs already specify something, reference the location. Never copy.
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">3.</span> <span class="gs">**Reference, Don't Duplicate**</span>: If README/CLAUDE.md/configs already specify something, reference the location. Never copy.
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">4.</span> <span class="gs">**Staleness Detection**</span>: Check mtime. Encyclopedias older than 30 days get refresh offers, not silent reads.
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
@@ -9646,8 +9646,8 @@
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="k">1.</span> Compute project path: <span class="sb">`~/.local/spellbook/docs/&lt;project-encoded&gt;/encyclopedia.md`</span>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">2.</span> Check existence and freshness:
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If exists AND mtime &lt; 30 days: Read silently, use for context
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If exists AND mtime &gt;= 30 days: &quot;Encyclopedia is [N] days old. Refresh?&quot;
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If not exists: &quot;I don&#39;t have an encyclopedia for this project. Create one?&quot;
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If exists AND mtime &gt;= 30 days: "Encyclopedia is [N] days old. Refresh?"
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>If not exists: "I don't have an encyclopedia for this project. Create one?"
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">3.</span> User declines: Proceed without. Do not ask again this session.
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">4.</span> User accepts: Invoke <span class="sb">`project-encyclopedia`</span> skill
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">```</span>

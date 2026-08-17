@@ -9415,18 +9415,18 @@ hand off to a fresh session. The original body is preserved in ARCHIVE.md.</p>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>nested-dispatch pattern) and the related <span class="sb">`work_items`</span> separate-session
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>decomposition mode have been removed from <span class="sb">`develop`</span> / <span class="sb">`feature-implement`</span>.
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gs">**Why it was removed:**</span> the pattern depended on a &quot;Manager&quot; subagent dispatching
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="gs">**Why it was removed:**</span> the pattern depended on a "Manager" subagent dispatching
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>its own per-gate sub-subagents via the Task tool. In practice, dispatched
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>subagents do not reliably have the Task tool wired through, so Managers silently
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>degraded to inline execution and the intended per-gate context isolation was
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>lost. The single-orchestrator model is the only reliable dispatch topology.
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gs">**Migration:**</span>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`develop`</span>&#39;s single-orchestrator <span class="gs">**delegated**</span> execution mode: one
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Use <span class="sb">`develop`</span>'s single-orchestrator <span class="gs">**delegated**</span> execution mode: one
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>  orchestrator dispatches gate subagents directly.
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>For very large features, do NOT nest orchestrators. Instead, checkpoint the
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>  <span class="sb">`develop_gate_ledger`</span> and hand off to a fresh <span class="sb">`develop`</span> session when the
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  orchestrator&#39;s context approaches its limit.
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>  orchestrator's context approaches its limit.
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>End-of-phase quality gates (comprehensive audit, full test suite, green-mirage
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>  audit, comprehensive fact-check, pre-PR claim validation) still run at the
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>  single orchestrator level.
@@ -9439,10 +9439,10 @@ hand off to a fresh session. The original body is preserved in ARCHIVE.md.</p>
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">1.</span> <span class="gs">**Deprecated**</span> - Do not use this skill or the <span class="sb">`sub_orchestrators`</span> / <span class="sb">`work_items`</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>   execution modes. Use <span class="sb">`develop`</span>&#39;s single-orchestrator delegated mode instead.
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>   execution modes. Use <span class="sb">`develop`</span>'s single-orchestrator delegated mode instead.
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>&lt;analysis&gt;This skill is deprecated. Nested sub-orchestrator dispatch is unsupported because dispatched subagents lack a reliable Task tool. The original body lives in ARCHIVE.md.&lt;/analysis&gt;
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>&lt;reflection&gt;If invoked, redirect the user to develop&#39;s single-orchestrator delegated mode, and point to the <span class="sb">`develop_gate_ledger`</span> checkpoint mechanism for very large efforts.&lt;/reflection&gt;
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>&lt;reflection&gt;If invoked, redirect the user to develop's single-orchestrator delegated mode, and point to the <span class="sb">`develop_gate_ledger`</span> checkpoint mechanism for very large efforts.&lt;/reflection&gt;
 </code></pre></div>
 
 

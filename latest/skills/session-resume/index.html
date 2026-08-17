@@ -9413,7 +9413,7 @@
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Boot Prompt Executes Immediately**</span> - The resume boot prompt runs before any other user interaction; it is not optional or deferrable.
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> <span class="gs">**Continuation Intent Governs Action**</span> - The user&#39;s first message determines whether to resume, start fresh, or default to resume; never assume.
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> <span class="gs">**Continuation Intent Governs Action**</span> - The user's first message determines whether to resume, start fresh, or default to resume; never assume.
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> <span class="gs">**Corrupted State Is Announced, Not Silently Skipped**</span> - If todos or workflow state is malformed, inform the user explicitly rather than proceeding with partial data.
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gu">## Session Resume Protocol</span>
@@ -9428,11 +9428,11 @@
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| <span class="sb">`resume_session_id`</span>       | string | Session soul ID                    |
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| <span class="sb">`resume_age_hours`</span>        | float  | Hours since bound                  |
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| <span class="sb">`resume_bound_at`</span>         | string | ISO bind timestamp                 |
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| <span class="sb">`resume_active_skill`</span>     | string | Active skill (e.g., &quot;develop&quot;)     |
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| <span class="sb">`resume_skill_phase`</span>      | string | Skill phase (e.g., &quot;DESIGN&quot;)       |
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| <span class="sb">`resume_active_skill`</span>     | string | Active skill (e.g., "develop")     |
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| <span class="sb">`resume_skill_phase`</span>      | string | Skill phase (e.g., "DESIGN")       |
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| <span class="sb">`resume_pending_todos`</span>    | int    | Incomplete todo count              |
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>| <span class="sb">`resume_todos_corrupted`</span>  | bool   | Todo JSON malformed                |
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| <span class="sb">`resume_workflow_pattern`</span> | string | Workflow (e.g., &quot;TDD&quot;)             |
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>| <span class="sb">`resume_workflow_pattern`</span> | string | Workflow (e.g., "TDD")             |
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>| <span class="sb">`resume_boot_prompt`</span>      | string | Section 0 boot prompt              |
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">### Resume Execution</span>
@@ -9447,9 +9447,9 @@
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| Pattern                                     | Intent      | Action                                        |
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>| ------------------------------------------- | ----------- | --------------------------------------------- |
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| &quot;continue&quot;, &quot;resume&quot;, &quot;where were we&quot;       | continue    | Execute boot prompt                           |
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| &quot;start fresh&quot;, &quot;new session&quot;, &quot;clean slate&quot; | fresh_start | Skip resume, return <span class="sb">`resume_available: false`</span> |
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| &quot;ok&quot;, &quot;next&quot;, neutral message               | neutral     | Execute boot prompt (if session exists)       |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| "continue", "resume", "where were we"       | continue    | Execute boot prompt                           |
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| "start fresh", "new session", "clean slate" | fresh_start | Skip resume, return <span class="sb">`resume_available: false`</span> |
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| "ok", "next", neutral message               | neutral     | Execute boot prompt (if session exists)       |
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gu">## Session Repairs</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
@@ -9465,7 +9465,7 @@
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">&gt; </span><span class="ge">Welcome to spellbook-enhanced Claude.</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">&gt;</span>
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="ge">&gt; Repairs needed:</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">&gt; </span><span class="ge">- (warnings surfaced by `spellbook_session_init`; suggest each entry&#39;s `fix_command`)</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">&gt; </span><span class="ge">- (warnings surfaced by `spellbook_session_init`; suggest each entry's `fix_command`)</span>
 </code></pre></div>
 
 

@@ -9579,10 +9579,10 @@
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sb">```python</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="c1"># CORRECT</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="s2">&quot;the complete expected output, every character&quot;</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="s2">"the complete expected output, every character"</span>
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="c1"># CORRECT - dynamic output</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">assert</span> <span class="n">message</span> <span class="o">==</span> <span class="sa">f</span><span class="s2">&quot;Today&#39;s date is </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="k">assert</span> <span class="n">message</span> <span class="o">==</span> <span class="sa">f</span><span class="s2">"Today's date is </span><span class="si">{</span><span class="n">datetime</span><span class="o">.</span><span class="n">date</span><span class="o">.</span><span class="n">today</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">()</span><span class="si">}</span><span class="s2">"</span>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="sb">```</span>
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="gu">### Required Assertion Level</span>
@@ -9604,12 +9604,12 @@
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span><span class="sb">`assert &quot;X&quot; in output`</span> (bare substring on any output — static or dynamic)
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">-</span><span class="w"> </span><span class="sb">`assert "X" in output`</span> (bare substring on any output — static or dynamic)
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">-</span><span class="w"> </span><span class="sb">`assert len(result) &gt; 0`</span> (existence only)
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">-</span><span class="w"> </span><span class="sb">`assert len(result) == N`</span> without content verification
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">-</span><span class="w"> </span><span class="sb">`assert result is not None`</span> without value assertion
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">-</span><span class="w"> </span><span class="sb">`assert result == function_under_test(same_input)`</span> (tautological)
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">-</span><span class="w"> </span>Multiple <span class="sb">`assert &quot;X&quot; in result`</span> checks (still partial)
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">-</span><span class="w"> </span>Multiple <span class="sb">`assert "X" in result`</span> checks (still partial)
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span><span class="sb">`mock.ANY`</span> in any mock call assertion (construct expected argument instead)
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
@@ -9653,22 +9653,22 @@
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>    <span class="k">assert</span> <span class="n">report</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">report</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="c1"># WRONG &quot;FIX&quot;: Still partial (Level 2 - STILL BANNED)</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="c1"># WRONG "FIX": Still partial (Level 2 - STILL BANNED)</span>
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_generate_report</span><span class="p">():</span>
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>    <span class="n">report</span> <span class="o">=</span> <span class="n">generate_report</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>    <span class="k">assert</span> <span class="s2">&quot;Expected Title&quot;</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>  <span class="c1"># STILL A GREEN MIRAGE</span>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>    <span class="k">assert</span> <span class="s2">"Expected Title"</span> <span class="ow">in</span> <span class="nb">str</span><span class="p">(</span><span class="n">report</span><span class="p">)</span>  <span class="c1"># STILL A GREEN MIRAGE</span>
 <a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="c1"># CORRECT FIX: Exact equality on complete output (Level 5 - GOLD)</span>
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_generate_report</span><span class="p">():</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>    <span class="n">report</span> <span class="o">=</span> <span class="n">generate_report</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>    <span class="k">assert</span> <span class="n">report</span> <span class="o">==</span> <span class="p">{</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>        <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Expected Title&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>        <span class="s2">&quot;sections&quot;</span><span class="p">:</span> <span class="p">[</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Section 1&quot;</span><span class="p">,</span> <span class="s2">&quot;valid&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">},</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Section 2&quot;</span><span class="p">,</span> <span class="s2">&quot;valid&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">},</span>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;Section 3&quot;</span><span class="p">,</span> <span class="s2">&quot;valid&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;...&quot;</span><span class="p">},</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>        <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Expected Title"</span><span class="p">,</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>        <span class="s2">"sections"</span><span class="p">:</span> <span class="p">[</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>            <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Section 1"</span><span class="p">,</span> <span class="s2">"valid"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"..."</span><span class="p">},</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>            <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Section 2"</span><span class="p">,</span> <span class="s2">"valid"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"..."</span><span class="p">},</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>            <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"Section 3"</span><span class="p">,</span> <span class="s2">"valid"</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s2">"content"</span><span class="p">:</span> <span class="s2">"..."</span><span class="p">},</span>
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>        <span class="p">],</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>        <span class="s2">&quot;generated_at&quot;</span><span class="p">:</span> <span class="n">mock_timestamp</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>        <span class="s2">"generated_at"</span><span class="p">:</span> <span class="n">mock_timestamp</span>
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>    <span class="p">}</span>
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="sb">```</span>
 <a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
@@ -9676,12 +9676,12 @@
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">```python</span>
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_generate_report_empty_data</span><span class="p">():</span>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s2">&quot;Data cannot be empty&quot;</span><span class="p">):</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>    <span class="k">with</span> <span class="n">pytest</span><span class="o">.</span><span class="n">raises</span><span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="n">match</span><span class="o">=</span><span class="s2">"Data cannot be empty"</span><span class="p">):</span>
 <a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a>        <span class="n">generate_report</span><span class="p">([])</span>
 <a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a>
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_generate_report_malformed_data</span><span class="p">():</span>
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">generate_report</span><span class="p">({</span><span class="s2">&quot;invalid&quot;</span><span class="p">:</span> <span class="s2">&quot;structure&quot;</span><span class="p">})</span>
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>    <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">&quot;error&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;Invalid data format&quot;</span>
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">generate_report</span><span class="p">({</span><span class="s2">"invalid"</span><span class="p">:</span> <span class="s2">"structure"</span><span class="p">})</span>
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>    <span class="k">assert</span> <span class="n">result</span><span class="p">[</span><span class="s2">"error"</span><span class="p">]</span> <span class="o">==</span> <span class="s2">"Invalid data format"</span>
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="sb">```</span>
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="gs">**Flaky Test Fix:**</span>
@@ -9705,16 +9705,16 @@
 <a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">```python</span>
 <a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="c1"># BEFORE: Tests implementation</span>
 <a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_user_save</span><span class="p">():</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>    <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>    <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
 <a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a>    <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>    <span class="k">assert</span> <span class="n">user</span><span class="o">.</span><span class="n">_db_connection</span><span class="o">.</span><span class="n">execute</span><span class="o">.</span><span class="n">called_with</span><span class="p">(</span><span class="s2">&quot;INSERT...&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>    <span class="k">assert</span> <span class="n">user</span><span class="o">.</span><span class="n">_db_connection</span><span class="o">.</span><span class="n">execute</span><span class="o">.</span><span class="n">called_with</span><span class="p">(</span><span class="s2">"INSERT..."</span><span class="p">)</span>
 <a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>
 <a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="c1"># AFTER: Tests behavior</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_user_save</span><span class="p">():</span>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>    <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>    <span class="n">user</span> <span class="o">=</span> <span class="n">User</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>    <span class="n">user</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>    <span class="n">loaded</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">find_by_name</span><span class="p">(</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>    <span class="k">assert</span> <span class="n">loaded</span> <span class="o">==</span> <span class="n">User</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;test&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>    <span class="n">loaded</span> <span class="o">=</span> <span class="n">User</span><span class="o">.</span><span class="n">find_by_name</span><span class="p">(</span><span class="s2">"test"</span><span class="p">)</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>    <span class="k">assert</span> <span class="n">loaded</span> <span class="o">==</span> <span class="n">User</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"test"</span><span class="p">)</span>
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="sb">```</span>
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="gu">## 2.4 Verify Fix</span>
@@ -9730,7 +9730,7 @@
 <a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">- [ ]</span> Other tests in file still pass
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="k">- [ ]</span> Fix would actually catch the failure it should catch
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="k">- [ ]</span> Every new assertion is Level 4+ on the Assertion Strength Ladder
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="k">- [ ]</span> No bare substring checks (<span class="sb">`assert &quot;X&quot; in result`</span>) on any output (static or dynamic)
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="k">- [ ]</span> No bare substring checks (<span class="sb">`assert "X" in result`</span>) on any output (static or dynamic)
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="k">- [ ]</span> For each assertion: named a specific production code mutation it catches
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="k">- [ ]</span> Fix is NOT just moving from one BANNED level to another
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>&lt;/reflection&gt;
@@ -9739,12 +9739,12 @@
 <a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>
 <a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">```bash</span>
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>git<span class="w"> </span>add<span class="w"> </span>path/to/test.py
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;fix(tests): strengthen assertions in test_function</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">"fix(tests): strengthen assertions in test_function</span>
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
 <a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="s2">- [What was weak/broken]</span>
 <a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="s2">- [What fix does]</span>
 <a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="s2">- Pattern: N - [Pattern name] (if from audit)</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="s2">&quot;</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="s2">"</span>
 <a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">```</span>
 <a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
 <a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>&lt;FINAL_EMPHASIS&gt;

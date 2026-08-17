@@ -9421,7 +9421,7 @@
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">1.</span> <span class="gs">**Atomic = one predicate, one subject.**</span> &quot;X does Y and Z&quot; is two claims, not one.
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">1.</span> <span class="gs">**Atomic = one predicate, one subject.**</span> "X does Y and Z" is two claims, not one.
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">2.</span> <span class="gs">**Preserve original meaning.**</span> Decomposition must not add or subtract meaning.
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">3.</span> <span class="gs">**Independence.**</span> Each atomic claim must be verifiable without reference to other claims from the same decomposition.
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">4.</span> <span class="gs">**No interpretation.**</span> Decompose what is stated, not what is implied.
@@ -9431,11 +9431,11 @@
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="gu">### Step 1: Identify Compound Statements</span>
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>Scan the input text for:
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span>Conjunctions joining distinct facts (&quot;X and Y&quot;, &quot;X but Y&quot;, &quot;X while Y&quot;)
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span>Relative clauses adding facts (&quot;X, which does Y&quot;)
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">-</span><span class="w"> </span>Parenthetical additions (&quot;X (using Y)&quot;)
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">-</span><span class="w"> </span>Lists presented as prose (&quot;supports A, B, and C&quot;)
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span>Causal chains (&quot;X because Y, leading to Z&quot;)
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span>Conjunctions joining distinct facts ("X and Y", "X but Y", "X while Y")
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="k">-</span><span class="w"> </span>Relative clauses adding facts ("X, which does Y")
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">-</span><span class="w"> </span>Parenthetical additions ("X (using Y)")
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="k">-</span><span class="w"> </span>Lists presented as prose ("supports A, B, and C")
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="k">-</span><span class="w"> </span>Causal chains ("X because Y, leading to Z")
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="gu">### Step 2: Extract Atomic Claims</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
@@ -9443,18 +9443,18 @@
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>| Compound | Atomic Claims |
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>|---|---|
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| &quot;The cache uses Redis and expires entries after 5 minutes&quot; | 1. &quot;The cache uses Redis&quot; 2. &quot;Cache entries expire after 5 minutes&quot; |
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| &quot;Authentication is handled by OAuth2, which requires HTTPS&quot; | 1. &quot;Authentication is handled by OAuth2&quot; 2. &quot;OAuth2 requires HTTPS&quot; |
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| &quot;The API supports JSON and XML responses with rate limiting&quot; | 1. &quot;The API supports JSON responses&quot; 2. &quot;The API supports XML responses&quot; 3. &quot;The API has rate limiting&quot; |
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>| "The cache uses Redis and expires entries after 5 minutes" | 1. "The cache uses Redis" 2. "Cache entries expire after 5 minutes" |
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>| "Authentication is handled by OAuth2, which requires HTTPS" | 1. "Authentication is handled by OAuth2" 2. "OAuth2 requires HTTPS" |
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>| "The API supports JSON and XML responses with rate limiting" | 1. "The API supports JSON responses" 2. "The API supports XML responses" 3. "The API has rate limiting" |
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="gu">### Step 3: Classify Each Atomic Claim</span>
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>| Classification | Definition | Example |
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>|---|---|---|
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| Verifiable-Internal | Can be checked against codebase | &quot;The cache TTL is 300 seconds&quot; |
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| Verifiable-External | Requires external source to check | &quot;OAuth2 requires HTTPS&quot; |
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| Subjective | Opinion or preference, not verifiable | &quot;The API is well-designed&quot; |
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| Definitional | True by definition, trivially verifiable | &quot;JSON is a data format&quot; |
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| Verifiable-Internal | Can be checked against codebase | "The cache TTL is 300 seconds" |
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| Verifiable-External | Requires external source to check | "OAuth2 requires HTTPS" |
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| Subjective | Opinion or preference, not verifiable | "The API is well-designed" |
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>| Definitional | True by definition, trivially verifiable | "JSON is a data format" |
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gu">### Step 4: Output Format</span>
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
@@ -9463,7 +9463,7 @@
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="sb">### Source: [file:line or document section]</span>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">Original: &quot;[compound statement]&quot;</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">Original: "[compound statement]"</span>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">Atomic claims:</span>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="sb">1. [claim] | [classification] | [suggested evidence tier]</span>

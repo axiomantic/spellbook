@@ -9422,7 +9422,7 @@
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">1.</span> <span class="gs">**Directory Determines Truth**</span> - Branch-context commands must run from the correct working directory; running from the wrong repo produces silently wrong results.
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">2.</span> <span class="gs">**Merge Base Is the Reference Point**</span> - All branch diffs, PR descriptions, and changelogs describe changes relative to the merge base, never absolute state.
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">3.</span> <span class="gs">**Stacked Branches Show Only Their Layer**</span> - In a stack, each branch&#39;s diff includes only what it added on top of its parent branch.
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">3.</span> <span class="gs">**Stacked Branches Show Only Their Layer**</span> - In a stack, each branch's diff includes only what it added on top of its parent branch.
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>---
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
@@ -9462,12 +9462,12 @@
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>which lets a review certify N-of-N against zero hunks.
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="sb">`json`</span> reports BOTH counts: <span class="sb">`files_changed`</span> (working tree) and
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">`files_changed_committed`</span>. Automation deciding &quot;is there anything to review&quot;
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="sb">`files_changed_committed`</span>. Automation deciding "is there anything to review"
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>must read <span class="sb">`files_changed_committed`</span>.
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>Run <span class="sb">`branch-context.sh --help`</span> for the authoritative list; this table and the
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>script&#39;s own usage output are ONE contract.
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>script's own usage output are ONE contract.
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="sb">`$SPELLBOOK_DIR`</span> is substituted at load time from spellbook configuration.
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
@@ -9484,7 +9484,7 @@
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="k">1.</span> Run <span class="sb">`branch-context.sh`</span> to confirm the detected merge target.
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">2.</span> Verify the merge target is the parent branch (e.g., <span class="sb">`branch-A`</span>), not <span class="sb">`main`</span>
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>   or <span class="sb">`master`</span>.
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">3.</span> The diff will show only branch-B&#39;s additions, not the full stack.
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">3.</span> The diff will show only branch-B's additions, not the full stack.
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>---
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
@@ -9515,7 +9515,7 @@
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="gs">**Rules:**</span>
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">-</span><span class="w"> </span>Describe what the branch introduces relative to its merge base.
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span>Do not narrate the development history (&quot;first we tried X, then switched to Y&quot;).
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span>Do not narrate the development history ("first we tried X, then switched to Y").
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">-</span><span class="w"> </span>Do not reference work from parent branches in stacked PRs.
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="k">-</span><span class="w"> </span>PR descriptions should summarize the diff, not the journey.
 </code></pre></div>

@@ -9420,19 +9420,19 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>changed code. Skipping this produces hand-waving: a review that never cites a loaded rule by
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>name is not a review.
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">1.</span> <span class="gs">**Discover and read the repository&#39;s own standards documents.**</span> They vary per repository,
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">1.</span> <span class="gs">**Discover and read the repository's own standards documents.**</span> They vary per repository,
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>   so find them rather than assuming a fixed set. Typical locations include a coding-standards
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>   document, testing instructions, code-review instructions, the root <span class="sb">`AGENTS.md`</span>, and every
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>   subdirectory <span class="sb">`AGENTS.md`</span> covering a changed path. Also read whatever those documents
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>   reference: contributing guides, style guides, and lint configuration. If a document you
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>   expected is absent, note that and adapt; if the repository carries standards documents you
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>   did not expect, load those too.
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">2.</span> <span class="gs">**Read the operator&#39;s standing rules**</span> and any project memory the environment provides.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">2.</span> <span class="gs">**Read the operator's standing rules**</span> and any project memory the environment provides.
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">3.</span> <span class="gs">**Extract a concrete, NAMED rule catalogue**</span> from every document loaded so far — the enforceable rules
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>   with whatever identifiers or names the documents give them. That catalogue is the checklist
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>   the review runs against. You must know the rules before you look for violations.
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">4.</span> <span class="gs">**Every finding names the rule it violates**</span> — the document plus the rule&#39;s identifier or
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>   name — or it is a named correctness or logic bug. No vague &quot;this seems off&quot;: cite the
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">4.</span> <span class="gs">**Every finding names the rule it violates**</span> — the document plus the rule's identifier or
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>   name — or it is a named correctness or logic bug. No vague "this seems off": cite the
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>   standard.
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>If the <span class="sb">`diff-semantics`</span> module is installed, its base and endpoint rules determine which diff
@@ -9441,7 +9441,7 @@
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="gu">### Method — read EVERY line</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>Consume every changed hunk in every changed file and hold each against the catalogue built in
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>Phase 0. No grep-sampling. No skimming. No &quot;I read the hot files.&quot; Grep is fine to LOCATE
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>Phase 0. No grep-sampling. No skimming. No "I read the hot files." Grep is fine to LOCATE
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>things; it is never a substitute for reading the whole diff.
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="k">-</span><span class="w"> </span>For a <span class="gs">**large diff, chunk it across subagents**</span> so that 100% of the diff is assigned and read

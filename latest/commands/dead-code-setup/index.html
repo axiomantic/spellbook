@@ -9549,7 +9549,7 @@
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
 <a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="gu">## Phase 0: Git Safety (MANDATORY)</span>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>&lt;RULE&gt;ALWAYS check git state before any analysis. Dead code verification involves code deletion - protect user&#39;s work.&lt;/RULE&gt;
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>&lt;RULE&gt;ALWAYS check git state before any analysis. Dead code verification involves code deletion - protect user's work.&lt;/RULE&gt;
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
 <a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="gu">### Step 1: Check for uncommitted changes</span>
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>
@@ -9558,7 +9558,7 @@
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="sb">```</span>
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>If output non-empty:
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Present to user**</span>: &quot;You have uncommitted changes. Should I commit them first?&quot;
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Present to user**</span>: "You have uncommitted changes. Should I commit them first?"
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Options**</span>:
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="gs">**Yes**</span> - Ask for commit message and create commit
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span><span class="gs">**No, proceed anyway**</span> - Continue but warn about risks
@@ -9568,9 +9568,9 @@
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>&lt;RULE&gt;ALWAYS ask about worktree, regardless of uncommitted changes. Protects main branch from experimental deletions.&lt;/RULE&gt;
 <a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gs">**Present to user**</span>: &quot;Should I use a git worktree for dead code hunting? (Recommended)&quot;
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gs">**Present to user**</span>: "Should I use a git worktree for dead code hunting? (Recommended)"
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gs">**Explanation**</span>: &quot;A worktree creates an isolated branch where I can safely delete code to test. Your main branch stays untouched. At the end, you review findings and decide what to apply.&quot;
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a><span class="gs">**Explanation**</span>: "A worktree creates an isolated branch where I can safely delete code to test. Your main branch stays untouched. At the end, you review findings and decide what to apply."
 <a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="gs">**Options**</span>:
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Yes, create worktree**</span> (Recommended) - Invoke <span class="sb">`using-git-worktrees`</span> skill
@@ -9578,12 +9578,12 @@
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>
 <a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="gs">**If worktree selected**</span>:
 <a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="k">1.</span> Create branch: <span class="sb">`dead-code-hunt-YYYY-MM-DD-HHMM`</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">2.</span> All &quot;remove and test&quot; operations happen in worktree
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">2.</span> All "remove and test" operations happen in worktree
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">3.</span> Final report generated with findings
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">4.</span> User decides what to apply to main branch
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gs">**If worktree declined**</span>:
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Warning**</span>: &quot;Working directly in your current directory. Any &#39;remove and test&#39; verification will modify your working files.&quot;
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Warning**</span>: "Working directly in your current directory. Any 'remove and test' verification will modify your working files."
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span>Require explicit approval before ANY file modifications
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gu">### Step 3: Proceed to scope selection</span>

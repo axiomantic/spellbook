@@ -9429,14 +9429,14 @@ on each write.</p>
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>Canvas lifecycle:
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">1.</span> <span class="sb">`canvas_open(&quot;plan-x&quot;)`</span> — idempotent claim. Creates the tree on first
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">1.</span> <span class="sb">`canvas_open("plan-x")`</span> — idempotent claim. Creates the tree on first
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>   call; returns the existing metadata on subsequent calls. The returned
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>   <span class="sb">`url`</span> is the page the operator opens in a browser tab.
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">2.</span> <span class="sb">`canvas_write(&quot;plan-x&quot;, markdown_body)`</span> — last-write-wins atomic replace
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">2.</span> <span class="sb">`canvas_write("plan-x", markdown_body)`</span> — last-write-wins atomic replace
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>   of <span class="sb">`pages/index.md`</span>. Publishes <span class="sb">`canvas.updated`</span> on the event bus, which
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>   the SPA picks up within ~100ms.
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">3.</span> <span class="sb">`canvas_close(&quot;plan-x&quot;)`</span> — marks the canvas closed in <span class="sb">`meta.json`</span>.
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>   Subsequent <span class="sb">`canvas_write`</span> calls return <span class="sb">`{&quot;code&quot;: &quot;closed&quot;}`</span>. Files are
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="k">3.</span> <span class="sb">`canvas_close("plan-x")`</span> — marks the canvas closed in <span class="sb">`meta.json`</span>.
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>   Subsequent <span class="sb">`canvas_write`</span> calls return <span class="sb">`{"code": "closed"}`</span>. Files are
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>   NOT deleted; closure is a soft state.
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>The agent owns page writes; the browser can submit DECISIONS via
@@ -9460,7 +9460,7 @@ on each write.</p>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>   decision survives every page rewrite.
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">3.</span> <span class="gs">**Never pass external content to `canvas_write`.**</span> <span class="sb">`rehype-raw`</span> is in the
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>   render path by design (the shortcode grammar depends on it), so raw
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>   <span class="sb">`&lt;script&gt;`</span> in the markdown WILL execute under the admin&#39;s authenticated
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>   <span class="sb">`&lt;script&gt;`</span> in the markdown WILL execute under the admin's authenticated
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>   origin. Web fetches, external transcripts, unvetted MCP output, and pasted
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>   third-party strings must be summarized/paraphrased in your own words and
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>   stripped of literal markup before they reach a canvas. Mitigation is agent
@@ -9472,7 +9472,7 @@ on each write.</p>
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">5.</span> <span class="gs">**`canvas_open` is idempotent; `canvas_close` is a soft state.**</span> Opening an
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>   existing name returns its metadata rather than recreating it, so re-opening
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>   is safe. Closing marks <span class="sb">`meta.json`</span> closed (writes then return
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>   <span class="sb">`{&quot;code&quot;: &quot;closed&quot;}`</span>) but never deletes files.
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>   <span class="sb">`{"code": "closed"}`</span>) but never deletes files.
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>&lt;analysis&gt;
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>Before rendering anything to a canvas, settle three questions:
@@ -9522,8 +9522,8 @@ on each write.</p>
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Charts.**</span> Vega-Lite specs for latency timelines, cost breakdowns,
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>  benchmark comparisons — anything the operator wants to look at, not just
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>  read.
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Side-by-side options.**</span> Tab panels comparing approaches (e.g. &quot;Option A
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>  vs Option B&quot;) where the operator picks visually rather than scrolling.
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Side-by-side options.**</span> Tab panels comparing approaches (e.g. "Option A
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>  vs Option B") where the operator picks visually rather than scrolling.
 <a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Live status.**</span> Long-running orchestrations that want to surface a
 <a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a>  rolling summary the operator can keep open in a tab while you work.
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a>
@@ -9541,7 +9541,7 @@ on each write.</p>
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>A canvas can take a decision back from the operator. The agent declares a
 <a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a>decision (<span class="sb">`canvas_decision_open`</span>), renders a live <span class="sb">`&lt;choice&gt;`</span> or <span class="sb">`&lt;approve&gt;`</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>control on the page, surfaces the URL, then awaits the operator&#39;s submission
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>control on the page, surfaces the URL, then awaits the operator's submission
 <a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>(<span class="sb">`canvas_decision_await`</span>) — which flows back to the awaiting session. Decision
 <a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>state lives in <span class="sb">`meta.json`</span> and survives page rewrites (see Invariant 2).
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
@@ -9564,7 +9564,7 @@ on each write.</p>
 <a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a>incremental patches).
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="sb">`canvas_list`</span> returns a small JSON envelope describing every canvas under
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>the configured root; the admin SPA&#39;s <span class="sb">`/admin/canvas`</span> index page is backed
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>the configured root; the admin SPA's <span class="sb">`/admin/canvas`</span> index page is backed
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a>by the same data.
 <a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="gu">## Shortcode Reference</span>
@@ -9584,19 +9584,19 @@ on each write.</p>
 <a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>|---|---|---|
 <a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>| <span class="sb">`&lt;chart&gt;`</span> | <span class="sb">`caption?: string`</span> | Vega-Lite JSON spec as text (NOT re-parsed as markdown). |
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>| <span class="sb">`&lt;diagram&gt;`</span> | <span class="sb">`caption?: string`</span> | Mermaid DSL source as text (NOT re-parsed as markdown). |
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>| <span class="sb">`&lt;callout&gt;`</span> | <span class="sb">`type: &quot;note&quot; \| &quot;tip&quot; \| &quot;warning&quot; \| &quot;danger&quot;`</span> (default <span class="sb">`&quot;note&quot;`</span>), <span class="sb">`title?: string`</span> | Markdown content (re-rendered recursively). |
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>| <span class="sb">`&lt;callout&gt;`</span> | <span class="sb">`type: "note" \| "tip" \| "warning" \| "danger"`</span> (default <span class="sb">`"note"`</span>), <span class="sb">`title?: string`</span> | Markdown content (re-rendered recursively). |
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>| <span class="sb">`&lt;tabs&gt;`</span> | — | Must contain <span class="sb">`&lt;tab&gt;`</span> elements only. <span class="sb">`&lt;tab&gt;`</span> takes <span class="sb">`title: string`</span>; tab children are markdown. |
 <a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>| <span class="sb">`&lt;choice&gt;`</span> | <span class="sb">`id: string`</span>, <span class="sb">`prompt: string`</span>, <span class="sb">`options: string`</span> (JSON-encoded <span class="sb">`[{value, label}]`</span>) | — (self-closing; renders a live control when a decision with this <span class="sb">`id`</span> is declared, disabled otherwise). |
 <a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>| <span class="sb">`&lt;approve&gt;`</span> | <span class="sb">`id: string`</span>, <span class="sb">`prompt: string`</span>, <span class="sb">`confirm_label?: string`</span>, <span class="sb">`decline_label?: string`</span> | — (self-closing; renders a live control when a decision with this <span class="sb">`id`</span> is declared, disabled otherwise). |
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>| <span class="sb">`&lt;collapsible&gt;`</span> | <span class="sb">`summary?: string`</span> (default <span class="sb">`&quot;Details&quot;`</span>), <span class="sb">`open?: presence-bool`</span> | Markdown content (re-rendered recursively). |
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>| <span class="sb">`&lt;collapsible&gt;`</span> | <span class="sb">`summary?: string`</span> (default <span class="sb">`"Details"`</span>), <span class="sb">`open?: presence-bool`</span> | Markdown content (re-rendered recursively). |
 <a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>
 <a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>Nesting rules:
 <a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>
 <a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>| Container | Allowed nested shortcodes |
 <a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>|---|---|
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>| <span class="sb">`&lt;callout&gt;`</span> | All, including <span class="sb">`&lt;collapsible&gt;`</span>. Don&#39;t abuse — a callout nested three deep is a smell. |
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>| <span class="sb">`&lt;callout&gt;`</span> | All, including <span class="sb">`&lt;collapsible&gt;`</span>. Don't abuse — a callout nested three deep is a smell. |
 <a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>| <span class="sb">`&lt;tabs&gt;`</span> / <span class="sb">`&lt;tab&gt;`</span> | All, including <span class="sb">`&lt;collapsible&gt;`</span>. A <span class="sb">`&lt;chart&gt;`</span> inside a <span class="sb">`&lt;tab&gt;`</span> is the canonical use case. |
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>| <span class="sb">`&lt;collapsible&gt;`</span> | All. Don&#39;t nest 3-deep — same smell rule as <span class="sb">`&lt;callout&gt;`</span>. |
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>| <span class="sb">`&lt;collapsible&gt;`</span> | All. Don't nest 3-deep — same smell rule as <span class="sb">`&lt;callout&gt;`</span>. |
 <a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>| <span class="sb">`&lt;chart&gt;`</span>, <span class="sb">`&lt;diagram&gt;`</span> | None. Children are raw text only. |
 <a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>| <span class="sb">`&lt;choice&gt;`</span>, <span class="sb">`&lt;approve&gt;`</span> | None. Self-closing. |
 <a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>
@@ -9610,7 +9610,7 @@ on each write.</p>
 <a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>
 <a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="sb">`&lt;collapsible&gt;`</span> open/closed state is cached per canvas by summary + source
 <a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>position, so it survives page rewrites. Give sibling collapsibles distinct
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>summaries: collapsibles sharing the default &quot;Details&quot; summary can have their
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>summaries: collapsibles sharing the default "Details" summary can have their
 <a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>remembered open-state misattributed if the page is reordered.
 <a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
 <a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>Example markdown an agent might emit via <span class="sb">`canvas_write`</span>:
@@ -9618,13 +9618,13 @@ on each write.</p>
 <a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>````markdown
 <a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="gh"># Plan: Feature X</span>
 <a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>&lt;callout type=&quot;warning&quot; title=&quot;Heads up&quot;&gt;
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>&lt;callout type="warning" title="Heads up"&gt;
 <a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>This change touches the auth path. Review carefully.
 <a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>&lt;/callout&gt;
 <a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="gu">## Architecture</span>
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>&lt;diagram caption=&quot;Request flow&quot;&gt;
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>&lt;diagram caption="Request flow"&gt;
 <a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>flowchart LR
 <a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a>  A --&gt; B
 <a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>  B --&gt; C
@@ -9632,17 +9632,17 @@ on each write.</p>
 <a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
 <a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="gu">## Metrics</span>
 <a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>&lt;chart caption=&quot;Daily p99 latency&quot;&gt;
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>{&quot;mark&quot;:&quot;line&quot;,&quot;encoding&quot;:{&quot;x&quot;:{&quot;field&quot;:&quot;date&quot;,&quot;type&quot;:&quot;temporal&quot;},&quot;y&quot;:{&quot;field&quot;:&quot;p99&quot;,&quot;type&quot;:&quot;quantitative&quot;}},&quot;data&quot;:{&quot;values&quot;:[{&quot;date&quot;:&quot;2026-05-01&quot;,&quot;p99&quot;:120},{&quot;date&quot;:&quot;2026-05-02&quot;,&quot;p99&quot;:135}]}}
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>&lt;chart caption="Daily p99 latency"&gt;
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>{"mark":"line","encoding":{"x":{"field":"date","type":"temporal"},"y":{"field":"p99","type":"quantitative"}},"data":{"values":[{"date":"2026-05-01","p99":120},{"date":"2026-05-02","p99":135}]}}
 <a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>&lt;/chart&gt;
 <a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
 <a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gu">## Options</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
 <a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>&lt;tabs&gt;
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>  &lt;tab title=&quot;Option A&quot;&gt;
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>  &lt;tab title="Option A"&gt;
 <a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>    Single-table schema. Simpler to query.
 <a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>  &lt;/tab&gt;
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>  &lt;tab title=&quot;Option B&quot;&gt;
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>  &lt;tab title="Option B"&gt;
 <a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>    Star schema. More flexible for analytics.
 <a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>  &lt;/tab&gt;
 <a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>&lt;/tabs&gt;
@@ -9653,7 +9653,7 @@ on each write.</p>
 <a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="k">- [x]</span> Migration written
 <a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="k">- [ ]</span> Backfill verified
 <a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>&lt;collapsible summary=&quot;Migration details&quot;&gt;
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>&lt;collapsible summary="Migration details"&gt;
 <a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
 <a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>The migration runs in two phases to avoid a long table lock.
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
@@ -9668,7 +9668,7 @@ on each write.</p>
 <a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
 <a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>Canvas content is <span class="gs">**trusted-local-agent**</span> output. It is treated with the
 <a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>same trust posture as agent-emitted memory files, agent-written code, or
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>agent-spawned subprocesses: the local agent runs with the operator&#39;s
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>agent-spawned subprocesses: the local agent runs with the operator's
 <a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>privileges, and what it writes is what gets rendered.
 <a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>
 <a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="sb">`rehype-raw`</span> is in the render pipeline by design — <span class="sb">`&lt;chart&gt;`</span>, <span class="sb">`&lt;diagram&gt;`</span>,
@@ -9676,10 +9676,10 @@ on each write.</p>
 <a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>react-markdown <span class="sb">`components`</span> prop dispatches on. Removing rehype-raw would
 <a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>break the entire shortcode grammar. As a direct consequence, **raw
 <a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="sb">`&lt;script&gt;`</span> tags in canvas markdown WILL execute under the admin origin**
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>(<span class="sb">`http://127.0.0.1:8765`</span>), which is the admin&#39;s HMAC-cookie-authenticated
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>origin. A malicious script can read the admin&#39;s HttpOnly cookie via
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a>(<span class="sb">`http://127.0.0.1:8765`</span>), which is the admin's HMAC-cookie-authenticated
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>origin. A malicious script can read the admin's HttpOnly cookie via
 <a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>same-origin XHR/fetch, exfiltrate session tokens, or call admin API
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>endpoints with the operator&#39;s auth.
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>endpoints with the operator's auth.
 <a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>
 <a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>The mitigation is <span class="gs">**agent discipline, not sanitization**</span>. When the user
 <a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>gives you content that came from an external source, do NOT pass it to
@@ -9689,9 +9689,9 @@ on each write.</p>
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
 <a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">-</span><span class="w"> </span>Chat transcripts from external systems.
 <a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="k">-</span><span class="w"> </span>Web pages fetched via <span class="sb">`WebFetch`</span> or similar tools.
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">-</span><span class="w"> </span>MCP tool outputs from upstream tools whose provenance you can&#39;t vouch
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">-</span><span class="w"> </span>MCP tool outputs from upstream tools whose provenance you can't vouch
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>  for.
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="k">-</span><span class="w"> </span>User-pasted strings from another session&#39;s clipboard, untrusted email,
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="k">-</span><span class="w"> </span>User-pasted strings from another session's clipboard, untrusted email,
 <a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>  or third-party documents.
 <a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>
 <a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>If you need to surface external content on a canvas, **summarize and
@@ -9699,7 +9699,7 @@ on each write.</p>
 <a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>Quoting verbatim is fine for prose — it is NOT fine for anything that
 <a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>might contain markup. If the operator explicitly asks you to render
 <a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>untrusted HTML in a canvas, STOP and confirm — that path is reserved for
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>v2&#39;s <span class="sb">`rehype-sanitize`</span> layer.
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>v2's <span class="sb">`rehype-sanitize`</span> layer.
 <a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>
 <a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="gs">**Operator-submitted answers are a second trust class.**</span> When a decision is
 <a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>declared, the operator submits a value (and optionally <span class="sb">`free_text`</span>) from the
@@ -9725,15 +9725,15 @@ on each write.</p>
 <a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>
 <a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="sb">```python</span>
 <a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="c1"># 1. Claim the name (idempotent — safe to call again later).</span>
-<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="n">canvas_open</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">&quot;plan-x&quot;</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Refactor: extract auth module&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="n">canvas_open</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s2">"plan-x"</span><span class="p">,</span> <span class="n">title</span><span class="o">=</span><span class="s2">"Refactor: extract auth module"</span><span class="p">)</span>
 <a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
 <a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="c1"># 2. Write the body. Last-write-wins; the whole markdown payload goes</span>
 <a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="c1">#    in `content` on every call.</span>
 <a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="n">canvas_write</span><span class="p">(</span>
-<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>    <span class="n">canvas</span><span class="o">=</span><span class="s2">&quot;plan-x&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>    <span class="n">content</span><span class="o">=</span><span class="s2">&quot;&quot;&quot;# Refactor: extract auth module</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>    <span class="n">canvas</span><span class="o">=</span><span class="s2">"plan-x"</span><span class="p">,</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>    <span class="n">content</span><span class="o">=</span><span class="s2">"""# Refactor: extract auth module</span>
 <a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>
-<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="s2">&lt;callout type=&quot;note&quot; title=&quot;Scope&quot;&gt;</span>
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a><span class="s2">&lt;callout type="note" title="Scope"&gt;</span>
 <a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="s2">Move `auth/*` out of `core/` into a new top-level package.</span>
 <a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="s2">&lt;/callout&gt;</span>
 <a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>
@@ -9742,7 +9742,7 @@ on each write.</p>
 <a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a><span class="s2">1. Move files.</span>
 <a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a><span class="s2">2. Update imports.</span>
 <a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a><span class="s2">3. Run the test suite.</span>
-<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="s2">&quot;&quot;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="s2">"""</span><span class="p">,</span>
 <a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="p">)</span>
 <a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>
 <a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="c1"># 3. Surface the canvas URL to the operator (returned by canvas_open</span>
@@ -9751,7 +9751,7 @@ on each write.</p>
 <a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a>
 <a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a>After this turn the operator sees <span class="sb">`http://127.0.0.1:8765/admin/canvas/plan-x`</span>
 <a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>in the terminal; opening it shows the rendered plan, and any subsequent
-<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">`canvas_write(&quot;plan-x&quot;, ...)`</span> call updates the page live without a
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="sb">`canvas_write("plan-x", ...)`</span> call updates the page live without a
 <a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a>refresh.
 </code></pre></div>
 

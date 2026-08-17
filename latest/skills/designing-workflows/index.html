@@ -9829,7 +9829,7 @@
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">1.</span> <span class="gs">**States Are Business Concepts**</span>: &quot;ProcessingPayment&quot; not &quot;step3&quot;
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">1.</span> <span class="gs">**States Are Business Concepts**</span>: "ProcessingPayment" not "step3"
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">2.</span> <span class="gs">**Transitions Are Events**</span>: Every arrow needs a named trigger
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">3.</span> <span class="gs">**Guards Prevent Ambiguity**</span>: Mutually exclusive and exhaustive
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">4.</span> <span class="gs">**Error States Are First-Class**</span>: Every state needs an error path
@@ -9914,13 +9914,13 @@
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>&lt;/example&gt;
 <a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>States named after implementation (&quot;step1&quot;)
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>States named after implementation ("step1")
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Transitions without named triggers
 <a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>Overlapping guards (ambiguous transitions)
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>Missing error handling (only happy path)
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="k">-</span><span class="w"> </span>Side effects without compensating actions
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="k">-</span><span class="w"> </span>Dead-end states not marked terminal
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Implicit guards (&quot;else&quot; without condition)
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Implicit guards ("else" without condition)
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Skipping completeness validation
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>

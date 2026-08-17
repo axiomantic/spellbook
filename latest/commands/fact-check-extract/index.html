@@ -9596,14 +9596,14 @@
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="gs">**Sources**</span>:
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>| Source | Patterns |
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>|--------|----------|
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| Comments | <span class="sb">`//`</span>, <span class="sb">`#`</span>, <span class="sb">`/* */`</span>, <span class="sb">`&quot;&quot;&quot;`</span>, <span class="sb">`&#39;&#39;&#39;`</span>, <span class="sb">`&lt;!-- --&gt;`</span>, <span class="sb">`--`</span> |
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>| Comments | <span class="sb">`//`</span>, <span class="sb">`#`</span>, <span class="sb">`/* */`</span>, <span class="sb">`"""`</span>, <span class="sb">`'''`</span>, <span class="sb">`&lt;!-- --&gt;`</span>, <span class="sb">`--`</span> |
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a>| Docstrings | Function/class/module documentation |
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>| Markdown | README, CHANGELOG, docs/*.md |
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>| Commits | <span class="sb">`git log --format=%B`</span> for branch commits |
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a>| PR descriptions | Via <span class="sb">`gh pr view`</span> |
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>| Naming | <span class="sb">`validateX`</span>, <span class="sb">`safeX`</span>, <span class="sb">`isX`</span>, <span class="sb">`ensureX`</span> |
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>If a source is inaccessible (no git history, no PR): skip and log <span class="sb">`⚠ [Source] unavailable -- skipped`</span>. If no claims found across all sources: report &quot;No verifiable claims found&quot; and halt.
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>If a source is inaccessible (no git history, no PR): skip and log <span class="sb">`⚠ [Source] unavailable -- skipped`</span>. If no claims found across all sources: report "No verifiable claims found" and halt.
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="gu">### CoVe Self-Interrogation on Extracted Claims</span>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
@@ -9626,8 +9626,8 @@
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>After extracting explicit claims from comments/docs, scan ALL function and variable names in scope against naming patterns:
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">1.</span> Run pattern matching for: validate*, verify*, check*, assert*, ensure*, safe*, sanitize*, escape*, is*, has*, can*, get*, compute*, create*, clone*, atomic*, sync*, lock*
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">2.</span> For each match, extract the implicit claim: &quot;[function name] implies [property]&quot;
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">3.</span> Add to claims list with source_type: &quot;naming_convention&quot;
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">2.</span> For each match, extract the implicit claim: "[function name] implies [property]"
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">3.</span> Add to claims list with source_type: "naming_convention"
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">4.</span> These claims default to MEDIUM depth (not shallow)
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>&lt;RULE&gt;Implicit claims from naming conventions are first-class claims. Skipping this scan is FORBIDDEN.&lt;/RULE&gt;
@@ -9635,19 +9635,19 @@
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gs">**Categories**</span> (also flag: Ambiguous, Misleading, Jargon-heavy):
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>| Category | Examples | Agent |
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>|----------|----------|-------|
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| Technical | &quot;O(n log n)&quot;, &quot;matches RFC 5322&quot;, &quot;handles UTF-8&quot; | CorrectnessAgent |
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| Behavior | &quot;returns null when...&quot;, &quot;throws if...&quot;, &quot;never blocks&quot; | CorrectnessAgent |
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| Security | &quot;sanitized&quot;, &quot;XSS-safe&quot;, &quot;bcrypt hashed&quot;, &quot;no injection&quot; | SecurityAgent |
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| Concurrency | &quot;thread-safe&quot;, &quot;reentrant&quot;, &quot;atomic&quot;, &quot;lock-free&quot; | ConcurrencyAgent |
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Performance | &quot;O(n)&quot;, &quot;cached 5m&quot;, &quot;lazy-loaded&quot;, benchmarks | PerformanceAgent |
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| Invariant/state | &quot;never null after init&quot;, &quot;always sorted&quot;, &quot;immutable&quot; | CorrectnessAgent |
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>| Side effects | &quot;pure function&quot;, &quot;idempotent&quot;, &quot;no side effects&quot; | CorrectnessAgent |
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>| Dependencies | &quot;requires Node 18+&quot;, &quot;compatible with Postgres 14&quot; | ConfigurationAgent |
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| Configuration | &quot;defaults to 30s&quot;, &quot;env var X controls Y&quot; | ConfigurationAgent |
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| Historical | &quot;workaround for Chrome bug&quot;, &quot;fixes <span class="ni">#123</span>&quot; | HistoricalAgent |
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| TODO/FIXME | Referenced issues, &quot;temporary&quot; hacks | HistoricalAgent |
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>| Technical | "O(n log n)", "matches RFC 5322", "handles UTF-8" | CorrectnessAgent |
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>| Behavior | "returns null when...", "throws if...", "never blocks" | CorrectnessAgent |
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>| Security | "sanitized", "XSS-safe", "bcrypt hashed", "no injection" | SecurityAgent |
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>| Concurrency | "thread-safe", "reentrant", "atomic", "lock-free" | ConcurrencyAgent |
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>| Performance | "O(n)", "cached 5m", "lazy-loaded", benchmarks | PerformanceAgent |
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| Invariant/state | "never null after init", "always sorted", "immutable" | CorrectnessAgent |
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>| Side effects | "pure function", "idempotent", "no side effects" | CorrectnessAgent |
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>| Dependencies | "requires Node 18+", "compatible with Postgres 14" | ConfigurationAgent |
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| Configuration | "defaults to 30s", "env var X controls Y" | ConfigurationAgent |
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| Historical | "workaround for Chrome bug", "fixes <span class="ni">#123</span>" | HistoricalAgent |
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| TODO/FIXME | Referenced issues, "temporary" hacks | HistoricalAgent |
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>| Examples | Code examples in docs/README | DocumentationAgent |
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>| Test coverage | &quot;covered by tests in test_foo.py&quot; | DocumentationAgent |
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>| Test coverage | "covered by tests in test_foo.py" | DocumentationAgent |
 <a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>| External refs | URLs, RFC citations, spec references | DocumentationAgent |
 <a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
 <a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gu">## Phase 3: Triage</span>
@@ -9660,11 +9660,11 @@
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">## Claims Found: 23</span>
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">### Security (4 claims)</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="sb">1. [MEDIUM] src/auth.ts:34 - &quot;passwords hashed with bcrypt&quot;</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">2. [DEEP] src/db.ts:89 - &quot;SQL injection safe via parameterization&quot;</span>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="sb">1. [MEDIUM] src/auth.ts:34 - "passwords hashed with bcrypt"</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">2. [DEEP] src/db.ts:89 - "SQL injection safe via parameterization"</span>
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="sb">...</span>
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="sb">Adjust depths? (Enter claim numbers and new depth, e.g. &quot;1=deep 3=shallow&quot;, or &#39;continue&#39;)</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="sb">Adjust depths? (Enter claim numbers and new depth, e.g. "1=deep 3=shallow", or 'continue')</span>
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="sb">```</span>
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
 <a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="gs">**Depth Definitions**</span>:
@@ -9678,7 +9678,7 @@
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
 <a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>When a comment matches LLM Over-Commenting Patterns (from claim-patterns.md), AND the comment contains a verifiable claim:
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">1.</span> Flag the claim with <span class="sb">`source_risk: &quot;llm_generated&quot;`</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">1.</span> Flag the claim with <span class="sb">`source_risk: "llm_generated"`</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">2.</span> Auto-assign MEDIUM depth minimum (never shallow)
 <a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">3.</span> Require Tier 1-2 evidence (code trace or test execution) for verification
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">4.</span> Note in the report that the claim may share bias with its verifier

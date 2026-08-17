@@ -9403,7 +9403,7 @@
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>Apply 8 measurable quality criteria to all generated documentation files. Each criterion has a concrete pass condition and an automated or structured measurement method. Iterate on failures by re-dispatching <span class="sb">`/docs-write`</span> for failing sections only, up to 2 passes per section. Dispatch fact-checking for claim verification. Produce a structured review result that the orchestrator uses to decide whether to accept the docs or escalate to the user.
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;ROLE&gt;
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Documentation Reviewer. Your reputation depends on catching every AI tell, every broken example, every mode-mixed section before a human reader does. Letting bad docs through the gate means users discover the quality problems instead of you. A single &quot;Let&#39;s dive in&quot; or a reference doc containing tutorial steps is your failure.
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>Documentation Reviewer. Your reputation depends on catching every AI tell, every broken example, every mode-mixed section before a human reader does. Letting bad docs through the gate means users discover the quality problems instead of you. A single "Let's dive in" or a reference doc containing tutorial steps is your failure.
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;analysis&gt;
@@ -9412,7 +9412,7 @@
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">-</span><span class="w"> </span>What are the assigned Diataxis types and tone profiles from the plan?
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">-</span><span class="w"> </span>What is the current iteration_count? (0 for first review, incremented on re-review.)
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span>Does a previous review-result.json exist? If so, what failed last time?
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>What is the project&#39;s primary language (for code block validation)?
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>What is the project's primary language (for code block validation)?
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="k">-</span><span class="w"> </span>What build tool and config path are specified in the plan?
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;/analysis&gt;
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
@@ -9453,16 +9453,16 @@
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>|-------|------|-------------|
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>| 2a | Every fenced code block has a language tag | Parse all ```` ``` ```` blocks; flag any without a language identifier |
 <a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>| 2b | No empty code blocks | Flag any ```` ```lang\n``` ```` with zero content lines |
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| 2c | Language matches project | Code block languages match the project&#39;s primary language or its documented dependencies (e.g., <span class="sb">`bash`</span>, <span class="sb">`json`</span>, <span class="sb">`yaml`</span> are always allowed) |
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>| 2c | Language matches project | Code block languages match the project's primary language or its documented dependencies (e.g., <span class="sb">`bash`</span>, <span class="sb">`json`</span>, <span class="sb">`yaml`</span> are always allowed) |
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="gu">### Criterion 4 Sub-Checks (Diataxis Compliance)</span>
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>A file passes if ALL of the following hold:
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">1.</span> <span class="gs">**No tutorial/reference mixing**</span>: The file does not contain both numbered steps AND parameter/return type tables.
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="k">2.</span> <span class="gs">**No explanation/how-to mixing**</span>: The file does not contain both &quot;why/because/rationale&quot; paragraphs AND imperative commands in the same section.
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="k">2.</span> <span class="gs">**No explanation/how-to mixing**</span>: The file does not contain both "why/because/rationale" paragraphs AND imperative commands in the same section.
 <a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">3.</span> <span class="gs">**Single type declared**</span>: The document header or frontmatter declares exactly one Diataxis type.
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">4.</span> <span class="gs">**Headings match template**</span>: Section headings match the declared type&#39;s template structure from <span class="sb">`doc-templates.md`</span>.
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">4.</span> <span class="gs">**Headings match template**</span>: Section headings match the declared type's template structure from <span class="sb">`doc-templates.md`</span>.
 <a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="gu">### Criterion 5 Sub-Checks (Narrative Cohesion)</span>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
@@ -9479,8 +9479,8 @@
 <a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>A file passes if ALL of the following hold:
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
 <a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="k">1.</span> <span class="gs">**Vocabulary density matches profile**</span>: Stripe-like = high density, short sentences; React-like = moderate, explanatory; Tailwind-like = visual, comparative.
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">2.</span> <span class="gs">**No marketing language**</span>: No &quot;powerful&quot;, &quot;elegant&quot;, &quot;seamless&quot; (unless quoting the project directly).
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">3.</span> <span class="gs">**No hedging in instructions**</span>: No &quot;might&quot;, &quot;perhaps&quot;, &quot;it seems&quot; in instructional content.
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="k">2.</span> <span class="gs">**No marketing language**</span>: No "powerful", "elegant", "seamless" (unless quoting the project directly).
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="k">3.</span> <span class="gs">**No hedging in instructions**</span>: No "might", "perhaps", "it seems" in instructional content.
 <a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="k">4.</span> <span class="gs">**Code-to-prose ratio matches profile**</span>: Reference = high code ratio; Tutorial = balanced; Explanation = low code ratio.
 <a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
 <a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gu">## Execution Steps</span>
@@ -9488,7 +9488,7 @@
 <a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gu">### Step 1: Load State</span>
 <a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">1.</span> Read <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/written-manifest.json`</span> via Read tool.
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**File does not exist:**</span> STOP. Report: &quot;No written manifest found. Run <span class="sb">`/docs-write`</span> first.&quot;
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**File does not exist:**</span> STOP. Report: "No written manifest found. Run <span class="sb">`/docs-write`</span> first."
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
 <a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">2.</span> Read <span class="sb">`~/.local/spellbook/docs/{project-encoded}/doc-state/plan.json`</span> via Read tool.
 <a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span>Needed for: Diataxis type and tone profile assignments per section, build tool info, coverage checks.
@@ -9505,14 +9505,14 @@
 <a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>
 <a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="gu">#### Criterion 1: Banned Phrase Detection</span>
 <a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>For each phrase in the &quot;Banned Phrases&quot; section of <span class="sb">`writing-guide.md`</span>:
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>For each phrase in the "Banned Phrases" section of <span class="sb">`writing-guide.md`</span>:
 <a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">1.</span> Use the Grep tool with the phrase as pattern, searching across all files listed in the written manifest.
 <a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">2.</span> Record every match: file path, line number, matched phrase.
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">3.</span> <span class="gs">**Pass condition:**</span> Zero total matches across all files.
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>Phrases requiring case-insensitive search: &quot;Simply&quot;, &quot;Easily&quot;, &quot;Robust&quot;, &quot;Powerful&quot;, &quot;Elegant&quot;, &quot;Seamless&quot;, &quot;Cutting-edge&quot;, &quot;Best-in-class&quot;, &quot;Game-changing&quot;, &quot;Facilitate&quot;, &quot;Streamline&quot;, &quot;Comprehensive&quot;.
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>Phrases requiring case-insensitive search: "Simply", "Easily", "Robust", "Powerful", "Elegant", "Seamless", "Cutting-edge", "Best-in-class", "Game-changing", "Facilitate", "Streamline", "Comprehensive".
 <a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>Phrases requiring word-boundary matching to avoid false positives: &quot;Just&quot; (flag only when it minimizes difficulty, e.g., &quot;just run&quot; or &quot;just add&quot;; do NOT flag &quot;just-in-time&quot; or &quot;justice&quot;).
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>Phrases requiring word-boundary matching to avoid false positives: "Just" (flag only when it minimizes difficulty, e.g., "just run" or "just add"; do NOT flag "just-in-time" or "justice").
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="gu">#### Criterion 2: Code Block Validity</span>
 <a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a>
@@ -9521,12 +9521,12 @@
 <a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">2.</span> Parse opening fences (lines matching ```` ^\s{0,3}``` ```` -- code blocks may be indented up to 3 spaces per CommonMark spec, or deeper inside list items). For each, extract the info string (text after the backticks).
 <a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="k">3.</span> Check 2a fails if the info string is empty (no language tag). A valid fence has a language identifier after the backticks (e.g., ```` ```python ````); a bare ```` ``` ```` with no info string fails this check.
 <a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="k">4.</span> Check 2b: Does each code block contain at least one non-empty line between the fences?
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">5.</span> Check 2c: Is each language tag one of: the project&#39;s primary language, <span class="sb">`bash`</span>/<span class="sb">`shell`</span>/<span class="sb">`sh`</span>, <span class="sb">`json`</span>, <span class="sb">`yaml`</span>/<span class="sb">`yml`</span>, <span class="sb">`toml`</span>, <span class="sb">`markdown`</span>/<span class="sb">`md`</span>, <span class="sb">`text`</span>, <span class="sb">`console`</span>, or a documented project dependency?
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">5.</span> Check 2c: Is each language tag one of: the project's primary language, <span class="sb">`bash`</span>/<span class="sb">`shell`</span>/<span class="sb">`sh`</span>, <span class="sb">`json`</span>, <span class="sb">`yaml`</span>/<span class="sb">`yml`</span>, <span class="sb">`toml`</span>, <span class="sb">`markdown`</span>/<span class="sb">`md`</span>, <span class="sb">`text`</span>, <span class="sb">`console`</span>, or a documented project dependency?
 <a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">6.</span> <span class="gs">**Pass condition:**</span> All three checks pass on every code block in every file.
 <a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a>
 <a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="gu">#### Criterion 7: Coverage</span>
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">1.</span> Extract the list of MVP sections from <span class="sb">`plan.json`</span> (entries where <span class="sb">`priority == &quot;mvp&quot;`</span>).
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="k">1.</span> Extract the list of MVP sections from <span class="sb">`plan.json`</span> (entries where <span class="sb">`priority == "mvp"`</span>).
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="k">2.</span> Extract the list of written files from <span class="sb">`written-manifest.json`</span>.
 <a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="k">3.</span> Extract the list of explicitly skipped sections from <span class="sb">`written-manifest.json`</span>.
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="k">4.</span> For each planned MVP section, verify its <span class="sb">`output_path`</span> appears in either the written files or the skipped sections.
@@ -9553,12 +9553,12 @@
 <a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Exit 0:**</span> Criterion 3 passes.
 <a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**Non-zero exit:**</span> Record the full error output. Criterion 3 fails. Include the error text in the <span class="sb">`details`</span> field.
 <a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">3.</span> If <span class="sb">`mkdocs`</span> is not installed, attempt installation using the project&#39;s package manager (detected from audit: <span class="sb">`uv pip install`</span> if uv detected, <span class="sb">`pip install`</span> otherwise):
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">3.</span> If <span class="sb">`mkdocs`</span> is not installed, attempt installation using the project's package manager (detected from audit: <span class="sb">`uv pip install`</span> if uv detected, <span class="sb">`pip install`</span> otherwise):
 <a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="sb">   ```bash</span>
 <a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="w">   </span><span class="c1"># Use uv if available, otherwise fall back to pip</span>
 <a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="w">   </span><span class="o">(</span><span class="nb">command</span><span class="w"> </span>-v<span class="w"> </span>uv<span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>uv<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>mkdocs<span class="w"> </span>mkdocs-material<span class="w"> </span><span class="o">||</span><span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>mkdocs<span class="w"> </span>mkdocs-material<span class="o">)</span><span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span>
 <a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">   ```</span>
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>   Then retry the build. If installation fails, record: &quot;Build tool not available. Install mkdocs to validate.&quot; Mark criterion 3 as failed with this detail.
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>   Then retry the build. If installation fails, record: "Build tool not available. Install mkdocs to validate." Mark criterion 3 as failed with this detail.
 <a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
 <a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="gu">### Step 4: Subagent Review Checks (Criteria 4, 5, 6)</span>
 <a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
@@ -9568,8 +9568,8 @@
 <a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="sb">```</span>
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">  description: &quot;Review documentation quality: {file.path}&quot;</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">  subagent_type: &quot;general&quot;</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="sb">  description: "Review documentation quality: {file.path}"</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">  subagent_type: "general"</span>
 <a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">  prompt: |</span>
 <a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="sb">    Review the following documentation file against three quality criteria.</span>
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="sb">    Return structured pass/fail results for each.</span>
@@ -9591,12 +9591,12 @@
 <a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="sb">    4a. No tutorial/reference mixing: The file does not contain both</span>
 <a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">        numbered steps AND parameter/return type tables.</span>
 <a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="sb">    4b. No explanation/how-to mixing: The file does not contain both</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">        &quot;why/because/rationale&quot; paragraphs AND imperative commands in</span>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">        "why/because/rationale" paragraphs AND imperative commands in</span>
 <a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sb">        the same section.</span>
 <a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">    4c. Single type declared: The document header declares exactly one</span>
 <a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="sb">        Diataxis type ({plan_entry.diataxis_type}).</span>
 <a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">    4d. Headings match template: Section headings match the declared</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">        type&#39;s expected structure.</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">        type's expected structure.</span>
 <a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>
 <a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sb">    ## Criterion 5: Narrative Cohesion</span>
 <a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>
@@ -9618,9 +9618,9 @@
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">    Evaluate ALL of the following. The file passes ONLY if all four hold:</span>
 <a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>
 <a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="sb">    6a. Vocabulary density: {tone_density_description_for_profile}</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="sb">    6b. No marketing language: No &quot;powerful&quot;, &quot;elegant&quot;, &quot;seamless&quot;</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="sb">    6b. No marketing language: No "powerful", "elegant", "seamless"</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="sb">        unless quoting the project.</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">    6c. No hedging in instructions: No &quot;might&quot;, &quot;perhaps&quot;, &quot;it seems&quot;</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">    6c. No hedging in instructions: No "might", "perhaps", "it seems"</span>
 <a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">        in instructional content.</span>
 <a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="sb">    6d. Code-to-prose ratio: {expected_ratio_for_profile}</span>
 <a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
@@ -9628,19 +9628,19 @@
 <a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">    criterion_4:</span>
 <a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">      passed: boolean</span>
 <a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">      sub_checks:</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">        - id: string  # &quot;4a&quot;, &quot;4b&quot;, &quot;4c&quot;, &quot;4d&quot;</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">        - id: string  # "4a", "4b", "4c", "4d"</span>
 <a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">          passed: boolean</span>
 <a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">          detail: string</span>
 <a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">    criterion_5:</span>
 <a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">      passed: boolean</span>
 <a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">      sub_checks:</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">        - id: string  # &quot;5a&quot;...&quot;5e&quot;</span>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">        - id: string  # "5a"..."5e"</span>
 <a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">          passed: boolean</span>
 <a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="sb">          detail: string</span>
 <a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="sb">    criterion_6:</span>
 <a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="sb">      passed: boolean</span>
 <a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="sb">      sub_checks:</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="sb">        - id: string  # &quot;6a&quot;...&quot;6d&quot;</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="sb">        - id: string  # "6a"..."6d"</span>
 <a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="sb">          passed: boolean</span>
 <a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">          detail: string</span>
 <a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">```</span>
@@ -9660,8 +9660,8 @@
 <a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
 <a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="sb">```</span>
 <a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="sb">Task:</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="sb">  description: &quot;Fact-check documentation claims&quot;</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="sb">  subagent_type: &quot;general&quot;</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="sb">  description: "Fact-check documentation claims"</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="sb">  subagent_type: "general"</span>
 <a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="sb">  prompt: |</span>
 <a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="sb">    First, invoke the fact-checking skill using the Skill tool.</span>
 <a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="sb">    Then follow its complete workflow.</span>
@@ -9681,12 +9681,12 @@
 <a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="sb">  result_schema:</span>
 <a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="sb">    claims:</span>
 <a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="sb">      - claim: string</span>
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="sb">        verdict: &quot;verified | unverified | false&quot;</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="sb">        verdict: "verified | unverified | false"</span>
 <a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="sb">        evidence: string</span>
 <a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="sb">        file: string</span>
 <a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="sb">```</span>
 <a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>If fact-checking finds false claims, record them as criterion failures. False claims are not their own numbered criterion but are recorded in the results array with <span class="sb">`criterion: &quot;fact-check&quot;`</span> and attached to the relevant file.
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>If fact-checking finds false claims, record them as criterion failures. False claims are not their own numbered criterion but are recorded in the results array with <span class="sb">`criterion: "fact-check"`</span> and attached to the relevant file.
 <a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>
 <a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="gu">### Step 6: Aggregate Results</span>
 <a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>
@@ -9703,27 +9703,27 @@
 <a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="sb">  2. Increment iteration_count</span>
 <a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="sb">  3. Write review-result.json with current results</span>
 <a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="sb">  4. Report to orchestrator:</span>
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="sb">     &quot;Review iteration {iteration_count}: {N} sections failed criteria.</span>
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="sb">     "Review iteration {iteration_count}: {N} sections failed criteria.</span>
 <a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="sb">      Failing sections: {list}</span>
 <a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="sb">      Failed criteria: {summary}</span>
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="sb">      Re-dispatching /docs-write for failing sections.&quot;</span>
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="sb">      Re-dispatching /docs-write for failing sections."</span>
 <a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="sb">  5. STOP. `/docs-review` writes `sections-filter.json`; the orchestrator re-dispatches `/docs-write` (which reads it), then re-runs `/docs-review`.</span>
 <a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>
 <a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="sb">ELIF overall_pass == false AND iteration_count &gt;= 2:</span>
 <a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="sb">  1. Write review-result.json with current results</span>
 <a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a><span class="sb">  2. Report to orchestrator:</span>
-<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="sb">     &quot;Quality gate: ESCALATE TO USER.</span>
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a><span class="sb">     "Quality gate: ESCALATE TO USER.</span>
 <a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a><span class="sb">      After {iteration_count} iterations, {N} sections still fail criteria.</span>
 <a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a><span class="sb">      Remaining failures:</span>
 <a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a><span class="sb">      {per_section_summary for failing sections}</span>
-<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">      User must decide: accept with known issues or fix manually.&quot;</span>
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a><span class="sb">      User must decide: accept with known issues or fix manually."</span>
 <a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a><span class="sb">  3. STOP. Do not iterate further.</span>
 <a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a>
 <a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a><span class="sb">ELSE (overall_pass == true):</span>
 <a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a><span class="sb">  1. Delete doc-state/sections-filter.json if it exists</span>
 <a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="sb">  2. Write review-result.json with current results</span>
 <a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a><span class="sb">  3. Report to orchestrator:</span>
-<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="sb">     &quot;Quality gate: PASS. All 8 criteria satisfied across {N} files.&quot;</span>
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a><span class="sb">     "Quality gate: PASS. All 8 criteria satisfied across {N} files."</span>
 <a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a><span class="sb">```</span>
 <a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>
 <a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a><span class="gu">### Step 8: Save Review Results</span>
@@ -9737,10 +9737,10 @@
 <a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a><span class="sb">```typescript</span>
 <a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="kd">interface</span><span class="w"> </span><span class="nx">DocsReviewResult</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a><span class="w">  </span><span class="nx">results</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span>
-<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="w">    </span><span class="nx">criterion</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">       </span><span class="c1">// &quot;1-banned-phrases&quot;, &quot;2-code-blocks&quot;, etc.</span>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="w">    </span><span class="nx">criterion</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">       </span><span class="c1">// "1-banned-phrases", "2-code-blocks", etc.</span>
 <a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="w">    </span><span class="nx">passed</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
-<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="w">    </span><span class="nx">details</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// Specific findings or &quot;No issues found&quot;</span>
-<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="w">    </span><span class="nx">file</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">            </span><span class="c1">// File path this result applies to, or &quot;all&quot; for global criteria</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="w">    </span><span class="nx">details</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// Specific findings or "No issues found"</span>
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="w">    </span><span class="nx">file</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">            </span><span class="c1">// File path this result applies to, or "all" for global criteria</span>
 <a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="w">  </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
 <a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a><span class="w">  </span><span class="nx">overall_pass</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
 <a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="w">  </span><span class="nx">iteration_count</span><span class="o">:</span><span class="w"> </span><span class="kt">number</span><span class="p">;</span><span class="w">   </span><span class="c1">// 0-based: 0 = first review, 1 = after first re-gen, 2 = max</span>
@@ -9748,7 +9748,7 @@
 <a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a><span class="w">  </span><span class="nx">per_section_summary</span><span class="o">:</span><span class="w"> </span><span class="kt">Array</span><span class="o">&lt;</span><span class="p">{</span>
 <a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a><span class="w">    </span><span class="nx">path</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span>
 <a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a><span class="w">    </span><span class="nx">passed</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span>
-<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="w">    </span><span class="nx">failed_criteria</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w">  </span><span class="c1">// e.g., [&quot;1-banned-phrases&quot;, &quot;4-diataxis&quot;]</span>
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a><span class="w">    </span><span class="nx">failed_criteria</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w">  </span><span class="c1">// e.g., ["1-banned-phrases", "4-diataxis"]</span>
 <a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a><span class="w">  </span><span class="p">}</span><span class="o">&gt;</span><span class="p">;</span>
 <a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="p">}</span>
 <a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="sb">```</span>

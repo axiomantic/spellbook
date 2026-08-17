@@ -9697,7 +9697,7 @@
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Check the run checkpoint before re-verifying**</span> - Read <span class="sb">`.fact-checking/state.json`</span> (the current run&#39;s resume state) before re-verifying a claim; skip already-completed claims on resume and use the recorded verdict when nothing has changed in scope.
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">1.</span> <span class="gs">**Check the run checkpoint before re-verifying**</span> - Read <span class="sb">`.fact-checking/state.json`</span> (the current run's resume state) before re-verifying a claim; skip already-completed claims on resume and use the recorded verdict when nothing has changed in scope.
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">2.</span> <span class="gs">**Evidence requires source**</span> - Every verdict must cite code traces, test results, docs, or benchmarks.
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="k">3.</span> <span class="gs">**Cross-agent confirmation**</span> - A claim verified by one agent is not confirmed until a second independent agent corroborates or no contradicting evidence emerges.
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
@@ -9706,7 +9706,7 @@
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;RULE&gt;Read the run checkpoint BEFORE verifying. Write the run checkpoint AFTER each completed claim.&lt;/RULE&gt;
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
 <a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>The checkpoint lives at <span class="sb">`.fact-checking/state.json`</span> (project-local, gitignored).
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>It is the run&#39;s resume artifact, not a cross-run knowledge base. The read/write
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>It is the run's resume artifact, not a cross-run knowledge base. The read/write
 <a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>contract:
 <a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
 <a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Before verifying a claim:**</span> read the checkpoint. If the claim is in the
@@ -9715,7 +9715,7 @@
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>  verdict and bibliography. If the file has changed, drop the cached entry and
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>  re-verify. Cross-run knowledge is intentionally out of scope.
 <a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">-</span><span class="w"> </span><span class="gs">**After verifying a claim:**</span> write the verdict, bibliography entry, and
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  timestamp into the checkpoint&#39;s <span class="sb">`findings`</span> map and append the claim index to
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>  timestamp into the checkpoint's <span class="sb">`findings`</span> map and append the claim index to
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>  <span class="sb">`completed`</span>. The checkpoint is the source of truth for resume; without it, a
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>  resumed run will redo work that has already been verified.
 <a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
@@ -9741,7 +9741,7 @@
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="k">1.</span> Surface the contradiction explicitly in the report
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="k">2.</span> Present BOTH verdicts with their evidence to the user
 <a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="k">3.</span> Do NOT silently pick one verdict
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">4.</span> Mark the claim as &quot;Contested&quot; with both perspectives
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="k">4.</span> Mark the claim as "Contested" with both perspectives
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">5.</span> If one agent has higher-tier evidence (per Evidence Hierarchy), note this
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">6.</span> Let the user make the final call on contested claims
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
@@ -9750,14 +9750,14 @@
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gu">## Scope Expansion for System-Wide Claims</span>
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>Claims containing these keywords require expanded verification scope:
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">-</span><span class="w"> </span>&quot;backwards compatible&quot;, &quot;breaking change&quot;, &quot;all callers&quot;, &quot;API contract&quot;
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">-</span><span class="w"> </span>&quot;thread-safe&quot; (when applied to a class, not just a function)
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">-</span><span class="w"> </span>&quot;no side effects&quot; (when the function calls other functions)
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="k">-</span><span class="w"> </span>"backwards compatible", "breaking change", "all callers", "API contract"
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="k">-</span><span class="w"> </span>"thread-safe" (when applied to a class, not just a function)
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">-</span><span class="w"> </span>"no side effects" (when the function calls other functions)
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
 <a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>For these claims:
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">1.</span> Identify all files that import/reference the claimed module
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">2.</span> Include caller analysis in verification
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">3.</span> If scope expansion exceeds 20 files, mark Inconclusive with note: &quot;Claim requires system-wide verification beyond current scope&quot;
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">3.</span> If scope expansion exceeds 20 files, mark Inconclusive with note: "Claim requires system-wide verification beyond current scope"
 <a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
 <a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">## Phase 5: Verdicts</span>
 <a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
@@ -9786,7 +9786,7 @@
 <a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>| 5 | Git history (actual commits/diffs read) | Yes, for historical claims |
 <a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>| 6 | LLM parametric knowledge | NEVER alone |
 <a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>&lt;RULE&gt;LLM parametric knowledge (things &quot;known&quot; from training) is NOT evidence. It may generate hypotheses to investigate, but a verdict based solely on &quot;I know that X is true&quot; without a Tier 1-5 citation is a FORBIDDEN verdict without evidence.&lt;/RULE&gt;
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>&lt;RULE&gt;LLM parametric knowledge (things "known" from training) is NOT evidence. It may generate hypotheses to investigate, but a verdict based solely on "I know that X is true" without a Tier 1-5 citation is a FORBIDDEN verdict without evidence.&lt;/RULE&gt;
 <a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
 <a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="gu">## Mandatory Inconclusive Conditions</span>
 <a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>
@@ -9800,7 +9800,7 @@
 <a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
 <a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>&lt;RULE&gt;When uncertain between Verified and Refuted, always choose Inconclusive. A wrong Refuted verdict causes more harm than an honest Inconclusive.&lt;/RULE&gt;
 <a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="gs">**Fractal exploration (Inconclusive/Ambiguous only):**</span> Invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: &quot;Is &#39;[claim]&#39; true? What evidence would confirm or refute it?&quot;. Apply synthesis findings to re-attempt the verdict; if upgraded, update verdict category and evidence field.
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="gs">**Fractal exploration (Inconclusive/Ambiguous only):**</span> Invoke fractal-thinking with intensity <span class="sb">`pulse`</span> and seed: "Is '[claim]' true? What evidence would confirm or refute it?". Apply synthesis findings to re-attempt the verdict; if upgraded, update verdict category and evidence field.
 <a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a>
 <a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="k">-</span><span class="w"> </span>Issuing any verdict without concrete evidence citation
