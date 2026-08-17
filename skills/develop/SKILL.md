@@ -360,7 +360,9 @@ answer this question and act on the answer:
 Claims that are usually decidable: the dependency graph is acyclic; every
 declared dependency exists; wave and ordering assignments agree with the
 dependency graph; every tag comes from the declared vocabulary; every cited path
-and symbol exists; every declared check command goes red on a known-bad input.
+and symbol exists; every declared check command goes red on a known-bad input;
+every symbol a task's deliverable consumes has a producer inside that task's
+dependency closure.
 
 1. **Mechanize before you review.** Build the checks for the decidable claims,
    run them, and repair what they find. Then dispatch the reviewer, and tell it
@@ -910,10 +912,15 @@ keeps the orchestrator's context lean without dropping any gate.
 | 8–12 | delegated | batched per-domain dispatches (still one gate per task, grouped) |
 | > 12 OR ≥ 2 tracks | delegated (batched, aggressive) | batched per-domain dispatches; if the orchestrator's context cannot hold the whole run, checkpoint the `develop_gate_ledger` and hand off remaining work to a fresh session |
 
-**Do NOT collapse per-task gates into one batched gate.** That is not
-batching — that is gate elision (Pattern 8). Batching groups dispatches by
-domain while still running every gate for every task; elision runs fewer
-gates. When one session cannot hold a very large run, hand off via the
+**Elision vs repositioning.** ELISION is running FEWER gates than the locked
+ceremony selected (Pattern 8). It stays forbidden, always — no batching
+threshold, session-size pressure, or hand-off justifies it. REPOSITIONING is
+running EVERY selected gate at a declared boundary recorded in the ledger
+(`ceremony.gate_position`). It is a Phase-0 choice, locked with everything
+else, and is never a mid-run improvisation — a run may not switch from
+`per_task` to `per_group` partway through. Batching remains what it already
+is: grouping dispatches by domain while still running every gate for every
+task. When one session cannot hold a very large run, hand off via the
 ledger — never by skipping gates.
 
 **Subagent Prompt Length Verification:**
@@ -1052,10 +1059,19 @@ gate-ledger entries that must exist before the next phase can begin.
    `Wave discipline` or `Wave-completion rules`; in plan files that do not
    name the section, the check defaults to "every row whose identifier
    carries the wave's prefix must be in a closed state."
-3. For the wave being marked done, enumerate every row assigned to it
-   (e.g., for wave `3a`, every row with a `W3a-` or `Wave 3a` prefix).
-4. Verify each row is in a CLOSED state: it carries `✓`, `[x]`, `done`,
-   `closed`, or the equivalent terminal marker the plan uses.
+3. For the wave being marked done, enumerate BOTH of the following sets.
+   Both must be closed; neither substitutes for the other.
+   a. Every PLAN row assigned to the wave (e.g., for wave `3a`, every row
+      with a `W3a-` or `Wave 3a` prefix), per the default from step 2.
+   b. SEPARATELY, every row in the defect register's OPEN-ACTIONABLE
+      partition tagged to this wave — decision records and stale-text
+      findings, wherever they live in the register, cannot hold a wave
+      open. A row mis-triaged into an archive partition becomes invisible
+      to this half of the check, so the pass that moves a row out of
+      OPEN-ACTIONABLE must cite what closed it.
+4. Verify each row in set (a) is in a CLOSED state: it carries `✓`, `[x]`,
+   `done`, `closed`, or the equivalent terminal marker the plan uses.
+   Verify each row in set (b) has been closed in the defect register.
 5. Record the result in `develop_gate_ledger.waves.<wave_id>.section_24_6_check`.
 
    The ledger lives at `$SPELLBOOK_DEV_DIR/develop_gate_ledger.json`
@@ -1134,7 +1150,7 @@ interface SessionPreferences {
   size_estimate: "small" | "medium" | "large";  // signal ONLY — tunes parallelization + token_enforcement; NEVER changes which gates run.
                                                 // DERIVED in feature-config §0.7.5 from the cost assessment (4+ dimensions high => large,
                                                 // 2-3 => medium, else small). No longer asked; downstream meaning unchanged.
-  cost_assessment: {                  // feature-config §0.7.5 — the seven dimensions that actually predict cost.
+  cost_assessment: {                  // feature-config §0.7.5 — the eight dimensions that actually predict cost.
     unfamiliarity: "low" | "high";            // D1  is the code understood?
     fuzziness: "low" | "high";                // D2  is "correct" defined?
     blast_radius: "low" | "high";             // D3  how bad is wrong, and can it be undone?
@@ -1142,6 +1158,7 @@ interface SessionPreferences {
     verification_difficulty: "low" | "high";  // D5  provable, or only assertable?   ESCALATION-ONLY
     silent_failure_potential: "low" | "high"; // D6  loud breakage, or invisible?     ESCALATION-ONLY
     precedent: "present" | "absent";          // D7  is there an in-repo pattern to copy?
+    precedent_external: "surveyed" | "known-unsurveyed" | "none" | "unknown"; // D8  adjacent prior art outside the repo, and has it been surveyed?
     evidence: Record<string, string>;         // one line of concrete evidence per dimension; unevidenced => rated high
   };
 }
@@ -1433,6 +1450,33 @@ develop_gate_ledger: {
     selected: string;           // newline-joined optional gates chosen to RUN
     declined: string;           // newline-joined optional gates chosen to SKIP (recorded, not absent)
     promotions: string;         // newline-joined "{gate} <- {reason} ({ISO ts})" escalation record
+    gate_position: string;      // "per_task" | "per_group", default "per_task". "per_group" is
+                                 // offered only when SESSION_PREFERENCES.task_granularity ==
+                                 // "capability" (feature-config §0.7 Step 2.5) — that answer is
+                                 // recorded in Phase 0, before any plan exists. Locked with the
+                                 // rest of ceremony at locked_at; never changed mid-run.
+  };
+  ceremony_history: {            // archive of superseded `ceremony` blocks, keyed by ISO archive
+                                  // timestamp. Written only on a deliberate re-invocation over an
+                                  // existing ledger — the old `ceremony` block is archived here
+                                  // with a reason before a new Phase 0 sets `ceremony` fresh.
+    [archived_at: string]: {
+      ceremony: object;          // the full superseded ceremony block, verbatim
+      reason: string;            // why the operator re-invoked and re-selected
+      archived_at: string;       // ISO 8601; also written INTO the entry by archive_ceremony,
+                                  // duplicating the key this entry is stored under
+    };
+  };
+  blockers: {                    // open blockers keyed by id; each row carries a type so the
+                                  // orchestrator can count them at phase/wave boundaries
+    [blocker_id: string]: {
+      type: "decision" | "work" | "external";
+      description?: string;      // omitted by record_blocker when --description is blank or absent
+      opened_at: string;         // ISO 8601
+      closed_at?: string;        // ISO 8601. `_deep_merge` never deletes keys, so a blocker row
+                                  // is permanent once written — closure is a FIELD, never an
+                                  // absence. A blocker is OPEN iff it has no `closed_at`.
+    };
   };
   waves: {                      // §24.6 wave-discipline check records, keyed by wave id
     [wave_id: string]: {
@@ -1444,20 +1488,47 @@ develop_gate_ledger: {
       };
     };
   };
+  groups: {                     // gate_position: per_group boundary-gate check records, keyed by
+                                 // group id. Without this record, "the boundary gate stack ran"
+                                 // and "it never ran" are indistinguishable — the same
+                                 // mechanism-vs-discipline gap §24.6 closes for waves.
+    [group_id: string]: {
+      gate_stack: {
+        status: "passed" | "failed" | "n_a";
+        gates?: string[];          // the gates run at this group boundary
+        open_findings?: string[];  // REQUIRED when status=failed; mirrors the wave-discipline guard
+        timestamp?: string;        // ISO 8601
+      };
+    };
+  };
 }
 ```
 
+**Defect register rows carry a `class:` tag.** The tag lives in the defect
+register (plan/ledger-adjacent, not a `develop_gate_ledger` field), and the
+orchestrator reads it to detect a recurring-defect shape: two open rows
+sharing one `class:` tag.
+
 **Writes go through `scripts/develop_gate_ledger.py`.** The Python
 implementation is the only path that respects the merge contract --
-it deep-merges, refuses to rewrite `ceremony.locked_at`, and refuses
-`section_24_6_check.status=failed` without open rows. Hand-writing the
+it deep-merges, and refuses `section_24_6_check.status=failed` without
+open rows. Ordinary `set` refuses to rewrite `ceremony.locked_at`; the
+ONLY sanctioned path that supersedes a lock is `archive-ceremony`, which
+archives the old `ceremony` block into `ceremony_history` before writing
+a new one, and cannot run without a `--reason`. Hand-writing the
 JSON is a full overwrite and will clobber sibling keys written by
 other develop writes or by the spellbook hooks' `workflow_state` row;
 do not do it. The CLI surface is intentionally narrow:
 
 - `python3 scripts/develop_gate_ledger.py show [--field ceremony.locked_at]`
-- `python3 scripts/develop_gate_ledger.py set <field> <value>` (top-level or `ceremony.*`)
+- `python3 scripts/develop_gate_ledger.py set <field> <value>` (top-level or `ceremony.*`,
+  including `set ceremony.gate_position per_task|per_group`)
 - `python3 scripts/develop_gate_ledger.py wave-discipline <wave_id> --status {passed|failed|n_a} [--open-rows W3a-2,W3a-5] [--timestamp ISO]`
+- `python3 scripts/develop_gate_ledger.py archive-ceremony --reason "<text>" [--timestamp ISO]`
+- `python3 scripts/develop_gate_ledger.py blocker <id> --type decision|work|external [--description "<text>"] [--close]`
+- `python3 scripts/develop_gate_ledger.py group-gate <group_id> --status passed|failed|n_a [--gates ...] [--open-findings ...]` —
+  writes `develop_gate_ledger.groups.<group_id>.gate_stack`; `status=failed` requires
+  `--open-findings`, mirroring the wave-discipline guard.
 
 When the skill tells you to "write the ledger", it means call this
 CLI, not write the JSON yourself. The contract is enforced in Python

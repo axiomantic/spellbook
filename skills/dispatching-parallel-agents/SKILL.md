@@ -633,6 +633,110 @@ CALL BATCHING:
 | `general` or unknown | `general` | Default behavior |
 | Any (exploration only) | `explore` | Read-only exploration tasks |
 
+## Dispatch Protocol
+
+Three conventions that cut tokens without costing comprehension. None of them
+compress text — they remove duplication and fix an order. Do NOT invent a
+shorthand, an abbreviation scheme, or a stenographic encoding: a dense encoding
+saves a few hundred tokens and buys a misread, and the waste this protocol
+targets was never wording. It was repeated content.
+
+### Prompt layout is fixed and cache-aligned
+
+Order every dispatch prompt with the INVARIANT BLOCKS FIRST and the volatile
+task detail LAST:
+
+1. Efficiency Contract (verbatim, byte-identical every dispatch)
+2. Return envelope schema (verbatim)
+3. Constraints the dispatcher states for this dispatch (e.g. explicit FORBIDDEN
+   actions, scope boundaries) — not a canonical per-agent-type block, since none
+   exists to copy. If the dispatched agent type has its own defined guardrails
+   (e.g. an agent-type file under `~/.claude/agents/*.md` with an Invariant
+   Principles or Guardrails section), quote the relevant lines here.
+4. `TASK` — what to do, this dispatch only
+5. `SCOPE` — files, directories, boundaries
+6. `INPUTS` — pointers to material (see below)
+7. `FORBIDDEN` — actions out of bounds for this dispatch
+8. `BUDGET` — token or time ceiling, or "none"
+
+Blocks 1-3 are prefix-cacheable only while they stay byte-identical. Paraphrasing
+them per dispatch defeats the cache and costs real money for zero benefit. COPY
+them; do not rewrite them.
+
+### Pass pointers, not payloads
+
+Content longer than ~30 lines goes in a file and the dispatch carries
+`path:line-range`. A subagent that needs it reads it once. Inlining a file into
+a prompt and then having the subagent read that same file is the duplication
+this rule exists to stop.
+
+- Material shared by N dispatches: write it ONCE to the scratchpad, pass that
+  one path to all N.
+- Reports name `path:line` for every claim a reader might want to verify.
+- Exception: a short excerpt that IS the subject of the task — quote it inline.
+
+### Return envelope
+
+Every dispatch declares the shape it wants back; every subagent returns that
+shape and nothing else. Default when a skill defines no shape of its own:
+
+```json
+{
+  "status": "COMPLETE | OPEN | BLOCKED",
+  "reason": "required when status is OPEN or BLOCKED, else empty",
+  "findings": [{"id": "", "severity": "", "path": "", "line": 0, "claim": ""}],
+  "artifacts": ["paths written or modified"],
+  "unverified": ["claims this agent could not confirm"]
+}
+```
+
+A conversational report in place of the declared shape is a FAILED dispatch even
+when the work behind it is right. `unverified` is not optional politeness — an
+empty `unverified` on a task involving measurement is itself a claim.
+
+### Canonical result vocabulary
+
+Use these exact tokens. They are names with one meaning each, not abbreviations
+to decode. A private synonym per skill is how "done" came to mean four different
+things on one project.
+
+| Domain | Values |
+|---|---|
+| Task state | `COMPLETE`, `OPEN`, `BLOCKED` |
+| Artifact conformance | `CONFORMS`, `SALVAGEABLE`, `REWRITE`, `UNCLAIMED` |
+| Finding provenance | `NEW`, `INDUCED`, `CARRIED` |
+| Verification outcome | `VERIFIED`, `UNVERIFIED`, `REFUTED`, `INCONCLUSIVE` |
+| Gate result | `PASSED`, `FAILED`, `N_A` |
+| Convergence | `CONVERGING`, `OSCILLATING` |
+| Figure confidence | `MEASURED`, `DERIVED`, `CARRIED`, `ESTIMATED` |
+
+Gate results are written to the §24.6 ledger in lowercase (`passed` / `failed` / `n_a`) —
+that is the only form `scripts/develop_gate_ledger.py`'s `wave-discipline` and `group-gate`
+CLI accept. The uppercase form above is for prose and reports; do not pass it to the CLI.
+
+`CARRIED` is the value `rules/20-orchestration.md` already requires: a figure you did
+not measure yourself in this session, passed along unverified. It is distinct from
+`DERIVED` (computed from values that were measured) and from `ESTIMATED` (no
+measurement behind it at all). Projects whose existing documents use `INFERRED` may
+keep that word — it is an accepted synonym for `DERIVED` and does not need churning.
+
+**Extending the vocabulary.** A domain this table does not cover is expected. That
+does NOT license a private synonym for a value that IS here. When work needs a
+value the table lacks:
+
+1. **Add it where it is needed so work is not blocked** — project-locally, in the
+   project's `AGENTS.md`, with a one-line definition.
+2. **Surface it to the operator as a SUGGESTION**: the proposed value, its
+   one-line meaning, and where it was needed. Spellbook is the PREFERRED home —
+   a value defined once here beats the same value re-invented per project.
+3. **The operator decides** whether it lands in spellbook. Never edit this table
+   without that decision, and never sit on a value you have used twice without
+   proposing it.
+
+A value that has appeared in two projects is overdue for this table.
+
+## Dispatch Mechanics and Examples
+
 ### Skill Availability by Agent Type
 
 The Skill tool is included for most subagent types but not all. Verify before dispatching skill-dependent work:
@@ -648,7 +752,7 @@ The Skill tool is included for most subagent types but not all. Verify before di
 
 Dispatching a skill-using prompt to an agent type without the Skill tool is a contract bug. The dispatch will produce no "Launching skill:" line and the orchestrator must reject the result.
 
-Every dispatch pays a fixed skill-catalog injection cost (~30K characters) regardless of whether the subagent uses any skill. When several small sequential tasks would each need a dispatch, prefer one subagent with the combined sequential scope — provided the tasks are not separate rows of a develop dispatch table (that combination is forbidden by 40-develop-discipline).
+Every dispatch pays a fixed skill-catalog injection cost (~30K characters) regardless of whether the subagent uses any skill. When several small sequential tasks would each need a dispatch, prefer one subagent with the combined sequential scope — provided the tasks are not separate rows of a develop dispatch table (that combination is forbidden by 40-develop-discipline). This cost is harness-level and cannot be reduced from a prompt or a rule file — consolidating dispatches is the only lever available here, so do not spend effort trying to suppress the injection itself.
 
 **Lazy-injection caveat:** The skills catalog system-reminder is injected into a subagent's context AFTER its first tool call, not at session start. A subagent that introspects its tools or system reminders before acting may falsely conclude that no skills are available. The dispatch template's "First, invoke the [SKILL-NAME] skill" instruction forces the first tool call to BE the skill invocation, sidestepping this footgun. Do not weaken that instruction.
 

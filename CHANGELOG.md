@@ -7,6 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Dispatch Protocol section in `dispatching-parallel-agents`: a fixed
+  cache-aligned prompt layout that puts invariant blocks first so they stay
+  prefix-cacheable, a pointer-passing convention (content over ~30 lines goes
+  to a file, the prompt carries `path:line-range`), a default JSON return
+  envelope, and a canonical result-vocabulary table with a defined extension
+  procedure -- a project may add a value locally but must surface it as a
+  suggestion for spellbook, and the operator decides. Shorthand/abbreviation
+  schemes are explicitly rejected: the waste targeted is repeated content,
+  not wording.
+- Thirteen develop-ceremony proposals upstreamed into `develop/SKILL.md` and
+  `rules/40-develop-discipline.md`: gate position is now a locked Phase-0
+  axis (`gate_position: per_task | per_group`) so depth gates
+  4.4/4.5/4.5.1 may run at capability-group boundaries -- repositioning,
+  never elision, with both terms now defined; capability-cut task groups
+  with file unions and end-to-end deliverables in `writing-plans`; a
+  closure-symbol claim class added to the 3.1.5 checkability pass;
+  structured attribution tags replacing provenance prose; defect-register
+  lifecycle partitions read by the wave gate; decisions must name an
+  implementing edge or declare themselves informational; ABORT-and-re-invoke
+  defined as a cheap ledger-carrying operation so the ceremony lock's escape
+  hatch is affordable; three new Phase-0 questions (task granularity,
+  external prior art as cost dimension D8, measurement subject kinds plus an
+  operator-only task lane); and three mid-run operator forks
+  (recurring-defect-shape, decision-batch, static-read-first).
+- "State, not story" invariant principle in the `handoff` command. §1.11 and
+  §1.25 are consolidated into a single Standing Constraints section feeding
+  one YAML `constraints:` key; narrative-gathering instructions are removed
+  throughout, including the User Messages/Intent Evolution and Error History
+  tables and the checklist items that fed them.
+- New `archive-ceremony`, `blocker`, and `group-gate` subcommands in
+  `scripts/develop_gate_ledger.py`, plus `ceremony.gate_position` as a
+  settable field with value validation. `ceremony_history`, `blockers`, and
+  `groups` are now maps rather than lists, because the module's merge policy
+  replaces lists wholesale. The `locked_at` no-rewrite guard is unchanged --
+  `archive-ceremony` is the only sanctioned supersede path and requires a
+  `--reason`.
+- Mechanical checks: documented `develop_gate_ledger.py` invocations in
+  markdown are now extracted and executed, failing if argparse rejects one
+  (distinguishing argparse rejection from the CLI's legitimate semantic
+  refusals); and a docs-mirror freshness check that writes nothing.
+
+### Fixed
+
+- `scripts/develop_gate_ledger.py` could not run under its own documented
+  invocation (`python3 scripts/develop_gate_ledger.py ...`) because a
+  module-level `spellbook` package import failed outside the venv; it now
+  falls back to an equivalent local implementation, guarded by an
+  anti-drift test.
+- `scripts/generate_docs.py` had no argument parsing, so `--help` silently
+  regenerated 14 files instead of printing usage. It now has `--help` and a
+  `--check` mode that writes nothing.
+- The OpenCode workflow-state extension still read the removed
+  `conversation.corrections` key and rendered "None" forever instead of
+  erroring; it now reads `constraints`.
+- The generated `docs/` mirror was stale by 14 pages.
+
 ## [0.88.0] - 2026-08-17
 
 ### Added

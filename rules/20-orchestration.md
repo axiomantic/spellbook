@@ -119,6 +119,8 @@ All skills MUST adhere to these efficiency and quality standards to prevent cont
 
 Load `dispatching-parallel-agents` skill for the full context minimization protocol, dispatch templates, subagent decision heuristics, and task output storage locations.
 
+Dispatch prompt layout (invariant blocks first, cache-aligned), the pointer-passing convention, the return envelope, and the canonical result vocabulary are defined there too. Use them verbatim rather than improvising a per-dispatch format — and never substitute an invented shorthand or abbreviation scheme for them.
+
 When dispatching subagents, provide CONTEXT only in prompts, never duplicate skill instructions.
 
 <CRITICAL>

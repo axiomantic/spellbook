@@ -91,11 +91,8 @@ export interface WorkflowState {
     binding: Array<{ decision: string; rationale: string; binding: 'ABSOLUTE' | 'SESSION' }>;
     technical: Array<{ decision: string; rationale: string }>;
   };
-  conversation: {
-    user_messages: Array<{ content: string; type: string; timestamp: string }>;
-    corrections: Array<{ original: string; correction: string; lesson: string }>;
-    errors: Array<{ error: string; fix: string; user_feedback: string | null }>;
-  };
+  // Standing constraints (handoff.md Section 1.25): binding rules future work must follow.
+  constraints: Array<{ constraint: string; reason: string }>;
 }
 
 export interface PluginState {

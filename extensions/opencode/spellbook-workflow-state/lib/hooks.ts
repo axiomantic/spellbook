@@ -211,8 +211,8 @@ ${ws.workflow.waiting_for.map(w => `- ${w}`).join('\n') || 'Nothing'}
 ### Decisions (DO NOT RE-LITIGATE)
 ${ws.decisions.binding.map(d => `- ${d.decision}`).join('\n') || 'None'}
 
-### Corrections (DO NOT REPEAT)
-${ws.conversation.corrections.map(c => `- ${c.lesson}`).join('\n') || 'None'}
+### Standing Constraints (DO NOT VIOLATE)
+${(ws.constraints || []).map(c => `- ${c.constraint} (${c.reason})`).join('\n') || 'None'}
 </workflow-recovery>
 `.trim();
 }

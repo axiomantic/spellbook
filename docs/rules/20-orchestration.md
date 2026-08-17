@@ -56,7 +56,7 @@ belongs in this repo. Which model a tier means is the operator's choice, recorde
 | `light` | Carrying out an already-approved plan or spec: TDD implementation against a written spec, completion/artifact verification against a checklist, precisely-specified amends, rote edits, running tests, git/PR/Jira mechanics, applying a described change | `low` |
 
 Debugging splits across tiers. Diagnosing an unknown failure is `heavy`; working through a
-TDD red-green cycle whose test and target are already specified is `light`.
+TDD red-green cycle whose test and target are already specified is `light`. Scope the dispatch to the trigger's size: a 140-line test file does not justify a build-configuration-wide toolchain investigation, and a precision lookup with a known location is a direct read, not a web-research dispatch.
 
 **The specialized agent types already declare their tier** in frontmatter (`tier: heavy`), so
 dispatching the right type gets the right tier for free:
@@ -118,6 +118,8 @@ All skills MUST adhere to these efficiency and quality standards to prevent cont
 ### Context Minimization, Subagent Dispatch, and Compacting
 
 Load `dispatching-parallel-agents` skill for the full context minimization protocol, dispatch templates, subagent decision heuristics, and task output storage locations.
+
+Dispatch prompt layout (invariant blocks first, cache-aligned), the pointer-passing convention, the return envelope, and the canonical result vocabulary are defined there too. Use them verbatim rather than improvising a per-dispatch format — and never substitute an invented shorthand or abbreviation scheme for them.
 
 When dispatching subagents, provide CONTEXT only in prompts, never duplicate skill instructions.
 

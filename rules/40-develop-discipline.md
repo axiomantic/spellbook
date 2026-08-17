@@ -74,6 +74,13 @@ develop in the active skill list IS the contract.
 **Thoroughness is CHOSEN ONCE, then FIXED.** develop's ceremony is selectable
 — but only in a single window, and never afterward.
 
+- **Elision vs repositioning.** ELISION is running FEWER gates than the locked
+  ceremony selected — forbidden, always, mid-run and otherwise. REPOSITIONING
+  is running EVERY selected gate at a declared boundary recorded in the
+  ledger — a Phase-0 choice (`gate_position: per_task | per_group`), locked at
+  `locked_at` with everything else. Repositioning chosen mid-run is NOT a
+  thing: a change of gate position after the lock requires the same
+  ABORT-and-re-invoke path as any other ceremony change.
 - **The selection window is Phase 0, before any work begins.** develop assesses
   the request across its cost dimensions and RECOMMENDS a ceremony; the
   operator's answer is the SOURCE OF TRUTH and overrides the recommendation.
@@ -98,6 +105,20 @@ develop in the active skill list IS the contract.
   ceremony is always available and is fully legitimate — it makes re-selection
   visible and deliberate instead of an erosion. Silently dropping gates is not
   a third option.
+- **ABORT-and-re-invoke is a DEFINED operation, not an improvised one.** On a
+  deliberate re-invocation over an existing `develop_gate_ledger`, the old
+  `ceremony` block is archived under `ceremony_history` with a reason, a NEW
+  Phase 0 runs and a new selection window legitimately opens, completed-gate
+  and wave records carry forward, and `locked_at` is set fresh. The lock's
+  legitimacy rests on this escape hatch being affordable: if the honest path
+  costs a full restart, quiet erosion becomes the cheap path and the lock
+  fails in practice. A defined, ledger-carrying re-invocation makes the
+  honest route cheaper than the dishonest one. This does not loosen the lock:
+  the non-negotiable core applies at EVERY selection, the D5/D6 escalation-only
+  locks re-derive from the unchanged assessment, and `ceremony_history` makes
+  serial de-escalation visible and auditable. Ritually re-invoking to shed
+  gates is itself a phase-collapse rationalization and is already covered by
+  the forbidden-rationalizations list above.
 - **Escalation is always legal; de-escalation never becomes legal.** Scope
   drift may ADD gates mid-run (a declined component may be promoted, with the
   reason recorded); nothing may remove one. The lock is a floor, not a ceiling.

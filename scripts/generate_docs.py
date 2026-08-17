@@ -6,7 +6,9 @@
 """
 Generate documentation pages from SKILL.md, command, agent, and rule files.
 """
+import argparse
 import re
+import sys
 from pathlib import Path
 
 import yaml
@@ -309,24 +311,24 @@ def generate_rule_doc(rule_file: Path) -> str:
     return "".join(parts)
 
 
-def main():
-    # Create output directories
-    (DOCS_DIR / "skills").mkdir(parents=True, exist_ok=True)
-    (DOCS_DIR / "commands").mkdir(parents=True, exist_ok=True)
-    (DOCS_DIR / "agents").mkdir(parents=True, exist_ok=True)
-    (DOCS_DIR / "rules").mkdir(parents=True, exist_ok=True)
+def collect_docs() -> tuple[dict[Path, str], dict[str, int]]:
+    """Render every generated page in memory, writing nothing.
+
+    Splitting rendering from writing is what lets ``--check`` report
+    staleness without touching the tree (Check 2/Check 3): the same
+    content the default mode would write is compared against what is on
+    disk. Insertion order is the write/report order.
+    """
+    docs: dict[Path, str] = {}
 
     # Generate skill docs
     skill_count = 0
-    files_changed = 0
     for skill_dir in sorted(SKILLS_DIR.iterdir()):
         if skill_dir.is_dir() and skill_dir.name not in EXCLUDED_SKILLS and (skill_dir / "SKILL.md").exists():
             doc = generate_skill_doc(skill_dir)
             if doc:
                 output_file = DOCS_DIR / "skills" / f"{skill_dir.name}.md"
-                if write_if_changed(output_file, doc):
-                    files_changed += 1
-                    print(f"Generated: skills/{skill_dir.name}.md")
+                docs[output_file] = doc
                 skill_count += 1
 
     # Generate command docs (flat files)
@@ -339,9 +341,7 @@ def main():
         doc = generate_command_doc(cmd_file)
         if doc:
             output_file = DOCS_DIR / "commands" / cmd_file.name
-            if write_if_changed(output_file, doc):
-                files_changed += 1
-                print(f"Generated: commands/{cmd_file.name}")
+            docs[output_file] = doc
             command_count += 1
 
     # Generate command docs (nested directories like commands/systematic-debugging/)
@@ -353,9 +353,7 @@ def main():
                 doc = generate_command_doc(main_cmd)
                 if doc:
                     output_file = DOCS_DIR / "commands" / f"{cmd_dir.name}.md"
-                    if write_if_changed(output_file, doc):
-                        files_changed += 1
-                        print(f"Generated: commands/{cmd_dir.name}.md")
+                    docs[output_file] = doc
                     command_count += 1
 
     # Generate agent docs
@@ -368,9 +366,7 @@ def main():
         doc = generate_agent_doc(agent_file)
         if doc:
             output_file = DOCS_DIR / "agents" / agent_file.name
-            if write_if_changed(output_file, doc):
-                files_changed += 1
-                print(f"Generated: agents/{agent_file.name}")
+            docs[output_file] = doc
             agent_count += 1
 
     # Generate rule module docs
@@ -379,9 +375,7 @@ def main():
         doc = generate_rule_doc(rule_file)
         if doc:
             output_file = DOCS_DIR / "rules" / rule_file.name
-            if write_if_changed(output_file, doc):
-                files_changed += 1
-                print(f"Generated: rules/{rule_file.name}")
+            docs[output_file] = doc
             rule_count += 1
 
     # Generate commands index
@@ -416,9 +410,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
         origin = "[superpowers](https://github.com/obra/superpowers)" if name in SUPERPOWERS_COMMANDS else "spellbook"
         commands_index += f"| [/{name}]({name}.md) | {desc} | {origin} |\n"
 
-    if write_if_changed(DOCS_DIR / "commands" / "index.md", commands_index):
-        files_changed += 1
-        print("Generated: commands/index.md")
+    docs[DOCS_DIR / "commands" / "index.md"] = commands_index
 
     # Generate agents index
     agents_index = """# Agents Overview
@@ -435,9 +427,7 @@ Agents are specialized reviewers that can be invoked for specific tasks.
         origin = "[superpowers](https://github.com/obra/superpowers)" if name in SUPERPOWERS_AGENTS else "spellbook"
         agents_index += f"| [{name}]({name}.md) | Specialized code review agent | {origin} |\n"
 
-    if write_if_changed(DOCS_DIR / "agents" / "index.md", agents_index):
-        files_changed += 1
-        print("Generated: agents/index.md")
+    docs[DOCS_DIR / "agents" / "index.md"] = agents_index
 
     # Generate rules index
     rules_index = """# Rule Modules Overview
@@ -469,16 +459,90 @@ you decline is never reinstalled and a module added later is offered once.
         desc = " ".join(str(frontmatter.get("description", "")).split())
         rules_index += f"| [{name}]({rule_file.name}) | {class_label} | {desc} |\n"
 
-    if write_if_changed(DOCS_DIR / "rules" / "index.md", rules_index):
-        files_changed += 1
-        print("Generated: rules/index.md")
+    docs[DOCS_DIR / "rules" / "index.md"] = rules_index
 
-    print(f"\nProcessed {skill_count} skills, {command_count} commands, {agent_count} agents, {rule_count} rule modules")
+    counts = {
+        "skills": skill_count,
+        "commands": command_count,
+        "agents": agent_count,
+        "rules": rule_count,
+    }
+    return docs, counts
+
+
+def stale_docs(docs: dict[Path, str]) -> list[Path]:
+    """Return the generated paths whose on-disk content is missing or stale."""
+    stale = []
+    for path, content in docs.items():
+        if not path.exists() or path.read_text(encoding="utf-8") != content:
+            stale.append(path)
+    return stale
+
+
+def build_parser() -> argparse.ArgumentParser:
+    """Argument handling for the generator.
+
+    Without a parser, `--help` was silently ignored and the script
+    regenerated 14 files as a side effect of asking for usage. Every flag
+    is now parsed, so an unknown flag is an error rather than a write.
+    """
+    parser = argparse.ArgumentParser(
+        prog="generate_docs",
+        description=(
+            "Generate the docs/ mirror from skills, commands, agents, and "
+            "rule modules. With no arguments, writes the mirror in place."
+        ),
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help=(
+            "Do not write anything. Exit non-zero if any generated page is "
+            "missing or stale, listing the offending paths."
+        ),
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
+
+    docs, counts = collect_docs()
+    summary = (
+        f"\nProcessed {counts['skills']} skills, {counts['commands']} commands, "
+        f"{counts['agents']} agents, {counts['rules']} rule modules"
+    )
+
+    # --check must write nothing at all: no page contents and no output
+    # directories. Comparison happens purely in memory.
+    if args.check:
+        stale = stale_docs(docs)
+        print(summary)
+        if stale:
+            print(f"Stale or missing generated page(s): {len(stale)}")
+            for path in stale:
+                print(f"  {path.relative_to(REPO_ROOT)}")
+            print("Run: python3 scripts/generate_docs.py")
+            return 1
+        print("All files up to date")
+        return 0
+
+    for subdir in ("skills", "commands", "agents", "rules"):
+        (DOCS_DIR / subdir).mkdir(parents=True, exist_ok=True)
+
+    files_changed = 0
+    for path, content in docs.items():
+        if write_if_changed(path, content):
+            files_changed += 1
+            print(f"Generated: {path.relative_to(DOCS_DIR)}")
+
+    print(summary)
     if files_changed > 0:
         print(f"Updated {files_changed} file(s)")
     else:
         print("All files up to date")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

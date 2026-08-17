@@ -572,6 +572,58 @@ Proceeding...
 
 ---
 
+### 0.5.6 Ceremony Re-invocation (ABORT-and-re-invoke)
+
+<CRITICAL>
+The ceremony lock (§0.8) is legitimate only because its escape hatch is real and
+affordable. FINISH or ABORT-and-re-invoke are the two honest answers to "this is
+taking too long" — never a quiet mid-run narrowing. This section defines what
+ABORT-and-re-invoke does when it lands on an existing `develop_gate_ledger`, so the
+honest path stays cheap enough to actually be taken.
+</CRITICAL>
+
+**Trigger.** The operator explicitly invokes develop again over a project that
+already has a `develop_gate_ledger` with a locked `ceremony` block — a deliberate
+re-invocation, distinct from the ordinary continuation flow in §0.5 Steps 1–5 (which
+resumes the SAME ceremony rather than re-selecting it).
+
+**Flow:**
+
+1. Archive the existing `ceremony` block under
+   `develop_gate_ledger.ceremony_history` (an append-only map keyed by the ISO
+   archive timestamp), recording a reason for the re-invocation. Run this via
+   `python3 scripts/develop_gate_ledger.py archive-ceremony --reason "<why>"` — the
+   dedicated CLI subcommand that archives the current ceremony into
+   `ceremony_history`, records the reason, and clears `ceremony` so a fresh Phase 0
+   can set a new `locked_at`. The ordinary `set` path refuses to rewrite `locked_at`
+   by design; this subcommand is the only sanctioned way to perform the
+   archive-and-relock.
+2. Run a NEW Phase 0 — §0.7, §0.7.5, §0.7.6, and §0.8 execute again in full. This is a new,
+   legitimate selection window; it is not exempt from anything §0.8 requires,
+   including Step 1 (the non-negotiable core, unchanged at every selection) and the
+   D5/D6 escalation-only locks (RE-DERIVED from the current assessment, never carried
+   forward from the prior selection).
+3. Completed-gate records and wave records from the prior ceremony CARRY FORWARD —
+   re-invocation does not erase work already verified.
+4. Write a fresh `locked_at` for the new selection. The old `locked_at` remains
+   readable inside the archived `ceremony_history` entry.
+
+**Counterweights (why this cannot become a quiet de-escalation path):**
+
+- The non-negotiable core (§0.8 Step 1) applies at every selection, including a
+  re-invocation. It is never on the menu.
+- D5/D6 locks re-derive from the unchanged cost-assessment method; a re-invocation
+  cannot unlock a gate that the current assessment still rates `high`.
+- `ceremony_history` is an append-only map keyed by the ISO archive timestamp and
+  visible in the ledger. A pattern of serial
+  re-invocations that each shed gates is auditable, not hidden inside a single
+  session's mid-run narrowing.
+
+Nothing here opens the lock mid-run. It defines what happens when the operator takes
+the already-legitimate ABORT-and-re-invoke path, so that path stays cheap.
+
+---
+
 ### 0.1 Detect Escape Hatches
 
 <RULE>Parse user's initial message for escape hatches BEFORE asking questions.</RULE>
@@ -603,6 +655,10 @@ Options:
 - **Review first (impl plan):** Skip 2.1–3.1, load doc, jump to 3.2 (review)
 - **Treat as ready (design doc):** Skip entire Phase 2, start at Phase 3
 - **Treat as ready (impl plan):** Skip Phases 2–3, start at Phase 4
+
+### 0.1.5 Suggest Dedicated Project Directory (multi-session efforts)
+
+<RULE>If `cwd` is a home directory or generic parent (`~`, `~/Development`, or similar non-project-specific path), and the effort looks multi-session (based on Q-flags or cost/scope assessment), suggest — once, non-blocking — starting from or creating a dedicated project directory, since session artifacts, transcripts, and project-scoped tooling all key off the project path.</RULE>
 
 ### 0.2 Clarify Motivation (WHY)
 
@@ -827,6 +883,34 @@ Suggested: `Yes — new deps/infra/schema` / `No — existing code only`
 
 **Orthogonality:** If Q-INFRA is answered yes, auto-set `needs_design=true` and do NOT ask Q-DESIGN separately. `needs_research` is independent of the other two (you can need design without prior research and vice versa). `size_estimate` is orthogonal to all flags and never gates a phase.
 
+#### Step 2.5: Task Granularity (asked only when any flag is set)
+
+<RULE>Skip this question entirely on the fast path — a fast-path change has no plan to cut.</RULE>
+
+If ANY of the three need-flags resolved `yes` in Step 2, ask via AskUserQuestion:
+
+```markdown
+### Q-GRANULARITY — "Will the plan cut tasks by capability or by file?"
+Capability-cut tasks group by what the feature DOES: each task or group delivers an
+end-to-end capability with its own check. File-cut tasks group by WHICH FILES change:
+each task delivers "this file exists / compiles" with no capability-level check.
+Default is capability — file-cut plans have shipped modules nothing calls and
+integration tasks that could not reach the files their deliverable required. Answer
+`file` only for genuinely mechanical work: a migration touching many files
+identically, where there is no capability boundary to cut along.
+Suggested: `Capability (Recommended) — group by what the feature does` / `File — cut by which files change (mechanical migrations only)`
+```
+
+Store the answer in `SESSION_PREFERENCES.task_granularity ∈ {"capability", "file"}`,
+default `capability`. Record it in `develop_gate_ledger` alongside the other Phase 0
+decisions. This answer routes `writing-plans` (capability-cut plans declare groups,
+deliverables, and file unions) and determines whether the `per_group` gate-position
+option is offered in §0.8 (see §0.8 Step 1a) — it is never offered under `file`
+granularity, since a file-cut plan has no capability boundary to gate at.
+
+§3.1.5 MUST enforce this answer: under `capability` granularity, a task whose
+deliverable is "this file exists" or "this file compiles" is a finding.
+
 #### Step 3: Route by Flags
 
 Resolve the three booleans, then route:
@@ -845,18 +929,19 @@ Store the resolved `need_flags` (`needs_research`, `needs_design`, `needs_infras
 
 ---
 
-### 0.7.5 Cost Assessment (seven dimensions — develop's own read)
+### 0.7.5 Cost Assessment (eight dimensions — develop's own read)
 
 <CRITICAL>
 This is develop's assessment, produced BEFORE the picker and shown TO the operator.
 It is a SUGGESTION and is labelled as one. The operator's answer in §0.8 is the
 SOURCE OF TRUTH and overrides any dimension read here.
 
-Assess ALL SEVEN dimensions. Do NOT estimate file counts — file count is not a
-dimension and never was a good one. Rate each `low` / `high` and give ONE line of
+Assess ALL EIGHT dimensions. Do NOT estimate file counts — file count is not a
+dimension and never was a good one. Rate D1–D7 `low` / `high` and give ONE line of
 concrete evidence (a path, a symbol, a named unknown). A dimension rated without
 evidence is rated `high` by default: an unevidenced "this is fine" is exactly the
-guess this section exists to eliminate.
+guess this section exists to eliminate. D8 uses its own four-value scale (see below)
+and is EXCLUDED from the `size_estimate` derivation, which stays based on D1–D7.
 </CRITICAL>
 
 | # | Dimension | The question it answers | Rate `high` when |
@@ -867,9 +952,22 @@ guess this section exists to eliminate.
 | D4 | **coupling** | How many consumers depend on what we touch? | The thing changed is depended on by callers we will not be editing |
 | D5 | **verification difficulty** | Can correctness be PROVEN, or only asserted? | There is no command that would go red if the change were wrong |
 | D6 | **silent-failure potential** | Would breakage be LOUD or INVISIBLE? | The failure mode is "reports success, does nothing" rather than "throws" |
-| D7 | **precedent** | Is there an in-repo pattern to copy? | No existing example of this shape exists in the repo |
+| D7 | **precedent (in-repo)** | Is there an in-repo pattern to copy? | No existing example of this shape exists in the repo |
+| D8 | **precedent (external)** | Does adjacent prior art exist outside the repo, and has it been surveyed? | Rated `known-unsurveyed` or `unknown` — see note below |
 
-**Why these seven, and not size.** Cost tracks these dimensions, not volume. The
+**D8 uses a four-value scale, not low/high**: `surveyed` / `known-unsurveyed` /
+`none` / `unknown`. `surveyed` means someone has already checked the ecosystem
+outside the repo (other implementations, corpora, schemas, captures of the thing
+being built) and recorded what was found. `none` means the survey was done and
+nothing adjacent exists. `known-unsurveyed` means prior art is believed to exist but
+nobody has looked. `unknown` means nobody has even asked the question yet.
+
+D8's only consequence (the survey scheduled below) applies solely to
+research-flagged runs. When `needs_research = no`, D8 resolves to `unknown`
+WITHOUT costing an interview turn — do not ask about it; record `unknown` and move
+on. Assess D8 for real only when `needs_research = yes`.
+
+**Why these eight, and not size.** Cost tracks these dimensions, not volume. The
 motivating case: work that was small by every size measure cost enormously because
 its defects were invisible-failure-shaped — an installer that reported success while
 writing files no harness read, tests that passed against an inert feature, a check
@@ -895,11 +993,26 @@ failure. Every other dimension's implied gates are freely selectable.
 | D5 verification difficulty | Checkability passes (2.1.5 / 3.1.5) + green-mirage (4.6.3) — **LOCKED** |
 | D6 silent-failure potential | Completion verification (4.4) + comprehensive audit (4.6.1) + green-mirage (4.6.3) + TDD-first (4.3), waiver revoked — **LOCKED** |
 | D7 precedent absent | Research (Phase 1) + Design (Phase 2) |
+| D8 `known-unsurveyed` or `unknown` | Bounded external-precedent survey task scheduled in Phase 1, with licence posture and survey budget recorded alongside it |
 
-**Derive `size_estimate`** from the assessment instead of asking: `large` if four or
-more dimensions are `high`, `medium` if two or three, else `small`. Store in
-`SESSION_PREFERENCES.size_estimate`. Its downstream meaning is UNCHANGED — it tunes
-parallelization and checkpoint frequency and NEVER gates a review step.
+**D8 survey scheduling.** When D8 rates `known-unsurveyed` or `unknown` on a
+research-flagged run (`needs_research = yes`), schedule a bounded survey task in
+Phase 1 (external prior art — implementations, corpora, schemas, or captures already
+in the ecosystem outside this repo). Record two required sub-answers alongside the
+scheduled task, not after it starts:
+
+- **Licence posture** — may this project read or reuse what the survey finds? A
+  clean-room project may answer "read-only, no reuse" or "excluded entirely." This is
+  part of the question, not an afterthought — the contamination risk is real.
+- **Survey budget** — a time or dispatch bound, so the survey cannot rathole.
+
+A survey scheduled without both sub-answers recorded is an incomplete Phase 0 item.
+
+**Derive `size_estimate`** from D1–D7 only, instead of asking: `large` if four or
+more of D1–D7 are `high`, `medium` if two or three, else `small`. D8 does NOT count
+toward this derivation — it uses a different scale and answers a different question.
+Store in `SESSION_PREFERENCES.size_estimate`. Its downstream meaning is UNCHANGED — it
+tunes parallelization and checkpoint frequency and NEVER gates a review step.
 
 **Scope drift upward.** If the assessment rates D1 or D2 `high` on a change the
 operator flagged zero, say so plainly and set the corresponding need-flag before
@@ -919,11 +1032,60 @@ ADD flags; it may never clear one the operator set.
 | Coupling | low/high | ... |
 | Verification difficulty | low/high | ... |
 | Silent-failure potential | low/high | ... |
-| Precedent | present/absent | ... |
+| Precedent (in-repo) | present/absent | ... |
+| Precedent (external) | surveyed/known-unsurveyed/none/unknown | ... |
 
 Recommended ceremony: **{Core|Focused|Full}** — {one sentence naming the dimension that drove it}
 Locked by D5/D6: {list, or "nothing — no invisible-failure risk detected"}
 ```
+
+---
+
+### 0.7.6 Measurement Task Tagging and Operator-Only Lane
+
+<RULE>Ask this only when `needs_research` or `needs_infrastructure` is set — no plan
+exists yet at Phase 0, so "the work includes measurement-type deliverables" cannot be
+evaluated directly. `needs_research` or `needs_infrastructure` is the knowable proxy
+at this point in the flow; most feature work sets neither, and the tag is then absent
+and nothing fires.</RULE>
+
+When the RULE's proxy condition triggers (`needs_research` or `needs_infrastructure`
+set), ask the operator directly via AskUserQuestion — the operator, not the
+orchestrator, determines which deliverables (if any) are measurements, since no plan
+exists yet to inspect:
+
+```markdown
+### Q-MEASURE — "Which deliverables are measurements, of what kind — and which
+tasks need resources only you have?"
+
+Part 1: For each measurement-type deliverable, what is its subject?
+- Fixed artifact (a shipped binary, a PDF, a captured corpus — cannot change under test)
+- Instrumented run (a harness, a test rig, a live capture)
+- Physical access (hardware in hand, a photograph, an account, third-party correspondence)
+
+Part 2: Which of those need a resource only you (the operator) have — hardware in
+hand, a photograph, an account, third-party correspondence?
+
+Suggested: describe the deliverables and flag which ones are operator-only.
+```
+
+**Subject-kind tagging.** Record each measurement task's subject kind
+(`fixed_artifact` / `instrumented_run` / `physical_access`) in the plan template. This
+tag drives a cheapest-first ordering rule at implementation time: attempt a static
+read of a fixed artifact before building instrumented-run infrastructure, and attempt
+an instrumented run before requiring physical access. The tag is what makes the
+ordering decidable at plan time rather than discovered by accident mid-run.
+
+**Operator-only lane.** Tasks tagged `physical_access` (or otherwise requiring a
+resource only the operator holds — an account, a photograph, third-party
+correspondence) form a named parallel lane, recorded separately from the main task
+list. The lane is a SURFACED LIST, never a blocking gate: it is presented at session
+start and re-presented at every wave boundary until empty. It blocks nothing in the
+main track; the point is that these tasks are often minutes of operator effort and
+otherwise sit unexecuted because nothing re-surfaces them.
+
+Store the subject-kind tags and the operator-lane membership in
+`SESSION_PREFERENCES.measurement_tasks` (empty if no measurement deliverables exist).
 
 ---
 
@@ -952,6 +1114,41 @@ MUST NOT be presented as such:
   test-first rule that can be switched off is not a rule.
 - Author ≠ Judge, the artifact-verification protocol, and the Phase Declaration ritual
   (these are structural, not gates — nothing about them is selectable)
+
+#### Step 1a: Gate position axis (`gate_position`)
+
+<CRITICAL>
+`gate_position` changes gate POSITION, never gate PRESENCE. Every gate the operator
+selects still runs; this axis decides only where in the task stream it runs. This is
+NOT a way to drop a gate — elision (running fewer gates than the locked ceremony
+selected) stays forbidden; repositioning (running every selected gate at a declared
+boundary recorded in the ledger) is a Phase-0 choice.
+</CRITICAL>
+
+Default `gate_position = per_task` — today's behavior, unchanged for operators who do
+not engage with this axis. Offer `per_group` ONLY when
+`SESSION_PREFERENCES.task_granularity == "capability"` (§0.7 Step 2.5) — a file-cut
+plan has no capability boundary to gate at, so `per_group` is never offered under
+`file` granularity.
+
+When offered, ask via AskUserQuestion:
+
+```markdown
+Header: "Gate position"
+Question: "The depth gates (completion verification 4.4, code review 4.5, fact-check
+4.5.1) can run per task, or once per declared capability group at the group boundary.
+Which do you want? Every selected gate still runs either way — this only changes
+where."
+
+Options:
+- Per task (Recommended default): today's behavior — each task gets its own gate pass.
+- Per group: gates run once per capability group, against the group's single
+  deliverable, adversarially (at least one control that goes RED on a known-bad
+  input). Fewer gate dispatches; detection moves to the group boundary instead of
+  the task that introduced the defect.
+```
+
+Store the answer as `develop_gate_ledger.ceremony.gate_position ∈ {"per_task", "per_group"}`.
 
 #### Step 2: Build the menu from the assessment (do NOT show a fixed 12-item list)
 
@@ -1018,6 +1215,9 @@ develop skill under "Ceremony Ledger". Two properties matter here:
    session must be able to tell "the operator chose not to run this" from "this has
    not run yet". Absence is ambiguous; `declined` is not.
 2. `locked_at` is written at this moment and never rewritten. Its presence IS the lock.
+3. `gate_position` (§0.8 Step 1a) is locked alongside `selected`/`declined`, under the
+   same `locked_at` — it is one more field of the same immutable ceremony block, not a
+   separate decision with its own lock.
 
 <FORBIDDEN>
 - Presenting any non-negotiable core item as a selectable option
@@ -1025,7 +1225,7 @@ develop skill under "Ceremony Ledger". Two properties matter here:
 - Presenting a menu of components the assessment did not make relevant
 - Preselecting the recommendation without showing that it is develop's suggestion and the operator's call
 - Deriving ceremony from a file count
-- Re-opening the picker after `locked_at` is set (abort and re-invoke develop instead)
+- Re-opening the picker after `locked_at` is set (abort and re-invoke develop instead — see §0.5.6)
 </FORBIDDEN>
 
 <FORBIDDEN>
@@ -1055,9 +1255,13 @@ Before proceeding, verify:
 - [ ] Token enforcement level selected
 - [ ] Refactoring mode detected if applicable
 - [ ] All three need-flag questions answered; `need_flags` stored in SESSION_PREFERENCES
-- [ ] All seven cost dimensions assessed with one line of evidence each (§0.7.5); `size_estimate` DERIVED, not asked
+- [ ] Task granularity (Q-GRANULARITY, §0.7 Step 2.5) asked if any flag set; `SESSION_PREFERENCES.task_granularity` stored
+- [ ] All eight cost dimensions assessed with one line of evidence each (§0.7.5); `size_estimate` DERIVED from D1–D7 only, not asked
+- [ ] D8 external precedent assessed; if `known-unsurveyed`/`unknown` on a research-flagged run, survey task scheduled with licence posture and budget recorded
+- [ ] Measurement task tagging and operator-only lane recorded if measurement deliverables exist (§0.7.6)
 - [ ] Assessment presented to the operator as a SUGGESTION, with D5/D6 locks named
 - [ ] Ceremony chosen by the operator (§0.8) and written to `develop_gate_ledger.ceremony` with `locked_at` set
+- [ ] `gate_position` (§0.8 Step 1a) resolved — `per_task` by default, `per_group` only if offered and chosen — and locked with the rest of the ceremony
 - [ ] Declined components recorded in `ceremony.declined` (recorded as declined, never merely absent)
 - [ ] Flag routing determined (fast path vs. flag-gated phases)
 

@@ -41,6 +41,8 @@ If the answer is "exactly what I am looking at", you have not verified it.
   that points somewhere plausible-but-wrong produces a real pass on the
   wrong input.
 
+**A result a machine might later check belongs in a fixed-column table, not a paragraph.** Verification results, coverage figures, and per-item status go in a table whose columns do not move between runs. A table can become a lint's input; a paragraph cannot. When a review loop stops converging, that table is the thing you mechanize — and a table that must be re-parsed by hand every round is what made the loop expensive in the first place.
+
 **Observed instances** (all real, all reported success):
 
 - A waf task invoked a binary that was not on PATH, discarded the non-zero
@@ -51,6 +53,7 @@ If the answer is "exactly what I am looking at", you have not verified it.
   caller's branch.
 - A message body containing backticks was command-substituted by the shell
   before send. The message arrived; parts of it were silently blank.
+- Four agents independently hand-counted the same consumer set and returned 0, 5, 9, and 10; the computed answer was 14. A count is an artifact: compute it (grep -c, wc -l, a script), never recall or estimate it. A verification table also claimed four repositories checked when the command covered three — the table must be generated from the command's output, not written beside it.
 
 The shape is always the same: **the operator-visible signal looks normal.**
 That is what makes it expensive — no error to notice, no retry prompt, and a

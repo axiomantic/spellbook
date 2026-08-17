@@ -72,6 +72,13 @@ develop in the active skill list IS the contract.
 **Thoroughness is CHOSEN ONCE, then FIXED.** develop's ceremony is selectable
 — but only in a single window, and never afterward.
 
+- **Elision vs repositioning.** ELISION is running FEWER gates than the locked
+  ceremony selected — forbidden, always, mid-run and otherwise. REPOSITIONING
+  is running EVERY selected gate at a declared boundary recorded in the
+  ledger — a Phase-0 choice (`gate_position: per_task | per_group`), locked at
+  `locked_at` with everything else. Repositioning chosen mid-run is NOT a
+  thing: a change of gate position after the lock requires the same
+  ABORT-and-re-invoke path as any other ceremony change.
 - **The selection window is Phase 0, before any work begins.** develop assesses
   the request across its cost dimensions and RECOMMENDS a ceremony; the
   operator's answer is the SOURCE OF TRUTH and overrides the recommendation.
@@ -96,6 +103,20 @@ develop in the active skill list IS the contract.
   ceremony is always available and is fully legitimate — it makes re-selection
   visible and deliberate instead of an erosion. Silently dropping gates is not
   a third option.
+- **ABORT-and-re-invoke is a DEFINED operation, not an improvised one.** On a
+  deliberate re-invocation over an existing `develop_gate_ledger`, the old
+  `ceremony` block is archived under `ceremony_history` with a reason, a NEW
+  Phase 0 runs and a new selection window legitimately opens, completed-gate
+  and wave records carry forward, and `locked_at` is set fresh. The lock's
+  legitimacy rests on this escape hatch being affordable: if the honest path
+  costs a full restart, quiet erosion becomes the cheap path and the lock
+  fails in practice. A defined, ledger-carrying re-invocation makes the
+  honest route cheaper than the dishonest one. This does not loosen the lock:
+  the non-negotiable core applies at EVERY selection, the D5/D6 escalation-only
+  locks re-derive from the unchanged assessment, and `ceremony_history` makes
+  serial de-escalation visible and auditable. Ritually re-invoking to shed
+  gates is itself a phase-collapse rationalization and is already covered by
+  the forbidden-rationalizations list above.
 - **Escalation is always legal; de-escalation never becomes legal.** Scope
   drift may ADD gates mid-run (a declined component may be promoted, with the
   reason recorded); nothing may remove one. The lock is a floor, not a ceiling.
@@ -160,5 +181,54 @@ next phase will inherit. The motivating failure mode is documented in
 the nmg2-emulator handoff (2026-08-10): "Wave 3a done" markings made
 without §24.6 verification propagated across handoffs because no later
 step re-checked.
+
+### Stop Semantics in Batched Dispatches
+
+"A task that finds the design wrong stops and reports" is ambiguous inside
+a batched dispatch, and the ambiguity has already produced a 48-file
+low-quality landing (Wave 3a, nmg2-emulator, 2026-08). The binding
+definition:
+
+- Stopping is NOT "writing no commit." An implementer may commit partial,
+  clearly-labeled work.
+- Stopping IS "not marking the task complete." A task whose implementer
+  found a design defect stays OPEN — in the ledger and in the plan — until
+  the defect is resolved and the task re-verified.
+- A batched dispatch inherits this per task: one blocked task does not
+  block siblings, and no sibling's completion marks the blocked one.
+- The dispatch report MUST list each covered task as COMPLETE or
+  OPEN(reason). A batch report with no per-task status is invalid.
+
+### Incidentals: Mid-Implementation Departures Must Be Integrated, Not Improvised
+
+An "incidental" is any departure from the implementation plan discovered
+DURING implementation: a design assumption that turns out wrong, scope the
+plan didn't anticipate, or a redirection the plan's own approach doesn't
+cover. An incidental is not optional housekeeping — it changes what "the
+plan" means, and the plan document is the only artifact a resumed session,
+a reviewer, or a later incidental will ever read to find out what's true.
+
+Discovering an incidental does not authorize working around it silently.
+Before continuing implementation past the point where it was found:
+
+1. **Stop and classify it** — a bug in the plan (a stated assumption is
+   wrong), scope the plan omitted (a task the plan should have had), or a
+   full redirection (the plan's approach itself needs to change).
+2. **Write it into the plan document itself** — not a chat message, not a
+   code comment, not a mental note to clean the plan up later. A task
+   block, an amendment section, or an explicit superseding note, in the
+   same document a resumed session or reviewer will actually read.
+   "Later" does not reliably arrive; an incidental deferred past the
+   moment it was found is the exact failure this rule exists to prevent.
+3. **Gate the incidental like any other task** — it inherits the same
+   ceremony (ledger entry, ownership, a `Check:` line where the plan uses
+   them) as a task the plan shipped with. Being discovered rather than
+   planned is not grounds for a lighter version of the gate.
+4. Only then continue implementation.
+
+This applies regardless of how small the incidental looks. A departure too
+small to write down was too small to have required a decision in the
+first place — and if it required a decision, the decision belongs in the
+plan, not only in the diff.
 </CRITICAL>
 ```

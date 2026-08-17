@@ -118,6 +118,7 @@ You feel genuine anxiety about organizational chaos. The fresh instance must fee
 3. **Orchestrator delegates** - Invoke skills, spawn subagents. Never implement directly
 4. **Verify before complete** - Every task needs runnable check. Missing verification = not done
 5. **Workflow first** - Restore skill stack BEFORE work. Ad-hoc = workflow violation
+6. **State, not story** - A handoff records what is TRUE NOW and what is OPEN: current phase, ledger rows, open items, next actions, verification commands, known blockers. It does NOT narrate how the session arrived here. Git holds the history and the transcript holds the narrative; a reader who needs either can go read them. Session-narrative prose is the most expensive content in a handoff and the least read — and it goes stale the moment the next session does anything, which makes it worse than absent. Where a past decision still constrains future work, record the CONSTRAINT and its reason in one line, not the story of reaching it.
 
 <FORBIDDEN>
 - **Section 1.9/1.10 blank** -> ALWAYS search ~/.local/spellbook/docs/<project-encoded>/plans/
@@ -133,11 +134,11 @@ You feel genuine anxiety about organizational chaos. The fresh instance must fee
 <analysis>
 Before generating, wrap analysis in these tags (SKIP if mode=auto):
 
-1. **Conversation walkthrough** (per phase): User requests/intent, your approach, decisions+rationale, code changes, errors+resolutions, user feedback
+1. **Current-state extraction**: decisions+rationale still governing future work, code/file changes (for artifact state), open blockers not yet resolved
 
 2. **Org structure**: Your direct work vs delegated, workflow pattern
 
-3. **Completeness check**: All subagents? All user messages? All errors? All decisions?
+3. **Completeness check**: All subagents accounted for? All binding decisions captured? All open blockers captured?
 
 4. **Artifact state**: Files modified, CURRENT state (not claimed), match plan?
 
@@ -149,11 +150,7 @@ Before generating, wrap analysis in these tags (SKIP if mode=auto):
    - For EACH: Record ABSOLUTE path, progress, sections to re-read
    - If none: explicitly note "NO PLANNING DOCUMENTS"
 
-7. **Conversation context**:
-   - List ALL user messages (not tool results) with type classification
-   - Identify corrections: where user redirected your approach
-   - Identify lessons: patterns to avoid in future
-   - Capture error history with resolutions
+7. **Standing constraints**: Identify corrections that still bind future work and record each as constraint+reason in Section 1.25. Do not list message sequences or resolved errors (Principle 6).
 </analysis>
 
 <reflection>
@@ -162,6 +159,15 @@ After generating, verify:
 - Planning docs have ABSOLUTE paths?
 - Todos EXACTLY preserved (verbatim)?
 - Would I inherit this confidently with zero context?
+- **Claim verification gate (before the handoff is final):** every concrete,
+  checkable claim in the handoff — build/test command sequences, repo and
+  path attributions, counts, version numbers — must be verified by
+  execution or computation, not recall. Run each quoted command sequence
+  (or its cheapest dry-run equivalent) and compute each count. A handoff
+  that ships an untested build command has already required a correction
+  pass in practice ("Trust the corrections over the body", 2026-08-10).
+  For handoffs with many claims, dispatch one subagent invoking the
+  fact-checking skill over the claim list.
 </reflection>
 
 ---
@@ -267,17 +273,6 @@ List every significant decision with WHY: technical approach, delegation choices
 **Main Agent:** Files modified, commands run
 **Subagents:** Agent [ID]: [changes]
 
-### 1.6 Errors, Fixes & User Corrections
-
-| Error | Fix | User Feedback |
-|-------|-----|---------------|
-
-**Behavioral Corrections:** [user instructions on different approach]
-**Mistakes NOT to Repeat:** [anti-patterns discovered]
-
-### 1.7 All User Messages
-List ALL non-tool-result user messages (verbatim/detailed summary) capturing intent evolution. See Section 1.25 for structured table format.
-
 ### 1.8 Pending Work Items
 **Main Agent Todos (VERBATIM):** [exact wording]
 **Subagent Pending:** [what each needs to complete, for awareness]
@@ -336,9 +331,6 @@ Read("/path/to/design.md") # Extract: key decisions affecting implementation
 ```
 
 **If NONE:** Write "NO DOCUMENTS TO RE-READ" explicitly.
-
-### 1.11 Session Narrative
-2-3 paragraphs: what happened, approach, organization, challenges, current state. Capture what lists cannot: orchestrator's tone/personality, unexplained decisions, interpersonal dynamics with user, implicit constraints.
 
 ### 1.12 Artifact State at Distillation
 
@@ -524,20 +516,10 @@ decisions:
     - decision: "[what]"
       rationale: "[why]"
 
-# === CONVERSATION CONTEXT (Section 1.25) ===
-conversation:
-  user_messages:
-    - content: "[message]"
-      type: "[request|clarification|correction|feedback|approval]"
-      timestamp: "[ISO]"
-  corrections:
-    - original: "[what you did wrong]"
-      correction: "[what user said to do instead]"
-      lesson: "[pattern to avoid]"
-  errors:
-    - error: "[what happened]"
-      fix: "[how resolved]"
-      user_feedback: "[if any]"
+# === STANDING CONSTRAINTS (Section 1.25) ===
+constraints:
+  - constraint: "[what future work must do/avoid]"
+    reason: "[why]"
 
 # === ARTIFACTS (Section 1.12) ===
 artifacts:
@@ -638,30 +620,20 @@ See `<FORBIDDEN>` section for core failures. Additional runtime failures:
 | Checkpoint ignorance | 1.22: Use checkpoint on bad verification |
 | Workflow violation | 1.1: Honor established pattern |
 
-### 1.25 Conversation Context
+### 1.25 Standing Constraints
 
-**Captures conversation history that affects behavior. Not a full transcript - key moments only.**
+**Single home for every one-line constraint or rationale the artifacts cannot show: a decision whose reason is not evident from the code or the plan, a constraint the operator stated in-session, a correction that still governs future work, a preference that will govern future work. This is the ONLY section that feeds the YAML `constraints:` key (Section 1.20) and the `<workflow-recovery>` "Standing Constraints" block (Section 3.3) — do not duplicate this content elsewhere in the handoff.**
 
-#### User Messages (Intent Evolution)
-| # | Type | Message Summary |
-|---|------|-----------------|
-| 1 | request | [initial request] |
-| 2 | clarification | [answered question about X] |
-| 3 | correction | [told me to do Y instead of Z] |
+**Not a recap.** Current state lives in the sections below and history lives in git; the narrative of how a correction was received belongs to the transcript, not the handoff (Principle 6). If a line here could be derived by reading the diff, delete it. ONE LINE EACH.
 
 #### Corrections Received
-| Original Behavior | Correction | Lesson |
-|-------------------|------------|--------|
-| [what I did] | [what user said] | [pattern to avoid] |
+| Constraint | Reason |
+|------------|--------|
+| [what future work must do/avoid] | [why] |
 
 **Mistakes NOT to Repeat:**
 - [anti-pattern 1]
 - [anti-pattern 2]
-
-#### Error History
-| Error | Resolution | User Involved? |
-|-------|------------|----------------|
-| [error] | [fix] | [yes/no + feedback] |
 
 ---
 
@@ -752,18 +724,15 @@ ALL must be "yes":
 - [ ] Todo EXACTLY preserved (+ implicit todos)
 
 **Context:**
-- [ ] ALL user messages (not just corrections)
-- [ ] ALL errors + fixes
 - [ ] Technical concepts + decisions
-- [ ] User corrections (no repeat mistakes)
-- [ ] Section 1.25 conversation context complete
-- [ ] Lessons learned captured in corrections
+- [ ] Section 1.25 standing constraints complete
+- [ ] Mistakes NOT to Repeat captured in 1.25
 
 **Machine-Readable (Section 1.20):**
 - [ ] All YAML fields populated (no [placeholders])
 - [ ] skill_stack includes constraints (forbidden/required)
 - [ ] subagents includes skill_stack for each
-- [ ] conversation.corrections captures lessons
+- [ ] constraints captures standing constraints
 - [ ] If mode=auto: workflow state persisted
 
 **Verification:**
@@ -856,8 +825,8 @@ ${state.workflow.waiting_for.map(w => `- ${w}`).join('\n')}
 ### Decisions (DO NOT RE-LITIGATE)
 ${state.decisions.binding.map(d => `- ${d.decision}`).join('\n')}
 
-### Corrections (DO NOT REPEAT)
-${state.conversation.corrections.map(c => `- ${c.lesson}`).join('\n')}
+### Standing Constraints (DO NOT VIOLATE)
+${state.constraints.map(c => `- ${c.constraint} (${c.reason})`).join('\n')}
 </workflow-recovery>
 ```
 
