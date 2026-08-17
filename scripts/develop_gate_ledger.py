@@ -170,7 +170,24 @@ except ModuleNotFoundError:  # standalone invocation, `spellbook` not on sys.pat
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_STATE_DIR = Path.home() / ".local" / "spellbook"
+def default_state_dir() -> Path:
+    """Base directory holding the per-project ledger files.
+
+    Resolved lazily rather than at import time: ``Path.home()`` raises
+    ``RuntimeError`` on a host with no resolvable home directory (a
+    Windows CI runner with none of ``USERPROFILE``/``HOMEDRIVE``/
+    ``HOMEPATH`` set), and computing this at module scope made that
+    raise before ``main`` could run -- so even an invocation that never
+    consults this default, such as one setting ``$SPELLBOOK_DEV_DIR``,
+    could not start. Falling back to a directory under the cwd keeps the
+    CLI usable there; wherever ``Path.home()`` works the path is
+    unchanged.
+    """
+    try:
+        home = Path.home()
+    except RuntimeError:
+        return Path.cwd() / ".spellbook"
+    return home / ".local" / "spellbook"
 
 # Fields the ledger may contain, per skills/develop/SKILL.md
 # "Ledger shape (develop_gate_ledger, design §5.3)" section.
@@ -203,7 +220,7 @@ def default_ledger_path() -> Path:
     different projects, must not read/write the same ledger file.
     """
     encoded = encode_cwd(os.getcwd())
-    return DEFAULT_STATE_DIR / f"develop_gate_ledger-{encoded}.json"
+    return default_state_dir() / f"develop_gate_ledger-{encoded}.json"
 
 
 def ledger_path() -> Path:

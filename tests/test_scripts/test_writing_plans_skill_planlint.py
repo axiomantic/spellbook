@@ -62,7 +62,12 @@ def test_field_definitions_documents_depends_check_and_schema():
         for line in section.splitlines()
         if line.strip().startswith("| `**")
     ]
-    assert field_rows == ["**Depends:**", "**Check:**", "**Schema:** planlint-v1"]
+    assert field_rows == [
+        "**Depends:**",
+        "**Check:**",
+        "**Schema:** planlint-v1",
+        "**Subject:**",
+    ]
 
 
 def test_plan_lint_self_check_section_exists_before_final_emphasis():

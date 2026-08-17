@@ -10,6 +10,7 @@ run, not a Python test.
 
 import json
 import logging
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -947,6 +948,96 @@ def test_cli_runs_standalone_without_spellbook_package(tmp_path):
         f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
     )
     assert proc.stdout.strip() == "{}"
+
+
+_NO_HOME_DRIVER = '''
+"""Run a script with ``Path.home()`` guaranteed to raise RuntimeError.
+
+That is the state of a Windows CI runner with no USERPROFILE/HOMEDRIVE/
+HOMEPATH. POSIX hosts recover a home from the ``pwd`` database even with
+the environment cleared, and Windows has no ``pwd`` module at all, so
+blocking the import is what makes this reproduce identically on both.
+"""
+
+import os
+import runpy
+import sys
+
+for var in ("HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH"):
+    os.environ.pop(var, None)
+
+
+class _BlockPwd:
+    def find_spec(self, name, path=None, target=None):
+        if name == "pwd":
+            raise ImportError("no pwd module (simulating Windows)")
+        return None
+
+
+sys.modules.pop("pwd", None)
+sys.meta_path.insert(0, _BlockPwd())
+
+from pathlib import Path
+
+try:
+    Path.home()
+except RuntimeError:
+    pass
+else:
+    sys.exit(99)
+
+script = sys.argv[1]
+sys.argv = sys.argv[1:]
+runpy.run_path(script, run_name="__main__")
+'''
+
+
+def test_cli_starts_when_home_directory_is_unresolvable(tmp_path):
+    """A host where ``Path.home()`` raises must still run the CLI.
+
+    Windows CI has no resolvable home directory, and the state directory
+    used to be computed at module scope -- so the CLI died during import,
+    before ``main`` could read ``$SPELLBOOK_DEV_DIR``. Exercised through
+    the documented subprocess entry point rather than by patching
+    ``default_state_dir``, because the defect was in WHEN the value was
+    computed, not in what it computed: any test that imports the module
+    normally has already passed the line that raised.
+    """
+    dev_dir = tmp_path / "dev"
+    dev_dir.mkdir()
+    driver = tmp_path / "no_home_driver.py"
+    driver.write_text(_NO_HOME_DRIVER, encoding="utf-8")
+
+    env = dict(os.environ)
+    env["SPELLBOOK_DEV_DIR"] = str(dev_dir)
+
+    proc = subprocess.run(
+        [sys.executable, str(driver), str(SCRIPT_PATH), "show"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+        cwd=str(tmp_path),
+        env=env,
+    )
+    assert proc.returncode != 99, "precondition failed: Path.home() still resolved"
+    assert proc.returncode == 0, f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+    assert proc.stdout.strip() == "{}"
+
+
+def test_default_state_dir_is_unchanged_when_home_resolves(monkeypatch):
+    """The fallback must not move the ledger for real users."""
+    monkeypatch.setattr(ledger.Path, "home", classmethod(lambda cls: cls("/home/someone")))
+    assert ledger.default_state_dir() == Path("/home/someone/.local/spellbook")
+
+
+def test_default_state_dir_falls_back_under_cwd_without_a_home(monkeypatch, tmp_path):
+    def _raise(cls):
+        raise RuntimeError("Could not determine home directory.")
+
+    monkeypatch.setattr(ledger.Path, "home", classmethod(_raise))
+    monkeypatch.chdir(tmp_path)
+    assert ledger.default_state_dir() == Path.cwd() / ".spellbook"
 
 
 def test_fallback_encode_cwd_matches_real_implementation():
