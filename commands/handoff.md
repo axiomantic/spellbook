@@ -776,7 +776,7 @@ When `session.compacting` fires:
 
 ```typescript
 async function onSessionCompacting(context: PluginContext): Promise<void> {
-  // 1. Build complete state from tracking + conversation analysis
+  // 1. Build complete state from tracking + standing-constraint capture
   const state = await buildCompleteState(context);
 
   // 2. Persist state

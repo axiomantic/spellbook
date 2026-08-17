@@ -4,17 +4,24 @@ docs/ is produced by scripts/generate_docs.py from skills/, commands/,
 agents/, and rules/. Nothing enforced freshness, so a source edit could
 land while the mirror kept describing the previous version -- the same
 "artifact changed, consumer did not follow" shape this suite guards
-against, here at ~740 lines of drift.
+against.
 
-Working-tree safety: this test never writes. It shells out to
-``generate_docs.py --check``, which renders every page IN MEMORY and
-compares against disk. To keep that a mechanism rather than a promise,
-the test snapshots (size, mtime_ns) of every file under docs/ before and
-after the run and asserts the snapshot is unchanged -- so a future
-regression that makes --check write is caught here instead of in a
-developer's tree.
+Working-tree safety: this test never writes to the repository. It shells
+out to ``generate_docs.py --check``, which renders every page IN MEMORY
+and compares against disk. To keep that a mechanism rather than a
+promise, the tests snapshot every entry under a docs tree -- files with
+(size, mtime_ns) and directories by existence -- before and after the
+run, and assert the snapshot is unchanged.
+
+A snapshot of the repo's own docs/ cannot catch a regression on its own:
+the tree is already current, so the write path would rewrite identical
+bytes and ``write_if_changed`` would no-op. The teeth come from
+``test_check_writes_nothing_against_a_stale_tree``, which runs --check
+against a copy whose docs/ has been made deliberately stale, so the
+write path WOULD change bytes and create directories.
 """
 
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -22,14 +29,31 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATOR = REPO_ROOT / "scripts" / "generate_docs.py"
 DOCS_DIR = REPO_ROOT / "docs"
+SOURCE_DIRS = ("scripts", "skills", "commands", "agents", "rules", "docs")
 
 
-def _snapshot() -> dict[str, tuple[int, int]]:
-    return {
-        str(p.relative_to(REPO_ROOT)): (p.stat().st_size, p.stat().st_mtime_ns)
-        for p in sorted(DOCS_DIR.rglob("*"))
-        if p.is_file()
-    }
+def _snapshot(docs_dir: Path = DOCS_DIR) -> dict[str, tuple[str, int, int]]:
+    """Record every entry under ``docs_dir``, directories included.
+
+    Directories are recorded because the write path calls ``mkdir`` before
+    writing; a file-only snapshot cannot see a directory the run created.
+    """
+    snapshot: dict[str, tuple[str, int, int]] = {}
+    for path in sorted(docs_dir.rglob("*")):
+        rel = str(path.relative_to(docs_dir))
+        if path.is_dir():
+            snapshot[rel] = ("dir", 0, 0)
+        else:
+            stat = path.stat()
+            snapshot[rel] = ("file", stat.st_size, stat.st_mtime_ns)
+    return snapshot
+
+
+def _scratch_repo(tmp_path: Path) -> Path:
+    root = tmp_path / "repo"
+    for name in SOURCE_DIRS:
+        shutil.copytree(REPO_ROOT / name, root / name)
+    return root
 
 
 def test_generated_docs_mirror_is_current():
@@ -50,6 +74,40 @@ def test_generated_docs_mirror_is_current():
         "the generated docs/ mirror is stale. Run: python3 scripts/generate_docs.py\n"
         f"{result.stdout}{result.stderr}"
     )
+
+
+def test_check_writes_nothing_against_a_stale_tree(tmp_path):
+    """--check against a tree the write path WOULD change must still not write.
+
+    The scratch tree is made stale two ways, one per failure mode a
+    file-only snapshot of an already-current tree misses: a page whose
+    bytes differ (so ``write_if_changed`` would write) and a missing
+    output directory (so the write path would ``mkdir`` it).
+    """
+    root = _scratch_repo(tmp_path)
+    docs = root / "docs"
+    shutil.rmtree(docs / "rules")
+    (docs / "commands" / "handoff.md").write_text("stale\n", encoding="utf-8")
+
+    before = _snapshot(docs)
+    result = subprocess.run(
+        [sys.executable, str(root / "scripts" / "generate_docs.py"), "--check"],
+        capture_output=True,
+        text=True,
+        cwd=str(root),
+        timeout=300,
+    )
+    after = _snapshot(docs)
+
+    assert after == before, (
+        "generate_docs.py --check wrote to a stale tree; it must only read\n"
+        f"added: {sorted(set(after) - set(before))[:10]}\n"
+        f"removed: {sorted(set(before) - set(after))[:10]}"
+    )
+    assert result.returncode == 1, (
+        f"--check must report a stale tree as failure\n{result.stdout}{result.stderr}"
+    )
+    assert "Stale or missing generated page(s)" in result.stdout
 
 
 def test_check_mode_reports_staleness_and_help_writes_nothing():

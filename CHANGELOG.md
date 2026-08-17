@@ -58,12 +58,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   falls back to an equivalent local implementation, guarded by an
   anti-drift test.
 - `scripts/generate_docs.py` had no argument parsing, so `--help` silently
-  regenerated 14 files instead of printing usage. It now has `--help` and a
+  rewrote the mirror instead of printing usage. It now has `--help` and a
   `--check` mode that writes nothing.
 - The OpenCode workflow-state extension still read the removed
   `conversation.corrections` key and rendered "None" forever instead of
   erroring; it now reads `constraints`.
-- The generated `docs/` mirror was stale by 14 pages.
+- The generated `docs/` mirror was stale.
 
 ## [0.88.0] - 2026-08-17
 

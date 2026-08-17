@@ -483,7 +483,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Argument handling for the generator.
 
     Without a parser, `--help` was silently ignored and the script
-    regenerated 14 files as a side effect of asking for usage. Every flag
+    rewrote the mirror as a side effect of asking for usage. Every flag
     is now parsed, so an unknown flag is an error rather than a write.
     """
     parser = argparse.ArgumentParser(
