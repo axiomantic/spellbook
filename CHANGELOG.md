@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.88.0] - 2026-08-17
+
 ### Added
 
 - Comment discipline in the `code-quality` rule module. Comments are sparse and
@@ -57,6 +59,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   existing rules (hand-counted vs. computed verification, a false constraint
   recorded after a single failed fetch, and dispatch scope matching the size
   of its trigger).
+- Incidentals rule in `rules/40-develop-discipline.md`: any departure, addition,
+  or redirection discovered during implementation must be integrated into the
+  plan document itself and gated like any other task, not handled ad hoc.
+  `commands/feature-implement-execute.md`'s per-task loop now carries a trigger
+  note pointing back to this rule.
+- Fixed the PR Review Bot config in CLAUDE.md: gemini-code-assist was retired
+  by Google; the bot actually in use is Momus (`axiomantic-momus[bot]`,
+  triggered with `/ai-review`), which does not auto-review new PRs.
 
 ### Fixed
 
