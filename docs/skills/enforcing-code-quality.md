@@ -4,7 +4,7 @@ Production code quality standards enforcement covering prohibited patterns like 
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Behavioral protocol for all code changes. Invoked automatically by develop and test-driven-development. Triggers: 'code quality', 'no shortcuts', 'production quality', 'enforce standards'. NOT for: reviewing others' code (use code-review) or test quality (use fixing-tests).
+> Behavioral protocol for all code changes. Invoked by test-driven-development at the GREEN step; the always-loaded code-quality rule module points here for the full standards. Triggers: 'code quality', 'no shortcuts', 'production quality', 'enforce standards'. NOT for: reviewing others' code (use code-review) or test quality (use fixing-tests).
 
 ## Workflow Diagram
 

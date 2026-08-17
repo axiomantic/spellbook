@@ -83,7 +83,6 @@ nav:
       - skills/executing-plans.md
       - skills/gathering-requirements.md
       - skills/analyzing-domains.md
-      - skills/autonomous-roundtable.md
     - Code Review:
       - skills/code-review.md
       - skills/advanced-code-review.md
@@ -145,13 +144,10 @@ nav:
       - rules/51-ai-attribution.md
       - rules/55-diff-semantics.md
       - rules/60-autonomy.md
-      - rules/70-bash-gate.md
       - rules/80-code-quality.md
       - rules/81-testing.md
       - rules/82-file-reading.md
       - rules/83-language-python.md
-      - rules/85-review-method.md
-      - rules/86-review-posture.md
       - rules/91-role.md
       - rules/92-core-philosophy.md
       - rules/93-communication.md
@@ -169,7 +165,6 @@ nav:
       - skills/audio-notifications.md
       - skills/async-await-patterns.md
       - skills/auditing-green-mirage.md
-      - skills/autonomous-roundtable.md
       - skills/design-exploration.md
       - skills/branch-context.md
       - skills/canvas.md
@@ -183,7 +178,6 @@ nav:
       - skills/designing-workflows.md
       - skills/devils-advocate.md
       - skills/dispatching-parallel-agents.md
-      - skills/dispatching-sub-orchestrators.md
       - skills/distilling-prs.md
       - skills/documenting-projects.md
       - skills/documenting-tools.md
@@ -208,7 +202,6 @@ nav:
       - skills/optimizing-instructions.md
       - skills/permissions-from-transcripts.md
       - skills/polish-repo.md
-      - skills/project-encyclopedia.md
       - skills/reflexion.md
       - skills/requesting-code-review.md
       - skills/resolving-merge-conflicts.md

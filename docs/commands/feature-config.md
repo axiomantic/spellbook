@@ -1097,6 +1097,9 @@ for the rest of the run. This is the ONLY moment develop's ceremony is negotiabl
 After the lock, mid-run requests to drop a gate are REFUSED; the two honest answers
 to "this is taking too long" are FINISH or ABORT, never a quiet narrowing.
 Escalation (adding gates) stays legal all run; de-escalation never becomes legal.
+The operator contract this lock enforces — including the phrasings that do NOT
+reopen it — is stated in full in `$SPELLBOOK_DIR/skills/develop/SKILL.md` under
+"Develop = Thoroughness Mode (Operator Contract)".
 </CRITICAL>
 
 #### Step 1: The non-negotiable core (NEVER appears in the picker)

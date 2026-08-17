@@ -130,6 +130,12 @@ Test errors? Fix error, re-run until it fails correctly.
 
 Simplest code to pass. No features, no refactoring, no "improvements."
 
+Load the `enforcing-code-quality` skill before writing this code. "Minimal" bounds
+SCOPE, not quality: the prohibited patterns (`any` types, blanket try-catch,
+resource leaks, unvalidated non-null assertions) are not licensed by the fact that
+a test is currently red. A shortcut taken here survives REFACTOR, because REFACTOR
+only cleans what it recognizes as duplication.
+
 <Good>
 ```typescript
 async function retryOperation<T>(fn: () => Promise<T>): Promise<T> {

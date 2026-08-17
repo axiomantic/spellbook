@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Behavioral protocol for reading files or command output of unknown size. Loaded automatically for all file reading operations. Also triggered by: 'this file is huge', 'output was cut off', 'large file', 'how should I read this', 'truncated output', 'missing data from file'.
+> Behavioral protocol for reading files or command output of unknown size. Load it before reading anything whose size you have not checked; the always-loaded file-reading rule module carries the one-line rule and points here for the full protocol. Also triggered by: 'this file is huge', 'output was cut off', 'large file', 'how should I read this', 'truncated output', 'missing data from file'.
 
 ## Workflow Diagram
 

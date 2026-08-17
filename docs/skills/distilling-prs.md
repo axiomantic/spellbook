@@ -201,6 +201,15 @@ Produces:
 
 ### Phase 2: AI Analysis (if needed)
 
+<CRITICAL>
+Before dispatching any subagent to analyze the PR, load the `reviewing-prs`
+skill and compute `review_source`. Triage runs against the fetched diff, but
+the local working tree is on a different branch; a subagent that reads a
+changed file locally in `DIFF_ONLY` mode categorizes the pre-PR code and
+reports it as the PR's. `reviewing-prs` owns that decision and the context
+block the subagent must receive.
+</CRITICAL>
+
 For unmatched files, analyze each to determine:
 - **review_required**: Significant logic, API, or behavior changes
 - **safe_to_skip**: Formatting, comments, trivial refactors

@@ -27,6 +27,20 @@ After verification: Verify that the skill actually changes agent behavior in the
 6. **Rules Bind to Properties, Not Names**: State what makes a thing wrong, then list library-specific spellings as non-exhaustive examples. A rule naming only one library's API voids itself at the next migration. (See: Express Rules Against Properties, Not Library Names.)
 7. **Model Versioning Strategy**: Prefer general model aliases (e.g. `sonnet`, `flash`, `pro`) over hardcoded version numbers (e.g. `claude-3-5-sonnet`, `gemini-2.5-flash`). Hardcoded versions are permitted ONLY when a specific behavior is required that differs between versions.
 
+## Shared Skill Principles
+
+<CRITICAL>
+All skills MUST adhere to these efficiency and quality standards to prevent context bloat and rate limiting. They apply to every skill you write or edit, in addition to the Invariant Principles of this skill.
+</CRITICAL>
+
+1. **Implicit Role Inheritance**: Skills do NOT need to repeat "Senior Architect" or "Rigor" boilerplate. Adhere to the `role` and `core-philosophy` rule modules, which install unconditionally.
+2. **No Deep-Loading**: Never reference external `.md` files that force the platform to inject large amounts of text into the prompt. Inline compact summaries instead. (The File Organization table of this skill states when a supporting file is nonetheless warranted: heavy reference of 100+ lines, or a reusable tool.)
+3. **Mandatory Summarization**: Tools returning structured data (Figma, DevTools, verbose logs) MUST be wrapped in a summarization step before returning to the main orchestrator.
+4. **Subagent Strict Schema**: Dispatches via the `Task` tool MUST specify a strict JSON schema for results. Conversational subagent leak is forbidden.
+5. **Phase-Implementation Separation**: Coordination logic lives in the skill; implementation details belong in subagent prompts or phase-specific commands. The Multi-Phase Skill Architecture rules of this skill are how this principle is applied once a skill reaches 2+ phases.
+
+Principles 3 and 4 govern skills you author; the `dispatching-parallel-agents` skill states their dispatch-time enforcement (Subagent Efficiency Contract, return envelope).
+
 ## Inputs
 
 | Input | Required | Description |
@@ -451,6 +465,7 @@ Before completing:
 - [ ] Schema elements present: Overview, When to Use, Quick Reference, Common Mistakes
 - [ ] Token budget met: <500 words core instructions (<200 words for frequently-loaded skills)
 - [ ] Multi-phase architecture: 3+ phase skills separate orchestrator from phase commands
+- [ ] Shared Skill Principles satisfied: no repeated role boilerplate, no deep-loading, tool output summarized, dispatches declare a strict result schema, coordination separated from implementation
 - [ ] No workflow summary in description
 - [ ] Rationalization table built (for discipline skills)
 

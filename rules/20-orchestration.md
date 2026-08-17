@@ -48,6 +48,8 @@ Every dispatch matches its model and effort to the COGNITIVE LOAD of the task, n
 Cognitive load is expressed as a generic **tier**, never as a model name. Spellbook installs to
 nine harnesses and a model id that is correct in one is meaningless in another, so no model name
 belongs in this repo. Which model a tier means is the operator's choice, recorded per harness.
+An unset tier is NOT an error and NEVER blocks a dispatch: it resolves to "no override", and the
+harness default applies.
 
 | Tier | What it is | `effort` |
 |------|-----------|----------|
@@ -56,39 +58,16 @@ belongs in this repo. Which model a tier means is the operator's choice, recorde
 | `light` | Carrying out an already-approved plan or spec: TDD implementation against a written spec, completion/artifact verification against a checklist, precisely-specified amends, rote edits, running tests, git/PR/Jira mechanics, applying a described change | `low` |
 
 Debugging splits across tiers. Diagnosing an unknown failure is `heavy`; working through a
-TDD red-green cycle whose test and target are already specified is `light`. Scope the dispatch to the trigger's size: a 140-line test file does not justify a build-configuration-wide toolchain investigation, and a precision lookup with a known location is a direct read, not a web-research dispatch.
-
-**The specialized agent types already declare their tier** in frontmatter (`tier: heavy`), so
-dispatching the right type gets the right tier for free:
-
-- `heavy` → `code-reviewer`, `justice-resolver`, `lovers-integrator`, `hierophant-distiller`, `web-researcher`
-- `standard` → `emperor-governor`, `queen-affective`
-- `light` → `implementer`, `chariot-implementer`, `test-runner`, `git-committer`, `git-pusher`, `pr-creator`, `pr-merger`, `jira-reader`, `jira-mutator`
-
-Agent frontmatter carries NO `model:` field. Resolving a tier to a model is a runtime step:
-
-<CRITICAL>
-Before your first subagent dispatch in a session, call `spellbook_model_tier_status(harness)` with
-the spellbook platform id you are running in (underscored — `claude_code`, not `claude-code`).
-
-If it reports unset tiers, ask the operator ONCE, in one exchange covering every unset tier, which
-model to use for each. Offer ONLY models you can actually see in this harness. NEVER invent a model
-id, and NEVER copy one out of documentation — a model that exists on another harness will fail on
-this one. Record the answers with `spellbook_model_tier_set`.
-
-An unset tier is NOT an error and NEVER blocks a dispatch. It resolves to "no override": dispatch
-without a model and let the harness use its own default. If the operator is unavailable —
-non-interactive, headless, or CI — proceed on harness defaults and say so. Do not stall work
-waiting for a preference.
-</CRITICAL>
-
-Then pass the resolved model as a per-call override.
-
-**When dispatching a generic type** (`general-purpose`, `claude`, `Explore`, `Plan`) or when a task's cognitive load differs from the agent's declared tier, resolve the tier the task actually needs and override at the call site. Precedence: per-call override > tier resolution > harness default. `fork` subagents ignore the model override — they always inherit the parent model.
+TDD red-green cycle whose test and target are already specified is `light`.
 
 **Escalate up, never down.** If a tier's model cannot produce a usable result, retry at the next
 tier up. Never silently drop a task to a cheaper tier; if cost is a concern, say so and let the
 operator decide.
+
+The runtime procedure that turns a tier into a model — the `spellbook_model_tier_status` /
+`spellbook_model_tier_set` calls, the once-per-session operator question, which tier each
+specialized agent type declares, and override precedence — is needed only at the moment of
+dispatch. Load `dispatching-parallel-agents` skill for it before your first dispatch in a session.
 
 ### Skill Execution
 
@@ -100,20 +79,21 @@ operator decide.
 - YOLO mode grants permission to ACT without asking. It does NOT grant permission to SKIP skill phases, subagent dispatch, or quality gates.
 - **Subagents are HOW each phase executes, not a substitute FOR the phases.** Conflating "use subagents" with "skip skill phases" is forbidden. If a skill defines research, design, plan, and implement as separate phases, dispatching a single subagent that "does it all" violates the skill no matter how thorough the dispatch prompt is. Each phase still runs; subagent dispatch is the implementation mechanism inside each phase, not a way to collapse them.
 
+### Mark Carried Figures
+
+A number is CARRIED if you did not measure it yourself in this session. Say so in the dispatch
+prompt: "This figure is carried from a prior pass. It is not verified. Re-measure before you write
+it down." Never present a carried figure as a fresh measurement. The orchestrator reads reports; it
+does not take measurements itself, so nearly every figure it passes along is carried. In one
+session seven relayed figures were all refuted by the subagents' own measurements — a lint baseline
+relayed as "one finding" measured 156 on recheck. Load `dispatching-parallel-agents` skill for the
+full account and for the figure-confidence vocabulary that records the distinction.
+
 ### Shared Skill Principles
 
-<CRITICAL>
-All skills MUST adhere to these efficiency and quality standards to prevent context bloat and rate limiting.
-</CRITICAL>
-
-1. **Implicit Role Inheritance**: Skills do NOT need to repeat "Senior Architect" or "Rigor" boilerplate. Adhere to the `role` and `core-philosophy` modules, which install unconditionally.
-2. **No Deep-Loading**: Never reference external `.md` files that force the platform to inject large amounts of text into the prompt. Inline compact summaries instead.
-3. **Mandatory Summarization**: Tools returning structured data (Figma, DevTools, verbose logs) MUST be wrapped in a summarization step before returning to the main orchestrator.
-4. **Subagent Strict Schema**: Dispatches via the `Task` tool MUST specify a strict JSON schema for results. Conversational subagent leak is forbidden.
-5. **Phase-Implementation Separation**: Coordination logic lives in the skill; implementation details belong in subagent prompts or phase-specific commands.
-6. **Mark Carried Figures**: A number is CARRIED if you did not measure it yourself in this session. Say so in the dispatch prompt: "This figure is carried from a prior pass. It is not verified. Re-measure before you write it down." Never present a carried figure as a fresh measurement. The orchestrator reads reports; it does not take measurements itself. Nearly every figure it passes along is carried.
-
-   **Observed: seven cases in one session. The subagent's own measurement refuted all seven.** A lint baseline reported as "one finding" measured 156 on recheck. A count attributed to a code comment; the comment did not exist. A flag rule relayed without the `-R` prefix the original measurement required. A proposed fix whose mechanism failed in both directions once tested. The agents caught all seven mistakes, which is why none caused damage. But in a codebase where a written measurement is trusted by default, a carried figure written as if measured will not stay flagged. It gets copied into a source comment, and the next reader has no way to tell it apart from a real measurement.
+Five efficiency and quality standards every skill must satisfy — implicit role inheritance, no
+deep-loading, mandatory summarization, subagent strict schema, and phase-implementation separation
+— bind whoever authors or edits a skill. Load `writing-skills` skill for them.
 
 ### Context Minimization, Subagent Dispatch, and Compacting
 

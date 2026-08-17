@@ -497,6 +497,55 @@ After each phase, reflect:
 
 ---
 
+## Posture
+
+A review is a GATE, not a courtesy pass. Be extremely discerning and apply zero
+tolerance.
+
+- Surface ANY deviation: rule violation, logic bug, design smell, untested
+  behavior, inconsistency — anything off.
+- Be **adversarial**. Verify each finding to filter false positives (that is what
+  Phase 4 is for), but **default to flagging** when in doubt.
+- A review that "found nothing" on a non-trivial diff is a **FAILED review**, not
+  a clean one. Treat an empty finding list as evidence about the review, not
+  about the code.
+
+**Build the failure. Do not just check the author's claim.** Both actions cost
+the same dispatch. Building the failure finds more problems.
+
+- Ask "can I make this fail?" Do not ask "does this pass?" The second question
+  only checks the author's own transcript. The first question does not.
+- A check that has never failed is not proven. If nobody has watched a check's
+  failure path fire, the check is a claim, not a mechanism.
+- For a claimed clean result — a mutation that should change nothing, a guard
+  that should stay silent — prove the change reached the code under test. A
+  no-op edit looks the same as a correct no-effect. Only the exit status cannot
+  tell them apart.
+- Reproduce the defect before you fix it. If you never saw the gap yourself, you
+  are guessing at the gap. A guessed fix cannot be tested.
+
+**Observed.** One guard failed four times, in four versions, each broken one level deeper than the last. Version 1 baked a path in at configure time; a reviewer defeated it by copying the tree. Version 2 replaced the real check with a flag; the reviewer deleted the check but kept the flag set. Version 3 checked a token at the end of the branch; the reviewer deleted one part of the branch and kept the token. Version 4 used per-site counters. Every version passed its own author's tests. A reviewer who rebuilt the failure — not one who reran the author's tests — broke every version. Separately, a reviewer built three silent failure modes in an isolated copy of the code. This method found a false-pass path that four prior readings of the same file had missed.
+
+**The known cost, stated plainly:** this posture produces more findings, and some
+of them will be noise. That trade is the point of the posture, and Phase 4
+verification is where the noise is filtered — not the finding stage.
+
+## Scope Obligation
+
+Consume every changed hunk in every changed file and hold each against the rule
+catalogue Phase 2 builds. No grep-sampling. No skimming. No "I read the hot
+files." Grep is fine to LOCATE things; it is never a substitute for reading the
+whole diff. For a large diff, chunk it across subagents (`LARGE_DIFF_LINES`,
+`SUBAGENT_THRESHOLD_FILES`) so that 100% of the diff is assigned and read line by
+line; `coverage-manifest.json` is how coverage is proven.
+
+When the operator names a narrower scope — a single file, a specific function,
+one subsystem, a numbered pull request, staged changes only (`--scope`) — honor
+that scope instead. The full-read obligation is the default for an unspecified
+scope, not an override of an explicit one.
+
+---
+
 ## Inputs
 
 | Input | Required | Default | Description |
@@ -552,6 +601,11 @@ Reading local files in PR mode produces silently wrong results:
 Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR's changed file set.
 
 **Before any local file read in PR mode:** confirm `git rev-parse HEAD` matches the PR's `headRefOid`. If they differ, treat the local file as unavailable for that finding.
+
+**Load the `reviewing-prs` skill before dispatching any review subagent in PR
+mode.** It is the single source for the `review_source` decision table (including
+the worktree case, which converts a `DIFF_ONLY` review into a `LOCAL_FILES` one)
+and for the mandatory PR-review context block each subagent must be given.
 </CRITICAL>
 
 ---
@@ -651,7 +705,7 @@ failure this procedure exists to prevent.
 
 **Outputs:** `rule-catalogue.json`, `context-analysis.md`, `previous-items.json`
 
-**Self-Check:** Standards loaded across the full document net (root AND subdirectory `AGENTS.md`, coding standards, testing instructions, lint config), rule catalogue emitted, previous items loaded, PR context fetched (if online), re-check requests extracted.
+**Self-Check:** Standards loaded across the full document net (root AND subdirectory `AGENTS.md`, coding standards, testing instructions, lint config, and whatever those documents themselves reference — contributing guides, style guides), the operator's standing rules and any project memory the environment provides read, rule catalogue emitted, previous items loaded, PR context fetched (if online), re-check requests extracted.
 
 <CRITICAL>
 **Phase 2 is split on blocking behavior.**
@@ -761,6 +815,8 @@ exist. If a future edit removes a consumer, remove the row.
 - Use "branch diff" without saying which endpoint (committed-only vs. working tree)
 - Substitute grep for reading a hunk (grep LOCATES; it never COVERS)
 - Sample the diff and treat the remainder as covered
+- Treat an empty finding list on a non-trivial diff as a clean result rather than a failed review
+- Suppress a finding at the finding stage to avoid noise (Phase 4 filters; Phase 3 flags)
 - Report a style or convention finding when the standards load found nothing
 - Classify a bug as CRITICAL (bugs are HIGH)
 - Guess at severity (use decision tree)

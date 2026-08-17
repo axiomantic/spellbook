@@ -191,10 +191,10 @@ Reusable workflows for structured development:
 |----------|--------|
 | **Core Workflow** | [design-exploration]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
-| **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [dispatching-sub-orchestrators] *(deprecated)*, [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
-| **Autonomous Dev** | [autonomous-roundtable], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
+| **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
+| **Autonomous Dev** | [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas], [canvas-decision], [dedupe], [estimating-tickets], [rounding-up-worktree-sessions] |
-| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [project-encyclopedia] *(deprecated)*, [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [permissions-from-transcripts] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [permissions-from-transcripts] |
 | **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications], [agent2agent] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
@@ -238,9 +238,7 @@ Reusable workflows for structured development:
 [sharpening-prompts]: https://axiomantic.github.io/spellbook/latest/skills/sharpening-prompts/
 [optimizing-instructions]: https://axiomantic.github.io/spellbook/latest/skills/optimizing-instructions/
 [dispatching-parallel-agents]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-parallel-agents/
-[dispatching-sub-orchestrators]: https://axiomantic.github.io/spellbook/latest/skills/dispatching-sub-orchestrators/
 [smart-reading]: https://axiomantic.github.io/spellbook/latest/skills/smart-reading/
-[project-encyclopedia]: https://axiomantic.github.io/spellbook/latest/skills/project-encyclopedia/
 [polish-repo]: https://axiomantic.github.io/spellbook/latest/skills/polish-repo/
 [analyzing-skill-usage]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-skill-usage/
 [documenting-tools]: https://axiomantic.github.io/spellbook/latest/skills/documenting-tools/
@@ -263,7 +261,6 @@ Reusable workflows for structured development:
 [permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
-[autonomous-roundtable]: https://axiomantic.github.io/spellbook/latest/skills/autonomous-roundtable/
 [gathering-requirements]: https://axiomantic.github.io/spellbook/latest/skills/gathering-requirements/
 [dehallucination]: https://axiomantic.github.io/spellbook/latest/skills/dehallucination/
 [reflexion]: https://axiomantic.github.io/spellbook/latest/skills/reflexion/

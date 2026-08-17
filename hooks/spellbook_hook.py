@@ -395,6 +395,62 @@ POST_COMPACT_FALLBACK_DIRECTIVE = (
     "list, and verify your current working context."
 )
 
+# Appended to the post-compaction directive when a develop_gate_ledger exists
+# for the session's project. A compacted context has dropped the ceremony
+# lock, the dispatch table, and the gate semantics; a develop run that
+# continues without them elides gates while still reporting success. Naming
+# the file to re-read is the whole mechanism -- a directive that only says
+# "you were compacted" leaves the LLM to reconstruct the discipline from
+# memory, which is the failure this exists to prevent.
+POST_COMPACT_DEVELOP_DIRECTIVE = (
+    "A develop_gate_ledger exists for this project, so a develop run may be "
+    "in progress. Before your next dispatch, re-read "
+    "$SPELLBOOK_DIR/skills/develop/SKILL.md (phase non-fungibility, the "
+    "Phase-0 ceremony lock, wave discipline, stop semantics, and the "
+    "incidentals protocol) and re-read the ledger itself to recover the "
+    "locked ceremony and the current phase."
+)
+
+
+def _develop_ledger_path(cwd: str) -> Path | None:
+    """Where this project's develop ledger would live, or None if unknowable.
+
+    Mirrors ``scripts/develop_gate_ledger.py``: ``$SPELLBOOK_DEV_DIR`` names an
+    exact directory; otherwise the per-project file under the state dir. That
+    module REFUSES when no home directory resolves. A refusal is right for a
+    CLI writing state and wrong here -- a hook that raises on a Windows runner
+    with no ``USERPROFILE`` would take out the compaction notice as well, so
+    an unknowable path degrades to "no develop hint".
+    """
+    override = os.environ.get("SPELLBOOK_DEV_DIR")
+    if override:
+        return Path(override) / "develop_gate_ledger.json"
+    scripts_dir = Path(__file__).resolve().parent.parent / "scripts"
+    try:
+        if str(scripts_dir) not in sys.path:
+            sys.path.insert(0, str(scripts_dir))
+        import develop_gate_ledger
+
+        state_dir = develop_gate_ledger.default_state_dir()
+        encoded = develop_gate_ledger.encode_cwd(cwd)
+    except Exception:
+        return None
+    return state_dir / f"develop_gate_ledger-{encoded}.json"
+
+
+def _develop_post_compact_hint(cwd: str) -> str | None:
+    """The develop re-load directive, when a ledger exists for ``cwd``."""
+    if not cwd:
+        return None
+    path = _develop_ledger_path(cwd)
+    if path is None:
+        return None
+    try:
+        exists = path.is_file()
+    except OSError:
+        return None
+    return POST_COMPACT_DEVELOP_DIRECTIVE if exists else None
+
 
 
 def _handle_session_start(data: dict) -> dict | None:
@@ -438,6 +494,18 @@ def _handle_session_start(data: dict) -> dict | None:
         # when the LLM most needs telling that its context was truncated --
         # gating on cwd would drop the notice precisely then.
         fragments.append(POST_COMPACT_FALLBACK_DIRECTIVE)
+
+        # Project-specific second fragment: only when this project has a
+        # develop ledger. Unlike the notice itself, this one IS gated on cwd
+        # -- without a project there is no ledger to point at.
+        try:
+            develop_hint = _develop_post_compact_hint(
+                (data.get("cwd") or "").strip()
+            )
+            if develop_hint:
+                fragments.append(develop_hint)
+        except Exception as exc:
+            _log_hook_error("develop_post_compact_hint", "SessionStart", exc)
 
     # Orphan-chain hint is independent of compaction. It fires on every
     # SessionStart that detects a dropped a2a watch chain, because the

@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> System skill loaded at session start to initialize skill routing. Not invoked directly by users. Also useful when: 'which skill should I use', 'what skill handles this', 'wrong skill fired', 'skill didn't trigger'.
+> The full skill-routing protocol. The always-loaded intent-routing rule module carries the kernel and points here; load this skill for the decision flow, the rationalization table, and skill-priority ordering. Use when: 'which skill should I use', 'what skill handles this', 'wrong skill fired', 'skill didn't trigger', or when routing is going wrong repeatedly.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).

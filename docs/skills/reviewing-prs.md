@@ -4,7 +4,7 @@ Safety layer for PR review that determines whether to analyze diffs only or read
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> System skill loaded before dispatching any PR review subagent. Ensures correct file version selection based on branch and worktree state. Not invoked directly by users. Required by: code-review, advanced-code-review, distilling-prs when reviewing PRs.
+> Load before dispatching any subagent to review or triage a pull request, to pick the correct file version for the branch and worktree state. Required by: advanced-code-review (PR mode), code-review (--pr), distilling-prs (Phase 2), each of which names this skill at its dispatch point. Also use directly when: 'review PR #X', 'is it safe to read local files for this PR', 'why did the review say the bug is not there'.
 ## Skill Content
 
 ````markdown

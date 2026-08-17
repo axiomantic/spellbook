@@ -327,8 +327,8 @@ When operating in YOLO mode or when user selected "Fully autonomous":
 - **STOP for scope expansion regardless of autonomous mode.** If a
   decision would introduce capabilities, infrastructure, or external
   integrations the operator did not mention in the initial request,
-  pause and surface to the operator. See `~/.claude/CLAUDE.md`
-  "Autonomous Mode and Scope Discipline".
+  pause and surface to the operator. The Autonomous Mode and Scope
+  Discipline section of this skill states the full contract.
 - **STOP before large delegated fan-out.** For a large delegated run,
   the plan one-pager and worktree/parallelization choices are gated by
   `feature-implement` Phase 3.4.7 (One-Pager Approval Gate). Autonomous
@@ -398,6 +398,81 @@ C) [option + tradeoff]
 After emitting, suspend all progress until the user replies. Do not poll, retry, or act
 unilaterally. A halted agent that reports clearly is the protocol working; never suppress a
 circuit breaker and never proceed after triggering one.
+</CRITICAL>
+
+---
+
+## Autonomous Mode and Scope Discipline
+
+<CRITICAL>
+Autonomous mode scopes **confirmations**, not **scope**.
+
+Autonomous mode means: do not pause for trivial yes/no acknowledgments that an
+interactive user would give automatically (e.g., "proceed to the next phase?",
+"apply this fix?", "run the test suite?").
+
+Autonomous mode does NOT mean: license to expand the work beyond what the
+operator described in their initial request.
+
+A decision **expands scope** when it introduces capabilities, infrastructure,
+external integrations, monitoring/alerting, escalation paths, or new components
+that the operator did not mention. Examples of scope expansion that REQUIRE
+pausing regardless of autonomous mode:
+
+- Adding a new Lambda, scheduled job, queue, or background worker
+- Introducing a new external integration (PagerDuty, Slack, monitoring service,
+  secret store)
+- Adding an escalation/retry/reconciliation system not requested
+- Introducing a cache, mirror, or replication layer not requested
+- Adding authentication, authorization, or signing schemes not asked for
+
+When such an expansion is contemplated — even when justified by an
+adversarial-review finding or a "what could go wrong" risk surfaced by the
+orchestrator itself — the orchestrator MUST pause and surface the proposed
+expansion to the operator for explicit go/no-go.
+
+This rule overrides any phase-local "in autonomous mode, proceed automatically"
+instruction. Doing the asked work thoroughly is not the same as expanding the
+asked work autonomously.
+</CRITICAL>
+
+## Autonomous Mode: the Only Two Valid Stops
+
+<CRITICAL>
+Autonomous Mode and Scope Discipline says when you MUST stop; this rule says
+when you MUST NOT. Both are binding. When they do not both apply, you continue.
+
+In autonomous mode there are exactly TWO valid reasons to end a turn without a
+tool call:
+
+1. **A genuine external blocker.** Something only the operator can supply:
+   physical hardware, a credential, an irreversible or outward-facing action
+   (push, merge, publish, delete), or a decision whose options you cannot
+   generate.
+2. **The task is fully complete** and no further action is possible. Say so in
+   those words — "Complete. Nothing further possible without <the specific
+   missing thing>." Do not trail off into a status inventory.
+
+Everything else is NOT a stopping point. Specifically, these are completion
+bias, not blockers, and you continue past all of them:
+
+- The session has run long, or "this is a clean checkpoint."
+- A subagent returned a result. A result is an input to your next action, not
+  the end of your turn.
+- You finished a task-list item and there are more items.
+- You are waiting on a PEER AGENT. Peers are not blockers — pick up any other
+  unblocked work while you wait.
+- You just wrote a long report. Length is not completion.
+- You reached a phase boundary in a skill.
+
+**The announce-then-stop rule.** If your text says you will do something —
+"next I'll…", "I'm doing X now", "then executing the rename" — the tool call
+that starts it MUST be in the SAME turn. Announcing an action and ending the
+turn is a process failure even when the announcement is accurate. Either do it
+now or say explicitly why you cannot.
+
+**Do not claim in-flight work you have not dispatched.** "Poll just went out",
+"I've asked the group" are only true if a tool call in this turn made them true.
 </CRITICAL>
 
 ---
@@ -696,6 +771,13 @@ around. Do this instead:
 This is not a round cap. A round that finds new, real defects is progress — run
 it. The trigger is regression, not repetition.
 
+**Retry after a failed round: invoke `reflexion`.** When a round is repaired and
+re-dispatched, the repair dispatch MUST invoke the `reflexion` skill before it
+starts, so the retry carries an explicit account of why the previous attempt
+failed. A retry dispatched with no such account repeats the attempt with more
+words, which is how the same defect survives three rounds. This is the ONLY
+load path `reflexion` has; nothing else invokes it.
+
 **Round evidence (round 2 and later).** Each fresh reviewer starts with no
 memory, so every round re-derives the same graph and re-measures the same
 behavior. From round 2 on, carry an `ESTABLISHED FACTS` block in the review
@@ -712,6 +794,14 @@ round happens; a prompt block costs nothing until then.
 ## MANDATORY: Pre-Dispatch Ritual
 
 <CRITICAL>
+**Phase non-fungibility.** Inside /develop or any of its sub-skills
+(feature-config, feature-research, feature-discover, feature-design,
+feature-implement, feature-implement-execute), every Task() dispatch executes
+EXACTLY ONE row of the Subagent Dispatch Points table of this skill. Combining
+rows into a single dispatch is forbidden. A dispatch not preceded by a Phase
+Declaration is a process failure even if the work product is correct: the
+declaration is what makes phase collapse mechanically detectable in real time.
+
 Before EVERY Task() dispatch inside /develop or any of its sub-skills
 (feature-config, feature-research, feature-discover, feature-design,
 feature-implement, feature-implement-execute), output the following block
@@ -781,6 +871,13 @@ Operator phrasings that DO NOT authorize phase collapse (no exceptions):
 - "save context", "save tokens", "context efficiency"
 - "the ceremony is customizable now", "we picked a lighter ceremony", "drop that gate"
   <-- the picker closed at Phase 0. Cite the ledger or run the gate.
+- "prior phases produced strong context", "we already know enough"
+- "subagents would burn context if dispatched separately"
+- "it would be more efficient to combine..."
+
+Every item in that list is a phase-collapse rationalization. Recognizing one is
+the signal to stop, not a sign the situation is exceptional. The dispatch table
+has no exception column.
 
 If you find yourself reading any of the above as license to combine rows,
 that IS the rationalization (see Anti-Rationalization Framework below,
@@ -827,6 +924,21 @@ If a subagent fails or returns empty results: re-dispatch with additional contex
 | 4.6.3 | Green mirage             | auditing-green-mirage            | FORBIDDEN        |
 | 4.6.4 | Comprehensive fact-check | fact-checking                    | FORBIDDEN        |
 | 4.7   | Finishing                | finishing-a-development-branch   | FORBIDDEN        |
+
+### Conditional Companion Skills
+
+These do not own a row of the table: each rides along inside the dispatch for the
+phase named, and only when its trigger is present. A dispatch that meets a
+trigger MUST name the companion skill in its prompt alongside the phase's own
+skill; the Phase Declaration is unchanged, because the row is unchanged.
+
+| Trigger | Phase | Skill to name in the dispatch |
+| ------- | ----- | ----------------------------- |
+| Requirements are vague, or scope/acceptance criteria are unstated | 1.5 Discovery | `gathering-requirements` |
+| The change enters an unfamiliar domain, or key terms are undefined | 1.2 Research | `analyzing-domains` |
+| The design carries explicit states, transitions, or multi-step flows | 2.1 Design | `designing-workflows` |
+| A dispatch prompt is approaching its token budget, or must select from a large artifact set | 3.x Planning, 4.x Execution | `assembling-context` |
+| A gate is being re-dispatched after a failed round | 2.4 / 3.4 / 4.x retry | `reflexion` |
 
 <FORBIDDEN>
 ### Signs You Are Violating This Rule
@@ -908,6 +1020,97 @@ The orchestrator is where that qualifier gets lost, because it is summarising.
 4. **Completion Means Evidence**: "Done" requires traced verification through code. Trust execution paths, not file names or comments.
 
 5. **Autonomous Means Thorough**: In autonomous mode, treat suggestions as mandatory. Fix root causes, not symptoms. Choose highest-quality fixes.
+
+---
+
+## Develop = Thoroughness Mode (Operator Contract)
+
+<CRITICAL>
+Invoking develop is the operator's explicit opt-in to thoroughness, and a
+durable instruction: correctness outranks speed for the duration of the work.
+An operator who wants speed will say so and will not invoke develop. The
+presence of develop in the active skill list IS the contract. The
+"steady correctness over speed" disposition, where that rule module is
+installed, is the general form of this contract.
+
+**Thoroughness is CHOSEN ONCE, then FIXED.** The ceremony is selectable in a
+single window, and never afterward.
+
+- **The selection window is Phase 0, before any work begins.** develop assesses
+  the request across its cost dimensions and RECOMMENDS a ceremony. The
+  operator's answer is the SOURCE OF TRUTH and overrides the recommendation. It
+  is written to `develop_gate_ledger.ceremony` and LOCKED (`locked_at`). This is
+  the only moment ceremony is negotiable.
+- **A non-negotiable core is never on the menu.** The review floor defines that
+  core: code review, green-mirage auditing, the test run when tests cover the
+  touched code, and TDD-first for anything carrying behavioral logic. Where the
+  Iron Law is established (no skill written or edited without a failing test
+  first), it belongs to that core too. Gates implied by high verification
+  difficulty or high silent-failure potential are locked on and cannot be
+  deselected.
+- **Elision vs repositioning.** ELISION is running FEWER gates than the locked
+  ceremony selected. It is forbidden, always. REPOSITIONING is running EVERY
+  selected gate at a declared boundary recorded in the ledger — a Phase-0 choice
+  (`gate_position: per_task | per_group`), locked at `locked_at` with everything
+  else. Changing gate position after the lock requires the same
+  ABORT-and-re-invoke path as any other ceremony change.
+- **After the lock, the original contract applies UNCHANGED.** NO operator
+  phrasing during develop is license to compress phases. Not "wrap up", not "and
+  pause", not "finish X items", not "save tokens", not "be efficient", not "we
+  may have enough info now", not standing autonomous mode, not "pre-resolved
+  forks", and not "the ceremony is customizable now". A mid-run request to drop
+  a gate is REFUSED.
+- **The two honest answers to "this is taking too long" are FINISH or ABORT.**
+  Never a quiet narrowing. Aborting and re-invoking develop with a different
+  ceremony is always legitimate: it makes re-selection visible and deliberate
+  instead of an erosion.
+- **ABORT-and-re-invoke is a DEFINED operation, not an improvised one.** On a
+  deliberate re-invocation over an existing `develop_gate_ledger`, the old
+  `ceremony` block is archived under `ceremony_history` with a reason, a NEW
+  Phase 0 runs and a new selection window legitimately opens, completed-gate and
+  wave records carry forward, and `locked_at` is set fresh (`feature-config`
+  §0.5.6 is the procedure). The escape hatch must stay affordable: if the honest
+  path costs a full restart, quiet erosion becomes the cheap path. This does not
+  loosen the lock: the non-negotiable core applies at EVERY selection, the D5/D6
+  escalation-only locks re-derive from the unchanged assessment, and
+  `ceremony_history` makes serial de-escalation auditable. Re-invoking ritually
+  to shed gates is itself a phase-collapse rationalization, already covered by
+  the Anti-Rationalization Framework of this skill.
+- **Escalation is always legal; de-escalation never becomes legal.** Scope drift
+  may ADD gates mid-run (a declined component may be promoted, with the reason
+  recorded); nothing may remove one. The lock is a floor, not a ceiling.
+- **A declined component is RECORDED as declined**, not merely absent, so a
+  resumed session can tell "the operator chose not to run this" from "this has
+  not run yet".
+- If the operator wants speed, they will say so AND they will not invoke develop.
+- Apparent time pressure ("pause when done", impending session end, etc.) does
+  NOT justify skipping phases. The chosen path is the only path inside develop.
+  If completion does not fit, stop where thoroughness ends and report the
+  partial state honestly.
+- This contract is durable across sessions and governs what happens AFTER the
+  lock, on every develop invocation in every project.
+</CRITICAL>
+
+### Parallelism vs Ceremony (two independent fields, not one)
+
+`SESSION_PREFERENCES.parallelization` (asked in §0.4) and
+`develop_gate_ledger.ceremony` (asked in §0.8) are **two independent fields**.
+Changing one does NOT change the other:
+
+- `parallelization: "conservative"` (or `"sequential"`) only controls dispatch
+  count -- how many tasks run concurrently. It does NOT drop any gate, change
+  the review floor, or alter the ceremony.
+- A lighter ceremony in §0.8 (`Customize` -> unselect a component) changes WHICH
+  gates run, not HOW MANY tasks dispatch at once.
+- An operator who says "switch to conservative" is asking for sequential
+  dispatch with the SAME ceremony still in force. Treat that as a parallelism
+  change only; the locked `ceremony.selected` is unchanged.
+
+They answer different questions. Parallelism is "how much work in flight at
+once?"; ceremony is "what verification must each piece of work pass?"
+Re-deriving ceremony from a parallelism preference would let time pressure erode
+the review floor, which is what the lock prevents. Read the two fields
+independently and never conflate them.
 
 ---
 
@@ -1208,6 +1411,56 @@ else, and is never a mid-run improvisation — a run may not switch from
 is: grouping dispatches by domain while still running every gate for every
 task. When one session cannot hold a very large run, hand off via the
 ledger — never by skipping gates.
+
+### Stop Semantics in Batched Dispatches
+
+<CRITICAL>
+"A task that finds the design wrong stops and reports" is ambiguous inside a
+batched dispatch. The ambiguity has already produced a 48-file low-quality
+landing (Wave 3a, nmg2-emulator, 2026-08). The binding definition:
+
+- Stopping is NOT "writing no commit." An implementer may commit partial,
+  clearly-labeled work.
+- Stopping IS "not marking the task complete." A task whose implementer found a
+  design defect stays OPEN — in the ledger and in the plan — until the defect is
+  resolved and the task re-verified.
+- A batch inherits this per task: one blocked task does not block siblings, and
+  no sibling's completion marks the blocked one.
+- The dispatch report MUST list each covered task as COMPLETE or OPEN(reason). A
+  batch report with no per-task status is invalid.
+</CRITICAL>
+
+### Incidentals: Mid-Implementation Departures Must Be Integrated, Not Improvised
+
+<CRITICAL>
+An "incidental" is any departure from the implementation plan discovered DURING
+implementation: a design assumption that turns out wrong, scope the plan didn't
+anticipate, or a redirection the plan's approach doesn't cover. It is not
+optional housekeeping. It changes what "the plan" means, and the plan document
+is the only artifact a resumed session or reviewer will read to find out what's
+true.
+
+Discovering an incidental does not authorize working around it silently. Before
+continuing implementation past the point where it was found:
+
+1. **Stop and classify it** — a bug in the plan (a stated assumption is wrong),
+   scope the plan omitted (a task it should have had), or a full redirection
+   (the plan's approach itself needs to change).
+2. **Write it into the plan document itself** — not a chat message, not a code
+   comment, not a mental note to clean the plan up afterwards. Use a task block,
+   an amendment section, or an explicit superseding note, in the document a
+   resumed session or reviewer reads. An incidental deferred past the moment it
+   was found is the exact failure this rule prevents.
+3. **Gate the incidental like any other task** — it inherits the same ceremony
+   (ledger entry, ownership, a `Check:` line where the plan uses them) as a
+   planned task. Being discovered rather than planned is not grounds for a
+   lighter gate.
+4. Only then continue implementation.
+
+This applies however small the incidental looks. A departure too small to write
+down was too small to require a decision. If it required a decision, the
+decision belongs in the plan, not only in the diff.
+</CRITICAL>
 
 **Subagent Prompt Length Verification:**
 Before dispatching ANY subagent:

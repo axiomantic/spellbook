@@ -8,12 +8,15 @@ How a user's expressed wish about functionality routes to a skill, and why plann
 **Related artifacts:**
 
 - `skills/develop`
+- `skills/using-skills`
 
 ## Rule Content
 
 ```markdown
 <CRITICAL>
 ### Intent Routing
+
+The skill check comes FIRST, before responding, exploring, or clarifying: if any skill plausibly applies, load it before acting. "I'll read the file first" and "this one is simple" are the two rationalizations that bypass it. Skip the check only on low-signal turns — status questions and short clarifications. Load `using-skills` for the threshold and the full routing flow.
 
 When the user expresses a wish about functionality ("Would be great to...", "I want...", "We need...", "Can we add..."), invoke the matching skill IMMEDIATELY. Do not ask your own clarifying questions before loading the skill. Once loaded, follow the skill's instructions exactly, including any confirmation steps or quality gates the skill defines. "Invoke immediately" means load the skill without delay, not skip the skill's own phases.
 
