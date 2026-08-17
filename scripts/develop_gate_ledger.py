@@ -19,6 +19,17 @@ different projects -- from reading and writing the same ledger file.
 The file is JSON for human inspectability -- a developer or subagent
 can read it directly without the Python module.
 
+On a host with no resolvable home directory (a Windows CI runner with
+none of ``USERPROFILE``/``HOMEDRIVE``/``HOMEPATH`` set), that default
+cannot be computed and the invocation REFUSES with an error naming the
+remedy: set ``$SPELLBOOK_DEV_DIR``, or pass ``--path``. It does not fall
+back to a directory under the cwd. Such a fallback exits 0 while reading
+and writing a ledger that is not the project's ledger, which is the
+silent-but-wrong failure this module is built to avoid. Only an
+invocation that actually needs the default is affected: ``$SPELLBOOK_DEV_DIR``
+and ``--path`` both work normally with no home directory, and the module
+still imports cleanly there.
+
 ## Merge semantics (per the develop skill)
 
 The skill is explicit: writes are MERGE-ONLY, never full overwrite. Two
@@ -41,13 +52,17 @@ silently discard the prior entries -- and discard them in exactly the audit
 trail that exists to prove a gate ran. As maps, the deep-merge adds the new
 key and leaves the siblings alone.
 
-Two fields inside those maps are still lists (``open_rows``,
-``open_findings``), and that is correct: they describe the state at one
-check and must be able to SHRINK as rows close, the same reason
-``remaining_gates`` is a newline-joined scalar. Both recorders therefore
-write their list on EVERY status, empty included -- an omitted key cannot
-shrink anything, so a passing re-record would inherit the prior failure's
-entries and report a passed gate that still lists open work.
+Three fields inside those maps are still lists (``open_rows``,
+``open_findings``, ``gates``), and that is correct: they describe the
+state at one check and must be able to SHRINK, the same reason
+``remaining_gates`` is a newline-joined scalar. Every recorder therefore
+writes its list on EVERY status, empty included -- an omitted key cannot
+shrink anything, so a re-record would inherit the prior record's entries:
+a passing re-record reporting a passed gate that still lists open work,
+or a re-record claiming gate coverage it never asserted. One shrink rule
+across all three beats three fields with three different semantics -- the
+ledger's records must be true, and a record that outlives the assertion
+that produced it is not.
 
 Deletion is never part of the contract -- ``_deep_merge`` has no delete.
 Anything that must "go away" is expressed as a field instead: a closed
@@ -178,15 +193,28 @@ def default_state_dir() -> Path:
     Windows CI runner with none of ``USERPROFILE``/``HOMEDRIVE``/
     ``HOMEPATH`` set), and computing this at module scope made that
     raise before ``main`` could run -- so even an invocation that never
-    consults this default, such as one setting ``$SPELLBOOK_DEV_DIR``,
-    could not start. Falling back to a directory under the cwd keeps the
-    CLI usable there; wherever ``Path.home()`` works the path is
-    unchanged.
+    consults this default, such as one setting ``$SPELLBOOK_DEV_DIR``
+    or passing ``--path``, could not start. Lazy resolution keeps those
+    invocations working.
+
+    An invocation that genuinely NEEDS this default and has no home
+    REFUSES. The alternative -- defaulting under the cwd -- is the
+    silent-but-wrong shape: the command exits 0 while reading and
+    writing a ledger that is not the project's ledger, and whichever
+    directory it happened to run from silently becomes the state
+    location. A refusal naming the remedy is the loud failure.
+
+    Wherever ``Path.home()`` works the path is byte-identical to before.
     """
     try:
         home = Path.home()
-    except RuntimeError:
-        return Path.cwd() / ".spellbook"
+    except RuntimeError as exc:
+        raise LedgerError(
+            "no home directory could be determined, so the default ledger "
+            "location cannot be resolved; set $SPELLBOOK_DEV_DIR to the "
+            "directory that should hold develop_gate_ledger.json, or pass "
+            "--path to name the ledger file explicitly"
+        ) from exc
     return home / ".local" / "spellbook"
 
 # Fields the ledger may contain, per skills/develop/SKILL.md
@@ -640,14 +668,17 @@ def record_group_gate(
             "an empty open_findings with status=failed would be a false pass."
         )
     entry: dict[str, Any] = {"status": status}
-    gate_list = list(gates or [])
-    if gate_list:
-        entry["gates"] = gate_list
     if timestamp:
         entry["timestamp"] = timestamp
-    # Unconditional, empty on passed/n_a -- see record_wave_discipline. A
-    # gate recorded as passed while still listing open findings is the
-    # false-pass this recorder exists to close.
+    # Both lists are written unconditionally, empty included -- see
+    # record_wave_discipline. `_deep_merge` replaces lists but never deletes
+    # keys, so a conditional write cannot SHRINK: the prior record's value
+    # survives. For open_findings that means a gate recorded as passed while
+    # still listing the previous failure's findings; for gates it means the
+    # record claims coverage the re-record never asserted. One shrink rule
+    # across all three sibling list fields (gates, open_findings, open_rows)
+    # beats three fields with three different semantics.
+    entry["gates"] = list(gates or [])
     entry["open_findings"] = findings
     return write_ledger({"groups": {group_id: {"gate_stack": entry}}}, path=path)
 
@@ -679,8 +710,11 @@ def is_wave_done_claimable(wave_id: str, *, path: Path | None = None) -> bool:
 
 
 def _cmd_show(args: argparse.Namespace) -> int:
-    path = Path(args.path) if args.path else ledger_path()
     try:
+        # ledger_path() is inside the try on purpose: resolving the default
+        # can itself refuse (no home directory), and that refusal is a
+        # user-facing configuration error, not a crash to traceback.
+        path = Path(args.path) if args.path else ledger_path()
         data = read_ledger(path)
     except LedgerError as exc:
         print(f"error: {exc}", file=sys.stderr)

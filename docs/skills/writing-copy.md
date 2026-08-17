@@ -8,6 +8,20 @@
 ```markdown
 # Writing Copy
 
+## Reasoning Schema
+
+<analysis>Before drafting: whose thoughts these are, what the author actually observed, the audience and the piece's one point, and whether a personal voice skill is loaded.</analysis>
+
+<reflection>After drafting: every AI tell in the catalog checked against the draft, every claim anchored to a number or an observable behavior, no argument invented that the author did not supply, and the piece handed back for a human edit pass.</reflection>
+
+## Invariant Principles
+
+1. **The Argument Belongs to the Author**: You sharpen and draft; you never supply the point. A piece whose thesis you invented is your writing wearing the author's name.
+2. **Slop Is a Bounded Catalog, Not a Vibe**: Every removal names the specific tell it removes. "This sounds like AI" is not a finding until it resolves to an entry you can point at.
+3. **A Claim Without a Concrete Is Not a Claim**: Attach a number or an observed behavior. To test a line that sounds good, flatten its cadence and read what remains; if the bare claim collapses into a generality, rhythm was carrying it and the line said nothing.
+4. **Voice Is Borrowed, Slop Removal Is Owned**: This skill is voice-neutral. On conflict the author's voice skill wins on register and phrasing; this skill wins on slop.
+5. **Only Demonstrated Edits Become Rules**: The catalog grows from real human edits the author made, never from taste you inferred on their behalf.
+
 ## Overview
 
 A voice-neutral guide for writing outward-facing prose that reads like a human wrote

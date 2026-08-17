@@ -1360,8 +1360,11 @@ gate-ledger entries that must exist before the next phase can begin.
    Verify each row in set (b) has been closed in the defect register.
 5. Record the result in `develop_gate_ledger.waves.<wave_id>.section_24_6_check`.
 
-   The ledger lives at `$SPELLBOOK_DEV_DIR/develop_gate_ledger.json`
-   (default `~/.local/spellbook/develop_gate_ledger.json`). Writes go
+   The ledger lives at `$SPELLBOOK_DEV_DIR/develop_gate_ledger.json`,
+   defaulting to the per-project file
+   `~/.local/spellbook/develop_gate_ledger-<project-encoded>.json` -- and
+   when no home directory resolves, the CLI refuses with an error naming
+   `$SPELLBOOK_DEV_DIR` rather than guessing a location. Writes go
    through `scripts/develop_gate_ledger.py` so the deep-merge and
    refusal semantics match the rest of the ledger contract -- DO NOT
    hand-write the file with shell `cat > ledger.json`, because that
@@ -1768,7 +1771,11 @@ develop_gate_ledger: {
     [wave_id: string]: {
       section_24_6_check: {
         status: "passed" | "failed" | "n_a";
-        open_rows?: string[];   // present when status=failed, the W<n>- ids that were still open
+        open_rows: string[];    // the W<n>- ids still open; written on EVERY status, empty
+                                // included. `_deep_merge` replaces lists but never deletes
+                                // keys, so an omitted key cannot SHRINK -- a passing
+                                // re-record would inherit the prior failure's rows.
+                                // status=failed is REFUSED with an empty list.
         timestamp?: string;     // ISO 8601; the develop skill writes it on each entry
         reason?: string;        // free-form context; records WHY on status=n_a
       };
@@ -1781,8 +1788,14 @@ develop_gate_ledger: {
     [group_id: string]: {
       gate_stack: {
         status: "passed" | "failed" | "n_a";
-        gates?: string[];          // the gates run at this group boundary
-        open_findings?: string[];  // REQUIRED when status=failed; mirrors the wave-discipline guard
+        gates: string[];           // the gates run at this group boundary
+        open_findings: string[];   // the findings still open at this boundary
+                                   // Both lists follow the `open_rows` shrink rule: written on
+                                   // EVERY status, empty included, because a conditionally
+                                   // written field can never shrink. A re-record that omitted
+                                   // them would retain stale findings on a pass, or a coverage
+                                   // claim the re-record never asserted.
+                                   // status=failed is REFUSED with an empty open_findings.
         timestamp?: string;        // ISO 8601
       };
     };

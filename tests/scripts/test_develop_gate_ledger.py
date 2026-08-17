@@ -636,6 +636,36 @@ def test_group_gate_failed_guard_still_fires_after_a_prior_record(tmp_ledger):
     assert entry["open_findings"] == ["F1"]
 
 
+def test_group_gate_re_record_without_gates_shrinks_the_gate_list(tmp_ledger):
+    """``gates`` gets the same SHRINK treatment as the other two list fields.
+
+    ``_deep_merge`` replaces lists but never deletes keys, so a ``gates``
+    written only ``if gate_list`` is retained forever: a re-record that
+    asserted no gates at all would still read as covering 4.4/4.5, and the
+    ledger would claim coverage the re-record never asserted.
+    """
+    ledger.record_group_gate("G1", status="passed", gates=["4.4", "4.5"])
+    ledger.record_group_gate("G1", status="passed")
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["gates"] == []
+
+
+def test_group_gate_re_record_with_fewer_gates_shrinks(tmp_ledger):
+    ledger.record_group_gate("G1", status="passed", gates=["4.4", "4.5", "4.5.1"])
+    ledger.record_group_gate("G1", status="passed", gates=["4.4"])
+    assert ledger.read_ledger()["groups"]["G1"]["gate_stack"]["gates"] == ["4.4"]
+
+
+def test_group_gate_records_gates_key_even_when_never_supplied(tmp_ledger):
+    """One shrink rule across all three sibling fields: ``gates`` is
+    present on every record, empty included, exactly like ``open_findings``.
+    """
+    ledger.record_group_gate("G1", status="passed")
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["gates"] == []
+    assert entry["open_findings"] == []
+
+
 def test_two_groups_coexist(tmp_ledger):
     ledger.record_group_gate("G1", status="passed")
     ledger.record_group_gate("G2", status="passed")
@@ -1025,19 +1055,84 @@ def test_cli_starts_when_home_directory_is_unresolvable(tmp_path):
     assert proc.stdout.strip() == "{}"
 
 
+def test_cli_with_explicit_path_works_without_a_home(tmp_path):
+    """``--path`` never consults the default, so no home is needed.
+
+    The sibling of the ``$SPELLBOOK_DEV_DIR`` case above: the refusal must
+    fire only for invocations that actually NEED the default directory.
+    """
+    driver = tmp_path / "no_home_driver.py"
+    driver.write_text(_NO_HOME_DRIVER, encoding="utf-8")
+    explicit = tmp_path / "explicit.json"
+
+    env = dict(os.environ)
+    env.pop("SPELLBOOK_DEV_DIR", None)
+
+    proc = subprocess.run(
+        [sys.executable, str(driver), str(SCRIPT_PATH), "--path", str(explicit), "show"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+        cwd=str(tmp_path),
+        env=env,
+    )
+    assert proc.returncode != 99, "precondition failed: Path.home() still resolved"
+    assert proc.returncode == 0, f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+    assert proc.stdout.strip() == "{}"
+
+
+def test_cli_refuses_with_a_remedy_when_the_default_is_needed_without_a_home(tmp_path):
+    """No home and no override: REFUSE, naming the remedy.
+
+    Writing the ledger into whatever directory the CLI happened to run
+    from is the silent-but-wrong shape: the run "succeeds" while the
+    ledger it consults is not the project's ledger. A user-facing
+    configuration error is reported like every other refusal in this
+    module -- ``error: ...`` on stderr, non-zero exit, no traceback.
+    """
+    driver = tmp_path / "no_home_driver.py"
+    driver.write_text(_NO_HOME_DRIVER, encoding="utf-8")
+
+    env = dict(os.environ)
+    env.pop("SPELLBOOK_DEV_DIR", None)
+
+    proc = subprocess.run(
+        [sys.executable, str(driver), str(SCRIPT_PATH), "show"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
+        cwd=str(tmp_path),
+        env=env,
+    )
+    assert proc.returncode != 99, "precondition failed: Path.home() still resolved"
+    assert proc.returncode != 0, f"stdout={proc.stdout!r} stderr={proc.stderr!r}"
+    assert "Traceback" not in proc.stderr, proc.stderr
+    assert proc.stderr.startswith("error: "), proc.stderr
+    assert "SPELLBOOK_DEV_DIR" in proc.stderr
+    assert "--path" in proc.stderr
+    # The refusal must not have written a ledger beside the cwd.
+    assert not (tmp_path / ".spellbook").exists()
+
+
 def test_default_state_dir_is_unchanged_when_home_resolves(monkeypatch):
-    """The fallback must not move the ledger for real users."""
+    """The refusal must not move the ledger for real users."""
     monkeypatch.setattr(ledger.Path, "home", classmethod(lambda cls: cls("/home/someone")))
     assert ledger.default_state_dir() == Path("/home/someone/.local/spellbook")
 
 
-def test_default_state_dir_falls_back_under_cwd_without_a_home(monkeypatch, tmp_path):
+def test_default_state_dir_refuses_without_a_home(monkeypatch, tmp_path):
     def _raise(cls):
         raise RuntimeError("Could not determine home directory.")
 
     monkeypatch.setattr(ledger.Path, "home", classmethod(_raise))
     monkeypatch.chdir(tmp_path)
-    assert ledger.default_state_dir() == Path.cwd() / ".spellbook"
+    with pytest.raises(ledger.LedgerError) as excinfo:
+        ledger.default_state_dir()
+    message = str(excinfo.value)
+    assert "SPELLBOOK_DEV_DIR" in message
+    assert "--path" in message
 
 
 def test_fallback_encode_cwd_matches_real_implementation():

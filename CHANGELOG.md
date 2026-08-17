@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `validate_schemas.py` now runs in CI as a blocking `schema-validation` job in
+  `lint.yml`. It previously ran only in pre-commit, which is how a rule module
+  crossing the 12,000-byte Antigravity per-file cap reached review. The gate was
+  verified by mutation rather than by assumption: clean tree exits 0, a
+  positional-language token exits 1, a cap breach exits 1, and reverting returns
+  to 0. The four pre-existing validation failures were fixed first so the gate
+  could go blocking against a clean tree.
 - Dispatch Protocol section in `dispatching-parallel-agents`: a fixed
   cache-aligned prompt layout that puts invariant blocks first so they stay
   prefix-cacheable, a pointer-passing convention (content over ~30 lines goes
@@ -52,6 +59,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `scripts/develop_gate_ledger.py` computed its state directory from
+  `Path.home()` at module scope, so on a host with no resolvable home the CLI
+  died during import -- before it could read `$SPELLBOOK_DEV_DIR`, the variable
+  meant to override that very path. A latent defect surfaced on the Windows CI
+  runner by the standalone-invocation test added on this branch. Resolution is
+  now lazy, and when no home resolves the CLI refuses with an error naming
+  `$SPELLBOOK_DEV_DIR` and `--path` rather than guessing a location. Behaviour
+  is byte-identical wherever `Path.home()` works, pinned by a test.
+- `record_group_gate` wrote `gates` only when a list was supplied, so
+  re-recording a group without `--gates` retained the previous list and the
+  record claimed coverage the re-record never asserted. It is now written
+  unconditionally, joining `open_findings` and `open_rows` under one shrink
+  rule: `_deep_merge` replaces lists but never deletes keys, so a conditionally
+  written field can never shrink.
+- The develop skill's ledger shape declared `gates`, `open_findings`, and
+  `open_rows` optional. All three are written unconditionally; the declaration
+  had been wrong for `open_findings` since the shrink fix landed. The
+  documented default ledger path also omitted the per-project filename suffix.
+- `writing-plans` gained a `**Subject:**` field while a test pinned the Field
+  Definitions table as an exact list, breaking CI on all three platforms.
 - `scripts/develop_gate_ledger.py` could not run under its own documented
   invocation (`python3 scripts/develop_gate_ledger.py ...`) because a
   module-level `spellbook` package import failed outside the venv; it now
