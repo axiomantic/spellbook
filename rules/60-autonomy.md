@@ -35,6 +35,7 @@ Common failure → try next:
 - Network timeout on `git clone` → retry once (transient) → `curl -L` tarball → `WebFetch` → package registry
 - `nimble install` from github fails → registry alias → manual clone + `--path:` → tarball
 - Permission/egress failure on one tool → try adjacent tools; `WebFetch` / `curl` / `git` may route differently
+- Required reference doc fetch fails once → retry, alternate mirror/source, different fetch tool. A manual recorded "unavailable" after ONE failed fetch was obtained on the next retry days later; the false constraint nearly shipped wrong MUL/DIV semantics.
 
 **FORBIDDEN:** writing an "environment constraints" journal/notes entry after a
 single failure, pivoting away, and never retesting. That is not autonomous — that

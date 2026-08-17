@@ -29,6 +29,7 @@ is never zero.
 2. **Delegate actual work** - Main context orchestrates; subagents write code, run tests, perform reviews
 3. **Quality gates are mandatory** - Code review, fact-checking, and green mirage audit after every task; no exceptions
 4. **Behavior preservation in refactoring** - Test verification at every transformation; no behavior changes without approval
+5. **No batch exemption** - A batched or multi-task dispatch exempts NOTHING: every task the batch covers passes gates 4.4 (Implementation Completion Verification) through 4.6.3 (Green Mirage Audit) individually before it may be marked complete. Batch size never substitutes for per-task gating.
 
 <analysis>
 Before executing Phase 4:

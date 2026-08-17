@@ -161,6 +161,26 @@ Verifies definition of done per work item, risk assessment per phase, QA checkpo
 
 **Gate:** Proceed only when completeness audit is done and all escalation claims are cataloged.
 
+## Re-Review Protocol (round 2 and later)
+
+When this skill runs on a plan it has reviewed before:
+
+1. **Delta-only verification.** Re-verify ONLY claims, citations, and
+   sections changed since the last verified pass. Record the prior pass's
+   verified set and diff against it. A full-corpus re-verification is
+   permitted only on the first pass, or when the prior pass's record is
+   lost. Re-verifying an unchanged, previously-verified citation is
+   duplicated work, not added rigor.
+2. **Convergence check.** Before scheduling round N+1, classify round N's
+   Critical findings: NEW (pre-existing defect newly found) vs INDUCED
+   (introduced by round N-1's own repairs). If more than half are INDUCED,
+   another same-style round is FORBIDDEN. Switch method: build or extend a
+   mechanical check (a planlint rule, a compile check, a symbol-table
+   diff) for the oscillating defect class, run it, and only then resume
+   prose review for what the check cannot cover.
+3. Record in the report: `Round N: X new / Y induced. Convergence:
+   CONVERGING | OSCILLATING (mechanized: <check name>)`.
+
 ## Report Assembly
 
 Assemble the final report from subagent outputs:
@@ -273,6 +293,7 @@ Before completing review:
 [ ] Did I separate Critical/Important/Minor findings?
 [ ] Did I provide prioritized remediation plan?
 [ ] Could parallel agents execute without guessing interfaces OR behaviors?
+[ ] If round 2+: did I verify only the delta, and run the convergence check?
 
 If NO to ANY item, go back and complete it.
 </reflection>

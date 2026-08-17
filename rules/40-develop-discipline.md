@@ -162,4 +162,21 @@ next phase will inherit. The motivating failure mode is documented in
 the nmg2-emulator handoff (2026-08-10): "Wave 3a done" markings made
 without §24.6 verification propagated across handoffs because no later
 step re-checked.
+
+### Stop Semantics in Batched Dispatches
+
+"A task that finds the design wrong stops and reports" is ambiguous inside
+a batched dispatch, and the ambiguity has already produced a 48-file
+low-quality landing (Wave 3a, nmg2-emulator, 2026-08). The binding
+definition:
+
+- Stopping is NOT "writing no commit." An implementer may commit partial,
+  clearly-labeled work.
+- Stopping IS "not marking the task complete." A task whose implementer
+  found a design defect stays OPEN — in the ledger and in the plan — until
+  the defect is resolved and the task re-verified.
+- A batched dispatch inherits this per task: one blocked task does not
+  block siblings, and no sibling's completion marks the blocked one.
+- The dispatch report MUST list each covered task as COMPLETE or
+  OPEN(reason). A batch report with no per-task status is invalid.
 </CRITICAL>

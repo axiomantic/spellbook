@@ -9,9 +9,15 @@ the Python reference implementation for reading and writing that shape
 to a persistent state file.
 
 State file location: ``$SPELLBOOK_DEV_DIR/develop_gate_ledger.json``,
-defaulting to ``~/.local/spellbook/develop_gate_ledger.json``. The file
-is JSON for human inspectability -- a developer or subagent can read it
-directly without the Python module.
+defaulting to a PER-PROJECT file under
+``~/.local/spellbook/develop_gate_ledger-<project-encoded>.json``, where
+``<project-encoded>`` is the current working directory's repo root
+encoded per the project-encoded convention (leading ``/`` stripped,
+``/`` replaced with ``-``; see ``spellbook.core.path_utils.encode_cwd``).
+This keeps two different projects -- or two concurrent sessions in
+different projects -- from reading and writing the same ledger file.
+The file is JSON for human inspectability -- a developer or subagent
+can read it directly without the Python module.
 
 ## Merge semantics (per the develop skill)
 
@@ -69,10 +75,11 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import Any
 
+from spellbook.core.path_utils import encode_cwd
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_STATE_DIR = Path.home() / ".local" / "spellbook"
-DEFAULT_LEDGER_PATH = DEFAULT_STATE_DIR / "develop_gate_ledger.json"
 
 # Fields the ledger may contain, per skills/develop/SKILL.md
 # "Ledger shape (develop_gate_ledger, design §5.3)" section.
@@ -88,12 +95,29 @@ CEREMONY_FIELDS = (
 )
 
 
+def default_ledger_path() -> Path:
+    """Compute the per-project default ledger path for the current cwd.
+
+    One ledger file per project (see module docstring "State file
+    location"): two different projects, or two concurrent sessions in
+    different projects, must not read/write the same ledger file.
+    """
+    encoded = encode_cwd(os.getcwd())
+    return DEFAULT_STATE_DIR / f"develop_gate_ledger-{encoded}.json"
+
+
 def ledger_path() -> Path:
-    """Resolve the ledger path, honoring ``$SPELLBOOK_DEV_DIR`` if set."""
+    """Resolve the ledger path, honoring ``$SPELLBOOK_DEV_DIR`` if set.
+
+    ``$SPELLBOOK_DEV_DIR`` (when set) still names an exact directory
+    holding a single ``develop_gate_ledger.json``, unchanged from before.
+    Only the fallback default changes: it is now per-project rather than
+    one fixed global path.
+    """
     override = os.environ.get("SPELLBOOK_DEV_DIR")
     if override:
         return Path(override) / "develop_gate_ledger.json"
-    return DEFAULT_LEDGER_PATH
+    return default_ledger_path()
 
 
 def _ensure_parent(path: Path) -> None:
@@ -405,7 +429,8 @@ def build_parser() -> argparse.ArgumentParser:
         help=(
             "Override the ledger file path. Default: "
             "$SPELLBOOK_DEV_DIR/develop_gate_ledger.json, "
-            "falling back to ~/.local/spellbook/develop_gate_ledger.json"
+            "falling back to a per-project file under "
+            "~/.local/spellbook/develop_gate_ledger-<project-encoded>.json"
         ),
     )
 

@@ -493,6 +493,8 @@ REVIEW MODE INSTRUCTIONS:
 - Using `isolation: "worktree"` for tasks that depend on prior uncommitted work (isolated worktrees branch from current HEAD, missing uncommitted changes)
 - Dispatching subagents without specifying which branch to base worktrees on
 - Dispatching open-ended analytical prompts to Explore subagents without a scope isolation preamble (agent will latch onto session metadata instead of performing the task)
+- Dispatching without the Subagent Efficiency Contract block in the prompt
+- Carrying raw tool output >2,000 chars forward instead of a reduction
 </FORBIDDEN>
 
 ---
@@ -598,6 +600,31 @@ will reject any result that does not contain a "Launching skill:" line.
 )
 ```
 
+### Subagent Efficiency Contract (include in EVERY dispatch prompt)
+
+Append this block verbatim to every subagent prompt:
+
+```
+TOOL OUTPUT DISCIPLINE:
+- After any tool call whose output exceeds ~2,000 characters, immediately
+  reduce it to the facts the task needs before your next step. Do not carry
+  raw logs, full file dumps, or listings forward turn over turn.
+- Build/test/lint output: reduce to pass/fail counts plus the names and
+  messages of failures. Never re-paste a passing log.
+- Never load base64 or image data into context unless the task is to
+  analyze that exact image.
+
+CALL BATCHING:
+- Read a file ONCE, in full (or one bounded range), not in repeated
+  offset windows.
+- Combine related searches into one grep with alternation
+  (grep -E 'a|b|c'), not one call per identifier.
+- Treat configure/build/test as ONE step with one summarized result
+  unless a gate requires them separated.
+- Report repetitive results (e.g., mutation variants M1..M23) as one
+  table in one message, not one message each.
+```
+
 **Agent Type Selection:**
 | Parent Agent | Subagent Type | Notes |
 |--------------|---------------|-------|
@@ -620,6 +647,8 @@ The Skill tool is included for most subagent types but not all. Verify before di
 | `statusline-setup` | no | Restricted to Read, Edit |
 
 Dispatching a skill-using prompt to an agent type without the Skill tool is a contract bug. The dispatch will produce no "Launching skill:" line and the orchestrator must reject the result.
+
+Every dispatch pays a fixed skill-catalog injection cost (~30K characters) regardless of whether the subagent uses any skill. When several small sequential tasks would each need a dispatch, prefer one subagent with the combined sequential scope — provided the tasks are not separate rows of a develop dispatch table (that combination is forbidden by 40-develop-discipline).
 
 **Lazy-injection caveat:** The skills catalog system-reminder is injected into a subagent's context AFTER its first tool call, not at session start. A subagent that introspects its tools or system reminders before acting may falsely conclude that no skills are available. The dispatch template's "First, invoke the [SKILL-NAME] skill" instruction forces the first tool call to BE the skill invocation, sidestepping this footgun. Do not weaken that instruction.
 

@@ -161,6 +161,8 @@ When reviewing AI-generated code, these checks are elevated to HIGH severity. LL
 
 Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
 
+**Test-quality scope:** if the audit scope includes judging whether tests would catch regressions, dispatch a subagent invoking auditing-green-mirage for those tests; do not run mutation reasoning inline.
+
 ---
 
 <FORBIDDEN>
@@ -173,6 +175,11 @@ Output: Executive Summary, findings by category (same severity thresholds as Sel
 - Hardcode a base ref or a default-branch name instead of shelling out to `branch-context.sh`
 - Report findings without stating the base used and how it was resolved
 - Use "branch diff" without saying which endpoint (committed-only vs. working tree)
+- Assess whether a test is a green mirage with an inline/ad hoc mutation
+  table. Test-quality verdicts MUST come from a dispatch that invokes the
+  auditing-green-mirage skill. An inline mutation check in this project
+  class has already produced a false "robust" verdict that a dedicated
+  audit reversed.
 </FORBIDDEN>
 
 ## Self-Check

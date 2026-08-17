@@ -36,6 +36,8 @@ If a pre-release exists that is newer than the last actual release, ask: "There'
 
 - **AGENTS.md** (this file) is for working **on the spellbook repo itself**. Only update it when changing the development workflow for this specific project (build commands, test conventions, architecture notes). It is NOT installed anywhere.
 - **`rules/*.md`** are the **global user-facing rule modules** that the spellbook installer ships. Directory-capable platforms receive one symlink per selected module in the platform's rules directory (`~/.claude/rules/` for Claude Code); flat platforms receive a generated concatenation at their real instruction path. Each module carries YAML frontmatter (`id`, `class`, `default`, `benefit`) and holds global directives, instructions, and behavioral rules that apply to ALL projects. This is where cross-project instructions belong.
+  - **Editing an existing `rules/*.md` file takes effect immediately** on directory-capable platforms — the installed file is a symlink to the source, so no reinstall step is needed.
+  - **Adding a NEW file under `rules/`** does need a step: run `uv run install.py` to create its symlink (or regenerate the flat-platform concatenation) before the new module reaches any installed platform. `MANIFEST.md` does not track `rules/*.md` — it only registers skills, commands, and agents — so there is no manifest entry to add for a new rule module, just the install step.
 - **Skills** go in `skills/<name>/SKILL.md` with YAML frontmatter
 - **Commands** go in `commands/<name>.md` with YAML frontmatter
 - **Hooks** go in `hooks/` and must be registered in `installer/components/hooks.py`
