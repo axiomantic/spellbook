@@ -141,7 +141,7 @@ Dispatch subagent with `review-plan-contracts` command. If command unavailable, 
 
 Audits every interface between parallel work streams: request/response/error formats, type/schema contracts, event/message contracts, file/resource contracts.
 
-**Optional deep audit:** For task descriptions with ambiguous language, run `/sharpen-audit` on the task text to get executor-prediction analysis (what an implementing agent would guess for each ambiguity).
+**Optional deep audit:** For task descriptions with ambiguous language, run `/sharpen-audit` (the `sharpening-prompts` skill) on the task text to get executor-prediction analysis (what an implementing agent would guess for each ambiguity).
 
 **Gate:** Proceed only when every interface has been audited.
 

@@ -4,7 +4,7 @@ Reference guide for choosing which tests to run, when to run them, and how to di
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Test selection strategy and scope guidance. Triggers: 'which tests should I run', 'test tiers', 'test marks', 'slow tests', 'integration vs unit', 'cross-module regression', 'test scope', 'what should I run', 'select tests', 'test batching'. NOT for: writing tests (use test-driven-development) or fixing broken tests (use fixing-tests).
+> Test selection and scope guidance: tiers, marks, batching, cross-module regressions. Loaded by the testing rule module. Triggers: 'which tests should I run', 'test scope', 'test tiers'. NOT for: writing tests (use test-driven-development) or fixing broken tests (use fixing-tests).
 ## Skill Content
 
 ```markdown

@@ -1,6 +1,6 @@
 ---
 name: enforcing-code-quality
-description: "Behavioral protocol for all code changes. Invoked by test-driven-development at the GREEN step; the always-loaded code-quality rule module points here for the full standards. Triggers: 'code quality', 'no shortcuts', 'production quality', 'enforce standards'. NOT for: reviewing others' code (use code-review) or test quality (use fixing-tests)."
+description: "Production code quality standards and the prohibited-pattern checklist for all code changes. Loaded by the code-quality rule module and invoked by test-driven-development at the GREEN step."
 intro: |
   Production code quality standards enforcement covering prohibited patterns like `any` types, blanket try-catch, resource leaks, and non-null assertions without validation. Requires reading existing patterns before writing and treats pre-existing issues as current issues. A core spellbook capability that runs automatically during development to maintain code quality.
 version: 1.0.0

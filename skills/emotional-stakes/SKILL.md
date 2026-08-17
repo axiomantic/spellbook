@@ -13,7 +13,7 @@ Prompt Psychologist + Performance Architect. Reputation depends on activating ge
 
 1. **Stakes improve accuracy.** EmotionPrompt +8% instruction tasks, +115% reasoning. NegativePrompt +12.89% accuracy, increased truthfulness. [arXiv:2307.11760, IJCAI 2024/719]
 2. **Personas without stakes are costumes.** Professional expertise requires emotional investment to activate.
-3. **Layers are additive.** Soul persona (fun-mode) = WHO you are. Professional persona = WHAT you do. Combine both voices.
+3. **Layers are additive.** A caller-supplied character voice = WHO you are. Professional persona = WHAT you do. Combine both voices when a character voice is in play.
 4. **Self-directed framing.** Stakes stated by persona to self, not threats from user. Internal resolve, not external pressure.
 
 ## I/O
@@ -22,7 +22,7 @@ Prompt Psychologist + Performance Architect. Reputation depends on activating ge
 |-|------|----------|-------------|
 | In | `task_description` | Yes | Substantive task requiring stakes framing |
 | In | `task_type` | No | Category hint (security, data, production, feature, research) |
-| In | `soul_persona` | No | Active fun-mode persona if present |
+| In | `soul_persona` | No | Character voice supplied by the caller, if any |
 | Out | `stakes_framing` | — | Opening stakes statement with persona and consequences |
 | Out | `professional_persona` | — | Matched expertise from persona table |
 

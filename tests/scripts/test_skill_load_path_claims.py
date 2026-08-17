@@ -16,13 +16,25 @@ Two checks, both narrow on purpose:
     prose. Require such a description to name an invoker the first check
     can then verify.
 
+``test_claims_name_a_checkable_invoker``
+    A "by X" claim whose X resolves to no skill, command, or rule module
+    ("invoked by skill improvement workflows", "invoked by other skills
+    when they need certainty") names nothing checkable. Such a claim used
+    to vanish from extraction entirely, so it read as a wired dependency
+    while no check could ever see it. It now fails.
+
 Stated blind spots -- what these checks do NOT cover:
 
 * Claims phrased without the ``by <name>`` shape ("runs during
   development", "part of the review flow") are not extracted at all.
-* A named invoker that is neither a ``skills/`` directory nor a
-  ``commands/`` file is skipped, not failed. Claims naming a hook, a
-  rule module, or an external mechanism therefore go unchecked.
+  A claim that DOES use the ``by <name>`` shape is now always visible:
+  it either resolves to a checkable target, or fails as unverifiable.
+* Resolvable targets are ``skills/`` directories, ``commands/`` files,
+  and ``rules/`` modules (matched on the stem with its numeric ordering
+  prefix stripped, so ``rules/80-code-quality.md`` answers to
+  ``code-quality``). An invoker outside those three trees -- a hook, an
+  MCP tool, an external mechanism -- cannot be named inside a ``by``
+  claim without failing; state that load path in prose instead.
 * Reference is a substring match on the skill name. A mention inside a
   comment, a NOT-for clause, or a deprecation note counts as a
   reference; the check proves mention, not correct wiring.
@@ -43,6 +55,10 @@ import pytest
 REPO = Path(__file__).resolve().parents[2]
 SKILLS_DIR = REPO / "skills"
 COMMANDS_DIR = REPO / "commands"
+RULES_DIR = REPO / "rules"
+
+# "80-code-quality" is addressed as "code-quality"; the digits are ordering.
+RULE_STEM_RE = re.compile(r"^\d+-")
 
 # "required by: a, b", "invoked automatically by x", "loaded by y".
 # The span stops at sentence end, newline, or a quote so a description
@@ -60,17 +76,16 @@ AUTOMATIC_RE = re.compile(
 
 TOKEN_RE = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)+|[a-z]{4,}")
 
-# Orphaned pairs this dispatch did not own. Each entry is real debt, not a
-# false positive: the claimant's description names an invoker that does not
+# Orphaned pairs awaiting wiring. Each entry is real debt, not a false
+# positive: the claimant's description names an invoker that does not
 # reference it. They are xfail(strict=True), so wiring one up turns the
 # suite RED with XPASS and forces the entry's removal -- the registry cannot
 # rot into a silent permanent exemption.
-KNOWN_ORPHANS: dict[tuple[str, str], str] = {
-    ("fractal-thinking", "deep-research"): "outside this dispatch's scope",
-    ("fractal-thinking", "fact-checking"): "outside this dispatch's scope",
-    ("sharpening-prompts", "reviewing-design-docs"): "outside this dispatch's scope",
-    ("sharpening-prompts", "reviewing-impl-plans"): "outside this dispatch's scope",
-}
+#
+# Empty is the intended steady state: every load-path claim in the tree is
+# currently backed by a real reference. An entry belongs here only as a
+# deliberate, temporary record of known debt.
+KNOWN_ORPHANS: dict[tuple[str, str], str] = {}
 
 
 def skill_names() -> set[str]:
@@ -79,6 +94,14 @@ def skill_names() -> set[str]:
 
 def command_names() -> set[str]:
     return {p.stem for p in COMMANDS_DIR.glob("*.md")}
+
+
+def rule_names() -> dict[str, Path]:
+    return {RULE_STEM_RE.sub("", p.stem): p for p in RULES_DIR.glob("*.md")}
+
+
+def known_targets() -> set[str]:
+    return skill_names() | command_names() | set(rule_names())
 
 
 def frontmatter_field(text: str, field: str) -> str:
@@ -104,18 +127,26 @@ def claim_surface(text: str) -> str:
     return frontmatter_description(text) + "\n" + frontmatter_field(text, "intro")
 
 
-def claimed_pairs():
-    """Yield (claimant, target, kind, span) for every resolvable claim."""
-    skills = skill_names()
-    commands = command_names()
-    known = skills | commands
-    for name in sorted(skills):
+def claims():
+    """Yield (claimant, span, targets) for every extracted claim.
+
+    ``targets`` is empty when the span names nothing checkable -- the
+    unverifiable-claim case, which used to be dropped silently here.
+    """
+    known = known_targets()
+    for name in sorted(skill_names()):
         text = claim_surface(
             (SKILLS_DIR / name / "SKILL.md").read_text(encoding="utf-8")
         )
-        for verb, span in CLAIM_RE.findall(text):
-            for target in sorted(resolve_targets(span, known) - {name}):
-                yield name, target, verb.lower(), span.strip()
+        for _verb, span in CLAIM_RE.findall(text):
+            yield name, span.strip(), sorted(resolve_targets(span, known) - {name})
+
+
+def claimed_pairs():
+    """Yield (claimant, target) for every resolvable claim."""
+    for name, _span, targets in claims():
+        for target in targets:
+            yield name, target
 
 
 def target_files(target: str) -> list[Path]:
@@ -123,7 +154,10 @@ def target_files(target: str) -> list[Path]:
     if (skill_dir / "SKILL.md").is_file():
         return sorted(skill_dir.rglob("*.md"))
     command = COMMANDS_DIR / f"{target}.md"
-    return [command] if command.is_file() else []
+    if command.is_file():
+        return [command]
+    rule = rule_names().get(target)
+    return [rule] if rule is not None else []
 
 
 PAIRS = [
@@ -137,7 +171,7 @@ PAIRS = [
         ),
         id=f"{claimant}-{target}",
     )
-    for claimant, target in sorted({(c, t) for c, t, _, _ in claimed_pairs()})
+    for claimant, target in sorted(set(claimed_pairs()))
 ]
 
 
@@ -149,8 +183,6 @@ def test_the_extractor_finds_claims_at_all():
 @pytest.mark.parametrize("claimant,target", PAIRS)
 def test_named_invokers_reference_the_skill(claimant, target):
     files = target_files(target)
-    if not files:
-        pytest.skip(f"{target!r} is neither a skill nor a command; not checkable")
     for path in files:
         if claimant in path.read_text(encoding="utf-8"):
             return
@@ -162,6 +194,18 @@ def test_named_invokers_reference_the_skill(claimant, target):
     )
 
 
+def test_claims_name_a_checkable_invoker():
+    """A "by X" claim naming nothing checkable is unverifiable prose."""
+    vague = [(c, s) for c, s, targets in claims() if not targets]
+    assert not vague, "UNVERIFIABLE LOAD CLAIM(S):\n" + "\n".join(
+        f"  skills/{c}/SKILL.md -- 'by {s}' names no skill, command, or rule "
+        f"module. Nothing can check it, so it reads as a wired dependency "
+        f"while being unfalsifiable. Name a real invoker, or drop the "
+        f"'by ...' phrasing."
+        for c, s in vague
+    )
+
+
 @pytest.mark.parametrize("name", sorted(skill_names()), ids=lambda v: v)
 def test_automatic_load_claims_name_their_loader(name):
     description = frontmatter_description(
@@ -170,7 +214,7 @@ def test_automatic_load_claims_name_their_loader(name):
     match = AUTOMATIC_RE.search(description)
     if match is None:
         return
-    known = skill_names() | command_names()
+    known = known_targets()
     named = {
         target
         for _, span in CLAIM_RE.findall(description)

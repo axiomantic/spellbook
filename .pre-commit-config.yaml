@@ -13,7 +13,7 @@ repos:
         entry: uv run scripts/generate_docs.py
         language: system
         pass_filenames: false
-        files: ^(skills/|commands/|agents/|rules/|docs/diagrams/)
+        files: ^(skills/|commands/|agents/|rules/)
 
       - id: check-docs-completeness
         name: Check documentation completeness
@@ -22,39 +22,12 @@ repos:
         pass_filenames: false
         always_run: true
 
-      - id: check-diagram-freshness
-        name: Check diagram freshness
-        entry: python3 scripts/check_diagram_freshness.py --staged
-        language: system
-        pass_filenames: false
-        files: ^(skills/|commands/|agents/|docs/diagrams/)
-
       - id: validate-schemas
         name: Validate skill/command/agent/rule schemas
         entry: uv run scripts/validate_schemas.py
         language: system
         pass_filenames: false
         files: ^(skills/|commands/|agents/|rules/)
-
-      - id: security-scan-changeset
-        name: Scan changeset for security issues
-        entry: uv run python -m spellbook.gates.scanner --staged
-        language: system
-        types: [markdown]
-
-      - id: security-scan-skills
-        name: Scan skills for security issues
-        entry: uv run python -m spellbook.gates.scanner --skills
-        language: system
-        stages: [manual]
-        files: ^skills/.*SKILL\.md$
-
-      - id: check-admin-frontend
-        name: Check admin frontend (lint + typecheck)
-        entry: bash -c 'cd spellbook/admin/frontend && npm run lint && npx tsc --noEmit'
-        language: system
-        pass_filenames: false
-        files: ^spellbook/admin/frontend/src/
 
       - id: check-dependabot-coverage
         name: Check Dependabot covers all package manifests

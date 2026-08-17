@@ -129,6 +129,8 @@ Autonomous mode detected ("Mode: AUTONOMOUS")? Enable all automatically.
 **Subagent dispatch:** Invoke `fact-check-verify` command.
 **Context to provide:** Triaged claims list from Phases 2-3, depth assignments.
 
+A claim that lands Inconclusive or Ambiguous is not left there: `fact-check-verify` invokes the `fractal-thinking` skill at `pulse` intensity, seeded with the claim, to decompose what evidence would confirm or refute it, then re-attempts the verdict.
+
 ## Subagent Context Requirements
 
 When spawning verification agents, provide:

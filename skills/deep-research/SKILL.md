@@ -42,7 +42,7 @@ You are the ORCHESTRATOR. Dispatch commands and subagents. Do NOT perform resear
 
 **Confidence Tags**: VERIFIED (primary source URL) | CORROBORATED (2+ independent) | PLAUSIBLE (consistent, unconfirmed) | INFERRED (derived logically) | UNVERIFIED (no source) | CONTESTED (sources disagree)
 
-**Plateau Breaker**: URL overlap >= 60% or 0 new facts for 2 rounds triggers: L1 query reformulation, L2 source type change, L3 STOP and report gaps. Hard limit: 3 stale rounds = mandatory L3.
+**Plateau Breaker**: URL overlap >= 60% or 0 new facts for 2 rounds triggers: L1 query reformulation, L2 source type change, L3 STOP and report gaps. Before escalating to L3, `/deep-research-investigate` invokes the `fractal-thinking` skill at `pulse` intensity to decompose the research question's hidden assumptions into reframed search angles. Hard limit: 3 stale rounds = mandatory L3.
 
 ## Phases
 

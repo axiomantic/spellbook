@@ -270,8 +270,21 @@ class OpenCodeInstaller(PlatformInstaller):
         """
         return self.config_dir / "plugins"
 
+    @property
+    def gate_plugin_source(self) -> Path:
+        """Get the source path for the OpenCode gate plugin."""
+        return self.spellbook_dir / "hooks" / "opencode-plugin.ts"
 
+    @property
+    def gate_plugin_target(self) -> Path:
+        """Get the target path for the installed gate plugin.
 
+        The filename is deliberately the one used before commit 7a8e9ab1
+        removed the install step. Installs from those versions still carry a
+        copy at this path, and reusing the name makes an upgrade overwrite it
+        rather than leave the stale file loaded alongside a new one.
+        """
+        return self.plugins_dir / "spellbook-security.ts"
 
 
     @property
@@ -419,7 +432,7 @@ class OpenCodeInstaller(PlatformInstaller):
             except json.JSONDecodeError:
                 pass
 
-
+        has_gate_plugin = self.gate_plugin_target.is_file()
 
         # Check for system prompt symlink
         has_system_prompt = self.system_prompt_target.is_symlink() or self.system_prompt_target.is_file()
@@ -443,7 +456,7 @@ class OpenCodeInstaller(PlatformInstaller):
             details={
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,
-
+                "gate_plugin_installed": has_gate_plugin,
                 "system_prompt_installed": has_system_prompt,
                 "instructions_configured": has_instructions,
             },
@@ -504,8 +517,29 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
             )
 
-
-
+        # Install the gate plugin (copied, not symlinked: OpenCode loads
+        # plugins by path and a symlink into the checkout would break when the
+        # checkout moves).
+        self._step("Installing gate plugin")
+        if self.gate_plugin_source.exists():
+            if self.dry_run:
+                action, message = "installed", "gate plugin: would be installed"
+            else:
+                self.plugins_dir.mkdir(parents=True, exist_ok=True)
+                self.gate_plugin_target.write_text(
+                    self.gate_plugin_source.read_text(encoding="utf-8"),
+                    encoding="utf-8",
+                )
+                action, message = "installed", "gate plugin: installed"
+            results.append(
+                InstallResult(
+                    component="gate_plugin",
+                    platform=self.platform_id,
+                    success=True,
+                    action=action,
+                    message=message,
+                )
+            )
 
 
         # Install Claude Code system prompt (behavioral standards)
@@ -609,8 +643,19 @@ class OpenCodeInstaller(PlatformInstaller):
             )
         )
 
-
-
+        # Remove the gate plugin file
+        if self.gate_plugin_target.exists():
+            if not self.dry_run:
+                self.gate_plugin_target.unlink()
+            results.append(
+                InstallResult(
+                    component="gate_plugin",
+                    platform=self.platform_id,
+                    success=True,
+                    action="removed",
+                    message="gate plugin: removed",
+                )
+            )
 
 
         # Remove system prompt symlink

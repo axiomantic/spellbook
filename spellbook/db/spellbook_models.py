@@ -1,7 +1,8 @@
 """SQLAlchemy ORM models for spellbook.db.
 
-These models mirror the CREATE TABLE statements in spellbook/core/db.py
-and spellbook/coordination/curator.py.
+Tables the runtime creates eagerly mirror the CREATE TABLE statements in
+spellbook/core/db.py. The remainder are defined only here and by the Alembic
+revisions under spellbook/db/migrations/versions/spellbook/.
 """
 
 import json

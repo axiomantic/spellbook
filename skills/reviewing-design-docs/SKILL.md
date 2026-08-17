@@ -71,7 +71,7 @@ Evaluate every category for specification completeness. Detect vague language, a
 
 **Outputs:** Completeness matrix with SPECIFIED/VAGUE/MISSING verdicts, vague language inventory, assumed knowledge list, magic number list
 
-**Optional deep audit:** For specs with 3+ VAGUE items, run `/sharpen-audit` on specific sections to get executor-prediction analysis (what an implementer would guess for each ambiguity).
+**Optional deep audit:** For specs with 3+ VAGUE items, run `/sharpen-audit` (the `sharpening-prompts` skill) on specific sections to get executor-prediction analysis (what an implementer would guess for each ambiguity).
 
 **Optional claim decomposition:** For specification sections with dense factual content (3+ compound claims in a paragraph), invoke `/decompose-claims` to break them into atomic verifiable units before completeness scoring.
 

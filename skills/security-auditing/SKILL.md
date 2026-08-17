@@ -2,7 +2,7 @@
 name: security-auditing
 description: "Use when auditing skills, commands, hooks, and MCP tools for security vulnerabilities. Triggers: 'security audit', 'scan for vulnerabilities', 'check security', 'audit skills', 'audit MCP tools', 'is this safe', 'check for injection', 'OWASP'. NOT for: general code review (use code-review --audit)."
 intro: |
-  Audits skills, commands, hooks, and MCP tools for injection risks, privilege escalation, and prompt manipulation vulnerabilities. Combines static analysis scanning with human-guided triage across six ordered phases. A core spellbook capability for systematic security review of the spellbook ecosystem and project code.
+  INOPERABLE: the static-analysis backbone this skill was built on was removed and not replaced, so its ANALYZE phase cannot run and it can produce no verdict. Retained as the specification a replacement scanner must satisfy — the rule catalogue, severity model, trust levels, attack-chain method, and report format for auditing skills, commands, hooks, and MCP tools.
 ---
 
 # Security Auditing
@@ -12,7 +12,22 @@ Security Auditor and Red Team Analyst. Your reputation depends on finding real v
 </ROLE>
 
 <CRITICAL>
-This skill orchestrates a full security audit of Spellbook content: skills, commands, hooks, and MCP tool implementations. It uses `spellbook.security.scanner` as its static analysis backbone and layers human-guided triage on top.
+**STATUS: INOPERABLE.** This skill was built on a static-analysis backbone --
+a static scanner package under the spellbook namespace -- that no longer exists in this
+repository. It was deleted in the security-to-gates rename and not replaced.
+Phase 2 (ANALYZE) therefore cannot run, and Phases 3-6 have no findings to
+consume. Do NOT report a PASS verdict from this skill: an audit that scans
+nothing produces a clean report for the wrong reason.
+
+Until a replacement scanner ships, an invoker MUST say the audit could not be
+performed and escalate to the operator. The rule catalogue, severity model,
+trust levels, attack-chain method, and report format below remain the
+specification a replacement must satisfy; they are retained for that purpose,
+not as a workflow that currently executes.
+
+This skill was designed to orchestrate a full security audit of Spellbook
+content: skills, commands, hooks, and MCP tool implementations, layering
+human-guided triage on top of scanner output.
 
 Follow ALL six phases in order. Do NOT skip classification or trace analysis for HIGH/CRITICAL findings. Scanner results alone are insufficient; interpret, deduplicate, and contextualize.
 </CRITICAL>
@@ -41,9 +56,10 @@ Follow ALL six phases in order. Do NOT skip classification or trace analysis for
 | Verdict | Enum | PASS, WARN, or FAIL |
 | Summary | Inline | Finding counts by severity and category |
 
-## Scanner Reference
+## Scanner Reference (specification for a replacement -- not currently implemented)
 
-The `spellbook.security.scanner` module provides these entry points:
+No scanner module ships in this repository. A replacement must provide these
+entry points:
 
 | Function | Target | Description |
 |----------|--------|-------------|
@@ -102,30 +118,20 @@ Run the scanner against all cataloged targets.
 
 <!-- SUBAGENT: Dispatch subagent to run scanner. For large scopes (20+ files), consider parallel subagents split by target type (skills vs MCP). -->
 
-1. **Run appropriate scanner functions based on scope:**
+<CRITICAL>
+**This phase is BLOCKED.** No scanner module ships in this repository, so there
+is no command to run and no findings to capture. STOP here. Report to the
+operator that the security audit could not be performed, name the missing
+backbone, and let the operator decide whether to restore a scanner, review
+manually against the rule catalogue above, or accept the gap. Never emit a
+verdict from an unscanned scope.
+</CRITICAL>
 
-   For skill/command files (markdown):
-   ```bash
-   uv run python -m spellbook.security.scanner --skills
-   ```
-   Or for specific files:
-   ```bash
-   uv run python -m spellbook.security.scanner --mode skill <path>
-   ```
+The remaining steps describe the intended flow once a scanner exists.
 
-   For MCP tool files (Python):
-   ```bash
-   uv run python -m spellbook.security.scanner --mode mcp spellbook/
-   ```
-
-   For changeset scanning:
-   ```bash
-   git diff --cached | uv run python -m spellbook.security.scanner --changeset
-   ```
-   Or branch-based:
-   ```bash
-   uv run python -m spellbook.security.scanner --base origin/main
-   ```
+1. **Run the scanner over the cataloged targets**, selecting the markdown, MCP
+   Python, or changeset entry point per the scope determined in Phase 1, and
+   passing the security mode from Phase 1.
 
    **Scanner failure path:** If any scanner command fails (non-zero exit, missing module, timeout), record the error, note which targets were not scanned, and flag the audit as incomplete. Do not proceed to Phase 3 with partial results unless the user explicitly approves.
 

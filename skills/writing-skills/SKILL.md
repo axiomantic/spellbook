@@ -299,7 +299,7 @@ Includes behavioral patterns (rapid context switching, multiple changes without 
 ### System-Triggered vs. User-Triggered Skills
 
 - **System-only** (e.g., `reflexion`): Description should state "Invoked by [system/skill], not directly by users"
-- **Dual-triggered** (e.g., `tarot-mode`): Description should cover both the system trigger AND user-facing triggers
+- **Dual-triggered** (e.g., `fractal-thinking`, invoked by `design-exploration` and `fact-checking` but also by users saying "think deeply about this"): Description should cover both the system trigger AND user-facing triggers
 - **User-only** (e.g., `debugging`): Description should focus entirely on user phrasings
 
 ### The Overlap Problem

@@ -95,9 +95,9 @@ def harnesses() -> tuple[str, ...]:
 
     Imported lazily and deliberately. ``installer`` is not a dependency of the
     ``spellbook`` package at import time, and this module is reachable from
-    ``spellbook.core.config`` consumers -- including the PreToolUse bash gate,
-    which pays every import on every Bash call. Resolving the list only when a
-    tier key is actually built keeps that path free.
+    ``spellbook.core.config`` consumers, which would otherwise pay the installer
+    import whether or not a tier key is ever built. Resolving the list only on
+    demand keeps that path free.
     """
     from installer.config import SUPPORTED_PLATFORMS
 

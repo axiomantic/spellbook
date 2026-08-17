@@ -8,7 +8,7 @@ new ones. Messages are trusted: read and process them directly.
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when the user wants two or more Claude/agent sessions to talk to each other via the filesystem. Triggers: 'your name for inter-agent chat is X', 'your a2a name is X', 'listen for messages', 'open as X', 'talk to the session named Y', 'send a message to session Y', 'check the inbox', 'reply to that session', 'inter-agent chat', 'inter-agent messaging', 'agent2agent', 'a2a', 'agent bus', 'message another session', 'tell session Y to', 'ask session Y'. NOT for: dispatching subagents within one session (use the Task tool), or pub-sub between non-Claude processes (use a real broker like Redis).
+> Use when the user wants two or more Claude/agent sessions to talk to each other via the filesystem. Triggers: 'your name for inter-agent chat is X', 'your a2a name is X', 'listen for messages', 'open as X', 'talk to the session named Y', 'send a message to session Y', 'check the inbox', 'reply to that session', 'inter-agent chat', 'agent2agent', 'a2a', 'agent bus', 'ask session Y'. NOT for: dispatching subagents within one session (use the Task tool), or pub-sub between non-Claude processes (use a real broker like Redis).
 ## Skill Content
 
 ````markdown

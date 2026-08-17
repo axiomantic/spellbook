@@ -5,99 +5,6 @@ Generates Mermaid flowcharts, dependency diagrams, state machines, and other vis
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when generating flowcharts, diagrams, dependency graphs, or visual representations of processes, relationships, architecture, or state machines. Triggers: 'diagram this', 'flowchart', 'visualize', 'dependency graph', 'ER diagram', 'state machine diagram', 'class diagram', 'sequence diagram', 'map the relationships', 'draw the architecture', 'how does X connect to Y'. NOT for: simple bullet point explanations, runtime monitoring, or text-only documentation.
-
-## Workflow Diagram
-
-```mermaid
-graph TD
-    %% Legend
-    subgraph Legend
-        L_start([Start])
-        L_process[Process Step]
-        L_decision{Decision Point}
-        L_subagent_dispatch[Subagent Dispatch / Skill Invocation]
-        L_quality_gate{Quality Gate}
-        L_terminal([Terminal State])
-        style L_subagent_dispatch fill:#4a9eff,color:#fff
-        style L_quality_gate fill:#ff6b6b,color:#fff
-        style L_terminal fill:#51cf66,color:#fff
-    end
-
-    Start([Start]) --> Phase1[Phase 1: Analysis]
-
-    subgraph Phase 1: Analysis
-        Phase1 --> P1_1{Identify Diagram Subject?}
-        P1_1 -->|Subject spans multiple types?| P1_1_separate[Produce separate diagrams]
-        P1_1 -->|No| P1_2[Scope the Traversal]
-        P1_1_separate --> P1_2
-
-        P1_2 --> P1_3{Select Format?}
-        P1_3 -->|Complexity (nodes > 50, styling, etc.)| P1_3_G[Graphviz DOT]
-        P1_3 -->|Default: Mermaid| P1_3_M[Mermaid]
-        P1_3_G --> P1_4{Plan Decomposition (if needed)?}
-        P1_3_M --> P1_4
-
-        P1_4 -->|Estimated node count exceeds limits?| P1_4_decompose[Decompose into levels (0, 1, 2)]
-        P1_4 -->|No decomposition| P2_start
-        P1_4_decompose --> P2_start
-    end
-
-    Phase2[Phase 2: Content Extraction]
-
-    subgraph Phase 2: Content Extraction
-        P2_start[Start Traversal Protocol] --> P2_1_algorithm[Systematic Traversal Algorithm]
-        P2_1_algorithm --> P2_1_extract[Extract content: Decision points, Subagent dispatches, Data transformations, Quality gates, Loop logic, Terminal conditions, Conditional branches]
-        P2_1_extract --> P2_2{Verify Completeness?}
-        P2_2 -->|Not Complete (e.g., orphan nodes, missing branches, placeholders)?| P2_2_return[Return to Phase 2, re-traverse]
-        P2_2 -->|Complete| P3_start
-        P2_2_return --> P2_1_algorithm
-    end
-
-    Phase3[Phase 3: Diagram Generation]
-
-    subgraph Phase 3: Diagram Generation
-        P3_start[Start Diagram Generation] --> P3_1[Generate Diagram Code (Mermaid/Graphviz rules)]
-        P3_1 --> P3_1_rules[Apply node/edge styling, labels, multiplicity]
-        P3_1_rules --> P3_2[Generate Legend]
-        P3_2 --> P3_3{Generate Cross-Reference Table?}
-        P3_3 -->|Decomposed diagrams?| P3_3_yes[Yes]
-        P3_3 -->|No| P4_start
-        P3_3_yes --> P4_start
-    end
-
-    Phase4[Phase 4: Verification]
-
-    subgraph Phase 4: Verification
-        P4_start[Start Verification] --> P4_1{Syntax Check?}
-        P4_1 -->|Syntax errors?| P4_return_P3[Return to Phase 3]
-        P4_1 -->|OK| P4_2{Renderability Check?}
-        P4_2 -->|Render issues (e.g., too many nodes, overlapping labels)?| P4_return_P1_4[Return to Phase 1.4: Decomposition]
-        P4_2 -->|OK| P4_3{Completeness Check?}
-        P4_3 -->|Not Complete (e.g., missing nodes/edges, unrepresented conditions)?| P4_return_P2[Return to Phase 2: Re-traverse]
-        P4_3 -->|Complete| End([End: Diagram Generated])
-        P4_return_P3 --> P3_1
-        P4_return_P1_4 --> P1_4
-        P4_return_P2 --> P2_1_algorithm
-    end
-
-    Start --> Phase1
-    Phase1 --> Phase2
-    Phase2 --> Phase3
-    Phase3 --> Phase4
-    Phase4 --> End
-
-    style Phase1 fill:#f0f8ff,stroke:#333,stroke-width:2px
-    style Phase2 fill:#f0f8ff,stroke:#333,stroke-width:2px
-    style Phase3 fill:#f0f8ff,stroke:#333,stroke-width:2px
-    style Phase4 fill:#f0f8ff,stroke:#333,stroke-width:2px
-    style P2_1_algorithm fill:#4a9eff,color:#fff
-    style P2_1_extract fill:#4a9eff,color:#fff
-    style P2_2 fill:#ff6b6b,color:#fff
-    style P4_1 fill:#ff6b6b,color:#fff
-    style P4_2 fill:#ff6b6b,color:#fff
-    style P4_3 fill:#ff6b6b,color:#fff
-```
-
 ## Skill Content
 
 ````markdown
@@ -445,20 +352,20 @@ digraph G {
 | "The completeness check takes too long" | Completeness check catches missing edges every time. 2 minutes to check vs. delivering wrong diagram. |
 | "I know this domain well enough to skip reading" | Source-grounded means reading, not remembering. Read or mark out-of-scope. |
 
-## Update Mode (Default)
+## Updating an Existing Diagram
 
-When updating existing diagrams (the default path), the system classifies source changes before deciding how to proceed:
+Classify the source change before you decide how much of the diagram to redo.
 
-### Tier 1: STAMP (Non-Structural)
-Changes that don't affect the workflow diagram are stamped as fresh without regeneration.
+### No change needed
+The diagram already describes the source correctly.
 - Adding/modifying XML tags (e.g., `<BEHAVIORAL_MODE>`, `<ROLE>`, `<CRITICAL>`)
 - Changing prose, descriptions, or explanations within existing steps
 - Fixing typos, rewording instructions
 - Adding/removing FORBIDDEN or REQUIRED items
 - Changing code examples within steps
 
-### Tier 2: PATCH (Surgical Update)
-Small structural changes trigger targeted edits to the existing diagram rather than full regeneration.
+### Patch (surgical update)
+Small structural changes warrant targeted edits rather than a full rebuild.
 - Adding or removing a single step within an existing phase
 - Renaming a phase or step
 - Adding a new quality gate
@@ -466,17 +373,14 @@ Small structural changes trigger targeted edits to the existing diagram rather t
 
 When patching, preserve ALL existing diagram structure, styling, and layout. Only modify the specific nodes, edges, or subgraphs affected by the change.
 
-### Tier 3: REGENERATE (Full)
+### Regenerate (full)
 Major structural changes fall through to the full 4-phase generation workflow above.
 - Adding or removing entire phases
 - Major reorganization of step ordering
 - Changing flow/branching logic
 - Adding new parallel tracks or decision points
 
-### Invocation
-- `generate_diagrams.py --interactive` uses smart classification by default
-- `generate_diagrams.py --force-regen` bypasses classification for full regeneration
-- On any classification or patching error, falls back to full regeneration automatically
+When classification is uncertain, regenerate. A wrong patch is harder to spot than a rebuilt diagram.
 
 <FORBIDDEN>
 - Placeholder nodes ("...", "etc.", "and more")

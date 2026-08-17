@@ -47,8 +47,8 @@
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
-  - [Skills (60 total)](#skills-60-total)
-  - [Commands (104 total)](#commands-104-total)
+  - [Skills (62 total)](#skills-62-total)
+  - [Commands (106 total)](#commands-106-total)
   - [Agents (16 total)](#agents-16-total)
 - [Creative Modes](#creative-modes)
 - [Platform Support](#platform-support)
@@ -183,7 +183,7 @@ Complete feature implementation, greenfield project creation, refactoring (with 
 
 ## What's Included
 
-### Skills (60 total)
+### Skills (62 total)
 
 Reusable workflows for structured development:
 
@@ -193,9 +193,9 @@ Reusable workflows for structured development:
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
 | **Autonomous Dev** | [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
-| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [shared-references], [tooling-discovery], [canvas], [canvas-decision], [dedupe], [estimating-tickets], [rounding-up-worktree-sessions] |
-| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [permissions-from-transcripts] |
-| **Session** | [fun-mode], [tarot-mode], [emotional-stakes], [session-mode-init], [session-resume], [audio-notifications], [agent2agent] |
+| **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [security-auditing], [generating-diagrams], [tooling-discovery], [dedupe], [estimating-tickets], [rounding-up-worktree-sessions] |
+| **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [writing-copy] |
+| **Session** | [emotional-stakes], [agent2agent] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -227,7 +227,6 @@ Reusable workflows for structured development:
 [managing-artifacts]: https://axiomantic.github.io/spellbook/latest/skills/managing-artifacts/
 [security-auditing]: https://axiomantic.github.io/spellbook/latest/skills/security-auditing/
 [generating-diagrams]: https://axiomantic.github.io/spellbook/latest/skills/generating-diagrams/
-[shared-references]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/
 [tooling-discovery]: https://axiomantic.github.io/spellbook/latest/skills/tooling-discovery/
 [estimating-tickets]: https://axiomantic.github.io/spellbook/latest/skills/estimating-tickets/
 [rounding-up-worktree-sessions]: https://axiomantic.github.io/spellbook/latest/skills/rounding-up-worktree-sessions/
@@ -244,21 +243,14 @@ Reusable workflows for structured development:
 [documenting-tools]: https://axiomantic.github.io/spellbook/latest/skills/documenting-tools/
 [documenting-projects]: https://axiomantic.github.io/spellbook/latest/skills/documenting-projects/
 [writing-commands]: https://axiomantic.github.io/spellbook/latest/skills/writing-commands/
+[writing-copy]: https://axiomantic.github.io/spellbook/latest/skills/writing-copy/
 [finishing-a-development-branch]: https://axiomantic.github.io/spellbook/latest/skills/finishing-a-development-branch/
-[fun-mode]: https://axiomantic.github.io/spellbook/latest/skills/fun-mode/
-[tarot-mode]: https://axiomantic.github.io/spellbook/latest/skills/tarot-mode/
 [emotional-stakes]: https://axiomantic.github.io/spellbook/latest/skills/emotional-stakes/
-[session-mode-init]: https://axiomantic.github.io/spellbook/latest/skills/session-mode-init/
-[session-resume]: https://axiomantic.github.io/spellbook/latest/skills/session-resume/
-[audio-notifications]: https://axiomantic.github.io/spellbook/latest/skills/audio-notifications/
 [testing-strategy]: https://axiomantic.github.io/spellbook/latest/skills/testing-strategy/
 [opportunity-awareness]: https://axiomantic.github.io/spellbook/latest/skills/opportunity-awareness/
 [branch-context]: https://axiomantic.github.io/spellbook/latest/skills/branch-context/
 [agent2agent]: https://axiomantic.github.io/spellbook/latest/skills/agent2agent/
-[canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
-[canvas-decision]: https://axiomantic.github.io/spellbook/latest/skills/canvas-decision/
 [dedupe]: https://axiomantic.github.io/spellbook/latest/skills/dedupe/
-[permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
 [gathering-requirements]: https://axiomantic.github.io/spellbook/latest/skills/gathering-requirements/
@@ -271,16 +263,12 @@ Reusable workflows for structured development:
 [fractal-thinking]: https://axiomantic.github.io/spellbook/latest/skills/fractal-thinking/
 [cove-protocol]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/cove-protocol/
 [decompose-claims]: https://axiomantic.github.io/spellbook/latest/commands/decompose-claims/
-[agent2agent]: https://axiomantic.github.io/spellbook/latest/skills/agent2agent/
-[canvas]: https://axiomantic.github.io/spellbook/latest/skills/canvas/
-[permissions-from-transcripts]: https://axiomantic.github.io/spellbook/latest/skills/permissions-from-transcripts/
 
-### Commands (104 total)
+### Commands (106 total)
 
 | Command | Description |
 |---------|-------------|
 | [/a2a] | Inter-session agent messaging bus (open inbox, send, check, reply) |
-| [/canvas] | Open, write to, list, or close a browser-rendered presentation surface |
 | [/create-issue] | Create a GitHub issue with proper template discovery and population |
 | [/create-pr] | Create a pull request with proper template discovery and population |
 | [/crystallize] | Transform SOPs into agentic CoT prompts |
@@ -334,7 +322,6 @@ Reusable workflows for structured development:
 | [/estimate-buffer] | PERT three-point estimation + Brooks's Law resource scaling |
 | [/estimate-report] | Produce the final structured estimation report |
 | [/merge-work-packets] | Merge completed packets with QA gates |
-| [/mode] | Switch session mode (fun/tarot/off) |
 | [/pr-dance] | Loop PR through CI + bot review until merge-ready |
 | [/pr-distill] | Analyze PR, categorize changes by review necessity |
 | [/pr-distill-bless] | Save discovered pattern for future distillations |
@@ -366,8 +353,6 @@ Reusable workflows for structured development:
 | [/request-review-plan] | Review planning and scope analysis |
 | [/request-review-execute] | Execute review with checklists |
 | [/request-review-artifacts] | Generate review artifacts and reports |
-| [/encyclopedia-build] | *(deprecated)* Research, build, and write encyclopedia |
-| [/encyclopedia-validate] | *(deprecated)* Validate encyclopedia accuracy |
 | [/merge-worktree-execute] | Execute worktree merge sequence |
 | [/merge-worktree-resolve] | Resolve merge conflicts |
 | [/merge-worktree-verify] | Verify merge and cleanup |
@@ -393,7 +378,6 @@ Reusable workflows for structured development:
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
 [/a2a]: https://axiomantic.github.io/spellbook/latest/commands/a2a/
-[/canvas]: https://axiomantic.github.io/spellbook/latest/commands/canvas/
 [/create-issue]: https://axiomantic.github.io/spellbook/latest/commands/create-issue/
 [/create-pr]: https://axiomantic.github.io/spellbook/latest/commands/create-pr/
 [/crystallize]: https://axiomantic.github.io/spellbook/latest/commands/crystallize/
@@ -446,7 +430,6 @@ Reusable workflows for structured development:
 [/estimate-report]: https://axiomantic.github.io/spellbook/latest/commands/estimate-report/
 [/execute-work-packets-seq]: https://axiomantic.github.io/spellbook/latest/commands/execute-work-packets-seq/
 [/merge-work-packets]: https://axiomantic.github.io/spellbook/latest/commands/merge-work-packets/
-[/mode]: https://axiomantic.github.io/spellbook/latest/commands/mode/
 [/pr-dance]: https://axiomantic.github.io/spellbook/latest/commands/pr-dance/
 [/pr-distill]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill/
 [/pr-distill-bless]: https://axiomantic.github.io/spellbook/latest/commands/pr-distill-bless/
@@ -478,8 +461,6 @@ Reusable workflows for structured development:
 [/request-review-plan]: https://axiomantic.github.io/spellbook/latest/commands/request-review-plan/
 [/request-review-execute]: https://axiomantic.github.io/spellbook/latest/commands/request-review-execute/
 [/request-review-artifacts]: https://axiomantic.github.io/spellbook/latest/commands/request-review-artifacts/
-[/encyclopedia-build]: https://axiomantic.github.io/spellbook/latest/commands/encyclopedia-build/
-[/encyclopedia-validate]: https://axiomantic.github.io/spellbook/latest/commands/encyclopedia-validate/
 [/merge-worktree-execute]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-execute/
 [/merge-worktree-resolve]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-resolve/
 [/merge-worktree-verify]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-verify/
@@ -501,9 +482,6 @@ Reusable workflows for structured development:
 [/sharpen-audit]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-audit/
 [/sharpen-improve]: https://axiomantic.github.io/spellbook/latest/commands/sharpen-improve/
 [/write-readme]: https://axiomantic.github.io/spellbook/latest/commands/write-readme/
-[/a2a]: https://axiomantic.github.io/spellbook/latest/commands/a2a/
-[/canvas]: https://axiomantic.github.io/spellbook/latest/commands/canvas/
-[/crystallize-consolidate]: https://axiomantic.github.io/spellbook/latest/commands/crystallize-consolidate/
 
 ### Agents (16 total)
 

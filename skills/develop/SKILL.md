@@ -50,14 +50,8 @@ When operating in YOLO mode or when user selected "Fully autonomous":
   it does not spawn parallel sessions.)
 - **APPROVAL GATES (2.3, 3.3) ARE NEVER AUTO-PROCEEDED.** Even in
   full autonomous mode, design and plan approval gates require explicit
-  artifact verification before continuation. The *surface* of these gates
-  honors `SESSION_PREFERENCES.decision_surface`: under `terminal` (default)
-  the gate uses `AskUserQuestion` as today; under `canvas`, the gate's
-  `AskUserQuestion` is replaced by the `canvas-decision` skill for forks that
-  meet the boundary in the "When to Use (testable boundary)" section of the
-  canvas-decision skill (context-heavy design/plan approval). The
-  never-auto-proceed contract is UNCHANGED by either surface — `canvas` still
-  awaits an explicit operator decision; quick yes/no acks stay terminal.
+  artifact verification before continuation. These gates are presented via
+  `AskUserQuestion` and always await an explicit operator decision.
   Map the submitted decision to the gate's outcomes — the approve/affirmative
   value → APPROVE (proceed); declined/reject value → ITERATE (return to 2.1/2.2
   [resp. 3.1/3.2]); a cancelled or never-answered decision HOLDS the gate
@@ -1256,7 +1250,7 @@ Phase 2: Design (if needs_design; needs_infrastructure implies needs_design; ski
   ├─ 2.1: Subagent invokes design-exploration (SYNTHESIS MODE)
   ├─ 2.1.5: Checkability pass (mechanize decidable claims before the review gate)
   ├─ 2.2: Subagent invokes reviewing-design-docs
-  ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous); surface honors decision_surface (terminal AskUserQuestion | canvas-decision for forks qualifying under the "When to Use (testable boundary)" section of the canvas-decision skill)
+  ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous); presented via AskUserQuestion
   ├─ 2.4: Subagent invokes executing-plans to fix
   └─ 2.5: Assumption Verification
     ↓
@@ -1264,7 +1258,7 @@ Phase 3: Implementation Planning (if needs_design OR needs_infrastructure; skip 
   ├─ 3.1: Subagent invokes writing-plans
   ├─ 3.1.5: Checkability pass (mechanize decidable claims; build plan-specified tooling FIRST)
   ├─ 3.2: Subagent invokes reviewing-impl-plans
-  ├─ 3.3: GATE: User approval per mode; surface honors decision_surface (terminal AskUserQuestion | canvas-decision for forks qualifying under the "When to Use (testable boundary)" section of the canvas-decision skill)
+  ├─ 3.3: GATE: User approval per mode; presented via AskUserQuestion
   ├─ 3.4: Subagent invokes executing-plans to fix
   └─ 3.4.5: Execution mode analysis (direct vs delegated, by parallelization preference + size_estimate)
     ↓
@@ -1551,10 +1545,10 @@ interface DesignContext {
 
 <CRITICAL>
 A change must never silently skip ALL review just because it carries no flags.
-The review floor is **always-on but TIERED** (design §3). The exact gate set is
-derived by `spellbook/sessions/develop_gates.py::derive_remaining_gates`; the
-tables below (design §3.2 floor, §3.3 flag-gated depth) are the SINGLE SOURCE OF
-TRUTH and are referenced here, not restated row-by-row.
+The review floor is **always-on but TIERED** (design §3). The tables in this
+section (design §3.2 floor, §3.3 flag-gated depth) are the SINGLE SOURCE OF
+TRUTH for the gate set; there is no executable derivation helper, so develop
+itself applies these tables and records the result in the ledger.
 </CRITICAL>
 
 - **Full floor (any flagged path):** TDD-first (4.3) + code review (4.5) +
@@ -1827,10 +1821,11 @@ and binding every declaration to it (see Pre-Dispatch Ritual above).
   code review, green-mirage, the conditional test run, TDD-first for behavioral
   changes, and the Iron Law were not options that happened to be selected.
 - **`remaining_gates` stays the run-queue** and is derived exactly as today from
-  `derive_remaining_gates(need_flags, current_phase, tests_exist, completed_gates)`,
-  then filtered by removing anything in `ceremony.declined`. When `declined` is empty
+  the Tiered Review Floor tables applied to
+  (`need_flags`, `current_phase`, `tests_exist`, `completed_gates`), then filtered
+  by removing anything in `ceremony.declined`. When `declined` is empty
   — the default path — the filter is the identity function and `remaining_gates` is
-  byte-identical to today's scalar. The helper itself is UNCHANGED.
+  byte-identical to today's scalar. The derivation itself is UNCHANGED.
 - **Escalation only.** `ceremony.promotions` records every declined → selected move
   with its reason; there is no recorded form for the reverse move because the reverse
   move is forbidden. Scope drift (Re-Flag and Continue) may set a need-flag and thereby
@@ -1843,23 +1838,20 @@ FULL scalar on each transition; the merge replaces it wholesale (CRIT-1, design 
 `current_phase` uses the literal `"fast-path"` for the zero-flag path (NOT
 `"direct"`, NOT an auto-exit sentinel — develop stays resident).
 
-**Deriving `remaining_gates`:** develop computes the scalar with the pure helper
-`spellbook/sessions/develop_gates.py`:
-
-```
-derive_remaining_gates(need_flags, current_phase, tests_exist, completed_gates=()) -> str
-```
-
-It encodes the tiered floor (design §3.2), flag-gated depth (§3.3), the TDD-first
-waiver on the fast path (§3.4), and phase ordering (§2.1) — those tables are the
-single source of truth; this helper is their single executable form. `tests_exist`
-is computed by **develop itself** from its touched-file analysis (do existing tests
-cover the files about to be edited?) and passed in; the helper is pure (no DB, no
-I/O) and trusts the boolean. On the fast path with no covering tests the helper
-emits the explicit sentinel line `"test suite (n/a — no tests cover touched code)"`
-inside the scalar so "not applicable" is never silently dropped. As each gate
-completes, re-derive with that gate in `completed_gates` (pruning = REPLACE the
-scalar with it removed).
+**Deriving `remaining_gates`:** develop computes the scalar itself from four
+inputs — `need_flags`, `current_phase`, `tests_exist`, `completed_gates` —
+against the tiered floor (design §3.2), flag-gated depth (§3.3), the TDD-first
+waiver on the fast path (§3.4), and phase ordering (§2.1). **Those tables are the
+single source of truth and they have no executable form**: nothing in this repo
+derives the gate set, so a mis-derivation fails silently and only a reader of the
+ledger will catch it. `tests_exist` is develop's own judgement from its
+touched-file analysis (do existing tests cover the files about to be edited?). On
+the fast path with no covering tests, emit the explicit sentinel line
+`"test suite (n/a — no tests cover touched code)"` inside the scalar so "not
+applicable" is never silently dropped. As each gate completes, re-derive with
+that gate in `completed_gates` (pruning = REPLACE the scalar with it removed).
+`scripts/develop_gate_ledger.py` RECORDS the derived scalar; it does not compute
+it.
 
 **Transition points where develop writes (design §5.4):**
 
@@ -1879,7 +1871,7 @@ scalar with it removed).
    Re-derive `remaining_gates` as the full scalar with completed gates pruned —
    REPLACE the whole value, never append (CRIT-1).
 4. **At fast-path entry (zero flags):** `current_phase="fast-path"`,
-   `remaining_gates` = the lighter-floor scalar from `derive_remaining_gates`
+   `remaining_gates` = the lighter-floor scalar from the same derivation
    (`"code review\ngreen-mirage"` plus `"test suite"` when `tests_exist`, else the
    n/a sentinel; TDD-first omitted per the §3.4 waiver). develop STAYS RESIDENT.
 

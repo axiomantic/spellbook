@@ -1,9 +1,11 @@
-# Spellbook Bash Security Policy (Claude + Gemini)
-# Install location (Gemini): ~/.gemini/policies/spellbook-security.toml
-# Loaded directly (Claude): merged into spellbook.gates.rules at import time.
+# Spellbook Bash Security Policy
 #
-# This policy file defines bash command security rules shared across both
-# the Gemini CLI policy engine and Claude's hook-based gate (gates/rules.py).
+# Consumed by the installer, which copies this file to each platform's policy
+# directory. No spellbook code reads it at runtime; the platform's own policy
+# engine evaluates it.
+#   Gemini CLI:  ~/.gemini/policies/spellbook-security.toml
+#   Antigravity: ~/.gemini/antigravity/policies/spellbook-security.toml
+#
 # Rules use TOML [[rules]] arrays with fields:
 #   id            - unique rule identifier (SB-BASH-NNN)
 #   toolName      - tool to match (e.g., "Bash")
@@ -125,10 +127,10 @@ deny_message = "Blocked: netcat listener or reverse shell"
 # SB-BASH-007 (ssh/scp/rsync remote transfer) INTENTIONALLY DISABLED by operator
 # decision (2026-06-08). This machine routinely SSHes/SCPs to its own LAN devices
 # (GL.iNet routers, etc.), for which this rule is a false-positive hard-block.
-# Left commented on purpose — do NOT "fix" by re-enabling. Paired with EXF-005 in
-# spellbook/gates/rules.py (also commented): both match ssh/scp/rsync, so BOTH
-# must stay commented for that traffic to pass. To restore protection, uncomment
-# this rule AND EXF-005.
+# Left commented on purpose — do NOT "fix" by re-enabling. It was once paired
+# with a rule in a spellbook-side scanner that no longer exists, so this file is
+# now the only place that would block that traffic. To restore protection,
+# uncomment this rule.
 # [[rules]]
 # id = "SB-BASH-007"
 # toolName = "Bash"

@@ -1,6 +1,6 @@
 ---
 name: estimating-tickets
-description: Algorithmically estimate engineering tickets, JIRA cards, test cards, or feature requests. Produces well-scoped, AI-productivity-adjusted, PERT-buffered estimates with 80/90/95% confidence intervals for single and multi-engineer execution. Triggers - "estimate this ticket", "estimate this card", "estimate this test card", "size this", "story point this", "/estimate", "how long will this take", "T-shirt this", "point this story", "planning poker", "PERT estimate", "give me a timeline", "scope this work".
+description: Algorithmically estimate engineering tickets, JIRA cards, test cards, or feature requests. Produces well-scoped, AI-productivity-adjusted, PERT-buffered estimates with 80/90/95% confidence intervals for single and multi-engineer execution. Triggers - "estimate this ticket", "estimate this card", "size this", "story point this", "/estimate", "how long will this take", "T-shirt this", "planning poker", "PERT estimate", "give me a timeline", "scope this work".
 ---
 
 <ROLE>

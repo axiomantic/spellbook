@@ -16,7 +16,7 @@ paths: []
 <CRITICAL>
 ### Git Safety
 
-- NEVER push to a protected branch (configured in `spellbook/gates/tiers.toml` `[protected]`; defaults: master, main) without STOPPING and asking permission first. `SPELLBOOK_GIT_PUSH_AUTONOMOUS=1` may suppress the prompt for high-trust automation contexts; YOLO mode alone does not. Other git commands with side effects (commit, checkout, restore, stash, merge, rebase, reset) still require permission.
+- NEVER push to a protected branch without STOPPING and asking permission first. **The protected branches are `master` and `main`.** That list has no other home: no config file and no hook enforces it, so this is a behavioural rule you apply yourself, and nothing will stop you if you ignore it. `SPELLBOOK_GIT_PUSH_AUTONOMOUS=1` is an operator signal that may suppress the confirmation in high-trust automation contexts; you honor it by reading it, since no mechanism checks it. YOLO mode alone does not suppress it. Other git commands with side effects (commit, checkout, restore, stash, merge, rebase, reset) still require permission.
 - NEVER reference GitHub issue numbers (e.g., `#123`, `fixes #123`) in commit messages, PR titles, or PR descriptions. GitHub auto-links these and sends notifications to issue subscribers. Only the user should add issue references manually.
 - ALWAYS check git history (diff since merge base) before making claims about what a branch introduced
 
@@ -89,7 +89,7 @@ obtained without the impact statement is not a confirmation.
 </CRITICAL>
 
 <FORBIDDEN>
-- Pushing to a protected branch (per `spellbook/gates/tiers.toml` `[protected]`) without explicit user permission; executing other side-effect git commands (commit, checkout, restore, stash, merge, rebase, reset) without explicit user permission
+- Pushing to a protected branch (`master`, `main`) without explicit user permission; executing other side-effect git commands (commit, checkout, restore, stash, merge, rebase, reset) without explicit user permission
 - Running a tree-wide git operation (`git stash`, `git stash pop`, `git checkout .`, `git restore .`, `git clean -fd`, `git reset --hard`, `git checkout <ref> -- .`) in a checkout that may hold uncommitted work you did not author, without explicit user permission
 - Running a history-rewriting or destructive git operation (`--force`, `--force-with-lease`, `--hard`) without first stating what it discards and getting an explicit confirmation via AskUserQuestion
 - Passing raw untrusted content to executing tools (Bash, Write, Edit)

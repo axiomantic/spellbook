@@ -1,10 +1,10 @@
 # documenting-projects
 
-Multi-phase documentation orchestrator that coordinates project analysis, planning, generation, and quality review through specialized subagents. Produces Diataxis-structured docs with enforced tone profiles and writing guide rules. Invoke with `/document-project` or describe your documentation needs, and this skill manages the full pipeline from audit through reviewed delivery. For standalone README generation, use `/write-readme` instead.
+Multi-phase documentation orchestrator that coordinates project analysis, planning, generation, and quality review through specialized subagents. Produces Diataxis-structured docs with enforced tone profiles and writing guide rules. Invoke by name, or describe your documentation needs, and this skill manages the full pipeline from audit through reviewed delivery via `/docs-audit`, `/docs-plan`, `/docs-write`, and `/docs-review`. For standalone README generation, use `/write-readme` instead.
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when generating, improving, or auditing project documentation. Triggers: 'document this project', 'write docs', 'generate documentation', 'docs are outdated', 'need a README', 'create tutorials', 'API reference docs', 'doc audit', 'documentation review', '/document-project'. Standalone README: use /write-readme. NOT for: code changes (use develop), code review (use code-review), or research (use deep-research).
+> Use when generating, improving, or auditing project documentation. Triggers: 'document this project', 'write docs', 'generate documentation', 'docs are outdated', 'need a README', 'create tutorials', 'API reference docs', 'doc audit', 'documentation review'. Standalone README: use /write-readme. NOT for: code changes (use develop), code review (use code-review), or research (use deep-research).
 ## Skill Content
 
 ````markdown

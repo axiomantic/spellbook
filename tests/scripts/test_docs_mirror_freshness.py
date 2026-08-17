@@ -110,6 +110,86 @@ def test_check_writes_nothing_against_a_stale_tree(tmp_path):
     assert "Stale or missing generated page(s)" in result.stdout
 
 
+def test_check_reports_orphan_pages_and_writes_nothing(tmp_path):
+    """A page whose source is gone must be reported, not silently kept.
+
+    The generator only ever wrote pages, so deleting a skill left its
+    page in docs/ forever. --check was blind to it by construction: it
+    compared rendered pages against disk and never asked the reverse
+    question.
+    """
+    root = _scratch_repo(tmp_path)
+    docs = root / "docs"
+    orphan = docs / "skills" / "ghost-skill.md"
+    orphan.write_text("# ghost\n", encoding="utf-8")
+
+    before = _snapshot(docs)
+    result = subprocess.run(
+        [sys.executable, str(root / "scripts" / "generate_docs.py"), "--check"],
+        capture_output=True,
+        text=True,
+        cwd=str(root),
+        timeout=300,
+    )
+    after = _snapshot(docs)
+
+    assert after == before, "--check removed an orphan; it must only read"
+    assert result.returncode == 1, (
+        f"--check must report an orphan page as failure\n{result.stdout}{result.stderr}"
+    )
+    assert "skills/ghost-skill.md" in result.stdout, result.stdout
+
+
+def test_write_run_prunes_orphans_but_keeps_hand_authored_pages(tmp_path):
+    """Pruning is confined to the generated subtrees.
+
+    docs/ also holds hand-authored pages. docs/skills/index.md sits
+    INSIDE a generated subtree and is not generated, so a prune keyed
+    only on "not produced by this run" would delete real documentation.
+    """
+    root = _scratch_repo(tmp_path)
+    docs = root / "docs"
+    orphans = [
+        docs / "skills" / "ghost-skill.md",
+        docs / "commands" / "ghost-command.md",
+        docs / "agents" / "ghost-agent.md",
+        docs / "rules" / "99-ghost.md",
+    ]
+    for path in orphans:
+        path.write_text("# ghost\n", encoding="utf-8")
+
+    survivors = [
+        docs / "skills" / "index.md",
+        docs / "windows-support-report.md",
+        docs / "index.md",
+    ]
+    for path in survivors:
+        assert path.exists(), f"fixture expects {path} to exist in the source tree"
+
+    result = subprocess.run(
+        [sys.executable, str(root / "scripts" / "generate_docs.py")],
+        capture_output=True,
+        text=True,
+        cwd=str(root),
+        timeout=300,
+    )
+
+    assert result.returncode == 0, f"{result.stdout}{result.stderr}"
+    for path in orphans:
+        assert not path.exists(), f"orphan survived the prune: {path}"
+    for path in survivors:
+        assert path.exists(), f"prune deleted a hand-authored page: {path}"
+
+    recheck = subprocess.run(
+        [sys.executable, str(root / "scripts" / "generate_docs.py"), "--check"],
+        capture_output=True,
+        text=True,
+        cwd=str(root),
+        timeout=300,
+    )
+    assert recheck.returncode == 0, f"{recheck.stdout}{recheck.stderr}"
+
+
 def test_check_mode_reports_staleness_and_help_writes_nothing():
     """--help must not regenerate anything.
 

@@ -1,7 +1,7 @@
 ---
 name: smart-reading
 version: 1.0.0
-description: "Behavioral protocol for reading files or command output of unknown size. Load it before reading anything whose size you have not checked; the always-loaded file-reading rule module carries the one-line rule and points here for the full protocol. Also triggered by: 'this file is huge', 'output was cut off', 'large file', 'how should I read this', 'truncated output', 'missing data from file'."
+description: "Full protocol for reading files or command output of unknown size: measure before reading, never truncate blindly, delegate large reads. Loaded by the file-reading rule module, which carries the one-line rule and points here."
 ---
 
 <ROLE>

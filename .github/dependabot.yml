@@ -9,19 +9,6 @@ updates:
     labels:
       - "dependencies"
 
-  # Python dependencies (daemon lockfiles)
-  - package-ecosystem: "pip"
-    directory: "/daemon"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-    groups:
-      daemon-core:
-        patterns:
-          - "*"
-
   # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -31,15 +18,6 @@ updates:
     labels:
       - "dependencies"
       - "ci"
-
-  # Go modules (mcp-language-server)
-  - package-ecosystem: "gomod"
-    directory: "/mcp-language-server"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
 
   # Docker (tests)
   - package-ecosystem: "docker"
@@ -62,44 +40,9 @@ updates:
 
   # Node - OpenCode extensions
   - package-ecosystem: "npm"
-    directory: "/extensions/opencode/spellbook-forged"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-
-  - package-ecosystem: "npm"
-    directory: "/extensions/opencode/spellbook-workflow-state"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-
-  - package-ecosystem: "npm"
     directory: "/extensions/opencode/context-curator"
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 5
     labels:
       - "dependencies"
-
-  # Node - Admin frontend
-  - package-ecosystem: "npm"
-    directory: "/spellbook_mcp/admin/frontend"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "admin"
-
-  - package-ecosystem: "npm"
-    directory: "/spellbook/admin/frontend"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
-      - "admin"

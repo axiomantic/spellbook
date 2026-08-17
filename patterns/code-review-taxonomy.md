@@ -5,9 +5,10 @@
 ## Severity Levels
 
 <CRITICAL>
-Severity names are **UPPERCASE tokens**, not prose. The consumers that gate
-merges (`SEVERITY_ORDER` in `/advanced-code-review-report`, `determine_verdict`,
-and `spellbook.code_review.models.Severity`) match on the exact token. Emitting
+Severity names are **UPPERCASE tokens**, not prose. This file is the definition;
+no code declares the vocabulary. The consumers that gate merges (`SEVERITY_ORDER`
+and `determine_verdict` in `/advanced-code-review-report`) match on the exact
+token, and nothing validates a token you invent. Emitting
 `Critical` in Title Case matched no branch of the old gate and fell through to
 APPROVE — a blocking finding merged under "No blocking issues found."
 

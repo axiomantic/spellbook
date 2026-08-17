@@ -1,6 +1,6 @@
 ---
 name: dispatching-parallel-agents
-description: "Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'run these at the same time', 'split this up', 'do both at once', 'dispatch template', 'context minimization'."
+description: "Subagent dispatch: decision heuristics, dispatch templates, model-tier selection, context minimization. Loaded by the orchestration rule module. Triggers: 'should I use a subagent', 'parallelize', 'run these at the same time'."
 ---
 
 # Dispatching Parallel Agents

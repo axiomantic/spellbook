@@ -5,17 +5,12 @@ import os from 'node:os';
 
 import { runSecurityCheck, getCheckCommand } from '../../hooks/opencode-plugin.ts';
 
-// The plugin shells out to a gate module. Two failure shapes reach the same
-// catch block and must NOT be treated the same way:
+// Spellbook ships no gate. The check command comes from SPELLBOOK_GATE_CMD:
 //
-//   - the gate RAN and errored  -> block. A security check that cannot finish
-//     is not a security check that passed.
-//   - the gate IS NOT INSTALLED -> allow. Blocking here bricks every Bash call
-//     on OpenCode for a policy that does not exist to have an opinion.
-//
-// Python reports the second as ModuleNotFoundError naming the gate package
-// itself. A ModuleNotFoundError naming anything ELSE means the gate is present
-// and its dependencies are broken -- that is the first case, and it blocks.
+//   - unset     -> allow, without spawning a process. There is no policy to
+//     enforce and nothing to fail closed on behalf of.
+//   - set       -> the gate must produce a verdict. Missing, crashed, or timed
+//     out all mean no verdict, and no verdict blocks.
 
 let dir: string;
 
@@ -35,13 +30,33 @@ afterEach(() => {
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-describe('runSecurityCheck', () => {
-  it('allows when the gate module is not installed', () => {
-    // The real, default command. This repo ships no spellbook.gates package,
-    // so this is the exact condition every OpenCode user hits today.
-    const result = runSecurityCheck(PAYLOAD, [], getCheckCommand());
+describe('getCheckCommand', () => {
+  it('reports no gate when SPELLBOOK_GATE_CMD is unset', () => {
+    delete process.env.SPELLBOOK_GATE_CMD;
 
-    expect(result.safe).toBe(true);
+    expect(getCheckCommand()).toBeNull();
+  });
+
+  it('returns the operator-supplied command', () => {
+    process.env.SPELLBOOK_GATE_CMD = 'python3 -m my_gate';
+
+    expect(getCheckCommand()).toBe('python3 -m my_gate');
+
+    delete process.env.SPELLBOOK_GATE_CMD;
+  });
+});
+
+describe('runSecurityCheck', () => {
+  it('allows without spawning anything when no gate is configured', () => {
+    delete process.env.SPELLBOOK_GATE_CMD;
+
+    expect(runSecurityCheck(PAYLOAD).safe).toBe(true);
+  });
+
+  it('blocks when a configured gate is not installed', () => {
+    const cmd = 'python3 -m spellbook_gate_that_is_not_installed_xyz';
+
+    expect(runSecurityCheck(PAYLOAD, [], cmd).safe).toBe(false);
   });
 
   it('blocks when the gate ran and crashed', () => {
@@ -50,8 +65,7 @@ describe('runSecurityCheck', () => {
     expect(runSecurityCheck(PAYLOAD, [], cmd).safe).toBe(false);
   });
 
-  it('blocks when the gate is present but its dependency is missing', () => {
-    // Not the same as an absent gate: a policy exists, it just cannot load.
+  it('blocks when the gate loads but its dependency is missing', () => {
     const cmd = script('import spellbook_gate_missing_dependency_xyz\n');
 
     expect(runSecurityCheck(PAYLOAD, [], cmd).safe).toBe(false);

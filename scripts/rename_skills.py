@@ -256,9 +256,7 @@ def discover_file_renames(old_kebab: str, new_kebab: str) -> list[RenameOp]:
     Checks:
       - skills/<old>/ directory
       - docs/skills/<old>.md
-      - docs/diagrams/skills/<old>.md
       - docs/commands/<old>-*.md (sub-commands)
-      - docs/diagrams/commands/<old>-*.md
       - commands/<old>-*.md
       - tests/ files with snake_case in the name
       - spellbook/ directories with snake_case name
@@ -273,14 +271,14 @@ def discover_file_renames(old_kebab: str, new_kebab: str) -> list[RenameOp]:
         ops.append(RenameOp(skill_dir, REPO_ROOT / "skills" / new_kebab))
 
     # --- Doc files ---
-    for doc_dir in ["docs/skills", "docs/diagrams/skills"]:
+    for doc_dir in ["docs/skills"]:
         doc_file = REPO_ROOT / doc_dir / f"{old_kebab}.md"
         if doc_file.exists():
             ops.append(RenameOp(doc_file, REPO_ROOT / doc_dir / f"{new_kebab}.md"))
 
     # --- Command files and their docs (prefix match) ---
     # e.g. commands/code-review-give.md, commands/advanced-code-review-verify.md
-    for cmd_dir in ["commands", "docs/commands", "docs/diagrams/commands"]:
+    for cmd_dir in ["commands", "docs/commands"]:
         cmd_root = REPO_ROOT / cmd_dir
         if not cmd_root.is_dir():
             continue
@@ -301,7 +299,7 @@ def discover_file_renames(old_kebab: str, new_kebab: str) -> list[RenameOp]:
                 )
 
     # --- Agent files ---
-    for agent_dir in ["agents", "docs/agents", "docs/diagrams/agents"]:
+    for agent_dir in ["agents", "docs/agents"]:
         agent_root = REPO_ROOT / agent_dir
         if not agent_root.is_dir():
             continue
