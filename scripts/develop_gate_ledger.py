@@ -44,7 +44,10 @@ key and leaves the siblings alone.
 Two fields inside those maps are still lists (``open_rows``,
 ``open_findings``), and that is correct: they describe the state at one
 check and must be able to SHRINK as rows close, the same reason
-``remaining_gates`` is a newline-joined scalar.
+``remaining_gates`` is a newline-joined scalar. Both recorders therefore
+write their list on EVERY status, empty included -- an omitted key cannot
+shrink anything, so a passing re-record would inherit the prior failure's
+entries and report a passed gate that still lists open work.
 
 Deletion is never part of the contract -- ``_deep_merge`` has no delete.
 Anything that must "go away" is expressed as a field instead: a closed
@@ -365,6 +368,18 @@ def set_ceremony_field(
     rewritten once set (skill CRIT-2). ``set_ceremony_field`` honors
     that rule -- a re-set of ``locked_at`` to a different value is
     rejected, matching the skill's "the lock is a floor" semantics.
+
+    ``gate_position`` is locked by the same stamp. The skill's ledger
+    shape says it is "locked with the rest of ceremony at locked_at;
+    never changed mid-run", so once ``locked_at`` is set, changing an
+    already-recorded ``gate_position`` is refused; ``archive_ceremony``
+    remains the sanctioned path. Re-asserting the SAME value is allowed,
+    and a first write after the lock is allowed -- the guard refuses a
+    reposition, not the recording of the original selection.
+
+    Other ceremony fields stay writable after the lock on purpose:
+    ``selected`` and ``promotions`` must accept escalation, which the
+    skill permits mid-run ("the lock is a floor, not a ceiling").
     """
     if name not in CEREMONY_FIELDS:
         raise ValueError(
@@ -384,6 +399,20 @@ def set_ceremony_field(
             f"refusing to rewrite ceremony.locked_at: existing={existing_locked!r} "
             f"new={value!r}. The lock is set once and never rewritten."
         )
+    # gate_position is locked WITH the ceremony, not merely alongside it:
+    # repositioning after the lock takes the same ABORT-and-re-invoke path
+    # as any other ceremony change. Guarding only locked_at would leave the
+    # documented lock unenforced for the one field a mid-run session has a
+    # motive to change.
+    if name == "gate_position" and existing_locked:
+        existing_position = current.get("ceremony", {}).get("gate_position")
+        if existing_position and existing_position != value:
+            raise LedgerError(
+                f"refusing to rewrite ceremony.gate_position after the lock: "
+                f"existing={existing_position!r} new={value!r} "
+                f"(locked_at={existing_locked!r}). Repositioning mid-run is not "
+                "a thing: archive-ceremony and re-select in a fresh Phase 0."
+            )
     return write_ledger({"ceremony": {name: value}}, path=path)
 
 
@@ -491,8 +520,12 @@ def record_wave_discipline(
         entry["timestamp"] = timestamp
     if reason and reason.strip():
         entry["reason"] = reason.strip()
-    if status == "failed":
-        entry["open_rows"] = open_rows_list
+    # Written UNCONDITIONALLY, empty on passed/n_a. Omitting the key on a
+    # passing re-record would leave the previous failure's rows behind --
+    # _deep_merge has no delete, so only a list REPLACEMENT can shrink it,
+    # and the docstring's "must be able to SHRINK as rows close" contract
+    # is exactly what an omitted key breaks.
+    entry["open_rows"] = open_rows_list
     return write_ledger({"waves": {wave_id: {"section_24_6_check": entry}}}, path=path)
 
 
@@ -595,8 +628,10 @@ def record_group_gate(
         entry["gates"] = gate_list
     if timestamp:
         entry["timestamp"] = timestamp
-    if status == "failed":
-        entry["open_findings"] = findings
+    # Unconditional, empty on passed/n_a -- see record_wave_discipline. A
+    # gate recorded as passed while still listing open findings is the
+    # false-pass this recorder exists to close.
+    entry["open_findings"] = findings
     return write_ledger({"groups": {group_id: {"gate_stack": entry}}}, path=path)
 
 

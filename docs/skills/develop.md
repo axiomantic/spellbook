@@ -1808,7 +1808,8 @@ do not do it. The CLI surface is intentionally narrow:
 
 - `python3 scripts/develop_gate_ledger.py show [--field ceremony.locked_at]`
 - `python3 scripts/develop_gate_ledger.py set <field> <value>` (top-level or `ceremony.*`,
-  including `set ceremony.gate_position per_task|per_group`)
+  including `set ceremony.gate_position per_task|per_group` — refused once `locked_at`
+  is set and a different position is already recorded; use `archive-ceremony` to reposition)
 - `python3 scripts/develop_gate_ledger.py wave-discipline <wave_id> --status {passed|failed|n_a} [--open-rows W3a-2,W3a-5] [--timestamp ISO]`
 - `python3 scripts/develop_gate_ledger.py archive-ceremony --reason "<text>" [--timestamp ISO]`
 - `python3 scripts/develop_gate_ledger.py blocker <id> --type decision|work|external [--description "<text>"] [--close]`

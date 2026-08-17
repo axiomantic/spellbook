@@ -184,6 +184,55 @@ def test_set_ceremony_gate_position_rejects_invalid_value(tmp_ledger):
     assert "gate_position" not in ledger.read_ledger().get("ceremony", {})
 
 
+def test_set_ceremony_gate_position_rewrite_after_lock_refused(tmp_ledger):
+    """gate_position is locked WITH the rest of ceremony at locked_at.
+
+    The skill's ledger shape says "Locked with the rest of ceremony at
+    locked_at; never changed mid-run", and 40-develop-discipline.md says
+    changing gate position after the lock requires the same
+    ABORT-and-re-invoke path as any other ceremony change. A guard that
+    only covers locked_at leaves repositioning as a silent mid-run edit.
+    """
+    ledger.set_ceremony_field("gate_position", "per_task")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to rewrite"):
+        ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_task"
+
+
+def test_set_ceremony_gate_position_same_value_after_lock_succeeds(tmp_ledger):
+    """Idempotent re-assertion is not a change -- a resumed session
+    re-writing the value it already holds must not be punished, matching
+    the locked_at guard's own same-value allowance.
+    """
+    ledger.set_ceremony_field("gate_position", "per_group")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
+
+
+def test_set_ceremony_gate_position_first_write_after_lock_succeeds(tmp_ledger):
+    """The guard refuses a REWRITE, not a first write. A ceremony locked
+    without an explicit gate_position defaults to per_task by documentation,
+    not by a stored value, so writing the field once afterwards is still the
+    original selection being recorded -- not a mid-run reposition.
+    """
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
+
+
+def test_gate_position_writable_again_after_archive_ceremony(tmp_ledger):
+    """ABORT-and-re-invoke is the sanctioned path: archiving clears the
+    ceremony, so a fresh Phase 0 may select a different gate_position.
+    """
+    ledger.set_ceremony_field("gate_position", "per_task")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted; re-selecting")
+    ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
+
+
 def test_set_scalar_rejects_dotted_field(tmp_ledger):
     """Use set_ceremony_field for ceremony.* -- set_scalar is for the
     top level only, and a dotted argument is almost certainly a bug.
@@ -383,6 +432,37 @@ def test_record_wave_discipline_preserves_other_waves(tmp_ledger):
     assert ledger.wave_discipline_status("3b")["status"] == "passed"
 
 
+def test_wave_discipline_passed_after_failed_clears_open_rows(tmp_ledger):
+    """open_rows must SHRINK as rows close (module docstring).
+
+    Omitting the key on a passing re-record leaves the previous failure's
+    rows in place, because _deep_merge has no delete -- producing a ledger
+    that reads "passed" while still listing rows as open.
+    """
+    ledger.record_wave_discipline("3a", status="failed", open_rows=["W3a-2", "W3a-5"])
+    ledger.record_wave_discipline("3a", status="passed")
+    entry = ledger.wave_discipline_status("3a")
+    assert entry["status"] == "passed"
+    assert entry["open_rows"] == []
+
+
+def test_wave_discipline_na_after_failed_clears_open_rows(tmp_ledger):
+    ledger.record_wave_discipline("3a", status="failed", open_rows=["W3a-2"])
+    ledger.record_wave_discipline("3a", status="n_a", reason="wave dissolved")
+    assert ledger.wave_discipline_status("3a")["open_rows"] == []
+
+
+def test_wave_discipline_failed_guard_still_fires_after_a_prior_record(tmp_ledger):
+    """Writing open_rows unconditionally must not weaken the false-pass
+    guard: status=failed with no rows is still refused, and the previously
+    recorded entry is left untouched by the refusal.
+    """
+    ledger.record_wave_discipline("3a", status="failed", open_rows=["W3a-2"])
+    with pytest.raises(ValueError, match="requires at least one open row"):
+        ledger.record_wave_discipline("3a", status="failed")
+    assert ledger.wave_discipline_status("3a")["open_rows"] == ["W3a-2"]
+
+
 # ---- blockers ------------------------------------------------------------
 
 
@@ -504,7 +584,7 @@ def test_group_gate_passed_round_trips(tmp_ledger):
     assert entry["status"] == "passed"
     assert entry["gates"] == ["4.4", "4.5"]
     assert entry["timestamp"] == "2026-08-11T09:00Z"
-    assert "open_findings" not in entry
+    assert entry["open_findings"] == []
 
 
 def test_group_gate_failed_with_open_findings(tmp_ledger):
@@ -522,6 +602,37 @@ def test_group_gate_rejects_invalid_status(tmp_ledger):
 def test_group_gate_na(tmp_ledger):
     ledger.record_group_gate("G1", status="n_a")
     assert ledger.read_ledger()["groups"]["G1"]["gate_stack"]["status"] == "n_a"
+
+
+def test_group_gate_passed_after_failed_clears_open_findings(tmp_ledger):
+    """The per-group counterpart of the open_rows shrink contract.
+
+    Re-recording G1 as passed after a failed run must not leave the
+    failure's findings behind: a passed gate that still carries open
+    findings is precisely the false-pass this recorder exists to close.
+    """
+    ledger.record_group_gate("G1", status="failed", open_findings=["F1", "F2"])
+    ledger.record_group_gate("G1", status="passed", gates=["4.4", "4.5"])
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["status"] == "passed"
+    assert entry["open_findings"] == []
+
+
+def test_group_gate_na_after_failed_clears_open_findings(tmp_ledger):
+    ledger.record_group_gate("G1", status="failed", open_findings=["F1"])
+    ledger.record_group_gate("G1", status="n_a")
+    assert ledger.read_ledger()["groups"]["G1"]["gate_stack"]["open_findings"] == []
+
+
+def test_group_gate_failed_guard_still_fires_after_a_prior_record(tmp_ledger):
+    """Writing open_findings unconditionally must not weaken the
+    false-pass guard, and a refusal must leave the stored entry intact.
+    """
+    ledger.record_group_gate("G1", status="failed", open_findings=["F1"])
+    with pytest.raises(ValueError, match="requires at least one open finding"):
+        ledger.record_group_gate("G1", status="failed")
+    entry = ledger.read_ledger()["groups"]["G1"]["gate_stack"]
+    assert entry["open_findings"] == ["F1"]
 
 
 def test_two_groups_coexist(tmp_ledger):
@@ -590,6 +701,28 @@ def test_cli_set_ceremony_gate_position_invalid_value_errors(tmp_ledger):
     proc = _run_cli("set", "ceremony.gate_position", "per_wave")
     assert proc.returncode != 0
     assert "per_task" in proc.stderr and "per_group" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_gate_position_rewrite_after_lock_refused(tmp_ledger):
+    """The CLI must not be a hole through the gate_position lock either."""
+    _run_cli("set", "ceremony.gate_position", "per_task")
+    _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
+    proc = _run_cli("set", "ceremony.gate_position", "per_group")
+    assert proc.returncode == 1
+    assert "refusing to rewrite" in proc.stderr
+    data = json.loads(tmp_ledger.read_text())
+    assert data["ceremony"]["gate_position"] == "per_task"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_group_gate_passed_after_failed_clears_open_findings(tmp_ledger):
+    _run_cli("group-gate", "G1", "--status", "failed", "--open-findings", "F1,F2")
+    proc = _run_cli("group-gate", "G1", "--status", "passed")
+    assert proc.returncode == 0, proc.stderr
+    entry = json.loads(tmp_ledger.read_text())["groups"]["G1"]["gate_stack"]
+    assert entry["status"] == "passed"
+    assert entry["open_findings"] == []
 
 
 @pytest.mark.allow("subprocess")
@@ -673,7 +806,11 @@ def test_cli_wave_discipline_na_with_reason(tmp_ledger):
     )
     assert proc.returncode == 0
     entry = json.loads(tmp_ledger.read_text())["waves"]["plan"]["section_24_6_check"]
-    assert entry == {"status": "n_a", "reason": "plan has no wave structure"}
+    assert entry == {
+        "status": "n_a",
+        "reason": "plan has no wave structure",
+        "open_rows": [],
+    }
 
 
 @pytest.mark.allow("subprocess")
