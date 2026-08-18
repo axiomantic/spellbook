@@ -172,24 +172,7 @@ Apply the principle: "You Aren't Gonna Need It"
 Output: JSON array of {item, type: "skill"|"command"|"feature", concern, recommendation, confidence: "high"|"medium"|"low"}
 ```
 
-#### 7. Persona Quality Agent (if fun-mode exists)
-```
-Audit persona/context/undertow lists for quality and variety.
-
-Files: skills/fun-mode/personas.txt, contexts.txt, undertows.txt
-
-Check for:
-- Duplicates or near-duplicates
-- Entries that are too similar in vibe
-- Missing variety in weirdness tiers
-- Entries that are too long (token waste)
-- Entries that don't synthesize well together
-- Quality of creative writing
-
-Output: JSON with {personas: {count, duplicates, quality_issues}, contexts: {...}, undertows: {...}, cross_synthesis_issues}
-```
-
-#### 8. Consistency Audit Agent
+#### 7. Consistency Audit Agent
 ```
 Audit for consistency across all skills and commands.
 
@@ -204,7 +187,7 @@ Check for:
 Output: JSON array of {inconsistency_type, examples: [{file1, file2, difference}], suggested_standard}
 ```
 
-#### 9. Dependency Analysis Agent
+#### 8. Dependency Analysis Agent
 ```
 Map dependencies between skills, commands, and MCP tools.
 
@@ -218,7 +201,7 @@ Build a dependency graph:
 Output: JSON with {graph: {nodes, edges}, orphans, circular_deps, hotspots}
 ```
 
-#### 10. Test Coverage Agent
+#### 9. Test Coverage Agent
 ```
 Analyze test coverage for spellbook components.
 
@@ -231,7 +214,7 @@ Check:
 Output: JSON array of {component, type, has_tests, test_quality: "good"|"weak"|"none", gaps}
 ```
 
-#### 11. Token Counting Agent
+#### 10. Token Counting Agent
 ```
 Measure actual token costs across all spellbook content.
 
@@ -258,7 +241,7 @@ Output: JSON with {
 }
 ```
 
-#### 12. Conditional Extraction Agent
+#### 11. Conditional Extraction Agent
 ```
 Find large conditional blocks that should become skills.
 
@@ -290,7 +273,7 @@ Output: JSON array of {
 }
 ```
 
-#### 13. Tables-Over-Prose Agent
+#### 12. Tables-Over-Prose Agent
 ```
 Identify prose sections that would be more token-efficient as tables.
 
@@ -317,7 +300,7 @@ Output: JSON array of {
 }
 ```
 
-#### 14. Glossary Opportunity Agent
+#### 13. Glossary Opportunity Agent
 ```
 Find repeated term definitions that could use a shared glossary.
 
@@ -340,7 +323,7 @@ Output: JSON array of {
 }
 ```
 
-#### 15. Naming Consistency Agent
+#### 14. Naming Consistency Agent
 ```
 Audit all skill, command, and agent names for semantic consistency.
 
@@ -378,7 +361,7 @@ Output: JSON array of {
 }
 ```
 
-#### 16. Reference Validation Agent
+#### 15. Reference Validation Agent
 ```
 Validate that all skill/command references in documentation actually exist.
 
@@ -411,7 +394,7 @@ Output: JSON array of {
 }
 ```
 
-#### 17. Orphaned Docs Agent
+#### 16. Orphaned Docs Agent
 ```
 Find documentation files without corresponding source files.
 
@@ -467,9 +450,6 @@ Generated: [timestamp]
 
 ## YAGNI Analysis
 [recommendations sorted by confidence]
-
-## Persona Quality
-[if applicable]
 
 ## Consistency Issues
 [grouped by type]

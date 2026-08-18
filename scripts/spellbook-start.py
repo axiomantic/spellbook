@@ -7,7 +7,10 @@ Reads config and outputs session startup data including fun-mode selections.
 import json
 import os
 import random
+import sys
 from pathlib import Path
+
+ASSET_KEYS = ("persona", "context", "undertow")
 
 
 def get_config_path() -> Path:
@@ -57,13 +60,26 @@ def main():
         return
 
     # Fun mode enabled - select random persona/context/undertow
-    spellbook_dir = get_spellbook_dir()
-    fun_assets = spellbook_dir / "skills" / "fun-mode"
+    fun_assets = get_spellbook_dir() / "skills" / "fun-mode"
+    selections = {key: random_line(fun_assets / f"{key}s.txt") for key in ASSET_KEYS}
+
+    # An unreadable, absent, or empty asset file yields "". Emitting
+    # "persona=" would announce an active fun mode while supplying nothing to
+    # act on -- a failure indistinguishable from success for any consumer. Fun
+    # mode without its assets is fun mode off, and it says so on stderr.
+    missing = [key for key, value in selections.items() if not value]
+    if missing:
+        print(
+            f"spellbook-start: fun mode requested but {', '.join(missing)} "
+            f"unavailable under {fun_assets}; reporting fun mode off",
+            file=sys.stderr,
+        )
+        print("fun_mode=no")
+        return
 
     print("fun_mode=yes")
-    print(f"persona={random_line(fun_assets / 'personas.txt')}")
-    print(f"context={random_line(fun_assets / 'contexts.txt')}")
-    print(f"undertow={random_line(fun_assets / 'undertows.txt')}")
+    for key in ASSET_KEYS:
+        print(f"{key}={selections[key]}")
 
 
 if __name__ == "__main__":

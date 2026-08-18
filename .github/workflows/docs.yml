@@ -10,6 +10,7 @@ on:
       - 'skills/**'
       - 'commands/**'
       - 'agents/**'
+      - 'rules/**'
       - 'scripts/generate_docs.py'
   pull_request:
     paths:
@@ -18,6 +19,7 @@ on:
       - 'skills/**'
       - 'commands/**'
       - 'agents/**'
+      - 'rules/**'
       - 'scripts/generate_docs.py'
   workflow_dispatch:
     inputs:

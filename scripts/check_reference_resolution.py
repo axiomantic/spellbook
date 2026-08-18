@@ -86,9 +86,11 @@ from __future__ import annotations
 
 import argparse
 import fnmatch
+import os
 import re
 import sys
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Callable, Iterator
 
@@ -124,6 +126,62 @@ ANCHOR_DIRS = frozenset(
 
 # Vendored trees never contain this repository's own references.
 SKIP_PARTS = frozenset({"node_modules", ".git", "__pycache__", ".venv", "venv"})
+
+
+# ---------------------------------------------------------------------------
+# Case-exact filesystem probes
+# ---------------------------------------------------------------------------
+#
+# ``Path.exists`` answers the FILESYSTEM's question, not the repository's. On a
+# case-insensitive volume -- the macOS and Windows default -- it accepts
+# ``.github/PULL_REQUEST_TEMPLATE.md`` while only ``pull_request_template.md``
+# is on disk. A reference that is broken for every Linux reader then resolves
+# clean for the author who wrote it, and this checker reports zero violations
+# for a repository that has one. Each component is matched against its parent's
+# real directory listing instead, so a verdict does not depend on the volume the
+# checkout happens to sit on.
+
+
+@lru_cache(maxsize=None)
+def _listing(directory: Path) -> frozenset[str]:
+    try:
+        return frozenset(entry.name for entry in directory.iterdir())
+    except OSError:
+        return frozenset()
+
+
+def _cased_exactly(repo_root: Path, path: Path) -> bool:
+    """Whether every component below ``repo_root`` matches the on-disk spelling.
+
+    Components at or above ``repo_root`` are not checked: the checkout's own
+    location is not a reference this repository controls.
+    """
+    resolved = Path(os.path.normpath(path))
+    try:
+        relative = resolved.relative_to(repo_root)
+    except ValueError:
+        return True
+    current = repo_root
+    for part in relative.parts:
+        if part not in _listing(current):
+            return False
+        current = current / part
+    return True
+
+
+def exists_exact(repo_root: Path, path: Path) -> bool:
+    """``Path.exists`` that does not accept a mis-cased spelling."""
+    return path.exists() and _cased_exactly(repo_root, path)
+
+
+def is_file_exact(repo_root: Path, path: Path) -> bool:
+    """``Path.is_file`` that does not accept a mis-cased spelling."""
+    return path.is_file() and _cased_exactly(repo_root, path)
+
+
+def is_dir_exact(repo_root: Path, path: Path) -> bool:
+    """``Path.is_dir`` that does not accept a mis-cased spelling."""
+    return path.is_dir() and _cased_exactly(repo_root, path)
 
 
 @dataclass(frozen=True)
@@ -216,7 +274,7 @@ def extract_workflow_scripts(repo_root: Path) -> list[Reference]:
 
 def resolve_repo_path(repo_root: Path, ref: Reference) -> bool:
     """A workflow-declared path must exist as a file or directory."""
-    return (repo_root / ref.target).exists()
+    return exists_exact(repo_root, repo_root / ref.target)
 
 
 # ---------------------------------------------------------------------------
@@ -243,7 +301,7 @@ def extract_dependabot_directories(repo_root: Path) -> list[Reference]:
 
 def resolve_directory(repo_root: Path, ref: Reference) -> bool:
     """A dependabot ``directory:`` is repo-root-relative and must be a directory."""
-    return (repo_root / ref.target.lstrip("/")).is_dir()
+    return is_dir_exact(repo_root, repo_root / ref.target.lstrip("/"))
 
 
 # ---------------------------------------------------------------------------
@@ -375,7 +433,7 @@ def resolve_prose_path(repo_root: Path, ref: Reference) -> bool:
     candidates = [repo_root / ref.target, repo_root / source.parent / ref.target]
     if source.parts and source.parts[0] == "skills" and len(source.parts) > 2:
         candidates.append(repo_root / Path(*source.parts[:2]) / ref.target)
-    return any(candidate.exists() for candidate in candidates)
+    return any(exists_exact(repo_root, candidate) for candidate in candidates)
 
 
 # ---------------------------------------------------------------------------
@@ -402,10 +460,12 @@ def resolve_prose_module(repo_root: Path, ref: Reference) -> bool:
     rest: list[str] = []
     for i in range(len(parts), 0, -1):
         candidate = repo_root / Path(*parts[:i])
-        if candidate.is_dir() and (candidate / "__init__.py").is_file():
+        if is_dir_exact(repo_root, candidate) and is_file_exact(
+            repo_root, candidate / "__init__.py"
+        ):
             base, rest = candidate, parts[i:]
             break
-        if candidate.with_suffix(".py").is_file():
+        if is_file_exact(repo_root, candidate.with_suffix(".py")):
             base, rest = candidate.with_suffix(".py"), parts[i:]
             break
     if base is None:
@@ -436,7 +496,7 @@ def extract_prose_skills(repo_root: Path) -> list[Reference]:
 
 def resolve_skill(repo_root: Path, ref: Reference) -> bool:
     """A named skill must be a directory carrying a SKILL.md."""
-    return (repo_root / "skills" / ref.target / "SKILL.md").is_file()
+    return is_file_exact(repo_root, repo_root / "skills" / ref.target / "SKILL.md")
 
 
 # ---------------------------------------------------------------------------
@@ -459,11 +519,11 @@ def resolve_slash_name(repo_root: Path, ref: Reference) -> bool:
     the same syntax, so a skill directory also resolves the reference.
     """
     name = ref.target
-    if (repo_root / "commands" / f"{name}.md").is_file():
+    if is_file_exact(repo_root, repo_root / "commands" / f"{name}.md"):
         return True
-    if (repo_root / "commands" / name / f"{name}.md").is_file():
+    if is_file_exact(repo_root, repo_root / "commands" / name / f"{name}.md"):
         return True
-    return (repo_root / "skills" / name / "SKILL.md").is_file()
+    return is_file_exact(repo_root, repo_root / "skills" / name / "SKILL.md")
 
 
 # ---------------------------------------------------------------------------

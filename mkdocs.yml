@@ -113,7 +113,6 @@ nav:
     - Project Quality:
       - skills/fact-checking.md
       - skills/finding-dead-code.md
-      - skills/security-auditing.md
       - skills/polish-repo.md
       - skills/enforcing-code-quality.md
       - skills/generating-diagrams.md
@@ -202,7 +201,6 @@ nav:
       - skills/reviewing-design-docs.md
       - skills/reviewing-impl-plans.md
       - skills/reviewing-prs.md
-      - skills/security-auditing.md
       - skills/sharpening-prompts.md
       - skills/smart-reading.md
       - skills/test-driven-development.md

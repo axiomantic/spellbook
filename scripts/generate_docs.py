@@ -508,11 +508,11 @@ def main(argv: list[str] | None = None) -> int:
             if stale:
                 print(f"Stale or missing generated page(s): {len(stale)}")
                 for path in stale:
-                    print(f"  {path.relative_to(REPO_ROOT)}")
+                    print(f"  {path.relative_to(REPO_ROOT).as_posix()}")
             if orphans:
                 print(f"Orphaned generated page(s) with no source: {len(orphans)}")
                 for path in orphans:
-                    print(f"  {path.relative_to(REPO_ROOT)}")
+                    print(f"  {path.relative_to(REPO_ROOT).as_posix()}")
             print("Run: python3 scripts/generate_docs.py")
             return 1
         print("All files up to date")
@@ -525,13 +525,13 @@ def main(argv: list[str] | None = None) -> int:
     for path, content in docs.items():
         if write_if_changed(path, content):
             files_changed += 1
-            print(f"Generated: {path.relative_to(DOCS_DIR)}")
+            print(f"Generated: {path.relative_to(DOCS_DIR).as_posix()}")
 
     files_removed = 0
     for path in orphan_docs(docs):
         path.unlink()
         files_removed += 1
-        print(f"Removed orphan: {path.relative_to(DOCS_DIR)}")
+        print(f"Removed orphan: {path.relative_to(DOCS_DIR).as_posix()}")
 
     print(summary)
     if files_changed > 0 or files_removed > 0:

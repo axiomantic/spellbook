@@ -3,16 +3,16 @@
 Canonical registry of all skills, commands, and agents with compliance metrics.
 
 **Generated:** 2026-01-12
-**Validation:** All 45 items pass schema validation
+**Validation:** All 43 items pass schema validation
 
 ## Summary
 
 | Category | Count | Total Tokens | Total Lines | Avg Tokens |
 |----------|-------|--------------|-------------|------------|
-| Skills | 29 | 34,534 | 4,474 | 1,191 |
-| Commands | 15 | 13,070 | 1,647 | 871 |
+| Skills | 28 | 33,389 | 4,343 | 1,192 |
+| Commands | 14 | 12,550 | 1,578 | 896 |
 | Agents | 1 | 853 | 85 | 853 |
-| **Total** | **45** | **48,457** | **6,206** | **1,077** |
+| **Total** | **43** | **46,792** | **6,006** | **1,088** |
 
 ## Schema Compliance
 
@@ -32,7 +32,7 @@ All items conform to their respective schemas:
 | Inputs / Outputs | Interoperability contracts | API design |
 | Self-Check | Final verification gate | Quality assurance |
 
-## Skills (29)
+## Skills (28)
 
 | Name | Tokens | Lines | Status | Notes |
 |------|--------|-------|--------|-------|
@@ -48,7 +48,6 @@ All items conform to their respective schemas:
 | finding-dead-code | 1,567 | 186 | PASS | Over budget |
 | finishing-a-development-branch | 1,132 | 161 | PASS | |
 | fixing-tests | 1,499 | 211 | PASS | |
-| fun-mode | 1,145 | 131 | PASS | |
 | auditing-green-mirage | 1,357 | 164 | PASS | |
 | reviewing-impl-plans | 1,214 | 150 | PASS | |
 | develop | 2,089 | 214 | PASS | Over budget (orchestrator) |
@@ -65,7 +64,7 @@ All items conform to their respective schemas:
 | writing-plans | 1,073 | 144 | PASS | |
 | writing-skills | 1,269 | 159 | PASS | |
 
-## Commands (15)
+## Commands (14)
 
 | Name | Tokens | Lines | Status | Notes |
 |------|--------|-------|--------|-------|
@@ -81,7 +80,6 @@ All items conform to their respective schemas:
 | merge-work-packets | 1,046 | 125 | PASS | |
 | move-project | 915 | 119 | PASS | |
 | simplify | 895 | 112 | PASS | |
-| toggle-fun | 520 | 69 | PASS | |
 | verify | 811 | 102 | PASS | |
 | write-plan | 441 | 62 | PASS | |
 

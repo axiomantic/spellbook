@@ -2,8 +2,8 @@
 
 Several keys have entries in ``CONFIG_SCHEMA`` but no installer prompt:
 ``security_gates_enabled``, ``notify_enabled``, ``notify_title``,
-``auto_update``, ``session_mode``. Without a prompt users discover them
-only via the admin UI or by reading source.
+``auto_update``. Without a prompt users discover them only via the admin
+UI or by reading source.
 
 This wizard closes the gap by walking the user through each key on
 fresh installs. It respects the idempotency rule defined in AGENTS.md:
@@ -19,23 +19,6 @@ from __future__ import annotations
 
 import sys as _sys
 from typing import Any, Optional
-
-
-# Session mode enum is sourced from ``spellbook.core.config.SESSION_MODES`` so
-# the installer, admin PATCH validator, and ``session_mode_set`` share one
-# definition. The presentation order here intentionally leads with "none" so
-# the wizard default shows first; the canonical set itself is unordered.
-def _session_mode_options() -> tuple[str, ...]:
-    try:
-        from spellbook.core.config import SESSION_MODES
-    except ImportError:
-        # Fallback keeps the installer runnable even if spellbook.core is not
-        # importable (e.g. partially installed environments during bootstrap).
-        return ("none", "fun", "tarot")
-    return ("none",) + tuple(m for m in SESSION_MODES if m != "none")
-
-
-_SESSION_MODE_OPTIONS: tuple[str, ...] = _session_mode_options()
 
 
 def _is_explicit(key: str) -> bool:
@@ -69,26 +52,6 @@ def _prompt_string(prompt: str, current: str) -> str:
     shown = current if current else "(empty)"
     raw = input(f"{prompt} [{shown}]: ").strip()
     return current if not raw else raw
-
-
-def _prompt_choice(prompt: str, current: str, options: tuple[str, ...]) -> str:
-    """Numbered-list prompt for a string enum. Enter keeps current."""
-    print()
-    print(f"{prompt} (current: {current}):")
-    for i, opt in enumerate(options, start=1):
-        print(f"  {i}. {opt}")
-    while True:
-        raw = input(f"Select [1-{len(options)}] (Enter to keep {current}): ").strip()
-        if not raw:
-            return current
-        try:
-            idx = int(raw)
-        except ValueError:
-            print("  Please enter a number.")
-            continue
-        if 1 <= idx <= len(options):
-            return options[idx - 1]
-        print("  Out of range.")
 
 
 def _write(key: str, value: Any) -> None:
@@ -128,7 +91,6 @@ def run_defaults_wizard(args: Optional[Any] = None) -> None:
         "notify_enabled",
         "notify_title",
         "auto_update",
-        "session_mode",
     ]
     if not reconfigure and all(_is_explicit(k) for k in candidate_keys):
         return
@@ -184,18 +146,3 @@ def run_defaults_wizard(args: Optional[Any] = None) -> None:
             print("  (defaults wizard cancelled)")
             return
         _write("auto_update", value)
-
-    # ----- Session mode (none / fun / tarot) -----
-    if reconfigure or not _is_explicit("session_mode"):
-        current = str(_config_get("session_mode", "none"))
-        if current not in _SESSION_MODE_OPTIONS:
-            current = "none"
-        try:
-            value = _prompt_choice(
-                "Default session mode", current, _SESSION_MODE_OPTIONS
-            )
-        except (EOFError, KeyboardInterrupt):
-            print()
-            print("  (defaults wizard cancelled)")
-            return
-        _write("session_mode", value)
