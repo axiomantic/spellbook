@@ -13,6 +13,10 @@ Checks:
 4. Reasoning schema tags (<analysis>, <reflection>)
 5. Interoperability sections (Inputs, Outputs)
 6. Token counts
+7. Size ratchet: a file with a recorded ceiling in scripts/size_ceilings.json
+   is checked against that ceiling instead of the truncation limits. Ceilings
+   only decrease. `--update-ceilings` rewrites the file with min(recorded,
+   actual); no code path raises a ceiling.
 
 Exit codes:
 - 0: All validations pass
@@ -45,26 +49,65 @@ except ImportError:
 MAX_LINES = 1900  # Buffer of 100 lines
 MAX_BYTES = 49152  # Buffer of 2KB (48KB)
 
-# Per-file SIZE-limit exemptions (byte + line checks ONLY).
-# Keyed by repo-relative POSIX path. Exempt files still undergo every other
-# check (frontmatter, Invariant Principles, reasoning tags, etc.); only the
-# truncation byte/line gate is waived.
+# SIZE RATCHET
 #
-# commands/crystallize.md: crystallize's PURPOSE is to shrink/consolidate other
-# docs, so it legitimately carries extensive instructional content and is allowed
-# to exceed the truncation size gate. This is a narrow, operator-directed
-# exemption — do not add files here without a documented rationale.
+# A ratchet replaces the former blanket size exemption. A ratcheted file carries
+# a recorded ceiling (bytes and lines) in `scripts/size_ceilings.json`. The
+# ceiling supersedes MAX_BYTES/MAX_LINES for that file: at or under the ceiling
+# passes, over the ceiling fails. A ceiling may only DECREASE. There is no code
+# path that raises one — `--update-ceilings` writes min(recorded, actual), and a
+# ceiling above the truncation limits additionally requires a rationale entry in
+# OVER_LIMIT_RATIONALE, which is checked when the ceilings file loads.
 #
-# skills/develop/SKILL.md: develop/SKILL.md is the governance-dense central
-# orchestrator; its untouchable + mandatory-preserve governance content exceeds
-# the byte limit and crystallize's 80% preservation floor cannot reach it without
-# dropping protected rules. Operator-approved exemption (2026-05-24).
-# DEFERRED: split reference material into a sibling file so this exemption
-# can be removed.
-SIZE_LIMIT_EXEMPT = {
-    "commands/crystallize.md",
-    "skills/develop/SKILL.md",
+# COVERAGE: a file is ratcheted once it reaches RATCHET_THRESHOLD (80% of either
+# truncation limit). Below that a file has ~10KB of headroom and a ratchet would
+# be noise on every ordinary edit.
+CEILINGS_PATH = Path(__file__).parent / "size_ceilings.json"
+
+RATCHET_THRESHOLD_BYTES = int(MAX_BYTES * 0.8)
+RATCHET_THRESHOLD_LINES = int(MAX_LINES * 0.8)
+
+# Rationale is REQUIRED for any ceiling above the truncation limits. These are
+# the files the former SIZE_LIMIT_EXEMPT set covered; the ratchet keeps them
+# passing while forbidding further growth.
+OVER_LIMIT_RATIONALE = {
+    "commands/crystallize.md": (
+        "crystallize's PURPOSE is to shrink/consolidate other docs, so it "
+        "legitimately carries extensive instructional content."
+    ),
+    "skills/develop/SKILL.md": (
+        "governance-dense central orchestrator; its untouchable + "
+        "mandatory-preserve content exceeds the byte limit and crystallize's "
+        "80% preservation floor cannot reach it without dropping protected "
+        "rules. Operator-approved (2026-05-24). The ratchet ceiling is the "
+        "mechanism that makes the split enforceable: it can only go down."
+    ),
 }
+
+
+def load_ceilings(path: Path = CEILINGS_PATH) -> dict[str, dict[str, int]]:
+    """Load recorded per-file size ceilings.
+
+    Raises ValueError when a ceiling exceeds a truncation limit without a
+    documented rationale, so an over-limit ceiling cannot be introduced by
+    editing data alone.
+    """
+    if not path.exists():
+        return {}
+    data = json.loads(path.read_text(encoding="utf-8"))
+    ceilings = data.get("ceilings", {})
+    for key, entry in ceilings.items():
+        over = entry["bytes"] > MAX_BYTES or entry["lines"] > MAX_LINES
+        if over and key not in OVER_LIMIT_RATIONALE:
+            raise ValueError(
+                f"{path.name}: ceiling for {key} exceeds the truncation limits "
+                f"({entry['bytes']:,} bytes / {entry['lines']} lines) with no "
+                f"entry in OVER_LIMIT_RATIONALE"
+            )
+    return ceilings
+
+
+CEILINGS = load_ceilings()
 
 
 class ValidationResult(NamedTuple):
@@ -158,17 +201,41 @@ def repo_relative_key(path: Path) -> str:
         return path.as_posix()
 
 
-def check_truncation_limits(content: str, errors: list[str], path: Path | None = None) -> None:
-    """Check if content exceeds opencode tool output truncation limits.
+def check_truncation_limits(
+    content: str,
+    errors: list[str],
+    path: Path | None = None,
+    ceilings: dict[str, dict[str, int]] | None = None,
+) -> None:
+    """Check content against the truncation limits or its recorded ceiling.
 
-    Files listed in SIZE_LIMIT_EXEMPT are exempt from the byte/line size gate
-    ONLY; all other checks still apply.
+    A file with a recorded ceiling is checked against that ceiling INSTEAD of
+    the truncation limits: the ceiling is what may only decrease. All other
+    schema checks apply to every file either way.
     """
-    if path is not None and repo_relative_key(path) in SIZE_LIMIT_EXEMPT:
-        return
-
     line_count = len(content.splitlines())
     byte_count = len(content.encode("utf-8"))
+
+    if ceilings is None:
+        ceilings = CEILINGS
+    ceiling = ceilings.get(repo_relative_key(path)) if path is not None else None
+
+    if ceiling is not None:
+        if byte_count > ceiling["bytes"]:
+            errors.append(
+                f"Exceeds recorded size ceiling: {byte_count:,} bytes > "
+                f"{ceiling['bytes']:,} ceiling (over by "
+                f"{byte_count - ceiling['bytes']:,} bytes). Ceilings only "
+                f"decrease — shrink the file, do not raise the ceiling."
+            )
+        if line_count > ceiling["lines"]:
+            errors.append(
+                f"Exceeds recorded line ceiling: {line_count} lines > "
+                f"{ceiling['lines']} ceiling (over by "
+                f"{line_count - ceiling['lines']} lines). Ceilings only "
+                f"decrease — shrink the file, do not raise the ceiling."
+            )
+        return
 
     if line_count > MAX_LINES:
         errors.append(
@@ -640,6 +707,49 @@ def validate_rule_module(
     )
 
 
+def is_ratchet_candidate(byte_count: int, line_count: int) -> bool:
+    """Whether a file is large enough to be worth ratcheting."""
+    return byte_count >= RATCHET_THRESHOLD_BYTES or line_count >= RATCHET_THRESHOLD_LINES
+
+
+def compute_ceilings(
+    measured: dict[str, tuple[int, int]],
+    recorded: dict[str, dict[str, int]],
+) -> dict[str, dict[str, int]]:
+    """Return the ratchet's next state. Every value moves down or stays put.
+
+    `measured` maps repo-relative path to (byte_count, line_count). A recorded
+    ceiling is kept for any file still present, lowered to the measured size
+    when the file shrank, and NEVER raised — that min() is the whole ratchet.
+    A file with no ceiling gets one only once it reaches the threshold.
+    """
+    result: dict[str, dict[str, int]] = {}
+    for key, (byte_count, line_count) in sorted(measured.items()):
+        entry = recorded.get(key)
+        if entry is None:
+            if not is_ratchet_candidate(byte_count, line_count):
+                continue
+            result[key] = {"bytes": byte_count, "lines": line_count}
+            continue
+        result[key] = {
+            "bytes": min(entry["bytes"], byte_count),
+            "lines": min(entry["lines"], line_count),
+        }
+    return result
+
+
+def write_ceilings(ceilings: dict[str, dict[str, int]], path: Path = CEILINGS_PATH) -> None:
+    payload = {
+        "_comment": (
+            "Per-file size ceilings enforced by scripts/validate_schemas.py. "
+            "Ceilings only decrease. Regenerate with: "
+            "uv run scripts/validate_schemas.py --update-ceilings"
+        ),
+        "ceilings": ceilings,
+    }
+    path.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+
+
 def main():
     repo_root = Path(__file__).parent.parent.absolute()
     skills_dir = repo_root / "skills"
@@ -727,6 +837,32 @@ def main():
     print(f"Total lines: {total_lines}")
     print(f"Total bytes: {total_bytes:,}")
     print(f"\nTruncation limits: {MAX_LINES} lines / {MAX_BYTES:,} bytes per file")
+    print(
+        f"Size ratchet: {len(CEILINGS)} file(s) carry a recorded ceiling "
+        f"(threshold {RATCHET_THRESHOLD_BYTES:,} bytes / {RATCHET_THRESHOLD_LINES} lines)"
+    )
+
+    if "--update-ceilings" in sys.argv:
+        measured = {
+            repo_relative_key(Path(r.path)): (r.byte_count, r.line_count) for r in results
+        }
+        updated = compute_ceilings(measured, CEILINGS)
+        changed = [
+            key
+            for key, entry in updated.items()
+            if CEILINGS.get(key) != entry
+        ]
+        dropped = sorted(set(CEILINGS) - set(updated))
+        write_ceilings(updated, CEILINGS_PATH)
+        print(f"\nCeilings written to {CEILINGS_PATH.name}: {len(updated)} entries")
+        for key in changed:
+            before = CEILINGS.get(key)
+            print(
+                f"  {key}: {before['bytes'] if before else '-'} -> {updated[key]['bytes']} bytes, "
+                f"{before['lines'] if before else '-'} -> {updated[key]['lines']} lines"
+            )
+        for key in dropped:
+            print(f"  {key}: entry dropped (file no longer validated)")
 
     # Generate JSON report if requested
     if "--json" in sys.argv:
@@ -744,6 +880,7 @@ def main():
                     "max_lines": MAX_LINES,
                     "max_bytes": MAX_BYTES,
                 },
+                "size_ceilings": CEILINGS,
             },
             "results": [
                 {

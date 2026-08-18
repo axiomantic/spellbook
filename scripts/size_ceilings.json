@@ -1,0 +1,25 @@
+{
+  "_comment": "Per-file size ceilings enforced by scripts/validate_schemas.py. Ceilings only decrease. Regenerate with: uv run scripts/validate_schemas.py --update-ceilings",
+  "ceilings": {
+    "commands/crystallize.md": {
+      "bytes": 51033,
+      "lines": 1084
+    },
+    "commands/feature-config.md": {
+      "bytes": 44560,
+      "lines": 863
+    },
+    "commands/feature-implement-execute.md": {
+      "bytes": 48234,
+      "lines": 1199
+    },
+    "skills/develop/SKILL.md": {
+      "bytes": 111268,
+      "lines": 2116
+    },
+    "skills/dispatching-parallel-agents/SKILL.md": {
+      "bytes": 40941,
+      "lines": 903
+    }
+  }
+}
