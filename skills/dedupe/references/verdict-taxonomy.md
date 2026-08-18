@@ -37,7 +37,8 @@ single-line references at the original sites) loses no signal.
 **Example.** Two skills both contain a paragraph explaining the
 `branch-context.sh` invocation in identical terms, with no surrounding
 context that depends on the paragraph's exact position. Consolidating into
-`skills/shared-references/branch-context-invocation.md` loses nothing.
+a pointer to `skills/branch-context/SKILL.md`, which already owns that
+material, loses nothing.
 EXTRACT.
 
 ---

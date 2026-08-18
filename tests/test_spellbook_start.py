@@ -17,7 +17,47 @@ pytestmark = [
     pytest.mark.integration,
 ]
 
-SCRIPT_PATH = Path(__file__).parent.parent / "scripts" / "spellbook-start.py"
+REPO_ROOT = Path(__file__).parent.parent
+SCRIPT_PATH = REPO_ROOT / "scripts" / "spellbook-start.py"
+FUN_ASSET_DIR = REPO_ROOT / "skills" / "fun-mode"
+
+
+class TestRealRepositoryAssets:
+    """Tests that run against this repository, not a fabricated asset tree.
+
+    Every other test in this module supplies its own ``skills/fun-mode``
+    directory under ``tmp_path``. That makes them blind to the state that
+    actually ships: the assets were removed from the repository, so the only
+    tree the script meets in production is one without them.
+    """
+
+    def test_fun_mode_assets_are_absent_from_this_repository(self):
+        """The premise of the degradation test below. Loud if it ever changes."""
+        assert not FUN_ASSET_DIR.exists(), (
+            f"{FUN_ASSET_DIR} exists again. Fun-mode assets were reintroduced; "
+            "revisit the degradation contract asserted below."
+        )
+
+    def test_enabled_fun_mode_degrades_to_off_against_this_repository(self, tmp_path):
+        """With assets absent, the script must report fun mode off, not empty values."""
+        config_dir = tmp_path / ".config" / "spellbook"
+        config_dir.mkdir(parents=True)
+        (config_dir / "spellbook.json").write_text(json.dumps({"fun_mode": True}))
+
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT_PATH)],
+            capture_output=True,
+            text=True,
+            timeout=30,
+            env={"HOME": str(tmp_path), "SPELLBOOK_DIR": str(REPO_ROOT)},
+        )
+
+        assert result.returncode == 0
+        assert result.stdout == "fun_mode=no\n"
+        assert "persona=" not in result.stdout
+        assert "context=" not in result.stdout
+        assert "undertow=" not in result.stdout
+        assert "unavailable" in result.stderr
 
 
 class TestFunModeDisabled:
@@ -203,8 +243,8 @@ class TestConfigMalformed:
 class TestPersonaFilesMissing:
     """Tests for when persona/context/undertow files don't exist."""
 
-    def test_missing_persona_files_outputs_empty_values(self, tmp_path, monkeypatch):
-        """Missing text files should result in empty values for persona/context/undertow."""
+    def test_missing_persona_files_report_fun_mode_off(self, tmp_path, monkeypatch):
+        """Missing text files must report fun mode off, not an active mode with no content."""
         # Setup config with fun_mode=true
         config_dir = tmp_path / ".config" / "spellbook"
         config_dir.mkdir(parents=True)
@@ -226,15 +266,11 @@ class TestPersonaFilesMissing:
         )
 
         assert result.returncode == 0
-        lines = result.stdout.strip().split("\n")
-        assert len(lines) == 4
-        assert lines[0] == "fun_mode=yes"
-        assert lines[1] == "persona="
-        assert lines[2] == "context="
-        assert lines[3] == "undertow="
+        assert result.stdout == "fun_mode=no\n"
+        assert "persona, context, undertow unavailable" in result.stderr
 
-    def test_partial_missing_files(self, tmp_path, monkeypatch):
-        """Some files existing, some missing should handle gracefully."""
+    def test_partial_missing_files_report_fun_mode_off(self, tmp_path, monkeypatch):
+        """A partial asset set cannot drive fun mode, so it too reports off."""
         config_dir = tmp_path / ".config" / "spellbook"
         config_dir.mkdir(parents=True)
         config_file = config_dir / "spellbook.json"
@@ -256,19 +292,15 @@ class TestPersonaFilesMissing:
         )
 
         assert result.returncode == 0
-        lines = result.stdout.strip().split("\n")
-        assert len(lines) == 4
-        assert lines[0] == "fun_mode=yes"
-        assert lines[1] == "persona=Existing Persona"
-        assert lines[2] == "context="
-        assert lines[3] == "undertow="
+        assert result.stdout == "fun_mode=no\n"
+        assert "context, undertow unavailable" in result.stderr
 
 
 class TestEmptyPersonaFiles:
     """Tests for when persona/context/undertow files exist but are empty."""
 
-    def test_empty_files_output_empty_values(self, tmp_path, monkeypatch):
-        """Empty text files should result in empty values."""
+    def test_empty_files_report_fun_mode_off(self, tmp_path, monkeypatch):
+        """Empty text files supply no persona, so fun mode reports off."""
         config_dir = tmp_path / ".config" / "spellbook"
         config_dir.mkdir(parents=True)
         config_file = config_dir / "spellbook.json"
@@ -290,15 +322,11 @@ class TestEmptyPersonaFiles:
         )
 
         assert result.returncode == 0
-        lines = result.stdout.strip().split("\n")
-        assert len(lines) == 4
-        assert lines[0] == "fun_mode=yes"
-        assert lines[1] == "persona="
-        assert lines[2] == "context="
-        assert lines[3] == "undertow="
+        assert result.stdout == "fun_mode=no\n"
+        assert "persona, context, undertow unavailable" in result.stderr
 
     def test_whitespace_only_files_treated_as_empty(self, tmp_path, monkeypatch):
-        """Files with only whitespace should be treated as empty."""
+        """Files with only whitespace hold no usable entry, so fun mode reports off."""
         config_dir = tmp_path / ".config" / "spellbook"
         config_dir.mkdir(parents=True)
         config_file = config_dir / "spellbook.json"
@@ -320,12 +348,8 @@ class TestEmptyPersonaFiles:
         )
 
         assert result.returncode == 0
-        lines = result.stdout.strip().split("\n")
-        assert len(lines) == 4
-        assert lines[0] == "fun_mode=yes"
-        assert lines[1] == "persona="
-        assert lines[2] == "context="
-        assert lines[3] == "undertow="
+        assert result.stdout == "fun_mode=no\n"
+        assert "persona, context, undertow unavailable" in result.stderr
 
 
 class TestSpellbookDirResolution:

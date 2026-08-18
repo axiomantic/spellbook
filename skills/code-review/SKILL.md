@@ -49,6 +49,15 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 
 **Modifiers:** `--tarot` (roundtable dialogue via `code-review-tarot`), `--pr <num>` (PR source)
 
+<CRITICAL>
+**With `--pr <num>`, load the `reviewing-prs` skill BEFORE dispatching any
+review subagent.** It owns `review_source` (`LOCAL_FILES` vs `DIFF_ONLY`) and
+the mandatory PR-review context block every dispatched subagent must receive.
+A `REFUTED` verdict produced by reading a local file in `DIFF_ONLY` mode is a
+wrong verdict — the local tree is on a different branch, so a real bug the PR
+introduced reads as absent.
+</CRITICAL>
+
 ---
 
 ## Tool Integration
@@ -116,6 +125,48 @@ failure this procedure exists to prevent.
 
 ---
 
+## Phase 0 — Load and Catalogue the Standards FIRST
+
+A review cannot catch violations of rules it has not read. Before computing the
+diff or reading a single changed line:
+
+1. **Discover and read the repository's own standards documents.** They vary per
+   repository, so find them rather than assuming a fixed set. Typical locations
+   include a coding-standards document, testing instructions, code-review
+   instructions, the root `AGENTS.md`, and every subdirectory `AGENTS.md`
+   covering a changed path. Also read whatever those documents reference:
+   contributing guides, style guides, and lint configuration. If a document you
+   expected is absent, note that and adapt; if the repository carries standards
+   documents you did not expect, load those too.
+2. **Read the operator's standing rules** and any project memory the environment
+   provides.
+3. **Extract a concrete, NAMED rule catalogue** — the enforceable rules with
+   whatever identifiers or names the documents give them. That catalogue is the
+   checklist the review runs against.
+4. **Every finding names the rule it violates** — the document plus the rule's
+   identifier or name — or it is a named correctness or logic bug. No vague
+   "this seems off": cite the standard.
+
+Finding *no* standards document is not a failure — record it, proceed, and raise
+no style or convention findings. Skipping the load is: a review that never cites
+a loaded rule by name is not a review.
+
+## Scope Obligation
+
+Consume every changed hunk in every changed file and hold each against the
+catalogue from Phase 0. No grep-sampling. No skimming. No "I read the hot files."
+Grep is fine to LOCATE things; it is never a substitute for reading the whole
+diff. For a large diff, chunk it across subagents so that 100% of the diff is
+assigned and read line by line; track file and hunk coverage and be able to prove
+no file went unread.
+
+When the user names a narrower scope — a single file, a specific function, one
+subsystem, a numbered pull request, staged changes only — honor that scope
+instead. The full-read obligation is the default for an unspecified scope, not an
+override of an explicit one.
+
+---
+
 ## Self Mode (`--self`)
 
 <reflection>
@@ -147,6 +198,40 @@ Scopes: (none)=branch changes, file.py, dir/, security, all
 
 **Passes:** Correctness > Security > Performance > Maintainability > Edge Cases
 
+### Audit Posture — zero tolerance
+
+An audit is a GATE, not a courtesy pass. This posture governs `--audit` only; the
+other modes of this skill are the explicit opt-in to a lighter pass and keep
+ordinary judgement about what is worth raising.
+
+- Surface ANY deviation: rule violation, logic bug, design smell, untested
+  behavior, inconsistency — anything off.
+- Be **adversarial**. Verify each finding to filter false positives, but
+  **default to flagging** when in doubt.
+- An audit that "found nothing" on a non-trivial diff is a **FAILED audit**, not
+  a clean one. Treat an empty finding list as evidence about the audit, not
+  about the code.
+
+**Build the failure. Do not just check the author's claim.** Both actions cost
+the same dispatch. Building the failure finds more problems.
+
+- Ask "can I make this fail?" Do not ask "does this pass?" The second question
+  only checks the author's own transcript. The first question does not.
+- A check that has never failed is not proven. If nobody has watched a check's
+  failure path fire, the check is a claim, not a mechanism.
+- For a claimed clean result — a mutation that should change nothing, a guard
+  that should stay silent — prove the change reached the code under test. A
+  no-op edit looks the same as a correct no-effect. Only the exit status cannot
+  tell them apart.
+- Reproduce the defect before you fix it. If you never saw the gap yourself, you
+  are guessing at the gap. A guessed fix cannot be tested.
+
+**Observed.** One guard failed four times, in four versions, each broken one level deeper than the last. Version 1 baked a path in at configure time; a reviewer defeated it by copying the tree. Version 2 replaced the real check with a flag; the reviewer deleted the check but kept the flag set. Version 3 checked a token at the end of the branch; the reviewer deleted one part of the branch and kept the token. Version 4 used per-site counters. Every version passed its own author's tests. A reviewer who rebuilt the failure — not one who reran the author's tests — broke every version. Separately, a reviewer built three silent failure modes in an isolated copy of the code. This method found a false-pass path that four prior readings of the same file had missed.
+
+**The known cost, stated plainly:** this posture produces more findings, and some
+of them will be noise. That trade is the point of the posture, and it is why it
+scopes to `--audit` rather than to every mode of this skill.
+
 **API Hallucination Detection (Correctness Pass):**
 
 During the Correctness pass, check for API hallucination patterns:
@@ -170,6 +255,10 @@ Output: Executive Summary, findings by category (same severity thresholds as Sel
 - Ignore Critical findings
 - Dismiss feedback without evidence
 - Give vague feedback without file:line
+- Generate any finding before Phase 0 has loaded and catalogued the standards
+- Report a style or convention finding when the standards load found nothing
+- Substitute grep for reading a hunk (grep LOCATES; it never COVERS)
+- Sample the diff and treat the remainder as covered
 - Approve to avoid conflict
 - Rate severity by effort instead of impact
 - Hardcode a base ref or a default-branch name instead of shelling out to `branch-context.sh`
@@ -185,6 +274,8 @@ Output: Executive Summary, findings by category (same severity thresholds as Sel
 ## Self-Check
 
 - [ ] Correct mode identified
+- [ ] Phase 0 completed: standards discovered, read, catalogued by name (or absence recorded)
+- [ ] Every changed hunk read; no grep-sampling; coverage provable
 - [ ] Base obtained via `branch-context.sh` — no hardcoded base literal
 - [ ] Base, `resolved_via`, and fetch status reported in output
 - [ ] Endpoint (committed-only vs. working tree) chosen deliberately and stated

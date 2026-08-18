@@ -592,7 +592,6 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 # count and loses the module.
 EXPECTED_MANDATORY_IDS = frozenset(
     {
-        "bash-gate",
         "core",
         "core-philosophy",
         "diff-semantics",
@@ -615,8 +614,6 @@ EXPECTED_PREFERENCE_IDS = frozenset(
         "language-python",
         "opportunity-awareness",
         "pr-conventions",
-        "review-method",
-        "review-posture",
         "session",
         "testing",
         "worktrees",

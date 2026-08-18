@@ -349,20 +349,20 @@ digraph G {
 | "The completeness check takes too long" | Completeness check catches missing edges every time. 2 minutes to check vs. delivering wrong diagram. |
 | "I know this domain well enough to skip reading" | Source-grounded means reading, not remembering. Read or mark out-of-scope. |
 
-## Update Mode (Default)
+## Updating an Existing Diagram
 
-When updating existing diagrams (the default path), the system classifies source changes before deciding how to proceed:
+Classify the source change before you decide how much of the diagram to redo.
 
-### Tier 1: STAMP (Non-Structural)
-Changes that don't affect the workflow diagram are stamped as fresh without regeneration.
+### No change needed
+The diagram already describes the source correctly.
 - Adding/modifying XML tags (e.g., `<BEHAVIORAL_MODE>`, `<ROLE>`, `<CRITICAL>`)
 - Changing prose, descriptions, or explanations within existing steps
 - Fixing typos, rewording instructions
 - Adding/removing FORBIDDEN or REQUIRED items
 - Changing code examples within steps
 
-### Tier 2: PATCH (Surgical Update)
-Small structural changes trigger targeted edits to the existing diagram rather than full regeneration.
+### Patch (surgical update)
+Small structural changes warrant targeted edits rather than a full rebuild.
 - Adding or removing a single step within an existing phase
 - Renaming a phase or step
 - Adding a new quality gate
@@ -370,17 +370,14 @@ Small structural changes trigger targeted edits to the existing diagram rather t
 
 When patching, preserve ALL existing diagram structure, styling, and layout. Only modify the specific nodes, edges, or subgraphs affected by the change.
 
-### Tier 3: REGENERATE (Full)
+### Regenerate (full)
 Major structural changes fall through to the full 4-phase generation workflow above.
 - Adding or removing entire phases
 - Major reorganization of step ordering
 - Changing flow/branching logic
 - Adding new parallel tracks or decision points
 
-### Invocation
-- `generate_diagrams.py --interactive` uses smart classification by default
-- `generate_diagrams.py --force-regen` bypasses classification for full regeneration
-- On any classification or patching error, falls back to full regeneration automatically
+When classification is uncertain, regenerate. A wrong patch is harder to spot than a rebuilt diagram.
 
 <FORBIDDEN>
 - Placeholder nodes ("...", "etc.", "and more")

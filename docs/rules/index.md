@@ -23,13 +23,10 @@ you decline is never reinstalled and a module added later is offered once.
 | [AI Attribution Suppression](51-ai-attribution.md) | optional (default on) | Suppresses AI attribution in commits, pull requests, issues, and comments. |
 | [Diff and Branch Semantics](55-diff-semantics.md) | mandatory | How the merge target and merge base are detected, and how the diff endpoint is chosen for the task at hand. |
 | [Autonomous Mode](60-autonomy.md) | optional (default on) | How the agent behaves when it is running without turn-by-turn confirmation. |
-| [Bash Gate Navigation](70-bash-gate.md) | mandatory | How to read a spellbook bash-gate denial, which layer produced it, and what the correct response is for each block class. |
 | [Code Quality](80-code-quality.md) | optional (default on) | The standing quality bar for produced code, the comment discipline that keeps stale claims out of source files, and the rule against silently skipping pre-existing issues. |
 | [Testing Discipline](81-testing.md) | optional (default on) | How many test commands run at once and how test scope is matched to change scope. |
 | [File Reading](82-file-reading.md) | optional (default on) | Sizing a file or command output before reading it, the ban on truncating reads, and why a negative search result is evidence only when its tool is named. |
 | [Python Conventions](83-language-python.md) | optional (default on) | Import placement convention for Python code. |
-| [Review Method](85-review-method.md) | optional (default on) | How a code review loads the standards it will judge against, and how much of the diff it is obliged to read. |
-| [Review Posture (Zero Tolerance)](86-review-posture.md) | optional (default off) | An adversarial, zero-tolerance quality-gate posture for code review. |
 | [Agent Role](91-role.md) | mandatory | The standing persona every skill inherits rather than restating. |
 | [Core Philosophy](92-core-philosophy.md) | mandatory | The standing dispositions that govern how a solution is chosen: verify before trusting, dig rather than retreat, preserve behavior, and prefer correctness to speed. |
 | [Communication](93-communication.md) | optional (default on) | How questions reach the user, and the expected tone for prose the agent writes. |

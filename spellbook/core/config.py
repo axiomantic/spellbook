@@ -75,9 +75,10 @@ def rule_module_config_defaults() -> dict[str, Any]:
     """Memoized ``rules.module.*`` defaults, resolved on first use.
 
     Deliberately NOT folded into ``CONFIG_DEFAULTS`` at import time. Doing that
-    globbed and parsed every file in ``rules/`` on every import of this module
-    -- including from the PreToolUse bash gate, which runs on every single Bash
-    call. Resolution now happens only when a ``rules.module.*`` default is
+    globbed and parsed every file in ``rules/`` on every import of this module,
+    a cost paid by every consumer whether or not it reads a rule default --
+    including the MCP server and the hooks, which import it on paths that run
+    often. Resolution now happens only when a ``rules.module.*`` default is
     actually requested, and only once per checkout.
 
     Keyed on the resolved checkout path rather than memoized outright. The MCP

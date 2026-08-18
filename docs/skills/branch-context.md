@@ -2,7 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Triggers: 'branch diff', 'what changed on this branch', 'merge base', 'stacked branches', 'branch-context.sh', 'what does this branch do', 'PR description', 'changelog', 'branch comparison', 'diff since', 'what work is on this branch'. Also relevant during PR creation and finishing-a-development-branch workflows.
+> Branch diff mechanics: merge-base detection, branch-context.sh, stacked branches, worktree context. Loaded by the diff-semantics rule module. Triggers: 'what changed on this branch', 'branch diff', 'merge base', 'PR description', 'changelog'.
 ## Skill Content
 
 ````markdown

@@ -66,6 +66,18 @@ To switch which worktree the installed spellbook runs from, always run `uv run i
 - Hooks are bash/python scripts installed into the AI assistant's hook system
 - The `extensions/` directory contains platform-specific plugins (e.g., OpenCode workflow state)
 
+## Environment Variables
+
+Operator-facing behavioral switches. Not an inventory of every `SPELLBOOK_*`
+variable the code reads — path resolution (`SPELLBOOK_DIR`,
+`SPELLBOOK_CONFIG_DIR`) and MCP transport settings are covered where they are
+used.
+
+| Variable | Effect |
+|----------|--------|
+| `SPELLBOOK_GATE_CMD` | Shell command the OpenCode plugin (`hooks/opencode-plugin.ts`) runs as a command-execution gate. **Unset is the default and means there is no gate**: every command is allowed, and no subprocess is spawned. Set means the command MUST produce a verdict: it receives the JSON payload on stdin, exits `0` to allow, and exits `2` to block (with `{"error": "..."}` on stdout for the reason). Any other outcome — command missing, crash, non-`0`/`2` exit, or the 5s timeout — BLOCKS. A check that cannot complete is not a check that passed. Spellbook ships no gate implementation; the command is entirely operator-supplied. |
+| `SPELLBOOK_GIT_PUSH_AUTONOMOUS` | Operator signal that a protected-branch push confirmation may be skipped in high-trust automation. **No code reads it** — protected-branch protection is behavioural, honored by the agent, not enforced by any hook or config. See `rules/50-git-safety.md`. |
+
 ---
 
 # Spellbook Development Guide
@@ -188,7 +200,6 @@ A "user-facing config" is anything that governs behavior the user cares about (f
 
 | Where | What to add |
 |-------|-------------|
-| `spellbook/admin/routes/config.py` | `CONFIG_SCHEMA` entry (key/type/description/default) |
 | `spellbook/core/config.py` | `CONFIG_DEFAULTS` entry (matching key) — or, for a lazily-resolved key family, a `config_default_for()` resolver instead; see "Sanctioned exception" below |
 | Installer (BOTH entry points — see below) | Prompt gated by `config_is_explicitly_set(key)` or equivalent `config_get(key) is None` check |
 | Relevant wizard | Default surfaced to the user so they see what "don't change" means |
@@ -306,15 +317,13 @@ Wire every wizard into BOTH install entry paths:
 
 A wizard that lives in only one entry path is a bug. `--reconfigure` must bypass the idempotency gate so users can revisit earlier answers.
 
-Register every new key in:
-- `spellbook/core/config.py::CONFIG_DEFAULTS` (runtime default).
-- `spellbook/admin/routes/config.py::CONFIG_SCHEMA` (admin UI visibility, validator dispatch).
+Register every new key in `spellbook/core/config.py::CONFIG_DEFAULTS` (runtime default).
 
 **Sanctioned exception — lazily-resolved default families.** A key whose default
 cannot be computed without doing real work at import time MUST NOT go in
-`CONFIG_DEFAULTS`. `spellbook/core/config.py` is imported by the PreToolUse bash
-gate, which runs on **every single Bash call**, so an import-time computation is
-paid on every tool invocation in every session. Register such families through
+`CONFIG_DEFAULTS`. `spellbook/core/config.py` is imported by the MCP server and
+the hooks, so an import-time computation is paid by every consumer whether or not
+it ever reads that key. Register such families through
 `config_default_for()` instead, backed by a memoized resolver, and keep the
 `CONFIG_SCHEMA` entry as normal so admin-UI visibility is unchanged.
 
@@ -324,7 +333,12 @@ file in `rules/`. `config_default_for()` is the single read path, so callers see
 no difference; only the timing moves. A test pins the keys OUT of
 `CONFIG_DEFAULTS` so the import-time cost cannot come back by accident.
 
-Tests live in `tests/test_cli/test_install_wizard_coverage.py` and must cover each new key: fresh-install prompt fires, re-install skip, `--reconfigure` bypass, non-tty noop, and presence in both install entry paths.
+Tests must cover each new key: fresh-install prompt fires, re-install skip,
+`--reconfigure` bypass, non-tty noop, and presence in both install entry paths.
+The idempotency-gate helpers are covered in
+`tests/test_installer_config_helpers.py`; the wizard behaviours (prompting,
+non-tty safety, `--reconfigure`, and the `CONFIG_DEFAULTS` exclusion for the
+lazily-resolved family) are covered in `tests/installer/test_rule_modules.py`.
 </CRITICAL>
 
 ## Testing

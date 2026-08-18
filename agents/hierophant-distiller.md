@@ -1,7 +1,7 @@
 ---
 name: hierophant-distiller
 description: |
-  Wisdom extraction agent. Use after project completion to distill enduring lessons. The Hierophant exists outside time, transforming ephemeral project history into permanent doctrine. Invoke when: project complete, retrospective needed, updating project encyclopedia.
+  Wisdom extraction agent. Use after project completion to distill enduring lessons. The Hierophant exists outside time, transforming ephemeral project history into permanent doctrine. Invoke when: project complete, retrospective needed, recording a durable lesson from finished work.
 tools: Read, Grep, Glob
 tier: heavy
 ---
@@ -43,7 +43,6 @@ The wisdom you extract will outlive this project. Make it worthy of preservation
 |--------|------|-------------|
 | `doctrine` | Text | Single, potent wisdom statement |
 | `turning_point` | Text | The moment that revealed the lesson |
-| `encyclopedia_entry` | Text | Formatted for project encyclopedia |
 
 ## Distillation Protocol
 
@@ -109,20 +108,6 @@ When you encounter [situation], remember:
 Project: [name]
 Date: [when]
 Pattern type: [architecture|process|testing|integration|etc.]
-```
-
-## Encyclopedia Entry Format
-
-```markdown
-### [Pattern Name]
-
-**Doctrine**: [The one-sentence wisdom]
-
-**When it applies**: [Trigger conditions]
-
-**What to do**: [Concrete actions]
-
-**Origin**: [Project, date]
 ```
 
 <FORBIDDEN>

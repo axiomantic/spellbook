@@ -1,6 +1,6 @@
 ---
 name: using-skills
-description: "System skill loaded at session start to initialize skill routing. Not invoked directly by users. Also useful when: 'which skill should I use', 'what skill handles this', 'wrong skill fired', 'skill didn't trigger'."
+description: "The full skill-routing protocol: decision flow, rationalization table, skill-priority ordering. Loaded by the intent-routing rule module, which carries the kernel. Also use when: 'which skill should I use', 'wrong skill fired', 'skill didn't trigger'."
 ---
 
 <ROLE>
@@ -10,7 +10,7 @@ Skill orchestration specialist. Reputation depends on invoking the right skill a
 ## Invariant Principles
 
 1. **Skill invocation precedes all action.** Check skills BEFORE responding, exploring, clarifying, or gathering context.
-2. **25% probability threshold triggers invocation.** High applicability required. Wrong skills waste tokens; missed high-signal skills degrade quality.
+2. **A 1% probability of applying triggers invocation.** The bar is deliberately at the floor: if a skill *plausibly* applies, load it. A skill loaded needlessly costs tokens; a skill missed costs quality on work already underway, which is the far more expensive error. Low-signal turns are excluded by Principle 3, not by raising this bar.
 3. **Ignore low-signal turns.** Never invoke a skill for simple status checks, "where are we" questions, or short clarifications.
 4. **Skills encode institutional knowledge.** They evolve. Never rely on memory of skill content.
 5. **Process determines approach; implementation guides execution.**
@@ -33,7 +33,7 @@ Skill orchestration specialist. Reputation depends on invoking the right skill a
 
 ## Session Init
 
-On **first message**, greet: "Welcome to spellbook-enhanced Claude." If fun-mode preferences haven't been configured, ask the user whether they'd like fun mode enabled.
+On **first message**, greet: "Welcome to spellbook-enhanced Claude."
 
 ## Decision Flow
 

@@ -20,28 +20,21 @@ Verification Engineer. Your reputation depends on a clean, accurate finding set.
 <CRITICAL>
 Before verifying any finding, determine whether local files can be trusted.
 
-```python
-import subprocess
+**The `reviewing-prs` skill is the single source for that decision.** Load it and
+apply its `review_source` decision table; do not re-derive the rule here. This
+command previously carried its own copy, and the copy had already diverged — it
+missed the worktree case, so a review running inside a worktree checked out to the
+PR branch was downgraded to `DIFF_ONLY` and lost every verification it could have
+made.
 
-def get_review_source(manifest: dict) -> str:
-    """Determine if local files are safe for verification. Returns 'LOCAL_FILES' or 'DIFF_ONLY'."""
-    pr_head_sha = manifest.get("pr_head_sha")  # from review-manifest.json
-    if not pr_head_sha:
-        return "LOCAL_FILES"  # local branch review; files are authoritative
+Take `review_source` from `review-manifest.json` if Phase 1 recorded it; otherwise
+compute it per `reviewing-prs` and write it back to the manifest so the later
+phases and this one cannot disagree.
 
-    local_head = subprocess.run(
-        ["git", "rev-parse", "HEAD"], capture_output=True, text=True
-    ).stdout.strip()
-
-    return "LOCAL_FILES" if local_head == pr_head_sha else "DIFF_ONLY"
-```
-
-**When `review_source == "DIFF_ONLY"`** (PR review, local branch not checked out to PR HEAD):
+**Phase 4's consequence of `review_source == "DIFF_ONLY"`:**
 - ALL verify_* functions return `"INCONCLUSIVE"` immediately — do NOT read local files
 - Mark the finding `[NEEDS VERIFICATION]` in the report
 - Reason: "PR review — local HEAD does not match PR HEAD SHA; local files reflect different code"
-
-A REFUTED verdict from local files in DIFF_ONLY mode is a **wrong verdict**. Real bugs introduced by the PR will not appear in the local pre-PR code. Reading local files will cause you to declare them absent.
 </CRITICAL>
 
 <FORBIDDEN>

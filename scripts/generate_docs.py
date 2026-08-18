@@ -13,7 +13,7 @@ from pathlib import Path
 
 import yaml
 
-from diagram_config import (
+from docs_config import (
     EXCLUDED_AGENTS,
     EXCLUDED_COMMANDS,
     EXCLUDED_SKILLS,
@@ -25,7 +25,6 @@ COMMANDS_DIR = REPO_ROOT / "commands"
 AGENTS_DIR = REPO_ROOT / "agents"
 RULES_DIR = REPO_ROOT / "rules"
 DOCS_DIR = REPO_ROOT / "docs"
-DIAGRAMS_DIR = DOCS_DIR / "diagrams"
 
 # Skills that came from superpowers
 SUPERPOWERS_SKILLS = {
@@ -47,6 +46,19 @@ SUPERPOWERS_SKILLS = {
 SUPERPOWERS_COMMANDS = {"design-explore", "execute-plan", "write-plan"}
 
 SUPERPOWERS_AGENTS = {"code-reviewer"}
+
+# The docs/ subtrees this script owns end to end. Pruning is confined to
+# these four: every other path under docs/ (getting-started/, reference/,
+# windows-support-report.md, ...) is hand-authored and must
+# never be touched by a generator run.
+GENERATED_SUBDIRS = ("skills", "commands", "agents", "rules")
+
+# Hand-authored pages that live INSIDE a generated subtree. Membership in
+# GENERATED_SUBDIRS is not sufficient to call a page generated, and this
+# is the whole reason: docs/skills/index.md is written by hand while its
+# three sibling indexes are generated. Pruning on "not produced by this
+# run" alone would delete it.
+HAND_AUTHORED_PAGES = frozenset({DOCS_DIR / "skills" / "index.md"})
 
 
 _FENCE_RUN = re.compile(r"^\s{0,3}(`{3,})", re.MULTILINE)
@@ -100,41 +112,6 @@ def extract_frontmatter(content: str) -> tuple[dict, str]:
     return frontmatter, parts[2].strip()
 
 
-def get_diagram_section(item_type: str, item_name: str) -> str:
-    """Return a diagram section if a diagram file exists for this item.
-
-    Args:
-        item_type: 'skills' or 'commands'
-        item_name: The item name (e.g., 'develop')
-
-    Returns:
-        Markdown section with diagram content, or empty string if no diagram exists.
-    """
-    diagram_file = DIAGRAMS_DIR / item_type / f"{item_name}.md"
-    if not diagram_file.exists():
-        return ""
-
-    content = diagram_file.read_text(encoding="utf-8")
-
-    # Strip the metadata comment line (first line starting with <!-- diagram-meta:)
-    lines = content.split("\n", 1)
-    if lines and lines[0].startswith("<!-- diagram-meta:"):
-        body = lines[1] if len(lines) > 1 else ""
-    else:
-        body = content
-
-    # Strip the "# Diagram:" header (redundant when embedded under "## Workflow Diagram")
-    body_stripped = body.lstrip("\n")
-    if body_stripped.startswith("# Diagram:"):
-        _, _, body_stripped = body_stripped.partition("\n")
-        body = body_stripped
-
-    if not body.strip():
-        return ""
-
-    return f"\n## Workflow Diagram\n\n{body.strip()}\n\n"
-
-
 def generate_skill_doc(skill_dir: Path) -> str | None:
     """Generate documentation page for a skill."""
     skill_name = skill_dir.name
@@ -169,13 +146,6 @@ def generate_skill_doc(skill_dir: Path) -> str | None:
     if attribution:
         parts.append(f"\n{attribution}")
 
-    # Include diagram if available
-    diagram = get_diagram_section("skills", skill_name)
-    if diagram:
-        # Strip leading \n when preceded by attribution (which ends with \n\n)
-        # to avoid double blank lines that the markdown linter normalizes away
-        parts.append(diagram.lstrip("\n") if attribution else diagram)
-
     parts.append("## Skill Content\n\n")
     fence = fence_for(body)
     parts.append(f"{fence}markdown\n")
@@ -205,11 +175,6 @@ def generate_command_doc(command_file: Path) -> str:
     if attribution:
         parts.append(f"\n{attribution}")
 
-    # Include diagram if available
-    diagram = get_diagram_section("commands", command_name)
-    if diagram:
-        parts.append(diagram.lstrip("\n") if attribution else diagram)
-
     parts.append("## Command Content\n\n")
     fence = fence_for(body)
     parts.append(f"{fence}markdown\n")
@@ -238,11 +203,6 @@ def generate_agent_doc(agent_file: Path) -> str:
     parts = [f"# {agent_name}\n"]
     if attribution:
         parts.append(f"\n{attribution}")
-
-    # Include diagram if available
-    diagram = get_diagram_section("agents", agent_name)
-    if diagram:
-        parts.append(diagram.lstrip("\n") if attribution else diagram)
 
     parts.append("## Agent Content\n\n")
     fence = fence_for(body)
@@ -479,6 +439,31 @@ def stale_docs(docs: dict[Path, str]) -> list[Path]:
     return stale
 
 
+def orphan_docs(docs: dict[Path, str]) -> list[Path]:
+    """Return generated-subtree pages that this run did not produce.
+
+    A page becomes an orphan when its source is deleted. Nothing removed
+    it, because the generator only ever wrote, so a deleted skill kept
+    shipping its page, its nav entry, and its README row indefinitely.
+
+    The scan is deliberately shallow and confined to GENERATED_SUBDIRS.
+    A recursive sweep of docs/ would treat every hand-authored guide as
+    an orphan, and that mistake deletes real documentation rather than
+    merely failing a check.
+    """
+    generated = set(docs)
+    orphans = []
+    for subdir in GENERATED_SUBDIRS:
+        directory = DOCS_DIR / subdir
+        if not directory.is_dir():
+            continue
+        for page in sorted(directory.glob("*.md")):
+            if page in generated or page in HAND_AUTHORED_PAGES:
+                continue
+            orphans.append(page)
+    return orphans
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Argument handling for the generator.
 
@@ -517,11 +502,17 @@ def main(argv: list[str] | None = None) -> int:
     # directories. Comparison happens purely in memory.
     if args.check:
         stale = stale_docs(docs)
+        orphans = orphan_docs(docs)
         print(summary)
-        if stale:
-            print(f"Stale or missing generated page(s): {len(stale)}")
-            for path in stale:
-                print(f"  {path.relative_to(REPO_ROOT)}")
+        if stale or orphans:
+            if stale:
+                print(f"Stale or missing generated page(s): {len(stale)}")
+                for path in stale:
+                    print(f"  {path.relative_to(REPO_ROOT).as_posix()}")
+            if orphans:
+                print(f"Orphaned generated page(s) with no source: {len(orphans)}")
+                for path in orphans:
+                    print(f"  {path.relative_to(REPO_ROOT).as_posix()}")
             print("Run: python3 scripts/generate_docs.py")
             return 1
         print("All files up to date")
@@ -534,11 +525,20 @@ def main(argv: list[str] | None = None) -> int:
     for path, content in docs.items():
         if write_if_changed(path, content):
             files_changed += 1
-            print(f"Generated: {path.relative_to(DOCS_DIR)}")
+            print(f"Generated: {path.relative_to(DOCS_DIR).as_posix()}")
+
+    files_removed = 0
+    for path in orphan_docs(docs):
+        path.unlink()
+        files_removed += 1
+        print(f"Removed orphan: {path.relative_to(DOCS_DIR).as_posix()}")
 
     print(summary)
-    if files_changed > 0:
-        print(f"Updated {files_changed} file(s)")
+    if files_changed > 0 or files_removed > 0:
+        if files_changed > 0:
+            print(f"Updated {files_changed} file(s)")
+        if files_removed > 0:
+            print(f"Removed {files_removed} orphaned file(s)")
     else:
         print("All files up to date")
     return 0

@@ -10,11 +10,10 @@ dependencies = [
     "aiosqlite>=0.20.0,<0.23",
     "alembic>=1.18.5,<1.19",
     "rich>=15.0.0",
-    "claude-agent-sdk",
 ]
 
 [project.optional-dependencies]
-claude = ["claude-agent-sdk"]
+claude = []
 gemini = []
 
 [dependency-groups]

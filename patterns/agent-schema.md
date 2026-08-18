@@ -134,9 +134,9 @@ For review agents:
 
 ### Severity Definitions
 
-The canonical vocabulary is the seven tokens below, defined in full by
-`patterns/code-review-taxonomy.md` and enforced by
-`spellbook.code_review.models.Severity`.
+The canonical vocabulary is seven tokens, defined in full by
+`patterns/code-review-taxonomy.md`. No code enforces them: the consumers match
+the exact token and silently drop anything else.
 The names `IMPORTANT`, `MINOR`, and `SUGGESTION` are retired (RETIRED):
 the consumer's `SEVERITY_ORDER` has no such keys, so a finding emitted under a
 retired name sorts through the fallback and vanishes.

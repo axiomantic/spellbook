@@ -139,27 +139,13 @@ Task (or subagent simulation):
 
 ### 3.3 Approval Gate
 
-**Decision surface (honors `SESSION_PREFERENCES.decision_surface`):** the
-plan-approval prompt is presented via `AskUserQuestion` when
-`decision_surface == "terminal"` (default). When `decision_surface == "canvas"`
-AND this approval meets the boundary in the "When to Use (testable boundary)"
-section of the canvas-decision skill (context-heavy: several plan options or
-trade-offs, a diagram that aids the call, or a hard-to-reverse plan
-commitment), invoke the `canvas-decision` skill instead — render the
-plan/one-pager approval as a canvas page and await the operator's submission.
-This wraps the gate; it does NOT change it: the never-auto-proceed contract
-holds, and quick yes/no acknowledgments stay terminal even under `canvas`. Map
-the submitted decision to the gate's outcomes — the approve/affirmative value →
-APPROVE (proceed); declined/reject value → ITERATE (return to 3.1/3.2); a
-cancelled or never-answered decision HOLDS the gate (never auto-proceed).
-
-**Canvas page CONTENT (when rendered via `canvas`):** the plan-approval page
-MUST follow the "Decision Page Anatomy" section of the canvas-decision skill —
-do NOT ship a bare approve button. Top-to-bottom: a plan-summary callout framing
-the commitment → a task-list of the plan's steps → an optional `<collapsible>`
-carrying the full plan/one-pager detail → the `<approve>`/`<choice>` control
-LAST. This is a CONTENT prescription only; it does not change the gate's
-behavior, the outcome mapping, or the never-auto-proceed contract above.
+**Decision surface:** the plan-approval prompt is presented via
+`AskUserQuestion`. Summarize the commitment and the plan's steps first, then
+give per-option detail with the recommended option signposted — never a bare
+approve/reject with no context. Map the operator's answer to the gate's
+outcomes — the approve/affirmative value → APPROVE (proceed); declined/reject
+value → ITERATE (return to 3.1/3.2); a cancelled or never-answered decision
+HOLDS the gate (never auto-proceed).
 
 **Interactive mode:** Present findings to user. Ask: APPROVE (proceed to 3.4.5) or ITERATE (return to 3.1/3.2).
 **Autonomous mode:** If findings are critical/important → fix automatically (dispatch executing-plans subagent). If minor → proceed.

@@ -5,290 +5,6 @@ Full-lifecycle feature implementation orchestrator that coordinates research, di
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when building, creating, modifying, or planning any code change. Triggers: "implement X", "build Y", "add feature Z", "create X", "change how X works", "modify Y", "update the Z", "refactor X", "rework Y", "restructure Z", "make X do Y", "let's plan how to", "plan the implementation", "how should we implement", "how would you build", "what's the best way to implement", "I want to...", "We need...", "Would be great to...", "Can we add...", "Let's add...", "Let's build...", "Let's make...", "start a new project". Also for: new projects, repos, templates, greenfield development, refactoring, migrations, multi-file modifications, any code change requiring planning. PREFER THIS OVER plan mode or ad-hoc implementation for ANY substantive code change. NOT for: bug fixes (use debugging), pure research (use deep-research), questions about existing code without intent to change it, or test-only fixes (use fixing-tests).
-
-## Workflow Diagram
-
-# Diagram Set: `develop` Skill Workflow
-
-## Diagram 1 — Overview
-
-```mermaid
-flowchart TD
-    START([User request:<br/>build/change code]) --> P0[Phase 0: Configuration<br/>Wizard]
-    P0 --> FLAGCHECK{Need-flags<br/>resolved}
-    FLAGCHECK -->|zero flags| FASTPATH[Direct/Lightweight Path<br/>D1-D3]
-    FLAGCHECK -->|needs_research| P1[Phase 1: Research]
-    FLAGCHECK -->|needs_design or<br/>needs_infrastructure| P2GATE{needs_research<br/>also set?}
-
-    P1 --> P15[Phase 1.5: Informed<br/>Discovery]
-    P15 --> DESIGNCHECK{needs_design or<br/>needs_infrastructure?}
-    DESIGNCHECK -->|yes| P2[Phase 2: Design]
-    DESIGNCHECK -->|no| P3[Phase 3: Implementation<br/>Planning]
-    P2GATE -->|yes, via P1/P1.5| P2
-    P2GATE -->|no, design-only| P2
-
-    P2 --> P3
-    P3 --> P4[Phase 4: Implementation]
-    FASTPATH --> DONE_F([Feature complete<br/>lighter review floor])
-    P4 --> DONE([Feature complete<br/>full review floor])
-
-    ESCAPE[/Escape hatch:<br/>design_doc or impl_plan/] -.-> P2
-    ESCAPE -.-> P3
-
-    subgraph Legend
-        L1[Process Step]
-        L2{Decision Point}
-        L3([Terminal])
-        L4[/Escape hatch/]
-        L5[Subagent dispatch]
-        L6[Quality gate]
-    end
-    style L5 fill:#4a9eff,color:#fff
-    style L6 fill:#ff6b6b,color:#fff
-    style DONE fill:#51cf66,color:#000
-    style DONE_F fill:#51cf66,color:#000
-```
-
-### Cross-Reference Table
-
-| Overview Node | Detail Diagram | Source (SKILL.md lines) |
-|---|---|---|
-| `P0` | Diagram 2: Phase 0 | 871-878 |
-| `P1` / `P15` | Diagram 3: Phase 1 + 1.5 | 883-899 |
-| `P2` | Diagram 4: Phase 2 | 900-907 |
-| `P3` | Diagram 5: Phase 3 | 908-915 |
-| `P4` | Diagram 6: Phase 4 | 916-931 |
-| `FASTPATH` | Diagram 7: Fast Path | 932-940 |
-
----
-
-## Diagram 2 — Phase 0: Configuration Wizard
-
-```mermaid
-flowchart TD
-    E0[0.1: Escape hatch<br/>detection] --> E1[0.2: Motivation<br/>clarification WHY]
-    E1 --> E2[0.3: Core feature<br/>clarification WHAT]
-    E2 --> E3[0.4: Workflow prefs +<br/>store SESSION_PREFERENCES]
-    E3 --> E4[0.5: Continuation<br/>detection]
-    E4 --> E5[0.6: Detect<br/>refactoring mode]
-    E5 --> E6[0.7: Need-flag wizard<br/>Q-RESEARCH/Q-DESIGN/<br/>Q-INFRA/Q-SIZE]
-    E6 --> LEDGER[Write develop_gate_ledger<br/>first time]
-    LEDGER --> DECIDE{Any need-flag<br/>set?}
-    DECIDE -->|zero flags| FP([Direct/Lightweight Path])
-    DECIDE -->|any flag| GATED([Flag-gated phases<br/>under full review floor])
-
-    subgraph Legend
-        LG1[Process Step]
-        LG2{Decision Point}
-        LG3([Terminal / handoff])
-    end
-```
-
----
-
-## Diagram 3 — Phase 1 (Research) + Phase 1.5 (Informed Discovery)
-
-Runs iff `needs_research`.
-
-```mermaid
-flowchart TD
-    R1[1.1: Research strategy<br/>planning] --> R2[1.2: Execute research<br/>Invoke: explore agent]
-    R2 --> R3[1.3: Ambiguity<br/>extraction]
-    R3 --> R4{1.4 GATE: Research<br/>Quality = 100%?}
-    R4 -->|no| R1
-    R4 -->|yes, user consent<br/>to bypass also allowed| D0[1.5.0: Disambiguation<br/>session]
-
-    D0 --> D1[1.5.1: Generate 7-category<br/>discovery questions]
-    D1 --> D2[1.5.2: Discovery wizard<br/>AskUserQuestion + ARH]
-    D2 --> D3[1.5.3: Build glossary]
-    D3 --> D4[1.5.4: Synthesize<br/>design_context]
-    D4 --> D5{1.5.5 GATE: Completeness<br/>= 100%, 13/13 functions?}
-    D5 -->|no| D0
-    D5 -->|yes| D6[1.5.6: Create<br/>Understanding Document]
-
-    D6 --> D7[1.5.7: Dehallucination Gate<br/>Invoke: dehallucination]
-    D7 --> D7F{Hallucinations<br/>found?}
-    D7F -->|yes| D7FIX[Fix understanding doc,<br/>reconcile derived artifacts]
-    D7FIX --> D8
-    D7F -->|no| D8[1.6: Invoke devils-advocate<br/>if needs_design OR needs_research]
-    D8 --> D8R[Reconcile understanding doc<br/>with critique findings]
-    D8R --> NEXT([Proceed to Phase 2<br/>or Phase 3])
-
-    subgraph Legend
-        LG1[Process Step]
-        LG2{Decision / Gate}
-        LG3([Terminal])
-        LG4[Subagent dispatch]
-    end
-    style R2 fill:#4a9eff,color:#fff
-    style D7 fill:#4a9eff,color:#fff
-    style D8 fill:#4a9eff,color:#fff
-    style R4 fill:#ff6b6b,color:#fff
-    style D5 fill:#ff6b6b,color:#fff
-```
-
----
-
-## Diagram 4 — Phase 2: Design
-
-Runs iff `needs_design` (implied by `needs_infrastructure`); skipped if escape hatch.
-
-```mermaid
-flowchart TD
-    G1[2.1: Invoke design-exploration<br/>SYNTHESIS MODE] --> G15[2.1.5: Checkability pass<br/>mechanize decidable claims]
-    G15 --> G2[2.2: Invoke<br/>reviewing-design-docs]
-    G2 --> G3{2.3 GATE: User approval<br/>interactive or auto-proceed}
-    G3 -->|ITERATE| G1
-    G3 -->|APPROVE| G4[2.4: Invoke executing-plans<br/>to fix]
-    G3 -->|HOLD, cancelled/<br/>no answer| G3
-    G4 --> G5[2.5: Assumption Verification<br/>Invoke: fact-checking]
-    G5 --> NEXT([Proceed to Phase 3])
-
-    ESC[/Escape hatch: design_doc<br/>treat_as_ready -> skip all<br/>review_first -> start at 2.2/] -.-> G2
-
-    subgraph Legend
-        LG1[Process Step]
-        LG2{Decision / Gate}
-        LG3([Terminal])
-        LG4[Subagent dispatch]
-        LG5[/Escape hatch/]
-    end
-    style G1 fill:#4a9eff,color:#fff
-    style G2 fill:#4a9eff,color:#fff
-    style G4 fill:#4a9eff,color:#fff
-    style G5 fill:#4a9eff,color:#fff
-    style G3 fill:#ff6b6b,color:#fff
-```
-
-Note: gate 2.3's surface honors `decision_surface` — terminal `AskUserQuestion` (default) or `canvas-decision` skill for qualifying context-heavy forks. The APPROVE/ITERATE/HOLD mapping is unchanged by which surface renders it.
-
----
-
-## Diagram 5 — Phase 3: Implementation Planning
-
-Runs iff `needs_design` OR `needs_infrastructure`; skipped if impl-plan escape hatch.
-
-```mermaid
-flowchart TD
-    W1[3.1: Invoke<br/>writing-plans] --> W15[3.1.5: Checkability pass<br/>build plan-specified tooling FIRST]
-    W15 --> W2[3.2: Invoke<br/>reviewing-impl-plans]
-    W2 --> W3{3.3 GATE: User approval<br/>per mode}
-    W3 -->|ITERATE| W1
-    W3 -->|APPROVE| W4[3.4: Invoke executing-plans<br/>to fix]
-    W3 -->|HOLD, cancelled/<br/>no answer| W3
-    W4 --> W45[3.4.5: Execution mode analysis<br/>direct vs delegated]
-    W45 --> NEXT([Proceed to Phase 4])
-
-    ESC[/Escape hatch: impl_plan<br/>treat_as_ready -> skip design + Phase 3<br/>review_first -> start at 3.2/] -.-> W2
-
-    subgraph Legend
-        LG1[Process Step]
-        LG2{Decision / Gate}
-        LG3([Terminal])
-        LG4[Subagent dispatch]
-        LG5[/Escape hatch/]
-    end
-    style W1 fill:#4a9eff,color:#fff
-    style W2 fill:#4a9eff,color:#fff
-    style W4 fill:#4a9eff,color:#fff
-    style W3 fill:#ff6b6b,color:#fff
-```
-
----
-
-## Diagram 6 — Phase 4: Implementation
-
-```mermaid
-flowchart TD
-    I0[4.0: Pre-implementation<br/>environment probe] --> I1[4.1: Setup worktree/s<br/>per preference]
-    I1 --> I2[4.2: Execute tasks<br/>per worktree strategy]
-    I2 --> I25{per_parallel_track<br/>worktrees?}
-    I25 -->|yes| I25M[4.2.5: Smart merge]
-    I25 -->|no| TASKLOOP
-    I25M --> TASKLOOP[For each task]
-
-    TASKLOOP --> T3[4.3: Invoke<br/>test-driven-development]
-    T3 --> T4[4.4: Completion verification<br/>inline audit prompt]
-    T4 --> T5[4.5: Invoke<br/>requesting-code-review]
-    T5 --> T51[4.5.1: Invoke<br/>fact-checking]
-    T51 --> MORETASKS{More tasks<br/>remaining?}
-    MORETASKS -->|yes| TASKLOOP
-    MORETASKS -->|no| A1
-
-    A1[4.6.1: Comprehensive<br/>implementation audit] --> A2[4.6.2: Run test suite]
-    A2 --> A2F{Test<br/>failures?}
-    A2F -->|yes| A2D[Invoke<br/>systematic-debugging]
-    A2D --> A2
-    A2F -->|no| A3[4.6.3: Invoke<br/>audit-green-mirage]
-    A3 --> A4{needs_research OR<br/>needs_design?}
-    A4 -->|yes| A41[4.6.4: Comprehensive<br/>fact-checking]
-    A4 -->|no| A5
-    A41 --> A5[4.6.5: Pre-PR<br/>fact-checking]
-    A5 --> A6[4.7: Invoke<br/>finishing-a-development-branch]
-    A6 --> DONE([Feature delivered]))
-
-    subgraph Legend
-        LG1[Process Step]
-        LG2{Decision / Gate}
-        LG3([Terminal])
-        LG4[Subagent dispatch]
-    end
-    style T3 fill:#4a9eff,color:#fff
-    style T5 fill:#4a9eff,color:#fff
-    style T51 fill:#4a9eff,color:#fff
-    style A3 fill:#4a9eff,color:#fff
-    style A41 fill:#4a9eff,color:#fff
-    style A6 fill:#4a9eff,color:#fff
-    style A2D fill:#4a9eff,color:#fff
-    style DONE fill:#51cf66,color:#000
-```
-
-Batching (design-only, no new nodes): task count `< 8` → one dispatch per gate per task; `8–12` → batched per-domain dispatches (still one gate per task); `> 12` or `≥ 2` tracks → batched aggressively, checkpoint `develop_gate_ledger` and hand off to a fresh session if context cannot hold the run.
-
----
-
-## Diagram 7 — Direct/Lightweight Path (zero flags)
-
-`develop` STAYS RESIDENT on this path — it never exits.
-
-```mermaid
-flowchart TD
-    FP0([Zero flags resolved<br/>at Phase 0.7]) --> FP1[D1: Lightweight research<br/>explore subagent, <=5 files,<br/>1-paragraph summary]
-    FP1 --> FP2[D2: Inline plan<br/><=5 numbered steps,<br/>user confirms]
-    FP2 --> FP3[D3: Implementation under<br/>lighter review floor]
-    FP3 --> FP3A[Code review: ALWAYS]
-    FP3 --> FP3B[Green-mirage audit: ALWAYS]
-    FP3 --> FP3C{Tests cover<br/>touched code?}
-    FP3C -->|yes| FP3C1[Test suite run]
-    FP3C -->|no| FP3C2[Recorded n/a,<br/>never silently dropped]
-    FP3 --> FP3D{Pure literal/<br/>config edit?}
-    FP3D -->|yes| FP3D1[TDD-first waived]
-    FP3D -->|no, has<br/>behavioral logic| FP3D2[TDD-first required]
-    FP3A --> DONE([Feature complete])
-    FP3B --> DONE
-    FP3C1 --> DONE
-    FP3C2 --> DONE
-    FP3D1 --> DONE
-    FP3D2 --> DONE
-
-    GUARD{Any guardrail<br/>exceeded? research>5 files,<br/>plan>5 steps, impl>5 files,<br/>tests>3 files} -.-> REFLAG[Scope-Drift Protocol:<br/>set need-flag, re-flag,<br/>continue at gated phase]
-    FP1 -.-> GUARD
-    FP2 -.-> GUARD
-    FP3 -.-> GUARD
-    REFLAG -.-> NEXT([Jump to Phase 1/1.5/2/3<br/>per newly-set flag])
-
-    subgraph Legend
-        LG1[Process Step]
-        LG2{Decision Point}
-        LG3([Terminal])
-        LG4[Subagent dispatch]
-    end
-    style FP1 fill:#4a9eff,color:#fff
-    style DONE fill:#51cf66,color:#000
-```
-
-Note: fact-checking never runs on this path — there is no research/design/plan artifact for it to challenge. Project-standards discovery is also waived here (design §5.6 / DA MIN-8).
-
 ## Skill Content
 
 ````markdown
@@ -327,8 +43,8 @@ When operating in YOLO mode or when user selected "Fully autonomous":
 - **STOP for scope expansion regardless of autonomous mode.** If a
   decision would introduce capabilities, infrastructure, or external
   integrations the operator did not mention in the initial request,
-  pause and surface to the operator. See `~/.claude/CLAUDE.md`
-  "Autonomous Mode and Scope Discipline".
+  pause and surface to the operator. The Autonomous Mode and Scope
+  Discipline section of this skill states the full contract.
 - **STOP before large delegated fan-out.** For a large delegated run,
   the plan one-pager and worktree/parallelization choices are gated by
   `feature-implement` Phase 3.4.7 (One-Pager Approval Gate). Autonomous
@@ -336,14 +52,8 @@ When operating in YOLO mode or when user selected "Fully autonomous":
   it does not spawn parallel sessions.)
 - **APPROVAL GATES (2.3, 3.3) ARE NEVER AUTO-PROCEEDED.** Even in
   full autonomous mode, design and plan approval gates require explicit
-  artifact verification before continuation. The *surface* of these gates
-  honors `SESSION_PREFERENCES.decision_surface`: under `terminal` (default)
-  the gate uses `AskUserQuestion` as today; under `canvas`, the gate's
-  `AskUserQuestion` is replaced by the `canvas-decision` skill for forks that
-  meet the boundary in the "When to Use (testable boundary)" section of the
-  canvas-decision skill (context-heavy design/plan approval). The
-  never-auto-proceed contract is UNCHANGED by either surface — `canvas` still
-  awaits an explicit operator decision; quick yes/no acks stay terminal.
+  artifact verification before continuation. These gates are presented via
+  `AskUserQuestion` and always await an explicit operator decision.
   Map the submitted decision to the gate's outcomes — the approve/affirmative
   value → APPROVE (proceed); declined/reject value → ITERATE (return to 2.1/2.2
   [resp. 3.1/3.2]); a cancelled or never-answered decision HOLDS the gate
@@ -398,6 +108,81 @@ C) [option + tradeoff]
 After emitting, suspend all progress until the user replies. Do not poll, retry, or act
 unilaterally. A halted agent that reports clearly is the protocol working; never suppress a
 circuit breaker and never proceed after triggering one.
+</CRITICAL>
+
+---
+
+## Autonomous Mode and Scope Discipline
+
+<CRITICAL>
+Autonomous mode scopes **confirmations**, not **scope**.
+
+Autonomous mode means: do not pause for trivial yes/no acknowledgments that an
+interactive user would give automatically (e.g., "proceed to the next phase?",
+"apply this fix?", "run the test suite?").
+
+Autonomous mode does NOT mean: license to expand the work beyond what the
+operator described in their initial request.
+
+A decision **expands scope** when it introduces capabilities, infrastructure,
+external integrations, monitoring/alerting, escalation paths, or new components
+that the operator did not mention. Examples of scope expansion that REQUIRE
+pausing regardless of autonomous mode:
+
+- Adding a new Lambda, scheduled job, queue, or background worker
+- Introducing a new external integration (PagerDuty, Slack, monitoring service,
+  secret store)
+- Adding an escalation/retry/reconciliation system not requested
+- Introducing a cache, mirror, or replication layer not requested
+- Adding authentication, authorization, or signing schemes not asked for
+
+When such an expansion is contemplated — even when justified by an
+adversarial-review finding or a "what could go wrong" risk surfaced by the
+orchestrator itself — the orchestrator MUST pause and surface the proposed
+expansion to the operator for explicit go/no-go.
+
+This rule overrides any phase-local "in autonomous mode, proceed automatically"
+instruction. Doing the asked work thoroughly is not the same as expanding the
+asked work autonomously.
+</CRITICAL>
+
+## Autonomous Mode: the Only Two Valid Stops
+
+<CRITICAL>
+Autonomous Mode and Scope Discipline says when you MUST stop; this rule says
+when you MUST NOT. Both are binding. When they do not both apply, you continue.
+
+In autonomous mode there are exactly TWO valid reasons to end a turn without a
+tool call:
+
+1. **A genuine external blocker.** Something only the operator can supply:
+   physical hardware, a credential, an irreversible or outward-facing action
+   (push, merge, publish, delete), or a decision whose options you cannot
+   generate.
+2. **The task is fully complete** and no further action is possible. Say so in
+   those words — "Complete. Nothing further possible without <the specific
+   missing thing>." Do not trail off into a status inventory.
+
+Everything else is NOT a stopping point. Specifically, these are completion
+bias, not blockers, and you continue past all of them:
+
+- The session has run long, or "this is a clean checkpoint."
+- A subagent returned a result. A result is an input to your next action, not
+  the end of your turn.
+- You finished a task-list item and there are more items.
+- You are waiting on a PEER AGENT. Peers are not blockers — pick up any other
+  unblocked work while you wait.
+- You just wrote a long report. Length is not completion.
+- You reached a phase boundary in a skill.
+
+**The announce-then-stop rule.** If your text says you will do something —
+"next I'll…", "I'm doing X now", "then executing the rename" — the tool call
+that starts it MUST be in the SAME turn. Announcing an action and ending the
+turn is a process failure even when the announcement is accurate. Either do it
+now or say explicitly why you cannot.
+
+**Do not claim in-flight work you have not dispatched.** "Poll just went out",
+"I've asked the group" are only true if a tool call in this turn made them true.
 </CRITICAL>
 
 ---
@@ -696,6 +481,13 @@ around. Do this instead:
 This is not a round cap. A round that finds new, real defects is progress — run
 it. The trigger is regression, not repetition.
 
+**Retry after a failed round: invoke `reflexion`.** When a round is repaired and
+re-dispatched, the repair dispatch MUST invoke the `reflexion` skill before it
+starts, so the retry carries an explicit account of why the previous attempt
+failed. A retry dispatched with no such account repeats the attempt with more
+words, which is how the same defect survives three rounds. This is the ONLY
+load path `reflexion` has; nothing else invokes it.
+
 **Round evidence (round 2 and later).** Each fresh reviewer starts with no
 memory, so every round re-derives the same graph and re-measures the same
 behavior. From round 2 on, carry an `ESTABLISHED FACTS` block in the review
@@ -712,6 +504,14 @@ round happens; a prompt block costs nothing until then.
 ## MANDATORY: Pre-Dispatch Ritual
 
 <CRITICAL>
+**Phase non-fungibility.** Inside /develop or any of its sub-skills
+(feature-config, feature-research, feature-discover, feature-design,
+feature-implement, feature-implement-execute), every Task() dispatch executes
+EXACTLY ONE row of the Subagent Dispatch Points table of this skill. Combining
+rows into a single dispatch is forbidden. A dispatch not preceded by a Phase
+Declaration is a process failure even if the work product is correct: the
+declaration is what makes phase collapse mechanically detectable in real time.
+
 Before EVERY Task() dispatch inside /develop or any of its sub-skills
 (feature-config, feature-research, feature-discover, feature-design,
 feature-implement, feature-implement-execute), output the following block
@@ -781,6 +581,13 @@ Operator phrasings that DO NOT authorize phase collapse (no exceptions):
 - "save context", "save tokens", "context efficiency"
 - "the ceremony is customizable now", "we picked a lighter ceremony", "drop that gate"
   <-- the picker closed at Phase 0. Cite the ledger or run the gate.
+- "prior phases produced strong context", "we already know enough"
+- "subagents would burn context if dispatched separately"
+- "it would be more efficient to combine..."
+
+Every item in that list is a phase-collapse rationalization. Recognizing one is
+the signal to stop, not a sign the situation is exceptional. The dispatch table
+has no exception column.
 
 If you find yourself reading any of the above as license to combine rows,
 that IS the rationalization (see Anti-Rationalization Framework below,
@@ -827,6 +634,21 @@ If a subagent fails or returns empty results: re-dispatch with additional contex
 | 4.6.3 | Green mirage             | auditing-green-mirage            | FORBIDDEN        |
 | 4.6.4 | Comprehensive fact-check | fact-checking                    | FORBIDDEN        |
 | 4.7   | Finishing                | finishing-a-development-branch   | FORBIDDEN        |
+
+### Conditional Companion Skills
+
+These do not own a row of the table: each rides along inside the dispatch for the
+phase named, and only when its trigger is present. A dispatch that meets a
+trigger MUST name the companion skill in its prompt alongside the phase's own
+skill; the Phase Declaration is unchanged, because the row is unchanged.
+
+| Trigger | Phase | Skill to name in the dispatch |
+| ------- | ----- | ----------------------------- |
+| Requirements are vague, or scope/acceptance criteria are unstated | 1.5 Discovery | `gathering-requirements` |
+| The change enters an unfamiliar domain, or key terms are undefined | 1.2 Research | `analyzing-domains` |
+| The design carries explicit states, transitions, or multi-step flows | 2.1 Design | `designing-workflows` |
+| A dispatch prompt is approaching its token budget, or must select from a large artifact set | 3.x Planning, 4.x Execution | `assembling-context` |
+| A gate is being re-dispatched after a failed round | 2.4 / 3.4 / 4.x retry | `reflexion` |
 
 <FORBIDDEN>
 ### Signs You Are Violating This Rule
@@ -908,6 +730,97 @@ The orchestrator is where that qualifier gets lost, because it is summarising.
 4. **Completion Means Evidence**: "Done" requires traced verification through code. Trust execution paths, not file names or comments.
 
 5. **Autonomous Means Thorough**: In autonomous mode, treat suggestions as mandatory. Fix root causes, not symptoms. Choose highest-quality fixes.
+
+---
+
+## Develop = Thoroughness Mode (Operator Contract)
+
+<CRITICAL>
+Invoking develop is the operator's explicit opt-in to thoroughness, and a
+durable instruction: correctness outranks speed for the duration of the work.
+An operator who wants speed will say so and will not invoke develop. The
+presence of develop in the active skill list IS the contract. The
+"steady correctness over speed" disposition, where that rule module is
+installed, is the general form of this contract.
+
+**Thoroughness is CHOSEN ONCE, then FIXED.** The ceremony is selectable in a
+single window, and never afterward.
+
+- **The selection window is Phase 0, before any work begins.** develop assesses
+  the request across its cost dimensions and RECOMMENDS a ceremony. The
+  operator's answer is the SOURCE OF TRUTH and overrides the recommendation. It
+  is written to `develop_gate_ledger.ceremony` and LOCKED (`locked_at`). This is
+  the only moment ceremony is negotiable.
+- **A non-negotiable core is never on the menu.** The review floor defines that
+  core: code review, green-mirage auditing, the test run when tests cover the
+  touched code, and TDD-first for anything carrying behavioral logic. Where the
+  Iron Law is established (no skill written or edited without a failing test
+  first), it belongs to that core too. Gates implied by high verification
+  difficulty or high silent-failure potential are locked on and cannot be
+  deselected.
+- **Elision vs repositioning.** ELISION is running FEWER gates than the locked
+  ceremony selected. It is forbidden, always. REPOSITIONING is running EVERY
+  selected gate at a declared boundary recorded in the ledger — a Phase-0 choice
+  (`gate_position: per_task | per_group`), locked at `locked_at` with everything
+  else. Changing gate position after the lock requires the same
+  ABORT-and-re-invoke path as any other ceremony change.
+- **After the lock, the original contract applies UNCHANGED.** NO operator
+  phrasing during develop is license to compress phases. Not "wrap up", not "and
+  pause", not "finish X items", not "save tokens", not "be efficient", not "we
+  may have enough info now", not standing autonomous mode, not "pre-resolved
+  forks", and not "the ceremony is customizable now". A mid-run request to drop
+  a gate is REFUSED.
+- **The two honest answers to "this is taking too long" are FINISH or ABORT.**
+  Never a quiet narrowing. Aborting and re-invoking develop with a different
+  ceremony is always legitimate: it makes re-selection visible and deliberate
+  instead of an erosion.
+- **ABORT-and-re-invoke is a DEFINED operation, not an improvised one.** On a
+  deliberate re-invocation over an existing `develop_gate_ledger`, the old
+  `ceremony` block is archived under `ceremony_history` with a reason, a NEW
+  Phase 0 runs and a new selection window legitimately opens, completed-gate and
+  wave records carry forward, and `locked_at` is set fresh (`feature-config`
+  §0.5.6 is the procedure). The escape hatch must stay affordable: if the honest
+  path costs a full restart, quiet erosion becomes the cheap path. This does not
+  loosen the lock: the non-negotiable core applies at EVERY selection, the D5/D6
+  escalation-only locks re-derive from the unchanged assessment, and
+  `ceremony_history` makes serial de-escalation auditable. Re-invoking ritually
+  to shed gates is itself a phase-collapse rationalization, already covered by
+  the Anti-Rationalization Framework of this skill.
+- **Escalation is always legal; de-escalation never becomes legal.** Scope drift
+  may ADD gates mid-run (a declined component may be promoted, with the reason
+  recorded); nothing may remove one. The lock is a floor, not a ceiling.
+- **A declined component is RECORDED as declined**, not merely absent, so a
+  resumed session can tell "the operator chose not to run this" from "this has
+  not run yet".
+- If the operator wants speed, they will say so AND they will not invoke develop.
+- Apparent time pressure ("pause when done", impending session end, etc.) does
+  NOT justify skipping phases. The chosen path is the only path inside develop.
+  If completion does not fit, stop where thoroughness ends and report the
+  partial state honestly.
+- This contract is durable across sessions and governs what happens AFTER the
+  lock, on every develop invocation in every project.
+</CRITICAL>
+
+### Parallelism vs Ceremony (two independent fields, not one)
+
+`SESSION_PREFERENCES.parallelization` (asked in §0.4) and
+`develop_gate_ledger.ceremony` (asked in §0.8) are **two independent fields**.
+Changing one does NOT change the other:
+
+- `parallelization: "conservative"` (or `"sequential"`) only controls dispatch
+  count -- how many tasks run concurrently. It does NOT drop any gate, change
+  the review floor, or alter the ceremony.
+- A lighter ceremony in §0.8 (`Customize` -> unselect a component) changes WHICH
+  gates run, not HOW MANY tasks dispatch at once.
+- An operator who says "switch to conservative" is asking for sequential
+  dispatch with the SAME ceremony still in force. Treat that as a parallelism
+  change only; the locked `ceremony.selected` is unchanged.
+
+They answer different questions. Parallelism is "how much work in flight at
+once?"; ceremony is "what verification must each piece of work pass?"
+Re-deriving ceremony from a parallelism preference would let time pressure erode
+the review floor, which is what the lock prevents. Read the two fields
+independently and never conflate them.
 
 ---
 
@@ -1209,6 +1122,56 @@ is: grouping dispatches by domain while still running every gate for every
 task. When one session cannot hold a very large run, hand off via the
 ledger — never by skipping gates.
 
+### Stop Semantics in Batched Dispatches
+
+<CRITICAL>
+"A task that finds the design wrong stops and reports" is ambiguous inside a
+batched dispatch. The ambiguity has already produced a 48-file low-quality
+landing (Wave 3a, nmg2-emulator, 2026-08). The binding definition:
+
+- Stopping is NOT "writing no commit." An implementer may commit partial,
+  clearly-labeled work.
+- Stopping IS "not marking the task complete." A task whose implementer found a
+  design defect stays OPEN — in the ledger and in the plan — until the defect is
+  resolved and the task re-verified.
+- A batch inherits this per task: one blocked task does not block siblings, and
+  no sibling's completion marks the blocked one.
+- The dispatch report MUST list each covered task as COMPLETE or OPEN(reason). A
+  batch report with no per-task status is invalid.
+</CRITICAL>
+
+### Incidentals: Mid-Implementation Departures Must Be Integrated, Not Improvised
+
+<CRITICAL>
+An "incidental" is any departure from the implementation plan discovered DURING
+implementation: a design assumption that turns out wrong, scope the plan didn't
+anticipate, or a redirection the plan's approach doesn't cover. It is not
+optional housekeeping. It changes what "the plan" means, and the plan document
+is the only artifact a resumed session or reviewer will read to find out what's
+true.
+
+Discovering an incidental does not authorize working around it silently. Before
+continuing implementation past the point where it was found:
+
+1. **Stop and classify it** — a bug in the plan (a stated assumption is wrong),
+   scope the plan omitted (a task it should have had), or a full redirection
+   (the plan's approach itself needs to change).
+2. **Write it into the plan document itself** — not a chat message, not a code
+   comment, not a mental note to clean the plan up afterwards. Use a task block,
+   an amendment section, or an explicit superseding note, in the document a
+   resumed session or reviewer reads. An incidental deferred past the moment it
+   was found is the exact failure this rule prevents.
+3. **Gate the incidental like any other task** — it inherits the same ceremony
+   (ledger entry, ownership, a `Check:` line where the plan uses them) as a
+   planned task. Being discovered rather than planned is not grounds for a
+   lighter gate.
+4. Only then continue implementation.
+
+This applies however small the incidental looks. A departure too small to write
+down was too small to require a decision. If it required a decision, the
+decision belongs in the plan, not only in the diff.
+</CRITICAL>
+
 **Subagent Prompt Length Verification:**
 Before dispatching ANY subagent:
 
@@ -1289,7 +1252,7 @@ Phase 2: Design (if needs_design; needs_infrastructure implies needs_design; ski
   ├─ 2.1: Subagent invokes design-exploration (SYNTHESIS MODE)
   ├─ 2.1.5: Checkability pass (mechanize decidable claims before the review gate)
   ├─ 2.2: Subagent invokes reviewing-design-docs
-  ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous); surface honors decision_surface (terminal AskUserQuestion | canvas-decision for forks qualifying under the "When to Use (testable boundary)" section of the canvas-decision skill)
+  ├─ 2.3: GATE: User approval (interactive) or auto-proceed (autonomous); presented via AskUserQuestion
   ├─ 2.4: Subagent invokes executing-plans to fix
   └─ 2.5: Assumption Verification
     ↓
@@ -1297,7 +1260,7 @@ Phase 3: Implementation Planning (if needs_design OR needs_infrastructure; skip 
   ├─ 3.1: Subagent invokes writing-plans
   ├─ 3.1.5: Checkability pass (mechanize decidable claims; build plan-specified tooling FIRST)
   ├─ 3.2: Subagent invokes reviewing-impl-plans
-  ├─ 3.3: GATE: User approval per mode; surface honors decision_surface (terminal AskUserQuestion | canvas-decision for forks qualifying under the "When to Use (testable boundary)" section of the canvas-decision skill)
+  ├─ 3.3: GATE: User approval per mode; presented via AskUserQuestion
   ├─ 3.4: Subagent invokes executing-plans to fix
   └─ 3.4.5: Execution mode analysis (direct vs delegated, by parallelization preference + size_estimate)
     ↓
@@ -1584,10 +1547,10 @@ interface DesignContext {
 
 <CRITICAL>
 A change must never silently skip ALL review just because it carries no flags.
-The review floor is **always-on but TIERED** (design §3). The exact gate set is
-derived by `spellbook/sessions/develop_gates.py::derive_remaining_gates`; the
-tables below (design §3.2 floor, §3.3 flag-gated depth) are the SINGLE SOURCE OF
-TRUTH and are referenced here, not restated row-by-row.
+The review floor is **always-on but TIERED** (design §3). The tables in this
+section (design §3.2 floor, §3.3 flag-gated depth) are the SINGLE SOURCE OF
+TRUTH for the gate set; there is no executable derivation helper, so develop
+itself applies these tables and records the result in the ledger.
 </CRITICAL>
 
 - **Full floor (any flagged path):** TDD-first (4.3) + code review (4.5) +
@@ -1860,10 +1823,11 @@ and binding every declaration to it (see Pre-Dispatch Ritual above).
   code review, green-mirage, the conditional test run, TDD-first for behavioral
   changes, and the Iron Law were not options that happened to be selected.
 - **`remaining_gates` stays the run-queue** and is derived exactly as today from
-  `derive_remaining_gates(need_flags, current_phase, tests_exist, completed_gates)`,
-  then filtered by removing anything in `ceremony.declined`. When `declined` is empty
+  the Tiered Review Floor tables applied to
+  (`need_flags`, `current_phase`, `tests_exist`, `completed_gates`), then filtered
+  by removing anything in `ceremony.declined`. When `declined` is empty
   — the default path — the filter is the identity function and `remaining_gates` is
-  byte-identical to today's scalar. The helper itself is UNCHANGED.
+  byte-identical to today's scalar. The derivation itself is UNCHANGED.
 - **Escalation only.** `ceremony.promotions` records every declined → selected move
   with its reason; there is no recorded form for the reverse move because the reverse
   move is forbidden. Scope drift (Re-Flag and Continue) may set a need-flag and thereby
@@ -1876,23 +1840,20 @@ FULL scalar on each transition; the merge replaces it wholesale (CRIT-1, design 
 `current_phase` uses the literal `"fast-path"` for the zero-flag path (NOT
 `"direct"`, NOT an auto-exit sentinel — develop stays resident).
 
-**Deriving `remaining_gates`:** develop computes the scalar with the pure helper
-`spellbook/sessions/develop_gates.py`:
-
-```
-derive_remaining_gates(need_flags, current_phase, tests_exist, completed_gates=()) -> str
-```
-
-It encodes the tiered floor (design §3.2), flag-gated depth (§3.3), the TDD-first
-waiver on the fast path (§3.4), and phase ordering (§2.1) — those tables are the
-single source of truth; this helper is their single executable form. `tests_exist`
-is computed by **develop itself** from its touched-file analysis (do existing tests
-cover the files about to be edited?) and passed in; the helper is pure (no DB, no
-I/O) and trusts the boolean. On the fast path with no covering tests the helper
-emits the explicit sentinel line `"test suite (n/a — no tests cover touched code)"`
-inside the scalar so "not applicable" is never silently dropped. As each gate
-completes, re-derive with that gate in `completed_gates` (pruning = REPLACE the
-scalar with it removed).
+**Deriving `remaining_gates`:** develop computes the scalar itself from four
+inputs — `need_flags`, `current_phase`, `tests_exist`, `completed_gates` —
+against the tiered floor (design §3.2), flag-gated depth (§3.3), the TDD-first
+waiver on the fast path (§3.4), and phase ordering (§2.1). **Those tables are the
+single source of truth and they have no executable form**: nothing in this repo
+derives the gate set, so a mis-derivation fails silently and only a reader of the
+ledger will catch it. `tests_exist` is develop's own judgement from its
+touched-file analysis (do existing tests cover the files about to be edited?). On
+the fast path with no covering tests, emit the explicit sentinel line
+`"test suite (n/a — no tests cover touched code)"` inside the scalar so "not
+applicable" is never silently dropped. As each gate completes, re-derive with
+that gate in `completed_gates` (pruning = REPLACE the scalar with it removed).
+`scripts/develop_gate_ledger.py` RECORDS the derived scalar; it does not compute
+it.
 
 **Transition points where develop writes (design §5.4):**
 
@@ -1912,7 +1873,7 @@ scalar with it removed).
    Re-derive `remaining_gates` as the full scalar with completed gates pruned —
    REPLACE the whole value, never append (CRIT-1).
 4. **At fast-path entry (zero flags):** `current_phase="fast-path"`,
-   `remaining_gates` = the lighter-floor scalar from `derive_remaining_gates`
+   `remaining_gates` = the lighter-floor scalar from the same derivation
    (`"code review\ngreen-mirage"` plus `"test suite"` when `tests_exist`, else the
    n/a sentinel; TDD-first omitted per the §3.4 waiver). develop STAYS RESIDENT.
 

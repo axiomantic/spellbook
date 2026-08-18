@@ -88,7 +88,7 @@ Extract the actual enforceable rules with their ids/names and emit
   "sources": [
     {"path": "AGENTS.md", "status": "loaded"},
     {"path": "docs/coding-standards.md", "status": "loaded"},
-    {"path": "spellbook/gates/AGENTS.md", "status": "loaded", "covers": ["spellbook/gates/"]},
+    {"path": "patterns/code-review-taxonomy.md", "status": "loaded", "covers": ["reviews"]},
     {"path": "docs/ai/testing-instructions.md", "status": "absent"}
   ],
   "rules": [

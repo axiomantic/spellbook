@@ -10,7 +10,7 @@ contents inline (per M6 anti-irony, design §16).
 
 Spellbook's skill- and command-authoring conventions
 (`skills/writing-skills`, `skills/instruction-engineering`,
-`skills/writing-commands`, `skills/crystallize`, `commands/ie-template`)
+`skills/writing-commands`, `commands/crystallize.md`, `commands/ie-template`)
 prescribe a canonical heading skeleton that every well-formed skill or
 command instantiates. Two files that both contain a `## Invariant
 Principles` section are not *duplicating content* — each is filling a
@@ -148,5 +148,5 @@ pattern above is short-circuited.
   `skills/writing-skills/SKILL.md`,
   `skills/writing-commands/SKILL.md`,
   `skills/instruction-engineering/SKILL.md`,
-  `skills/crystallize/SKILL.md`,
+  `commands/crystallize.md`,
   `commands/ie-template.md`.

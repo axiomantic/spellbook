@@ -10,6 +10,16 @@ on:
       - 'skills/**'
       - 'commands/**'
       - 'agents/**'
+      - 'rules/**'
+      - 'scripts/generate_docs.py'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'skills/**'
+      - 'commands/**'
+      - 'agents/**'
+      - 'rules/**'
       - 'scripts/generate_docs.py'
   workflow_dispatch:
     inputs:
@@ -25,6 +35,7 @@ permissions:
 
 jobs:
   deploy:
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

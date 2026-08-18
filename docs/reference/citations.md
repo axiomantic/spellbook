@@ -1,6 +1,6 @@
 # Research Citations
 
-This page documents the research that informs spellbook's design, particularly the [fun-mode](../skills/fun-mode.md) and [emotional-stakes](../skills/emotional-stakes.md) skills.
+This page documents the research that informs spellbook's design, particularly the [emotional-stakes](../skills/emotional-stakes.md) skill.
 
 ## Creativity and Seed-Conditioning
 
@@ -8,7 +8,7 @@ This page documents the research that informs spellbook's design, particularly t
 
 - **Link**: [https://arxiv.org/abs/2504.15266](https://arxiv.org/abs/2504.15266) (group page: [https://www.cs.cmu.edu/~aditirag/icml2025.html](https://www.cs.cmu.edu/~aditirag/icml2025.html))
 - **Key finding**: Injecting noise at the input layer ("seed-conditioning") works as well as, and sometimes better than, temperature sampling at the output layer for eliciting creative and diverse outputs from language models. The paper argues that standard next-token prediction has inherent limits for tasks requiring planning and novel pattern discovery.
-- **Relevance**: Fun mode's random personas act as semantic seeds that steer generation toward diverse solution pathways.
+- **Relevance**: Informed spellbook's since-removed fun mode, whose random personas acted as semantic seeds intended to steer generation toward diverse solution pathways.
 
 ## Persona Effects on Reasoning
 
@@ -52,7 +52,7 @@ This page documents the research that informs spellbook's design, particularly t
 
 - **Link**: [https://arxiv.org/abs/2311.10054](https://arxiv.org/abs/2311.10054)
 - **Key finding**: Across 162 personas and 2,410 factual questions (MMLU), personas do not improve performance on factual tasks compared to neutral prompts. Effects are inconsistent and sometimes negative.
-- **Relevance**: **Critical caveat** - fun mode explicitly restricts personas to dialogue, never affecting code, commits, or documentation. Personas may help creative and social reasoning tasks but do not help factual question-answering.
+- **Relevance**: **Critical caveat** - personas may help creative and social reasoning tasks but do not help factual question-answering. This finding is why the since-removed fun mode restricted personas to dialogue, never to code, commits, or documentation.
 
 **Gupta, S., et al.** (2024). Bias Runs Deep: Implicit Reasoning Biases in Persona-Assigned LLMs. *International Conference on Learning Representations (ICLR 2024)*.
 
@@ -121,11 +121,11 @@ This page documents the research that informs spellbook's design, particularly t
 
 | Technique | Research Support | Domain | Used In |
 |-----------|-----------------|--------|---------|
-| Random personas | Nagarajan et al. (ICML 2025), Tan (PHAnToM) | Creative, social reasoning | fun-mode |
+| Random personas | Nagarajan et al. (ICML 2025), Tan (PHAnToM) | Creative, social reasoning | Not currently used (fun-mode skill removed) |
 | Emotional framing | Li (EmotionPrompt), Wang (NegativePrompt) | All reasoning tasks | emotional-stakes |
-| Persona consistency | Park (Generative Agents) | Long-form interaction | fun-mode session persistence |
+| Persona consistency | Park (Generative Agents) | Long-form interaction | Not currently used (fun-mode skill removed) |
 | CoVe self-interrogation | Dhuliawala et al. (2023) | Verification, claim checking | fact-checking, dehallucination, verifying-hunches |
 | Atomic claim decomposition | Min et al. (FActScore, EMNLP 2023) | Claim extraction, verification | decompose-claims command |
 | API hallucination detection | Tambon et al. (2025), Pomian et al. (2025) | Code review, quality | code-review, enforcing-code-quality |
 
-**Design principle**: Spellbook uses personas for creative dialogue only, never for code or documentation, based on Zheng et al.'s findings that personas do not improve objective task performance.
+**Design principle**: Where spellbook applied personas, it confined them to dialogue and kept them out of code and documentation, following Zheng et al.'s finding that personas do not improve objective task performance. The persona-driven modes have since been removed; the constraint stands for any future use.

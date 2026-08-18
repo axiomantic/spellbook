@@ -18,8 +18,8 @@ classes of forbidden tokens and FAILS (exit 1) on any non-allowlisted match:
 Allowlisting is CONTENT/SYMBOL-anchored (design N-2): each allowlist entry pairs
 a repo-relative path glob with an anchor substring that MUST appear on the matched
 line for the match to be suppressed. Path-only entries (anchor ``None``) suppress
-every match in a file -- used only for the archived sub-orchestrator body. Line
-numbers are NEVER used as anchors; they rot as files shift.
+every match in a file. Line numbers are NEVER used as anchors; they rot as files
+shift.
 
 Usage:
     uv run scripts/check_removed_mode_tokens.py [REPO_ROOT]
@@ -83,11 +83,6 @@ ALLOWLIST_TIER: tuple[AllowEntry, ...] = (
         reason="$COMPLEXITY shell variable in the simplify command",
     ),
     AllowEntry(
-        path_glob="skills/dispatching-sub-orchestrators/ARCHIVE.md",
-        anchor=None,
-        reason="archived sub-orchestrator body (historical), path-allowlisted",
-    ),
-    AllowEntry(
         path_glob="skills/estimating-tickets/fleet-effort.md",
         anchor="NET-NEW COMPLEX",
         reason="estimating-tickets complexity speed-class vocabulary, not a develop tier-classifier",
@@ -97,9 +92,8 @@ ALLOWLIST_TIER: tuple[AllowEntry, ...] = (
 # --- Allowlist (b): removed-mode vocabulary that legitimately survives --------
 #
 # work_items / sub_orchestrators are NEVER blanket-allowlisted as develop
-# routing vocabulary. The two anchored exceptions below are:
-#   * the deprecation STUB naming what was removed (design §9.1), and
-#   * a pre-existing, out-of-scope pseudocode loop variable in fixing-tests.
+# routing vocabulary. The one anchored exception below is a pre-existing,
+# out-of-scope pseudocode loop variable in fixing-tests.
 # execution_mode is RETAINED (Tasks 16/17) as the kept direct/delegated field
 # name; its surviving sites are allowlisted with tight content anchors.
 ALLOWLIST_REMOVED_MODE: tuple[AllowEntry, ...] = (
@@ -120,18 +114,6 @@ ALLOWLIST_REMOVED_MODE: tuple[AllowEntry, ...] = (
         path_glob="commands/feature-implement-execute.md",
         anchor="| execution_mode | Phase 4 Path |",
         reason="retained routing field column header (direct/delegated only)",
-    ),
-    # Deprecation stub naming the removed sub_orchestrators / work_items modes.
-    AllowEntry(
-        path_glob="skills/dispatching-sub-orchestrators/SKILL.md",
-        anchor=None,
-        reason="deprecation stub banner names the removed modes (design §9.1)",
-    ),
-    # Archived historical body.
-    AllowEntry(
-        path_glob="skills/dispatching-sub-orchestrators/ARCHIVE.md",
-        anchor=None,
-        reason="archived sub-orchestrator body (historical), path-allowlisted",
     ),
     # Pre-existing, out-of-scope pseudocode loop variable (see module docstring
     # and DEVIATION note): fixing-tests uses ``work_items`` as a local loop var

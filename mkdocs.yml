@@ -1,10 +1,8 @@
 docs_dir: docs
 exclude_docs: |
   Users-*/
-  diagrams/
   /security.md
   /windows-support-report.md
-  commands/toggle-fun.md
 site_name: Spellbook
 site_description: Multi-platform AI assistant skills, commands, and configuration
 site_url: https://axiomantic.github.io/spellbook/
@@ -83,7 +81,6 @@ nav:
       - skills/executing-plans.md
       - skills/gathering-requirements.md
       - skills/analyzing-domains.md
-      - skills/autonomous-roundtable.md
     - Code Review:
       - skills/code-review.md
       - skills/advanced-code-review.md
@@ -116,7 +113,6 @@ nav:
     - Project Quality:
       - skills/fact-checking.md
       - skills/finding-dead-code.md
-      - skills/security-auditing.md
       - skills/polish-repo.md
       - skills/enforcing-code-quality.md
       - skills/generating-diagrams.md
@@ -145,13 +141,10 @@ nav:
       - rules/51-ai-attribution.md
       - rules/55-diff-semantics.md
       - rules/60-autonomy.md
-      - rules/70-bash-gate.md
       - rules/80-code-quality.md
       - rules/81-testing.md
       - rules/82-file-reading.md
       - rules/83-language-python.md
-      - rules/85-review-method.md
-      - rules/86-review-posture.md
       - rules/91-role.md
       - rules/92-core-philosophy.md
       - rules/93-communication.md
@@ -166,14 +159,10 @@ nav:
       - skills/analyzing-domains.md
       - skills/analyzing-skill-usage.md
       - skills/assembling-context.md
-      - skills/audio-notifications.md
       - skills/async-await-patterns.md
       - skills/auditing-green-mirage.md
-      - skills/autonomous-roundtable.md
       - skills/design-exploration.md
       - skills/branch-context.md
-      - skills/canvas.md
-      - skills/canvas-decision.md
       - skills/code-review.md
       - skills/creating-issues-and-pull-requests.md
       - skills/debugging.md
@@ -183,7 +172,6 @@ nav:
       - skills/designing-workflows.md
       - skills/devils-advocate.md
       - skills/dispatching-parallel-agents.md
-      - skills/dispatching-sub-orchestrators.md
       - skills/distilling-prs.md
       - skills/documenting-projects.md
       - skills/documenting-tools.md
@@ -196,7 +184,6 @@ nav:
       - skills/finishing-a-development-branch.md
       - skills/fixing-tests.md
       - skills/fractal-thinking.md
-      - skills/fun-mode.md
       - skills/gathering-requirements.md
       - skills/generating-diagrams.md
       - skills/develop.md
@@ -206,9 +193,7 @@ nav:
       - skills/merging-worktrees.md
       - skills/opportunity-awareness.md
       - skills/optimizing-instructions.md
-      - skills/permissions-from-transcripts.md
       - skills/polish-repo.md
-      - skills/project-encyclopedia.md
       - skills/reflexion.md
       - skills/requesting-code-review.md
       - skills/resolving-merge-conflicts.md
@@ -216,13 +201,8 @@ nav:
       - skills/reviewing-design-docs.md
       - skills/reviewing-impl-plans.md
       - skills/reviewing-prs.md
-      - skills/security-auditing.md
-      - skills/security-trust-tiers.md
-      - skills/session-mode-init.md
-      - skills/session-resume.md
       - skills/sharpening-prompts.md
       - skills/smart-reading.md
-      - skills/tarot-mode.md
       - skills/test-driven-development.md
       - skills/testing-strategy.md
       - skills/tooling-discovery.md
@@ -231,6 +211,7 @@ nav:
       - skills/using-skills.md
       - skills/verifying-hunches.md
       - skills/writing-commands.md
+      - skills/writing-copy.md
       - skills/writing-plans.md
       - skills/writing-skills.md
     - Commands A-Z:
@@ -246,7 +227,6 @@ nav:
       - commands/audit-mirage-analyze.md
       - commands/audit-mirage-cross.md
       - commands/audit-mirage-report.md
-      - commands/canvas.md
       - commands/design-explore.md
       - commands/code-review-feedback.md
       - commands/code-review-give.md
@@ -274,8 +254,6 @@ nav:
       - commands/docs-write.md
       - commands/docs-review.md
       - commands/distill-session.md
-      - commands/encyclopedia-build.md
-      - commands/encyclopedia-validate.md
       - commands/estimate-buffer.md
       - commands/estimate-point.md
       - commands/estimate-report.md
@@ -307,7 +285,6 @@ nav:
       - commands/merge-worktree-execute.md
       - commands/merge-worktree-resolve.md
       - commands/merge-worktree-verify.md
-      - commands/mode.md
       - commands/move-project.md
       - commands/polish-repo-audit.md
       - commands/polish-repo-community.md

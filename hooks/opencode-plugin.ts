@@ -1,26 +1,40 @@
 // OpenCode plugin for Spellbook security
 //
 // Registers tool.execute.before and tool.execute.after hooks that shell out
-// to the spellbook security check module for input validation and output
-// audit logging.
+// to a security check command for input validation and output audit logging.
+//
+// Spellbook itself ships no gate. The command is supplied by the operator
+// through SPELLBOOK_GATE_CMD; with it unset there is no gate to consult and
+// the hooks are a pass-through. Naming a built-in default here would name a
+// module that does not exist and spawn an interpreter per tool call to
+// rediscover that on every call.
 //
 // Note: subagent tool calls do NOT trigger plugin hooks (OpenCode issue #5894)
 
 import { execSync } from 'child_process';
 
-function getCheckCommand(): string {
-  return 'python3 -m spellbook.gates.check';
+export function getCheckCommand(): string | null {
+  return process.env.SPELLBOOK_GATE_CMD || null;
 }
 
-function runSecurityCheck(payload: string, extraArgs: string[] = []): { safe: boolean; error?: string } {
+export function runSecurityCheck(
+  payload: string,
+  extraArgs: string[] = [],
+  cmd: string | null = getCheckCommand(),
+): { safe: boolean; error?: string } {
+  if (!cmd) {
+    // No gate is configured, so there is no policy to enforce and nothing to
+    // fail closed on behalf of.
+    return { safe: true };
+  }
   try {
-    const cmd = getCheckCommand();
     const args = extraArgs.length > 0 ? ' ' + extraArgs.join(' ') : '';
     execSync(`${cmd}${args}`, {
       input: payload,
       encoding: 'utf-8',
       timeout: 5000,
       env: { ...process.env },
+      stdio: ['pipe', 'pipe', 'pipe'],
     });
     return { safe: true };
   } catch (err: any) {
@@ -33,7 +47,10 @@ function runSecurityCheck(payload: string, extraArgs: string[] = []): { safe: bo
         return { safe: false, error: 'Security check failed' };
       }
     }
-    // Non-security errors (timeout, missing module, etc.) fail closed
+    // A gate was configured and did not finish -- missing, crashed, or timed
+    // out. A check that cannot complete is not a check that passed: fail
+    // closed. The no-gate case never reaches here; it returns above without
+    // spawning anything.
     console.error('[spellbook-security] Check error:', err.message || err);
     return { safe: false };
   }

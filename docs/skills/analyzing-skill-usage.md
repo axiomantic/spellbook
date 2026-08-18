@@ -2,90 +2,7 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when evaluating skill effectiveness or comparing skill versions. Triggers: 'how are skills performing', 'skill metrics', 'which skills fire correctly', 'skill invocation analysis', 'compare skill versions', 'analyze skill usage'. Also invoked by skill improvement workflows.
-
-## Workflow Diagram
-
-Workflow for analyzing skill invocation patterns across session transcripts. Supports two analysis modes: identifying weak skills and A/B testing skill versions.
-
-```mermaid
-flowchart TD
-    Start([Start]) --> LoadSessions[Load Sessions]
-    LoadSessions --> DetectInvocations[Detect Skill Invocations]
-    DetectInvocations --> IdentifyBoundaries[Identify Invocation Boundaries]
-    IdentifyBoundaries --> ScoreInvocations[Score Each Invocation]
-    ScoreInvocations --> DetectCorrections[Detect Correction Patterns]
-    DetectCorrections --> AggregateMetrics[Aggregate Metrics Per Skill]
-    AggregateMetrics --> ModeDecision{Analysis Mode?}
-    ModeDecision -->|Weak Skills| RankByFailure[Rank By Failure Score]
-    ModeDecision -->|A/B Testing| VersionDetected{Versions Detected?}
-    VersionDetected -->|Yes| SampleCheck{N >= 5 per variant?}
-    VersionDetected -->|No| NoComparison[Report: No Versions Found]
-    SampleCheck -->|Yes| CompareVersions[Compare Version Metrics]
-    SampleCheck -->|No| InsufficientData[Report: Insufficient Data]
-    RankByFailure --> GenerateReport[Generate Weak Skills Report]
-    CompareVersions --> StatSignificance{Statistically Significant?}
-    StatSignificance -->|Yes| Recommendation[Generate Recommendation]
-    StatSignificance -->|No| CaveatReport[Report With Caveats]
-    Recommendation --> GenerateReport
-    CaveatReport --> GenerateReport
-    InsufficientData --> GenerateReport
-    NoComparison --> GenerateReport
-    GenerateReport --> SelfCheck{Self-Check Passed?}
-    SelfCheck -->|Yes| End([End])
-    SelfCheck -->|No| FixGaps[Fix Gaps In Analysis]
-    FixGaps --> SelfCheck
-
-    style Start fill:#4CAF50,color:#fff
-    style End fill:#4CAF50,color:#fff
-    style LoadSessions fill:#2196F3,color:#fff
-    style DetectInvocations fill:#2196F3,color:#fff
-    style IdentifyBoundaries fill:#2196F3,color:#fff
-    style ScoreInvocations fill:#2196F3,color:#fff
-    style DetectCorrections fill:#2196F3,color:#fff
-    style AggregateMetrics fill:#2196F3,color:#fff
-    style RankByFailure fill:#2196F3,color:#fff
-    style CompareVersions fill:#2196F3,color:#fff
-    style Recommendation fill:#2196F3,color:#fff
-    style CaveatReport fill:#2196F3,color:#fff
-    style InsufficientData fill:#2196F3,color:#fff
-    style NoComparison fill:#2196F3,color:#fff
-    style GenerateReport fill:#2196F3,color:#fff
-    style FixGaps fill:#2196F3,color:#fff
-    style ModeDecision fill:#FF9800,color:#fff
-    style VersionDetected fill:#FF9800,color:#fff
-    style SampleCheck fill:#FF9800,color:#fff
-    style StatSignificance fill:#FF9800,color:#fff
-    style SelfCheck fill:#f44336,color:#fff
-```
-
-## Legend
-
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
-
-## Cross-Reference
-
-| Node | Source Reference |
-|------|----------------|
-| Load Sessions | Extraction Protocol, Step 1: Load Sessions |
-| Detect Skill Invocations | Extraction Protocol, Step 2: Detect Skill Invocations |
-| Identify Invocation Boundaries | Step 2: End Event detection |
-| Score Each Invocation | Extraction Protocol, Step 3: Score Each Invocation |
-| Detect Correction Patterns | Step 3: Correction Detection Patterns |
-| Aggregate Metrics Per Skill | Extraction Protocol, Step 4: Aggregate Metrics |
-| Analysis Mode? | Analysis Modes: Mode 1 vs Mode 2 |
-| Rank By Failure Score | Mode 1: Identify Weak Skills |
-| Versions Detected? | Mode 2: A/B Testing Versions |
-| N >= 5 per variant? | Version Detection: Minimum 5 invocations per variant |
-| Compare Version Metrics | Mode 2: A/B Comparison table |
-| Statistically Significant? | Mode 2: Significant column (p<0.05) |
-| Self-Check Passed? | Self-Check checklist |
-
+> Use when evaluating skill effectiveness or comparing skill versions. Triggers: 'how are skills performing', 'skill metrics', 'which skills fire correctly', 'skill invocation analysis', 'compare skill versions', 'analyze skill usage'. NOT for: authoring or editing a skill (use writing-skills).
 ## Skill Content
 
 ````markdown
@@ -123,32 +40,29 @@ flowchart TD
 
 ### 1. Load Sessions
 
+There is no spellbook library for this. Transcripts are plain JSONL on disk and
+you parse them yourself — one JSON object per line, in message order:
+
 ```python
-from spellbook.sessions.parser import load_jsonl, list_sessions_with_samples
-from spellbook.sessions.skill_analyzer import (
-    extract_skill_invocations,  # high-level: boundaries + scoring in one pass
-    aggregate_metrics,          # high-level: per-skill metric rollup
-)
+import json
+from pathlib import Path
+
+session_dir = Path.home() / ".claude" / "projects" / project_encoded
+for path in sorted(session_dir.glob("*.jsonl")):
+    messages = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 ```
 
-The protocol below describes what `skill_analyzer` does internally. For a
-ready-made implementation, call `extract_skill_invocations()` then
-`aggregate_metrics()` directly; the steps that follow document the same logic
-for cases where you need custom scoring.
-
-Sessions at: `~/.claude/projects/<project-encoded>/*.jsonl`
+Harnesses other than Claude Code store transcripts elsewhere; locate the
+directory for the harness under analysis before globbing. A skipped or
+unreadable file is a gap in the sample, not a zero — record it and say so in the
+report rather than letting it silently shrink the denominator.
 
 ### 2. Detect Skill Invocation Boundaries
 
-**Start Event**: Tool call where `name == "Skill"`. `extract_skill_invocations`
-handles boundary detection for you, returning `SkillInvocation` objects with
-`skill`, `version`, `start_idx`, `end_idx`, and `timestamp` already populated:
-```python
-invocations = extract_skill_invocations(messages, session_path)
-for inv in invocations:
-    skill_name = inv.skill            # base skill name (version stripped)
-    start = inv.start_idx             # message index where the Skill call fired
-```
+**Start Event**: an assistant tool-use block where the tool `name == "Skill"`.
+Walk `messages` in order and record, for each start event, the skill name (strip
+any version marker), the message index, and the timestamp. Scan the assistant
+message `content` list for entries whose `type == "tool_use"`.
 
 **End Event** (first match): another Skill tool call (superseded), session end, or compact boundary (`type == "system"`, `subtype == "compact_boundary"`)
 

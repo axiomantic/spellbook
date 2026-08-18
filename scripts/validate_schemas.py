@@ -430,7 +430,6 @@ _POSITIONAL_TOKENS = (
 # These are sequential or temporal, not cross-references. Enumerating them
 # rather than pattern-matching keeps a NEW positional use of the same token red.
 _POSITIONAL_ALLOWED: dict[tuple[str, str], str] = {
-    ("develop-discipline", "preceding"): "'preceded by a Phase Declaration' is sequential",
     ("core-philosophy", "later"): "'an unspecified later' is a temporal noun",
     ("pr-conventions", "above"): "'above all user instructions' describes the harness prompt",
 }

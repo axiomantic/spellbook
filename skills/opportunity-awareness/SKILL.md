@@ -1,6 +1,6 @@
 ---
 name: opportunity-awareness
-description: "Triggers after completing substantive work (finishing a todo, returning from subagent, applying non-obvious convention, receiving user correction). Also: 'what should we capture', 'reusable pattern', 'should this be a skill', 'AGENTS.md update', 'knowledge gap'. Behavioral skill loaded at natural pause points."
+description: "Detection heuristics for skill, command, and agent candidates and AGENTS.md knowledge gaps. The always-on opportunity-awareness rule module points here at pause points after substantive work."
 ---
 
 <analysis>

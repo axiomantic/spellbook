@@ -2,123 +2,10 @@
 
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
-> Use when deciding whether to dispatch subagents, when to stay in main context, or when facing 2+ independent parallel tasks. Triggers: 'should I use a subagent', 'parallelize', 'multiple independent tasks', 'run these at the same time', 'split this up', 'do both at once', 'dispatch template', 'context minimization'.
+> Subagent dispatch: decision heuristics, dispatch templates, model-tier selection, context minimization. Loaded by the orchestration rule module. Triggers: 'should I use a subagent', 'parallelize', 'run these at the same time'.
 
 !!! info "Origin"
     This skill originated from [obra/superpowers](https://github.com/obra/superpowers).
-
-## Workflow Diagram
-
-Decision and execution workflow for parallel subagent dispatch. Covers the independence gate, dispatch pattern, and merge verification protocol.
-
-```mermaid
-flowchart TD
-    Start([Start]) --> IdentifyTasks[Identify Tasks]
-    IdentifyTasks --> MultipleTask{Multiple Tasks?}
-    MultipleTask -->|No| MainContext[Stay In Main Context]
-    MultipleTask -->|Yes| IndependenceGate{Independence Gate}
-    MainContext --> End([End])
-    IndependenceGate --> SharedState{Shared State?}
-    SharedState -->|Yes| Sequential[Sequential Agents]
-    SharedState -->|No| FileOverlap{File Overlap?}
-    FileOverlap -->|Yes| Sequential
-    FileOverlap -->|No| Related{Failures Related?}
-    Related -->|Yes| SingleAgent[Single Agent: All Tasks]
-    Related -->|No| ParallelDispatch[Parallel Dispatch]
-    SingleAgent --> End
-    Sequential --> End
-    ParallelDispatch --> CreatePrompts[Create Focused Prompts]
-    CreatePrompts --> PromptCheck{Self-Contained?}
-    PromptCheck -->|No| AddContext[Add Missing Context]
-    AddContext --> PromptCheck
-    PromptCheck -->|Yes| PromptLength{Prompt > 200 Lines?}
-    PromptLength -->|Yes| CompressPrompt[Compress Prompt]
-    PromptLength -->|No| SetConstraints[Set Constraints]
-    CompressPrompt --> SetConstraints
-    SetConstraints --> SelectAgentType[Select Agent Type]
-    SelectAgentType --> DispatchAgents[Dispatch All Agents]
-    DispatchAgents --> WaitForResults[Wait For Results]
-    WaitForResults --> ReviewSummaries[Review Each Summary]
-    ReviewSummaries --> ConflictCheck{File Conflicts?}
-    ConflictCheck -->|Yes| ResolveConflicts[Resolve Conflicts]
-    ConflictCheck -->|No| RunTestSuite[Run Full Test Suite]
-    ResolveConflicts --> RunTestSuite
-    RunTestSuite --> TestsPass{Tests Green?}
-    TestsPass -->|No| DebugIntegration[Debug Integration]
-    TestsPass -->|Yes| SpotCheck[Spot Check Fixes]
-    DebugIntegration --> RunTestSuite
-    SpotCheck --> MergeGate{All Verified?}
-    MergeGate -->|Yes| Integrate[Integrate Work]
-    MergeGate -->|No| FixIssues[Fix Issues]
-    FixIssues --> MergeGate
-    Integrate --> End
-
-    style Start fill:#4CAF50,color:#fff
-    style End fill:#4CAF50,color:#fff
-    style IdentifyTasks fill:#2196F3,color:#fff
-    style MainContext fill:#2196F3,color:#fff
-    style Sequential fill:#2196F3,color:#fff
-    style SingleAgent fill:#2196F3,color:#fff
-    style ParallelDispatch fill:#2196F3,color:#fff
-    style CreatePrompts fill:#2196F3,color:#fff
-    style AddContext fill:#2196F3,color:#fff
-    style CompressPrompt fill:#2196F3,color:#fff
-    style SetConstraints fill:#2196F3,color:#fff
-    style SelectAgentType fill:#2196F3,color:#fff
-    style DispatchAgents fill:#2196F3,color:#fff
-    style WaitForResults fill:#2196F3,color:#fff
-    style ReviewSummaries fill:#2196F3,color:#fff
-    style ResolveConflicts fill:#2196F3,color:#fff
-    style RunTestSuite fill:#2196F3,color:#fff
-    style SpotCheck fill:#2196F3,color:#fff
-    style Integrate fill:#2196F3,color:#fff
-    style DebugIntegration fill:#2196F3,color:#fff
-    style FixIssues fill:#2196F3,color:#fff
-    style MultipleTask fill:#FF9800,color:#fff
-    style IndependenceGate fill:#FF9800,color:#fff
-    style SharedState fill:#FF9800,color:#fff
-    style FileOverlap fill:#FF9800,color:#fff
-    style Related fill:#FF9800,color:#fff
-    style PromptCheck fill:#FF9800,color:#fff
-    style PromptLength fill:#FF9800,color:#fff
-    style ConflictCheck fill:#FF9800,color:#fff
-    style TestsPass fill:#FF9800,color:#fff
-    style MergeGate fill:#f44336,color:#fff
-```
-
-## Legend
-
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
-
-## Cross-Reference
-
-| Node | Source Reference |
-|------|----------------|
-| Identify Tasks | Inputs: tasks (list of 2+ tasks) |
-| Multiple Tasks? | Decision Heuristics: Subagent vs Main Context |
-| Stay In Main Context | Stay in Main Context When table |
-| Independence Gate | CRITICAL: Independence verification is the gate |
-| Shared State? | analysis: "Will agents edit same files?" |
-| File Overlap? | Anti-Patterns: Overlapping file ownership |
-| Failures Related? | Don't use when: "Failures are related" |
-| Single Agent: All Tasks | When to Use: dot graph, "Single agent investigates all" |
-| Parallel Dispatch | The Pattern section |
-| Create Focused Prompts | The Pattern, Step 2: Create Focused Agent Prompts |
-| Self-Contained? | Agent Prompt Structure: Self-contained |
-| Prompt > 200 Lines? | Subagent Prompt Length Verification |
-| Set Constraints | Template: Constraints section |
-| Select Agent Type | Agent Type Selection table |
-| Dispatch All Agents | The Pattern, Step 3: Dispatch in Parallel |
-| Review Each Summary | The Pattern, Step 4: Review and Integrate |
-| File Conflicts? | reflection: "Check conflict potential" |
-| Run Full Test Suite | Verification, Step 3: Run full suite |
-| Spot Check Fixes | Verification, Step 4: Spot check |
-| All Verified? | Self-Check: merge verification checklist |
 
 ## Skill Content
 
@@ -169,7 +56,41 @@ IF building on established context → main context
 
 ## Model & Effort Selection
 
-Match the subagent's tier and effort to the COGNITIVE LOAD of the task, not its size: thinking work (planning, design, review, fact-checking, research, open-ended debugging) → `heavy` at inherited effort; mechanical work (TDD implementation against a written spec, checklist verification, rote edits, running tests, git/PR/Jira mechanics) → `light` at `effort: low`. Tiers are generic; the model each one means is resolved per harness at runtime, so never write a model name into a skill. The specialized agent types already declare their tier in frontmatter. See "Subagent Model and Effort Selection" in the core Inviolable Rules for the full table, the resolution protocol, and override precedence.
+Match the subagent's tier and effort to the COGNITIVE LOAD of the task, not its size: thinking work (planning, design, review, fact-checking, research, open-ended debugging) → `heavy` at inherited effort; mechanical work (TDD implementation against a written spec, checklist verification, rote edits, running tests, git/PR/Jira mechanics) → `light` at `effort: low`. Tiers are generic; the model each one means is resolved per harness at runtime, so never write a model name into a skill. `rules/20-orchestration.md` carries the tier table and the escalate-up-never-down rule; the runtime resolution protocol lives with the dispatch it serves, and is stated in full in this skill.
+
+Scope the dispatch to the trigger's size: a 140-line test file does not justify a build-configuration-wide toolchain investigation, and a precision lookup with a known location is a direct read, not a web-research dispatch.
+
+### Tier is declared by the agent type
+
+**The specialized agent types already declare their tier** in frontmatter (`tier: heavy`), so
+dispatching the right type gets the right tier for free:
+
+- `heavy` → `code-reviewer`, `justice-resolver`, `lovers-integrator`, `hierophant-distiller`, `web-researcher`
+- `standard` → `emperor-governor`, `queen-affective`
+- `light` → `implementer`, `chariot-implementer`, `test-runner`, `git-committer`, `git-pusher`, `pr-creator`, `pr-merger`, `jira-reader`, `jira-mutator`
+
+Agent frontmatter carries NO `model:` field. Resolving a tier to a model is a runtime step.
+
+### Resolution protocol (run once per session)
+
+<CRITICAL>
+Before your first subagent dispatch in a session, call `spellbook_model_tier_status(harness)` with
+the spellbook platform id you are running in (underscored — `claude_code`, not `claude-code`).
+
+If it reports unset tiers, ask the operator ONCE, in one exchange covering every unset tier, which
+model to use for each. Offer ONLY models you can actually see in this harness. NEVER invent a model
+id, and NEVER copy one out of documentation — a model that exists on another harness will fail on
+this one. Record the answers with `spellbook_model_tier_set`.
+
+An unset tier is NOT an error and NEVER blocks a dispatch. It resolves to "no override": dispatch
+without a model and let the harness use its own default. If the operator is unavailable —
+non-interactive, headless, or CI — proceed on harness defaults and say so. Do not stall work
+waiting for a preference.
+</CRITICAL>
+
+Then pass the resolved model as a per-call override.
+
+**When dispatching a generic type** (`general-purpose`, `claude`, `Explore`, `Plan`) or when a task's cognitive load differs from the agent's declared tier, resolve the tier the task actually needs and override at the call site. Precedence: per-call override > tier resolution > harness default. `fork` subagents ignore the model override — they always inherit the parent model.
 
 ---
 
@@ -722,7 +643,9 @@ will reject any result that does not contain a "Launching skill:" line.
 
 ### Subagent Efficiency Contract (include in EVERY dispatch prompt)
 
-Append this block verbatim to every subagent prompt:
+This block is the dispatch-time form of **Mandatory Summarization**: a tool that returns structured
+or verbose data (Figma, DevTools, build logs) is wrapped in a summarization step before anything
+reaches the orchestrator. Append it verbatim to every subagent prompt:
 
 ```
 TOOL OUTPUT DISCIPLINE:
@@ -797,8 +720,9 @@ this rule exists to stop.
 
 ### Return envelope
 
-Every dispatch declares the shape it wants back; every subagent returns that
-shape and nothing else. Default when a skill defines no shape of its own:
+This is **Subagent Strict Schema** at dispatch time. Every dispatch declares the shape it wants
+back; every subagent returns that shape and nothing else. Conversational leak in place of the
+declared schema is forbidden. Default when a skill defines no shape of its own:
 
 ```json
 {
@@ -839,6 +763,15 @@ not measure yourself in this session, passed along unverified. It is distinct fr
 `DERIVED` (computed from values that were measured) and from `ESTIMATED` (no
 measurement behind it at all). Projects whose existing documents use `INFERRED` may
 keep that word — it is an accepted synonym for `DERIVED` and does not need churning.
+
+**Observed: seven cases in one session. The subagent's own measurement refuted all seven.** A lint
+baseline reported as "one finding" measured 156 on recheck. A count attributed to a code comment;
+the comment did not exist. A flag rule relayed without the `-R` prefix the original measurement
+required. A proposed fix whose mechanism failed in both directions once tested. The agents caught
+all seven mistakes, which is why none caused damage. But in a codebase where a written measurement
+is trusted by default, a carried figure written as if measured will not stay flagged. It gets
+copied into a source comment, and the next reader has no way to tell it apart from a real
+measurement. Mark it `CARRIED` in the dispatch prompt and in the report.
 
 **Extending the vocabulary.** A domain this table does not cover is expected. That
 does NOT license a private synonym for a value that IS here. When work needs a

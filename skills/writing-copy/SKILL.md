@@ -2,16 +2,15 @@
 name: writing-copy
 description: >
   Use when writing or de-slopping outward-facing prose: newsletters, blog posts,
-  announcements, marketing or landing copy, emails, release notes, doc intros, cover letters, job-application answers, resume bullets and summaries, bios, personal statements.
+  announcements, marketing copy, emails, release notes, doc intros, cover letters,
+  job-application answers, resume bullets, bios. Fire this whenever you draft
+  outward-facing prose on the author's behalf, even without a trigger phrase.
   Triggers: 'make this sound human', 'this reads like AI', 'de-slop this',
-  'remove the AI tells', 'make it less AI', 'why does this sound like ChatGPT',
-  'help me draft this piece', 'write a newsletter', 'write a blog post', 'polish
-  this copy', 'tighten this'. Fire this whenever you draft outward-facing prose on the author's behalf, even without an explicit trigger phrase. Composes with a personal voice skill (for example
-  my-voice-skill) that supplies identity and register; this skill is voice-neutral
-  and supplies the writing process plus the anti-slop catalog. NOT for: code logic
-  or code review (use code-review), project doc structure (use documenting-projects),
-  READMEs (use write-readme / polish-repo), or a specific person's voice (use their
-  voice skill).
+  'remove the AI tells', 'write a newsletter', 'write a blog post', 'polish this
+  copy'. Voice-neutral: composes with a personal voice skill that supplies
+  identity and register. NOT for: code review (use code-review), project doc
+  structure (use documenting-projects), READMEs (use write-readme / polish-repo), or a specific
+  person's voice (use their voice skill).
 ---
 
 # Writing Copy

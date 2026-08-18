@@ -10,14 +10,28 @@ Validates:
 1. README.md mentions all skills/commands/agents
 2. docs/ has documentation pages for all items
 3. mkdocs.yml nav includes all items
+4. README.md's "(N total)" section headings and their TOC anchors match the
+   real counts. The repo forbids a count no mechanism reads; this is the
+   mechanism that reads these three.
+5. The reverse direction: every README table entry, every README
+   link-reference definition, every mkdocs.yml nav entry, and every page
+   under docs/{skills,commands,agents}/ resolves to a real source file.
+
+Checks 1-4 are one-directional -- they assert that every real item is
+documented, never that every documented item is real. That asymmetry let
+seven skills and five commands keep shipping documentation pages,
+README rows, and nav entries for months after their sources were
+deleted. Check 5 is the missing direction; without it the rot is
+invisible by construction.
 
 Exits with code 0 if all are documented, code 1 if any are missing.
 """
 
+import re
 import sys
 from pathlib import Path
 
-from diagram_config import (
+from docs_config import (
     EXCLUDED_SKILLS,
     EXCLUDED_COMMANDS,
     EXCLUDED_AGENTS,
@@ -25,12 +39,146 @@ from diagram_config import (
 )
 
 
+DOCS_BASE_URL = "https://axiomantic.github.io/spellbook/latest/"
+
+# A link-reference definition may legitimately point at hand-authored docs
+# (guides, reference pages) rather than at a generated artifact page. Only
+# these three prefixes name an artifact whose source this script can resolve.
+ARTIFACT_PREFIXES = ("skills", "commands", "agents")
+
+LINK_DEF_RE = re.compile(r"^\[([^\]^]+)\]:[ \t]*(\S+)[ \t]*$", re.M)
+NAV_ENTRY_RE = re.compile(r"\b(skills|commands|agents)/([A-Za-z0-9._-]+)\.md\b")
+
+
+def real_sources(repo_root):
+    """Return the set of names that actually exist on disk, per artifact kind.
+
+    Commands come in two shapes: a flat ``commands/<name>.md`` and a
+    directory ``commands/<name>/<name>.md``. Both are real, and a reverse
+    check that knows only the flat shape would report the two
+    subdirectory commands as phantoms.
+    """
+    skills = {
+        d.name
+        for d in (repo_root / "skills").iterdir()
+        if d.is_dir() and not d.name.startswith("_") and (d / "SKILL.md").exists()
+    }
+    commands = {
+        f.stem
+        for f in (repo_root / "commands").glob("*.md")
+        if not f.name.startswith("_") and "crystallized2" not in f.name
+    }
+    commands |= {
+        d.name
+        for d in (repo_root / "commands").iterdir()
+        if d.is_dir() and (d / f"{d.name}.md").exists()
+    }
+    agents = set()
+    if (repo_root / "agents").exists():
+        agents = {
+            f.stem
+            for f in (repo_root / "agents").glob("*.md")
+            if not f.name.startswith("_") and "crystallized2" not in f.name
+        }
+    return {"skills": skills, "commands": commands, "agents": agents}
+
+
+def section(readme_content, label):
+    """Return the README text under '### <label> (N total)'."""
+    match = re.search(rf"^### {label} \(\d+ total\)$", readme_content, re.M)
+    if match is None:
+        return ""
+    rest = readme_content[match.end():]
+    nxt = re.search(r"^### \w+ \(\d+ total\)$|^## ", rest, re.M)
+    return rest[: nxt.start()] if nxt else rest
+
+
+def check_reverse(repo_root, readme_content, mkdocs_content, issues):
+    """Assert every documented item resolves to a real source file.
+
+    Named separately from the forward checks because the two directions
+    fail for opposite reasons: forward failure means someone added a
+    source without documenting it, reverse failure means someone deleted
+    a source and left its documentation behind.
+    """
+    real = real_sources(repo_root)
+
+    # README table entries. Skills and agents are shortcut links '[name]';
+    # commands carry a leading slash, '[/name]'.
+    for label, kind, pattern in (
+        ("Skills", "skills", r"\[([a-z0-9][a-z0-9-]*)\]"),
+        ("Commands", "commands", r"^\| \[/([a-z0-9][a-z0-9:-]*)\]"),
+        ("Agents", "agents", r"^\| \[([a-z0-9][a-z0-9-]*)\]"),
+    ):
+        body = section(readme_content, label)
+        rows = "".join(
+            line + "\n" for line in body.splitlines() if line.startswith("| ")
+        )
+        for name in sorted(set(re.findall(pattern, rows, re.M))):
+            if name not in real[kind]:
+                issues.append(
+                    f"README {label} table lists '{name}', which has no source "
+                    f"under {kind}/"
+                )
+
+    # README link-reference definitions.
+    seen = {}
+    for name, url in LINK_DEF_RE.findall(readme_content):
+        if name in seen:
+            issues.append(f"README link definition duplicated: [{name}]")
+        seen[name] = url
+        if not url.startswith(DOCS_BASE_URL):
+            continue
+        parts = [p for p in url[len(DOCS_BASE_URL):].split("/") if p]
+        if not parts or parts[0] not in ARTIFACT_PREFIXES:
+            continue
+        kind, rest = parts[0], parts[1:]
+        if len(rest) == 1:
+            if rest[0] not in real[kind]:
+                issues.append(
+                    f"README link definition [{name}] points at {kind}/{rest[0]}, "
+                    f"which has no source"
+                )
+        elif len(rest) == 2 and kind == "skills":
+            # A nested reference page inside a skill directory, e.g.
+            # skills/shared-references/cove-protocol.
+            nested = repo_root / "skills" / rest[0] / f"{rest[1]}.md"
+            if not nested.exists():
+                issues.append(
+                    f"README link definition [{name}] points at "
+                    f"skills/{rest[0]}/{rest[1]}, which has no source file"
+                )
+
+    # mkdocs.yml nav and exclude_docs entries.
+    for kind, name in sorted(set(NAV_ENTRY_RE.findall(mkdocs_content))):
+        if name == "index":
+            continue
+        if name not in real[kind]:
+            issues.append(
+                f"mkdocs.yml references {kind}/{name}.md, which has no source "
+                f"under {kind}/"
+            )
+
+    # Generated documentation pages.
+    for kind in ARTIFACT_PREFIXES:
+        docs_subdir = repo_root / "docs" / kind
+        if not docs_subdir.exists():
+            continue
+        for page in sorted(docs_subdir.glob("*.md")):
+            if page.stem == "index":
+                continue
+            if page.stem not in real[kind]:
+                issues.append(
+                    f"Orphan docs page: docs/{kind}/{page.name} has no source "
+                    f"under {kind}/"
+                )
+
+
 def main():
     # Get repo root
     repo_root = Path(__file__).parent.parent.absolute()
     readme_path = repo_root / "README.md"
     mkdocs_path = repo_root / "mkdocs.yml"
-    commands_dir = repo_root / "commands"
     skills_dir = repo_root / "skills"
     agents_dir = repo_root / "agents"
     docs_skills_dir = repo_root / "docs" / "skills"
@@ -41,13 +189,14 @@ def main():
     readme_content = readme_path.read_text(encoding="utf-8")
     mkdocs_content = mkdocs_path.read_text(encoding="utf-8") if mkdocs_path.exists() else ""
 
-    # Find all commands (exclude files starting with underscore or crystallized2)
-    commands = []
-    for cmd_file in commands_dir.glob("*.md"):
-        if not cmd_file.name.startswith("_") and "crystallized2" not in cmd_file.name:
-            name = cmd_file.stem
-            if name not in EXCLUDED_COMMANDS:
-                commands.append(name)
+    # Find all commands, in BOTH shapes: flat `commands/<name>.md` and directory
+    # `commands/<name>/<name>.md`. Globbing only the flat shape made the forward
+    # checks disagree with the README table the reverse check reads, so the
+    # '### Commands (N total)' heading undercounted by the number of
+    # subdirectory commands while every check still reported green.
+    # real_sources() is the single definition of what a command is; deriving
+    # from it keeps the two directions from drifting apart again.
+    commands = sorted(real_sources(repo_root)["commands"] - set(EXCLUDED_COMMANDS))
 
     # Find all skills (directories with SKILL.md, exclude underscore prefix)
     skills = []
@@ -118,6 +267,32 @@ def main():
     for agent in agents:
         if f"agents/{agent}.md" not in mkdocs_content:
             issues.append(f"mkdocs.yml nav missing: agents/{agent}.md")
+
+    # Check the "(N total)" counts in README section headings and TOC anchors.
+    for label, items in (("Skills", skills), ("Commands", commands), ("Agents", agents)):
+        expected = len(items)
+        heading = re.search(rf"^### {label} \((\d+) total\)$", readme_content, re.M)
+        if heading is None:
+            issues.append(f"README missing heading: ### {label} (N total)")
+        elif int(heading.group(1)) != expected:
+            issues.append(
+                f"README heading '### {label} ({heading.group(1)} total)' is stale; "
+                f"the tree holds {expected}"
+            )
+        anchor = re.search(
+            rf"\[{label} \((\d+) total\)\]\(#{label.lower()}-(\d+)-total\)",
+            readme_content,
+        )
+        if anchor is None:
+            issues.append(f"README TOC missing entry for {label} (N total)")
+        elif {int(anchor.group(1)), int(anchor.group(2))} != {expected}:
+            issues.append(
+                f"README TOC entry for {label} says "
+                f"{anchor.group(1)}/#{label.lower()}-{anchor.group(2)}-total; "
+                f"the tree holds {expected}"
+            )
+
+    check_reverse(repo_root, readme_content, mkdocs_content, issues)
 
     # Report findings
     if issues:

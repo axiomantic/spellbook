@@ -5,364 +5,6 @@ Quick code review covering correctness, style, and common issues across four mod
 **Auto-invocation:** Your coding assistant will automatically invoke this skill when it detects a matching trigger.
 
 > Use when the user EXPLICITLY asks for a lightweight pass, or for feedback/audit modes. Triggers: 'quick review', 'light review', 'look over this', '--quick', 'check my work', 'self-review before PR', 'review my code', 'audit this code', 'PR comments to address', 'reviewer said', 'address feedback', 'review PR #X comments'. NOT for: unspecified-scope branch review such as 'review this branch' or 'code review' (that DEFAULTS to advanced-code-review), or PR triage and summarization (use distilling-prs). This skill is the explicit opt-in to a lighter pass; if the user did not ask for lightweight by name, do not use it. Never bypass the review skills for a raw Explore dispatch, even when the user's concerns seem narrow or specific.
-
-## Workflow Diagram
-
-The existing diagram is complete and verified against the source `SKILL.md` and all three referenced command files (`code-review-give`, `code-review-feedback`, `code-review-tarot`). Below is the verified diagram content.
-
-# Diagram: code-review
-
-Workflow diagrams for the `code-review` skill: mode routing, self/audit inline modes, give/feedback/tarot command workflows, and cross-reference index.
-
-## Overview
-
-High-level mode routing, modifiers, and terminal outputs for all four modes.
-
-```mermaid
-flowchart TD
-    classDef dispatch fill:#4a9eff,color:#000
-    classDef gate fill:#ff6b6b,color:#000
-    classDef success fill:#51cf66,color:#000
-
-    INVOKE["code-review invoked"]
-
-    INVOKE --> MODCHECK{"Modifier flags?"}
-
-    MODCHECK -->|"--tarot"| TAROT["code-review-tarot\n(wraps active mode)"]:::dispatch
-    MODCHECK -->|"--pr &lt;num&gt;"| PRFETCH["pr_fetch / pr_diff\n(MCP tools; fallback:\ngh CLI → local diff → paste)"]:::dispatch
-    MODCHECK -->|"none"| MODECHECK{"Mode flag?"}
-
-    TAROT --> MODECHECK{"Mode flag?"}
-    PRFETCH --> MODECHECK
-
-    MODECHECK -->|"--self / -s\nor no flag"| SELF["Self Mode\n(inline)"]:::dispatch
-    MODECHECK -->|"--feedback / -f"| FEEDBACK["code-review-feedback\ncommand"]:::dispatch
-    MODECHECK -->|"--give &lt;target&gt;"| GIVE["code-review-give\ncommand"]:::dispatch
-    MODECHECK -->|"--audit [scope]"| AUDIT["Audit Mode\n(inline)"]:::dispatch
-
-    SELF --> SELFOUT(["PASS / WARN / FAIL\n(severity gate)"]):::success
-    FEEDBACK --> FBOUT(["All items addressed\n+ self-review clean"]):::success
-    GIVE --> GIVEOUT(["APPROVE /\nREQUEST_CHANGES /\nCOMMENT"]):::success
-    AUDIT --> AUDITOUT(["Executive Summary\n+ Risk Assessment\nLOW / MEDIUM / HIGH / CRITICAL"]):::success
-
-    subgraph LEGEND["Legend"]
-        LL1["Process"]
-        LL2{"Decision"}
-        LL3(["Terminal"]):::success
-        LL4["Dispatch node"]:::dispatch
-        LL5["Quality gate"]:::gate
-    end
-```
-
----
-
-## Detail A — Self Mode and Audit Mode
-
-Both inline modes: Self on the left, Audit on the right.
-
-```mermaid
-flowchart TD
-    classDef dispatch fill:#4a9eff,color:#000
-    classDef gate fill:#ff6b6b,color:#000
-    classDef success fill:#51cf66,color:#000
-
-    subgraph SELF["Self Mode (--self / -s / default)"]
-        S1["git diff\n$(git merge-base origin/main HEAD)..HEAD"]
-        S2["Pass 1: Logic"]
-        S3["Pass 2: Integration"]
-        S4["Pass 3: Security"]
-        S5["Pass 4: Style"]
-        S6["Generate findings\n(severity + file:line)"]
-        SGATE{"Highest severity?"}:::gate
-        SFAIL(["FAIL\n(Critical finding)"]):::success
-        SWARN(["WARN\n(Important finding)"]):::success
-        SPASS(["PASS\n(Minor only)"]):::success
-
-        S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> SGATE
-        SGATE -->|"Critical"| SFAIL
-        SGATE -->|"Important"| SWARN
-        SGATE -->|"Minor only"| SPASS
-    end
-
-    subgraph AUDIT["Audit Mode (--audit [scope])"]
-        ASCOPE{"Scope\nresolution"}:::gate
-        ANONE["none → branch changes"]
-        AFILE["file.py → single file"]
-        ADIR["dir/ → directory"]
-        ASEC["security → security-only"]
-        AALL["all → full codebase"]
-
-        AP1["Pass 1: Correctness\n+ API Hallucination Detection\nchecklist"]
-        AP2["Pass 2: Security"]
-        AP3["Pass 3: Performance"]
-        AP4["Pass 4: Maintainability"]
-        AP5["Pass 5: Edge Cases"]
-
-        AOUT(["Executive Summary\n+ findings by category\n+ Risk Assessment\nLOW / MEDIUM / HIGH / CRITICAL"]):::success
-
-        ASCOPE -->|"none"| ANONE
-        ASCOPE -->|"file.py"| AFILE
-        ASCOPE -->|"dir/"| ADIR
-        ASCOPE -->|"security"| ASEC
-        ASCOPE -->|"all"| AALL
-
-        ANONE --> AP1
-        AFILE --> AP1
-        ADIR --> AP1
-        ASEC --> AP2
-        AALL --> AP1
-
-        AP1 --> AP2 --> AP3 --> AP4 --> AP5 --> AOUT
-    end
-
-    subgraph LEGEND["Legend"]
-        LL1["Process"]
-        LL2{"Decision"}
-        LL3(["Terminal"]):::success
-        LL4["Dispatch node"]:::dispatch
-        LL5["Quality gate"]:::gate
-    end
-```
-
-The API Hallucination Detection checklist (method existence, signature match, real config keys, resolvable imports, return-type contracts) runs inside the Correctness pass and is elevated to HIGH severity for AI-generated code.
-
----
-
-## Detail B — Give Mode (code-review-give)
-
-Full step 0–3 workflow with all quality gates.
-
-```mermaid
-flowchart TD
-    classDef dispatch fill:#4a9eff,color:#000
-    classDef gate fill:#ff6b6b,color:#000
-    classDef success fill:#51cf66,color:#000
-
-    subgraph STEP0["Step 0: Load Project Conventions (BEFORE any review)"]
-        C1["Read CLAUDE.md /\n.claude/CLAUDE.md"]
-        C2["Read style config\n(pyproject.toml / .eslintrc /\nbiome.json / setup.cfg)"]
-        C3["Check docs/code-review-instructions.md\nor .github/code-review-instructions.md"]
-        C4["Sample 1-2 adjacent files\nNOT in PR changed file set"]
-        CNOTE["CRITICAL: NEVER read local versions\nof files in the PR changed file set\n(local version is old code)"]:::gate
-
-        C1 --> C2 --> C3 --> C4 --> CNOTE
-    end
-
-    subgraph STEP1["Step 1: Fetch and Inventory"]
-        SRC{"Source type?"}
-        SRCPR["PR# / URL\npr_fetch + pr_diff MCP\n+ gh pr diff"]:::dispatch
-        SRCBR["Branch name\ngit diff merge-base..HEAD"]:::dispatch
-        MANIFEST["Build coverage manifest\nfrom ALL changed files\n(quality gate — must complete\nBEFORE beginning review)"]:::gate
-        PRIOR["Fetch prior review comments\ngh api pulls/number/comments\ngh api pulls/number/reviews"]:::dispatch
-        CLASSIFY["Classify each prior item:\nADDRESSED or STILL_OPEN"]
-
-        SRC -->|"PR# or URL"| SRCPR
-        SRC -->|"branch name"| SRCBR
-        SRCPR --> MANIFEST
-        SRCBR --> MANIFEST
-        MANIFEST --> PRIOR --> CLASSIFY
-    end
-
-    subgraph STEP2["Step 2: Multi-Pass Review"]
-        MANDATORY["Mandatory dimensions — every changed file\n(skip any = coverage failure)"]:::gate
-        D1["1. Correctness\n(logic errors, off-by-ones,\nnull handling, return types)"]
-        D2["2. Security\n(injection, auth, secrets,\nSSRF, input length)"]
-        D3["3. Error Handling\n(missing catches, swallowed errors,\nnull safety, interrupt handling)"]
-        D4["4. Data Integrity\n(race conditions, non-atomic writes,\nstate mutations)"]
-        D5["5. API Contracts\n(breaking changes, validation,\nschema drift)"]
-        D6["6. Test Coverage\n(changes tested, edge cases,\nmeaningful assertions)"]
-
-        CONDCHECK{"Conditional\ndimensions\ntriggered?"}
-        PERF["Performance pass\n(N+1 queries, missing indexes,\nallocations)"]:::dispatch
-        CONC["Concurrency/Async pass\n(REQUIRED when triggered)\nevent loop blocking, thread safety,\nrace conditions, lock ordering"]:::dispatch
-        A11Y["Accessibility pass\n(ARIA, keyboard nav,\nscreen readers)"]:::dispatch
-
-        SECPASS["Security Pass — runs for every review\nInput validation, path traversal,\nhardcoded secrets, auth/authz,\ninjection, SSRF"]:::gate
-
-        MANDATORY --> D1 --> D2 --> D3 --> D4 --> D5 --> D6 --> CONDCHECK
-        CONDCHECK -->|"hot paths / DB ops"| PERF
-        CONDCHECK -->|"async / threading present"| CONC
-        CONDCHECK -->|"UI / HTML / templates"| A11Y
-        CONDCHECK -->|"none triggered"| SECPASS
-        PERF --> SECPASS
-        CONC --> SECPASS
-        A11Y --> SECPASS
-    end
-
-    subgraph STEP3["Step 3: Output and Post-Review Reflection Gate"]
-        FORMAT["Format output:\nSummary\n→ Coverage Manifest (N/N files, gaps)\n→ Prior Feedback Reconciliation\n→ Findings (CRITICAL/IMPORTANT/MINOR/QUESTION\nwith file:line + dimension)\n→ Recommendation"]
-
-        REFLECT{"Post-review\nreflection gate"}:::gate
-        RCHECK["Self-check:\nAll files in manifest evaluated?\nAll 6 mandatory dimensions checked?\nSecurity pass (all 6 checks)?\nIf async/threading: concurrency pass?\nAll prior items reconciled?\nSeverity ratings honest (impact-based)?"]
-
-        RFIX["Address gaps\nbefore output"]
-        TERMINAL(["APPROVE /\nREQUEST_CHANGES /\nCOMMENT"]):::success
-
-        FORMAT --> REFLECT
-        REFLECT -->|"gaps found"| RCHECK --> RFIX --> REFLECT
-        REFLECT -->|"all checks pass"| TERMINAL
-    end
-
-    STEP0 --> STEP1 --> STEP2 --> STEP3
-
-    subgraph LEGEND["Legend"]
-        LL1["Process"]
-        LL2{"Decision"}
-        LL3(["Terminal"]):::success
-        LL4["Dispatch node"]:::dispatch
-        LL5["Quality gate"]:::gate
-    end
-```
-
----
-
-## Detail C — Feedback Mode (code-review-feedback)
-
-Full categorize/decide/execute workflow.
-
-```mermaid
-flowchart TD
-    classDef dispatch fill:#4a9eff,color:#000
-    classDef gate fill:#ff6b6b,color:#000
-    classDef success fill:#51cf66,color:#000
-
-    GATHER["Gather ALL feedback holistically\nacross related PRs\nbefore responding to any item"]:::gate
-
-    CATEGORIZE["Categorize each item:\nbug / style / question / suggestion / nit"]
-
-    DECIDE{"Decision\nper item"}
-
-    ACCEPT["Accept:\nmake the change"]
-    PUSHBACK["Push back:\ndisagree with evidence"]
-    CLARIFY["Clarify:\nask specific question"]
-    DEFER["Defer:\nacknowledge + scope reason"]
-
-    RATIONALE["Document rationale\n(WHY for each decision\nbefore responding)"]:::gate
-
-    FACTCHECK["Fact-check technical claims\nbefore accepting or disputing"]:::gate
-
-    EXECUTE["Execute accepted fixes"]:::dispatch
-
-    SELFREV["Re-run self-review\n(--self mode)"]:::dispatch
-
-    SELFGATE{"Self-review\nclean?"}:::gate
-    FIXMORE["Address new findings"]
-
-    subgraph TEMPLATES["Response Templates"]
-        T1["Accept: Fixed in &lt;SHA&gt;"]
-        T2["Push back: tradeoff + evidence"]
-        T3["Clarify: specific question"]
-        T4["Defer: scope + reason"]
-    end
-
-    RESPOND["Respond using templates"]
-
-    DONE(["All items addressed\n+ self-review clean"]):::success
-
-    GATHER --> CATEGORIZE --> DECIDE
-    DECIDE -->|"correct, improves code"| ACCEPT
-    DECIDE -->|"incorrect or harmful"| PUSHBACK
-    DECIDE -->|"ambiguous"| CLARIFY
-    DECIDE -->|"valid but out of scope"| DEFER
-
-    ACCEPT --> RATIONALE
-    PUSHBACK --> RATIONALE
-    CLARIFY --> RATIONALE
-    DEFER --> RATIONALE
-
-    RATIONALE --> FACTCHECK --> EXECUTE --> SELFREV --> SELFGATE
-    SELFGATE -->|"findings"| FIXMORE --> SELFREV
-    SELFGATE -->|"clean"| RESPOND --> TEMPLATES --> DONE
-
-    subgraph LEGEND["Legend"]
-        LL1["Process"]
-        LL2{"Decision"}
-        LL3(["Terminal"]):::success
-        LL4["Dispatch node"]:::dispatch
-        LL5["Quality gate"]:::gate
-    end
-```
-
----
-
-## Detail D — Tarot Overlay (code-review-tarot)
-
-Persona mapping, roundtable format, and audit integration.
-
-```mermaid
-flowchart TD
-    classDef dispatch fill:#4a9eff,color:#000
-    classDef gate fill:#ff6b6b,color:#000
-    classDef success fill:#51cf66,color:#000
-
-    OPTIN["Opt-in: --tarot modifier\n(compatible with all modes)"]
-
-    subgraph PERSONAS["Persona Mapping"]
-        PH["Hermit\nRole: Security reviewer\nFocus: Input validation, injection\nStakes: Do NOT trust inputs"]
-        PP["Priestess\nRole: Architecture reviewer\nFocus: Design patterns, coupling\nStakes: Do NOT commit early"]
-        PF["Fool\nRole: Assumption challenger\nFocus: Hidden assumptions, edge cases\nStakes: Do NOT accept hidden complexity"]
-        PM["Magician\nRole: Synthesis / verdict\nFocus: Final assessment\nStakes: Clarity determines everything"]
-    end
-
-    subgraph ROUNDTABLE["Roundtable Format"]
-        RT1["Magician opens"]
-        RT2["Hermit speaks\n(security findings)"]
-        RT3["Priestess speaks\n(architecture findings)"]
-        RT4["Fool speaks\n(assumption challenges)"]
-        RT5["Magician synthesizes\nby evidence weight\nNOT majority vote"]:::gate
-
-        RT1 --> RT2 --> RT3 --> RT4 --> RT5
-    end
-
-    subgraph AUDITINT["Audit + Tarot Integration\n(parallel subagent prompts)"]
-        AI1["Security pass\n→ Hermit persona"]:::dispatch
-        AI2["Architecture pass\n→ Priestess persona"]:::dispatch
-        AI3["Assumption pass\n→ Fool persona"]:::dispatch
-        AI4["Synthesis\n→ Magician persona"]:::dispatch
-
-        AI1 --> AI4
-        AI2 --> AI4
-        AI3 --> AI4
-    end
-
-    RULES["Critical rules:\nPersona dialogue appears ONLY in dialogue sections\nNEVER in code suggestions or formal findings\nSynthesis by evidence weight (NOT majority vote)\nfile:line citations required even in persona dialogue"]:::gate
-
-    TOUT(["Tarot-annotated\nreview output"]):::success
-
-    OPTIN --> PERSONAS
-    OPTIN --> ROUNDTABLE
-    OPTIN --> AUDITINT
-    PERSONAS --> RULES
-    ROUNDTABLE --> RULES
-    AUDITINT --> RULES
-    RULES --> TOUT
-
-    subgraph LEGEND["Legend"]
-        LL1["Process"]
-        LL2{"Decision"}
-        LL3(["Terminal"]):::success
-        LL4["Dispatch node"]:::dispatch
-        LL5["Quality gate"]:::gate
-    end
-```
-
----
-
-## Cross-Reference Table
-
-| Overview node | Detail diagram | Section |
-|---|---|---|
-| Self Mode (inline) | Detail A | Self Mode subgraph |
-| Audit Mode (inline) | Detail A | Audit Mode subgraph |
-| code-review-give command | Detail B | Steps 0–3 |
-| code-review-feedback command | Detail C | Full workflow |
-| code-review-tarot command | Detail D | Personas + Roundtable + Audit integration |
-| pr_fetch / pr_diff modifier | Detail B | Step 1: Fetch and Inventory |
-| Severity gate | Detail A | Self Mode — highest severity decision node |
-| Coverage manifest gate | Detail B | Step 1: Build coverage manifest |
-| Post-review reflection gate | Detail B | Step 3: Reflection gate |
-| Synthesis by evidence weight | Detail D | Roundtable — Magician synthesizes node |
-
 ## Skill Content
 
 ````markdown
@@ -409,6 +51,15 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 | `--audit [scope]` | Multi-pass deep-dive | (inline below) |
 
 **Modifiers:** `--tarot` (roundtable dialogue via `code-review-tarot`), `--pr <num>` (PR source)
+
+<CRITICAL>
+**With `--pr <num>`, load the `reviewing-prs` skill BEFORE dispatching any
+review subagent.** It owns `review_source` (`LOCAL_FILES` vs `DIFF_ONLY`) and
+the mandatory PR-review context block every dispatched subagent must receive.
+A `REFUTED` verdict produced by reading a local file in `DIFF_ONLY` mode is a
+wrong verdict — the local tree is on a different branch, so a real bug the PR
+introduced reads as absent.
+</CRITICAL>
 
 ---
 
@@ -477,6 +128,48 @@ failure this procedure exists to prevent.
 
 ---
 
+## Phase 0 — Load and Catalogue the Standards FIRST
+
+A review cannot catch violations of rules it has not read. Before computing the
+diff or reading a single changed line:
+
+1. **Discover and read the repository's own standards documents.** They vary per
+   repository, so find them rather than assuming a fixed set. Typical locations
+   include a coding-standards document, testing instructions, code-review
+   instructions, the root `AGENTS.md`, and every subdirectory `AGENTS.md`
+   covering a changed path. Also read whatever those documents reference:
+   contributing guides, style guides, and lint configuration. If a document you
+   expected is absent, note that and adapt; if the repository carries standards
+   documents you did not expect, load those too.
+2. **Read the operator's standing rules** and any project memory the environment
+   provides.
+3. **Extract a concrete, NAMED rule catalogue** — the enforceable rules with
+   whatever identifiers or names the documents give them. That catalogue is the
+   checklist the review runs against.
+4. **Every finding names the rule it violates** — the document plus the rule's
+   identifier or name — or it is a named correctness or logic bug. No vague
+   "this seems off": cite the standard.
+
+Finding *no* standards document is not a failure — record it, proceed, and raise
+no style or convention findings. Skipping the load is: a review that never cites
+a loaded rule by name is not a review.
+
+## Scope Obligation
+
+Consume every changed hunk in every changed file and hold each against the
+catalogue from Phase 0. No grep-sampling. No skimming. No "I read the hot files."
+Grep is fine to LOCATE things; it is never a substitute for reading the whole
+diff. For a large diff, chunk it across subagents so that 100% of the diff is
+assigned and read line by line; track file and hunk coverage and be able to prove
+no file went unread.
+
+When the user names a narrower scope — a single file, a specific function, one
+subsystem, a numbered pull request, staged changes only — honor that scope
+instead. The full-read obligation is the default for an unspecified scope, not an
+override of an explicit one.
+
+---
+
 ## Self Mode (`--self`)
 
 <reflection>
@@ -508,6 +201,40 @@ Scopes: (none)=branch changes, file.py, dir/, security, all
 
 **Passes:** Correctness > Security > Performance > Maintainability > Edge Cases
 
+### Audit Posture — zero tolerance
+
+An audit is a GATE, not a courtesy pass. This posture governs `--audit` only; the
+other modes of this skill are the explicit opt-in to a lighter pass and keep
+ordinary judgement about what is worth raising.
+
+- Surface ANY deviation: rule violation, logic bug, design smell, untested
+  behavior, inconsistency — anything off.
+- Be **adversarial**. Verify each finding to filter false positives, but
+  **default to flagging** when in doubt.
+- An audit that "found nothing" on a non-trivial diff is a **FAILED audit**, not
+  a clean one. Treat an empty finding list as evidence about the audit, not
+  about the code.
+
+**Build the failure. Do not just check the author's claim.** Both actions cost
+the same dispatch. Building the failure finds more problems.
+
+- Ask "can I make this fail?" Do not ask "does this pass?" The second question
+  only checks the author's own transcript. The first question does not.
+- A check that has never failed is not proven. If nobody has watched a check's
+  failure path fire, the check is a claim, not a mechanism.
+- For a claimed clean result — a mutation that should change nothing, a guard
+  that should stay silent — prove the change reached the code under test. A
+  no-op edit looks the same as a correct no-effect. Only the exit status cannot
+  tell them apart.
+- Reproduce the defect before you fix it. If you never saw the gap yourself, you
+  are guessing at the gap. A guessed fix cannot be tested.
+
+**Observed.** One guard failed four times, in four versions, each broken one level deeper than the last. Version 1 baked a path in at configure time; a reviewer defeated it by copying the tree. Version 2 replaced the real check with a flag; the reviewer deleted the check but kept the flag set. Version 3 checked a token at the end of the branch; the reviewer deleted one part of the branch and kept the token. Version 4 used per-site counters. Every version passed its own author's tests. A reviewer who rebuilt the failure — not one who reran the author's tests — broke every version. Separately, a reviewer built three silent failure modes in an isolated copy of the code. This method found a false-pass path that four prior readings of the same file had missed.
+
+**The known cost, stated plainly:** this posture produces more findings, and some
+of them will be noise. That trade is the point of the posture, and it is why it
+scopes to `--audit` rather than to every mode of this skill.
+
 **API Hallucination Detection (Correctness Pass):**
 
 During the Correctness pass, check for API hallucination patterns:
@@ -531,6 +258,10 @@ Output: Executive Summary, findings by category (same severity thresholds as Sel
 - Ignore Critical findings
 - Dismiss feedback without evidence
 - Give vague feedback without file:line
+- Generate any finding before Phase 0 has loaded and catalogued the standards
+- Report a style or convention finding when the standards load found nothing
+- Substitute grep for reading a hunk (grep LOCATES; it never COVERS)
+- Sample the diff and treat the remainder as covered
 - Approve to avoid conflict
 - Rate severity by effort instead of impact
 - Hardcode a base ref or a default-branch name instead of shelling out to `branch-context.sh`
@@ -546,6 +277,8 @@ Output: Executive Summary, findings by category (same severity thresholds as Sel
 ## Self-Check
 
 - [ ] Correct mode identified
+- [ ] Phase 0 completed: standards discovered, read, catalogued by name (or absence recorded)
+- [ ] Every changed hunk read; no grep-sampling; coverage provable
 - [ ] Base obtained via `branch-context.sh` — no hardcoded base literal
 - [ ] Base, `resolved_via`, and fetch status reported in output
 - [ ] Endpoint (committed-only vs. working tree) chosen deliberately and stated

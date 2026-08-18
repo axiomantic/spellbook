@@ -7,8 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.89.0] - 2026-08-17
+
 ### Added
 
+- `tests/scripts/test_skill_load_path_claims.py` extracts load-path claims from
+  skill frontmatter and asserts the named invoker references the skill. Proven
+  red against the seven orphans found first. Its `KNOWN_ORPHANS` registry is now
+  empty and its entries are `xfail(strict=True)`, so wiring an orphan turns the
+  suite red until its entry is removed.
+- `tests/scripts/test_precommit_hook_entries_resolve.py` executes each
+  `.pre-commit-config.yaml` hook entry's target and fails when it cannot
+  resolve. The three dead hooks above are what it was proven red against.
 - `validate_schemas.py` now runs in CI as a blocking `schema-validation` job in
   `lint.yml`. It previously ran only in pre-commit, which is how a rule module
   crossing the 12,000-byte Antigravity per-file cap reached review. The gate was
@@ -56,8 +66,168 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   markdown are now extracted and executed, failing if argparse rejects one
   (distinguishing argparse rejection from the CLI's legitimate semantic
   refusals); and a docs-mirror freshness check that writes nothing.
+- `scripts/check_reference_resolution.py` and
+  `tests/scripts/test_reference_resolution.py`: a reverse gate asserting that
+  every declared reference to a repository artifact resolves. Three checks in
+  this repository asserted only the forward direction -- every real item is
+  documented -- and each stayed green while rot accumulated behind it. The gate
+  inverts the direction once, for every source at once, as a table of seven
+  rows: workflow `run:` script paths and local `uses: ./` actions, dependabot
+  directories, MCP tool names called from extensions, and backticked repository
+  paths, dotted `spellbook.*` modules, `skills/<name>` mentions, and
+  `/<command>` mentions in prose. Adding a source is one row, not a new script.
+  Each row carries a `min_refs` floor so an extractor that silently stops
+  matching fails instead of passing, and each has a proven red case. The
+  allowlist is content-anchored -- an entry pairs a path glob with a substring
+  that must appear on the offending line, never a line number -- so a
+  correctly-worded deprecation notice is suppressed by what it says and the
+  allowlist cannot widen to cover a real regression. Its blind spots are stated
+  in the module rather than left to be discovered.
+- `tests/scripts/test_readme_no_phantoms.py`, plus a reverse check in
+  `scripts/check-readme-completeness.py` and orphan pruning in
+  `scripts/generate_docs.py`. Every README table entry, README link-reference
+  definition, `mkdocs.yml` nav entry, and page under `docs/{skills,commands,agents}/`
+  must now resolve to a real source file, duplicate link definitions are
+  reported, and a generated page whose source is gone is removed rather than
+  left behind. The README's "(N total)" headings and their TOC anchors are
+  checked against the real counts, which is the mechanism the repo's
+  no-unread-counts rule requires: 62 skills and 106 commands, the latter
+  counting both the flat `commands/<name>.md` and directory
+  `commands/<name>/<name>.md` shapes.
+- `tests/installer/test_opencode_plugin_install.py` covers the restored
+  OpenCode plugin install step: source and target resolution, overwrite of a
+  stale copy, dry-run writing nothing, uninstall, and detection reporting.
+- The context-curator extension's tests now run in CI as a `context-curator-tests`
+  job in `test.yml`. They previously ran in no gate at all.
+
+### Changed
+
+- Situational instructions moved out of the always-loaded rule modules. The
+  always-loaded set drops from 79,482 bytes across 23 modules to 54,884 bytes
+  across 20, a 30.9% reduction. Content moved only where a deterministic
+  trigger carries it -- explicit skill invocation, an agent definition loaded on
+  every dispatch, or a hook -- never behind a description match alone.
+  `40-develop-discipline` and most of `60-autonomy` moved into `skills/develop`;
+  `85-review-method` and `86-review-posture` into the review skills *and*
+  `agents/code-reviewer.md`, because a review dispatched from a develop gate
+  never sees a user phrase; `20-orchestration`'s skill-author principles into
+  `writing-skills` and its tier-resolution procedure into
+  `dispatching-parallel-agents`. The self-unblocking rule and a condensed form
+  of scope discipline stay always-loaded: they bind any session, not only
+  develop runs. A SessionStart hook now detects a `develop_gate_ledger` for the
+  project and directs re-reading the develop skill after a compaction, and
+  degrades to silence when no home directory resolves.
+- `hooks/opencode-plugin.ts` no longer carries a built-in check command. It
+  previously named `spellbook.gates.check`, a module no longer shipped, and
+  spawned an interpreter on every tool call to rediscover its absence. The
+  command now comes from `SPELLBOOK_GATE_CMD`: unset means no gate exists to
+  have an opinion and the hooks are a pass-through with no subprocess; set means
+  the gate must produce a verdict, and missing, crashed, or timed out all block.
+  The absent-package special case and its message-matching regex are gone with
+  the default that required them.
+- `hooks/bash-policy.toml` documented itself as merged into
+  `spellbook.gates.rules` at import time. Nothing imports it; the installer
+  copies it to the Gemini CLI and Antigravity policy directories, and the header
+  now says so.
+- `docs.yml` runs on pull requests, building the docs under `mkdocs --strict`
+  and uploading a preview artifact. The `deploy` job is guarded to push events
+  so a PR cannot publish.
+- Six agent definitions and `AGENTS.md` described the removed bash gate as live
+  enforcement. They now state that operator confirmation is the enforcement and
+  that a denied Bash command is surfaced verbatim, never reshaped.
+- `writing-copy` is registered under Meta rather than Specialized in the README
+  skill table.
+- `skills/security-auditing` is marked INOPERABLE in both its description and
+  its body. The static-analysis backbone its ANALYZE phase depends on is gone
+  repo-wide, so the skill can produce no verdict, and an audit that scans
+  nothing yields a clean report for the wrong reason. An invoker must say the
+  audit could not be performed and escalate. The rule catalogue, severity model,
+  trust levels, attack-chain method, and report format are retained as the
+  specification a replacement scanner must satisfy, not as a workflow that runs.
+- `fractal` and a new `curator` MCP tool module are registered in
+  `spellbook/mcp/tools/__init__.py`. `fractal` backs `skills/fractal-thinking`
+  and the `fractal-think-*` commands, and `curator` backs the calls the live
+  context-curator extension makes -- `mcp_curator_get_stats` had never been
+  registered at all, so the extension called a tool that did not exist.
+- Descriptions of skills that no routing path reaches are cut to one-line
+  statements of their load path. A description is routing surface loaded in
+  every session; a skill that is only ever loaded by name does not need trigger
+  phrases competing there.
+- `skills/develop/SKILL.md` no longer names a deleted module as the executable
+  form of its gate derivation. The tiered-floor tables are the single source of
+  truth and have no executable form, which the skill now says outright: nothing
+  in this repository derives the gate set, so a mis-derivation fails silently.
+- `AGENTS.md` gains an Environment Variables table documenting `SPELLBOOK_GATE_CMD`
+  and `SPELLBOOK_GIT_PUSH_AUTONOMOUS`, the latter recorded as an operator signal
+  no code reads.
+
+### Removed
+
+- `70-bash-gate` rule module. It documented the `spellbook/gates` subsystem,
+  which commit 7a8e9ab1 removed. Its layer names, message strings, and env vars
+  appear in no executable code, and the PreToolUse handler is a stub.
+- `permissions-from-transcripts` skill. Both halves it drove --
+  `spellbook.gates.transcript_analyzer` and
+  `scripts/analyze_yolo_transcripts.py` -- are gone, so every path it documented
+  fails. Its own stated alternatives, `/permissions` and `update-config`, remain.
+- Deprecated skills `autonomous-roundtable`, `dispatching-sub-orchestrators`,
+  and `project-encyclopedia`, and the deprecated `/encyclopedia-build` and
+  `/encyclopedia-validate` commands. All still shipped and could still trigger.
+- Three pre-commit hooks that could not run: `security-scan-changeset` and
+  `security-scan-skills` invoked the removed `spellbook.gates.scanner`, and
+  `check-admin-frontend` pointed at a frontend directory that no longer exists.
+- The diagram subsystem in its entirety: the generated `docs/diagrams/` mirror,
+  `scripts/generate_diagrams.py`, `scripts/check_diagram_freshness.py`, the
+  `check-diagram-freshness` pre-commit hook, and the diagram embedding in
+  `generate_docs.py`. The generator imported `spellbook.sdk`, which commit
+  7a8e9ab1 removed, so it could not run -- while the freshness hook still failed
+  every commit that touched a skill, command, or agent. The gate was
+  unsatisfiable and had no working remedy: its own failure message told the user
+  to run a generator that no longer existed. `scripts/diagram_config.py` held
+  the exclusion lists that `generate_docs.py` and `check-readme-completeness.py`
+  still need; those survive as `scripts/docs_config.py` and the diagram-only
+  tiering and structure-hashing halves are gone with the rest.
+- The `canvas` decision surface. Develop's Phase 0 offered `decision_surface`
+  as a locked axis whose `canvas` value routed approval gates through a
+  subsystem commit 7a8e9ab1 removed, so choosing it selected a surface that
+  could not render. The axis and its references are gone from `skills/develop`
+  and the `feature-*` commands; gates are presented via `AskUserQuestion` and
+  still always await an explicit operator decision. The canvas-only "Decision
+  Page Anatomy" rule was the one part with standalone value and is rehomed into
+  the terminal gates rather than deleted with its host.
+- The `spellbook-workflow-state` and `spellbook-forged` OpenCode extensions.
+  Both called MCP tools that are not registered, referenced backing code that
+  is not in the repository, and no installer path deployed either one.
+- Documentation for skills and commands that never existed: README table rows,
+  README link-reference definitions (including duplicates of entries already
+  defined), `mkdocs.yml` nav entries, and generated pages under `docs/`. This
+  is the rot the reverse checks above were written against.
+- Six `.github/dependabot.yml` entries whose `directory:` does not exist,
+  including the two deleted OpenCode extensions and two admin-frontend paths
+  removed with the admin subsystem.
 
 ### Fixed
+
+- `hooks/opencode-plugin.ts` blocked every Bash call on OpenCode. It shelled out
+  to the deleted gate module, got exit 1, and its catch-all returned
+  `safe: false`. It now distinguishes a gate that is absent from one that ran and
+  errored. The naive fix -- matching any `ModuleNotFoundError` -- was mutated in
+  and shown to wrongly allow commands when a present gate has a broken
+  dependency.
+- Skill load-path claims that named an invoker which did not reference the
+  skill, so the claimed instruction never loaded. `reviewing-prs` claimed three
+  invokers and had none, and
+  `commands/advanced-code-review-verify.md` held a diverged copy missing the
+  worktree case, which downgraded worktree reviews to `DIFF_ONLY`.
+  `smart-reading`, `using-skills`, and `enforcing-code-quality` claimed
+  automatic loading no mechanism performed. `fractal-thinking` was reachable by
+  no path at all and is now wired into `deep-research` and `fact-checking`, and
+  `sharpening-prompts` into `reviewing-design-docs` and `reviewing-impl-plans`.
+  The orphan registry is empty as a result.
+- `using-skills` stated a 25% applicability threshold for invoking a skill while
+  the rule modules stated 1%. The skill now matches: if a skill plausibly
+  applies, load it, with low-signal turns excluded by a separate principle
+  rather than by a raised bar.
 
 - `scripts/develop_gate_ledger.py` computed its state directory from
   `Path.home()` at module scope, so on a host with no resolvable home the CLI
@@ -87,9 +257,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/generate_docs.py` had no argument parsing, so `--help` silently
   rewrote the mirror instead of printing usage. It now has `--help` and a
   `--check` mode that writes nothing.
-- The OpenCode workflow-state extension still read the removed
-  `conversation.corrections` key and rendered "None" forever instead of
-  erroring; it now reads `constraints`.
+- The OpenCode plugin install step. Commit 7a8e9ab1 removed it along with the
+  gate subsystem, but the plugin itself still ships and OpenCode installs simply
+  stopped receiving it -- a regression, not a removal. It is restored under the
+  filename it used before, so an upgrade overwrites the stale broken copy that
+  older installs still load rather than leaving two plugins side by side.
+- `rules/50-git-safety.md` cited a deleted config file as the authority for the
+  protected-branch list, so a reader who checked the citation found nothing.
+  The rule now names `master` and `main` inline and states plainly that no
+  config file and no hook enforces them: protection is behavioural, and nothing
+  stops an agent that ignores it.
+- `AGENTS.md` named a deleted admin module in a mandatory config-registration
+  checklist and attributed a per-Bash-call import cost to a gate that no longer
+  exists. Both now describe the shipped code.
+- `skills/analyzing-skill-usage` documented an extraction protocol built on
+  imports from deleted modules, so every path it described failed. It now
+  specifies stdlib JSONL parsing, notes that other harnesses store transcripts
+  elsewhere, and requires an unreadable file to be reported as a gap in the
+  sample rather than silently shrinking the denominator.
 - The generated `docs/` mirror was stale.
 
 ## [0.88.0] - 2026-08-17

@@ -1,123 +1,4 @@
 # /advanced-code-review-verify
-
-## Workflow Diagram
-
-Phase 4 of advanced-code-review: Verification that fact-checks every finding against the actual codebase, removes false positives, flags inconclusive items, detects duplicates, and calculates signal-to-noise ratio.
-
-```mermaid
-flowchart TD
-    Start([Phase 4 Start])
-
-    DetectDups[Detect duplicate findings]
-    DupsFound{Duplicates found?}
-    MergeDups[Merge duplicate findings]
-
-    NextFinding{More findings?}
-    ExtractClaims[Extract verifiable claims]
-
-    ClaimType{Claim type?}
-    VerifyLine[Verify line content]
-    VerifyFunc[Verify function behavior]
-    VerifyCall[Verify call pattern]
-    VerifyPattern[Verify pattern violation]
-
-    AggResult{Aggregate result?}
-    MarkVerified[Mark: VERIFIED]
-    MarkRefuted[Mark: REFUTED]
-    MarkInconclusive[Mark: INCONCLUSIVE]
-
-    ValidateLines[Validate line numbers]
-    LinesValid{Lines valid?}
-    AdjustLines[Flag invalid lines]
-
-    AllVerified{All findings processed?}
-
-    RemoveRefuted[Remove REFUTED findings]
-    LogRefuted[Log to verification audit]
-    FlagInconclusive[Flag INCONCLUSIVE items]
-
-    CalcSNR[Calculate signal-to-noise]
-    SNRResult[Signal/Noise ratio computed]
-
-    WriteAudit[Write verification-audit.md]
-    UpdateJSON[Update findings.json]
-
-    SelfCheck{Phase 4 self-check OK?}
-    SelfCheckFail([STOP: Unverified findings])
-    Phase4Done([Phase 4 Complete])
-
-    Start --> DetectDups
-    DetectDups --> DupsFound
-    DupsFound -->|Yes| MergeDups
-    MergeDups --> NextFinding
-    DupsFound -->|No| NextFinding
-
-    NextFinding -->|Yes| ExtractClaims
-    ExtractClaims --> ClaimType
-
-    ClaimType -->|line_content| VerifyLine
-    ClaimType -->|function_behavior| VerifyFunc
-    ClaimType -->|call_pattern| VerifyCall
-    ClaimType -->|pattern_violation| VerifyPattern
-
-    VerifyLine --> AggResult
-    VerifyFunc --> AggResult
-    VerifyCall --> AggResult
-    VerifyPattern --> AggResult
-
-    AggResult -->|Verified| MarkVerified
-    AggResult -->|Refuted| MarkRefuted
-    AggResult -->|Inconclusive| MarkInconclusive
-
-    MarkVerified --> ValidateLines
-    MarkRefuted --> ValidateLines
-    MarkInconclusive --> ValidateLines
-
-    ValidateLines --> LinesValid
-    LinesValid -->|No| AdjustLines
-    AdjustLines --> AllVerified
-    LinesValid -->|Yes| AllVerified
-
-    AllVerified -->|No| NextFinding
-    AllVerified -->|Yes| RemoveRefuted
-
-    NextFinding -->|No| RemoveRefuted
-
-    RemoveRefuted --> LogRefuted
-    LogRefuted --> FlagInconclusive
-    FlagInconclusive --> CalcSNR
-    CalcSNR --> SNRResult
-
-    SNRResult --> WriteAudit
-    WriteAudit --> UpdateJSON
-    UpdateJSON --> SelfCheck
-
-    SelfCheck -->|No| SelfCheckFail
-    SelfCheck -->|Yes| Phase4Done
-
-    style Start fill:#2196F3,color:#fff
-    style Phase4Done fill:#2196F3,color:#fff
-    style SelfCheckFail fill:#2196F3,color:#fff
-    style WriteAudit fill:#2196F3,color:#fff
-    style UpdateJSON fill:#2196F3,color:#fff
-    style DupsFound fill:#FF9800,color:#fff
-    style NextFinding fill:#FF9800,color:#fff
-    style ClaimType fill:#FF9800,color:#fff
-    style AggResult fill:#FF9800,color:#fff
-    style LinesValid fill:#FF9800,color:#fff
-    style AllVerified fill:#FF9800,color:#fff
-    style SelfCheck fill:#f44336,color:#fff
-```
-
-## Legend
-
-| Color | Meaning |
-|-------|---------|
-| Green (#4CAF50) | Skill invocation |
-| Blue (#2196F3) | Command/action |
-| Orange (#FF9800) | Decision point |
-| Red (#f44336) | Quality gate |
-
 ## Command Content
 
 ````markdown
@@ -139,28 +20,21 @@ Verification Engineer. Your reputation depends on a clean, accurate finding set.
 <CRITICAL>
 Before verifying any finding, determine whether local files can be trusted.
 
-```python
-import subprocess
+**The `reviewing-prs` skill is the single source for that decision.** Load it and
+apply its `review_source` decision table; do not re-derive the rule here. This
+command previously carried its own copy, and the copy had already diverged — it
+missed the worktree case, so a review running inside a worktree checked out to the
+PR branch was downgraded to `DIFF_ONLY` and lost every verification it could have
+made.
 
-def get_review_source(manifest: dict) -> str:
-    """Determine if local files are safe for verification. Returns 'LOCAL_FILES' or 'DIFF_ONLY'."""
-    pr_head_sha = manifest.get("pr_head_sha")  # from review-manifest.json
-    if not pr_head_sha:
-        return "LOCAL_FILES"  # local branch review; files are authoritative
+Take `review_source` from `review-manifest.json` if Phase 1 recorded it; otherwise
+compute it per `reviewing-prs` and write it back to the manifest so the later
+phases and this one cannot disagree.
 
-    local_head = subprocess.run(
-        ["git", "rev-parse", "HEAD"], capture_output=True, text=True
-    ).stdout.strip()
-
-    return "LOCAL_FILES" if local_head == pr_head_sha else "DIFF_ONLY"
-```
-
-**When `review_source == "DIFF_ONLY"`** (PR review, local branch not checked out to PR HEAD):
+**Phase 4's consequence of `review_source == "DIFF_ONLY"`:**
 - ALL verify_* functions return `"INCONCLUSIVE"` immediately — do NOT read local files
 - Mark the finding `[NEEDS VERIFICATION]` in the report
 - Reason: "PR review — local HEAD does not match PR HEAD SHA; local files reflect different code"
-
-A REFUTED verdict from local files in DIFF_ONLY mode is a **wrong verdict**. Real bugs introduced by the PR will not appear in the local pre-PR code. Reading local files will cause you to declare them absent.
 </CRITICAL>
 
 <FORBIDDEN>

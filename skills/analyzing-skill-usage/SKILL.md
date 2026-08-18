@@ -1,6 +1,6 @@
 ---
 name: analyzing-skill-usage
-description: "Use when evaluating skill effectiveness or comparing skill versions. Triggers: 'how are skills performing', 'skill metrics', 'which skills fire correctly', 'skill invocation analysis', 'compare skill versions', 'analyze skill usage'. Also invoked by skill improvement workflows."
+description: "Use when evaluating skill effectiveness or comparing skill versions. Triggers: 'how are skills performing', 'skill metrics', 'which skills fire correctly', 'skill invocation analysis', 'compare skill versions', 'analyze skill usage'. NOT for: authoring or editing a skill (use writing-skills)."
 ---
 
 # Analyzing Skill Usage
@@ -37,32 +37,29 @@ description: "Use when evaluating skill effectiveness or comparing skill version
 
 ### 1. Load Sessions
 
+There is no spellbook library for this. Transcripts are plain JSONL on disk and
+you parse them yourself — one JSON object per line, in message order:
+
 ```python
-from spellbook.sessions.parser import load_jsonl, list_sessions_with_samples
-from spellbook.sessions.skill_analyzer import (
-    extract_skill_invocations,  # high-level: boundaries + scoring in one pass
-    aggregate_metrics,          # high-level: per-skill metric rollup
-)
+import json
+from pathlib import Path
+
+session_dir = Path.home() / ".claude" / "projects" / project_encoded
+for path in sorted(session_dir.glob("*.jsonl")):
+    messages = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 ```
 
-The protocol below describes what `skill_analyzer` does internally. For a
-ready-made implementation, call `extract_skill_invocations()` then
-`aggregate_metrics()` directly; the steps that follow document the same logic
-for cases where you need custom scoring.
-
-Sessions at: `~/.claude/projects/<project-encoded>/*.jsonl`
+Harnesses other than Claude Code store transcripts elsewhere; locate the
+directory for the harness under analysis before globbing. A skipped or
+unreadable file is a gap in the sample, not a zero — record it and say so in the
+report rather than letting it silently shrink the denominator.
 
 ### 2. Detect Skill Invocation Boundaries
 
-**Start Event**: Tool call where `name == "Skill"`. `extract_skill_invocations`
-handles boundary detection for you, returning `SkillInvocation` objects with
-`skill`, `version`, `start_idx`, `end_idx`, and `timestamp` already populated:
-```python
-invocations = extract_skill_invocations(messages, session_path)
-for inv in invocations:
-    skill_name = inv.skill            # base skill name (version stripped)
-    start = inv.start_idx             # message index where the Skill call fired
-```
+**Start Event**: an assistant tool-use block where the tool `name == "Skill"`.
+Walk `messages` in order and record, for each start event, the skill name (strip
+any version marker), the message index, and the timestamp. Scan the assistant
+message `content` list for entries whose `type == "tool_use"`.
 
 **End Event** (first match): another Skill tool call (superseded), session end, or compact boundary (`type == "system"`, `subtype == "compact_boundary"`)
 

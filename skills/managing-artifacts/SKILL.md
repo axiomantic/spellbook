@@ -1,6 +1,6 @@
 ---
 name: managing-artifacts
-description: "Use when generating documents, reports, plans, audits, or deciding where to save output files. Triggers: 'save report', 'write plan', 'where should I put this', 'where does this go', 'output directory', 'save this somewhere'."
+description: "Artifact storage paths and project-encoded conventions for generated documents, reports, plans, and audits. Loaded by the core rule module. Triggers: 'where should I put this', 'save report', 'output directory'."
 ---
 
 # Managing Artifacts
