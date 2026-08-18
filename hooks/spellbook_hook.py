@@ -500,6 +500,16 @@ def _develop_ledger_path(cwd: str) -> Path | None:
     CLI writing state and wrong here -- a hook that raises on a Windows runner
     with no ``USERPROFILE`` would take out the compaction notice as well, so
     an unknowable path degrades to "no develop hint".
+
+    ``encode_cwd`` is not a string operation: it resolves the git repo root by
+    spawning ``git worktree list --porcelain`` (and ``git rev-parse
+    --show-toplevel`` on fallback), each with a five-second timeout. This
+    function runs on every ``Task`` PostToolUse, so paying that on a machine
+    that has never run a develop flow is pure cost. An empty state directory
+    settles the question outright -- a ledger for THIS project cannot exist
+    when no ledger exists for ANY project -- and one directory listing is
+    cheaper than a process spawn. Both callers treat ``None`` and "file
+    absent" identically, so the short circuit is not observable to them.
     """
     override = os.environ.get("SPELLBOOK_DEV_DIR")
     if override:
@@ -511,6 +521,8 @@ def _develop_ledger_path(cwd: str) -> Path | None:
         import develop_gate_ledger
 
         state_dir = develop_gate_ledger.default_state_dir()
+        if not any(state_dir.glob("develop_gate_ledger-*.json")):
+            return None
         encoded = develop_gate_ledger.encode_cwd(cwd)
     except Exception:
         return None

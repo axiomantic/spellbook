@@ -22,6 +22,7 @@ import sys
 from pathlib import Path
 
 import pytest
+import tripwire
 
 HOOKS_DIR = Path(__file__).resolve().parents[2] / "hooks"
 if str(HOOKS_DIR) not in sys.path:
@@ -36,6 +37,10 @@ def dev_dir(tmp_path, monkeypatch):
     d.mkdir()
     monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(d))
     return d
+
+
+_NO_HOME = RuntimeError("no home directory")
+_DISK_GONE = OSError("disk gone")
 
 
 def _task_payload(cwd: str, *, prompt: str = "", description: str = "") -> dict:
@@ -141,22 +146,79 @@ def test_no_home_directory_does_not_crash_the_hook(monkeypatch, tmp_path):
     """The ledger CLI REFUSES with no home; a raising hook kills the tool call."""
     monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
 
-    def _no_home():
-        raise RuntimeError("no home directory")
+    home = tripwire.mock("pathlib:Path.home")
+    home.raises(_NO_HOME)
 
-    monkeypatch.setattr(Path, "home", staticmethod(_no_home))
+    with tripwire:
+        assert _dispatch(_task_payload(str(tmp_path), prompt="dehallucination")) == []
 
-    assert _dispatch(_task_payload(str(tmp_path), prompt="dehallucination")) == []
+    home.assert_call(args=(), kwargs={}, raised=_NO_HOME)
 
 
-def test_recording_failure_does_not_propagate(dev_dir, tmp_path, monkeypatch):
+def test_recording_failure_does_not_propagate(dev_dir, tmp_path):
     """Any unforeseen write failure degrades; the tool call still completes."""
     (dev_dir / "develop_gate_ledger.json").write_text("{}", encoding="utf-8")
+    payload = _task_payload(str(tmp_path), prompt="dehallucination")
 
-    def _boom(*args, **kwargs):
-        raise OSError("disk gone")
+    record = tripwire.mock("spellbook_hook:_record_develop_dispatch")
+    record.raises(_DISK_GONE)
+    logged = tripwire.mock("spellbook_hook:_log_hook_error")
+    logged.returns(None)
 
-    monkeypatch.setattr(spellbook_hook, "_record_develop_dispatch", _boom)
-    monkeypatch.setattr(spellbook_hook, "_log_hook_error", lambda *a: None)
+    with tripwire:
+        assert _dispatch(payload) == []
 
-    assert _dispatch(_task_payload(str(tmp_path), prompt="dehallucination")) == []
+    record.assert_call(args=(payload,), kwargs={}, raised=_DISK_GONE)
+    logged.assert_call(
+        args=("record_develop_dispatch", "PostToolUse", _DISK_GONE),
+        kwargs={},
+        returned=None,
+    )
+
+
+def test_no_ledger_anywhere_needs_no_repo_root_resolution(monkeypatch, tmp_path):
+    """The path is unknowable without git; an empty state dir answers first.
+
+    ``encode_cwd`` spawns ``git worktree list --porcelain`` to resolve the repo
+    root, and this runs on every ``Task`` dispatch. When the state directory
+    holds no ledger for any project, no resolution can change the answer -- so
+    none is performed, and the result is ``None`` rather than the path a git
+    probe would have built.
+
+    Deliberately outside a tripwire sandbox: real git must be free to run, so
+    that a regression which drops the short circuit produces a Path here
+    instead of silently passing on a sandbox error the caller swallows.
+    """
+    monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+
+    assert spellbook_hook._develop_ledger_path(str(tmp_path)) is None
+
+
+def test_a_ledger_for_another_project_still_resolves_the_repo_root(monkeypatch, tmp_path):
+    """The short circuit must not block resolution once any ledger exists."""
+    monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
+    monkeypatch.setenv("HOME", str(tmp_path))
+    monkeypatch.setenv("USERPROFILE", str(tmp_path))
+    state_dir = tmp_path / ".local" / "spellbook"
+    state_dir.mkdir(parents=True)
+    (state_dir / "develop_gate_ledger-some-other-project.json").write_text(
+        "{}", encoding="utf-8"
+    )
+
+    tripwire.subprocess.mock_run(
+        command=["git", "worktree", "list", "--porcelain"],
+        stdout="worktree /repos/thing\n",
+    )
+
+    with tripwire:
+        path = spellbook_hook._develop_ledger_path(str(tmp_path))
+
+    assert path == state_dir / "develop_gate_ledger-repos-thing.json"
+    tripwire.subprocess.assert_run(
+        command=["git", "worktree", "list", "--porcelain"],
+        returncode=0,
+        stdout="worktree /repos/thing\n",
+        stderr="",
+    )

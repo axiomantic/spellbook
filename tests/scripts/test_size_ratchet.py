@@ -30,56 +30,65 @@ _spec.loader.exec_module(vs)
 CEILINGS = {"skills/develop/SKILL.md": {"bytes": 200, "lines": 4}}
 
 
-def _fake(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, body: str) -> Path:
-    """Write `body` at a path that maps to the ratcheted repo-relative key."""
+def _fake(tmp_path: Path, body: str) -> Path:
+    """Write `body` to a scratch file the ratchet can be pointed at."""
     target = tmp_path / "skills" / "develop" / "SKILL.md"
     target.parent.mkdir(parents=True)
     target.write_text(body, encoding="utf-8")
-    monkeypatch.setattr(vs, "repo_relative_key", lambda p: "skills/develop/SKILL.md")
     return target
 
 
-def test_file_over_its_byte_ceiling_is_rejected(tmp_path, monkeypatch):
+def _ceilings(target: Path, byte_ceiling: int, line_ceiling: int) -> dict:
+    """`CEILINGS`-shaped dict keyed the way the ratchet keys `target`.
+
+    The key comes from the real `repo_relative_key` rather than a stub, so the
+    lookup under test runs against the production key derivation. Stubbing it
+    would also have meant mocking a module attribute, which this repo forbids
+    outside tripwire.
+    """
+    return {vs.repo_relative_key(target): {"bytes": byte_ceiling, "lines": line_ceiling}}
+
+
+def test_file_over_its_byte_ceiling_is_rejected(tmp_path):
     body = "x" * 250 + "\n"
-    target = _fake(tmp_path, monkeypatch, body)
+    target = _fake(tmp_path, body)
     errors: list[str] = []
-    vs.check_truncation_limits(body, errors, target, CEILINGS)
+    vs.check_truncation_limits(body, errors, target, _ceilings(target, 200, 4))
     assert any("Exceeds recorded size ceiling" in e for e in errors)
     assert any("over by 51 bytes" in e for e in errors)
 
 
-def test_same_file_under_its_ceiling_is_accepted(tmp_path, monkeypatch):
+def test_same_file_under_its_ceiling_is_accepted(tmp_path):
     body = "x" * 100 + "\n"
-    target = _fake(tmp_path, monkeypatch, body)
+    target = _fake(tmp_path, body)
     errors: list[str] = []
-    vs.check_truncation_limits(body, errors, target, CEILINGS)
+    vs.check_truncation_limits(body, errors, target, _ceilings(target, 200, 4))
     assert errors == []
 
 
-def test_file_over_its_line_ceiling_is_rejected(tmp_path, monkeypatch):
+def test_file_over_its_line_ceiling_is_rejected(tmp_path):
     body = "a\n" * 9
-    target = _fake(tmp_path, monkeypatch, body)
+    target = _fake(tmp_path, body)
     errors: list[str] = []
-    vs.check_truncation_limits(body, errors, target, CEILINGS)
+    vs.check_truncation_limits(body, errors, target, _ceilings(target, 200, 4))
     assert any("Exceeds recorded line ceiling" in e for e in errors)
 
 
-def test_ceiling_supersedes_the_global_limit(tmp_path, monkeypatch):
+def test_ceiling_supersedes_the_global_limit(tmp_path):
     """A ratcheted file over MAX_BYTES but under its ceiling passes.
 
     This is the case the old blanket exemption served, now bounded.
     """
     body = "x" * (vs.MAX_BYTES + 10_000) + "\n"
-    target = _fake(tmp_path, monkeypatch, body)
-    ceilings = {"skills/develop/SKILL.md": {"bytes": len(body.encode()), "lines": 5}}
+    target = _fake(tmp_path, body)
     errors: list[str] = []
-    vs.check_truncation_limits(body, errors, target, ceilings)
+    vs.check_truncation_limits(body, errors, target, _ceilings(target, len(body.encode()), 5))
     assert errors == []
 
 
-def test_unratcheted_file_still_hits_the_global_limit(tmp_path, monkeypatch):
+def test_unratcheted_file_still_hits_the_global_limit(tmp_path):
     body = "x" * (vs.MAX_BYTES + 1) + "\n"
-    target = _fake(tmp_path, monkeypatch, body)
+    target = _fake(tmp_path, body)
     errors: list[str] = []
     vs.check_truncation_limits(body, errors, target, {})
     assert any("Exceeds size limit" in e for e in errors)
