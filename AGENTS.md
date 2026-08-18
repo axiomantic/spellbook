@@ -159,7 +159,7 @@ spellbook/
 uv run pytest tests/                              # Fast tests (heavy markers auto-skipped)
 uv run pytest tests/unit/test_installer.py        # Specific file
 uv run pytest --cov=installer --cov=spellbook tests/  # Coverage
-./scripts/install-hooks.sh                        # Install hooks
+uvx pre-commit install                            # Install hooks
 python3 scripts/generate_docs.py                  # Gen docs
 uv run install.py --dry-run                       # Test installer
 ```
