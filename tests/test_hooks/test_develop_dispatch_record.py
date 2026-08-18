@@ -196,8 +196,12 @@ def test_no_ledger_anywhere_needs_no_repo_root_resolution(monkeypatch, tmp_path)
     assert spellbook_hook._develop_ledger_path(str(tmp_path)) is None
 
 
-def test_a_ledger_for_another_project_still_resolves_the_repo_root(monkeypatch, tmp_path):
-    """The short circuit must not block resolution once any ledger exists."""
+def _seed_state_dir(tmp_path, monkeypatch):
+    """A state dir holding a ledger for an unrelated project.
+
+    Enough to get past the "no ledger for ANY project" short circuit, so
+    what the tests below observe is the repo-root resolution itself.
+    """
     monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
@@ -206,6 +210,55 @@ def test_a_ledger_for_another_project_still_resolves_the_repo_root(monkeypatch, 
     (state_dir / "develop_gate_ledger-some-other-project.json").write_text(
         "{}", encoding="utf-8"
     )
+    return state_dir
+
+
+def test_a_ledger_for_another_project_still_resolves_the_repo_root(monkeypatch, tmp_path):
+    """The short circuit must not block resolution once any ledger exists.
+
+    A linked worktree is the probe because its answer cannot be reached by
+    any string rule: the main worktree is NOT an ancestor of the worktree's
+    cwd, so a path that keys to it proves resolution actually ran. The
+    resolution is a filesystem walk, hence no ``git`` process and no mock;
+    ``tests/test_path_utils.py`` is where that walk is held against real git.
+    """
+    state_dir = _seed_state_dir(tmp_path, monkeypatch)
+
+    repo = tmp_path / "repo"
+    (repo / ".git" / "objects").mkdir(parents=True)
+    (repo / ".git" / "HEAD").write_text("ref: refs/heads/main\n")
+    git_dir = repo / ".git" / "worktrees" / "wt"
+    git_dir.mkdir(parents=True)
+    (git_dir / "HEAD").write_text("ref: refs/heads/side\n")
+    (git_dir / "commondir").write_text("../..\n")
+    worktree = tmp_path / "wt"
+    worktree.mkdir()
+    (worktree / ".git").write_text(f"gitdir: {git_dir}\n")
+
+    from spellbook.core.path_utils import encode_cwd
+
+    with tripwire:
+        path = spellbook_hook._develop_ledger_path(str(worktree))
+
+    expected_key = encode_cwd(str(repo), resolve_git_root=False)
+    assert path == state_dir / f"develop_gate_ledger-{expected_key}.json"
+
+
+def test_resolution_falls_back_to_git_for_a_layout_it_cannot_read(monkeypatch, tmp_path):
+    """A bare repository still reaches ``git``, and its answer is still used.
+
+    The filesystem walk answers only the layouts it can prove; a bare repo
+    is not one of them (git reports the bare directory itself, and there is
+    no ``.git`` entry to walk to). Keeping this path covered matters because
+    it is the one that still spawns a process -- an optimization that
+    silently swallowed the exotic cases instead of deferring them would look
+    identical everywhere else.
+    """
+    state_dir = _seed_state_dir(tmp_path, monkeypatch)
+
+    bare = tmp_path / "bare.git"
+    (bare / "objects").mkdir(parents=True)
+    (bare / "HEAD").write_text("ref: refs/heads/main\n")
 
     tripwire.subprocess.mock_run(
         command=["git", "worktree", "list", "--porcelain"],
@@ -213,7 +266,7 @@ def test_a_ledger_for_another_project_still_resolves_the_repo_root(monkeypatch, 
     )
 
     with tripwire:
-        path = spellbook_hook._develop_ledger_path(str(tmp_path))
+        path = spellbook_hook._develop_ledger_path(str(bare))
 
     assert path == state_dir / "develop_gate_ledger-repos-thing.json"
     tripwire.subprocess.assert_run(

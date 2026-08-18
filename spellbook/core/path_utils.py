@@ -112,6 +112,169 @@ def detect_git_context(project_path: str, timeout: float = 5.0) -> GitContext:
     )
 
 
+# Environment variables that move git's repository discovery off the
+# filesystem walk below. Any one of them set means the on-disk layout no
+# longer determines the answer, so the walk declines and git decides.
+_GIT_DISCOVERY_ENV = (
+    "GIT_DIR",
+    "GIT_WORK_TREE",
+    "GIT_COMMON_DIR",
+    "GIT_CEILING_DIRECTORIES",
+    "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+)
+
+
+def _read_gitdir_pointer(dot_git: Path, base: Path) -> Optional[Path]:
+    """Resolve the ``gitdir: <path>`` pointer in a ``.git`` FILE."""
+    try:
+        text = dot_git.read_text(encoding="utf-8", errors="strict")
+    except (OSError, UnicodeDecodeError):
+        return None
+    line = text.strip()
+    if not line.startswith("gitdir:"):
+        return None
+    target = line[len("gitdir:"):].strip()
+    if not target:
+        return None
+    resolved = Path(target)
+    if not resolved.is_absolute():
+        resolved = base / resolved
+    try:
+        return Path(os.path.realpath(resolved))
+    except OSError:
+        return None
+
+
+def _looks_like_git_dir(candidate: Path) -> bool:
+    """A directory git would accept as a repository/worktree git dir.
+
+    ``HEAD`` is the cheapest marker git itself requires. Checking it stops
+    the walk from claiming an empty directory that merely happens to be
+    named ``.git`` -- git rejects that and keeps walking upward, and a walk
+    that stopped there would return a root git never would.
+    """
+    try:
+        return (candidate / "HEAD").is_file()
+    except OSError:
+        return False
+
+
+def _git_free_repo_root(path: str) -> Optional[str]:
+    """The repo root for ``path`` read off the filesystem, or None to defer.
+
+    Reproduces what ``git worktree list --porcelain`` reports as its first
+    entry, for the layouts whose answer is fully determined by what is on
+    disk: a plain repository, a linked worktree, any subdirectory of
+    either, and a path in no repository at all. Every other shape returns
+    None, which sends the caller to git.
+
+    None -- not a guess -- is the response to anything unrecognized. A wrong
+    root is not a slow path, it is a different namespace: ``encode_cwd``
+    turns this string into a state filename, so a root that differs from
+    git's by one character silently orphans the file it should have found,
+    and the caller sees an ordinary "no state here". Deferring costs a
+    process spawn; guessing costs correctness, so the two are not traded
+    against each other anywhere below.
+
+    Shapes deliberately deferred, each verified against real git:
+
+    - A **submodule**: git reports the git dir (``<super>/.git/modules/<n>``)
+      rather than the submodule's working tree. Its git dir carries no
+      ``commondir``, which is how the walk recognizes it.
+    - A **bare repository**: git reports the bare directory itself; there is
+      no ``.git`` entry for the walk to find.
+    - A **worktree of a bare repository**: ``commondir`` resolves to a
+      directory not named ``.git``, so the main-worktree parent derivation
+      does not apply.
+    - Anything under a ``GIT_*`` discovery override.
+
+    Git's own answer is realpath-based (it chdirs, and ``getcwd`` returns a
+    resolved path), so the walk starts from ``os.path.realpath``. Git also
+    stops discovery at a filesystem boundary unless
+    ``GIT_DISCOVERY_ACROSS_FILESYSTEM`` is set; the ``st_dev`` comparison
+    below is that rule, not an optimization.
+    """
+    if any(os.environ.get(var) for var in _GIT_DISCOVERY_ENV):
+        return None
+
+    if not path:
+        # ``realpath("")`` is the process cwd, but ``subprocess(cwd="")``
+        # raises, so git resolves nothing and the input passes through.
+        return path
+
+    try:
+        start = Path(os.path.realpath(path))
+        if not start.is_dir():
+            # git cannot chdir here, so both of its probes fail and the
+            # caller's documented fallback is the untouched input path.
+            return path
+        start_dev = start.stat().st_dev
+    except OSError:
+        return None
+
+    for directory in (start, *start.parents):
+        try:
+            if directory.stat().st_dev != start_dev:
+                # Git stopped discovery here, so it found no repository.
+                return path
+            dot_git = directory / ".git"
+            is_dir = dot_git.is_dir()
+            is_file = dot_git.is_file()
+            bare_here = (
+                not is_dir
+                and not is_file
+                and _looks_like_git_dir(directory)
+                and (directory / "objects").is_dir()
+            )
+        except OSError:
+            return None
+
+        if bare_here:
+            return None
+
+        if is_dir:
+            if not _looks_like_git_dir(dot_git):
+                return None
+            return os.path.normpath(str(directory))
+
+        if is_file:
+            git_dir = _read_gitdir_pointer(dot_git, directory)
+            if git_dir is None or not _looks_like_git_dir(git_dir):
+                return None
+            common_file = git_dir / "commondir"
+            try:
+                if not common_file.is_file():
+                    return None  # submodule: a git dir with no common dir
+                common_raw = common_file.read_text(encoding="utf-8").strip()
+            except (OSError, UnicodeDecodeError):
+                return None
+            if not common_raw:
+                return None
+            common = Path(common_raw)
+            if not common.is_absolute():
+                common = git_dir / common
+            try:
+                common = Path(os.path.realpath(common))
+            except OSError:
+                return None
+            if common.name != ".git":
+                return None  # worktree of a bare repository
+            main_root = common.parent
+            try:
+                if not (main_root / ".git").exists():
+                    return None
+            except OSError:
+                return None
+            return os.path.normpath(str(main_root))
+
+        if dot_git.exists():
+            # Present but neither file nor directory. Git's acceptance rules
+            # for this are not reconstructable from a stat.
+            return None
+
+    return path
+
+
 def resolve_repo_root(path: str) -> str:
     """Resolve a path to its git repository root, handling worktrees.
 
@@ -128,6 +291,16 @@ def resolve_repo_root(path: str) -> str:
     Returns:
         Absolute path to the git repository root, or the input path.
     """
+    # The filesystem walk answers the layouts it can prove and returns None
+    # for the rest. It is not a cache: nothing it reads is retained between
+    # calls, so there is no stale state to invalidate. This function is on
+    # the Task PostToolUse hook path, which runs as a FRESH PROCESS per
+    # event -- an in-process memo would be written once and never read, so
+    # removing the spawn is the only saving available here.
+    fast = _git_free_repo_root(path)
+    if fast is not None:
+        return fast
+
     try:
         # git worktree list --porcelain gives the main worktree first
         result = subprocess.run(

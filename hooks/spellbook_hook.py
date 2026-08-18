@@ -501,15 +501,15 @@ def _develop_ledger_path(cwd: str) -> Path | None:
     with no ``USERPROFILE`` would take out the compaction notice as well, so
     an unknowable path degrades to "no develop hint".
 
-    ``encode_cwd`` is not a string operation: it resolves the git repo root by
-    spawning ``git worktree list --porcelain`` (and ``git rev-parse
-    --show-toplevel`` on fallback), each with a five-second timeout. This
-    function runs on every ``Task`` PostToolUse, so paying that on a machine
-    that has never run a develop flow is pure cost. An empty state directory
-    settles the question outright -- a ledger for THIS project cannot exist
-    when no ledger exists for ANY project -- and one directory listing is
-    cheaper than a process spawn. Both callers treat ``None`` and "file
-    absent" identically, so the short circuit is not observable to them.
+    ``encode_cwd`` is not a string operation: it resolves the git repo root,
+    and for layouts it cannot read off the filesystem it still spawns ``git
+    worktree list --porcelain`` (and ``git rev-parse --show-toplevel`` on
+    fallback), each with a five-second timeout. This function runs on every
+    ``Task`` PostToolUse, so an empty state directory settles the question
+    before any of that: a ledger for THIS project cannot exist when no ledger
+    exists for ANY project, and one directory listing is the cheapest way to
+    learn it. Both callers treat ``None`` and "file absent" identically, so
+    the short circuit is not observable to them.
     """
     override = os.environ.get("SPELLBOOK_DEV_DIR")
     if override:

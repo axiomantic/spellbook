@@ -1197,6 +1197,13 @@ def test_fallback_encode_cwd_matches_real_implementation_with_git_root(tmp_path)
     fallback, and it carries all of the drift risk. Checking only
     ``resolve_git_root=False`` leaves it uncovered: a corrupted git-root
     branch left the False-only guard green.
+
+    Since ``spellbook.core.path_utils.resolve_repo_root`` grew a
+    filesystem walk that answers the common layouts without spawning git,
+    this test also serves as the standing differential between that walk
+    and a pure ``git``-subprocess implementation: the fallback below is
+    unchanged and still shells out, so any divergence in the mapping shows
+    up here as disagreement rather than as an orphaned state file.
     """
     from spellbook.core.path_utils import encode_cwd as real_encode_cwd
 
@@ -1221,6 +1228,9 @@ def test_fallback_encode_cwd_matches_real_implementation_with_git_root(tmp_path)
         timeout=30,
     )
 
+    worktree_subdir = worktree / "nested"
+    worktree_subdir.mkdir()
+
     not_a_repo = tmp_path / "plain"
     not_a_repo.mkdir()
 
@@ -1229,6 +1239,7 @@ def test_fallback_encode_cwd_matches_real_implementation_with_git_root(tmp_path)
         str(repo_root / "scripts"),          # a subdirectory of it
         str(temp_repo),                      # a freshly created repo
         str(worktree),                       # a real linked worktree
+        str(worktree_subdir),                # a subdirectory of a worktree
         str(not_a_repo),                     # not a git repo at all
     ]
     for path in paths:
