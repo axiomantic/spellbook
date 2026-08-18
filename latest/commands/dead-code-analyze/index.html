@@ -5172,6 +5172,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../code-review-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /code-review-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../code-review-feedback/" class="md-nav__link">
         
   
@@ -8990,69 +9018,101 @@
 <a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">  Repeat until no new transitive dead code found (fixed point)</span>
 <a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="sb">```</span>
 <a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="gu">### Step 5: Remove and Test Verification (Optional)</span>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>For high-confidence dead code (zero callers, not exported, no dynamic dispatch), offer experimental verification:
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>"Has callers" is not sufficient for alive status. Callers must themselves be alive.
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>The direct caller check (Step 2) and this transitive check are separate steps; neither
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>substitutes for the other.
 <a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="gs">**Protocol:**</span>
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="k">1.</span> Ask user: "Would you like me to experimentally verify by removing and testing?"
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="k">2.</span> If yes: create temporary git worktree or branch
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="k">3.</span> Remove the suspected dead code
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="k">4.</span> Run the test suite
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="k">5.</span> Tests pass → definitive proof code was dead
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="k">6.</span> Tests fail → code was live (or tests are incomplete); restore from git
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="k">7.</span> Restore original state regardless of outcome
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="gs">**When to offer:**</span> grep result ambiguous, code appears important with zero callers, or high-value cleanup.
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="gu">### Step 6: Symmetric Pair Analysis</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="gu">### Step 5: Remove and Test Verification (Optional)</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>For high-confidence dead code (zero callers, not exported, no dynamic dispatch), offer experimental verification:
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="gs">**Protocol:**</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="k">1.</span> Ask user: "Would you like me to experimentally verify by removing and testing?"
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="k">2.</span> If yes: create temporary git worktree or branch
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="k">3.</span> Remove the suspected dead code
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="k">4.</span> Run the test suite
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="k">5.</span> Tests pass → definitive proof code was dead
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="k">6.</span> Tests fail → code was live (or tests are incomplete); restore from git
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="k">7.</span> Restore original state regardless of outcome
 <a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">```</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">IF ANY of {getFoo, setFoo, clearFoo} is ALIVE → flag all for user review</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="sb">IF ALL are dead → entire group is dead</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sb">IF SOME alive, SOME dead → flag asymmetry for explicit user decision</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="gs">**When to offer:**</span> grep result ambiguous, code appears important with zero callers, or high-value cleanup.
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="gu">### Step 6: Symmetric Pair Analysis</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
 <a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="sb">```</span>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>---
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="gu">## Phase 5: Iterative Re-scanning</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="sb">IF ANY of {getFoo, setFoo, clearFoo} is ALIVE → flag all for user review</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="sb">IF ALL are dead → entire group is dead</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="sb">IF SOME alive, SOME dead → flag asymmetry for explicit user decision</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="sb">```</span>
 <a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>&lt;RULE&gt;After identifying dead code, re-scan for newly orphaned code. Removal cascades.&lt;/RULE&gt;
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="gs">**Why cascade matters:**</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">```</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">Round 1: evaluateDeferredFieldPragmas → 0 callers → DEAD</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">Round 2: iterator deferredPragmas → only called by above → NOW TRANSITIVE DEAD</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">Round 3: setDeferredExpr → stores to iterator that's dead → NOW WRITE-ONLY DEAD</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">```</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="gs">**Re-scan Algorithm:**</span>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="k">1.</span> Mark initial dead code (zero callers)
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="k">2.</span> Re-examine remaining items, excluding already-marked-dead
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="k">3.</span> Re-run verification on remaining items
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="k">4.</span> Check for newly transitive dead code
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="k">5.</span> Check for newly write-only dead code (getter removed → setter orphaned)
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="k">6.</span> Repeat until no new dead code found (fixed point)
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="gs">**Cascade Detection:**</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="k">-</span><span class="w"> </span>If removal of A makes B dead → note "B depends on A" in report
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="k">-</span><span class="w"> </span>Present cascade chains: "Removing X enables removing Y, Z"
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>Apply this to every symmetric group, including groups whose other members are heavily
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>used. A single zero-caller member of a live group is still a finding.
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="gu">### Step 7: Remaining Detection Patterns</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="gs">**Convenience wrapper:**</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">```</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">IF proc foo() only calls bar() with minor transform:</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">  Check if foo has callers</span>
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">  IF zero callers -&gt; dead wrapper</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="sb">  EVEN IF bar() is heavily used</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="sb">```</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="gs">**Field + accessors:**</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="sb">```</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">IF field X detected:</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">  Search for getter getX or X</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="sb">  Search for setter setX or `X=`</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="sb">  IF all three have zero usage -&gt; dead feature</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">```</span>
 <a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>---
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="gu">## Output</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>Produces:
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="k">1.</span> All code items with verdicts
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="k">2.</span> Evidence for each verdict (grep output, caller locations)
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="k">3.</span> Cascade chains documented
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">4.</span> Fixed-point confirmed
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="gs">**Next:**</span> Run <span class="sb">`/dead-code-report`</span>.
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>Every verdict requires evidence. Every transitive chain must close. Never declare fixed-point until re-scan confirms it. A careless verdict breaks production code.
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="gs">**Test-only usage:**</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">```</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">IF all callers are in test files:</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">  ASK user if test-only code should be kept</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">  Don't auto-mark as dead</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">```</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>---
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="gu">## Phase 5: Iterative Re-scanning</span>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>&lt;RULE&gt;After identifying dead code, re-scan for newly orphaned code. Removal cascades.&lt;/RULE&gt;
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="gs">**Why cascade matters:**</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="sb">```</span>
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="sb">Round 1: evaluateDeferredFieldPragmas → 0 callers → DEAD</span>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="sb">Round 2: iterator deferredPragmas → only called by above → NOW TRANSITIVE DEAD</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="sb">Round 3: setDeferredExpr → stores to iterator that's dead → NOW WRITE-ONLY DEAD</span>
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">```</span>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="gs">**Re-scan Algorithm:**</span>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">1.</span> Mark initial dead code (zero callers)
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="k">2.</span> Re-examine remaining items, excluding already-marked-dead
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="k">3.</span> Re-run verification on remaining items
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="k">4.</span> Check for newly transitive dead code
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="k">5.</span> Check for newly write-only dead code (getter removed → setter orphaned)
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">6.</span> Repeat until no new dead code found (fixed point)
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="gs">**Cascade Detection:**</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">-</span><span class="w"> </span>If removal of A makes B dead → note "B depends on A" in report
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">-</span><span class="w"> </span>Present cascade chains: "Removing X enables removing Y, Z"
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>---
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="gu">## Output</span>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>Produces:
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="k">1.</span> All code items with verdicts
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="k">2.</span> Evidence for each verdict (grep output, caller locations)
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="k">3.</span> Cascade chains documented
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="k">4.</span> Fixed-point confirmed
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="gs">**Next:**</span> Run <span class="sb">`/dead-code-report`</span>.
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>Every verdict requires evidence. Every transitive chain must close. Never declare fixed-point until re-scan confirms it. A careless verdict breaks production code.
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

@@ -5288,6 +5288,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../commands/code-review-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /code-review-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../commands/code-review-feedback/" class="md-nav__link">
         
   
@@ -9082,57 +9110,45 @@
 <a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
 <a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="gu">## Post-Creation Operations</span>
 <a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>Since <span class="sb">`gh pr edit`</span> is broken (GitHub Projects Classic deprecation), use the REST API for post-creation modifications:
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="c1"># Update PR title or body</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/pulls/NUMBER<span class="w"> </span>--method<span class="w"> </span>PATCH<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="w">  </span>-f<span class="w"> </span><span class="nv">title</span><span class="o">=</span><span class="s2">"New title"</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">body</span><span class="o">=</span><span class="s2">"New body"</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>
-<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="c1"># Add labels</span>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/issues/NUMBER/labels<span class="w"> </span>--method<span class="w"> </span>POST<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">'labels[]=label1'</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="c1"># Request reviewers</span>
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>gh<span class="w"> </span>api<span class="w"> </span>repos/OWNER/REPO/pulls/NUMBER/requested_reviewers<span class="w"> </span>--method<span class="w"> </span>POST<span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="w">  </span>-f<span class="w"> </span><span class="s1">'reviewers[]=username'</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">```</span>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>---
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`--fill`</span> flag with <span class="sb">`gh pr create`</span> (skips templates entirely)
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`--template`</span> flag with <span class="sb">`gh pr create`</span> or <span class="sb">`gh issue create`</span> (inconsistent behavior)
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`gh pr edit`</span> for any purpose (broken by GitHub Projects Classic deprecation)
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="k">-</span><span class="w"> </span>Fabricating Jira ticket numbers (<span class="sb">`ODY-0000`</span>, placeholder tickets)
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="k">-</span><span class="w"> </span>Creating a PR or issue without user confirmation
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="k">-</span><span class="w"> </span>Pushing to remote without user confirmation
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="k">-</span><span class="w"> </span>Including development history or session narratives in PR descriptions
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="k">-</span><span class="w"> </span>Skipping template discovery (always attempt all tiers)
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span>Using unquoted heredocs (<span class="sb">`&lt;&lt;EOF`</span> instead of <span class="sb">`&lt;&lt;'EOF'`</span>) for body content
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">-</span><span class="w"> </span>Passing raw body via <span class="sb">`--body`</span> when content may contain shell special characters
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">-</span><span class="w"> </span>Silently choosing a target repo without user confirmation
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">-</span><span class="w"> </span>Using local templates for fork PRs (templates come from upstream)
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="sb">`gh pr edit`</span> and <span class="sb">`gh issue edit`</span> are broken by the GitHub Projects Classic
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>deprecation. Every post-creation change — title, body, labels, reviewers — goes
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>through <span class="sb">`gh api`</span>. Phase 8 of <span class="sb">`/create-pr`</span> and <span class="sb">`/create-issue`</span> holds the exact calls.
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>---
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`--fill`</span> flag with <span class="sb">`gh pr create`</span> (skips templates entirely)
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`--template`</span> flag with <span class="sb">`gh pr create`</span> or <span class="sb">`gh issue create`</span> (inconsistent behavior)
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="k">-</span><span class="w"> </span>Using <span class="sb">`gh pr edit`</span> for any purpose (broken by GitHub Projects Classic deprecation)
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="k">-</span><span class="w"> </span>Fabricating Jira ticket numbers (<span class="sb">`ODY-0000`</span>, placeholder tickets)
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="k">-</span><span class="w"> </span>Creating a PR or issue without user confirmation
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="k">-</span><span class="w"> </span>Pushing to remote without user confirmation
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="k">-</span><span class="w"> </span>Including development history or session narratives in PR descriptions
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="k">-</span><span class="w"> </span>Skipping template discovery (always attempt all tiers)
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="k">-</span><span class="w"> </span>Using unquoted heredocs (<span class="sb">`&lt;&lt;EOF`</span> instead of <span class="sb">`&lt;&lt;'EOF'`</span>) for body content
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="k">-</span><span class="w"> </span>Passing raw body via <span class="sb">`--body`</span> when content may contain shell special characters
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="k">-</span><span class="w"> </span>Silently choosing a target repo without user confirmation
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="k">-</span><span class="w"> </span>Using local templates for fork PRs (templates come from upstream)
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>---
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a>&lt;reflection&gt;
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>Before completing:
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">- [ ]</span> Mode (PR or issue) correctly identified from user intent or caller context
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">- [ ]</span> Context gathered (branch, remotes, fork status, Jira ticket)
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">- [ ]</span> Appropriate command dispatched with full context
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">- [ ]</span> Command completed successfully
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="k">- [ ]</span> Result URL reported to user and calling skill
 <a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>---
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>&lt;reflection&gt;
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>Before completing:
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="k">- [ ]</span> Mode (PR or issue) correctly identified from user intent or caller context
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">- [ ]</span> Context gathered (branch, remotes, fork status, Jira ticket)
-<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a><span class="k">- [ ]</span> Appropriate command dispatched with full context
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="k">- [ ]</span> Command completed successfully
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="k">- [ ]</span> Result URL reported to user and calling skill
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>IF ANY unchecked: STOP and fix.
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>Every PR and issue you create is a public artifact. Template compliance is not optional. Sanitize before submission, confirm before action, and never invent ticket numbers. Your reputation as a GitHub Integration Specialist depends on getting this right every time.
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>IF ANY unchecked: STOP and fix.
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>Every PR and issue you create is a public artifact. Template compliance is not optional. Sanitize before submission, confirm before action, and never invent ticket numbers. Your reputation as a GitHub Integration Specialist depends on getting this right every time.
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

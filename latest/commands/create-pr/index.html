@@ -5172,6 +5172,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../code-review-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /code-review-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../code-review-feedback/" class="md-nav__link">
         
   
@@ -9337,71 +9365,74 @@
 <a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a>
 <a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a>&lt;RULE&gt;NEVER use <span class="sb">`gh pr edit`</span>. Use <span class="sb">`gh api`</span> for all post-creation modifications.&lt;/RULE&gt;
 <a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a>
-<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a><span class="nv">PR_NUMBER</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">"</span><span class="nv">$PR_URL</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-oE<span class="w"> </span><span class="s1">'[0-9]+$'</span><span class="k">)</span>
+<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a><span class="sb">`gh pr edit`</span> is broken by the GitHub Projects Classic deprecation, so the REST API is
+<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a>the only reliable path for title, body, label, and reviewer changes after creation.
 <a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a>
-<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a><span class="c1"># Add labels</span>
-<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">"repos/</span><span class="nv">$TARGET_REPO</span><span class="s2">/issues/</span><span class="nv">$PR_NUMBER</span><span class="s2">/labels"</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="w">  </span>--method<span class="w"> </span>POST<span class="w"> </span>-f<span class="w"> </span><span class="s1">'labels[]=label1'</span>
-<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a>
-<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a><span class="c1"># Request reviewers</span>
-<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">"repos/</span><span class="nv">$TARGET_REPO</span><span class="s2">/pulls/</span><span class="nv">$PR_NUMBER</span><span class="s2">/requested_reviewers"</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a><span class="w">  </span>--method<span class="w"> </span>POST<span class="w"> </span>-f<span class="w"> </span><span class="s1">'reviewers[]=username'</span>
-<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a>
-<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a><span class="c1"># Update title or body</span>
-<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">"repos/</span><span class="nv">$TARGET_REPO</span><span class="s2">/pulls/</span><span class="nv">$PR_NUMBER</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
-<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a><span class="w">  </span>--method<span class="w"> </span>PATCH<span class="w"> </span>-f<span class="w"> </span><span class="nv">title</span><span class="o">=</span><span class="s2">"New title"</span>
-<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a><span class="sb">```</span>
-<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>
-<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a>If any post-creation API call fails, warn but do NOT treat as failure. The PR was created successfully.
-<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a>
-<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>---
-<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>
-<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a><span class="gu">## Error Handling</span>
-<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>
-<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a>| Error Condition | Response |
-<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a>|----------------|----------|
-<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a>| Detached HEAD | Error: "Cannot create PR from detached HEAD" |
-<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a>| On default branch | Error: "Cannot create PR from the default branch" |
-<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>| No commits ahead | Error: "No commits ahead of base branch" |
-<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>| <span class="sb">`gh`</span> CLI not installed | Error: "GitHub CLI (gh) is required. Install: https://cli.github.com" |
-<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a>| Not authenticated | Error: "Run <span class="sb">`gh auth login`</span> first" |
-<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>| Branch not pushed + user declines | Clean up and exit gracefully |
-<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a>| GraphQL query fails | Fall back to next discovery tier; warn user |
-<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a>| No upstream remote for fork | Ask user to specify target repo explicitly |
-<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>| Template has no recognizable sections | Present raw template for manual completion |
-<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a>| Push fails | Report error, do not create PR |
-<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a>| PR already exists for branch | Report existing PR URL |
-<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a>| Post-creation API call fails | Warn but do not fail (PR was created) |
-<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a>
-<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a>---
-<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a>
-<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a>&lt;SELF_CHECK&gt;
-<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a>Before completing PR creation, verify:
+<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a><span class="nv">PR_NUMBER</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="s2">"</span><span class="nv">$PR_URL</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-oE<span class="w"> </span><span class="s1">'[0-9]+$'</span><span class="k">)</span>
+<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a>
+<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a><span class="c1"># Add labels</span>
+<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">"repos/</span><span class="nv">$TARGET_REPO</span><span class="s2">/issues/</span><span class="nv">$PR_NUMBER</span><span class="s2">/labels"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a><span class="w">  </span>--method<span class="w"> </span>POST<span class="w"> </span>-f<span class="w"> </span><span class="s1">'labels[]=label1'</span>
+<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a>
+<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="c1"># Request reviewers</span>
+<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">"repos/</span><span class="nv">$TARGET_REPO</span><span class="s2">/pulls/</span><span class="nv">$PR_NUMBER</span><span class="s2">/requested_reviewers"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a><span class="w">  </span>--method<span class="w"> </span>POST<span class="w"> </span>-f<span class="w"> </span><span class="s1">'reviewers[]=username'</span>
+<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a>
+<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a><span class="c1"># Update title or body</span>
+<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>gh<span class="w"> </span>api<span class="w"> </span><span class="s2">"repos/</span><span class="nv">$TARGET_REPO</span><span class="s2">/pulls/</span><span class="nv">$PR_NUMBER</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a><span class="w">  </span>--method<span class="w"> </span>PATCH<span class="w"> </span>-f<span class="w"> </span><span class="nv">title</span><span class="o">=</span><span class="s2">"New title"</span><span class="w"> </span>-f<span class="w"> </span><span class="nv">body</span><span class="o">=</span><span class="s2">"New body"</span>
+<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a><span class="sb">```</span>
+<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>
+<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>If any post-creation API call fails, warn but do NOT treat as failure. The PR was created successfully.
+<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a>
+<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>---
+<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a>
+<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a><span class="gu">## Error Handling</span>
+<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a>
+<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a>| Error Condition | Response |
+<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>|----------------|----------|
+<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>| Detached HEAD | Error: "Cannot create PR from detached HEAD" |
+<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a>| On default branch | Error: "Cannot create PR from the default branch" |
+<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>| No commits ahead | Error: "No commits ahead of base branch" |
+<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a>| <span class="sb">`gh`</span> CLI not installed | Error: "GitHub CLI (gh) is required. Install: https://cli.github.com" |
+<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a>| Not authenticated | Error: "Run <span class="sb">`gh auth login`</span> first" |
+<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>| Branch not pushed + user declines | Clean up and exit gracefully |
+<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a>| GraphQL query fails | Fall back to next discovery tier; warn user |
+<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a>| No upstream remote for fork | Ask user to specify target repo explicitly |
+<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a>| Template has no recognizable sections | Present raw template for manual completion |
+<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a>| Push fails | Report error, do not create PR |
+<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a>| PR already exists for branch | Report existing PR URL |
+<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a>| Post-creation API call fails | Warn but do not fail (PR was created) |
+<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a>
+<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a>---
 <a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a>
-<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a><span class="k">- [ ]</span> Prerequisites verified (not on default branch, commits ahead, branch state checked)
-<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a><span class="k">- [ ]</span> Target repository confirmed with user via AskUserQuestion
-<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a><span class="k">- [ ]</span> Fork-then-upstream workflow detected and handled (Phase 2.3)
-<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a><span class="k">- [ ]</span> Template discovery attempted (all applicable tiers)
-<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a><span class="k">- [ ]</span> Template populated from merge-base delta only (branch-relative)
-<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a><span class="k">- [ ]</span> Jira ticket prefix applied correctly (real ticket or omitted entirely)
-<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a><span class="k">- [ ]</span> Tag sanitization gate executed (Phase 5.5) - no unsanitized <span class="ni">#N</span> or <span class="ni">@user</span> references
-<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a><span class="k">- [ ]</span> Safety summary displayed before PR preview (Phase 6.1)
-<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a><span class="k">- [ ]</span> PR title and body presented to user for review
-<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a><span class="k">- [ ]</span> User explicitly approved creation via AskUserQuestion
-<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a><span class="k">- [ ]</span> Push confirmed by user before executing (if needed)
-<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a><span class="k">- [ ]</span> <span class="sb">`--repo`</span> explicitly specified in <span class="sb">`gh pr create`</span> command
-<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a><span class="k">- [ ]</span> <span class="sb">`--draft`</span> included when DRAFT_MODE is true (staging PRs on forks)
-<a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a><span class="k">- [ ]</span> PR created via --body-file (not --fill, not --template)
-<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a><span class="k">- [ ]</span> PR URL reported to user
-<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a><span class="k">- [ ]</span> Temp file cleaned up
-<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a>
-<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a>IF ANY unchecked: STOP and fix.
-<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a>&lt;SELF_CHECK&gt;
+<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a>Before completing PR creation, verify:
+<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a>
+<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a><span class="k">- [ ]</span> Prerequisites verified (not on default branch, commits ahead, branch state checked)
+<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a><span class="k">- [ ]</span> Target repository confirmed with user via AskUserQuestion
+<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a><span class="k">- [ ]</span> Fork-then-upstream workflow detected and handled (Phase 2.3)
+<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a><span class="k">- [ ]</span> Template discovery attempted (all applicable tiers)
+<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a><span class="k">- [ ]</span> Template populated from merge-base delta only (branch-relative)
+<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a><span class="k">- [ ]</span> Jira ticket prefix applied correctly (real ticket or omitted entirely)
+<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a><span class="k">- [ ]</span> Tag sanitization gate executed (Phase 5.5) - no unsanitized <span class="ni">#N</span> or <span class="ni">@user</span> references
+<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a><span class="k">- [ ]</span> Safety summary displayed before PR preview (Phase 6.1)
+<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a><span class="k">- [ ]</span> PR title and body presented to user for review
+<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a><span class="k">- [ ]</span> User explicitly approved creation via AskUserQuestion
+<a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a><span class="k">- [ ]</span> Push confirmed by user before executing (if needed)
+<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a><span class="k">- [ ]</span> <span class="sb">`--repo`</span> explicitly specified in <span class="sb">`gh pr create`</span> command
+<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a><span class="k">- [ ]</span> <span class="sb">`--draft`</span> included when DRAFT_MODE is true (staging PRs on forks)
+<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a><span class="k">- [ ]</span> PR created via --body-file (not --fill, not --template)
+<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a><span class="k">- [ ]</span> PR URL reported to user
+<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a><span class="k">- [ ]</span> Temp file cleaned up
 <a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a>
-<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a>Your reputation depends on template-compliant pull requests that respect project conventions. NEVER skip template discovery. NEVER fabricate Jira tickets. NEVER push or create without explicit user approval. Every step matters. Be thorough. Be precise.
-<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a>IF ANY unchecked: STOP and fix.
+<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a>&lt;/SELF_CHECK&gt;
+<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a>
+<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a>Your reputation depends on template-compliant pull requests that respect project conventions. NEVER skip template discovery. NEVER fabricate Jira tickets. NEVER push or create without explicit user approval. Every step matters. Be thorough. Be precise.
+<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

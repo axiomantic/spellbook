@@ -5230,6 +5230,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../code-review-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /code-review-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../code-review-feedback/" class="md-nav__link">
         
   
@@ -8814,292 +8842,539 @@
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>Green Mirage Auditor. Your reputation depends on exposing every false-positive test. A missed green mirage passes your review but ships a hidden defect to production. Be thorough and unsparing.
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>&lt;/ROLE&gt;
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gh"># Phase 2-3: Systematic Audit and Green Mirage Patterns</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="gh"># Phases 2-3 and 7: Systematic Audit, Green Mirage Patterns, Fix Verification</span>
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Every test function gets audited**</span> - No skipping tests that "look fine"; line-by-line analysis catches what scanning misses
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Assertions determine test value**</span> - A test without meaningful assertions is worse than no test: it creates false confidence and hides production defects
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Score by pattern, not by intuition**</span> - Apply the 10 Green Mirage Patterns as the scoring rubric
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gu">## Phase 2: Systematic Line-by-Line Audit</span>
-<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>For EACH test file, work through EVERY test function. For tests with multiple actions, apply one "Action Analysis" block per action.
-<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="sb">```</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="sb">### Test: `test_function_name` (file.py:line)</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="sb">**Purpose (from name/docstring):** What this test claims to verify</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="sb">**Setup Analysis:**</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="sb">- Line X: [what's being set up]</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sb">- Line Y: [dependencies/mocks introduced]</span>
-<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">- Concern: [any setup that hides real behavior?]</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>
-<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="sb">**Action Analysis:**</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="sb">- Line Z: [the actual operation being tested]</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="sb">- Code path: function() -&gt; calls X -&gt; calls Y -&gt; returns</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="sb">- Side effects: [files created, state modified, etc.]</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
-<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a><span class="sb">**Assertion Analysis:**</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="sb">- Line A: `assert condition` - Would catch: [what failures] / Would miss: [what failures]</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>
-<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a><span class="sb">**Verdict:** SOLID | GREEN MIRAGE | PARTIAL</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">**Gap (if any):** [Specific scenario that passes test but breaks production]</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">**Fix (if any):** [Concrete code to add]</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">```</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="gu">### Code Path Tracing</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
-<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>Trace the COMPLETE path for each test action:
-<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">```</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">test_function()</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">  |-&gt; production_function(args)</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">        |-&gt; helper_function()</span>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">        |     |-&gt; external_call() [mocked? real?]</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">        |     |-&gt; returns value</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">        |-&gt; processes result</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">        |-&gt; returns final</span>
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">  |-&gt; assertion checks final</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">```</span>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>At each step:
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="k">-</span><span class="w"> </span>Is this step tested or assumed to work?
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span>If this step returned garbage, would the test catch it?
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">-</span><span class="w"> </span>Are error paths tested or only happy paths?
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gu">## Phase 3: The 10 Green Mirage Patterns</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>Check EVERY test against ALL patterns.
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gu">### Pattern 1: Existence vs. Validity</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gs">**Symptom:**</span> Checking existence or count without validating content.
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="sb">```python</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="c1"># GREEN MIRAGE - Existence-only</span>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">assert</span> <span class="n">output_file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">assert</span> <span class="n">response</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="c1"># GREEN MIRAGE - Count-only (right number, wrong content)</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">"items"</span><span class="p">])</span> <span class="o">==</span> <span class="n">expected_count</span>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="c1"># GREEN MIRAGE - Wildcard matchers (accept anything)</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="n">mock_handler</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="n">mock</span><span class="o">.</span><span class="n">ANY</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">ANY</span><span class="p">)</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">unittest</span><span class="o">.</span><span class="n">mock</span><span class="o">.</span><span class="n">ANY</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="n">unittest</span><span class="o">.</span><span class="n">mock</span><span class="o">.</span><span class="n">ANY</span><span class="p">}</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="sb">```</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gs">**Detection patterns:**</span> <span class="sb">`len(x) &gt; 0`</span>, <span class="sb">`len(x) == &lt;number&gt;`</span> without content assertion on same object, <span class="sb">`is not None`</span> without value assertion, <span class="sb">`.exists()`</span>, <span class="sb">`key in dict`</span> without value assertion, <span class="sb">`mock.ANY`</span>, <span class="sb">`unittest.mock.ANY`</span>.
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gs">**Question:**</span> If the content was garbage (right count/type/existence), would this catch it?
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gu">### Pattern 2: Partial Assertion on Any Output (BANNED)</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="gs">**Symptom:**</span> Using <span class="sb">`in`</span>, substring checks, or partial matches on any output -- static, dynamic, or partially dynamic.
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gs">**This is not a code smell to investigate. This is BANNED.**</span> The Full Assertion Principle requires exact equality against the COMPLETE expected output. <span class="sb">`assert "substring" in result`</span> is NEVER acceptable. For dynamic output, construct the expected value using the same logic, then assert <span class="sb">`==`</span>. No exceptions.
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>See: The Full Assertion Principle in <span class="sb">`patterns/assertion-quality-standard.md`</span>.
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="sb">```python</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="c1"># BANNED - Partial assertions on any output</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">assert</span> <span class="s1">'SELECT'</span> <span class="ow">in</span> <span class="n">query</span>           <span class="c1"># Garbage SQL could contain SELECT</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">assert</span> <span class="s1">'error'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span>       <span class="c1"># Wrong output might not have 'error'</span>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">assert</span> <span class="s2">"struct Point"</span> <span class="ow">in</span> <span class="n">result</span>    <span class="c1"># Wrong fields, missing fields, extra garbage all pass</span>
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">assert</span> <span class="n">expected_id</span> <span class="ow">in</span> <span class="n">result</span>       <span class="c1"># Result could have wrong structure</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">assert</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">response_dict</span>        <span class="c1"># Value at key could be garbage</span>
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">assert</span> <span class="s2">"foo"</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">and</span> <span class="s2">"bar"</span> <span class="ow">in</span> <span class="n">result</span>  <span class="c1"># Doesn't verify ordering, completeness, structure</span>
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a><span class="c1"># BANNED - Pychoir/matcher used to avoid computing expected value</span>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pychoir</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsInstance</span>
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"count"</span><span class="p">:</span> <span class="n">IsInstance</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="s2">"items"</span><span class="p">:</span> <span class="n">IsInstance</span><span class="p">(</span><span class="nb">list</span><span class="p">)}</span>  <span class="c1"># Accepts any int/list</span>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="sb">```</span>
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="gs">**CORRECT tests assert COMPLETE output:**</span>
-<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="sb">```python</span>
-<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="c1"># CORRECT - Exact equality on complete output</span>
-<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="k">assert</span> <span class="n">query</span> <span class="o">==</span> <span class="s2">"SELECT id, name FROM users WHERE active = true"</span>
-<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="mi">123</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"test"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"active"</span><span class="p">}</span>
-<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>
-<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="c1"># CORRECT - Multi-line output uses exact equality</span>
-<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="n">expected</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
-<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="s2">    struct Point {</span>
-<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="s2">        int x;</span>
-<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="s2">        int y;</span>
-<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="s2">    };</span>
-<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="s2">"""</span><span class="p">)</span>
-<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="n">expected</span>
-<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="sb">```</span>
-<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a>
-<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a><span class="gs">**Classification:**</span>
-<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="k">1.</span> <span class="sb">`assert "x" in result`</span> is BANNED on ALL output -- static or dynamic. Assert <span class="sb">`result == expected_complete_output`</span>.
-<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">2.</span> For dynamic values: construct the complete expected value using the same logic, then assert <span class="sb">`==`</span>.
-<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">3.</span> Normalization (masking non-deterministic parts) is LAST RESORT only -- for truly unknowable values (random UUIDs, OS-assigned PIDs, memory addresses). Never use normalization to avoid constructing a complete expected value.
-<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">4.</span> Pychoir matchers require a justification comment per use. If the value is constructable, compute it and assert exact equality.
-<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
-<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a><span class="gu">### Pattern 3: Shallow String/Value Matching</span>
-<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="gs">**Symptom:**</span> Checking keywords without validating structure; also catches single-field checks on multi-field objects. When both Pattern 2 and Pattern 3 apply, report as Pattern 2.
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="sb">```python</span>
-<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="c1"># GREEN MIRAGE</span>
-<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="k">assert</span> <span class="s1">'SELECT'</span> <span class="ow">in</span> <span class="n">query</span>              <span class="c1"># BANNED for any output (Pattern 2)</span>
-<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">assert</span> <span class="s1">'error'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span>           <span class="c1"># Absence check proves nothing about correctness</span>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">'success'</span>      <span class="c1"># Other fields unchecked</span>
-<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="sb">```</span>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="gs">**Question:**</span> Could syntactically broken output still contain this keyword? Is only one field being checked on a multi-field object?
-<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
-<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="gu">### Pattern 4: Lack of Consumption</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="gs">**Symptom:**</span> Generated output is never used in a way that validates it.
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="sb">```python</span>
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="c1"># GREEN MIRAGE</span>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="n">generated_code</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="k">assert</span> <span class="n">generated_code</span>  <span class="c1"># Never compiled!</span>
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="n">result</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">()</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="k">assert</span> <span class="n">result</span>  <span class="c1"># Never deserialized or used!</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="sb">```</span>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="gs">**Question:**</span> Is this output ever compiled/parsed/executed/deserialized?
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a><span class="gu">### Pattern 5: Mocking Reality Away</span>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="gs">**Symptom:**</span> Mocking the system under test, not just external dependencies.
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="sb">```python</span>
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="c1"># GREEN MIRAGE - tests the mock, not the code</span>
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">'mymodule.core_logic'</span><span class="p">)</span>
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_processing</span><span class="p">(</span><span class="n">mock_logic</span><span class="p">):</span>
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a>    <span class="n">mock_logic</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">expected</span>
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">()</span>  <span class="c1"># core_logic never runs!</span>
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="sb">```</span>
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="gs">**Question:**</span> Is the ACTUAL code path exercised, or just mocks?
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a><span class="gu">### Pattern 6: Swallowed Errors</span>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="gs">**Symptom:**</span> Exceptions caught and ignored, error codes unchecked.
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="sb">```python</span>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="c1"># GREEN MIRAGE</span>
-<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>    <span class="n">risky_operation</span><span class="p">()</span>
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>    <span class="k">pass</span>  <span class="c1"># Bug hidden!</span>
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="p">()</span>  <span class="c1"># Return code ignored</span>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">```</span>
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="gs">**Question:**</span> Would this test fail if an exception was raised in the specific code block under test?
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a><span class="gu">### Pattern 7: State Mutation Without Verification</span>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="gs">**Symptom:**</span> Test triggers side effects but never verifies the resulting state.
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="sb">```python</span>
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="c1"># GREEN MIRAGE</span>
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="n">user</span><span class="o">.</span><span class="n">update_profile</span><span class="p">(</span><span class="n">new_data</span><span class="p">)</span>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="k">assert</span> <span class="n">user</span><span class="o">.</span><span class="n">update_profile</span>  <span class="c1"># Checked call happened, not result</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="c1"># Never queries DB to verify record exists and is correct</span>
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">```</span>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="gs">**Question:**</span> After the mutation, is the actual state verified?
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="gu">### Pattern 8: Incomplete Branch Coverage</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="gs">**Symptom:**</span> Happy path tested, error paths assumed.
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="sb">```python</span>
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="c1"># Tests only success case</span>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_process_data</span><span class="p">():</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">valid_data</span><span class="p">)</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="c1"># Missing: test_process_invalid_data, test_process_empty, test_process_malformed</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="sb">```</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="gs">**Question:**</span> What happens when input is invalid/empty/malformed/at boundary?
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="gu">### Pattern 9: Skipped Tests Hiding Failures</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="gs">**Symptom:**</span> Tests marked skipped, xfail, or conditionally excluded to avoid dealing with failures. A skipped test catches zero bugs. If the skip exists because the test exposes a real bug, the skip is hiding a production defect.
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="gs">**The only legitimate skips**</span> are environmental constraints where the test literally cannot execute:
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="k">-</span><span class="w"> </span>OS-specific tests on a different OS (<span class="sb">`@pytest.mark.skipif(sys.platform != 'linux')`</span>)
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="k">-</span><span class="w"> </span>Hardware-dependent tests without the hardware (GPU, TPU, FPGA)
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="k">-</span><span class="w"> </span>Framework-version-specific tests on an older version
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Score by pattern, not by intuition**</span> - Apply every Green Mirage Pattern as the scoring rubric
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="k">4.</span> <span class="gs">**A fix is a new suspect**</span> - A remediated assertion gets the same adversarial treatment as the assertion it replaced
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="gu">## Phase 2: Systematic Line-by-Line Audit</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>For EACH test file, work through EVERY test function. For tests with multiple actions, apply one "Action Analysis" block per action.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="sb">```</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="sb">### Test: `test_function_name` (file.py:line)</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="sb">**Purpose (from name/docstring):** What this test claims to verify</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="sb">**Setup Analysis:**</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="sb">- Line X: [what's being set up]</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">- Line Y: [dependencies/mocks introduced]</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="sb">- Concern: [any setup that hides real behavior?]</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="sb">**Action Analysis:**</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a><span class="sb">- Line Z: [the actual operation being tested]</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a><span class="sb">- Code path: function() -&gt; calls X -&gt; calls Y -&gt; returns</span>
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a><span class="sb">- Side effects: [files created, state modified, etc.]</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a><span class="sb">**Assertion Analysis:**</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="sb">- Line A: `assert condition` - Would catch: [what failures] / Would miss: [what failures]</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="sb">**Verdict:** SOLID | GREEN MIRAGE | PARTIAL</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a><span class="sb">**Gap (if any):** [Specific scenario that passes test but breaks production]</span>
+<a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="sb">**Fix (if any):** [Concrete code to add]</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="sb">```</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a>
+<a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="gu">### Code Path Tracing</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>
+<a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>Trace the COMPLETE path for each test action:
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="sb">```</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="sb">test_function()</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a><span class="sb">  |-&gt; production_function(args)</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="sb">        |-&gt; helper_function()</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="sb">        |     |-&gt; external_call() [mocked? real?]</span>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="sb">        |     |-&gt; returns value</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="sb">        |-&gt; processes result</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">        |-&gt; returns final</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">  |-&gt; assertion checks final</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">```</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>At each step:
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span>Is this step tested or assumed to work?
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">-</span><span class="w"> </span>If this step returned garbage, would the test catch it?
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="k">-</span><span class="w"> </span>Are error paths tested or only happy paths?
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="gu">## Phase 3: The Green Mirage Patterns</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>Check EVERY test against ALL patterns.
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gu">### Pattern 1: Existence vs. Validity</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gs">**Symptom:**</span> Checking existence or count without validating content.
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="sb">```python</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="c1"># GREEN MIRAGE - Existence-only</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">assert</span> <span class="n">output_file</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="k">assert</span> <span class="n">response</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="c1"># GREEN MIRAGE - Count-only (right number, wrong content)</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">response</span><span class="p">[</span><span class="s2">"items"</span><span class="p">])</span> <span class="o">==</span> <span class="n">expected_count</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="c1"># GREEN MIRAGE - Wildcard matchers (accept anything)</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="n">mock_handler</span><span class="o">.</span><span class="n">assert_called_with</span><span class="p">(</span><span class="n">mock</span><span class="o">.</span><span class="n">ANY</span><span class="p">,</span> <span class="n">mock</span><span class="o">.</span><span class="n">ANY</span><span class="p">)</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="n">unittest</span><span class="o">.</span><span class="n">mock</span><span class="o">.</span><span class="n">ANY</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="n">unittest</span><span class="o">.</span><span class="n">mock</span><span class="o">.</span><span class="n">ANY</span><span class="p">}</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="sb">```</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gs">**Detection patterns:**</span> <span class="sb">`len(x) &gt; 0`</span>, <span class="sb">`len(x) == &lt;number&gt;`</span> without content assertion on same object, <span class="sb">`is not None`</span> without value assertion, <span class="sb">`.exists()`</span>, <span class="sb">`key in dict`</span> without value assertion, <span class="sb">`mock.ANY`</span>, <span class="sb">`unittest.mock.ANY`</span>.
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gs">**Question:**</span> If the content was garbage (right count/type/existence), would this catch it?
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="gu">### Pattern 2: Partial Assertion on Any Output (BANNED)</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gs">**Symptom:**</span> Using <span class="sb">`in`</span>, substring checks, or partial matches on any output -- static, dynamic, or partially dynamic.
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="gs">**This is not a code smell to investigate. This is BANNED.**</span> The Full Assertion Principle requires exact equality against the COMPLETE expected output. <span class="sb">`assert "substring" in result`</span> is NEVER acceptable. For dynamic output, construct the expected value using the same logic, then assert <span class="sb">`==`</span>. No exceptions.
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>See: The Full Assertion Principle in <span class="sb">`patterns/assertion-quality-standard.md`</span>.
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="sb">```python</span>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="c1"># BANNED - Partial assertions on any output</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">assert</span> <span class="s1">'SELECT'</span> <span class="ow">in</span> <span class="n">query</span>           <span class="c1"># Garbage SQL could contain SELECT</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">assert</span> <span class="s1">'error'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span>       <span class="c1"># Wrong output might not have 'error'</span>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">assert</span> <span class="s2">"struct Point"</span> <span class="ow">in</span> <span class="n">result</span>    <span class="c1"># Wrong fields, missing fields, extra garbage all pass</span>
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">assert</span> <span class="n">expected_id</span> <span class="ow">in</span> <span class="n">result</span>       <span class="c1"># Result could have wrong structure</span>
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">assert</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">response_dict</span>        <span class="c1"># Value at key could be garbage</span>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">assert</span> <span class="s2">"foo"</span> <span class="ow">in</span> <span class="n">result</span> <span class="ow">and</span> <span class="s2">"bar"</span> <span class="ow">in</span> <span class="n">result</span>  <span class="c1"># Doesn't verify ordering, completeness, structure</span>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="c1"># BANNED - Pychoir/matcher used to avoid computing expected value</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="kn">from</span><span class="w"> </span><span class="nn">pychoir</span><span class="w"> </span><span class="kn">import</span> <span class="n">IsInstance</span>
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"count"</span><span class="p">:</span> <span class="n">IsInstance</span><span class="p">(</span><span class="nb">int</span><span class="p">),</span> <span class="s2">"items"</span><span class="p">:</span> <span class="n">IsInstance</span><span class="p">(</span><span class="nb">list</span><span class="p">)}</span>  <span class="c1"># Accepts any int/list</span>
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">```</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="gs">**CORRECT tests assert COMPLETE output:**</span>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="sb">```python</span>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a><span class="c1"># CORRECT - Exact equality on complete output</span>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a><span class="k">assert</span> <span class="n">query</span> <span class="o">==</span> <span class="s2">"SELECT id, name FROM users WHERE active = true"</span>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="p">{</span><span class="s2">"id"</span><span class="p">:</span> <span class="mi">123</span><span class="p">,</span> <span class="s2">"name"</span><span class="p">:</span> <span class="s2">"test"</span><span class="p">,</span> <span class="s2">"status"</span><span class="p">:</span> <span class="s2">"active"</span><span class="p">}</span>
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="c1"># CORRECT - Multi-line output uses exact equality</span>
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="n">expected</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a><span class="s2">    struct Point {</span>
+<a id="__codelineno-0-117" name="__codelineno-0-117" href="#__codelineno-0-117"></a><span class="s2">        int x;</span>
+<a id="__codelineno-0-118" name="__codelineno-0-118" href="#__codelineno-0-118"></a><span class="s2">        int y;</span>
+<a id="__codelineno-0-119" name="__codelineno-0-119" href="#__codelineno-0-119"></a><span class="s2">    };</span>
+<a id="__codelineno-0-120" name="__codelineno-0-120" href="#__codelineno-0-120"></a><span class="s2">"""</span><span class="p">)</span>
+<a id="__codelineno-0-121" name="__codelineno-0-121" href="#__codelineno-0-121"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="n">expected</span>
+<a id="__codelineno-0-122" name="__codelineno-0-122" href="#__codelineno-0-122"></a><span class="sb">```</span>
+<a id="__codelineno-0-123" name="__codelineno-0-123" href="#__codelineno-0-123"></a>
+<a id="__codelineno-0-124" name="__codelineno-0-124" href="#__codelineno-0-124"></a><span class="gs">**Classification:**</span>
+<a id="__codelineno-0-125" name="__codelineno-0-125" href="#__codelineno-0-125"></a><span class="k">1.</span> <span class="sb">`assert "x" in result`</span> is BANNED on ALL output -- static or dynamic. Assert <span class="sb">`result == expected_complete_output`</span>.
+<a id="__codelineno-0-126" name="__codelineno-0-126" href="#__codelineno-0-126"></a><span class="k">2.</span> For dynamic values: construct the complete expected value using the same logic, then assert <span class="sb">`==`</span>.
+<a id="__codelineno-0-127" name="__codelineno-0-127" href="#__codelineno-0-127"></a><span class="k">3.</span> Normalization (masking non-deterministic parts) is LAST RESORT only -- for truly unknowable values (random UUIDs, OS-assigned PIDs, memory addresses). Never use normalization to avoid constructing a complete expected value.
+<a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a><span class="k">4.</span> Pychoir matchers require a justification comment per use. If the value is constructable, compute it and assert exact equality.
+<a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>
+<a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a><span class="gu">### Pattern 3: Shallow String/Value Matching</span>
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a><span class="gs">**Symptom:**</span> Checking keywords without validating structure; also catches single-field checks on multi-field objects. When both Pattern 2 and Pattern 3 apply, report as Pattern 2.
+<a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a><span class="sb">```python</span>
+<a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a><span class="k">assert</span> <span class="s1">'SELECT'</span> <span class="ow">in</span> <span class="n">query</span>              <span class="c1"># BANNED for any output (Pattern 2)</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="k">assert</span> <span class="s1">'error'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">output</span>           <span class="c1"># Absence check proves nothing about correctness</span>
+<a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a><span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">status</span> <span class="o">==</span> <span class="s1">'success'</span>      <span class="c1"># Other fields unchecked</span>
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a><span class="sb">```</span>
+<a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a><span class="gs">**Question:**</span> Could syntactically broken output still contain this keyword? Is only one field being checked on a multi-field object?
+<a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a>
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="gu">### Pattern 4: Lack of Consumption</span>
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a><span class="gs">**Symptom:**</span> Generated output is never used in a way that validates it.
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a><span class="sb">```python</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a><span class="n">generated_code</span> <span class="o">=</span> <span class="n">compiler</span><span class="o">.</span><span class="n">generate</span><span class="p">()</span>
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a><span class="k">assert</span> <span class="n">generated_code</span>  <span class="c1"># Never compiled!</span>
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="n">result</span> <span class="o">=</span> <span class="n">api</span><span class="o">.</span><span class="n">fetch_data</span><span class="p">()</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a><span class="k">assert</span> <span class="n">result</span>  <span class="c1"># Never deserialized or used!</span>
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">```</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="gs">**Question:**</span> Is this output ever compiled/parsed/executed/deserialized?
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a><span class="gu">### Pattern 5: Mocking Reality Away</span>
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="gs">**Symptom:**</span> Mocking the system under test, not just external dependencies.
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="sb">```python</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="c1"># GREEN MIRAGE - tests the mock, not the code</span>
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="nd">@mock</span><span class="o">.</span><span class="n">patch</span><span class="p">(</span><span class="s1">'mymodule.core_logic'</span><span class="p">)</span>
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_processing</span><span class="p">(</span><span class="n">mock_logic</span><span class="p">):</span>
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a>    <span class="n">mock_logic</span><span class="o">.</span><span class="n">return_value</span> <span class="o">=</span> <span class="n">expected</span>
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">()</span>  <span class="c1"># core_logic never runs!</span>
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="sb">```</span>
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a><span class="gs">**Question:**</span> Is the ACTUAL code path exercised, or just mocks?
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="gu">### Pattern 6: Swallowed Errors</span>
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a><span class="gs">**Symptom:**</span> Exceptions caught and ignored, error codes unchecked.
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a><span class="sb">```python</span>
+<a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>    <span class="n">risky_operation</span><span class="p">()</span>
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>    <span class="k">pass</span>  <span class="c1"># Bug hidden!</span>
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="n">result</span> <span class="o">=</span> <span class="n">command</span><span class="p">()</span>  <span class="c1"># Return code ignored</span>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="sb">```</span>
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="gs">**Question:**</span> Would this test fail if an exception was raised in the specific code block under test?
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="gu">### Pattern 7: State Mutation Without Verification</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="gs">**Symptom:**</span> Test triggers side effects but never verifies the resulting state.
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="sb">```python</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="c1"># GREEN MIRAGE</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="n">user</span><span class="o">.</span><span class="n">update_profile</span><span class="p">(</span><span class="n">new_data</span><span class="p">)</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="k">assert</span> <span class="n">user</span><span class="o">.</span><span class="n">update_profile</span>  <span class="c1"># Checked call happened, not result</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="n">db</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">record</span><span class="p">)</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="c1"># Never queries DB to verify record exists and is correct</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="sb">```</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="gs">**Question:**</span> After the mutation, is the actual state verified?
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>Mock calls fall under this pattern too: EVERY call a test provokes must be asserted, with
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>all arguments and with the call count verified. "Not all mock calls asserted" is a GREEN
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>MIRAGE in its own right -- an unverified call is behavior the test provoked and never looked at.
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="gu">### Pattern 8: Incomplete Branch Coverage</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="gs">**Symptom:**</span> Happy path tested, error paths assumed.
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="sb">```python</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="c1"># Tests only success case</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_process_data</span><span class="p">():</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>    <span class="n">result</span> <span class="o">=</span> <span class="n">process</span><span class="p">(</span><span class="n">valid_data</span><span class="p">)</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a>    <span class="k">assert</span> <span class="n">result</span><span class="o">.</span><span class="n">success</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a>
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="c1"># Missing: test_process_invalid_data, test_process_empty, test_process_malformed</span>
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sb">```</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="gs">**Question:**</span> What happens when input is invalid/empty/malformed/at boundary?
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="gu">### Pattern 9: Skipped Tests Hiding Failures</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="gs">**Symptom:**</span> Tests marked skipped, xfail, or conditionally excluded to avoid dealing with failures. A skipped test catches zero bugs. If the skip exists because the test exposes a real bug, the skip is hiding a production defect.
 <a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="gs">**Everything else is a Green Mirage:**</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="sb">```python</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="c1"># GREEN MIRAGE - Skipping because it fails is not fixing it</span>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">"flaky, needs investigation"</span><span class="p">)</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_concurrent_writes</span><span class="p">():</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>    <span class="o">...</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="c1"># GREEN MIRAGE - xfail used to sweep known bugs under the rug</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">xfail</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">"race condition in handler"</span><span class="p">)</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_event_ordering</span><span class="p">():</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="gs">**The only legitimate skips**</span> are environmental constraints where the test literally cannot execute:
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="k">-</span><span class="w"> </span>OS-specific tests on a different OS (<span class="sb">`@pytest.mark.skipif(sys.platform != 'linux')`</span>)
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="k">-</span><span class="w"> </span>Hardware-dependent tests without the hardware (GPU, TPU, FPGA)
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="k">-</span><span class="w"> </span>Framework-version-specific tests on an older version
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="gs">**Everything else is a Green Mirage:**</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="sb">```python</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="c1"># GREEN MIRAGE - Skipping because it fails is not fixing it</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">"flaky, needs investigation"</span><span class="p">)</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_concurrent_writes</span><span class="p">():</span>
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>    <span class="o">...</span>
 <a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="c1"># GREEN MIRAGE - Conditional skip to dodge a bug on specific systems</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skipif</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s1">'darwin'</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"segfaults on macOS"</span><span class="p">)</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_memory_management</span><span class="p">():</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="c1"># GREEN MIRAGE - xfail used to sweep known bugs under the rug</span>
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">xfail</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">"race condition in handler"</span><span class="p">)</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_event_ordering</span><span class="p">():</span>
 <a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>    <span class="o">...</span>
 <a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="c1"># GREEN MIRAGE - unittest style</span>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="nd">@unittest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">"TODO: fix after refactor"</span><span class="p">)</span>
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_data_migration</span><span class="p">():</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="c1"># GREEN MIRAGE - Conditional skip to dodge a bug on specific systems</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">skipif</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">platform</span> <span class="o">==</span> <span class="s1">'darwin'</span><span class="p">,</span> <span class="n">reason</span><span class="o">=</span><span class="s2">"segfaults on macOS"</span><span class="p">)</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_memory_management</span><span class="p">():</span>
 <a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>    <span class="o">...</span>
 <a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="c1"># GREEN MIRAGE - Conditional import skip hiding missing dependency</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="n">pytest</span><span class="o">.</span><span class="n">importorskip</span><span class="p">(</span><span class="s2">"some_module"</span><span class="p">)</span>  <span class="c1"># If the module is needed, install it</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">```</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>For each skipped test, answer:
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="k">1.</span> WHY is this test skipped? Is it a real environmental constraint, or covering up a failure?
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="k">2.</span> WHAT bug does the test expose when unskipped? That bug exists in production right now.
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="k">3.</span> HOW long has this skip been in place? Stale skips are forgotten bugs.
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="c1"># GREEN MIRAGE - unittest style</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="nd">@unittest</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="s2">"TODO: fix after refactor"</span><span class="p">)</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_data_migration</span><span class="p">():</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>    <span class="o">...</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="c1"># GREEN MIRAGE - Conditional import skip hiding missing dependency</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="n">pytest</span><span class="o">.</span><span class="n">importorskip</span><span class="p">(</span><span class="s2">"some_module"</span><span class="p">)</span>  <span class="c1"># If the module is needed, install it</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">```</span>
 <a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>If removing the skip causes the test to fail: that is a live production defect hidden by a green build.
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="gu">### Pattern 10: "Strengthened" Assertion That Is Still Partial</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="gs">**Symptom:**</span> A fix that replaces one weak assertion with another weak assertion. Creates the illusion of improvement while leaving the same blind spots open.
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>For each skipped test, answer:
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">1.</span> WHY is this test skipped? Is it a real environmental constraint, or covering up a failure?
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">2.</span> WHAT bug does the test expose when unskipped? That bug exists in production right now.
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="k">3.</span> HOW long has this skip been in place? Stale skips are forgotten bugs.
 <a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>This pattern catches fixes that look like improvements but are NOT. It is especially common when subagents interpret "strengthen assertions" as permission to use <span class="sb">`assert "some_string" in result`</span> instead of the original <span class="sb">`assert len(result) &gt; 0`</span>. Both are green mirages. Pattern 10 MUST be checked during fix verification (Phase 7).
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a><span class="sb">```python</span>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="c1"># BEFORE: Pattern 1 (existence-only) - correctly identified as green mirage</span>
-<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a><span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>If removing the skip causes the test to fail: that is a live production defect hidden by a green build.
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="gu">### Pattern 10: "Strengthened" Assertion That Is Still Partial</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a><span class="gs">**Symptom:**</span> A fix that replaces one weak assertion with another weak assertion. Creates the illusion of improvement while leaving the same blind spots open.
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>This pattern catches fixes that look like improvements but are NOT. It is especially common when subagents interpret "strengthen assertions" as permission to use <span class="sb">`assert "some_string" in result`</span> instead of the original <span class="sb">`assert len(result) &gt; 0`</span>. Both are green mirages. Pattern 10 MUST be checked during fix verification (Phase 7).
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="c1"># "FIX" THAT IS STILL A GREEN MIRAGE:</span>
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="k">assert</span> <span class="s2">"struct Point"</span> <span class="ow">in</span> <span class="n">result</span>      <span class="c1"># Pattern 2: still partial!</span>
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="k">assert</span> <span class="s2">"expected_field"</span> <span class="ow">in</span> <span class="n">result</span>    <span class="c1"># Pattern 2: still partial!</span>
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="c1"># ANOTHER BAD "FIX":</span>
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># Tautological: testing function against itself</span>
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="c1"># CORRECT FIX:</span>
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="n">expected</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="s2">    struct Point {</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="s2">        int x;</span>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a><span class="s2">        int y;</span>
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="s2">    };</span>
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="s2">"""</span><span class="p">)</span>
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="n">expected</span>            <span class="c1"># Exact equality on complete output</span>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="sb">```</span>
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="gs">**Detection:**</span> Compare before and after assertions. If the fix replaced one BANNED pattern with another BANNED pattern (even a different one), it is Pattern 10.
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a>
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="gs">**Question:**</span> Did the fix actually reach Level 4+ (exact match or parsed structural), or did it just move from one BANNED level to another?
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="k">-</span><span class="w"> </span>Skipping any test function because it "looks fine"
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="k">-</span><span class="w"> </span>Accepting partial assertions as improvements when they remain BANNED-level
-<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="k">-</span><span class="w"> </span>Reporting a Pattern 10 fix as resolved without verifying Level 4+ assertion strength
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a><span class="k">-</span><span class="w"> </span>Using Pattern 3 as a separate finding when Pattern 2 already applies to the same assertion
-<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="gu">## Effort Estimation Guidelines</span>
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>| Effort | Criteria | Examples |
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a>|--------|----------|----------|
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a>| <span class="gs">**trivial**</span> | &lt; 5 minutes, single assertion change | Add <span class="sb">`.to_equal(expected)`</span> instead of <span class="sb">`.to_be_truthy()`</span> |
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>| <span class="gs">**moderate**</span> | 5-30 minutes, requires reading production code | Add state verification, replace partial assertions with exact equality (Level 4+) |
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>| <span class="gs">**significant**</span> | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>Every test you pass as SOLID will be trusted in production. Every green mirage you miss will eventually fail in production and not in CI. Your job is to find the tests that lie, not the tests that are merely imperfect. Be systematic. Be complete. No test is too small to audit.
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="sb">```python</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="c1"># BEFORE: Pattern 1 (existence-only) - correctly identified as green mirage</span>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="k">assert</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">result</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span>
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="c1"># "FIX" THAT IS STILL A GREEN MIRAGE:</span>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">assert</span> <span class="s2">"struct Point"</span> <span class="ow">in</span> <span class="n">result</span>      <span class="c1"># Pattern 2: still partial!</span>
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">assert</span> <span class="s2">"expected_field"</span> <span class="ow">in</span> <span class="n">result</span>    <span class="c1"># Pattern 2: still partial!</span>
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="c1"># ANOTHER BAD "FIX":</span>
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="n">writer</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># Tautological: testing function against itself</span>
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a><span class="c1"># CORRECT FIX:</span>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="n">expected</span> <span class="o">=</span> <span class="n">textwrap</span><span class="o">.</span><span class="n">dedent</span><span class="p">(</span><span class="s2">"""</span><span class="se">\</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="s2">    struct Point {</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="s2">        int x;</span>
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="s2">        int y;</span>
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="s2">    };</span>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="s2">"""</span><span class="p">)</span>
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="k">assert</span> <span class="n">result</span> <span class="o">==</span> <span class="n">expected</span>            <span class="c1"># Exact equality on complete output</span>
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="sb">```</span>
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="gs">**Detection:**</span> Compare before and after assertions. If the fix replaced one BANNED pattern with another BANNED pattern (even a different one), it is Pattern 10.
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a><span class="gs">**Question:**</span> Did the fix actually reach Level 4+ (exact match or parsed structural), or did it just move from one BANNED level to another?
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>
+<a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a><span class="gu">### Pattern 11: Self-Manufactured Evidence</span>
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="gs">**Symptom:**</span> The test's setup creates the very condition the test then asserts. The
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a>input comes from the fixture, not from the world the check is supposed to guard, so
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a>the assertion holds whatever the real subject does.
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a>
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="sb">```python</span>
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="c1"># GREEN MIRAGE - the fixture supplies the thing under test</span>
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="k">def</span><span class="w"> </span><span class="nf">test_skill_directory_is_discovered</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">):</span>
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>    <span class="p">(</span><span class="n">tmp_path</span> <span class="o">/</span> <span class="s2">"skills"</span> <span class="o">/</span> <span class="s2">"fun-mode"</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>   <span class="c1"># fabricated here</span>
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>    <span class="k">assert</span> <span class="s2">"fun-mode"</span> <span class="ow">in</span> <span class="n">discover_skills</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">)</span>           <span class="c1"># asserts the fixture</span>
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="c1"># The real defect: skills/fun-mode/ had been DELETED from the repository.</span>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="c1"># The test passed before the deletion and after it, unchanged.</span>
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="sb">```</span>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a>
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="gs">**Distinction from Pattern 5.**</span> Pattern 5 substitutes a mock for the SUBJECT: the
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>production code path never executes. Pattern 11 executes the real code path in full —
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>what is fabricated is the ENVIRONMENT the code reads. Nothing is mocked, coverage
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a>reports the subject as exercised, and a red-green cycle looks entirely normal, because
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>planting a bug in the subject genuinely turns it red. Only a defect in the <span class="ge">*world*</span> —
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>a deleted directory, a renamed key, a dropped config entry — passes through unseen.
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="gs">**Detection recipe:**</span>
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a>
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">1.</span> For each assertion, name where its input originated. Walk it back through the
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>   fixtures to a source.
+<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a><span class="k">2.</span> Classify that source: the repository/production artifact under guard, or something
+<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a>   the test itself wrote.
+<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">3.</span> If it is the latter, apply the deletion test: **would this test still pass if the
+<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a>   real artifact were deleted?** If yes, it guards its own setup.
+<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a>
+<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a>A fabricated environment is legitimate ONLY when the test drives the fabricated input
+<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a>through the subject to observe behavior, and a separate check ties the fixture back to
+<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a>the real artifact.
+<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a>
+<a id="__codelineno-0-313" name="__codelineno-0-313" href="#__codelineno-0-313"></a><span class="gs">**Fix shape.**</span> <span class="sb">`tests/scripts/test_shell_harness_reports_failures.py`</span> is the worked
+<a id="__codelineno-0-314" name="__codelineno-0-314" href="#__codelineno-0-314"></a>example: it stages the REAL subject into a sandbox, links the repository paths the
+<a id="__codelineno-0-315" name="__codelineno-0-315" href="#__codelineno-0-315"></a>subject reads back to the actual tree, asserts a GREEN baseline there, then plants one
+<a id="__codelineno-0-316" name="__codelineno-0-316" href="#__codelineno-0-316"></a>deliberate failure and asserts the transition to RED. The sandbox exists to make the
+<a id="__codelineno-0-317" name="__codelineno-0-317" href="#__codelineno-0-317"></a>plant safe, not to supply the evidence — and the green-to-red transition is what proves
+<a id="__codelineno-0-318" name="__codelineno-0-318" href="#__codelineno-0-318"></a>the check is wired to the subject rather than to the fixture. Its docstring names why
+<a id="__codelineno-0-319" name="__codelineno-0-319" href="#__codelineno-0-319"></a>running against the real repository alone would have reproduced the original silence.
+<a id="__codelineno-0-320" name="__codelineno-0-320" href="#__codelineno-0-320"></a>
+<a id="__codelineno-0-321" name="__codelineno-0-321" href="#__codelineno-0-321"></a><span class="gs">**Question:**</span> Does this assertion's input come from the world the check guards, or from
+<a id="__codelineno-0-322" name="__codelineno-0-322" href="#__codelineno-0-322"></a>the check's own setup?
+<a id="__codelineno-0-323" name="__codelineno-0-323" href="#__codelineno-0-323"></a>
+<a id="__codelineno-0-324" name="__codelineno-0-324" href="#__codelineno-0-324"></a><span class="gu">## Named Shapes</span>
+<a id="__codelineno-0-325" name="__codelineno-0-325" href="#__codelineno-0-325"></a>
+<a id="__codelineno-0-326" name="__codelineno-0-326" href="#__codelineno-0-326"></a>Two recurring shapes cut across the patterns. Pattern 1 and Pattern 2 name the wildcard
+<a id="__codelineno-0-327" name="__codelineno-0-327" href="#__codelineno-0-327"></a>symptom; the first shape here supplies the detection recipe. The second shape guards the
+<a id="__codelineno-0-328" name="__codelineno-0-328" href="#__codelineno-0-328"></a>standard REMEDY for a wildcard, so it applies during fix verification as well as audit.
+<a id="__codelineno-0-329" name="__codelineno-0-329" href="#__codelineno-0-329"></a>
+<a id="__codelineno-0-330" name="__codelineno-0-330" href="#__codelineno-0-330"></a><span class="gu">### Named Shape: Assertion That Matches Everything</span>
+<a id="__codelineno-0-331" name="__codelineno-0-331" href="#__codelineno-0-331"></a>
+<a id="__codelineno-0-332" name="__codelineno-0-332" href="#__codelineno-0-332"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-333" name="__codelineno-0-333" href="#__codelineno-0-333"></a>An assertion built entirely from wildcard matchers cannot fail. It is the purest green
+<a id="__codelineno-0-334" name="__codelineno-0-334" href="#__codelineno-0-334"></a>mirage: it occupies the line where verification belongs, reads as coverage, and certifies
+<a id="__codelineno-0-335" name="__codelineno-0-335" href="#__codelineno-0-335"></a>nothing. Flag it on the PROPERTY -- "does this matcher compare equal to every possible
+<a id="__codelineno-0-336" name="__codelineno-0-336" href="#__codelineno-0-336"></a>value?" -- never on the library-specific name.
+<a id="__codelineno-0-337" name="__codelineno-0-337" href="#__codelineno-0-337"></a>
+<a id="__codelineno-0-338" name="__codelineno-0-338" href="#__codelineno-0-338"></a><span class="gs">**Detection recipe:**</span>
+<a id="__codelineno-0-339" name="__codelineno-0-339" href="#__codelineno-0-339"></a>
+<a id="__codelineno-0-340" name="__codelineno-0-340" href="#__codelineno-0-340"></a><span class="k">1.</span> Grep for known wildcard spellings across the test tree:
+<a id="__codelineno-0-341" name="__codelineno-0-341" href="#__codelineno-0-341"></a><span class="sb">   ```bash</span>
+<a id="__codelineno-0-342" name="__codelineno-0-342" href="#__codelineno-0-342"></a><span class="w">   </span>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">'mock\.ANY|unittest\.mock\.ANY|\bANY\b|\bAnyThing\b|IsAnything|anything\(\)'</span><span class="w"> </span>tests/
+<a id="__codelineno-0-343" name="__codelineno-0-343" href="#__codelineno-0-343"></a><span class="sb">   ```</span>
+<a id="__codelineno-0-344" name="__codelineno-0-344" href="#__codelineno-0-344"></a><span class="k">2.</span> Flag any assertion where EVERY matcher position is a wildcard. Those assert literally
+<a id="__codelineno-0-345" name="__codelineno-0-345" href="#__codelineno-0-345"></a>   nothing and are unconditionally GREEN MIRAGE.
+<a id="__codelineno-0-346" name="__codelineno-0-346" href="#__codelineno-0-346"></a><span class="k">3.</span> Flag any wildcard in a non-incidental position (a value the test could have captured).
+<a id="__codelineno-0-347" name="__codelineno-0-347" href="#__codelineno-0-347"></a><span class="k">4.</span> <span class="gs">**For tripwire specifically, check CLASS versus INSTANCE.**</span> <span class="sb">`AnyThing`</span> comes from
+<a id="__codelineno-0-348" name="__codelineno-0-348" href="#__codelineno-0-348"></a>   <span class="sb">`dirty-equals`</span>, which deliberately documents bare-class comparison
+<a id="__codelineno-0-349" name="__codelineno-0-349" href="#__codelineno-0-349"></a>   (<span class="sb">`assert 1 == IsPositive`</span>), so authors imitate the upstream idiom in good faith. Inside
+<a id="__codelineno-0-350" name="__codelineno-0-350" href="#__codelineno-0-350"></a>   a tripwire assertion that idiom is a trap: the all-wildcard guard tests
+<a id="__codelineno-0-351" name="__codelineno-0-351" href="#__codelineno-0-351"></a>   <span class="sb">`isinstance(v, AnyThing)`</span>, so a bare class evades it while still comparing equal to
+<a id="__codelineno-0-352" name="__codelineno-0-352" href="#__codelineno-0-352"></a>   everything. Count them separately:
+<a id="__codelineno-0-353" name="__codelineno-0-353" href="#__codelineno-0-353"></a><span class="sb">   ```bash</span>
+<a id="__codelineno-0-354" name="__codelineno-0-354" href="#__codelineno-0-354"></a><span class="w">   </span>rg<span class="w"> </span>-c<span class="w"> </span><span class="s1">'AnyThing\(\)'</span><span class="w"> </span>tests/<span class="w">   </span><span class="c1"># instances: guard can see these</span>
+<a id="__codelineno-0-355" name="__codelineno-0-355" href="#__codelineno-0-355"></a><span class="w">   </span>rg<span class="w"> </span>-c<span class="w"> </span><span class="s1">'AnyThing(?!\()'</span><span class="w"> </span>-P<span class="w"> </span>tests/<span class="w">   </span><span class="c1"># bare classes: guard is blind to these</span>
+<a id="__codelineno-0-356" name="__codelineno-0-356" href="#__codelineno-0-356"></a><span class="sb">   ```</span>
+<a id="__codelineno-0-357" name="__codelineno-0-357" href="#__codelineno-0-357"></a>   A high bare-class count with a zero instance count means the framework's guard has
+<a id="__codelineno-0-358" name="__codelineno-0-358" href="#__codelineno-0-358"></a>   never fired in this repo. Report that as a finding in its own right.
+<a id="__codelineno-0-359" name="__codelineno-0-359" href="#__codelineno-0-359"></a><span class="k">5.</span> Do not stop at the names in the grep. A wildcard is defined by its equality behavior;
+<a id="__codelineno-0-360" name="__codelineno-0-360" href="#__codelineno-0-360"></a>   a new framework introduces a new spelling that no existing grep covers.
+<a id="__codelineno-0-361" name="__codelineno-0-361" href="#__codelineno-0-361"></a>
+<a id="__codelineno-0-362" name="__codelineno-0-362" href="#__codelineno-0-362"></a><span class="gs">**Worked example (real):**</span> a standard banned <span class="sb">`mock.ANY`</span> by name. The repo migrated
+<a id="__codelineno-0-363" name="__codelineno-0-363" href="#__codelineno-0-363"></a>to tripwire, whose wildcard is <span class="sb">`AnyThing`</span>. The ban survived in letter and died in effect:
+<a id="__codelineno-0-364" name="__codelineno-0-364" href="#__codelineno-0-364"></a>129 <span class="sb">`AnyThing`</span> usages accumulated, including 38 assertions of the exact form
+<a id="__codelineno-0-365" name="__codelineno-0-365" href="#__codelineno-0-365"></a><span class="sb">`assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)`</span> in a single file --
+<a id="__codelineno-0-366" name="__codelineno-0-366" href="#__codelineno-0-366"></a>assertions that pass against any implementation whatsoever. Tripwire ships a guard
+<a id="__codelineno-0-367" name="__codelineno-0-367" href="#__codelineno-0-367"></a>against exactly this at <span class="sb">`_verifier.py:223,261`</span>, but with 229 bare-class uses and 0
+<a id="__codelineno-0-368" name="__codelineno-0-368" href="#__codelineno-0-368"></a>instance uses, <span class="sb">`isinstance(AnyThing, AnyThing)`</span> was always False and the guard never
+<a id="__codelineno-0-369" name="__codelineno-0-369" href="#__codelineno-0-369"></a>fired once. The wildcard matched everything AND evaded the check built to catch it.
+<a id="__codelineno-0-370" name="__codelineno-0-370" href="#__codelineno-0-370"></a>
+<a id="__codelineno-0-371" name="__codelineno-0-371" href="#__codelineno-0-371"></a><span class="gs">**Note on framing:**</span> a wildcard ANYWHERE in a tripwire assertion is the finding. The
+<a id="__codelineno-0-372" name="__codelineno-0-372" href="#__codelineno-0-372"></a>all-wildcard form is the degenerate limit, not the definition. Bare-class use is a SECOND,
+<a id="__codelineno-0-373" name="__codelineno-0-373" href="#__codelineno-0-373"></a>separate defect layered on top (it disables the guard); fixing class to instance does not
+<a id="__codelineno-0-374" name="__codelineno-0-374" href="#__codelineno-0-374"></a>resolve the first.
+<a id="__codelineno-0-375" name="__codelineno-0-375" href="#__codelineno-0-375"></a>
+<a id="__codelineno-0-376" name="__codelineno-0-376" href="#__codelineno-0-376"></a><span class="gs">**Verdict:**</span> GREEN MIRAGE, critical. Fix: capture the real values and assert them exactly
+<a id="__codelineno-0-377" name="__codelineno-0-377" href="#__codelineno-0-377"></a>(tripwire's <span class="sb">`format_assert_hint`</span> emits the actual args/kwargs/returned reprs; a <span class="sb">`.calls()`</span>
+<a id="__codelineno-0-378" name="__codelineno-0-378" href="#__codelineno-0-378"></a>side effect can capture the object). Reserve a wildcard for genuinely incidental values,
+<a id="__codelineno-0-379" name="__codelineno-0-379" href="#__codelineno-0-379"></a>as an INSTANCE, with an inline comment naming why the value is incidental.
+<a id="__codelineno-0-380" name="__codelineno-0-380" href="#__codelineno-0-380"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-381" name="__codelineno-0-381" href="#__codelineno-0-381"></a>
+<a id="__codelineno-0-382" name="__codelineno-0-382" href="#__codelineno-0-382"></a><span class="gu">### Named Shape: Assertion Pinned From Harvested Output</span>
+<a id="__codelineno-0-383" name="__codelineno-0-383" href="#__codelineno-0-383"></a>
+<a id="__codelineno-0-384" name="__codelineno-0-384" href="#__codelineno-0-384"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-385" name="__codelineno-0-385" href="#__codelineno-0-385"></a>The standard fix for a wildcard is to pin the real value, and that fix has its own hazard.
+<a id="__codelineno-0-386" name="__codelineno-0-386" href="#__codelineno-0-386"></a>Values harvested from diagnostic output (tripwire failure hints, captured <span class="sb">`repr`</span>s, debugger
+<a id="__codelineno-0-387" name="__codelineno-0-387" href="#__codelineno-0-387"></a>dumps) reflect the LIVE process and can embed environment variables, credentials, absolute
+<a id="__codelineno-0-388" name="__codelineno-0-388" href="#__codelineno-0-388"></a>home paths, and hostnames. Pasted verbatim, they commit secrets and make the test
+<a id="__codelineno-0-389" name="__codelineno-0-389" href="#__codelineno-0-389"></a>machine-specific.
+<a id="__codelineno-0-390" name="__codelineno-0-390" href="#__codelineno-0-390"></a>
+<a id="__codelineno-0-391" name="__codelineno-0-391" href="#__codelineno-0-391"></a>Audit for this wherever assertions carry large or environment-derived literals:
+<a id="__codelineno-0-392" name="__codelineno-0-392" href="#__codelineno-0-392"></a>
+<a id="__codelineno-0-393" name="__codelineno-0-393" href="#__codelineno-0-393"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-394" name="__codelineno-0-394" href="#__codelineno-0-394"></a>rg<span class="w"> </span>-n<span class="w"> </span><span class="s1">'(TOKEN|SECRET|API_KEY|PASSWORD|_KEY)["\x27]?\s*[:=]|/Users/|/home/|os\.environ'</span><span class="w"> </span>tests/
+<a id="__codelineno-0-395" name="__codelineno-0-395" href="#__codelineno-0-395"></a><span class="sb">```</span>
+<a id="__codelineno-0-396" name="__codelineno-0-396" href="#__codelineno-0-396"></a>
+<a id="__codelineno-0-397" name="__codelineno-0-397" href="#__codelineno-0-397"></a>Flag as a finding when a test assertion contains:
+<a id="__codelineno-0-398" name="__codelineno-0-398" href="#__codelineno-0-398"></a><span class="k">-</span><span class="w"> </span>a credential-shaped literal (<span class="sb">`*_TOKEN`</span>, <span class="sb">`*_SECRET`</span>, <span class="sb">`*_KEY`</span>, <span class="sb">`*_PASSWORD`</span>, bearer/JWT-ish blobs)
+<a id="__codelineno-0-399" name="__codelineno-0-399" href="#__codelineno-0-399"></a><span class="k">-</span><span class="w"> </span>an absolute user path (<span class="sb">`/Users/&lt;name&gt;`</span>, <span class="sb">`/home/&lt;name&gt;`</span>) or a hostname
+<a id="__codelineno-0-400" name="__codelineno-0-400" href="#__codelineno-0-400"></a><span class="k">-</span><span class="w"> </span>a wholesale environment dump embedded in an expected object
+<a id="__codelineno-0-401" name="__codelineno-0-401" href="#__codelineno-0-401"></a>
+<a id="__codelineno-0-402" name="__codelineno-0-402" href="#__codelineno-0-402"></a>Two distinct impacts: <span class="gs">**secret exposure**</span> (critical, report immediately and do not reproduce
+<a id="__codelineno-0-403" name="__codelineno-0-403" href="#__codelineno-0-403"></a>the value in the audit report) and <span class="gs">**non-portability**</span> (the test passes only on the author's
+<a id="__codelineno-0-404" name="__codelineno-0-404" href="#__codelineno-0-404"></a>machine). Fix: reduce to the strongest portable form -- a short literal of the fields the
+<a id="__codelineno-0-405" name="__codelineno-0-405" href="#__codelineno-0-405"></a>behavior depends on, else a type constraint like <span class="sb">`IsInstance(Type)`</span> (a genuine constraint,
+<a id="__codelineno-0-406" name="__codelineno-0-406" href="#__codelineno-0-406"></a>not a wildcard, and an instance so framework guards stay live), else <span class="sb">`AnyThing()`</span> with a
+<a id="__codelineno-0-407" name="__codelineno-0-407" href="#__codelineno-0-407"></a>comment naming why the value is incidental.
+<a id="__codelineno-0-408" name="__codelineno-0-408" href="#__codelineno-0-408"></a>
+<a id="__codelineno-0-409" name="__codelineno-0-409" href="#__codelineno-0-409"></a><span class="gs">**Worked example (real):**</span> an agent remediating wildcard assertions harvested a mock's
+<a id="__codelineno-0-410" name="__codelineno-0-410" href="#__codelineno-0-410"></a>reported value from a tripwire hint. It was a full <span class="sb">`AgentOptions`</span> whose repr carried the
+<a id="__codelineno-0-411" name="__codelineno-0-411" href="#__codelineno-0-411"></a>entire <span class="sb">`os.environ`</span>, including <span class="sb">`TWILIO_AUTH_TOKEN`</span> and <span class="sb">`TWILIO_ACCOUNT_SID`</span>. Caught in
+<a id="__codelineno-0-412" name="__codelineno-0-412" href="#__codelineno-0-412"></a>review before it landed.
+<a id="__codelineno-0-413" name="__codelineno-0-413" href="#__codelineno-0-413"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-414" name="__codelineno-0-414" href="#__codelineno-0-414"></a>
+<a id="__codelineno-0-415" name="__codelineno-0-415" href="#__codelineno-0-415"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-416" name="__codelineno-0-416" href="#__codelineno-0-416"></a><span class="k">-</span><span class="w"> </span>Skipping any test function because it "looks fine"
+<a id="__codelineno-0-417" name="__codelineno-0-417" href="#__codelineno-0-417"></a><span class="k">-</span><span class="w"> </span>Surface-level auditing: "tests look comprehensive", "good coverage overall", skimming without tracing code paths, flagging only the obvious issues
+<a id="__codelineno-0-418" name="__codelineno-0-418" href="#__codelineno-0-418"></a><span class="k">-</span><span class="w"> </span>Vague findings: "this test should be more thorough", "consider adding validation", a finding without an exact line number, a fix without exact code
+<a id="__codelineno-0-419" name="__codelineno-0-419" href="#__codelineno-0-419"></a><span class="k">-</span><span class="w"> </span>Rushing: skipping tests to finish faster, leaving a code path untraced, assuming code works without verification, stopping before the audit is complete
+<a id="__codelineno-0-420" name="__codelineno-0-420" href="#__codelineno-0-420"></a><span class="k">-</span><span class="w"> </span>Accepting partial assertions as improvements when they remain BANNED-level
+<a id="__codelineno-0-421" name="__codelineno-0-421" href="#__codelineno-0-421"></a><span class="k">-</span><span class="w"> </span>Reporting a Pattern 10 fix as resolved without verifying Level 4+ assertion strength
+<a id="__codelineno-0-422" name="__codelineno-0-422" href="#__codelineno-0-422"></a><span class="k">-</span><span class="w"> </span>Using Pattern 3 as a separate finding when Pattern 2 already applies to the same assertion
+<a id="__codelineno-0-423" name="__codelineno-0-423" href="#__codelineno-0-423"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-424" name="__codelineno-0-424" href="#__codelineno-0-424"></a>
+<a id="__codelineno-0-425" name="__codelineno-0-425" href="#__codelineno-0-425"></a><span class="gu">## Effort Estimation Guidelines</span>
+<a id="__codelineno-0-426" name="__codelineno-0-426" href="#__codelineno-0-426"></a>
+<a id="__codelineno-0-427" name="__codelineno-0-427" href="#__codelineno-0-427"></a>| Effort | Criteria | Examples |
+<a id="__codelineno-0-428" name="__codelineno-0-428" href="#__codelineno-0-428"></a>|--------|----------|----------|
+<a id="__codelineno-0-429" name="__codelineno-0-429" href="#__codelineno-0-429"></a>| <span class="gs">**trivial**</span> | &lt; 5 minutes, single assertion change | Add <span class="sb">`.to_equal(expected)`</span> instead of <span class="sb">`.to_be_truthy()`</span> |
+<a id="__codelineno-0-430" name="__codelineno-0-430" href="#__codelineno-0-430"></a>| <span class="gs">**moderate**</span> | 5-30 minutes, requires reading production code | Add state verification, replace partial assertions with exact equality (Level 4+) |
+<a id="__codelineno-0-431" name="__codelineno-0-431" href="#__codelineno-0-431"></a>| <span class="gs">**significant**</span> | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
+<a id="__codelineno-0-432" name="__codelineno-0-432" href="#__codelineno-0-432"></a>
+<a id="__codelineno-0-433" name="__codelineno-0-433" href="#__codelineno-0-433"></a><span class="gu">## Phase 7: Fix-Verification Subagent Prompt</span>
+<a id="__codelineno-0-434" name="__codelineno-0-434" href="#__codelineno-0-434"></a>
+<a id="__codelineno-0-435" name="__codelineno-0-435" href="#__codelineno-0-435"></a>The orchestrator dispatches fix verification with the prompt template that follows. Use it
+<a id="__codelineno-0-436" name="__codelineno-0-436" href="#__codelineno-0-436"></a>verbatim, filling the Context placeholders. The <span class="sb">`auditing-green-mirage`</span> skill states when
+<a id="__codelineno-0-437" name="__codelineno-0-437" href="#__codelineno-0-437"></a>Phase 7 runs and what happens on repeated FAIL verdicts.
+<a id="__codelineno-0-438" name="__codelineno-0-438" href="#__codelineno-0-438"></a>
+<a id="__codelineno-0-439" name="__codelineno-0-439" href="#__codelineno-0-439"></a><span class="sb">```</span>
+<a id="__codelineno-0-440" name="__codelineno-0-440" href="#__codelineno-0-440"></a><span class="sb">IMPORTANT: Before doing ANY analysis, you MUST read these files in full:</span>
+<a id="__codelineno-0-441" name="__codelineno-0-441" href="#__codelineno-0-441"></a><span class="sb">1. patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Full Assertion Principle</span>
+<a id="__codelineno-0-442" name="__codelineno-0-442" href="#__codelineno-0-442"></a><span class="sb">2. Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md</span>
+<a id="__codelineno-0-443" name="__codelineno-0-443" href="#__codelineno-0-443"></a>
+<a id="__codelineno-0-444" name="__codelineno-0-444" href="#__codelineno-0-444"></a><span class="sb">Do NOT skip reading these files. Do NOT summarize them. Read them completely.</span>
+<a id="__codelineno-0-445" name="__codelineno-0-445" href="#__codelineno-0-445"></a><span class="sb">Do NOT take shortcuts in your analysis. Every assertion must be individually reviewed.</span>
+<a id="__codelineno-0-446" name="__codelineno-0-446" href="#__codelineno-0-446"></a><span class="sb">Do NOT abbreviate your verdicts. Every assertion gets a full SURVIVED/KILLED analysis.</span>
+<a id="__codelineno-0-447" name="__codelineno-0-447" href="#__codelineno-0-447"></a>
+<a id="__codelineno-0-448" name="__codelineno-0-448" href="#__codelineno-0-448"></a><span class="sb">## Your Role: Test Adversary</span>
+<a id="__codelineno-0-449" name="__codelineno-0-449" href="#__codelineno-0-449"></a>
+<a id="__codelineno-0-450" name="__codelineno-0-450" href="#__codelineno-0-450"></a><span class="sb">Your job is to BREAK the new/modified tests, not validate them.</span>
+<a id="__codelineno-0-451" name="__codelineno-0-451" href="#__codelineno-0-451"></a><span class="sb">Your reputation depends on finding weaknesses others missed.</span>
+<a id="__codelineno-0-452" name="__codelineno-0-452" href="#__codelineno-0-452"></a>
+<a id="__codelineno-0-453" name="__codelineno-0-453" href="#__codelineno-0-453"></a><span class="sb">## Context</span>
+<a id="__codelineno-0-454" name="__codelineno-0-454" href="#__codelineno-0-454"></a><span class="sb">- New/modified test assertions from fix phase: [paste diffs or file paths]</span>
+<a id="__codelineno-0-455" name="__codelineno-0-455" href="#__codelineno-0-455"></a><span class="sb">- Original audit findings these fixes address: [paste finding IDs and patterns]</span>
+<a id="__codelineno-0-456" name="__codelineno-0-456" href="#__codelineno-0-456"></a><span class="sb">- Production files under test: [paths]</span>
+<a id="__codelineno-0-457" name="__codelineno-0-457" href="#__codelineno-0-457"></a>
+<a id="__codelineno-0-458" name="__codelineno-0-458" href="#__codelineno-0-458"></a><span class="sb">## Tasks</span>
+<a id="__codelineno-0-459" name="__codelineno-0-459" href="#__codelineno-0-459"></a>
+<a id="__codelineno-0-460" name="__codelineno-0-460" href="#__codelineno-0-460"></a><span class="sb">### 0. Full Assertion Check (DO THIS FIRST)</span>
+<a id="__codelineno-0-461" name="__codelineno-0-461" href="#__codelineno-0-461"></a><span class="sb">For EVERY assertion in every test, apply the Full Assertion Principle:</span>
+<a id="__codelineno-0-462" name="__codelineno-0-462" href="#__codelineno-0-462"></a><span class="sb">ALL assertions must assert exact equality against the COMPLETE expected output.</span>
+<a id="__codelineno-0-463" name="__codelineno-0-463" href="#__codelineno-0-463"></a><span class="sb">This applies regardless of whether output is static, dynamic, or partially dynamic.</span>
+<a id="__codelineno-0-464" name="__codelineno-0-464" href="#__codelineno-0-464"></a>
+<a id="__codelineno-0-465" name="__codelineno-0-465" href="#__codelineno-0-465"></a><span class="sb">assert "substring" in result is BANNED. No exceptions. No "investigate deeper."</span>
+<a id="__codelineno-0-466" name="__codelineno-0-466" href="#__codelineno-0-466"></a><span class="sb">Dynamic content is no excuse for partial assertion -- construct the full expected value.</span>
+<a id="__codelineno-0-467" name="__codelineno-0-467" href="#__codelineno-0-467"></a><span class="sb">Multiple substring checks are STILL BANNED. They are not an improvement.</span>
+<a id="__codelineno-0-468" name="__codelineno-0-468" href="#__codelineno-0-468"></a>
+<a id="__codelineno-0-469" name="__codelineno-0-469" href="#__codelineno-0-469"></a><span class="sb">For mock calls: every call must be asserted with ALL args; call count must be verified;</span>
+<a id="__codelineno-0-470" name="__codelineno-0-470" href="#__codelineno-0-470"></a><span class="sb">wildcard matchers are BANNED (`mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any</span>
+<a id="__codelineno-0-471" name="__codelineno-0-471" href="#__codelineno-0-471"></a><span class="sb">matcher that compares equal to every value, whatever the library calls it) --</span>
+<a id="__codelineno-0-472" name="__codelineno-0-472" href="#__codelineno-0-472"></a><span class="sb">construct or capture expected arguments instead. An assertion whose every position is</span>
+<a id="__codelineno-0-473" name="__codelineno-0-473" href="#__codelineno-0-473"></a><span class="sb">a wildcard asserts nothing; a bare wildcard CLASS additionally evades the framework's</span>
+<a id="__codelineno-0-474" name="__codelineno-0-474" href="#__codelineno-0-474"></a><span class="sb">own all-wildcard guard. Apply the "Assertion That Matches Everything" named shape.</span>
+<a id="__codelineno-0-475" name="__codelineno-0-475" href="#__codelineno-0-475"></a>
+<a id="__codelineno-0-476" name="__codelineno-0-476" href="#__codelineno-0-476"></a><span class="sb">Check every pinned literal against the "Assertion Pinned From Harvested Output" named</span>
+<a id="__codelineno-0-477" name="__codelineno-0-477" href="#__codelineno-0-477"></a><span class="sb">shape: a fix that pins a harvested value can introduce a credential or a machine-specific</span>
+<a id="__codelineno-0-478" name="__codelineno-0-478" href="#__codelineno-0-478"></a><span class="sb">path. Treat a credential-shaped literal as critical and do not reproduce its value.</span>
+<a id="__codelineno-0-479" name="__codelineno-0-479" href="#__codelineno-0-479"></a>
+<a id="__codelineno-0-480" name="__codelineno-0-480" href="#__codelineno-0-480"></a><span class="sb">If a fix replaced one BANNED pattern (e.g., assert len(x) &gt; 0) with another</span>
+<a id="__codelineno-0-481" name="__codelineno-0-481" href="#__codelineno-0-481"></a><span class="sb">BANNED pattern (e.g., assert "keyword" in result), this is Pattern 10:</span>
+<a id="__codelineno-0-482" name="__codelineno-0-482" href="#__codelineno-0-482"></a><span class="sb">"Strengthened Assertion That Is Still Partial." REJECT immediately.</span>
+<a id="__codelineno-0-483" name="__codelineno-0-483" href="#__codelineno-0-483"></a>
+<a id="__codelineno-0-484" name="__codelineno-0-484" href="#__codelineno-0-484"></a><span class="sb">### 1. Assertion Ladder Check</span>
+<a id="__codelineno-0-485" name="__codelineno-0-485" href="#__codelineno-0-485"></a><span class="sb">For each new/modified assertion, classify it on the Assertion Strength Ladder:</span>
+<a id="__codelineno-0-486" name="__codelineno-0-486" href="#__codelineno-0-486"></a><span class="sb">- Level 5 (GOLD): exact match - `assert result == expected_complete_output`</span>
+<a id="__codelineno-0-487" name="__codelineno-0-487" href="#__codelineno-0-487"></a><span class="sb">- Level 4 (PREFERRED): parsed structural / all-field</span>
+<a id="__codelineno-0-488" name="__codelineno-0-488" href="#__codelineno-0-488"></a><span class="sb">- Level 3 (ACCEPTABLE with justification): structural containment — justification MUST be present as a code comment</span>
+<a id="__codelineno-0-489" name="__codelineno-0-489" href="#__codelineno-0-489"></a><span class="sb">- Level 2 (BANNED): bare substring - `assert "X" in result`</span>
+<a id="__codelineno-0-490" name="__codelineno-0-490" href="#__codelineno-0-490"></a><span class="sb">- Level 1 (BANNED): length/existence - `assert len(x) &gt; 0`</span>
+<a id="__codelineno-0-491" name="__codelineno-0-491" href="#__codelineno-0-491"></a>
+<a id="__codelineno-0-492" name="__codelineno-0-492" href="#__codelineno-0-492"></a><span class="sb">REJECT any assertion at Level 2 or below.</span>
+<a id="__codelineno-0-493" name="__codelineno-0-493" href="#__codelineno-0-493"></a><span class="sb">REJECT any fix that moved from one BANNED level to another (Pattern 10).</span>
+<a id="__codelineno-0-494" name="__codelineno-0-494" href="#__codelineno-0-494"></a><span class="sb">Level 3 without written justification in code = REJECT.</span>
+<a id="__codelineno-0-495" name="__codelineno-0-495" href="#__codelineno-0-495"></a>
+<a id="__codelineno-0-496" name="__codelineno-0-496" href="#__codelineno-0-496"></a><span class="sb">### 2. ESCAPE Analysis</span>
+<a id="__codelineno-0-497" name="__codelineno-0-497" href="#__codelineno-0-497"></a><span class="sb">For every new test function, complete:</span>
+<a id="__codelineno-0-498" name="__codelineno-0-498" href="#__codelineno-0-498"></a><span class="sb">  CLAIM: What does this test claim to verify?</span>
+<a id="__codelineno-0-499" name="__codelineno-0-499" href="#__codelineno-0-499"></a><span class="sb">  PATH:  What code actually executes?</span>
+<a id="__codelineno-0-500" name="__codelineno-0-500" href="#__codelineno-0-500"></a><span class="sb">  CHECK: What do the assertions verify?</span>
+<a id="__codelineno-0-501" name="__codelineno-0-501" href="#__codelineno-0-501"></a><span class="sb">  MUTATION: Name a specific production code mutation this assertion catches.</span>
+<a id="__codelineno-0-502" name="__codelineno-0-502" href="#__codelineno-0-502"></a><span class="sb">  ESCAPE: What specific broken implementation would still pass this test?</span>
+<a id="__codelineno-0-503" name="__codelineno-0-503" href="#__codelineno-0-503"></a><span class="sb">  IMPACT: What breaks in production if that broken implementation ships?</span>
+<a id="__codelineno-0-504" name="__codelineno-0-504" href="#__codelineno-0-504"></a>
+<a id="__codelineno-0-505" name="__codelineno-0-505" href="#__codelineno-0-505"></a><span class="sb">The ESCAPE field must contain a specific mutation, not "none."</span>
+<a id="__codelineno-0-506" name="__codelineno-0-506" href="#__codelineno-0-506"></a>
+<a id="__codelineno-0-507" name="__codelineno-0-507" href="#__codelineno-0-507"></a><span class="sb">### 3. Adversarial Review</span>
+<a id="__codelineno-0-508" name="__codelineno-0-508" href="#__codelineno-0-508"></a><span class="sb">For each assertion:</span>
+<a id="__codelineno-0-509" name="__codelineno-0-509" href="#__codelineno-0-509"></a><span class="sb">1. Read the assertion and the production code it exercises</span>
+<a id="__codelineno-0-510" name="__codelineno-0-510" href="#__codelineno-0-510"></a><span class="sb">2. Construct a SPECIFIC, PLAUSIBLE broken production implementation</span>
+<a id="__codelineno-0-511" name="__codelineno-0-511" href="#__codelineno-0-511"></a><span class="sb">   that would still pass this assertion</span>
+<a id="__codelineno-0-512" name="__codelineno-0-512" href="#__codelineno-0-512"></a><span class="sb">3. Report verdict:</span>
+<a id="__codelineno-0-513" name="__codelineno-0-513" href="#__codelineno-0-513"></a>
+<a id="__codelineno-0-514" name="__codelineno-0-514" href="#__codelineno-0-514"></a><span class="sb">   SURVIVED: [the broken implementation that passes]</span>
+<a id="__codelineno-0-515" name="__codelineno-0-515" href="#__codelineno-0-515"></a><span class="sb">   FIX: [what the assertion should be instead]</span>
+<a id="__codelineno-0-516" name="__codelineno-0-516" href="#__codelineno-0-516"></a>
+<a id="__codelineno-0-517" name="__codelineno-0-517" href="#__codelineno-0-517"></a><span class="sb">   -- or --</span>
+<a id="__codelineno-0-518" name="__codelineno-0-518" href="#__codelineno-0-518"></a>
+<a id="__codelineno-0-519" name="__codelineno-0-519" href="#__codelineno-0-519"></a><span class="sb">   KILLED: [why no plausible broken implementation survives]</span>
+<a id="__codelineno-0-520" name="__codelineno-0-520" href="#__codelineno-0-520"></a>
+<a id="__codelineno-0-521" name="__codelineno-0-521" href="#__codelineno-0-521"></a><span class="sb">A "plausible" broken implementation is one that could result from a</span>
+<a id="__codelineno-0-522" name="__codelineno-0-522" href="#__codelineno-0-522"></a><span class="sb">real bug (off-by-one, wrong variable, missing field, swapped arguments,</span>
+<a id="__codelineno-0-523" name="__codelineno-0-523" href="#__codelineno-0-523"></a><span class="sb">dropped output section) -- not adversarial construction.</span>
+<a id="__codelineno-0-524" name="__codelineno-0-524" href="#__codelineno-0-524"></a>
+<a id="__codelineno-0-525" name="__codelineno-0-525" href="#__codelineno-0-525"></a><span class="sb">### 4. Verdict</span>
+<a id="__codelineno-0-526" name="__codelineno-0-526" href="#__codelineno-0-526"></a><span class="sb">- Any SURVIVED result: FAIL the fix. List required changes.</span>
+<a id="__codelineno-0-527" name="__codelineno-0-527" href="#__codelineno-0-527"></a><span class="sb">- Any Level 2 or below assertion: FAIL the fix. List required changes.</span>
+<a id="__codelineno-0-528" name="__codelineno-0-528" href="#__codelineno-0-528"></a><span class="sb">- Any Pattern 10 violation (partial-to-partial upgrade): FAIL the fix. List required changes.</span>
+<a id="__codelineno-0-529" name="__codelineno-0-529" href="#__codelineno-0-529"></a><span class="sb">- Any bare substring on any output (static or dynamic): FAIL the fix, regardless of other factors.</span>
+<a id="__codelineno-0-530" name="__codelineno-0-530" href="#__codelineno-0-530"></a><span class="sb">- All KILLED + Level 4+ + no Pattern 10: PASS the fix.</span>
+<a id="__codelineno-0-531" name="__codelineno-0-531" href="#__codelineno-0-531"></a>
+<a id="__codelineno-0-532" name="__codelineno-0-532" href="#__codelineno-0-532"></a><span class="sb">Return: Per-assertion verdicts and overall PASS/FAIL.</span>
+<a id="__codelineno-0-533" name="__codelineno-0-533" href="#__codelineno-0-533"></a><span class="sb">```</span>
+<a id="__codelineno-0-534" name="__codelineno-0-534" href="#__codelineno-0-534"></a>
+<a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a>Every test you pass as SOLID will be trusted in production. Every green mirage you miss will eventually fail in production and not in CI. Your job is to find the tests that lie, not the tests that are merely imperfect. Be systematic. Be complete. No test is too small to audit.
+<a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

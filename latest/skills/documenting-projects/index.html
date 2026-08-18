@@ -5230,6 +5230,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../commands/code-review-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /code-review-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../commands/code-review-feedback/" class="md-nav__link">
         
   
@@ -8986,147 +9014,138 @@
 <a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>| Quality review (8 criteria) | All 8 pass | User consent after 2 iterations |
 <a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>| Fact-checking (claims) | No false claims in docs | Never |
 <a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>The 8 quality criteria evaluated in Phase 4:
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>| # | Criterion | Pass Condition |
-<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>|---|-----------|----------------|
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>| 1 | Banned phrase detection | Zero matches against writing-guide.md |
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>| 2 | Code example validity | Language tags, non-empty, language matches project |
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>| 3 | Build config validity | Zero errors from build tool |
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>| 4 | Diataxis compliance | No type mixing, correct structure per type |
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>| 5 | Narrative cohesion | Consistent tense, transitions, no orphan sections |
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>| 6 | Tone consistency | Vocabulary density and code ratio match profile |
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a>| 7 | Coverage | All MVP sections generated or explicitly skipped |
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a>| 8 | Cross-reference validity | Zero broken references or unresolved placeholders |
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a>
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>---
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="gu">## Subagent Result Schemas</span>
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>Each Task dispatch MUST specify a strict JSON result schema.
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="gs">**Explore agent (audit phase):**</span>
-<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">```json</span>
-<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a><span class="p">{</span>
-<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="w">  </span><span class="nt">"language"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span>
-<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="w">  </span><span class="nt">"framework"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span>
-<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="w">  </span><span class="nt">"build_tool_recommendation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span>
-<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="w">  </span><span class="nt">"existing_docs"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"quality"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"staleness"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}],</span>
-<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="w">  </span><span class="nt">"api_surface"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"modules"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"string"</span><span class="p">],</span><span class="w"> </span><span class="nt">"coverage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">},</span>
-<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="w">  </span><span class="nt">"gaps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"string"</span><span class="p">]</span>
-<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a><span class="p">}</span>
-<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="sb">```</span>
-<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a>
-<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="gs">**Writing subagent:**</span>
-<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="sb">```json</span>
-<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="p">{</span>
-<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="w">  </span><span class="nt">"files_written"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"diataxis_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"tone_profile"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"word_count"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="nt">"last_verified_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}]</span>
-<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="p">}</span>
-<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a><span class="sb">```</span>
-<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a>
-<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="gs">**Review subagent:**</span>
-<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="sb">```json</span>
-<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="p">{</span>
-<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="w">  </span><span class="nt">"results"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"criterion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w"> </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}],</span>
-<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="w">  </span><span class="nt">"overall_pass"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
-<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="p">}</span>
-<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a><span class="sb">```</span>
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="sb">`/docs-review`</span> defines the 8 quality criteria evaluated in Phase 4 — each one's
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>measurement method, pass condition, and sub-checks. That command is canonical for
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>them; this file states only that all 8 must pass.
+<a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>---
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="gu">## Subagent Result Schemas</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a>Each Task dispatch MUST specify a strict JSON result schema.
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="gs">**Explore agent (audit phase):**</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="sb">```json</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="p">{</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="w">  </span><span class="nt">"language"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="w">  </span><span class="nt">"framework"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span>
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="w">  </span><span class="nt">"build_tool_recommendation"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span>
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a><span class="w">  </span><span class="nt">"existing_docs"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"quality"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"staleness"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}],</span>
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a><span class="w">  </span><span class="nt">"api_surface"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="nt">"modules"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"string"</span><span class="p">],</span><span class="w"> </span><span class="nt">"coverage"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">},</span>
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a><span class="w">  </span><span class="nt">"gaps"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"string"</span><span class="p">]</span>
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a><span class="p">}</span>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="sb">```</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a><span class="gs">**Writing subagent:**</span>
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a><span class="sb">```json</span>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a><span class="p">{</span>
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a><span class="w">  </span><span class="nt">"files_written"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"path"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"diataxis_type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"tone_profile"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"word_count"</span><span class="p">:</span><span class="w"> </span><span class="s2">"number"</span><span class="p">,</span><span class="w"> </span><span class="nt">"last_verified_date"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}]</span>
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="p">}</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="sb">```</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a><span class="gs">**Review subagent:**</span>
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="sb">```json</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a><span class="p">{</span>
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a><span class="w">  </span><span class="nt">"results"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"criterion"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"passed"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span><span class="p">,</span><span class="w"> </span><span class="nt">"details"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"file"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}],</span>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="w">  </span><span class="nt">"overall_pass"</span><span class="p">:</span><span class="w"> </span><span class="s2">"boolean"</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="p">}</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a><span class="sb">```</span>
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="gs">**Fact-checking subagent:**</span>
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a><span class="sb">```json</span>
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a><span class="p">{</span>
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a><span class="w">  </span><span class="nt">"claims"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"claim"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"verdict"</span><span class="p">:</span><span class="w"> </span><span class="s2">"verified | unverified | false"</span><span class="p">,</span><span class="w"> </span><span class="nt">"evidence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}]</span>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a><span class="p">}</span>
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a><span class="sb">```</span>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>---
 <a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a>
-<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="gs">**Fact-checking subagent:**</span>
-<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a><span class="sb">```json</span>
-<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="p">{</span>
-<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="w">  </span><span class="nt">"claims"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span><span class="nt">"claim"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">,</span><span class="w"> </span><span class="nt">"verdict"</span><span class="p">:</span><span class="w"> </span><span class="s2">"verified | unverified | false"</span><span class="p">,</span><span class="w"> </span><span class="nt">"evidence"</span><span class="p">:</span><span class="w"> </span><span class="s2">"string"</span><span class="p">}]</span>
-<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="p">}</span>
-<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">```</span>
-<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>
-<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a>---
-<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>
-<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="gu">## Execution Protocol</span>
-<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>
-<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">```</span>
-<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">Phase 1: Dispatch subagent -&gt; Skill("docs-audit") -&gt; verify audit-result.json exists</span>
-<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">Phase 2: Dispatch subagent -&gt; Skill("docs-plan") -&gt; verify plan.json exists</span>
-<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">Phase 3: Dispatch subagent -&gt; Skill("docs-write") -&gt; verify written-manifest.json exists</span>
-<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">Phase 4: Dispatch subagent -&gt; Skill("docs-review") -&gt; check overall_pass</span>
-<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">  If !overall_pass &amp;&amp; iteration &lt; 2:</span>
-<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">    docs-review writes sections-filter.json from failing_sections</span>
-<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="sb">    Re-dispatch Phase 3 (docs-write reads sections-filter.json)</span>
-<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="sb">    Re-dispatch Phase 4 (docs-review)</span>
-<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="sb">  If !overall_pass &amp;&amp; iteration &gt;= 2:</span>
-<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="sb">    Escalate to user with specific failures</span>
-<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="sb">    User decides: accept with known issues OR manual fix</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="sb">  If overall_pass:</span>
-<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="sb">    Announce completion</span>
-<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="sb">    Offer hosting config (GitHub Pages, ReadTheDocs, Netlify)</span>
-<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="sb">```</span>
-<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>
-<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>---
-<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
-<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="gu">## MVP Scope</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a><span class="gu">## Execution Protocol</span>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a><span class="sb">```</span>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="sb">Phase 1: Dispatch subagent -&gt; Skill("docs-audit") -&gt; verify audit-result.json exists</span>
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a><span class="sb">Phase 2: Dispatch subagent -&gt; Skill("docs-plan") -&gt; verify plan.json exists</span>
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a><span class="sb">Phase 3: Dispatch subagent -&gt; Skill("docs-write") -&gt; verify written-manifest.json exists</span>
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a><span class="sb">Phase 4: Dispatch subagent -&gt; Skill("docs-review") -&gt; check overall_pass</span>
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="sb">  If !overall_pass &amp;&amp; iteration &lt; 2:</span>
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a><span class="sb">    docs-review writes sections-filter.json from failing_sections</span>
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a><span class="sb">    Re-dispatch Phase 3 (docs-write reads sections-filter.json)</span>
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a><span class="sb">    Re-dispatch Phase 4 (docs-review)</span>
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a><span class="sb">  If !overall_pass &amp;&amp; iteration &gt;= 2:</span>
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a><span class="sb">    Escalate to user with specific failures</span>
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a><span class="sb">    User decides: accept with known issues OR manual fix</span>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a><span class="sb">  If overall_pass:</span>
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="sb">    Announce completion</span>
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="sb">    Offer hosting config (GitHub Pages, ReadTheDocs, Netlify)</span>
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="sb">```</span>
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a>
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a>---
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a>
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="gu">## MVP Scope</span>
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a>
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="gs">**Tier 1 (MVP):**</span> README + Tutorials + Reference + MkDocs build tool.
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a>
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a>| Tier | Adds | Status |
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a>|------|------|--------|
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a>| 1 | README, Tutorials, Reference, MkDocs | Current |
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>| 2 | How-to Guides, Explanation pages, Sphinx support | Future |
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>| 3 | Docusaurus support, versioned docs, API auto-generation | Future |
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a>| 4 | i18n, develop skill integration, CI/CD doc validation | Future |
 <a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
-<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a><span class="gs">**Tier 1 (MVP):**</span> README + Tutorials + Reference + MkDocs build tool.
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>---
 <a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
-<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a>| Tier | Adds | Status |
-<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>|------|------|--------|
-<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>| 1 | README, Tutorials, Reference, MkDocs | Current |
-<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>| 2 | How-to Guides, Explanation pages, Sphinx support | Future |
-<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>| 3 | Docusaurus support, versioned docs, API auto-generation | Future |
-<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>| 4 | i18n, develop skill integration, CI/CD doc validation | Future |
-<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>
-<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a>---
-<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
-<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="gu">## Dispatch Model</span>
-<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>
-<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>The orchestrator dispatches subagents via the Task tool. Each subagent prompt provides CONTEXT
-<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>(project path, state file paths, user preferences) but never duplicates command instructions.
-<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>The subagent loads the command via <span class="sb">`Skill("docs-audit")`</span> etc. and follows the command's own logic.
-<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
-<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>Subagent prompts should include:
-<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="k">-</span><span class="w"> </span>Project root path
-<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="k">-</span><span class="w"> </span>Doc-state directory path
-<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="k">-</span><span class="w"> </span>Any user preferences or overrides from earlier phases
-<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="k">-</span><span class="w"> </span>Reference to prior phase output (file path, not inline content)
-<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a>
-<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>---
-<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>
-<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="gu">## Dispatch Model</span>
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a>
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a>The orchestrator dispatches subagents via the Task tool. Each subagent prompt provides CONTEXT
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a>(project path, state file paths, user preferences) but never duplicates command instructions.
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a>The subagent loads the command via <span class="sb">`Skill("docs-audit")`</span> etc. and follows the command's own logic.
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a>
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a>Subagent prompts should include:
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">-</span><span class="w"> </span>Project root path
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a><span class="k">-</span><span class="w"> </span>Doc-state directory path
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a><span class="k">-</span><span class="w"> </span>Any user preferences or overrides from earlier phases
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a><span class="k">-</span><span class="w"> </span>Reference to prior phase output (file path, not inline content)
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>---
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a>
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a>Before declaring the documentation pipeline complete:
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a>
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="k">- [ ]</span> Phase 1 executed: audit-result.json exists
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="k">- [ ]</span> Phase 2 executed: plan.json exists and user approved TOC
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="k">- [ ]</span> Phase 3 executed: written-manifest.json exists, all MVP sections accounted for
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a><span class="k">- [ ]</span> Phase 4 executed: review-result.json exists, overall_pass == true (or user accepted)
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a><span class="k">- [ ]</span> All documentation files written to project repo (not spellbook artifact directories)
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a><span class="k">- [ ]</span> No iteration loops remain open
 <a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>
-<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>Before declaring the documentation pipeline complete:
+<a id="__codelineno-0-277" name="__codelineno-0-277" href="#__codelineno-0-277"></a>---
 <a id="__codelineno-0-278" name="__codelineno-0-278" href="#__codelineno-0-278"></a>
-<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a><span class="k">- [ ]</span> Phase 1 executed: audit-result.json exists
-<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="k">- [ ]</span> Phase 2 executed: plan.json exists and user approved TOC
-<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="k">- [ ]</span> Phase 3 executed: written-manifest.json exists, all MVP sections accounted for
-<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">- [ ]</span> Phase 4 executed: review-result.json exists, overall_pass == true (or user accepted)
-<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="k">- [ ]</span> All documentation files written to project repo (not spellbook artifact directories)
-<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">- [ ]</span> No iteration loops remain open
-<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a>
-<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a>---
-<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a>
-<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a><span class="k">-</span><span class="w"> </span>Invoking phase commands directly in orchestrator context (use Task tool to dispatch subagents)
-<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a><span class="k">-</span><span class="w"> </span>Writing documentation files directly (ALL writing done by subagents)
-<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a><span class="k">-</span><span class="w"> </span>Skipping user approval of the TOC in Phase 2
-<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="k">-</span><span class="w"> </span>Proceeding to Phase 3 without a completed Phase 2 plan
-<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a><span class="k">-</span><span class="w"> </span>Mixing Diataxis types within a single document
-<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a><span class="k">-</span><span class="w"> </span>Iterating more than 2 times on failing sections without user consent
-<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a><span class="k">-</span><span class="w"> </span>Writing documentation to spellbook artifact directories (output goes to project repo)
-<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">-</span><span class="w"> </span>Reading source code files directly in orchestrator context (dispatch explore agents)
-<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a>
-<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a>---
-<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a>
-<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="gu">## Citations</span>
-<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a>
-<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a>Sources that informed this skill's design:
-<a id="__codelineno-0-304" name="__codelineno-0-304" href="#__codelineno-0-304"></a>
-<a id="__codelineno-0-305" name="__codelineno-0-305" href="#__codelineno-0-305"></a><span class="k">-</span><span class="w"> </span>Procida, D. "Diataxis: A systematic approach to technical documentation." https://diataxis.fr/
-<a id="__codelineno-0-306" name="__codelineno-0-306" href="#__codelineno-0-306"></a><span class="k">-</span><span class="w"> </span>Google Developer Documentation Style Guide
-<a id="__codelineno-0-307" name="__codelineno-0-307" href="#__codelineno-0-307"></a><span class="k">-</span><span class="w"> </span>Microsoft Writing Style Guide
-<a id="__codelineno-0-308" name="__codelineno-0-308" href="#__codelineno-0-308"></a><span class="k">-</span><span class="w"> </span>Stripe API Documentation (architectural patterns for reference docs)
-<a id="__codelineno-0-309" name="__codelineno-0-309" href="#__codelineno-0-309"></a><span class="k">-</span><span class="w"> </span>React Documentation (pedagogical patterns for tutorials)
-<a id="__codelineno-0-310" name="__codelineno-0-310" href="#__codelineno-0-310"></a><span class="k">-</span><span class="w"> </span>Tailwind CSS Documentation (visual/justification patterns for how-to guides)
-<a id="__codelineno-0-311" name="__codelineno-0-311" href="#__codelineno-0-311"></a><span class="k">-</span><span class="w"> </span>Markdoc (extensibility framework reference)
-<a id="__codelineno-0-312" name="__codelineno-0-312" href="#__codelineno-0-312"></a><span class="k">-</span><span class="w"> </span>The Good Docs Project (template patterns)
+<a id="__codelineno-0-279" name="__codelineno-0-279" href="#__codelineno-0-279"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-280" name="__codelineno-0-280" href="#__codelineno-0-280"></a><span class="k">-</span><span class="w"> </span>Invoking phase commands directly in orchestrator context (use Task tool to dispatch subagents)
+<a id="__codelineno-0-281" name="__codelineno-0-281" href="#__codelineno-0-281"></a><span class="k">-</span><span class="w"> </span>Writing documentation files directly (ALL writing done by subagents)
+<a id="__codelineno-0-282" name="__codelineno-0-282" href="#__codelineno-0-282"></a><span class="k">-</span><span class="w"> </span>Skipping user approval of the TOC in Phase 2
+<a id="__codelineno-0-283" name="__codelineno-0-283" href="#__codelineno-0-283"></a><span class="k">-</span><span class="w"> </span>Proceeding to Phase 3 without a completed Phase 2 plan
+<a id="__codelineno-0-284" name="__codelineno-0-284" href="#__codelineno-0-284"></a><span class="k">-</span><span class="w"> </span>Mixing Diataxis types within a single document
+<a id="__codelineno-0-285" name="__codelineno-0-285" href="#__codelineno-0-285"></a><span class="k">-</span><span class="w"> </span>Iterating more than 2 times on failing sections without user consent
+<a id="__codelineno-0-286" name="__codelineno-0-286" href="#__codelineno-0-286"></a><span class="k">-</span><span class="w"> </span>Writing documentation to spellbook artifact directories (output goes to project repo)
+<a id="__codelineno-0-287" name="__codelineno-0-287" href="#__codelineno-0-287"></a><span class="k">-</span><span class="w"> </span>Reading source code files directly in orchestrator context (dispatch explore agents)
+<a id="__codelineno-0-288" name="__codelineno-0-288" href="#__codelineno-0-288"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-289" name="__codelineno-0-289" href="#__codelineno-0-289"></a>
+<a id="__codelineno-0-290" name="__codelineno-0-290" href="#__codelineno-0-290"></a>---
+<a id="__codelineno-0-291" name="__codelineno-0-291" href="#__codelineno-0-291"></a>
+<a id="__codelineno-0-292" name="__codelineno-0-292" href="#__codelineno-0-292"></a><span class="gu">## Citations</span>
+<a id="__codelineno-0-293" name="__codelineno-0-293" href="#__codelineno-0-293"></a>
+<a id="__codelineno-0-294" name="__codelineno-0-294" href="#__codelineno-0-294"></a>Sources that informed this skill's design:
+<a id="__codelineno-0-295" name="__codelineno-0-295" href="#__codelineno-0-295"></a>
+<a id="__codelineno-0-296" name="__codelineno-0-296" href="#__codelineno-0-296"></a><span class="k">-</span><span class="w"> </span>Procida, D. "Diataxis: A systematic approach to technical documentation." https://diataxis.fr/
+<a id="__codelineno-0-297" name="__codelineno-0-297" href="#__codelineno-0-297"></a><span class="k">-</span><span class="w"> </span>Google Developer Documentation Style Guide
+<a id="__codelineno-0-298" name="__codelineno-0-298" href="#__codelineno-0-298"></a><span class="k">-</span><span class="w"> </span>Microsoft Writing Style Guide
+<a id="__codelineno-0-299" name="__codelineno-0-299" href="#__codelineno-0-299"></a><span class="k">-</span><span class="w"> </span>Stripe API Documentation (architectural patterns for reference docs)
+<a id="__codelineno-0-300" name="__codelineno-0-300" href="#__codelineno-0-300"></a><span class="k">-</span><span class="w"> </span>React Documentation (pedagogical patterns for tutorials)
+<a id="__codelineno-0-301" name="__codelineno-0-301" href="#__codelineno-0-301"></a><span class="k">-</span><span class="w"> </span>Tailwind CSS Documentation (visual/justification patterns for how-to guides)
+<a id="__codelineno-0-302" name="__codelineno-0-302" href="#__codelineno-0-302"></a><span class="k">-</span><span class="w"> </span>Markdoc (extensibility framework reference)
+<a id="__codelineno-0-303" name="__codelineno-0-303" href="#__codelineno-0-303"></a><span class="k">-</span><span class="w"> </span>The Good Docs Project (template patterns)
 </code></pre></div>
 
 

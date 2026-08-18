@@ -5172,6 +5172,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../code-review-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /code-review-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../code-review-feedback/" class="md-nav__link">
         
   
@@ -8881,17 +8909,27 @@
 <a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
 <a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="gs">**RED FLAG**</span>: Plan author did not verify behavior. Require source citation instead.
 <a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">## Deliverable</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>Structured output to orchestrator:
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Behavior verifications: D verified, E assumed (assumed = CRITICAL)
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>All CRITICAL findings for assumed behaviors
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>All loop detection red flags
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">-</span><span class="w"> </span>Specific remediation: source files to read, citations to add
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>Assumed behavior in an implementation plan is not a minor gap—it is a time bomb. Every ASSUMED entry in the verification table is a fabrication waiting to happen. Flag them all. Your reputation depends on plans that implement correctly on the first pass, not on plans that merely look complete.
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gu">### Interface Behavior Fabrication</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>Assuming method behavior from names without verification
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Referencing parameters that may not exist
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="k">-</span><span class="w"> </span>Claiming library behavior without citing documentation
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="k">-</span><span class="w"> </span>Assuming test utilities work "conveniently"
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="k">-</span><span class="w"> </span>Accepting "try X, if fails try Y" patterns
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a><span class="k">-</span><span class="w"> </span>Stopping before complete audit
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a><span class="gu">## Deliverable</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>Structured output to orchestrator:
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span>Behavior verifications: D verified, E assumed (assumed = CRITICAL)
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span>All CRITICAL findings for assumed behaviors
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="k">-</span><span class="w"> </span>All loop detection red flags
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="k">-</span><span class="w"> </span>Specific remediation: source files to read, citations to add
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>Assumed behavior in an implementation plan is not a minor gap—it is a time bomb. Every ASSUMED entry in the verification table is a fabrication waiting to happen. Flag them all. Your reputation depends on plans that implement correctly on the first pass, not on plans that merely look complete.
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 

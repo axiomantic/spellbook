@@ -5230,6 +5230,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../commands/code-review-audit/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /code-review-audit
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../commands/code-review-feedback/" class="md-nav__link">
         
   
@@ -8866,43 +8894,73 @@
 <a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>That is what makes it expensive — no error to notice, no retry prompt, and a
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>false fact enters the record wearing the costume of a verified one.
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="gs">**When you cannot verify**</span>, say so explicitly rather than reporting done.
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>"Ran, exit 0, artifact unverified" is honest. "Done" is not.
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="gs">**A measurement means nothing without its conditions.**</span> Write down what you ran
-<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>next to the result. A rule stated more broadly than what you tested is false in a
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>way the test itself will not show you. The test result is accurate; only the
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>broader claim is wrong.
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gs">**Observed.**</span> Three passes each wrote a general rule about which CTest flags break
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>a fixture-based guard. Each rule was true only for what its author ran. The real
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>rule reverses depending on one flag: <span class="sb">`-E`</span> is safe only when paired with <span class="sb">`-R`</span> and
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="sb">`-FS`</span>; <span class="sb">`-FS`</span>/<span class="sb">`-FA`</span> is safe only without <span class="sb">`-R`</span>. A fourth flag combination then broke
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>even that combined rule. Each pass had tested one path through a four-variable
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>space and generalized from it. **The fix: list every combination, or state exactly
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>which combination you tested and claim nothing beyond it.**
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gs">**A generated file is only evidence if it is newer than its source.**</span> Reading the
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>generated file is correct, but not enough on its own. Before you draw a conclusion
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>from it, check its timestamp against the source, or find a marker from the current
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>source inside it. A stale generated file carries the authority of the tool while
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>describing a state that no longer exists. That is worse than reading the source
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>directly — the source at least does not pretend to be current.
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a><span class="gs">**Observed, four times, three repos, two toolchains.**</span> A compile failed, left a
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>stale binary in place, and the test runner reported "100% tests passed." A
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>mutation tool measured stale C code because the source-to-C step ran at configure
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>time, not build time, so edits to the source were never reflected in what got
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>tested. A test passed green against a binary that could no longer be rebuilt from
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>current source. Two review gates read a generated manifest instead of its source —
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>one of the two manifests was generated from an older version of the file the
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>reviewer thought it audited, and its own line-number reference now pointed past
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>the end of the current file.
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>**A computed count wears that costume too. Name the population before you report
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>the number.** State what ONE unit IS — "one component entry", "one registered
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>test", "one changed file" — and show the command counts exactly those; <span class="sb">`grep -c`</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>over a structured file counts LINES, which are a unit only by accident. Then
+<a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a>check the magnitude against something you already know: a figure you cannot
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>sanity-check is not yet a measurement, and a load-bearing one earns a second
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a>derivation by a DIFFERENT method, never a re-run of the same command.
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="gs">**Observed.**</span> <span class="sb">`rg -c 'board: Expansion_Board'`</span> returned 1280 and was reported as
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>"1,280 extracted components on that board". The true figure is 52; the whole
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>design is 959 parts. That key also appears on connection nodes and on unresolved
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>elements under other top-level keys, so the command answered "how many lines
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>mention this board" — wrong by 25×, in the direction that made the evidence look
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>stronger. Counting <span class="sb">`- designator:`</span> entries filtered by board gives 52 at once.
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>Calibration would not have caught this: the instrument discriminated perfectly
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>and a known-positive/known-negative pair would both behave as expected; what was
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>wrong was the mapping from what it counted to what was claimed.
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>**An aggregator is unproven until one planted individual failure reaches the verdict
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>its consumer reads.** Anything that reduces many results to one — a test runner, a CI
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>job, a review protocol emitting an overall verdict, a summary table — sits on a signal
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>path with steps that can drop a failure silently. Trace ONE deliberately planted
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>failure end to end and name the step it survives; a green run over inputs that all pass
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>proves only that the path is quiet. Where the reduction is a rule rather than code,
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>state the derivation ("the verdict is the worst item"), or nothing forces the parts to
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>constrain the whole.
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="gs">**Observed, twice, each fixed only where it was found.**</span> A shell harness's scripts
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>ended in a bare <span class="sb">`echo`</span>, so exit status never reflected any assertion; it ran green for
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>eight months while printing <span class="sb">`✗`</span>. And audit protocols emitted an overall verdict with no
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>derivation rule, so a report naming a failing item could still conclude PASS.
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gs">**When you cannot verify**</span>, say so explicitly rather than reporting done.
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>"Ran, exit 0, artifact unverified" is honest. "Done" is not.
 <a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>Related: <span class="sb">`auditing-green-mirage`</span> is the test-suite specialization of this
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>rule (tests that pass without verifying behavior); the capability-claim
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>discipline in a project's <span class="sb">`AGENTS.md`</span> is its cross-session form.
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gs">**A measurement means nothing without its conditions.**</span> Write down what you ran
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>next to the result. A rule stated more broadly than what you tested is false in a
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>way the test itself will not show you. The test result is accurate; only the
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>broader claim is wrong.
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gs">**Observed.**</span> Three passes each wrote a general rule about which CTest flags break
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>a fixture-based guard. Each rule was true only for what its author ran. The real
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a>rule reverses depending on one flag: <span class="sb">`-E`</span> is safe only when paired with <span class="sb">`-R`</span> and
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">`-FS`</span>; <span class="sb">`-FS`</span>/<span class="sb">`-FA`</span> is safe only without <span class="sb">`-R`</span>. A fourth flag combination then broke
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>even that combined rule. Each pass had tested one path through a four-variable
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>space and generalized from it. **The fix: list every combination, or state exactly
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>which combination you tested and claim nothing beyond it.**
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="gs">**A generated file is only evidence if it is newer than its source.**</span> Reading the
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>generated file is correct, but not enough on its own. Before you draw a conclusion
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>from it, check its timestamp against the source, or find a marker from the current
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>source inside it. A stale generated file carries the authority of the tool while
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>describing a state that no longer exists. That is worse than reading the source
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>directly — the source at least does not pretend to be current.
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="gs">**Observed, four times, three repos, two toolchains.**</span> A compile failed, left a
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>stale binary in place, and the test runner reported "100% tests passed." A
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>mutation tool measured stale C code because the source-to-C step ran at configure
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>time, not build time, so edits to the source were never reflected in what got
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>tested. A test passed green against a binary that could no longer be rebuilt from
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>current source. Two review gates read a generated manifest instead of its source —
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>one of the two manifests was generated from an older version of the file the
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>reviewer thought it audited, and its own line-number reference now pointed past
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>the end of the current file.
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>Related: <span class="sb">`auditing-green-mirage`</span> is the test-suite specialization of this
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>rule (tests that pass without verifying behavior); the capability-claim
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a>discipline in a project's <span class="sb">`AGENTS.md`</span> is its cross-session form.
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a>&lt;/CRITICAL&gt;
 </code></pre></div>
 
 
