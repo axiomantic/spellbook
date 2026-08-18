@@ -56,6 +56,11 @@ PLACEHOLDER_VALUES = {
     "<why>": "documented invocation smoke test",
     "<reason>": "documented invocation smoke test",
     "<path>": "ledger.json",
+    # A real DISPATCH_SKILLS member. The `dispatches` query exits 1 when
+    # nothing matches, which this harness accepts -- it discriminates argparse
+    # drift (a "usage:" block) from a semantic no-match, and a fresh temp
+    # ledger legitimately has no dispatches recorded.
+    "<skill>": "dehallucination",
 }
 
 # Uppercase metavars used as flag values in prose (e.g. `[--timestamp ISO]`).

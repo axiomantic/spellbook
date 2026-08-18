@@ -1,5 +1,5 @@
 ---
-description: "Phase 4-5 of reviewing-impl-plans: Completeness Checks and Escalation"
+description: "Phase 4-5 of reviewing-impl-plans: Completeness Checks, Escalation, and report assembly"
 ---
 
 <ROLE>
@@ -114,6 +114,57 @@ After review, invoke `fact-checking` skill with pre-flagged claims. Do NOT imple
 - Reporting circular dependencies without CRITICAL designation
 - Accepting subjective acceptance criteria ("works correctly", "looks good")
 </FORBIDDEN>
+
+# Report Assembly
+
+This command owns the report templates the orchestrator assembles the review from. They
+follow the mechanized pre-pass block, whose format the `reviewing-impl-plans` skill owns.
+
+```
+## Summary
+- Parent design doc: EXISTS / NONE
+- Work items: X total (Y parallel, Z sequential)
+- Interfaces: A total, B fully specified, C MISSING (must be 100%)
+- Behavior verifications: D verified, E assumed (assumed = CRITICAL)
+- Claims escalated to fact-checking: F
+
+## Critical Findings (blocks execution)
+**Finding N: [Title]**
+Location: [section/line]
+Category: [Interface Contract / Behavior Verification / etc.]
+Current state: [quote or describe]
+Problem: [why insufficient for parallel execution]
+What agent would guess: [specific decisions left unspecified]
+Required: [exact addition needed]
+Risk if not fixed: [what could go wrong]
+
+## Important Findings (should fix)
+[Same format, lower priority]
+
+## Minor Findings (nice to fix)
+[Same format, lowest priority]
+
+## Remediation Plan
+
+### Priority 1: Interface Contracts (blocks parallel execution)
+1. [ ] [Specific interface contract to add]
+2. [ ] [Specific type definition to add]
+
+### Priority 2: Behavior Verification (prevents debugging loops)
+1. [ ] [Specific source citation to add]
+2. [ ] [Specific parameter verification needed]
+
+### Priority 3: QA/Testing
+1. [ ] Add auditing-green-mirage integration
+2. [ ] Add systematic-debugging integration
+
+### Priority 4: Completeness
+1. [ ] [Definition of done to add]
+2. [ ] [Risk assessment to add]
+
+### Fact-Checking Required
+1. [ ] [Claim] - [Category] - [Depth]
+```
 
 ## Deliverable
 

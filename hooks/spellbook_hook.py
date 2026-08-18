@@ -355,7 +355,21 @@ def _handle_pre_tool_use(tool_name: str, data: dict) -> list[str]:
 
 
 def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
-    """PostToolUse handler. Returns list of output strings."""
+    """PostToolUse handler. Returns list of output strings.
+
+    Emits nothing into the LLM's context. The one thing it does -- recording
+    ``Task`` dispatches into the develop gate ledger -- is deliberately
+    invisible to the agent: its value comes from being written by the HARNESS,
+    not by the party whose work it attests to.
+    """
+    if tool_name == "Task":
+        try:
+            _record_develop_dispatch(data)
+        except Exception as exc:
+            # A raising PostToolUse handler takes out the whole tool call. An
+            # unrecorded dispatch is a gap in an audit trail; a dead Task call
+            # is a broken session. Degrade, and leave a trace of why.
+            _log_hook_error("record_develop_dispatch", "PostToolUse", exc)
     return []
 
 
@@ -412,6 +426,71 @@ POST_COMPACT_DEVELOP_DIRECTIVE = (
 )
 
 
+def _import_develop_ledger():
+    """Import ``scripts/develop_gate_ledger``, or None if it cannot be reached.
+
+    The hook is installed as an absolute path into the spellbook checkout and
+    runs under the daemon venv, where the ``scripts`` directory is not on
+    ``sys.path``. Returning None rather than raising keeps every caller's
+    failure mode the same: the feature goes quiet, the hook does not.
+    """
+    scripts_dir = Path(__file__).resolve().parent.parent / "scripts"
+    try:
+        if str(scripts_dir) not in sys.path:
+            sys.path.insert(0, str(scripts_dir))
+        import develop_gate_ledger
+
+        return develop_gate_ledger
+    except Exception:
+        return None
+
+
+def _record_develop_dispatch(data: dict) -> None:
+    """Record a ``Task`` dispatch into the project's develop gate ledger.
+
+    Gated on a ledger ALREADY EXISTING for the session's project, the same
+    condition the post-compaction develop hint uses. Recording every Task call
+    in every session would fill unrelated projects' state with noise, and a
+    record that is always present says nothing about a develop run.
+
+    What gets stored is the ``subagent_type``, a truncated ``description``, and
+    the names of develop-dispatched skills RECOGNIZED in the prompt. The prompt
+    body itself is never stored: it routinely carries file contents and
+    operator text, and the ledger is an audit trail, not a transcript.
+
+    Silence is the failure mode throughout -- an unresolvable ledger path, a
+    missing module, an unreadable file. The caller adds one more layer for
+    anything unforeseen.
+    """
+    cwd = (data.get("cwd") or "").strip()
+    if not cwd:
+        return
+    ledger_file = _develop_ledger_path(cwd)
+    if ledger_file is None:
+        return
+    try:
+        if not ledger_file.is_file():
+            return
+    except OSError:
+        return
+
+    module = _import_develop_ledger()
+    if module is None:
+        return
+
+    tool_input = data.get("tool_input")
+    if not isinstance(tool_input, dict):
+        tool_input = {}
+    prompt = tool_input.get("prompt")
+    module.record_dispatch(
+        subagent_type=tool_input.get("subagent_type"),
+        description=tool_input.get("description"),
+        skills=module.extract_skills(prompt if isinstance(prompt, str) else None),
+        source="hook:PostToolUse",
+        path=ledger_file,
+    )
+
+
 def _develop_ledger_path(cwd: str) -> Path | None:
     """Where this project's develop ledger would live, or None if unknowable.
 
@@ -421,6 +500,16 @@ def _develop_ledger_path(cwd: str) -> Path | None:
     CLI writing state and wrong here -- a hook that raises on a Windows runner
     with no ``USERPROFILE`` would take out the compaction notice as well, so
     an unknowable path degrades to "no develop hint".
+
+    ``encode_cwd`` is not a string operation: it resolves the git repo root,
+    and for layouts it cannot read off the filesystem it still spawns ``git
+    worktree list --porcelain`` (and ``git rev-parse --show-toplevel`` on
+    fallback), each with a five-second timeout. This function runs on every
+    ``Task`` PostToolUse, so an empty state directory settles the question
+    before any of that: a ledger for THIS project cannot exist when no ledger
+    exists for ANY project, and one directory listing is the cheapest way to
+    learn it. Both callers treat ``None`` and "file absent" identically, so
+    the short circuit is not observable to them.
     """
     override = os.environ.get("SPELLBOOK_DEV_DIR")
     if override:
@@ -432,6 +521,8 @@ def _develop_ledger_path(cwd: str) -> Path | None:
         import develop_gate_ledger
 
         state_dir = develop_gate_ledger.default_state_dir()
+        if not any(state_dir.glob("develop_gate_ledger-*.json")):
+            return None
         encoded = develop_gate_ledger.encode_cwd(cwd)
     except Exception:
         return None

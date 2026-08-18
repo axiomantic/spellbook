@@ -1197,6 +1197,13 @@ def test_fallback_encode_cwd_matches_real_implementation_with_git_root(tmp_path)
     fallback, and it carries all of the drift risk. Checking only
     ``resolve_git_root=False`` leaves it uncovered: a corrupted git-root
     branch left the False-only guard green.
+
+    Since ``spellbook.core.path_utils.resolve_repo_root`` grew a
+    filesystem walk that answers the common layouts without spawning git,
+    this test also serves as the standing differential between that walk
+    and a pure ``git``-subprocess implementation: the fallback below is
+    unchanged and still shells out, so any divergence in the mapping shows
+    up here as disagreement rather than as an orphaned state file.
     """
     from spellbook.core.path_utils import encode_cwd as real_encode_cwd
 
@@ -1221,6 +1228,9 @@ def test_fallback_encode_cwd_matches_real_implementation_with_git_root(tmp_path)
         timeout=30,
     )
 
+    worktree_subdir = worktree / "nested"
+    worktree_subdir.mkdir()
+
     not_a_repo = tmp_path / "plain"
     not_a_repo.mkdir()
 
@@ -1229,6 +1239,7 @@ def test_fallback_encode_cwd_matches_real_implementation_with_git_root(tmp_path)
         str(repo_root / "scripts"),          # a subdirectory of it
         str(temp_repo),                      # a freshly created repo
         str(worktree),                       # a real linked worktree
+        str(worktree_subdir),                # a subdirectory of a worktree
         str(not_a_repo),                     # not a git repo at all
     ]
     for path in paths:
@@ -1248,3 +1259,101 @@ def test_fallback_encode_cwd_matches_real_implementation_with_git_root(tmp_path)
     assert fallback_encode_cwd(str(not_a_repo)) == fallback_encode_cwd(
         str(not_a_repo), resolve_git_root=False
     ), "a non-repo path must pass through unchanged"
+
+
+# ---- dispatch records ----------------------------------------------------
+
+
+def test_dispatch_vocabulary_names_real_skills():
+    """A renamed skill must fail loudly here, not silently stop matching.
+
+    ``DISPATCH_SKILLS`` is a fixed tuple rather than a glob of ``skills/``
+    (see its comment). The cost of fixing it is drift, and drift in THIS
+    direction is invisible: a stale name simply never matches, so every
+    lookup returns "no dispatch recorded" -- a false negative shaped exactly
+    like a real one. This test is the mechanism that reads the constant.
+    """
+    skills_dir = SCRIPT_PATH.parents[1] / "skills"
+    missing = [n for n in ledger.DISPATCH_SKILLS if not (skills_dir / n / "SKILL.md").is_file()]
+    assert missing == []
+
+
+def test_extract_skills_finds_names_in_a_dispatch_prompt():
+    found = ledger.extract_skills(
+        "Invoke $SPELLBOOK_DIR/skills/reviewing-impl-plans/SKILL.md, then the "
+        "test-driven-development skill."
+    )
+    assert found == ["reviewing-impl-plans", "test-driven-development"]
+
+
+def test_extract_skills_on_empty_input():
+    assert ledger.extract_skills(None) == []
+    assert ledger.extract_skills("") == []
+    assert ledger.extract_skills("nothing recognizable here") == []
+
+
+def test_record_dispatch_accumulates_rather_than_replacing(tmp_ledger):
+    ledger.record_dispatch(skills=["dehallucination"], timestamp="2026-01-01T00:00:00Z")
+    ledger.record_dispatch(skills=["devils-advocate"], timestamp="2026-01-01T00:00:00Z")
+    data = json.loads(tmp_ledger.read_text())
+    assert sorted(data["dispatches"]) == [
+        "2026-01-01T00:00:00Z",
+        "2026-01-01T00:00:00Z#002",
+    ]
+
+
+def test_record_dispatch_does_not_clobber_siblings(tmp_ledger):
+    ledger.set_scalar("current_phase", "4")
+    ledger.record_dispatch(skills=["test-driven-development"])
+    data = json.loads(tmp_ledger.read_text())
+    assert data["current_phase"] == "4"
+    assert len(data["dispatches"]) == 1
+
+
+def test_record_dispatch_with_nothing_known_still_proves_a_dispatch(tmp_ledger):
+    ledger.record_dispatch(timestamp="2026-01-01T00:00:00Z")
+    entry = json.loads(tmp_ledger.read_text())["dispatches"]["2026-01-01T00:00:00Z"]
+    assert entry == {"recorded_at": "2026-01-01T00:00:00Z", "skills": []}
+
+
+def test_record_dispatch_truncates_description(tmp_ledger):
+    ledger.record_dispatch(description="x" * 5000, timestamp="2026-01-01T00:00:00Z")
+    entry = json.loads(tmp_ledger.read_text())["dispatches"]["2026-01-01T00:00:00Z"]
+    assert len(entry["description"]) == ledger.DESCRIPTION_MAX
+
+
+def test_find_dispatches_filters_by_skill(tmp_ledger):
+    ledger.record_dispatch(skills=["dehallucination"], timestamp="2026-01-01T00:00:00Z")
+    ledger.record_dispatch(skills=["devils-advocate"], timestamp="2026-01-01T00:00:01Z")
+    found = ledger.find_dispatches(skill="devils-advocate")
+    assert [e["recorded_at"] for e in found] == ["2026-01-01T00:00:01Z"]
+
+
+def test_find_dispatches_since_excludes_an_earlier_task(tmp_ledger):
+    """Without --since, task 1's dispatch would satisfy every later task."""
+    ledger.record_dispatch(skills=["test-driven-development"], timestamp="2026-01-01T00:00:00Z")
+    assert ledger.find_dispatches(skill="test-driven-development") != []
+    assert ledger.find_dispatches(
+        skill="test-driven-development", since="2026-01-02T00:00:00Z"
+    ) == []
+
+
+def test_find_dispatches_on_a_fresh_ledger(tmp_ledger):
+    assert ledger.find_dispatches() == []
+
+
+def test_dispatches_cli_exits_1_when_nothing_matches(tmp_ledger, capsys):
+    ledger.record_dispatch(skills=["dehallucination"])
+    assert ledger.main(["dispatches", "--skill", "dehallucination"]) == 0
+    assert ledger.main(["dispatches", "--skill", "fact-checking"]) == 1
+
+
+def test_record_dispatch_cli_extracts_skills_without_storing_the_prompt(tmp_ledger):
+    rc = ledger.main([
+        "record-dispatch",
+        "--prompt", "invoke fact-checking; secret=hunter2",
+    ])
+    assert rc == 0
+    raw = tmp_ledger.read_text()
+    assert "fact-checking" in raw
+    assert "hunter2" not in raw

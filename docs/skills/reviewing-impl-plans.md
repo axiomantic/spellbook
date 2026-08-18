@@ -186,7 +186,7 @@ When this skill runs on a plan it has reviewed before:
 
 ## Report Assembly
 
-Assemble the final report from subagent outputs:
+Assemble the final report from subagent outputs. It opens with the mechanized pre-pass block:
 
 ```
 ## Phase 0: Mechanized Pre-Pass — claims already decided
@@ -194,51 +194,9 @@ Assemble the final report from subagent outputs:
 - Rules run: N of M   (a skipped rule is listed by name, with its reason)
 - Claims decided: [rule-id: clean | rule-id: N finding(s)]
 - Claims NOT decided (prose review must cover these): [rule-id: reason]
-
-## Summary
-- Parent design doc: EXISTS / NONE
-- Work items: X total (Y parallel, Z sequential)
-- Interfaces: A total, B fully specified, C MISSING (must be 100%)
-- Behavior verifications: D verified, E assumed (assumed = CRITICAL)
-- Claims escalated to fact-checking: F
-
-## Critical Findings (blocks execution)
-**Finding N: [Title]**
-Location: [section/line]
-Category: [Interface Contract / Behavior Verification / etc.]
-Current state: [quote or describe]
-Problem: [why insufficient for parallel execution]
-What agent would guess: [specific decisions left unspecified]
-Required: [exact addition needed]
-Risk if not fixed: [what could go wrong]
-
-## Important Findings (should fix)
-[Same format, lower priority]
-
-## Minor Findings (nice to fix)
-[Same format, lowest priority]
-
-## Remediation Plan
-
-### Priority 1: Interface Contracts (blocks parallel execution)
-1. [ ] [Specific interface contract to add]
-2. [ ] [Specific type definition to add]
-
-### Priority 2: Behavior Verification (prevents debugging loops)
-1. [ ] [Specific source citation to add]
-2. [ ] [Specific parameter verification needed]
-
-### Priority 3: QA/Testing
-1. [ ] Add auditing-green-mirage integration
-2. [ ] Add systematic-debugging integration
-
-### Priority 4: Completeness
-1. [ ] [Definition of done to add]
-2. [ ] [Risk assessment to add]
-
-### Fact-Checking Required
-1. [ ] [Claim] - [Category] - [Depth]
 ```
+
+The remaining templates — the Summary block, the finding format for Critical/Important/Minor, and the prioritized Remediation Plan — are specified in the `review-plan-completeness` command, which owns report assembly.
 
 <FORBIDDEN>
 Surface-level reviews are professional negligence. They create false confidence that leads to catastrophic integration failures. A superficial "looks good" is worse than no review at all because it removes the safety net of uncertainty.
@@ -259,15 +217,9 @@ Surface-level reviews are professional negligence. They create false confidence 
 - Assuming agents will "coordinate"
 - Assuming interfaces are "obvious"
 - Assuming data shapes can be "worked out"
-
-### Interface Behavior Fabrication
-- Assuming method behavior from names without verification
-- Referencing parameters that may not exist
-- Claiming library behavior without citing documentation
-- Assuming test utilities work "conveniently"
-- Accepting "try X, if fails try Y" patterns
-- Stopping before complete audit
 </FORBIDDEN>
+
+The Interface Behavior Fabrication anti-pattern — assumed method behavior, invented parameters, uncited library claims, "try X, if fails try Y" — is cataloged in the `review-plan-behavior` command, which audits for it.
 
 <reflection>
 Before completing review:

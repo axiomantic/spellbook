@@ -283,6 +283,26 @@ If ANY checkbox is unchecked: You violated the protocol. Go back and fix it.
 <CRITICAL>
 Before moving to the NEXT phase, verify artifacts exist. Missing artifacts = skipped work.
 Run these commands to verify. If ANY check fails, go back and complete the phase.
+
+**Two kinds of item appear below.** `[CHECKED]` — a command decides it and the
+command is given; its exit status or output is the verdict. `[SELF]` — a
+self-assertion by the party that would have skipped the step. **No mechanism
+reads it**: it is a statement on the record, not a check.
+
+**`DISPATCHED <skill>`** abbreviates `uv run scripts/develop_gate_ledger.py
+dispatches --skill <skill>` (exit 0 = one or more recorded, 1 = none). Those
+entries are written by the `PostToolUse` hook on `Task`
+(`hooks/spellbook_hook.py`), from the harness, NOT by the orchestrator — the
+only reason a dispatch is checkable at all, since an agent that skips a dispatch
+also skips a self-written record. **It raises the bar; it does not close the
+hole.** It proves a dispatch HAPPENED — a token subagent naming the skill, or
+one asked for something else, leaves an identical record — so only
+`CAN_STILL_FAIL` (verbatim RED plus revert proof) speaks to what it did. It
+records only where `PostToolUse` hooks run (Claude Code) and only after Phase 0
+writes a ledger: read a bare exit 1 as "unproven", not "proven absent". For
+per-task gates add `--since` (stamp `date -u +%Y-%m-%dT%H:%M:%SZ` before the
+task's first dispatch; without it, task 1's dispatch satisfies every later one).
+A `[SELF]` item naming an INLINE step or an OUTCOME cannot be upgraded at all.
 </CRITICAL>
 
 ### After Phase 1.5 (Informed Discovery):
@@ -292,10 +312,11 @@ ls ~/.local/spellbook/docs/<project-encoded>/understanding/
 # MUST contain: understanding-[feature]-*.md
 ```
 
-- [ ] Understanding document exists
-- [ ] Completeness score = 100% (13/13 validation functions)
-- [ ] Dehallucination gate subagent was dispatched (Phase 1.5.7)
-- [ ] Devil's advocate subagent was dispatched
+- [CHECKED] Understanding document exists (the `ls` above)
+- [CHECKED] `uv run scripts/check_understanding_doc.py <doc>` exits 0
+- [SELF] J1–J7 recorded YES/NO/N-A with evidence (Phase 1.5.5, judgment)
+- [CHECKED] Dehallucination gate subagent dispatched (1.5.7) — `DISPATCHED dehallucination`
+- [CHECKED] Devil's advocate subagent dispatched — `DISPATCHED devils-advocate`
 
 ### Phase 1.5.7: Dehallucination Gate
 
@@ -319,10 +340,10 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-design.md
 # MUST contain: YYYY-MM-DD-[feature]-design.md
 ```
 
-- [ ] Design document exists
-- [ ] Design review subagent (reviewing-design-docs) was dispatched
-- [ ] All critical/important findings fixed (if any)
-- [ ] Assumption verification completed (Phase 2.5)
+- [CHECKED] Design document exists (the `ls` above)
+- [CHECKED] Design review subagent dispatched — `DISPATCHED reviewing-design-docs`
+- [SELF] All critical/important findings fixed (if any) — outcome
+- [SELF] Assumption verification completed (Phase 2.5) — outcome
 
 ### Phase 2.5: Assumption Verification
 
@@ -343,24 +364,38 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 # MUST contain: YYYY-MM-DD-[feature]-impl.md
 ```
 
-- [ ] Implementation plan exists
-- [ ] Plan review subagent (reviewing-impl-plans) was dispatched
-- [ ] Execution mode determined (`delegated` / `direct`)
+- [CHECKED] Implementation plan exists (the `ls` above)
+- [CHECKED] Plan review subagent dispatched — `DISPATCHED reviewing-impl-plans`
+- [SELF] Execution mode determined (`delegated`/`direct`) — `CEREMONY_FIELDS` has no key for it
 
 ### During Phase 4 (for EACH task):
 
-- [ ] TDD subagent (test-driven-development) dispatched
-- [ ] Implementation completion verification done (inline audit prompt)
-- [ ] Code review subagent (requesting-code-review) dispatched
-- [ ] Fact-checking subagent dispatched
+- [CHECKED] TDD subagent dispatched — `DISPATCHED test-driven-development --since <task-start>`
+- [SELF] Implementation completion verification done — inline
+- [SELF] Every imperative in the task text maps to a named check (4.4 coverage)
+- [CHECKED] Code review subagent dispatched — `DISPATCHED requesting-code-review --since <task-start>`
+- [CHECKED] Fact-checking subagent dispatched — `DISPATCHED fact-checking --since <task-start>`
+
+**Gate 4.4 coverage: enumerate the task's IMPERATIVES, not just its criteria.**
+Gate 4.4 walks the task's declared acceptance criteria, expected outputs,
+interfaces, and behaviors. An instruction that appears only as a sentence in the
+task body — never restated as a criterion or named on the task's `Check:` line —
+is outside every one of those lists, so the audit passes without ever mentioning
+it. **A deliverable whose verification does not mention it closes exactly like
+one that was done.** Before the 4.4 verdict, list every imperative sentence in
+the task and name, for each, the criterion or check that decides it. Any
+imperative with no check is an INCOMPLETE verdict, not a passing one — either it
+gains a check or the task is not done. A one-sentence "wire the callbacks to the
+other side" with no test closed a task green; the missing wire surfaced weeks
+later as a stall in exactly that path.
 
 ### After Phase 4 (all tasks complete):
 
-- [ ] Comprehensive implementation audit done (inline audit prompt)
-- [ ] All tests pass
-- [ ] Green mirage audit subagent (auditing-green-mirage) dispatched
-- [ ] Comprehensive fact-checking done
-- [ ] Finishing subagent (finishing-a-development-branch) dispatched
+- [CHECKED] All tests pass — the suite's own exit status, pasted, not summarized
+- [SELF] Comprehensive implementation audit done — inline
+- [CHECKED] Green mirage audit subagent dispatched — `DISPATCHED auditing-green-mirage`
+- [SELF] Comprehensive fact-checking done — outcome
+- [CHECKED] Finishing subagent dispatched — `DISPATCHED finishing-a-development-branch`
 
 ---
 
@@ -385,6 +420,11 @@ in BOTH directions: prompt and return.
    sequential numbering before returning."
 4. **Forbidden phrasing.** Do not say "create the design AND the plan" —
    that triggers Phase Collapse (Pattern 6) inside the subagent.
+5. **Mark carried figures.** The orchestrator reads reports; it does not
+   measure. So every number it passes on is CARRIED and unverified. Say so
+   in the prompt verbatim, and require the subagent to re-derive any figure
+   it relies on or writes down. One session's use of this single line caught
+   six orchestrator figures that had already passed review.
 
 ### Subagent → Orchestrator (in every return summary)
 
@@ -398,7 +438,25 @@ ARTIFACTS_NOT_WRITTEN: (anything skill wanted to write but operator forbade)
 SKILL_INVOCATION: [skill-name]
 COMPILE_STATUS: pass | fail | n/a
 TEST_STATUS: N/N pass | n/a
+CAN_STILL_FAIL: [mutation applied | verbatim RED output | revert proof] | n/a (no new check)
 ```
+
+**`CAN_STILL_FAIL` is required from every dispatch that adds or changes a check**
+(gate 4.3 above all). It promotes the Checkability rule "Prove that the check can
+fail" from a property of PLANS into a property of each IMPLEMENTATION. The field
+carries three parts, and a subagent that supplies fewer has failed the gate:
+
+1. **The mutation applied** — the specific edit that should break the new check.
+2. **The verbatim RED** — the failure output pasted, not paraphrased. "It failed
+   as expected" is not the field; the assertion text is.
+3. **Revert proof, not revert assertion.** A sentence saying "reverted" is not
+   evidence. Prove it: checksum the touched files before mutating and compare
+   after (`shasum`/`git diff --exit-code`), and grep for the mutation marker
+   expecting zero hits. Paste both results.
+
+`n/a` is a legal value ONLY when the dispatch added no check, and it must say so.
+An empty, missing, or bare-`n/a` field is a FAILED gate, not a silent pass: the
+orchestrator re-dispatches rather than accepting the return.
 
 ### Orchestrator post-dispatch verification (mandatory)
 
@@ -448,6 +506,17 @@ dependency closure.
    Artifact, Not the Signal").
 4. **The check reports which rule fired, not only how many.** A count alone
    hides a check that reads only part of its input.
+5. **Calibrate an instrument you built for the task.** Any grep, regex, script,
+   or query you wrote to MEASURE something is itself unverified code, and its
+   characteristic failure is reading less input than you think while printing a
+   confident result — an unsearched input and a genuine absence are
+   indistinguishable in the output. Before trusting it, run it against one
+   known-positive and one known-negative input and confirm it reports each
+   correctly. A verification regex `\[(ERROR|WARN|INFO|NOTE)\]` silently matched
+   no `[WARNING]` line, compared 44 of 239 findings, and printed `IDENTICAL`.
+   This generalizes the `git grep` hazard the file-reading rule module names for
+   one tool: state which instrument produced any "appears nowhere" claim, and
+   calibrate it first.
 
 **Scope.** This pass is proportional. If the artifact makes no mechanically
 decidable claims — for example a five-step inline plan with no dependency graph
@@ -510,10 +579,8 @@ rows into a single dispatch is forbidden. A dispatch not preceded by a Phase
 Declaration is a process failure even if the work product is correct: the
 declaration is what makes phase collapse mechanically detectable in real time.
 
-Before EVERY Task() dispatch inside /develop or any of its sub-skills
-(feature-config, feature-research, feature-discover, feature-design,
-feature-implement, feature-implement-execute), output the following block
-IN YOUR VISIBLE RESPONSE
+Before EVERY Task() dispatch inside /develop or any of those sub-skills,
+output the following block IN YOUR VISIBLE RESPONSE
 (not in thinking, not summarized): the user must be able to read it.
 
 ```
@@ -674,11 +741,17 @@ Task (or subagent in Pi):
     Expected artifact path: [absolute path]
     Expected artifact count: 1 (do not produce sibling files)
 
+    CARRIED FIGURES: every number in this prompt is CARRIED — I did not
+    measure it in this session and it may be wrong. Re-derive any figure
+    you rely on or write down, and report the value YOU measured, even
+    when it matches.
+
     Return summary MUST include:
       ARTIFACTS_WRITTEN: [absolute paths with line counts]
       SKILL_INVOCATION: [skill-name]
       COMPILE_STATUS: pass | fail | n/a
       TEST_STATUS: N/N pass | n/a
+      CAN_STILL_FAIL: [mutation | verbatim RED | revert proof] | n/a (no new check)
 
     ## Context for the Skill
     [Provide context here]
@@ -723,7 +796,7 @@ The orchestrator is where that qualifier gets lost, because it is summarising.
 
 2. **Subagents Invoke Skills**: Every subagent prompt tells agent to invoke skill via Skill tool. Prompts provide CONTEXT only. Never duplicate skill instructions in prompts.
 
-3. **Quality Gates Block Progress**: Each phase has mandatory verification. 100% score required to proceed. Bypass only with explicit user consent.
+3. **Quality Gates Block Progress**: Each phase has mandatory verification. A gate passes on a checker's exit status, or on a recorded self-assessment — never a score. Bypass only with explicit user consent.
 
 4. **Completion Means Evidence**: "Done" requires traced verification through code. Trust execution paths, not file names or comments.
 
@@ -790,7 +863,6 @@ single window, and never afterward.
 - **A declined component is RECORDED as declined**, not merely absent, so a
   resumed session can tell "the operator chose not to run this" from "this has
   not run yet".
-- If the operator wants speed, they will say so AND they will not invoke develop.
 - Apparent time pressure ("pause when done", impending session end, etc.) does
   NOT justify skipping phases. The chosen path is the only path inside develop.
   If completion does not fit, stop where thoroughness ends and report the
@@ -852,7 +924,7 @@ That IS the rationalization. Run the prerequisite check instead.
 The ONLY valid reasons to skip or shorten a phase:
 
 1. **Escape hatch**: Real artifact at a real path, detected in Phase 0
-2. **Zero-flag fast path**: No need-flags set (no research, no design, no infrastructure). Runs the fast path — fewer phases, lighter review floor — but develop STAYS RESIDENT and the lighter floor (code review + green-mirage + conditional test run) still runs. This is NOT an exit and NOT zero review.
+2. **Zero-flag fast path**: No need-flags set (no research, no design, no infrastructure). Fewer phases run, but develop STAYS RESIDENT and the lighter floor stated under *Tiered Review Floor* still runs. This is NOT an exit and NOT zero review.
 3. **Flag not set for a flag-gated phase**: A phase whose need-flag is false does not run (e.g. Research/Discovery when `needs_research` is false; Design when `needs_design` is false). The flag → phase mapping is design §2.1 (single source of truth); do not skip a phase whose flag IS set.
 4. **Recorded in `ceremony.declined`**: the operator declined this component at the
    Phase-0 ceremony lock, and it is written verbatim in
@@ -860,9 +932,9 @@ The ONLY valid reasons to skip or shorten a phase:
    remembered preference, an inference from the operator's tone, or a component that is
    merely absent from `selected` does NOT qualify. If you cannot point at the line, the
    gate runs. Nothing in `ceremony.core` can ever appear here.
-5. **Explicit user skip mid-run**: DELETED as a valid reason. Ceremony is chosen once,
-   at Phase 0, and locked (see the Ceremony Ledger). A mid-run "skip this phase" is
-   refused; the honest responses are FINISH or ABORT-and-re-invoke. The operator can
+5. **Explicit user skip mid-run**: DELETED as a valid reason. A mid-run "skip this
+   phase" is refused under the Phase-0 ceremony lock; the honest responses are
+   FINISH or ABORT-and-re-invoke. The operator can
    always ABORT — they cannot narrow a running ceremony.
 
 Any other reason is a rationalization. No exceptions.
@@ -1109,16 +1181,14 @@ keeps the orchestrator's context lean without dropping any gate.
 | 8–12 | delegated | batched per-domain dispatches (still one gate per task, grouped) |
 | > 12 OR ≥ 2 tracks | delegated (batched, aggressive) | batched per-domain dispatches; if the orchestrator's context cannot hold the whole run, checkpoint the `develop_gate_ledger` and hand off remaining work to a fresh session |
 
-**Elision vs repositioning.** ELISION is running FEWER gates than the locked
-ceremony selected (Pattern 8). It stays forbidden, always — no batching
-threshold, session-size pressure, or hand-off justifies it. REPOSITIONING is
-running EVERY selected gate at a declared boundary recorded in the ledger
-(`ceremony.gate_position`). It is a Phase-0 choice, locked with everything
-else, and is never a mid-run improvisation — a run may not switch from
-`per_task` to `per_group` partway through. Batching remains what it already
-is: grouping dispatches by domain while still running every gate for every
-task. When one session cannot hold a very large run, hand off via the
-ledger — never by skipping gates.
+**Elision vs repositioning** is defined under *Develop = Thoroughness Mode
+(Operator Contract)*, and that definition binds here unchanged: no batching
+threshold, session-size pressure, or hand-off justifies ELISION (Pattern 8),
+and a run may not switch `ceremony.gate_position` from `per_task` to
+`per_group` partway through. Batching remains what it already is: grouping
+dispatches by domain while still running every gate for every task. When one
+session cannot hold a very large run, hand off via the ledger — never by
+skipping gates.
 
 ### Stop Semantics in Batched Dispatches
 
@@ -1233,7 +1303,7 @@ Phase 1: Research (if needs_research)
   ├─ 1.1: Research strategy planning
   ├─ 1.2: Execute research (subagent)
   ├─ 1.3: Ambiguity extraction
-  └─ 1.4: GATE: Research Quality Score = 100%
+  └─ 1.4: GATE: check_research_quality.py exits 0 + R1-R5
     ↓
 Phase 1.5: Informed Discovery (if needs_research)
   ├─ 1.5.0: Disambiguation session (resolve ambiguities)
@@ -1241,8 +1311,9 @@ Phase 1.5: Informed Discovery (if needs_research)
   ├─ 1.5.2: Conduct discovery wizard (AskUserQuestion + ARH)
   ├─ 1.5.3: Build glossary
   ├─ 1.5.4: Synthesize design_context
-  ├─ 1.5.5: GATE: Completeness Score = 100% (13 validation functions)
-  ├─ 1.5.6: Create Understanding Document
+  ├─ 1.5.5: GATE (judgment half): J1–J7 self-assessment, recorded not scored
+  ├─ 1.5.6: Create Understanding Document, then GATE (mechanical half):
+  │         uv run scripts/check_understanding_doc.py <doc> must exit 0
   ├─ 1.5.7: Dehallucination Gate
   └─ 1.6: Invoke devils-advocate skill (if needs_design OR needs_research)
     ↓
@@ -1281,11 +1352,8 @@ Phase 4: Implementation (direct or delegated)
 Direct/Lightweight Path (zero flags — develop STAYS RESIDENT, never exits):
   ├─ D1: Lightweight Research (explore subagent, <=5 files, 1-paragraph summary)
   ├─ D2: Inline Plan (<=5 numbered steps in conversation, user confirms)
-  └─ D3: Implementation under the LIGHTER review floor (design §3.2):
-          code review + green-mirage ALWAYS run; test run only if tests cover the
-          touched code; TDD-first waived for pure literal/config edits (§3.4);
-          fact-checking has no artifact to act on so it does not run. NEVER zero
-          review.
+  └─ D3: Implementation under the LIGHTER review floor, stated in full under
+          *Tiered Review Floor* (design §3.2). NEVER zero review.
 ```
 
 ---
@@ -1532,8 +1600,9 @@ interface DesignContext {
 
 | Gate                      | Threshold          | Bypass       |
 | ------------------------- | ------------------ | ------------ |
-| Research Quality          | 100%               | User consent |
-| Completeness              | 100% (13/13)       | User consent |
+| Research findings         | checker exits 0; R1–R5 self-assessed | User consent |
+| Understanding doc shape   | checker exits 0    | User consent |
+| Discovery judgment J1–J7  | self-assessed, not measured | User consent |
 | Implementation Completion | All items COMPLETE | Never        |
 | Tests                     | All passing        | Never        |
 | Green Mirage Audit        | Clean              | Never        |
@@ -1621,16 +1690,15 @@ Do NOT skip commands unless escape hatches allow it.
 
 ### Flag-Based Routing
 
-After `/feature-config` completes (including the Phase 0.7 need-flag wizard). The
-flag → phase mapping is design §2.1 (SINGLE SOURCE OF TRUTH); the routing below
-references it, it does not restate the rows.
+After `/feature-config` completes (including the Phase 0.7 need-flag wizard).
+Design §2.1 remains the single source of truth for the flag → phase mapping.
 
 **Zero flags (fast path):**
 - develop STAYS RESIDENT — it does NOT exit (there is no auto-exit anymore; file-count triviality detection is gone).
 - Skip `/feature-research`, `/feature-discover`, `/feature-design`, and Phase-3 planning-as-a-phase.
 - Run lightweight research inline (explore subagent, <=5 files, 1-paragraph summary).
 - Create an inline plan (<=5 numbered steps in conversation); get user confirmation.
-- Run `/feature-implement-execute` (Phase 4) under the LIGHTER review floor (design §3.2): code review + green-mirage ALWAYS; test run only if tests cover the touched code; TDD-first waived for pure literal/config edits (§3.4); fact-checking does not run (no artifact to act on). NEVER zero review.
+- Run `/feature-implement-execute` (Phase 4) under the LIGHTER review floor, stated in full under *Tiered Review Floor* (design §3.2) and binding here unchanged. NEVER zero review.
 
 **Any flag set:**
 - Run the phases that flag gates (per design §2.1) under the FULL review floor (design §3.2: TDD-first + code review + green-mirage + test suite) plus the flag-gated depth gates (design §3.3).

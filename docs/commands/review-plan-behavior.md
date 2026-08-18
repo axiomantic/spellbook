@@ -73,6 +73,16 @@ Flag when plan describes:
 
 **RED FLAG**: Plan author did not verify behavior. Require source citation instead.
 
+<FORBIDDEN>
+### Interface Behavior Fabrication
+- Assuming method behavior from names without verification
+- Referencing parameters that may not exist
+- Claiming library behavior without citing documentation
+- Assuming test utilities work "conveniently"
+- Accepting "try X, if fails try Y" patterns
+- Stopping before complete audit
+</FORBIDDEN>
+
 ## Deliverable
 
 Structured output to orchestrator:

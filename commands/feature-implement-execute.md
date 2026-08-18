@@ -429,6 +429,34 @@ Task:
     3. Identify dead code paths
     4. Verdict: FUNCTIONAL | NON_FUNCTIONAL | PARTIAL
 
+    ### 5. Imperative Coverage
+    Lists 1-4 walk what the plan DECLARED. An instruction that exists only as a
+    sentence in the task body belongs to none of those sets, so the audit can
+    finish without ever mentioning it. A deliverable whose verification does not
+    mention it closes exactly like one that was done.
+
+    Enumerate every imperative sentence in the task body. For each:
+    1. Quote the imperative
+    2. Name the criterion, output, interface, or check that decides it
+    3. Establish that the decider exercises it, by ONE of two procedures:
+       - **DEMONSTRATED** (strong): break the imperative, run the named decider,
+         paste the verbatim failure, revert, and prove the revert (`git diff
+         --exit-code` on the touched paths). This is the `CAN_STILL_FAIL`
+         pattern applied to one imperative. It establishes that the decider
+         cannot pass while the imperative is violated.
+       - **TRACED** (weak, and named weak): quote the decider's own text and
+         quote the imperative's subject inside it, so a reader sees the
+         imperative named where the decider reads it. It establishes only that
+         the decider MENTIONS the imperative. It does NOT establish that the
+         decider fails when the imperative is violated — a decider that names a
+         thing and then asserts nothing about it passes TRACED.
+    4. Verdict: COVERED_DEMONSTRATED | COVERED_TRACED | UNCOVERED
+
+    An imperative with no named decider is UNCOVERED. UNCOVERED is a blocking
+    issue, never a pass: either it gains a check, or the task is not done.
+    COVERED_TRACED is a pass, but it must be reported as TRACED — reporting a
+    traced imperative as demonstrated is a false claim, not a rounding.
+
     ## Output Format
 
     ```
@@ -452,6 +480,11 @@ Task:
     ✓ User can create widget: FUNCTIONAL
     ✗ Widget validates input: NON_FUNCTIONAL - validation never called
 
+    IMPERATIVE COVERAGE:
+    ✓ "Wire the callbacks": COVERED_DEMONSTRATED - test_wiring, RED pasted
+    ✓ "Log the retry count": COVERED_TRACED - named in criterion 2, not broken
+    ✗ "Emit a metric per retry": UNCOVERED - no criterion or check decides it
+
     BLOCKING ISSUES (must fix before proceeding):
     1. [issue]
 
@@ -460,6 +493,12 @@ Task:
 ````
 
 **Gate Behavior:**
+
+`Overall` is derived, not judged. The passing verdicts are COMPLETE, EXISTS,
+MATCHES, FUNCTIONAL, COVERED_DEMONSTRATED, and COVERED_TRACED.
+Any other verdict — INCOMPLETE, PARTIAL, MISSING, WRONG_INTERFACE, DIFFERS, NON_FUNCTIONAL, UNCOVERED — is a BLOCKING
+ISSUE and forces `Overall: INCOMPLETE`. `Overall: COMPLETE` requires a passing
+verdict in all five lists.
 
 IF BLOCKING ISSUES found:
 
@@ -675,6 +714,20 @@ Task:
 ````
 
 **Gate Behavior:**
+
+`Overall` is derived, not judged. The passing verdicts are COMPLETE, CONFORMS,
+SKIPPED, YES, and WORKS. Any other verdict — INCOMPLETE, PARTIAL, DEGRADED,
+DISCONNECTED, VIOLATION, NO, BROKEN — is a BLOCKING ISSUE and forces
+`Overall: INCOMPLETE`. `Overall: COMPLETE` requires a passing verdict
+in all five lists.
+
+Two tokens are not self-evident. DEGRADED blocks: Phase 1 defines it as an item
+that passed per-task verification and no longer works, so it describes broken
+behavior, not a lesser grade of done. SKIPPED passes: Phase 5 emits it only for
+a rule the operator already adjudicated, and re-raising an adjudicated rule is
+exactly what would keep the loop below from ever reaching clean. A VIOLATION on
+a SHOULD-severity rule is advisory per Phase 5 and does not block; a
+MUST-severity VIOLATION does.
 
 IF BLOCKING ISSUES: Fix, re-run audit, loop until clean.
 IF clean: Proceed to 4.6.2.

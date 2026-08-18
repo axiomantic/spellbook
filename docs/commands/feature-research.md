@@ -47,12 +47,12 @@ echo "Verify: SESSION_PREFERENCES.escape_hatch.type != 'impl_plan'"
 ## Invariant Principles
 
 1. **Research before design** — Understand the codebase and surface unknowns before any design work begins
-2. **100% quality score required** — All research questions need HIGH confidence answers; bypass requires explicit user consent
+2. **The gate is an exit status, not a score** — `check_research_quality.py` blocks on the artifact; confidence ratings are self-assessed and labelled as such; bypass requires explicit user consent
 3. **Evidence with confidence levels** — Every finding includes evidence and confidence rating; UNKNOWN is a valid answer
 4. **Ambiguity extraction** — Low-confidence and unknown items become explicit ambiguities for disambiguation
 
 <CRITICAL>
-Systematically explore codebase and surface unknowns BEFORE design work. All research findings must achieve 100% quality score to proceed.
+Systematically explore codebase and surface unknowns BEFORE design work. Research findings must pass the mechanical Phase 1 gate (§1.4) to proceed.
 </CRITICAL>
 
 ### 1.1 Research Strategy Planning
@@ -135,6 +135,14 @@ Task:
 - Subagent fails: retry once with same instructions
 - Second failure: return all findings marked UNKNOWN; note "Research failed after 2 attempts: [error]"; do NOT block — user chooses to proceed or retry
 - **TIMEOUT:** 120 seconds per subagent
+
+**ARTIFACT (write the returned JSON to disk).** The §1.4 gate reads a file, so
+the orchestrator persists the subagent's return object verbatim before moving on:
+
+**FILE PATH:** `~/.local/spellbook/docs/<project-encoded>/research/research-[feature-slug]-[timestamp].json`
+
+Keep `SESSION_CONTEXT.research_findings` as the in-memory carrier; the file is
+what the gate can read and what a later reviewer can re-check.
 
 ### 1.2.5 Project Development-Guidance Discovery (Subagent)
 
@@ -244,6 +252,10 @@ SESSION_CONTEXT.design_context.project_standards = <project_standards object fro
 Writing directly to `design_context.project_standards` (not a `research_findings`
 sub-key) lands it on the DesignContext carrier whose schema this feature extends.
 
+The same object is also written into the §1.2 research artifact under a
+top-level `project_standards` key, so the §1.4 gate can audit the sweep from
+the file rather than from memory.
+
 ### 1.3 Ambiguity Extraction
 
 **INPUT:** Research findings from subagent
@@ -272,87 +284,61 @@ SCOPE (MEDIUM impact):
   Impact: Affects feature completeness
 ```
 
-### 1.4 Research Quality Score
+### 1.4 Phase 1 Gate
 
-**SCORING FORMULAS:**
+<CRITICAL>
+This gate has TWO halves, and they carry different weight. The MECHANICAL half
+runs against the research artifact on disk and is the half that BLOCKS. The
+JUDGMENT half is a self-assessment you make and record; it is not computed, and
+it must never be reported as a computed figure.
 
-```typescript
-// 1. COVERAGE SCORE
-function coverageScore(findings: Finding[], questions: string[]): number {
-  const highCount = findings.filter(f => f.confidence === "HIGH").length;
-  if (questions.length === 0) return 100;
-  return (highCount / questions.length) * 100;
-}
+A previous version of this section presented four "scoring formulas" in
+TypeScript and a `Research Quality Score` percentage. Nothing executed that
+code. The score was a self-report wearing the costume of a measurement. It is
+removed. This is a deliberate LOWERING of the stated strength of the judgment
+items — they were never computed, and the text now says so.
+</CRITICAL>
 
-// 2. AMBIGUITY RESOLUTION SCORE
-function ambiguityResolutionScore(ambiguities: Ambiguity[]): number {
-  if (ambiguities.length === 0) return 100;
-  const categorized = ambiguities.filter(a => a.category && a.impact);
-  return (categorized.length / ambiguities.length) * 100;
-}
+**MECHANICAL HALF — run this before presenting findings:**
 
-// 3. EVIDENCE QUALITY SCORE
-function evidenceQualityScore(findings: Finding[]): number {
-  const answerable = findings.filter(f => f.confidence !== "UNKNOWN");
-  if (answerable.length === 0) return 0;
-  const withEvidence = answerable.filter(f => f.evidence.length > 0);
-  return (withEvidence.length / answerable.length) * 100;
-}
-
-// 4. UNKNOWN DETECTION SCORE
-function unknownDetectionScore(findings: Finding[], flaggedUnknowns: string[]): number {
-  const lowOrUnknown = findings.filter(
-    f => f.confidence === "UNKNOWN" || f.confidence === "LOW",
-  );
-  if (lowOrUnknown.length === 0) return 100;
-  return (flaggedUnknowns.length / lowOrUnknown.length) * 100;
-}
-
-// OVERALL SCORE: Weakest link determines quality — ALL must be 100%
-function overallScore(...scores: number[]): number {
-  return Math.min(...scores);
-}
+```bash
+uv run scripts/check_research_quality.py ~/.local/spellbook/docs/<project-encoded>/research/research-[feature-slug]-[timestamp].json
 ```
 
-**DISPLAY FORMAT:**
+The script reads the §1.2 artifact and computes seven structural checks: the
+top-level shape (`findings`, `patterns_discovered`, `unknowns`, findings
+non-empty), every finding carrying all five fields with a confidence value in
+the enum, every answerable finding citing at least one evidence entry, every
+LOW/UNKNOWN finding named in `unknowns`, every discovered pattern naming its
+files, no deferral markers (`TBD`, `to be determined`, `figure it out later`),
+and a §1.2.5 standards sweep whose result is auditable (a recorded source, or
+`none_found: true` with the globs it searched). Exit status IS the gate:
+non-zero blocks Phase 1.
 
-```
-Research Quality Score: [X]%
+What it does NOT establish: that any answer is true, that a HIGH rating is
+deserved, or that the right questions were asked. That is the judgment half.
 
-Breakdown:
-✓/✗ Coverage: [X]% ([N]/[M] questions with HIGH confidence)
-✓/✗ Ambiguity Resolution: [X]% ([N]/[M] ambiguities categorized)
-✓/✗ Evidence Quality: [X]% ([N]/[M] findings have file references)
-✓/✗ Unknown Detection: [X]% ([N]/[M] unknowns explicitly flagged)
+**JUDGMENT HALF — record each item as YES / NO / N-A with one line of evidence.
+No percentage.**
 
-Overall: [X]% (minimum of all criteria)
-```
+| # | Self-assessed item | What counts as YES |
+|---|---|---|
+| R1 | The questions cover the feature's technical domains | You re-read the request and found no domain without a question |
+| R2 | Each HIGH rating is deserved | The cited evidence answers the question directly, not by adjacency |
+| R3 | Each answer would survive a challenge | You would defend it against a reviewer holding the same files open |
+| R4 | Ambiguities are categorized by type AND impact | Every §1.3 ambiguity carries both, and the impact claim is argued |
+| R5 | Nothing was quietly rounded up | No MEDIUM was recorded as HIGH to clear the gate |
 
-**GATE BEHAVIOR:**
-
-IF SCORE < 100%:
-
-```
-Research Quality Score: [X]% - Below threshold
-
-OPTIONS:
-A) Continue anyway (bypass gate, accept risk)
-B) Iterate: Add more research questions and re-dispatch
-C) Skip ambiguous areas (reduce scope, remove low-confidence items)
-
-Your choice: ___
-```
-
-IF SCORE = 100%:
-
-- Display: "✓ Research Quality Score: 100% - All criteria met"
-- Proceed to Phase 1.5
+Any NO returns to §1.1 with added questions, or re-dispatches §1.2. The operator
+may accept a NO and continue; record that acceptance as an explicit bypass,
+naming the item.
 
 <FORBIDDEN>
 - Doing research work in main context instead of dispatching a subagent
 - Proceeding when any prerequisite check fails
 - Running this phase when `needs_research` is false (the flag, not a phase, gates this work)
-- Proceeding past the quality gate without a 100% score or explicit user bypass
+- Proceeding while `check_research_quality.py` exits non-zero, absent an explicit operator bypass
+- Reporting the R1-R5 self-assessment as a percentage or as a measured score
 - Blocking progress after two subagent failures (return UNKNOWN findings; do not halt)
 </FORBIDDEN>
 
@@ -363,7 +349,8 @@ IF SCORE = 100%:
 Before proceeding to Phase 1.5, verify:
 
 - [ ] Research subagent was DISPATCHED (not done in main context)
-- [ ] Research Quality Score = 100% (or user bypassed with consent)
+- [ ] `check_research_quality.py` exited 0 against the §1.2 artifact (or user bypassed with consent)
+- [ ] R1-R5 self-assessment recorded as YES / NO / N-A with evidence
 - [ ] All ambiguities extracted and categorized
 - [ ] Findings stored in SESSION_CONTEXT.research_findings
 - [ ] `SESSION_CONTEXT.design_context.project_standards` populated whenever the §1.2.5 sweep ran

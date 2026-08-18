@@ -15,7 +15,7 @@ uv pip install -e ".[dev,test,tts]"
 Install pre-commit hooks:
 
 ```bash
-./scripts/install-hooks.sh
+uvx pre-commit install
 ```
 
 ## Running Tests

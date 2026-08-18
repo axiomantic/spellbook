@@ -59,6 +59,36 @@ The shape is always the same: **the operator-visible signal looks normal.**
 That is what makes it expensive — no error to notice, no retry prompt, and a
 false fact enters the record wearing the costume of a verified one.
 
+**A computed count wears that costume too. Name the population before you report
+the number.** State what ONE unit IS — "one component entry", "one registered
+test", "one changed file" — and show the command counts exactly those; `grep -c`
+over a structured file counts LINES, which are a unit only by accident. Then
+check the magnitude against something you already know: a figure you cannot
+sanity-check is not yet a measurement, and a load-bearing one earns a second
+derivation by a DIFFERENT method, never a re-run of the same command.
+**Observed.** `rg -c 'board: Expansion_Board'` returned 1280 and was reported as
+"1,280 extracted components on that board". The true figure is 52; the whole
+design is 959 parts. That key also appears on connection nodes and on unresolved
+elements under other top-level keys, so the command answered "how many lines
+mention this board" — wrong by 25×, in the direction that made the evidence look
+stronger. Counting `- designator:` entries filtered by board gives 52 at once.
+Calibration would not have caught this: the instrument discriminated perfectly
+and a known-positive/known-negative pair would both behave as expected; what was
+wrong was the mapping from what it counted to what was claimed.
+
+**An aggregator is unproven until one planted individual failure reaches the verdict
+its consumer reads.** Anything that reduces many results to one — a test runner, a CI
+job, a review protocol emitting an overall verdict, a summary table — sits on a signal
+path with steps that can drop a failure silently. Trace ONE deliberately planted
+failure end to end and name the step it survives; a green run over inputs that all pass
+proves only that the path is quiet. Where the reduction is a rule rather than code,
+state the derivation ("the verdict is the worst item"), or nothing forces the parts to
+constrain the whole.
+**Observed, twice, each fixed only where it was found.** A shell harness's scripts
+ended in a bare `echo`, so exit status never reflected any assertion; it ran green for
+eight months while printing `✗`. And audit protocols emitted an overall verdict with no
+derivation rule, so a report naming a failing item could still conclude PASS.
+
 **When you cannot verify**, say so explicitly rather than reporting done.
 "Ran, exit 0, artifact unverified" is honest. "Done" is not.
 

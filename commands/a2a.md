@@ -47,6 +47,141 @@ transitions, and you never block on the bg watcher's progress.
    `_open_state alive`. Never use `TaskGet`, `stat`, or any other probe
    from the slash command body.
 
+## Architecture: watch chain vs hook-receive
+
+The bus has **two delivery paths**, both active when `/a2a open` is in effect.
+
+**1. Hook-receive (UserPromptSubmit notify path).** At the start of every user
+turn the spellbook UserPromptSubmit hook calls `notify <bound-name>`, which
+prints a metadata-only `[agent2agent] <name> has N pending message(s) from: ...`
+line. The agent decides whether to `read`. Messages surface **only on user
+prompt** — useful, but unbounded latency for a session that is not actively
+conversing.
+
+**2. Watch chain (idle delivery).** The path this slash command adds. After
+claiming the name with `open <name>`, Phase D dispatches — via
+`Bash(run_in_background: true)`, NOT a Task agent — a single **immortal**
+`agent2agent.py watch <name>` process. The watch subprocess:
+
+- acquires `inbox/.watcher.lock` via `fcntl.flock(LOCK_EX|LOCK_NB)`
+  (advisory; auto-released when the process's fd closes — no stale lockfile
+  state. The lockfile path persists; mutual exclusion comes from flock +
+  kernel fd cleanup, not file deletion);
+- touches `<inbox>/.watcher.heartbeat` (`os.utime`, monotonic-throttled)
+  every 30s so liveness probes can tell a live watcher from a dead one;
+- waits on a long-running `fswatch -0 -l 0.1 inbox/` stream (NUL-delimited
+  output, 100ms event-coalescing latency) if available, else a 500ms-poll
+  fallback;
+- runs with NO `--max-elapsed` (infinite mode): it exits ONLY on a terminal
+  stdout marker — `PENDING_BATCH <id> count=<n>` (messages arrived → drain +
+  re-arm), `WATCH_INBOX_GONE` (inbox closed elsewhere → clear, no re-arm), or
+  `WATCH_LOCKED <pid>` (another watcher owns this inbox → no re-arm). There is
+  no per-cycle recycle.
+
+The dispatching parent (this slash command) re-arms the chain only on the
+`PENDING_BATCH` exit: it `drain`s the pending batch (moves
+`pending/<batch-id>/ → processed/`, surfaces bodies to the operator) and
+dispatches one fresh immortal watcher. Because the watcher does not recycle,
+an idle session sees no per-cycle wake at all.
+
+The conceptual shape of the chain:
+
+```
+operator: /a2a open
+  └─> helper: open <name>             (claim inbox; write binding)
+  └─> Bash(bg): watch <name>          (immortal; no --max-elapsed)
+        ├─ message arrives → PENDING_BATCH <id> count=<n> (exit 0)
+        ├─ inbox closed     → WATCH_INBOX_GONE            (exit 1)
+        └─ other watcher    → WATCH_LOCKED <pid>          (exit 75)
+  └─> on bg-Bash completion (parent reads <output-file>):
+        ├─ PENDING_BATCH path  → drain <name> <id>; surface bodies; re-arm
+        ├─ WATCH_INBOX_GONE    → clear state; no re-arm
+        └─ WATCH_LOCKED        → watcher alive; no action
+```
+
+**Capability ladder (the canonical mental model).** Idle delivery has two tiers:
+
+- **Tier 1 (exit-driven bg delivery)** — the immortal watcher. Requires a
+  harness that delivers a background-process completion notification on exit.
+  Claude Code is the verified Tier-1 platform.
+- **Tier 0 (hook-notify floor)** — no watcher. Pending messages surface on the
+  operator's next prompt via the UserPromptSubmit `notify` hook (path 1). This
+  floor is the **designed** gap-filler: it is both the baseline for non-Tier-1
+  platforms AND the fallback if a Tier-1 watcher is misclassified, crashes, or
+  its completion notification is lost. Even a misclassified Tier-1 session
+  never silently drops mail — the floor fires on the next turn regardless.
+
+Phase D selects the tier by an env-var platform probe. Non-Claude platforms
+degrade to Tier 0.
+
+**Platform capability matrix.**
+
+| Platform | Idle delivery | Mechanism |
+|---|---|---|
+| Claude Code | Tier 1 | bg-Bash exit-driven |
+| Gemini CLI | Tier 0 (Tier 1 candidate, unverified) | hook floor (inject-mode future) |
+| Codex / ForgeCode | Tier 0 | hook floor |
+| OpenCode | Tier 0 (bg-shell capability deferred pending check) | hook floor |
+
+The OpenCode row is a **deliberate deferral pending a capability check**, not
+an asserted absence — bg-shell exit-notification support there has not been
+verified, so it conservatively floors to Tier 0.
+
+**Open-state record.** `/a2a open` writes `<bus>/.open/<session-id>` (JSON:
+`name`, `agent_id`, `started_at`, `output_file`). Under the immortal-watcher
+architecture `agent_id` holds the bg-Bash task id and `output_file` holds the
+`.watcher.heartbeat` path. This slash command and the SessionStart /
+UserPromptSubmit hook share the **same liveness contract** — heartbeat mtime +
+90s window (3 × the 30s touch interval), FAIL-SAFE-DEAD: a heartbeat whose
+mtime is older than 90s, or which is missing entirely, is treated as DEAD and
+the hook surfaces a `[agent2agent] watch chain looks dropped` re-arm hint. This
+command invokes the helper's `_open_state alive <sid>` subcommand; the hook
+implements the same probe inline (`_bg_agent_alive` in
+`hooks/spellbook_hook.py`) — it reads the JSON state and stats `output_file`
+directly rather than shelling out, for performance and reliability inside the
+hook hot path.
+
+**Protocol-internal helper subcommands.** `watch`, `drain`, and `_open_state`
+are driven by this slash command and must never be invoked by the operator:
+
+| Subcommand | Contract |
+|---|---|
+| `watch <name>` | Runs immortally (no `--max-elapsed`): blocks until a message arrives, exiting ONLY on a terminal marker (`PENDING_BATCH` / `WATCH_INBOX_GONE` / `WATCH_LOCKED`); atomically claims any inbox messages into `pending/<batch-id>/`. Touches `<inbox>/.watcher.heartbeat` every 30s for liveness. |
+| `drain <name> [<batch-id>]` | Reads and acks the messages staged by `watch` (moves `pending/<batch-id>/` → `processed/`). |
+| `_open_state {write,clear,read,alive} <sid>` | Maintains the open-state record at `<bus>/.open/<sid>` and defines the canonical liveness contract. This command invokes `_open_state alive` directly; the hook backstop implements the same probe inline (`_bg_agent_alive`) for performance — it does NOT shell out to the helper. |
+
+**Dependencies.** `fswatch` is recommended (`brew install fswatch`) for ~3s
+wake latency. Without it the watch loop falls back to a 500ms polling sleep —
+correct, slightly less responsive, zero LLM tokens either way. `fswatch`
+failures downgrade silently to polling.
+
+**Compaction limitation.** When the harness compacts the session or restarts,
+the bg watcher process dies with it. The chain does not auto-recover from the
+receiving session alone; the SessionStart and UserPromptSubmit hooks surface a
+`[agent2agent] watch chain looks dropped` hint when they detect an open-state
+record whose heartbeat is stale (>90s) or missing. To re-arm: run `/a2a open`
+again.
+
+**Silent-Idle cost model.** The immortal watcher costs ~nothing when no
+messages arrive, because it never recycles — it blocks until a real event:
+
+| Window | Token cost (idle) |
+|---|---|
+| Per real message batch | one main-loop wake (drain + surface) |
+| Idle hour, no messages | ~0 watcher-induced tokens (no recycle) |
+| Idle day, no messages | ~0 watcher-induced tokens |
+
+The prior `[0.64.0]` model under-counted by measuring main-transcript activity
+only; each Task recycle additionally cost ~15-25k in subagent cold-start +
+cache-expired re-read. The immortal watcher removes the recycle entirely. There
+is no longer an overnight-idle token reason to `/a2a close` — close only to
+retire a name and free its inbox tree.
+
+**When to use which.** Operators do not choose; `/a2a open` enables the
+hook-receive path always and the Tier-1 watcher where the platform supports it.
+The hook-receive path is the safety net for the operator's next turn; the
+Tier-1 watch chain delivers within ~3s while the session is otherwise idle.
+
 ## Subcommand Dispatch Table
 
 | Input | Action |
@@ -385,6 +520,11 @@ WHEN THE BG WATCHER EXITS (you receive a bg-Bash completion notification):
 
 7. Resume normal turn (the user may now type, or you may continue prior work).
    Do NOT emit any "watch re-armed" status line; the re-arm is silent.
+
+8. Before ending ANY turn in which you drained, sent, or replied on the bus,
+   verify the chain is armed with a live task id from THIS session. A heartbeat
+   is not proof — an untracked watcher heartbeats faithfully while delivering
+   nothing.
 ```
 
 ## /a2a close

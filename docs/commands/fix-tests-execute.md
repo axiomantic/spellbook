@@ -33,6 +33,18 @@ assert result == "the complete expected output, every character"
 assert message == f"Today's date is {datetime.date.today().isoformat()}"
 ```
 
+`assert "substring" in result` is BANNED. ALWAYS. NO EXCEPTIONS. Dynamic content is no
+excuse for a partial check.
+
+When fixing a partial assertion on dynamic output, construct the complete expected value
+using the same logic the function uses, then assert `==`. Prefer construct-then-compare
+over normalization; normalization is a last resort for truly unknowable values only
+(random UUIDs, OS-assigned PIDs, memory addresses).
+
+When fixing a partial mock assertion, also check whether ALL mock calls are fully
+asserted. Assert EVERY call with ALL args and verify the call count. NEVER use
+`mock.ANY` — construct the expected argument dynamically when it is dynamic.
+
 ### Required Assertion Level
 
 Every new or modified assertion must be:
@@ -49,6 +61,19 @@ For EACH assertion you write, answer in your reasoning:
 3. If the production code returned garbage, would this assertion catch it?
 
 If you cannot answer #2 with a specific mutation, the assertion is too weak.
+
+### The Assertion Quality Gate (ALL input modes)
+
+This gate applies to every fix, regardless of the input mode that produced the work
+item. It is NOT limited to `audit_report` mode. Before marking any fix complete:
+
+1. Read `patterns/assertion-quality-standard.md` — the Full Assertion Principle and the Assertion Strength Ladder
+2. Classify each new or modified assertion on the Assertion Strength Ladder
+3. REJECT any assertion at Level 2 (bare substring) or Level 1 (length/existence)
+4. REJECT any fix that moves from one BANNED level to another (Pattern 10)
+5. Level 3 (structural containment) requires written justification in the code
+6. For each new assertion, name the specific production code mutation it catches
+7. If you cannot name a mutation, the assertion is too weak — strengthen it
 </CRITICAL>
 
 <FORBIDDEN>
@@ -59,7 +84,13 @@ If you cannot answer #2 with a specific mutation, the assertion is too weak.
 - `assert result == function_under_test(same_input)` (tautological)
 - Multiple `assert "X" in result` checks (still partial)
 - `mock.ANY` in any mock call assertion (construct expected argument instead)
+- `assert_called()` or `assert_called_once()` without argument verification
+- Asserting only some of the mock calls
 </FORBIDDEN>
+
+A fix that introduces ANY of these is not a fix. Every assertion must reach Level 4+ on
+the Assertion Strength Ladder; replacing a Level 1 assertion with a Level 2 assertion is
+not a fix either.
 
 Process work items by priority: critical > important > minor.
 
@@ -89,6 +120,31 @@ For EACH work item:
 | Flaky (timing/ordering) | Fix isolation/determinism |
 | Tests implementation details | Rewrite to test behavior |
 | **Production code buggy** | STOP and report |
+
+### Production Bug Protocol
+
+<CRITICAL>
+If investigation reveals a production bug, stop and put the decision to the user:
+
+```
+PRODUCTION BUG DETECTED
+
+Test: [test_function]
+Expected behavior: [what test expects]
+Actual behavior: [what code does]
+
+This is not a test issue - production code has a bug.
+
+Options:
+A) Fix production bug (then test will pass)
+B) Update test to match buggy behavior (not recommended)
+C) Skip test, create issue for bug
+
+Your choice: ___
+```
+
+Do NOT silently fix production bugs as "test fixes."
+</CRITICAL>
 
 ## 2.3 Fix Examples
 
@@ -165,7 +221,17 @@ def test_user_save():
     assert loaded == User(name="test")
 ```
 
-## 2.4 Verify Fix
+## 2.4 Special Cases
+
+**Flaky tests:** Identify the non-determinism source (time, random, ordering, external state). Mock or control it. Use deterministic waits, not sleep-and-hope.
+
+**Implementation-coupled tests:** Identify the BEHAVIOR the test should verify. Rewrite to test through the public interface. Remove mocks of the unit under test's own internals; do not remove mocks of external services.
+
+**Missing tests entirely:** Read the production code. Identify key behaviors. Write tests following existing test file patterns in the codebase. Ensure the tests would catch real failures.
+
+**Slow/bloated tests:** Tests taking >5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data (e.g., 1024x1024 matrix where 4x4 suffices). Separate slow tests with marks (`@pytest.mark.slow`, `@pytest.mark.integration`, etc.). Shrink test inputs to the minimum that exercises the behavior. Move real I/O to the integration tier. If a fixture takes longer than the test itself, it is too heavy for a unit test.
+
+## 2.5 Verify Fix
 
 ```bash
 pytest path/to/test.py::test_function -v
@@ -183,7 +249,7 @@ Verification checklist:
 - [ ] Fix is NOT just moving from one BANNED level to another
 </reflection>
 
-## 2.5 Commit (per-fix strategy)
+## 2.6 Commit (per-fix strategy)
 
 ```bash
 git add path/to/test.py
@@ -194,6 +260,48 @@ git commit -m "fix(tests): strengthen assertions in test_function
 - Pattern: N - [Pattern name] (if from audit)
 "
 ```
+
+## Post-Fix Adversarial Review (fixing-tests Phase 3.5)
+
+After ALL fixes are applied, the orchestrator dispatches a Test Adversary subagent. That
+review is mandatory — it catches Pattern 10 violations, the partial-to-partial upgrades
+that look like improvements and are not. Dispatch prompt:
+
+```
+First, read these files to understand the quality requirements:
+- Read patterns/assertion-quality-standard.md (especially The Full Assertion Principle)
+- Copy in the full Test Adversary Template from skills/dispatching-parallel-agents/SKILL.md
+
+ROLE: Test Adversary. Your job is to BREAK the new/modified test assertions.
+
+## Context
+- Modified test files: [list of files changed during fix phase]
+- Git diff of changes: [paste or reference the diff]
+- Production files under test: [paths]
+
+## Mandatory Checks
+
+1. IMMEDIATE REJECTION: Flag any assertion that is:
+   - assert "X" in result on deterministic output (BANNED)
+   - assert len(x) > 0 or assert x is not None (BANNED)
+   - A fix that replaced one BANNED pattern with another (Pattern 10)
+
+2. For each new/modified assertion:
+   - Classify on Assertion Strength Ladder (must be Level 4+)
+   - Determine if function under test is deterministic
+   - If deterministic: only Level 5 (exact equality) is acceptable
+   - Construct a plausible broken implementation that still passes
+   - Verdict: KILLED or SURVIVED
+
+3. Overall verdict:
+   - Any SURVIVED or BANNED assertion: FAIL (list required re-fixes)
+   - All KILLED + Level 4+: PASS
+
+Return: Per-assertion verdicts and overall PASS/FAIL.
+```
+
+A FAIL verdict sends the failed items back through this fix protocol with explicit
+instructions about what went wrong.
 
 <FINAL_EMPHASIS>
 You are a Test Quality Enforcer. Every weak assertion you leave in place is a lie waiting to ship to production. A test that passes without catching real failures is worse than no test — it creates false confidence. Each fix must eliminate the blind spot entirely, not shuffle it sideways. Errors here propagate through every future deployment.

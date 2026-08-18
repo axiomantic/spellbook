@@ -12,6 +12,80 @@ description: "Advanced Code Review Phase 1: Strategic Planning - scope analysis,
 
 **Purpose:** Establish review scope, categorize files by risk, compute complexity estimate, and create prioritized review order.
 
+## 1.0 Constants and Configuration
+
+These constants are established at planning time and consumed across every phase.
+
+### Severity Order
+
+```python
+SEVERITY_ORDER = {
+    "CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "QUESTION": 5, "PRAISE": 6
+}
+```
+
+<CRITICAL>
+`QUESTION` is a legal severity and **must** appear in this dict. Omitting it
+sends every QUESTION finding to the `.get(..., 99)` fallback, where it sorts
+last and vanishes from `review-summary.json`'s `by_severity`. This dict, the one
+in `/advanced-code-review-report`, and the `by_severity` examples in
+`/advanced-code-review-review` are ONE contract — they must agree key for key.
+</CRITICAL>
+
+`CRITICAL` is reserved for security vulnerabilities, data loss, and production
+outages. **Bugs are HIGH**, never CRITICAL.
+
+### Configurable Thresholds
+
+| Threshold | Default | Consumer |
+|-----------|---------|----------|
+| `STALENESS_DAYS` | 30 | `/advanced-code-review-context` 2.1 — `discover_previous_review` discards a review older than this |
+| `LARGE_DIFF_LINES` | 10000 | `/advanced-code-review-plan` 1.6.1 — `plan_chunks` line budget per chunk |
+| `SUBAGENT_THRESHOLD_FILES` | 20 | `/advanced-code-review-plan` 1.6.1 — `plan_chunks` file count that triggers chunked dispatch |
+| `VERIFICATION_TIMEOUT_SEC` | 60 | Phase 4 circuit breaker — verification exceeding this stops the run |
+
+<CRITICAL>
+Each threshold names its consumer. A threshold with no consumer is dead
+configuration that invites false confidence: `LARGE_DIFF_LINES` and
+`SUBAGENT_THRESHOLD_FILES` previously advertised chunked processing that did not
+exist. If a future edit removes a consumer, remove the row.
+</CRITICAL>
+
+## Mode Router
+
+| Target Pattern | Mode | Network Required | Source of Truth |
+|----------------|------|------------------|-----------------|
+| `feature/xyz` (branch name) | Local | No | Local files |
+| `#123` (PR number) | PR | Yes | **Diff only** |
+| `https://github.com/...` (URL) | PR | Yes | **Diff only** |
+| Any + `--offline` flag | Local | No | Local files |
+
+**Implicit Offline Detection:** If target is a local branch AND no `--pr` flag is present, operate in offline mode automatically.
+
+<CRITICAL>
+**PR Mode = Diff-Only Source**
+
+When target is a PR number or URL, the fetched diff is the ONLY authoritative representation of the changed code. The local working tree reflects a DIFFERENT git state — it is on whatever branch was checked out when the review started, which is almost certainly not the PR branch.
+
+Reading local files in PR mode produces silently wrong results:
+- Changes introduced by the PR appear absent (local has the old code)
+- Real bugs get declared "not present" → false REFUTED verdicts
+- The review poisons findings with high confidence in wrong conclusions
+
+Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR's changed file set.
+
+**Before any local file read in PR mode:** confirm `git rev-parse HEAD` matches the PR's `headRefOid`. If they differ, treat the local file as unavailable for that finding.
+
+**Load the `reviewing-prs` skill before dispatching any review subagent in PR
+mode.** It is the single source for the `review_source` decision table (including
+the worktree case, which converts a `DIFF_ONLY` review into a `LOCAL_FILES` one)
+and for the mandatory PR-review context block each subagent must be given.
+
+This rule binds every later phase, not just this one. Phase 4 verification is
+where it is most often violated: a REFUTED verdict reached by reading a local
+file during a PR review is the most dangerous error in this skill.
+</CRITICAL>
+
 ## 1.1 Target Resolution
 
 <CRITICAL>
@@ -33,7 +107,7 @@ That emits, among other fields:
 | `merge_target` | Detected base branch — never a hardcoded literal |
 | `merge_base` | Common ancestor SHA |
 | `base_ref` | The concrete ref the base was computed against |
-| `resolved_via` | `pr-base-ref` / `upstream-tracking` / `remote-head` / `fallback-literal` |
+| `resolved_via` | `pr-base-ref` / `upstream-tracking` / `remote-head` / `fallback-literal` / `explicit-override` |
 | `fetch` | `ok`, `skipped (...)`, or `FAILED (...) - merge base may be STALE` |
 | `detached_head` | True when HEAD has no branch identity |
 

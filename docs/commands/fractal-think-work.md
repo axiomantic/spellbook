@@ -23,6 +23,11 @@ Dispatch workers and wait for them to finish.
 <analysis>Before dispatching, assess: open question count, budget limits, graph active status.</analysis>
 <reflection>After workers finish, verify: no orphaned claimed nodes, synthesis cascade complete, all work accounted for.</reflection>
 
+**Read `skills/fractal-thinking/references/mcp-tools.md` before Step 1, and pass that
+path to every worker.** It is the canonical definition of the `fractal_*` tool surface,
+the valid `intensity` and `checkpoint_mode` values, the saturation reasons, and the node
+state machine that governs every status transition workers make.
+
 ## Parameters
 
 | Parameter | Required | Description |
@@ -87,6 +92,9 @@ Task(
   description: "Fractal worker <worker_id> for graph <graph_id>",
   prompt: """
 You are fractal worker "<worker_id>" for graph "<graph_id>".
+
+Read skills/fractal-thinking/references/mcp-tools.md first: it defines the
+fractal_* tool signatures, the saturation reasons, and the node state machine.
 
 Execute a loop. Each iteration claims a node, answers it, decomposes it into
 sub-questions, synthesizes completed branches, and detects cross-branch connections.
@@ -429,6 +437,15 @@ Do NOT freeze the graph or change graph status. That is the harvest command's jo
 | `fractal_get_snapshot` fails during monitoring | Return with partial state, note the error |
 
 ## Anti-Patterns
+
+| Pattern | Why It Fails |
+|---------|-------------|
+| Orchestrator answers questions itself | Defeats graph persistence; answers not recorded as nodes |
+| Generating questions without querying graph first | Creates duplicate or already-answered questions |
+| Top-down monolithic synthesis | Misses the self-similar property; synthesis should be bottom-up |
+| Workers waiting on each other | Workers are independent; they claim work atomically |
+| Ignoring convergence/contradiction signals | Misses cross-branch insights and boundary questions |
+| Dispatching workers before seed phase completes | No work exists to claim yet |
 
 <FORBIDDEN>
 - Answering questions in dispatcher context instead of dispatching workers

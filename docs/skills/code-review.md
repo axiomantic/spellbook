@@ -45,10 +45,10 @@ Self-review catches issues early. Feedback mode processes received comments. Giv
 
 | Flag | Mode | Command File |
 |------|------|-------------|
-| `--self`, `-s`, (default: no flag given) | Pre-PR self-review | (inline below) |
+| `--self`, `-s`, (default: no flag given) | Pre-PR self-review | (inline, "Self Mode") |
 | `--feedback`, `-f` | Process received feedback | `code-review-feedback` |
 | `--give <target>` | Review someone else's code | `code-review-give` |
-| `--audit [scope]` | Multi-pass deep-dive | (inline below) |
+| `--audit [scope]` | Multi-pass deep-dive | `code-review-audit` |
 
 **Modifiers:** `--tarot` (roundtable dialogue via `code-review-tarot`), `--pr <num>` (PR source)
 
@@ -82,28 +82,15 @@ A literal base errors outright on repos whose default branch differs, and models
 paste what they are given.
 </CRITICAL>
 
-Two independent axes. Decide each one explicitly.
+Two independent axes — BASE and ENDPOINT — and each is decided explicitly. The
+`branch-context` skill owns both: the detection ladder that resolves the merge
+target (`pr-base-ref`, then `upstream-tracking`, then `remote-head`, then a
+`fallback-literal` that is a guess and is reported as one), and the subcommand
+pair for each endpoint. A `--base` override skips detection entirely and is
+reported as `explicit-override`. Load it rather than restating it here.
 
-### Axis 1 — BASE (invariant)
-
-The merge base against the **detected** merge target. The script fetches first,
-then resolves in this order, and reports which rung it landed on:
-
-| Order | Method | `resolved_via` |
-|-------|--------|----------------|
-| 1 | PR base ref (`gh pr view --json baseRefName`, head-ref validated) | `pr-base-ref` |
-| 2 | Upstream tracking branch | `upstream-tracking` |
-| 3 | Remote HEAD | `remote-head` |
-| 4 | Last-ditch literal — **a guess, and reported as one** | `fallback-literal` |
-
-### Axis 2 — ENDPOINT (task-dependent)
-
-| Task | Endpoint | Subcommand |
-|------|----------|------------|
-| Reviewing what will merge | committed only | `diff-committed` |
-| Describing what the branch does (changelog, PR body) | include working tree | `diff` |
-| Pre-commit self-review | include working tree | `diff` |
-
+The endpoint choice for this skill: `diff-committed` when reviewing what will
+merge, `diff` for a pre-commit self-review or a changelog/PR-body description.
 "Branch diff" is **not** a name for both. Say which endpoint you used.
 
 ### Reporting requirement
@@ -197,59 +184,13 @@ Example finding: `src/auth/login.py:42 [Critical] Token written to log — data 
 
 ## Audit Mode (`--audit [scope]`)
 
-Scopes: (none)=branch changes, file.py, dir/, security, all
+**Execute:** `/code-review-audit`
 
-**Passes:** Correctness > Security > Performance > Maintainability > Edge Cases
-
-### Audit Posture — zero tolerance
-
-An audit is a GATE, not a courtesy pass. This posture governs `--audit` only; the
-other modes of this skill are the explicit opt-in to a lighter pass and keep
-ordinary judgement about what is worth raising.
-
-- Surface ANY deviation: rule violation, logic bug, design smell, untested
-  behavior, inconsistency — anything off.
-- Be **adversarial**. Verify each finding to filter false positives, but
-  **default to flagging** when in doubt.
-- An audit that "found nothing" on a non-trivial diff is a **FAILED audit**, not
-  a clean one. Treat an empty finding list as evidence about the audit, not
-  about the code.
-
-**Build the failure. Do not just check the author's claim.** Both actions cost
-the same dispatch. Building the failure finds more problems.
-
-- Ask "can I make this fail?" Do not ask "does this pass?" The second question
-  only checks the author's own transcript. The first question does not.
-- A check that has never failed is not proven. If nobody has watched a check's
-  failure path fire, the check is a claim, not a mechanism.
-- For a claimed clean result — a mutation that should change nothing, a guard
-  that should stay silent — prove the change reached the code under test. A
-  no-op edit looks the same as a correct no-effect. Only the exit status cannot
-  tell them apart.
-- Reproduce the defect before you fix it. If you never saw the gap yourself, you
-  are guessing at the gap. A guessed fix cannot be tested.
-
-**Observed.** One guard failed four times, in four versions, each broken one level deeper than the last. Version 1 baked a path in at configure time; a reviewer defeated it by copying the tree. Version 2 replaced the real check with a flag; the reviewer deleted the check but kept the flag set. Version 3 checked a token at the end of the branch; the reviewer deleted one part of the branch and kept the token. Version 4 used per-site counters. Every version passed its own author's tests. A reviewer who rebuilt the failure — not one who reran the author's tests — broke every version. Separately, a reviewer built three silent failure modes in an isolated copy of the code. This method found a false-pass path that four prior readings of the same file had missed.
-
-**The known cost, stated plainly:** this posture produces more findings, and some
-of them will be noise. That trade is the point of the posture, and it is why it
-scopes to `--audit` rather than to every mode of this skill.
-
-**API Hallucination Detection (Correctness Pass):**
-
-During the Correctness pass, check for API hallucination patterns:
-
-- [ ] Method calls use APIs that exist in the imported library version (not invented methods)
-- [ ] Function signatures match actual library definitions (parameter names, types, order)
-- [ ] Configuration keys and environment variables are real (not plausible-sounding inventions)
-- [ ] Import paths resolve to actual modules (not hallucinated package structures)
-- [ ] Return types match actual API contracts (not assumed shapes)
-
-When reviewing AI-generated code, these checks are elevated to HIGH severity. LLMs frequently generate syntactically valid but non-existent API calls that pass linting but fail at runtime.
-
-Output: Executive Summary, findings by category (same severity thresholds as Self Mode), Risk Assessment (LOW/MEDIUM/HIGH/CRITICAL)
-
-**Test-quality scope:** if the audit scope includes judging whether tests would catch regressions, dispatch a subagent invoking auditing-green-mirage for those tests; do not run mutation reasoning inline.
+An audit is a GATE, not a courtesy pass, and it is the one mode of this skill that
+is not a lighter pass. The command owns the scopes, the pass order, the
+zero-tolerance posture and its accepted noise cost, the API-hallucination
+checklist, and the output shape. Read it before running an audit; do not
+improvise the posture from this summary.
 
 ---
 
