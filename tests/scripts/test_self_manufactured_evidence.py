@@ -20,7 +20,7 @@ module honest is that the green above is not.
 """
 
 import sys
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
@@ -30,6 +30,7 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from check_self_manufactured_evidence import (
     discover_script_checks,
     evaluate,
+    rel_posix,
 )
 
 VERDICTS, COUNTS = evaluate(REPO_ROOT)
@@ -85,6 +86,36 @@ def test_test_shaped_discovery_floor():
 def test_the_gate_discovers_itself():
     """A checker that cannot see its own shape is not checking that shape."""
     assert "check_self_manufactured_evidence" in discover_script_checks(REPO_ROOT)
+
+
+# ---------------------------------------------------------------------------
+# Emitted names are POSIX-shaped on every platform
+# ---------------------------------------------------------------------------
+
+
+def test_emitted_name_is_posix_shaped_under_a_windows_path_flavour():
+    """The separator the emitted name carries must not follow the host OS.
+
+    ``rel_posix`` is flavour-agnostic, so a ``PureWindowsPath`` pair exercises
+    the Windows rendering from a POSIX runner: ``str()`` on that flavour yields
+    a backslash and ``as_posix()`` does not. Drop the normalisation and this
+    assertion goes RED here, not only on Windows.
+    """
+    root = PureWindowsPath(r"C:\checkout")
+    assert rel_posix(root / "tests" / "test_corpus_shape.py", root) == (
+        "tests/test_corpus_shape.py"
+    )
+
+
+def test_no_verdict_over_the_real_tree_carries_a_backslash():
+    """The consumer-visible names, taken from the real-tree pass CI reads."""
+    offenders = [
+        (v.name, v.evidence, ref)
+        for v in VERDICTS
+        for ref in v.referenced_by + [v.name, v.evidence]
+        if "\\" in ref
+    ]
+    assert not offenders, offenders
 
 
 def test_known_checkers_are_reported_as_really_covered():

@@ -122,6 +122,21 @@ ENV_WRITE_ATTRS = {"setenv", "chdir", "delenv", "setattr"}
 
 
 # =============================================================================
+# Emitted paths
+# =============================================================================
+#
+# Every path this check prints or puts in a Verdict is a name a reader compares
+# and a consumer matches on. `str(Path)` renders the native separator, so the
+# same checkout emits `tests/x.py` on POSIX and `tests\x.py` on Windows and the
+# tool's own output changes shape by platform. POSIX form is the one form.
+
+
+def rel_posix(path: Path, root: Path) -> str:
+    """Path relative to the repo root, in POSIX form on every platform."""
+    return path.relative_to(root).as_posix()
+
+
+# =============================================================================
 # Taint
 # =============================================================================
 
@@ -588,7 +603,7 @@ def analyse_script_check(
         kinds = [tainter.classify(x) for x in leaves]
         fn = node.func
         fname = fn.attr if isinstance(fn, ast.Attribute) else getattr(fn, "id", "")
-        where = f"{tf}:{node.lineno}"
+        where = f"{tf.as_posix()}:{node.lineno}"
         if "root" in kinds:
             # One purely root-derived leaf is enough. A subprocess env dict
             # mixes {"HOME": tmp_path, "SPELLBOOK_DIR": REPO_ROOT}; the second
@@ -630,7 +645,7 @@ def external_real_coverage(root: Path, stem: str) -> list[str]:
     for wf in sorted(workflows.glob("*.yml")) + sorted(workflows.glob("*.yaml")):
         for line in wf.read_text(encoding="utf-8").splitlines():
             if f"{stem}.py" in line and ("run:" in line or "entry:" in line):
-                out.append(str(wf.relative_to(root)))
+                out.append(rel_posix(wf, root))
                 break
     return out
 
@@ -718,7 +733,7 @@ def analyse_test_check(tf: Path, conftests: dict[Path, dict[str, FuncInfo]]) -> 
         if not tainter.is_corpus(subject):
             continue
         kind = tainter.classify(subject)
-        where = f"{tf}:{call.lineno}"
+        where = f"{tf.as_posix()}:{call.lineno}"
         if kind == "root":
             findings.append(Finding("real", where, "enumerates the checkout"))
         elif kind == "tmp":
@@ -805,7 +820,7 @@ def evaluate(root: Path) -> tuple[list[Verdict], dict[str, int]]:
         external = external_real_coverage(root, stem)
         real = [f for f in findings if f.kind == "real"]
         unclassified = [f for f in findings if f.kind == "unclassified"]
-        rel = [str(tf.relative_to(root)) for tf in referencing]
+        rel = [rel_posix(tf, root) for tf in referencing]
         if real:
             verdicts.append(
                 Verdict(stem, "script", "real", f"{real[0].where}: {real[0].detail}", rel)
@@ -841,7 +856,7 @@ def evaluate(root: Path) -> tuple[list[Verdict], dict[str, int]]:
         findings = analyse_test_check(tf, conftests)
         if not findings:
             continue
-        name = str(tf.relative_to(root))
+        name = rel_posix(tf, root)
         real = [f for f in findings if f.kind == "real"]
         unclassified = [f for f in findings if f.kind == "unclassified"]
         if real:
