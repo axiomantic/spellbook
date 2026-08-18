@@ -429,6 +429,21 @@ Task:
     3. Identify dead code paths
     4. Verdict: FUNCTIONAL | NON_FUNCTIONAL | PARTIAL
 
+    ### 5. Imperative Coverage
+    Lists 1-4 walk what the plan DECLARED. An instruction that exists only as a
+    sentence in the task body belongs to none of those sets, so the audit can
+    finish without ever mentioning it. A deliverable whose verification does not
+    mention it closes exactly like one that was done.
+
+    Enumerate every imperative sentence in the task body. For each:
+    1. Quote the imperative
+    2. Name the criterion, output, interface, or check that decides it
+    3. Confirm that decider actually exercises it, not merely that it exists
+    4. Verdict: COVERED | UNCOVERED
+
+    An imperative with no named decider is UNCOVERED. UNCOVERED is a blocking
+    issue, never a pass: either it gains a check, or the task is not done.
+
     ## Output Format
 
     ```
@@ -452,6 +467,10 @@ Task:
     ✓ User can create widget: FUNCTIONAL
     ✗ Widget validates input: NON_FUNCTIONAL - validation never called
 
+    IMPERATIVE COVERAGE:
+    ✓ "Wire the callbacks to the consumer": COVERED by criterion 2 / test_wiring
+    ✗ "Emit a metric per retry": UNCOVERED - no criterion or check decides it
+
     BLOCKING ISSUES (must fix before proceeding):
     1. [issue]
 
@@ -460,6 +479,12 @@ Task:
 ````
 
 **Gate Behavior:**
+
+`Overall` is derived, not judged. The passing verdicts are COMPLETE, EXISTS,
+MATCHES, FUNCTIONAL, and COVERED. Any other verdict — INCOMPLETE, PARTIAL,
+MISSING, WRONG_INTERFACE, DIFFERS, NON_FUNCTIONAL, UNCOVERED — is a BLOCKING
+ISSUE and forces `Overall: INCOMPLETE`. `Overall: COMPLETE` requires a passing
+verdict in all five lists.
 
 IF BLOCKING ISSUES found:
 

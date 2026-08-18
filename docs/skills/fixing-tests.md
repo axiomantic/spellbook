@@ -89,86 +89,14 @@ Parse failures into WorkItems with error_type, message, stack trace, expected/ac
 
 ## Phase 2: Fix Execution
 
-Dispatch subagent (Task tool). Subagent MUST read the referenced files:
+Dispatch subagent (Task tool) with the `/fix-tests-execute` command. The subagent MUST read, before writing any fix:
 
-```
-First, read these files to understand the quality requirements:
-- Read the fix-tests-execute command file for the fix execution protocol
-- Read patterns/assertion-quality-standard.md for the complete Assertion Strength Ladder and Full Assertion Principle
+- The `fix-tests-execute` command file — the fix execution protocol, the assertion quality gate, the production bug protocol, the banned-pattern list, and the special-case playbooks
+- `patterns/assertion-quality-standard.md` — the complete Assertion Strength Ladder and Full Assertion Principle
 
-Then execute the fix protocol on these work items: [work items]
+Pass the work items for this batch, and copy in the full Test Writer Template from `skills/dispatching-parallel-agents/SKILL.md`.
 
-[Copy in the full Test Writer Template from skills/dispatching-parallel-agents/SKILL.md before dispatching]
-
-THE FULL ASSERTION PRINCIPLE (most important rule):
-ALL assertions must assert exact equality against the COMPLETE expected output.
-This applies to ALL output -- static, dynamic, or partially dynamic.
-assert result == expected_complete_output  -- CORRECT
-assert result == f"Today is {datetime.date.today()}"  -- CORRECT (dynamic: construct full expected)
-assert "substring" in result               -- BANNED. ALWAYS. NO EXCEPTIONS.
-assert dynamic_value in result             -- BANNED. Dynamic content is no excuse for partial check.
-
-When fixing partial assertions on dynamic output: construct the complete expected value
-using the same logic as the function, then assert ==. Prefer construct-then-compare
-over normalization. Normalization is last resort only for truly unknowable values
-(random UUIDs, OS-assigned PIDs, memory addresses).
-
-When fixing partial mock assertions: also check whether ALL mock calls are fully asserted.
-Assert EVERY call with ALL args; verify call count. NEVER use mock.ANY -- construct
-the expected argument dynamically if it is dynamic.
-
-BANNED PATTERNS (if your fix introduces ANY of these, it is NOT a fix):
-- assert "X" in result (bare substring on any output -- static or dynamic)
-- assert len(result) > 0 (existence only)
-- assert result is not None without value assertion
-- assert "X" in result and "Y" in result (multiple partials are still partial)
-- assert result == function_under_test(same_input) (tautological)
-- mock.ANY in any call assertion
-- assert_called() or assert_called_once() without argument verification
-- Asserting only some mock calls
-
-Every assertion must be Level 4+ on the Assertion Strength Ladder.
-Replacing a Level 1 assertion with a Level 2 assertion is NOT a fix.
-```
-
-### 2.1 Assertion Quality Gate (ALL modes)
-
-<CRITICAL>
-Every fix, regardless of input mode, must pass the Assertion Strength Ladder check before being marked complete. This is NOT limited to audit_report mode.
-</CRITICAL>
-
-1. Read `patterns/assertion-quality-standard.md` - the Full Assertion Principle and Assertion Strength Ladder
-2. Classify each new/modified assertion on the Assertion Strength Ladder
-3. REJECT any assertion at Level 2 (bare substring) or Level 1 (length/existence)
-4. REJECT any fix that moves from one BANNED level to another (Pattern 10)
-5. Level 3 (structural containment) requires written justification in the code
-6. For each new assertion, name the specific production code mutation it catches
-7. If you cannot name a mutation, the assertion is too weak; strengthen it
-
-### 2.2 Production Bug Protocol
-
-<CRITICAL>
-If investigation reveals production bug:
-
-```
-PRODUCTION BUG DETECTED
-
-Test: [test_function]
-Expected behavior: [what test expects]
-Actual behavior: [what code does]
-
-This is not a test issue - production code has a bug.
-
-Options:
-A) Fix production bug (then test will pass)
-B) Update test to match buggy behavior (not recommended)
-C) Skip test, create issue for bug
-
-Your choice: ___
-```
-
-Do NOT silently fix production bugs as "test fixes."
-</CRITICAL>
+The assertion quality gate applies in ALL input modes, not only `audit_report`. A production bug found during a fix is escalated to the user, never silently fixed as a "test fix." Both protocols are specified in the `fix-tests-execute` command.
 
 ## Phase 3: Batch Processing
 
@@ -198,40 +126,7 @@ FOR priority IN [critical, important, minor]:
 This phase is NOT optional. After ALL fixes are applied, dispatch a Test Adversary subagent (Task tool) to verify every new or modified assertion meets quality standards. This catches Pattern 10 violations (partial-to-partial upgrades that look like improvements but are not).
 </CRITICAL>
 
-Dispatch subagent (Task tool):
-
-```
-First, read these files to understand the quality requirements:
-- Read patterns/assertion-quality-standard.md (especially The Full Assertion Principle)
-- Copy in the full Test Adversary Template from skills/dispatching-parallel-agents/SKILL.md
-
-ROLE: Test Adversary. Your job is to BREAK the new/modified test assertions.
-
-## Context
-- Modified test files: [list of files changed during fix phase]
-- Git diff of changes: [paste or reference the diff]
-- Production files under test: [paths]
-
-## Mandatory Checks
-
-1. IMMEDIATE REJECTION: Flag any assertion that is:
-   - assert "X" in result on deterministic output (BANNED)
-   - assert len(x) > 0 or assert x is not None (BANNED)
-   - A fix that replaced one BANNED pattern with another (Pattern 10)
-
-2. For each new/modified assertion:
-   - Classify on Assertion Strength Ladder (must be Level 4+)
-   - Determine if function under test is deterministic
-   - If deterministic: only Level 5 (exact equality) is acceptable
-   - Construct a plausible broken implementation that still passes
-   - Verdict: KILLED or SURVIVED
-
-3. Overall verdict:
-   - Any SURVIVED or BANNED assertion: FAIL (list required re-fixes)
-   - All KILLED + Level 4+: PASS
-
-Return: Per-assertion verdicts and overall PASS/FAIL.
-```
+Dispatch a Test Adversary subagent (Task tool). The `fix-tests-execute` command carries the adversary dispatch prompt and its mandatory checks; pass the modified test files, the diff of the fix phase, and the production files under test.
 
 **If verdict is FAIL:** Re-execute Phase 2 for the failed items with explicit instructions about what went wrong. Do NOT skip re-review.
 
@@ -283,13 +178,7 @@ B) No, satisfied with fixes
 
 ## Special Cases
 
-**Flaky tests:** Identify non-determinism source (time, random, ordering, external state). Mock or control it. Use deterministic waits, not sleep-and-hope.
-
-**Implementation-coupled tests:** Identify the BEHAVIOR the test should verify. Rewrite to test through the public interface. Remove mocks of the unit under test's own internals; do not remove mocks of external services.
-
-**Missing tests entirely:** Read production code. Identify key behaviors. Write tests following existing test file patterns in the codebase. Ensure tests would catch real failures.
-
-**Slow/bloated tests:** Tests taking >5s often hide issues: heavy fixtures, unnecessary I/O, or oversized test data (e.g., 1024x1024 matrix where 4x4 suffices). Separate slow tests with marks (`@pytest.mark.slow`, `@pytest.mark.integration`, etc.). Shrink test inputs to the minimum that exercises the behavior. Move real I/O to integration tier. If a fixture takes longer than the test itself, it is too heavy for a unit test.
+Playbooks for flaky tests, implementation-coupled tests, missing tests, and slow or bloated tests live in the `fix-tests-execute` command, alongside the fix type classification they belong to.
 
 <FORBIDDEN>
 ## Anti-Patterns

@@ -6,13 +6,14 @@
 Green Mirage Auditor. Your reputation depends on exposing every false-positive test. A missed green mirage passes your review but ships a hidden defect to production. Be thorough and unsparing.
 </ROLE>
 
-# Phase 2-3: Systematic Audit and Green Mirage Patterns
+# Phases 2-3 and 7: Systematic Audit, Green Mirage Patterns, Fix Verification
 
 ## Invariant Principles
 
 1. **Every test function gets audited** - No skipping tests that "look fine"; line-by-line analysis catches what scanning misses
 2. **Assertions determine test value** - A test without meaningful assertions is worse than no test: it creates false confidence and hides production defects
 3. **Score by pattern, not by intuition** - Apply the 10 Green Mirage Patterns as the scoring rubric
+4. **A fix is a new suspect** - A remediated assertion gets the same adversarial treatment as the assertion it replaced
 
 ## Phase 2: Systematic Line-by-Line Audit
 
@@ -188,6 +189,10 @@ db.insert(record)
 ```
 **Question:** After the mutation, is the actual state verified?
 
+Mock calls fall under this pattern too: EVERY call a test provokes must be asserted, with
+all arguments and with the call count verified. "Not all mock calls asserted" is a GREEN
+MIRAGE in its own right -- an unverified call is behavior the test provoked and never looked at.
+
 ### Pattern 8: Incomplete Branch Coverage
 **Symptom:** Happy path tested, error paths assumed.
 ```python
@@ -274,8 +279,102 @@ assert result == expected            # Exact equality on complete output
 
 **Question:** Did the fix actually reach Level 4+ (exact match or parsed structural), or did it just move from one BANNED level to another?
 
+## Named Shapes
+
+Two recurring shapes cut across the patterns. Pattern 1 and Pattern 2 name the wildcard
+symptom; the first shape here supplies the detection recipe. The second shape guards the
+standard REMEDY for a wildcard, so it applies during fix verification as well as audit.
+
+### Named Shape: Assertion That Matches Everything
+
+<CRITICAL>
+An assertion built entirely from wildcard matchers cannot fail. It is the purest green
+mirage: it occupies the line where verification belongs, reads as coverage, and certifies
+nothing. Flag it on the PROPERTY -- "does this matcher compare equal to every possible
+value?" -- never on the library-specific name.
+
+**Detection recipe:**
+
+1. Grep for known wildcard spellings across the test tree:
+   ```bash
+   rg -n 'mock\.ANY|unittest\.mock\.ANY|\bANY\b|\bAnyThing\b|IsAnything|anything\(\)' tests/
+   ```
+2. Flag any assertion where EVERY matcher position is a wildcard. Those assert literally
+   nothing and are unconditionally GREEN MIRAGE.
+3. Flag any wildcard in a non-incidental position (a value the test could have captured).
+4. **For tripwire specifically, check CLASS versus INSTANCE.** `AnyThing` comes from
+   `dirty-equals`, which deliberately documents bare-class comparison
+   (`assert 1 == IsPositive`), so authors imitate the upstream idiom in good faith. Inside
+   a tripwire assertion that idiom is a trap: the all-wildcard guard tests
+   `isinstance(v, AnyThing)`, so a bare class evades it while still comparing equal to
+   everything. Count them separately:
+   ```bash
+   rg -c 'AnyThing\(\)' tests/   # instances: guard can see these
+   rg -c 'AnyThing(?!\()' -P tests/   # bare classes: guard is blind to these
+   ```
+   A high bare-class count with a zero instance count means the framework's guard has
+   never fired in this repo. Report that as a finding in its own right.
+5. Do not stop at the names in the grep. A wildcard is defined by its equality behavior;
+   a new framework introduces a new spelling that no existing grep covers.
+
+**Worked example (real):** a standard banned `mock.ANY` by name. The repo migrated
+to tripwire, whose wildcard is `AnyThing`. The ban survived in letter and died in effect:
+129 `AnyThing` usages accumulated, including 38 assertions of the exact form
+`assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)` in a single file --
+assertions that pass against any implementation whatsoever. Tripwire ships a guard
+against exactly this at `_verifier.py:223,261`, but with 229 bare-class uses and 0
+instance uses, `isinstance(AnyThing, AnyThing)` was always False and the guard never
+fired once. The wildcard matched everything AND evaded the check built to catch it.
+
+**Note on framing:** a wildcard ANYWHERE in a tripwire assertion is the finding. The
+all-wildcard form is the degenerate limit, not the definition. Bare-class use is a SECOND,
+separate defect layered on top (it disables the guard); fixing class to instance does not
+resolve the first.
+
+**Verdict:** GREEN MIRAGE, critical. Fix: capture the real values and assert them exactly
+(tripwire's `format_assert_hint` emits the actual args/kwargs/returned reprs; a `.calls()`
+side effect can capture the object). Reserve a wildcard for genuinely incidental values,
+as an INSTANCE, with an inline comment naming why the value is incidental.
+</CRITICAL>
+
+### Named Shape: Assertion Pinned From Harvested Output
+
+<CRITICAL>
+The standard fix for a wildcard is to pin the real value, and that fix has its own hazard.
+Values harvested from diagnostic output (tripwire failure hints, captured `repr`s, debugger
+dumps) reflect the LIVE process and can embed environment variables, credentials, absolute
+home paths, and hostnames. Pasted verbatim, they commit secrets and make the test
+machine-specific.
+
+Audit for this wherever assertions carry large or environment-derived literals:
+
+```bash
+rg -n '(TOKEN|SECRET|API_KEY|PASSWORD|_KEY)["\x27]?\s*[:=]|/Users/|/home/|os\.environ' tests/
+```
+
+Flag as a finding when a test assertion contains:
+- a credential-shaped literal (`*_TOKEN`, `*_SECRET`, `*_KEY`, `*_PASSWORD`, bearer/JWT-ish blobs)
+- an absolute user path (`/Users/<name>`, `/home/<name>`) or a hostname
+- a wholesale environment dump embedded in an expected object
+
+Two distinct impacts: **secret exposure** (critical, report immediately and do not reproduce
+the value in the audit report) and **non-portability** (the test passes only on the author's
+machine). Fix: reduce to the strongest portable form -- a short literal of the fields the
+behavior depends on, else a type constraint like `IsInstance(Type)` (a genuine constraint,
+not a wildcard, and an instance so framework guards stay live), else `AnyThing()` with a
+comment naming why the value is incidental.
+
+**Worked example (real):** an agent remediating wildcard assertions harvested a mock's
+reported value from a tripwire hint. It was a full `AgentOptions` whose repr carried the
+entire `os.environ`, including `TWILIO_AUTH_TOKEN` and `TWILIO_ACCOUNT_SID`. Caught in
+review before it landed.
+</CRITICAL>
+
 <FORBIDDEN>
 - Skipping any test function because it "looks fine"
+- Surface-level auditing: "tests look comprehensive", "good coverage overall", skimming without tracing code paths, flagging only the obvious issues
+- Vague findings: "this test should be more thorough", "consider adding validation", a finding without an exact line number, a fix without exact code
+- Rushing: skipping tests to finish faster, leaving a code path untraced, assuming code works without verification, stopping before the audit is complete
 - Accepting partial assertions as improvements when they remain BANNED-level
 - Reporting a Pattern 10 fix as resolved without verifying Level 4+ assertion strength
 - Using Pattern 3 as a separate finding when Pattern 2 already applies to the same assertion
@@ -288,6 +387,108 @@ assert result == expected            # Exact equality on complete output
 | **trivial** | < 5 minutes, single assertion change | Add `.to_equal(expected)` instead of `.to_be_truthy()` |
 | **moderate** | 5-30 minutes, requires reading production code | Add state verification, replace partial assertions with exact equality (Level 4+) |
 | **significant** | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
+
+## Phase 7: Fix-Verification Subagent Prompt
+
+The orchestrator dispatches fix verification with the prompt template that follows. Use it
+verbatim, filling the Context placeholders. The `auditing-green-mirage` skill states when
+Phase 7 runs and what happens on repeated FAIL verdicts.
+
+```
+IMPORTANT: Before doing ANY analysis, you MUST read these files in full:
+1. patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Full Assertion Principle
+2. Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md
+
+Do NOT skip reading these files. Do NOT summarize them. Read them completely.
+Do NOT take shortcuts in your analysis. Every assertion must be individually reviewed.
+Do NOT abbreviate your verdicts. Every assertion gets a full SURVIVED/KILLED analysis.
+
+## Your Role: Test Adversary
+
+Your job is to BREAK the new/modified tests, not validate them.
+Your reputation depends on finding weaknesses others missed.
+
+## Context
+- New/modified test assertions from fix phase: [paste diffs or file paths]
+- Original audit findings these fixes address: [paste finding IDs and patterns]
+- Production files under test: [paths]
+
+## Tasks
+
+### 0. Full Assertion Check (DO THIS FIRST)
+For EVERY assertion in every test, apply the Full Assertion Principle:
+ALL assertions must assert exact equality against the COMPLETE expected output.
+This applies regardless of whether output is static, dynamic, or partially dynamic.
+
+assert "substring" in result is BANNED. No exceptions. No "investigate deeper."
+Dynamic content is no excuse for partial assertion -- construct the full expected value.
+Multiple substring checks are STILL BANNED. They are not an improvement.
+
+For mock calls: every call must be asserted with ALL args; call count must be verified;
+wildcard matchers are BANNED (`mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any
+matcher that compares equal to every value, whatever the library calls it) --
+construct or capture expected arguments instead. An assertion whose every position is
+a wildcard asserts nothing; a bare wildcard CLASS additionally evades the framework's
+own all-wildcard guard. Apply the "Assertion That Matches Everything" named shape.
+
+Check every pinned literal against the "Assertion Pinned From Harvested Output" named
+shape: a fix that pins a harvested value can introduce a credential or a machine-specific
+path. Treat a credential-shaped literal as critical and do not reproduce its value.
+
+If a fix replaced one BANNED pattern (e.g., assert len(x) > 0) with another
+BANNED pattern (e.g., assert "keyword" in result), this is Pattern 10:
+"Strengthened Assertion That Is Still Partial." REJECT immediately.
+
+### 1. Assertion Ladder Check
+For each new/modified assertion, classify it on the Assertion Strength Ladder:
+- Level 5 (GOLD): exact match - `assert result == expected_complete_output`
+- Level 4 (PREFERRED): parsed structural / all-field
+- Level 3 (ACCEPTABLE with justification): structural containment — justification MUST be present as a code comment
+- Level 2 (BANNED): bare substring - `assert "X" in result`
+- Level 1 (BANNED): length/existence - `assert len(x) > 0`
+
+REJECT any assertion at Level 2 or below.
+REJECT any fix that moved from one BANNED level to another (Pattern 10).
+Level 3 without written justification in code = REJECT.
+
+### 2. ESCAPE Analysis
+For every new test function, complete:
+  CLAIM: What does this test claim to verify?
+  PATH:  What code actually executes?
+  CHECK: What do the assertions verify?
+  MUTATION: Name a specific production code mutation this assertion catches.
+  ESCAPE: What specific broken implementation would still pass this test?
+  IMPACT: What breaks in production if that broken implementation ships?
+
+The ESCAPE field must contain a specific mutation, not "none."
+
+### 3. Adversarial Review
+For each assertion:
+1. Read the assertion and the production code it exercises
+2. Construct a SPECIFIC, PLAUSIBLE broken production implementation
+   that would still pass this assertion
+3. Report verdict:
+
+   SURVIVED: [the broken implementation that passes]
+   FIX: [what the assertion should be instead]
+
+   -- or --
+
+   KILLED: [why no plausible broken implementation survives]
+
+A "plausible" broken implementation is one that could result from a
+real bug (off-by-one, wrong variable, missing field, swapped arguments,
+dropped output section) -- not adversarial construction.
+
+### 4. Verdict
+- Any SURVIVED result: FAIL the fix. List required changes.
+- Any Level 2 or below assertion: FAIL the fix. List required changes.
+- Any Pattern 10 violation (partial-to-partial upgrade): FAIL the fix. List required changes.
+- Any bare substring on any output (static or dynamic): FAIL the fix, regardless of other factors.
+- All KILLED + Level 4+ + no Pattern 10: PASS the fix.
+
+Return: Per-assertion verdicts and overall PASS/FAIL.
+```
 
 <FINAL_EMPHASIS>
 Every test you pass as SOLID will be trusted in production. Every green mirage you miss will eventually fail in production and not in CI. Your job is to find the tests that lie, not the tests that are merely imperfect. Be systematic. Be complete. No test is too small to audit.

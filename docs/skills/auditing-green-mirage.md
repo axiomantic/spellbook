@@ -129,14 +129,17 @@ Create complete inventory before auditing:
 
 <!-- SUBAGENT: Dispatch subagent(s) for line-by-line audit. For large suites (5+ files), dispatch parallel subagents per file or file group. Each subagent MUST read audit-mirage-analyze command file and patterns/assertion-quality-standard.md in full before doing any audit work. -->
 
-Subagent prompt template:
+Dispatch prompt: one subagent per file or file group, each carrying this preamble
+verbatim.
+
 ```
 IMPORTANT: Before doing ANY audit work, you MUST read these files in full:
-1. commands/audit-mirage-analyze.md - read the ENTIRE file, every pattern definition (defines all 10 Green Mirage Patterns)
-2. patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Full Assertion Principle
+1. commands/audit-mirage-analyze.md - the ENTIRE file: all 10 Green Mirage Patterns, both
+   named shapes, and the systematic line-by-line audit template
+2. patterns/assertion-quality-standard.md - the ENTIRE file, especially The Full Assertion Principle
 
 Do NOT skip reading these files. Do NOT summarize or abbreviate them.
-Do NOT take shortcuts in your analysis. Every test function must be individually analyzed.
+Do NOT take shortcuts. Every test function is individually analyzed against every pattern.
 Do NOT batch verdicts or use shorthand. Each test gets the full audit template.
 
 ## Context
@@ -144,149 +147,41 @@ Do NOT batch verdicts or use shorthand. Each test gets the full audit template.
 - Production file(s) under test: [paths]
 - Inventory from Phase 1: [paste inventory]
 
-For EACH test function (no skipping, no "looks fine"):
-1. Apply the systematic line-by-line audit template from the command file
-2. Trace every code path through production code
-3. Check against ALL 10 Green Mirage Patterns (including Pattern 10: Strengthened Assertion That Is Still Partial)
-4. Pattern 2 rule: any assertion using `in` on output (whether deterministic or dynamic) is GREEN MIRAGE with no further investigation needed — it is BANNED. Dynamic content is no excuse for partial assertion.
-5. Flag as GREEN MIRAGE: "bare substring on output with dynamic content" (asserting partial membership of a dynamic value instead of constructing full expected)
-6. Flag as GREEN MIRAGE: "wildcard matcher used in call assertions" -- `mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any equivalent under another name (proves nothing about actual arguments). See the "Assertion That Matches Everything" named shape for the detection recipe, including the tripwire bare-class trap.
-7. Flag as GREEN MIRAGE: "not all mock calls asserted" (unverified calls hide behavior gaps)
-8. Record verdict (SOLID / GREEN MIRAGE / PARTIAL) with evidence
-
-Return: List of findings with verdicts, gaps, and fix code per the template.
+Return: per-test verdicts (SOLID / GREEN MIRAGE / PARTIAL) with evidence, gaps, and fix
+code, in the shape the command file specifies.
 ```
 
-### Named Shape: Assertion That Matches Everything
+The pattern rules the subagent applies -- Pattern 2's unconditional ban on partial
+assertions, wildcard-matcher detection, unasserted mock calls, Pattern 10 partial-to-partial
+upgrades -- are defined in `/audit-mirage-analyze`. This skill does not restate them.
 
-<CRITICAL>
-An assertion built entirely from wildcard matchers cannot fail. It is the purest green
-mirage: it occupies the line where verification belongs, reads as coverage, and certifies
-nothing. Flag it on the PROPERTY -- "does this matcher compare equal to every possible
-value?" -- never on the library-specific name.
+### Named Shapes (owned by `/audit-mirage-analyze`)
 
-**Detection recipe:**
-
-1. Grep for known wildcard spellings across the test tree:
-   ```bash
-   rg -n 'mock\.ANY|unittest\.mock\.ANY|\bANY\b|\bAnyThing\b|IsAnything|anything\(\)' tests/
-   ```
-2. Flag any assertion where EVERY matcher position is a wildcard. Those assert literally
-   nothing and are unconditionally GREEN MIRAGE.
-3. Flag any wildcard in a non-incidental position (a value the test could have captured).
-4. **For tripwire specifically, check CLASS versus INSTANCE.** `AnyThing` comes from
-   `dirty-equals`, which deliberately documents bare-class comparison
-   (`assert 1 == IsPositive`), so authors imitate the upstream idiom in good faith. Inside
-   a tripwire assertion that idiom is a trap: the all-wildcard guard tests
-   `isinstance(v, AnyThing)`, so a bare class evades it while still comparing equal to
-   everything. Count them separately:
-   ```bash
-   rg -c 'AnyThing\(\)' tests/   # instances: guard can see these
-   rg -c 'AnyThing(?!\()' -P tests/   # bare classes: guard is blind to these
-   ```
-   A high bare-class count with a zero instance count means the framework's guard has
-   never fired in this repo. Report that as a finding in its own right.
-5. Do not stop at the names in the grep. A wildcard is defined by its equality behavior;
-   a new framework introduces a new spelling that no existing grep covers.
-
-**Worked example (this repo):** the standard banned `mock.ANY` by name. The repo migrated
-to tripwire, whose wildcard is `AnyThing`. The ban survived in letter and died in effect:
-129 `AnyThing` usages accumulated, including 38 assertions of the exact form
-`assert_call(args=AnyThing, kwargs=AnyThing, returned=AnyThing)` in a single file --
-assertions that pass against any implementation whatsoever. Tripwire ships a guard
-against exactly this at `_verifier.py:223,261`, but with 229 bare-class uses and 0
-instance uses, `isinstance(AnyThing, AnyThing)` was always False and the guard never
-fired once. The wildcard matched everything AND evaded the check built to catch it.
-
-**Note on framing:** a wildcard ANYWHERE in a tripwire assertion is the finding. The
-all-wildcard form is the degenerate limit, not the definition. Bare-class use is a SECOND,
-separate defect layered on top (it disables the guard); fixing class to instance does not
-resolve the first.
-
-**Verdict:** GREEN MIRAGE, critical. Fix: capture the real values and assert them exactly
-(tripwire's `format_assert_hint` emits the actual args/kwargs/returned reprs; a `.calls()`
-side effect can capture the object). Reserve a wildcard for genuinely incidental values,
-as an INSTANCE, with an inline comment naming why the value is incidental.
-</CRITICAL>
-
-### Named Shape: Assertion Pinned From Harvested Output
-
-<CRITICAL>
-The standard fix for a wildcard is to pin the real value, and that fix has its own hazard.
-Values harvested from diagnostic output (tripwire failure hints, captured `repr`s, debugger
-dumps) reflect the LIVE process and can embed environment variables, credentials, absolute
-home paths, and hostnames. Pasted verbatim, they commit secrets and make the test
-machine-specific.
-
-Audit for this wherever assertions carry large or environment-derived literals:
-
-```bash
-rg -n '(TOKEN|SECRET|API_KEY|PASSWORD|_KEY)["\x27]?\s*[:=]|/Users/|/home/|os\.environ' tests/
-```
-
-Flag as a finding when a test assertion contains:
-- a credential-shaped literal (`*_TOKEN`, `*_SECRET`, `*_KEY`, `*_PASSWORD`, bearer/JWT-ish blobs)
-- an absolute user path (`/Users/<name>`, `/home/<name>`) or a hostname
-- a wholesale environment dump embedded in an expected object
-
-Two distinct impacts: **secret exposure** (critical, report immediately and do not reproduce
-the value in the audit report) and **non-portability** (the test passes only on the author's
-machine). Fix: reduce to the strongest portable form -- a short literal of the fields the
-behavior depends on, else a type constraint like `IsInstance(Type)` (a genuine constraint,
-not a wildcard, and an instance so framework guards stay live), else `AnyThing()` with a
-comment naming why the value is incidental.
-
-**Worked example (real):** an agent remediating wildcard assertions harvested a mock's
-reported value from a tripwire hint. It was a full `AgentOptions` whose repr carried the
-entire `os.environ`, including `TWILIO_AUTH_TOKEN` and `TWILIO_ACCOUNT_SID`. Caught in
-review before it landed.
-</CRITICAL>
+Two named shapes -- "Assertion That Matches Everything" (wildcard matchers that compare
+equal to every value, plus the bare-class trap that disables a framework's own guard) and
+"Assertion Pinned From Harvested Output" (a pinned literal carrying a credential or a
+machine-specific path) -- carry detection recipes, worked examples, and verdicts. Both live
+in full in `/audit-mirage-analyze`, which every audit subagent reads before working.
 
 ### Phase 4: Cross-Test Analysis
 
 <!-- SUBAGENT: Dispatch subagent to analyze suite-level gaps using audit-mirage-cross command. -->
 
-Subagent prompt template:
-```
-Read commands/audit-mirage-cross.md for cross-test analysis templates.
-
-## Context
-- Production files: [paths]
-- Test files: [paths]
-- Phase 2-3 findings: [summary of individual test verdicts]
-
-Analyze the suite as a whole:
-1. Functions/methods never directly tested
-2. Error paths never tested
-3. Edge cases never tested
-4. Test isolation issues
-
-Return: Suite-level gap analysis per the templates.
-```
+Dispatch one subagent with `/audit-mirage-cross` as its required reading. Give it the
+production paths, the test paths, and a summary of the Phase 2-3 verdicts. It returns
+suite-level gaps: functions never directly tested, untested error paths, untested edge
+cases, skipped or disabled tests, and test isolation issues.
 
 ### Phase 5-6: Findings Report and Output
 
 <!-- SUBAGENT: Dispatch subagent to compile the final report using audit-mirage-report command. -->
 
-Subagent prompt template:
-```
-Read commands/audit-mirage-report.md for the complete report format, YAML template, and output conventions.
-
-## Context
-- Phase 1 inventory: [paste]
-- Phase 2-3 findings: [paste all findings with verdicts, line numbers, fix code]
-- Phase 4 cross-test gaps: [paste suite-level analysis]
-- Project root: [path]
-
-Compile the full audit report:
-1. Machine-parseable YAML block at START
-2. Human-readable summary
-3. Detailed findings with all required fields
-4. Remediation plan with dependency-ordered phases
-5. Write to the correct output path
-
-Return: File path of written report and inline summary.
-```
+Dispatch one subagent with `/audit-mirage-report` as its required reading. Give it the
+Phase 1 inventory, every Phase 2-3 finding with verdicts and line numbers and fix code, the
+Phase 4 gap analysis, and the project root. `/audit-mirage-report` owns the report format:
+the machine-parseable YAML block, the required per-finding fields, the dependency-ordered
+remediation plan, the output path, and the `/fixing-tests` next-step directive. It returns
+the written report path and an inline summary.
 
 ### Phase 7: Fix Verification (MANDATORY)
 
@@ -298,162 +193,53 @@ If adversarial review repeatedly FAILs: list required changes per finding, send 
 
 <!-- SUBAGENT: Dispatch subagent to verify fixes. MUST read assertion-quality-standard pattern file and apply Test Adversary persona. No shortcuts. -->
 
-Subagent prompt template:
-```
-IMPORTANT: Before doing ANY analysis, you MUST read these files in full:
-1. patterns/assertion-quality-standard.md - read the ENTIRE file, especially The Full Assertion Principle
-2. Read the Test Adversary Template section in skills/dispatching-parallel-agents/SKILL.md
+Dispatch one subagent per fix batch. The full Test Adversary prompt -- role framing,
+mandatory reading list, and Tasks 0-4 (Full Assertion Check, Assertion Ladder Check, ESCAPE
+Analysis, Adversarial Review, Verdict) -- is the Phase 7 section of `/audit-mirage-analyze`.
+Copy it verbatim from there and fill its Context placeholders. Do not paraphrase it.
 
-Do NOT skip reading these files. Do NOT summarize them. Read them completely.
-Do NOT take shortcuts in your analysis. Every assertion must be individually reviewed.
-Do NOT abbreviate your verdicts. Every assertion gets a full SURVIVED/KILLED analysis.
+The verdict contract the orchestrator enforces on the returned result:
 
-## Your Role: Test Adversary
+| Returned condition | Orchestrator action |
+|--------------------|---------------------|
+| Any SURVIVED assertion | FAIL: return required changes to the fix author |
+| Any assertion at Level 2 or below | FAIL: return required changes |
+| Any Pattern 10 partial-to-partial upgrade | FAIL: return required changes |
+| All KILLED, all Level 4+, no Pattern 10 | PASS: fixes accepted |
+| 3 consecutive FAIL verdicts on one assertion | HALT and report to user |
 
-Your job is to BREAK the new/modified tests, not validate them.
-Your reputation depends on finding weaknesses others missed.
+## Effort Estimation
 
-## Context
-- New/modified test assertions from fix phase: [paste diffs or file paths]
-- Original audit findings these fixes address: [paste finding IDs and patterns]
-- Production files under test: [paths]
-
-## Tasks
-
-### 0. Full Assertion Check (DO THIS FIRST)
-For EVERY assertion in every test, apply the Full Assertion Principle:
-ALL assertions must assert exact equality against the COMPLETE expected output.
-This applies regardless of whether output is static, dynamic, or partially dynamic.
-
-assert "substring" in result is BANNED. No exceptions. No "investigate deeper."
-Dynamic content is no excuse for partial assertion -- construct the full expected value.
-Multiple substring checks are STILL BANNED. They are not an improvement.
-
-For mock calls: every call must be asserted with ALL args; call count must be verified;
-wildcard matchers are BANNED (`mock.ANY`, tripwire `AnyThing`/`AnyThing()`, or any
-matcher that compares equal to every value, whatever the library calls it) --
-construct or capture expected arguments instead. An assertion whose every position is
-a wildcard asserts nothing; a bare wildcard CLASS additionally evades the framework's
-own all-wildcard guard.
-
-If a fix replaced one BANNED pattern (e.g., assert len(x) > 0) with another
-BANNED pattern (e.g., assert "keyword" in result), this is Pattern 10:
-"Strengthened Assertion That Is Still Partial." REJECT immediately.
-
-### 1. Assertion Ladder Check
-For each new/modified assertion, classify it on the Assertion Strength Ladder:
-- Level 5 (GOLD): exact match - `assert result == expected_complete_output`
-- Level 4 (PREFERRED): parsed structural / all-field
-- Level 3 (ACCEPTABLE with justification): structural containment — justification MUST be present as a code comment
-- Level 2 (BANNED): bare substring - `assert "X" in result`
-- Level 1 (BANNED): length/existence - `assert len(x) > 0`
-
-REJECT any assertion at Level 2 or below.
-REJECT any fix that moved from one BANNED level to another (Pattern 10).
-Level 3 without written justification in code = REJECT.
-
-### 2. ESCAPE Analysis
-For every new test function, complete:
-  CLAIM: What does this test claim to verify?
-  PATH:  What code actually executes?
-  CHECK: What do the assertions verify?
-  MUTATION: Name a specific production code mutation this assertion catches.
-  ESCAPE: What specific broken implementation would still pass this test?
-  IMPACT: What breaks in production if that broken implementation ships?
-
-The ESCAPE field must contain a specific mutation, not "none."
-
-### 3. Adversarial Review
-For each assertion:
-1. Read the assertion and the production code it exercises
-2. Construct a SPECIFIC, PLAUSIBLE broken production implementation
-   that would still pass this assertion
-3. Report verdict:
-
-   SURVIVED: [the broken implementation that passes]
-   FIX: [what the assertion should be instead]
-
-   -- or --
-
-   KILLED: [why no plausible broken implementation survives]
-
-A "plausible" broken implementation is one that could result from a
-real bug (off-by-one, wrong variable, missing field, swapped arguments,
-dropped output section) -- not adversarial construction.
-
-### 4. Verdict
-- Any SURVIVED result: FAIL the fix. List required changes.
-- Any Level 2 or below assertion: FAIL the fix. List required changes.
-- Any Pattern 10 violation (partial-to-partial upgrade): FAIL the fix. List required changes.
-- Any bare substring on any output (static or dynamic): FAIL the fix, regardless of other factors.
-- All KILLED + Level 4+ + no Pattern 10: PASS the fix.
-
-Return: Per-assertion verdicts and overall PASS/FAIL.
-```
-
-## Effort Estimation Guidelines
-
-| Effort | Criteria | Examples |
-|--------|----------|----------|
-| **trivial** | < 5 minutes, single assertion change | Add `.to_equal(expected)` instead of `.to_be_truthy()` |
-| **moderate** | 5-30 minutes, requires reading production code | Add state verification, replace partial assertions with exact equality (Level 4+) |
-| **significant** | 30+ minutes, requires new test infrastructure | Add schema validation, create edge case tests, refactor mocked tests |
+Findings carry an effort estimate of `trivial`, `moderate`, or `significant`. The criteria
+and examples for each are defined once, in `/audit-mirage-analyze`, where the subagents that
+assign them read.
 
 ## Anti-Patterns
 
 <FORBIDDEN>
-### Surface-Level Auditing
-- "Tests look comprehensive"
-- "Good coverage overall"
-- Skimming without tracing code paths
-- Flagging only obvious issues
-
-### Vague Findings
-- "This test should be more thorough"
-- "Consider adding validation"
-- Findings without exact line numbers
-- Fixes without exact code
-
-### Rushing
-- Skipping tests to finish faster
-- Not tracing full code paths
-- Assuming code works without verification
-- Stopping before full audit complete
+- Accepting a subagent result that reports "tests look comprehensive" or "good coverage overall" instead of per-test verdicts with evidence
+- Accepting findings without exact line numbers and exact fix code
+- Declaring the audit complete while any inventoried file remains unaudited
+- Skipping Phase 7 because the fixes came from another skill
 </FORBIDDEN>
+
+The auditor-scoped prohibitions -- skimming without tracing, vague findings, rushing --
+are stated in `/audit-mirage-analyze`, which every audit subagent reads.
 
 ## Self-Check
 
-Before completing audit, verify:
+These rows are the ORCHESTRATOR's. The auditors' own completeness rows live in
+`/audit-mirage-analyze` and `/audit-mirage-cross`; the report-structure rows live in
+`/audit-mirage-report`. Verify each subagent returned against its command's checklist
+rather than restating those rows here.
 
-**Audit Completeness:**
-- [ ] Did I read every line of every test file?
-- [ ] Did I trace code paths from test through production and back?
-- [ ] Did I check every test against all 10 patterns?
-- [ ] Did I verify assertions would catch actual failures?
-- [ ] Did I identify untested functions/methods?
-- [ ] Did I identify untested error paths?
-- [ ] Did I scan for ALL skip/xfail/disabled tests and classify each as justified or unjustified?
-- [ ] Did I scan assertion literals for credential-shaped or machine-specific values pinned from harvested output?
-
-**Finding Quality:**
-- [ ] Does every finding include exact line numbers?
-- [ ] Does every finding include exact fix code?
-- [ ] Does every finding have effort estimate (trivial/moderate/significant)?
-- [ ] Does every finding have depends_on specified (even if empty [])?
-- [ ] Did I prioritize findings (critical/important/minor)?
-
-**Fix Verification (when fixes are written):**
-- [ ] Every new assertion is Level 4+ on the Assertion Strength Ladder
-- [ ] Every new assertion has a named mutation that would cause it to fail
-- [ ] Adversarial review found no SURVIVED assertions
-
-**Report Structure:**
-- [ ] Did I output YAML block at START?
-- [ ] Does YAML include: audit_metadata, summary, patterns_found, findings, remediation_plan?
-- [ ] Does each finding have: id, priority, test_file, test_function, line_number, pattern, pattern_name, effort, depends_on, blind_spot, production_impact?
-- [ ] Did I generate remediation_plan with dependency-ordered phases?
-- [ ] Did I provide human-readable summary after YAML?
-- [ ] Did I include "Quick Start" section pointing to fixing-tests?
+- [ ] Did every phase run, in order, with its own dispatch? No phase collapsed into another.
+- [ ] Did every dispatch prompt carry the mandatory reading list verbatim?
+- [ ] Was every test file in the Phase 1 inventory assigned to an audit subagent, with none unassigned?
+- [ ] Did Phase 4 receive the Phase 2-3 verdicts, and Phase 5-6 receive Phases 1, 2-3, and 4?
+- [ ] Did Phase 7 run for every fix written, through whatever path the fixes arrived?
+- [ ] Did I enforce the Phase 7 verdict contract, including HALT after 3 consecutive FAILs?
+- [ ] Does the report file exist at the returned path? A returned path is not a written file.
 
 If NO to ANY item, go back and complete it.
 

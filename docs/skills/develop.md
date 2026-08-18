@@ -353,8 +353,22 @@ ls ~/.local/spellbook/docs/<project-encoded>/plans/*-impl.md
 
 - [ ] TDD subagent (test-driven-development) dispatched
 - [ ] Implementation completion verification done (inline audit prompt)
+- [ ] Every imperative in the task text maps to a named check (4.4 coverage)
 - [ ] Code review subagent (requesting-code-review) dispatched
 - [ ] Fact-checking subagent dispatched
+
+**Gate 4.4 coverage: enumerate the task's IMPERATIVES, not just its criteria.**
+Gate 4.4 walks the task's declared acceptance criteria, expected outputs,
+interfaces, and behaviors. An instruction that appears only as a sentence in the
+task body — never restated as a criterion or named on the task's `Check:` line —
+is outside every one of those lists, so the audit passes without ever mentioning
+it. **A deliverable whose verification does not mention it closes exactly like
+one that was done.** Before the 4.4 verdict, list every imperative sentence in
+the task and name, for each, the criterion or check that decides it. Any
+imperative with no check is an INCOMPLETE verdict, not a passing one — either it
+gains a check or the task is not done. A one-sentence "wire the callbacks to the
+other side" with no test closed a task green; the missing wire surfaced weeks
+later as a stall in exactly that path.
 
 ### After Phase 4 (all tasks complete):
 
@@ -387,6 +401,11 @@ in BOTH directions: prompt and return.
    sequential numbering before returning."
 4. **Forbidden phrasing.** Do not say "create the design AND the plan" —
    that triggers Phase Collapse (Pattern 6) inside the subagent.
+5. **Mark carried figures.** The orchestrator reads reports; it does not
+   measure. So every number it passes on is CARRIED and unverified. Say so
+   in the prompt verbatim, and require the subagent to re-derive any figure
+   it relies on or writes down. One session's use of this single line caught
+   six orchestrator figures that had already passed review.
 
 ### Subagent → Orchestrator (in every return summary)
 
@@ -400,7 +419,25 @@ ARTIFACTS_NOT_WRITTEN: (anything skill wanted to write but operator forbade)
 SKILL_INVOCATION: [skill-name]
 COMPILE_STATUS: pass | fail | n/a
 TEST_STATUS: N/N pass | n/a
+CAN_STILL_FAIL: [mutation applied | verbatim RED output | revert proof] | n/a (no new check)
 ```
+
+**`CAN_STILL_FAIL` is required from every dispatch that adds or changes a check**
+(gate 4.3 above all). It promotes the Checkability rule "Prove that the check can
+fail" from a property of PLANS into a property of each IMPLEMENTATION. The field
+carries three parts, and a subagent that supplies fewer has failed the gate:
+
+1. **The mutation applied** — the specific edit that should break the new check.
+2. **The verbatim RED** — the failure output pasted, not paraphrased. "It failed
+   as expected" is not the field; the assertion text is.
+3. **Revert proof, not revert assertion.** A sentence saying "reverted" is not
+   evidence. Prove it: checksum the touched files before mutating and compare
+   after (`shasum`/`git diff --exit-code`), and grep for the mutation marker
+   expecting zero hits. Paste both results.
+
+`n/a` is a legal value ONLY when the dispatch added no check, and it must say so.
+An empty, missing, or bare-`n/a` field is a FAILED gate, not a silent pass: the
+orchestrator re-dispatches rather than accepting the return.
 
 ### Orchestrator post-dispatch verification (mandatory)
 
@@ -450,6 +487,17 @@ dependency closure.
    Artifact, Not the Signal").
 4. **The check reports which rule fired, not only how many.** A count alone
    hides a check that reads only part of its input.
+5. **Calibrate an instrument you built for the task.** Any grep, regex, script,
+   or query you wrote to MEASURE something is itself unverified code, and its
+   characteristic failure is reading less input than you think while printing a
+   confident result — an unsearched input and a genuine absence are
+   indistinguishable in the output. Before trusting it, run it against one
+   known-positive and one known-negative input and confirm it reports each
+   correctly. A verification regex `\[(ERROR|WARN|INFO|NOTE)\]` silently matched
+   no `[WARNING]` line, compared 44 of 239 findings, and printed `IDENTICAL`.
+   This generalizes the `git grep` hazard the file-reading rule module names for
+   one tool: state which instrument produced any "appears nowhere" claim, and
+   calibrate it first.
 
 **Scope.** This pass is proportional. If the artifact makes no mechanically
 decidable claims — for example a five-step inline plan with no dependency graph
@@ -676,11 +724,17 @@ Task (or subagent in Pi):
     Expected artifact path: [absolute path]
     Expected artifact count: 1 (do not produce sibling files)
 
+    CARRIED FIGURES: every number in this prompt is CARRIED — I did not
+    measure it in this session and it may be wrong. Re-derive any figure
+    you rely on or write down, and report the value YOU measured, even
+    when it matches.
+
     Return summary MUST include:
       ARTIFACTS_WRITTEN: [absolute paths with line counts]
       SKILL_INVOCATION: [skill-name]
       COMPILE_STATUS: pass | fail | n/a
       TEST_STATUS: N/N pass | n/a
+      CAN_STILL_FAIL: [mutation | verbatim RED | revert proof] | n/a (no new check)
 
     ## Context for the Skill
     [Provide context here]

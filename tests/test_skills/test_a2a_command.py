@@ -417,24 +417,22 @@ SKILL_PATH = (
 )
 
 
-def test_skill_md_documents_watch_chain() -> None:
-    """SKILL.md must document the immortal watch-chain architecture.
+def test_command_documents_watch_chain() -> None:
+    """commands/a2a.md must document the immortal watch-chain architecture.
 
-    SKILL.md's architecture section explains the immortal bg-Bash watch
+    The command owns the mechanism; its architecture section explains the immortal bg-Bash watch
     chain, the open-state record at ``<bus>/.open/<sid>``, the heartbeat
     liveness contract, the fswatch + polling backstop, the silent-idle
     cost model, and the ``/a2a`` slash command surface.
 
     These markers are the load-bearing terms a reader needs to find when
     diagnosing a chain issue or onboarding to the architecture. Each must
-    appear in SKILL.md; their absence is a regression of the prose pass.
+    appear in the command; their absence is a regression of the prose pass.
 
-    Note: under the immortal-watcher architecture SKILL.md documents the
-    terminal markers PENDING_BATCH / WATCH_INBOX_GONE / WATCH_LOCKED (the
-    per-cycle WATCH_RECYCLE is finite-mode/debug-only and is documented in
-    commands/a2a.md, not here).
+    The marker set is unchanged; only its home moved. SKILL.md keeps a
+    Delivery Paths summary and points at `/a2a` for the mechanism.
     """
-    body = SKILL_PATH.read_text(encoding="utf-8")
+    body = COMMAND_PATH.read_text(encoding="utf-8")
     required_markers = [
         # Watch-chain architecture
         "watch chain",
@@ -458,13 +456,13 @@ def test_skill_md_documents_watch_chain() -> None:
     ]
     missing = [m for m in required_markers if m not in body]
     assert not missing, (
-        "SKILL.md must document the watch-chain architecture per impl plan "
+        "commands/a2a.md must document the watch-chain architecture per impl plan "
         f"§Task 8; missing markers: {missing!r}"
     )
 
 
-def test_skill_md_silent_idle_cost_model_cites_token_numbers() -> None:
-    """SKILL.md Silent-Idle Cost Model table must carry its idle-window rows.
+def test_command_silent_idle_cost_model_cites_token_numbers() -> None:
+    """The Silent-Idle Cost Model table must carry its idle-window rows.
 
     Under the immortal-watcher architecture the cost model headline is that
     an idle session incurs ~0 watcher-induced tokens (no recycle). The
@@ -473,7 +471,7 @@ def test_skill_md_silent_idle_cost_model_cites_token_numbers() -> None:
     reason to ``/a2a close`` (close only retires a name). Drifting away from
     these row labels silently is a regression of the cost-model pass.
     """
-    body = SKILL_PATH.read_text(encoding="utf-8")
+    body = COMMAND_PATH.read_text(encoding="utf-8")
     # Table row labels from the immortal-watcher cost model, plus the
     # `/a2a close` reference the prose anchors the retire-vs-silence
     # distinction on.
@@ -485,7 +483,7 @@ def test_skill_md_silent_idle_cost_model_cites_token_numbers() -> None:
     ]
     missing = [p for p in required_phrases if p not in body]
     assert not missing, (
-        "SKILL.md Silent-Idle Cost Model subsection must carry the "
+        "The Silent-Idle Cost Model subsection in commands/a2a.md must carry the "
         "per-batch / idle-hour / idle-day rows and reference `/a2a close`; "
         f"missing: {missing!r}"
     )
