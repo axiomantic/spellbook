@@ -387,157 +387,35 @@ Build complete `DesignContext` object from all prior phases.
 - No "TBD" or "unknown" strings
 - All arrays with content or explicit "N/A"
 
-### 1.5.5 Completeness Checklist (13 Validation Functions)
+### 1.5.5 Phase 1.5 Gate: Self-Assessment Half
 
-```typescript
-// FUNCTION 1: Research quality validated
-function research_quality_validated(): boolean {
-  return quality_scores.research_quality === 100 || override_flag === true;
-}
+<CRITICAL>
+This gate has TWO halves, and they carry different weight. This section is the
+JUDGMENT half: a self-assessment you make and record. It is not computed, and it
+must never be reported as a computed figure. The mechanical half runs in 1.5.6,
+against the understanding document on disk, and it is the half that blocks.
 
-// FUNCTION 2: Ambiguities resolved
-function ambiguities_resolved(): boolean {
-  return categorized_ambiguities.every((amb) =>
-    disambiguation_results.hasOwnProperty(amb.description),
-  );
-}
+A previous version of this section presented these items as "13 validation
+functions" in TypeScript with a `completeness_score` percentage. Nothing executed
+that code. The score was a self-report wearing the costume of a measurement. It is
+removed. This is a deliberate LOWERING of the stated strength of the judgment
+items — they were never computed, and the text now says so.
+</CRITICAL>
 
-// FUNCTION 3: Architecture chosen
-function architecture_chosen(): boolean {
-  return (
-    discovery_answers.architecture.chosen_approach !== null &&
-    discovery_answers.architecture.rationale !== null
-  );
-}
+**Record each item as YES / NO / N-A with one line of evidence. No percentage.**
 
-// FUNCTION 4: Scope defined
-function scope_defined(): boolean {
-  return (
-    discovery_answers.scope.in_scope.length > 0 &&
-    discovery_answers.scope.out_of_scope.length > 0
-  );
-}
+| # | Self-assessed item | What counts as YES |
+|---|---|---|
+| J1 | Research questions answered at HIGH confidence | Every research question has an answer you would defend, or the operator set the override |
+| J2 | Ambiguities disambiguated | Every categorized ambiguity has a recorded resolution |
+| J3 | Architecture chosen for a stated reason | A named approach AND the rationale that beat the alternatives |
+| J4 | Integration points verified against the codebase | Each point was opened and read, not inferred from a name |
+| J5 | Glossary covers the domain terms actually used | You re-read the answers looking for unglossed terms |
+| J6 | Assumptions validated WITH THE OPERATOR | The operator saw them and responded; silence is NO |
+| J7 | Need-flags consistent with discovered scope | Discovery surfaced no design/infra need absent from `SESSION_PREFERENCES.need_flags` |
 
-// FUNCTION 5: MVP stated
-function mvp_stated(): boolean {
-  return mvp_definition !== null && mvp_definition.length > 10;
-}
-
-// FUNCTION 6: Integration verified
-function integration_verified(): boolean {
-  const points = discovery_answers.integration.integration_points;
-  return points.length > 0 && points.every((p) => p.validated === true);
-}
-
-// FUNCTION 7: Failure modes identified
-function failure_modes_identified(): boolean {
-  return (
-    discovery_answers.failure_modes.edge_cases.length > 0 ||
-    discovery_answers.failure_modes.failure_scenarios.length > 0
-  );
-}
-
-// FUNCTION 8: Success criteria measurable
-function success_criteria_measurable(): boolean {
-  const metrics = discovery_answers.success_criteria.metrics;
-  return metrics.length > 0 && metrics.every((m) => m.threshold !== null);
-}
-
-// FUNCTION 9: Glossary complete
-function glossary_complete(): boolean {
-  const uniqueTermsInAnswers = extractUniqueTerms(discovery_answers);
-  return (
-    Object.keys(glossary).length >= uniqueTermsInAnswers.length ||
-    user_said_no_glossary_needed === true
-  );
-}
-
-// FUNCTION 10: Assumptions validated
-function assumptions_validated(): boolean {
-  const validated = discovery_answers.assumptions.validated;
-  return validated.length > 0 && validated.every((a) => a.confidence !== null);
-}
-
-// FUNCTION 11: No TBD items
-function no_tbd_items(): boolean {
-  const contextJSON = JSON.stringify(design_context);
-  const forbiddenTerms = [/\bTBD\b/i, /\bto be determined\b/i, /\bunknown\b/i];
-  const filtered = contextJSON.replace(/"confidence":\s*"[^"]*"/g, "");
-  return !forbiddenTerms.some((regex) => regex.test(filtered));
-}
-
-// FUNCTION 12: Need-flags consistent with discovered scope
-function flags_consistent_with_scope(): boolean {
-  // No newly-implied flags = the set is consistent with what discovery found.
-  // If discovery surfaced a design/infra need, it must already be reflected in
-  // SESSION_PREFERENCES.need_flags (re-flag-and-continue sets it immediately).
-  return detect_missing_flags().length === 0;
-}
-
-// FUNCTION 13: Project standards discovered
-function standards_discovered(): boolean {
-  // Passes when the sweep RAN AND (recorded >=1 source OR none_found:true WITH
-  // search_globs_used populated). Does NOT require any binding rule to exist —
-  // a repo may legitimately have no doctrine — only that the search demonstrably
-  // happened and its result is recorded.
-  const ps = design_context?.project_standards;
-  if (!ps || ps.searched !== true) return false;
-  const hasSource = Array.isArray(ps.sources) && ps.sources.length > 0;
-  const auditableEmpty =
-    ps.none_found === true &&
-    Array.isArray(ps.search_globs_used) &&
-    ps.search_globs_used.length > 0;
-  return hasSource || auditableEmpty;
-}
-```
-
-**SCORE CALCULATION:**
-
-```typescript
-const checked_count = Object.values(validation_results).filter(
-  (v) => v === true,
-).length;
-const completeness_score = (checked_count / 13) * 100;
-```
-
-**DISPLAY FORMAT:**
-
-```
-Completeness Checklist:
-
-[✓/✗] All research questions answered with HIGH confidence
-[✓/✗] All ambiguities disambiguated
-[✓/✗] Architecture approach explicitly chosen and validated
-[✓/✗] Scope boundaries defined with explicit exclusions
-[✓/✗] MVP definition stated
-[✓/✗] Integration points verified against codebase
-[✓/✗] Failure modes and edge cases identified
-[✓/✗] Success criteria defined with measurable thresholds
-[✓/✗] Glossary complete for all domain terms
-[✓/✗] All assumptions validated with user
-[✓/✗] No "we'll figure it out later" items remain
-[✓/✗] Need-flags consistent with discovered scope (any new design/infra need re-flagged)
-[✓/✗] Project standards discovered (sweep ran; ≥1 source recorded OR none_found with globs recorded)
-
-Completeness Score: [X]% ([N]/13 items complete)
-```
-
-**GATE BEHAVIOR:**
-
-IF completeness_score < 100:
-
-```
-Completeness Score: [X]% - Below threshold
-
-OPTIONS:
-A) Return to discovery wizard for missing items
-B) Return to research for new questions
-C) Proceed anyway (bypass gate, accept risk)
-
-Your choice: ___
-```
-
-IF completeness_score == 100: Proceed to Phase 1.5.6
+Any NO returns to the discovery wizard or to research. The operator may accept a
+NO and continue; record that acceptance as an explicit bypass, naming the item.
 
 ### 1.5.6 Create Understanding Document
 
@@ -598,11 +476,28 @@ MVP DEFINITION:
 - None found: [true/false] (if true, REQUIRED operator cross-check was run)
 - Truncated candidates: [paths classified on headings + first-N-lines only]
 
-## Completeness Score
-Research Quality: [X]%
-Discovery Completeness: [X]%
-Overall Confidence: [X]%
+## Self-Assessment (not measured)
+Record J1-J7 from Phase 1.5.5 as YES / NO / N-A with one line of evidence each.
+These are judgments. Do not render them as a percentage.
 ```
+
+**MECHANICAL GATE — run this before presenting the document:**
+
+```bash
+uv run scripts/check_understanding_doc.py ~/.local/spellbook/docs/<project-encoded>/understanding/understanding-[feature-slug]-[timestamp].md
+```
+
+The script reads the document and computes six structural checks: required
+sections present, those sections non-empty, the three scope blocks present and
+filled, every success criterion carrying a threshold, no deferral markers
+(`TBD`, `to be determined`, `figure it out later`), and a standards sweep whose
+result is auditable (a recorded source, or `None found: true` with the globs it
+searched). Exit status IS the gate: non-zero blocks Phase 1.5.
+
+What it does NOT establish: that any section's content is true, sufficient, or
+well-judged. It proves the artifact has the shape the phase requires and defers
+nothing in writing. The J1-J7 self-assessment covers the rest and is not
+computed.
 
 Present to user:
 
