@@ -217,21 +217,9 @@ Never fabricate a Jira ticket number. No `ODY-0000`, no placeholder tickets. If 
 
 ## Post-Creation Operations
 
-Since `gh pr edit` is broken (GitHub Projects Classic deprecation), use the REST API for post-creation modifications:
-
-```bash
-# Update PR title or body
-gh api repos/OWNER/REPO/pulls/NUMBER --method PATCH \
-  -f title="New title" -f body="New body"
-
-# Add labels
-gh api repos/OWNER/REPO/issues/NUMBER/labels --method POST \
-  -f 'labels[]=label1'
-
-# Request reviewers
-gh api repos/OWNER/REPO/pulls/NUMBER/requested_reviewers --method POST \
-  -f 'reviewers[]=username'
-```
+`gh pr edit` and `gh issue edit` are broken by the GitHub Projects Classic
+deprecation. Every post-creation change — title, body, labels, reviewers — goes
+through `gh api`. Phase 8 of `/create-pr` and `/create-issue` holds the exact calls.
 
 ---
 

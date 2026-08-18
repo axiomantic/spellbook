@@ -135,64 +135,13 @@ Each sub-command can be run independently:
 
 ---
 
-## Detection Patterns (Shared Reference)
+## Detection Patterns
 
-### Pattern 1: Asymmetric Symmetric API
-```
-IF getFoo exists AND setFoo exists AND clearFoo exists:
-  Check usage of each independently
-  IF any has zero callers -> flag as dead
-  EVEN IF others in group are used
-```
-
-### Pattern 2: Convenience Wrapper
-```
-IF proc foo() only calls bar() with minor transform:
-  Check if foo has callers
-  IF zero callers -> dead wrapper
-  EVEN IF bar() is heavily used
-```
-
-### Pattern 3: Transitive Dead Code
-```
-WHILE changes detected:
-  FOR each item with callers:
-    IF ALL callers are marked dead:
-      Mark item as transitive dead
-```
-NOTE: "Has callers" is not sufficient for alive status. Callers must themselves be alive. Direct caller check and transitive check are separate steps.
-
-### Pattern 4: Field + Accessors
-```
-IF field X detected:
-  Search for getter getX or X
-  Search for setter setX or `X=`
-  IF all three have zero usage -> dead feature
-```
-
-### Pattern 5: Test-Only Usage
-```
-IF all callers are in test files:
-  ASK user if test-only code should be kept
-  Don't auto-mark as dead
-```
-
-### Pattern 6: Write-Only Dead Code
-```
-FOR each setter/store S with corresponding getter/read G:
-  IF S has callers AND G has zero callers:
-    Mark BOTH S and G as write-only dead
-    Mark data is "stored but never read"
-```
-
-### Pattern 7: Iterator Without Consumers
-```
-IF iterator I defined:
-  Search for "for .* in I" or "items(I)" patterns
-  IF zero consumers found:
-    Mark iterator as dead
-    Check if backing storage is also write-only dead
-```
+`/dead-code-analyze` is canonical for the detection patterns: symmetric-pair
+asymmetry, convenience wrappers, transitive dead code, field-plus-accessor groups,
+test-only usage, write-only stores, and iterators without consumers. Every pattern,
+with its algorithm and its verdict, is defined there in the verification phase that
+applies it.
 
 ---
 

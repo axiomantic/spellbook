@@ -529,6 +529,9 @@ If labels, reviewers, or assignees were specified but not passed via `gh pr crea
 
 <RULE>NEVER use `gh pr edit`. Use `gh api` for all post-creation modifications.</RULE>
 
+`gh pr edit` is broken by the GitHub Projects Classic deprecation, so the REST API is
+the only reliable path for title, body, label, and reviewer changes after creation.
+
 ```bash
 PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
 
@@ -542,7 +545,7 @@ gh api "repos/$TARGET_REPO/pulls/$PR_NUMBER/requested_reviewers" \
 
 # Update title or body
 gh api "repos/$TARGET_REPO/pulls/$PR_NUMBER" \
-  --method PATCH -f title="New title"
+  --method PATCH -f title="New title" -f body="New body"
 ```
 
 If any post-creation API call fails, warn but do NOT treat as failure. The PR was created successfully.

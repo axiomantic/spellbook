@@ -48,7 +48,7 @@
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
   - [Skills (61 total)](#skills-61-total)
-  - [Commands (106 total)](#commands-106-total)
+  - [Commands (107 total)](#commands-107-total)
   - [Agents (16 total)](#agents-16-total)
 - [Platform Support](#platform-support)
   - [AI Coding Assistants](#ai-coding-assistants)
@@ -261,7 +261,7 @@ Reusable workflows for structured development:
 [cove-protocol]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/cove-protocol/
 [decompose-claims]: https://axiomantic.github.io/spellbook/latest/commands/decompose-claims/
 
-### Commands (106 total)
+### Commands (107 total)
 
 | Command | Description |
 |---------|-------------|
@@ -355,6 +355,7 @@ Reusable workflows for structured development:
 | [/merge-worktree-verify] | Verify merge and cleanup |
 | [/finish-branch-execute] | Analyze branch and execute chosen strategy |
 | [/finish-branch-cleanup] | Post-merge cleanup |
+| [/code-review-audit] | Multi-pass deep-dive audit with zero-tolerance posture |
 | [/code-review-feedback] | Process received code review feedback |
 | [/code-review-give] | Review others' code |
 | [/code-review-tarot] | Roundtable-style collaborative review |
@@ -463,6 +464,7 @@ Reusable workflows for structured development:
 [/merge-worktree-verify]: https://axiomantic.github.io/spellbook/latest/commands/merge-worktree-verify/
 [/finish-branch-execute]: https://axiomantic.github.io/spellbook/latest/commands/finish-branch-execute/
 [/finish-branch-cleanup]: https://axiomantic.github.io/spellbook/latest/commands/finish-branch-cleanup/
+[/code-review-audit]: https://axiomantic.github.io/spellbook/latest/commands/code-review-audit/
 [/code-review-feedback]: https://axiomantic.github.io/spellbook/latest/commands/code-review-feedback/
 [/code-review-give]: https://axiomantic.github.io/spellbook/latest/commands/code-review-give/
 [/code-review-tarot]: https://axiomantic.github.io/spellbook/latest/commands/code-review-tarot/

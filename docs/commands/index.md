@@ -14,9 +14,10 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/advanced-code-review-review](advanced-code-review-review.md) | Advanced Code Review Phase 3: Deep Review - multi-pass code analysis, finding ge... | spellbook |
 | [/advanced-code-review-verify](advanced-code-review-verify.md) | Advanced Code Review Phase 4: Verification - fact-check findings against codebas... | spellbook |
 | [/audit-green-mirage](audit-green-mirage.md) | Audit test suites for Green Mirage anti-patterns: tests that pass but don't veri... | spellbook |
-| [/audit-mirage-analyze](audit-mirage-analyze.md) | Phases 2-3 and 7 of auditing-green-mirage: systematic line-by-line audit, the 10... | spellbook |
+| [/audit-mirage-analyze](audit-mirage-analyze.md) | Phases 2-3 and 7 of auditing-green-mirage: systematic line-by-line audit, the Gr... | spellbook |
 | [/audit-mirage-cross](audit-mirage-cross.md) | Phase 4 of auditing-green-mirage: Cross-test suite-level analysis | spellbook |
 | [/audit-mirage-report](audit-mirage-report.md) | Phase 5-6 of auditing-green-mirage: Findings report generation and output | spellbook |
+| [/code-review-audit](code-review-audit.md) | Audit mode for code-review: multi-pass deep-dive with zero-tolerance posture, AP... | spellbook |
 | [/code-review-feedback](code-review-feedback.md) | Feedback mode for code-review: Process received review feedback with categorizat... | spellbook |
 | [/code-review-give](code-review-give.md) | Give mode for code-review: Review someone else's code with multi-pass analysis a... | spellbook |
 | [/code-review-tarot](code-review-tarot.md) | Tarot integration for code-review: Roundtable dialogue with archetype personas f... | spellbook |

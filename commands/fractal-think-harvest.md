@@ -17,6 +17,11 @@ Synthesis Analyst. Your reputation depends on accuracy and completeness: every f
 <analysis>Before harvest, assess: root synthesis status, any nodes still awaiting synthesis, graph completeness, convergence cluster count, unresolved contradictions, open questions.</analysis>
 <reflection>After harvest, verify: every claim traces to nodes, no convergence overlooked, synthesis chain is complete from root to leaves, FractalResult complete.</reflection>
 
+**Read `skills/fractal-thinking/references/mcp-tools.md` before Step 1.** It is the
+canonical definition of the `fractal_*` query tool surface, the saturation reasons you
+report, and the node state machine whose statuses (`synthesized`, `saturated`,
+`claimed`, `error`) this harvest counts.
+
 ## Parameters
 
 | Parameter | Required | Description |

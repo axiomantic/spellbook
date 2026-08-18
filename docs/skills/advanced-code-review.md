@@ -174,38 +174,18 @@ branch differs, and models paste what they are given — that is the structural
 cause of the bug.
 </CRITICAL>
 
-Two independent axes. Decide each one explicitly.
+Two independent axes — BASE and ENDPOINT — and each is decided explicitly. The
+`branch-context` skill owns both: the detection ladder that resolves the merge
+target (`pr-base-ref`, then `upstream-tracking`, then `remote-head`, then a
+`fallback-literal` that is a guess and is reported as one), and the subcommand
+pair for each endpoint. `/advanced-code-review-plan` 1.1 and 1.2 apply that
+ladder to this skill, including the `--base` override (which skips detection and
+reports `resolved_via` as `explicit-override`, naming who supplied it) and the
+error rows for a failed, stale, or guessed base. Load those rather than
+restating them here.
 
-### Axis 1 — BASE (invariant)
-
-The merge base against the **detected** merge target. The script fetches first,
-then resolves in this order, and reports which rung it landed on:
-
-| Order | Method | `resolved_via` |
-|-------|--------|----------------|
-| 1 | PR base ref (`gh pr view --json baseRefName`, head-ref validated) | `pr-base-ref` |
-| 2 | Upstream tracking branch | `upstream-tracking` |
-| 3 | Remote HEAD | `remote-head` |
-| 4 | Last-ditch literal — **a guess, and reported as one** | `fallback-literal` |
-
-A `--base` override skips detection. When overridden, report `resolved_via` as
-`explicit-override` and name who supplied it.
-
-```bash
-# Machine-readable provenance for the manifest
-"$SPELLBOOK_DIR/scripts/branch-context.sh" json
-```
-
-### Axis 2 — ENDPOINT (task-dependent)
-
-| Task | Endpoint | Subcommand |
-|------|----------|------------|
-| Reviewing what will merge (**the default for this skill**) | committed only | `diff-committed` |
-| Describing what the branch does (changelog, PR body) | include working tree | `diff` |
-| Pre-commit self-review | include working tree | `diff` |
-
-This skill reviews what will merge, so `diff-committed` is the default. If the
-operator is reviewing before committing, switch to `diff` and say so.
+This skill reviews what will merge, so `diff-committed` is the default endpoint.
+If the operator is reviewing before committing, switch to `diff` and say so.
 "Branch diff" is **not** a name for both endpoints.
 
 ### Reporting requirement
@@ -258,14 +238,9 @@ failure this procedure exists to prevent.
 **Self-Check:** Standards loaded across the full document net (root AND subdirectory `AGENTS.md`, coding standards, testing instructions, lint config, and whatever those documents themselves reference — contributing guides, style guides), the operator's standing rules and any project memory the environment provides read, rule catalogue emitted, previous items loaded, PR context fetched (if online), re-check requests extracted.
 
 <CRITICAL>
-**Phase 2 is split on blocking behavior.**
-
-- **Standards load (2.0) BLOCKS.** A review that has not loaded the standards
-  cannot report standards findings. A read failure on a discovered standards
-  document stops the phase. Finding *no* standards document is not a failure —
-  record it, proceed, and forbid style findings downstream.
-- **History (previous reviews, PR context) is non-blocking.** Proceed with empty
-  history and a logged warning if it cannot be loaded.
+**Phase 2 is split on blocking behavior.** The standards load (2.0) BLOCKS;
+history (previous reviews, PR context) is non-blocking. `/advanced-code-review-context`
+states both halves and their failure handling — do not apply one rule to both.
 </CRITICAL>
 
 ---
@@ -306,50 +281,16 @@ Findings about test adequacy are PLAUSIBLE at best until auditing-green-mirage h
 
 ## Constants and Configuration
 
-### Severity Order
-
-```python
-SEVERITY_ORDER = {
-    "CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3, "NIT": 4, "QUESTION": 5, "PRAISE": 6
-}
-```
-
-<CRITICAL>
-`QUESTION` is a legal severity and **must** appear in this dict. Omitting it
-sends every QUESTION finding to the `.get(..., 99)` fallback, where it sorts
-last and vanishes from `review-summary.json`'s `by_severity`. This dict, the one
-in `/advanced-code-review-report`, and the `by_severity` examples in
-`/advanced-code-review-review` are ONE contract — they must agree key for key.
-</CRITICAL>
-
-`CRITICAL` is reserved for security vulnerabilities, data loss, and production
-outages. **Bugs are HIGH**, never CRITICAL.
-
-### Configurable Thresholds
-
-| Threshold | Default | Consumer |
-|-----------|---------|----------|
-| `STALENESS_DAYS` | 30 | `/advanced-code-review-context` 2.1 — `discover_previous_review` discards a review older than this |
-| `LARGE_DIFF_LINES` | 10000 | `/advanced-code-review-plan` 1.6.1 — `plan_chunks` line budget per chunk |
-| `SUBAGENT_THRESHOLD_FILES` | 20 | `/advanced-code-review-plan` 1.6.1 — `plan_chunks` file count that triggers chunked dispatch |
-| `VERIFICATION_TIMEOUT_SEC` | 60 | Phase 4 circuit breaker — verification exceeding this stops the run |
-
-<CRITICAL>
-Each threshold names its consumer. A threshold with no consumer is dead
-configuration that invites false confidence: `LARGE_DIFF_LINES` and
-`SUBAGENT_THRESHOLD_FILES` previously advertised chunked processing that did not
-exist. If a future edit removes a consumer, remove the row.
-</CRITICAL>
-
----
+`/advanced-code-review-plan` owns the severity vocabulary (`SEVERITY_ORDER`,
+including the `QUESTION` key whose omission silently drops findings, and the
+rule that bugs are HIGH rather than CRITICAL) and the configurable thresholds
+`STALENESS_DAYS`, `LARGE_DIFF_LINES`, `SUBAGENT_THRESHOLD_FILES`, and
+`VERIFICATION_TIMEOUT_SEC`, each with its named consumer.
 
 ## Offline Mode
 
-| Feature | Online Mode | Offline Mode |
-|---------|-------------|--------------|
-| PR metadata | Fetched | Skipped |
-| PR comments | Fetched | Skipped |
-| Re-check detection | Available | Not available |
+`/advanced-code-review-context` owns the online/offline feature matrix: what is
+fetched, what is skipped, and which capabilities are unavailable offline.
 
 ---
 
@@ -431,34 +372,11 @@ If ANY self-check item fails, STOP and fix before declaring complete.
 
 ## Integration Points
 
-### Git Commands (also used for PR analysis via `gh` CLI)
-
-| Command | Phase | Usage |
-|---------|-------|-------|
-| `branch-context.sh json` | 1 | Detect base, fetch, compute merge base, report provenance |
-| `branch-context.sh files-committed` | 1 | Coverage-manifest file list, committed-only endpoint |
-| `branch-context.sh diff-committed` | 1, 3 | Diff content, committed-only endpoint |
-| `branch-context.sh files` | 1 | Coverage-manifest file list including working tree (pre-commit review only) |
-| `branch-context.sh diff` | 1, 3 | Diff content including working tree (pre-commit review only) |
-| `git show` | 4 | Verify file contents at SHA |
-
-<CRITICAL>
-`git merge-base` and bare `git diff <base>` are NOT invoked directly. The script
-owns base detection, the pre-base `git fetch`, and provenance reporting;
-re-implementing that chain is how hardcoded literals get reintroduced.
-
-The file list and the diff MUST come from the SAME endpoint:
-`files-committed` pairs with `diff-committed`, and `files` pairs with `diff`.
-Mixing them builds a coverage manifest of files the diff does not contain, so
-coverage reconciliation reports complete against zero hunks — a review that read
-nothing and certified N-of-N.
-</CRITICAL>
-
-### Fallback Chain
-
-```
-gh pr view (remote PR) -> git diff (local branch only)
-```
+`/advanced-code-review-context` owns the git-command table (which
+`branch-context.sh` subcommand each phase invokes, the prohibition on calling
+`git merge-base` or a bare `git diff <base>` directly, and the rule that the file
+list and the diff must share one endpoint) and the `gh pr view` to local-git
+fallback chain.
 
 ---
 

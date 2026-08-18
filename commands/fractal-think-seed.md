@@ -20,6 +20,10 @@ There is no clustering; questions are added directly as flat children of the roo
 <analysis>Before generating questions, assess: seed type (question/claim/goal/fact), intensity budget, resume vs new.</analysis>
 <reflection>After writing nodes, verify: all questions recorded as open nodes, count matches intensity target, no duplicates.</reflection>
 
+**Read `skills/fractal-thinking/references/mcp-tools.md` before Step 1.** It is the
+canonical definition of the `fractal_*` tool surface, the valid `intensity` and
+`checkpoint_mode` values, the saturation reasons, and the node state machine used here.
+
 ## Parameters
 
 | Parameter | Required | Description |

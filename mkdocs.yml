@@ -228,6 +228,7 @@ nav:
       - commands/audit-mirage-cross.md
       - commands/audit-mirage-report.md
       - commands/design-explore.md
+      - commands/code-review-audit.md
       - commands/code-review-feedback.md
       - commands/code-review-give.md
       - commands/code-review-tarot.md

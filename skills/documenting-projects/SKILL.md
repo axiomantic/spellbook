@@ -187,18 +187,9 @@ If found, present to the user: "Previous [phase] results found at [path]. Reuse 
 | Quality review (8 criteria) | All 8 pass | User consent after 2 iterations |
 | Fact-checking (claims) | No false claims in docs | Never |
 
-The 8 quality criteria evaluated in Phase 4:
-
-| # | Criterion | Pass Condition |
-|---|-----------|----------------|
-| 1 | Banned phrase detection | Zero matches against writing-guide.md |
-| 2 | Code example validity | Language tags, non-empty, language matches project |
-| 3 | Build config validity | Zero errors from build tool |
-| 4 | Diataxis compliance | No type mixing, correct structure per type |
-| 5 | Narrative cohesion | Consistent tense, transitions, no orphan sections |
-| 6 | Tone consistency | Vocabulary density and code ratio match profile |
-| 7 | Coverage | All MVP sections generated or explicitly skipped |
-| 8 | Cross-reference validity | Zero broken references or unresolved placeholders |
+`/docs-review` defines the 8 quality criteria evaluated in Phase 4 — each one's
+measurement method, pass condition, and sub-checks. That command is canonical for
+them; this file states only that all 8 must pass.
 
 ---
 

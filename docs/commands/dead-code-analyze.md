@@ -182,6 +182,10 @@ WHILE changes detected:
   Repeat until no new transitive dead code found (fixed point)
 ```
 
+"Has callers" is not sufficient for alive status. Callers must themselves be alive.
+The direct caller check (Step 2) and this transitive check are separate steps; neither
+substitutes for the other.
+
 ### Step 5: Remove and Test Verification (Optional)
 
 For high-confidence dead code (zero callers, not exported, no dynamic dispatch), offer experimental verification:
@@ -203,6 +207,34 @@ For high-confidence dead code (zero callers, not exported, no dynamic dispatch),
 IF ANY of {getFoo, setFoo, clearFoo} is ALIVE → flag all for user review
 IF ALL are dead → entire group is dead
 IF SOME alive, SOME dead → flag asymmetry for explicit user decision
+```
+
+Apply this to every symmetric group, including groups whose other members are heavily
+used. A single zero-caller member of a live group is still a finding.
+
+### Step 7: Remaining Detection Patterns
+
+**Convenience wrapper:**
+```
+IF proc foo() only calls bar() with minor transform:
+  Check if foo has callers
+  IF zero callers -> dead wrapper
+  EVEN IF bar() is heavily used
+```
+
+**Field + accessors:**
+```
+IF field X detected:
+  Search for getter getX or X
+  Search for setter setX or `X=`
+  IF all three have zero usage -> dead feature
+```
+
+**Test-only usage:**
+```
+IF all callers are in test files:
+  ASK user if test-only code should be kept
+  Don't auto-mark as dead
 ```
 
 ---

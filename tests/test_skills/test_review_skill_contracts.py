@@ -52,6 +52,7 @@ EXPECTED_GUARDED_FILES = (
     "commands/advanced-code-review-report.md",
     "commands/advanced-code-review-review.md",
     "commands/advanced-code-review-verify.md",
+    "commands/code-review-audit.md",
     "commands/code-review-give.md",
     "patterns/agent-schema.md",
     "patterns/code-review-antipatterns.md",
@@ -68,6 +69,7 @@ def _guarded_files() -> list[Path]:
     for skill_dir in (REPO_ROOT / "skills" / "code-review", REPO_ROOT / "skills" / "advanced-code-review"):
         files.extend(sorted(skill_dir.rglob("*.md")))
     files.extend(sorted((REPO_ROOT / "commands").glob("advanced-code-review-*.md")))
+    files.extend(sorted((REPO_ROOT / "commands").glob("code-review-audit.md")))
     files.append(GIVE_COMMAND)
     files.extend(REVIEW_PATTERN_FILES)
     return files
@@ -148,28 +150,33 @@ def _parse_severity_order(path: Path) -> dict[str, int]:
 
 
 def test_severity_order_dicts_agree_key_for_key():
-    """The skill and the report command declare ONE contract in two places.
+    """The plan command and the report command declare ONE contract in two places.
 
     A key present in one and missing in the other routes those findings through
     the `.get(..., 99)` fallback in the consumer, where they sort last and vanish
     from `review-summary.json`'s `by_severity` -- silently, with no error.
+
+    The declaring copy lives in ``commands/advanced-code-review-plan.md``; it was
+    written in the parent skill until the skill was slimmed to a pointer. What
+    the guard protects is the AGREEMENT of two independently edited copies, not
+    the identity of the file holding either one.
     """
-    skill_order = _parse_severity_order(ADVANCED_SKILL)
+    plan_order = _parse_severity_order(PLAN_COMMAND)
     report_order = _parse_severity_order(REPORT_COMMAND)
 
-    assert skill_order.keys() == report_order.keys(), (
+    assert plan_order.keys() == report_order.keys(), (
         "SEVERITY_ORDER key sets diverged.\n"
-        f"  only in {_rel(ADVANCED_SKILL)}: {sorted(skill_order.keys() - report_order.keys())}\n"
-        f"  only in {_rel(REPORT_COMMAND)}: {sorted(report_order.keys() - skill_order.keys())}"
+        f"  only in {_rel(PLAN_COMMAND)}: {sorted(plan_order.keys() - report_order.keys())}\n"
+        f"  only in {_rel(REPORT_COMMAND)}: {sorted(report_order.keys() - plan_order.keys())}"
     )
-    assert skill_order == report_order, (
-        f"SEVERITY_ORDER ranks diverged.\n  skill:  {skill_order}\n  report: {report_order}"
+    assert plan_order == report_order, (
+        f"SEVERITY_ORDER ranks diverged.\n  plan:   {plan_order}\n  report: {report_order}"
     )
 
 
 def test_severity_order_includes_question():
     """QUESTION is the key that has actually gone missing before. Pin it by name."""
-    for path in (ADVANCED_SKILL, REPORT_COMMAND):
+    for path in (PLAN_COMMAND, REPORT_COMMAND):
         assert "QUESTION" in _parse_severity_order(path), (
             f"{_rel(path)}: SEVERITY_ORDER dropped QUESTION"
         )

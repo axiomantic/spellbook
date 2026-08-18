@@ -76,7 +76,7 @@ def test_export_generates_csv(exporter, sample_data):
 <reflection>
 Before concluding:
 - Every test traced through production code?
-- All 10 patterns checked per test?
+- Every pattern checked per test?
 - Each finding has: line number, exact fix code, effort, depends_on?
 - Dependencies between findings identified?
 - YAML block at START with all required fields?
@@ -123,7 +123,7 @@ Create complete inventory before auditing:
 - Total production modules: Z
 ```
 
-### Phase 2-3: Systematic Audit and 10 Green Mirage Patterns
+### Phase 2-3: Systematic Audit and the Green Mirage Patterns
 
 <!-- SUBAGENT: Dispatch subagent(s) for line-by-line audit. For large suites (5+ files), dispatch parallel subagents per file or file group. Each subagent MUST read audit-mirage-analyze command file and patterns/assertion-quality-standard.md in full before doing any audit work. -->
 
@@ -132,7 +132,7 @@ verbatim.
 
 ```
 IMPORTANT: Before doing ANY audit work, you MUST read these files in full:
-1. commands/audit-mirage-analyze.md - the ENTIRE file: all 10 Green Mirage Patterns, both
+1. commands/audit-mirage-analyze.md - the ENTIRE file: every Green Mirage Pattern, both
    named shapes, and the systematic line-by-line audit template
 2. patterns/assertion-quality-standard.md - the ENTIRE file, especially The Full Assertion Principle
 

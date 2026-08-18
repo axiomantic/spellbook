@@ -12,7 +12,7 @@ Green Mirage Auditor. Your reputation depends on exposing every false-positive t
 
 1. **Every test function gets audited** - No skipping tests that "look fine"; line-by-line analysis catches what scanning misses
 2. **Assertions determine test value** - A test without meaningful assertions is worse than no test: it creates false confidence and hides production defects
-3. **Score by pattern, not by intuition** - Apply the 10 Green Mirage Patterns as the scoring rubric
+3. **Score by pattern, not by intuition** - Apply every Green Mirage Pattern as the scoring rubric
 4. **A fix is a new suspect** - A remediated assertion gets the same adversarial treatment as the assertion it replaced
 
 ## Phase 2: Systematic Line-by-Line Audit
@@ -62,7 +62,7 @@ At each step:
 - If this step returned garbage, would the test catch it?
 - Are error paths tested or only happy paths?
 
-## Phase 3: The 10 Green Mirage Patterns
+## Phase 3: The Green Mirage Patterns
 
 Check EVERY test against ALL patterns.
 
@@ -278,6 +278,52 @@ assert result == expected            # Exact equality on complete output
 **Detection:** Compare before and after assertions. If the fix replaced one BANNED pattern with another BANNED pattern (even a different one), it is Pattern 10.
 
 **Question:** Did the fix actually reach Level 4+ (exact match or parsed structural), or did it just move from one BANNED level to another?
+
+### Pattern 11: Self-Manufactured Evidence
+**Symptom:** The test's setup creates the very condition the test then asserts. The
+input comes from the fixture, not from the world the check is supposed to guard, so
+the assertion holds whatever the real subject does.
+
+```python
+# GREEN MIRAGE - the fixture supplies the thing under test
+def test_skill_directory_is_discovered(tmp_path):
+    (tmp_path / "skills" / "fun-mode").mkdir(parents=True)   # fabricated here
+    assert "fun-mode" in discover_skills(tmp_path)           # asserts the fixture
+
+# The real defect: skills/fun-mode/ had been DELETED from the repository.
+# The test passed before the deletion and after it, unchanged.
+```
+
+**Distinction from Pattern 5.** Pattern 5 substitutes a mock for the SUBJECT: the
+production code path never executes. Pattern 11 executes the real code path in full —
+what is fabricated is the ENVIRONMENT the code reads. Nothing is mocked, coverage
+reports the subject as exercised, and a red-green cycle looks entirely normal, because
+planting a bug in the subject genuinely turns it red. Only a defect in the *world* —
+a deleted directory, a renamed key, a dropped config entry — passes through unseen.
+
+**Detection recipe:**
+
+1. For each assertion, name where its input originated. Walk it back through the
+   fixtures to a source.
+2. Classify that source: the repository/production artifact under guard, or something
+   the test itself wrote.
+3. If it is the latter, apply the deletion test: **would this test still pass if the
+   real artifact were deleted?** If yes, it guards its own setup.
+
+A fabricated environment is legitimate ONLY when the test drives the fabricated input
+through the subject to observe behavior, and a separate check ties the fixture back to
+the real artifact.
+
+**Fix shape.** `tests/scripts/test_shell_harness_reports_failures.py` is the worked
+example: it stages the REAL subject into a sandbox, links the repository paths the
+subject reads back to the actual tree, asserts a GREEN baseline there, then plants one
+deliberate failure and asserts the transition to RED. The sandbox exists to make the
+plant safe, not to supply the evidence — and the green-to-red transition is what proves
+the check is wired to the subject rather than to the fixture. Its docstring names why
+running against the real repository alone would have reproduced the original silence.
+
+**Question:** Does this assertion's input come from the world the check guards, or from
+the check's own setup?
 
 ## Named Shapes
 

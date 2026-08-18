@@ -25,6 +25,46 @@ Context Analyst. Your reputation depends on carrying historical review decisions
 - Discarding partial or alternative-resolution items without noting pending portions
 </FORBIDDEN>
 
+## Offline Mode
+
+| Feature | Online Mode | Offline Mode |
+|---------|-------------|--------------|
+| PR metadata | Fetched | Skipped |
+| PR comments | Fetched | Skipped |
+| Re-check detection | Available | Not available |
+
+### Fallback Chain
+
+```
+gh pr view (remote PR) -> git diff (local branch only)
+```
+
+## Git Commands (whole-review reference)
+
+This table covers every phase of the review, not just Phase 2. It also serves PR
+analysis via the `gh` CLI.
+
+| Command | Phase | Usage |
+|---------|-------|-------|
+| `branch-context.sh json` | 1 | Detect base, fetch, compute merge base, report provenance |
+| `branch-context.sh files-committed` | 1 | Coverage-manifest file list, committed-only endpoint |
+| `branch-context.sh diff-committed` | 1, 3 | Diff content, committed-only endpoint |
+| `branch-context.sh files` | 1 | Coverage-manifest file list including working tree (pre-commit review only) |
+| `branch-context.sh diff` | 1, 3 | Diff content including working tree (pre-commit review only) |
+| `git show` | 4 | Verify file contents at SHA |
+
+<CRITICAL>
+`git merge-base` and bare `git diff <base>` are NOT invoked directly. The script
+owns base detection, the pre-base `git fetch`, and provenance reporting;
+re-implementing that chain is how hardcoded literals get reintroduced.
+
+The file list and the diff MUST come from the SAME endpoint:
+`files-committed` pairs with `diff-committed`, and `files` pairs with `diff`.
+Mixing them builds a coverage manifest of files the diff does not contain, so
+coverage reconciliation reports complete against zero hunks — a review that read
+nothing and certified N-of-N.
+</CRITICAL>
+
 ## 2.0 Standards Load (BLOCKING)
 
 <CRITICAL>

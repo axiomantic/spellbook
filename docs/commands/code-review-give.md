@@ -166,7 +166,7 @@ Format findings as:
 [1-2 sentences on overall assessment]
 
 ## Base
-[detected-base] @ [sha] (resolved via [pr-base-ref|upstream-tracking|remote-head|fallback-literal], fetch [status])
+[detected-base] @ [sha] (resolved via [pr-base-ref|upstream-tracking|remote-head|fallback-literal|explicit-override], fetch [status])
 Endpoint: [committed-only | includes working tree]
 
 ## Coverage Manifest
