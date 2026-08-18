@@ -239,6 +239,36 @@ GATE_POSITIONS = ("per_task", "per_group")
 # Blocker kinds, per the develop skill's blocker taxonomy.
 BLOCKER_TYPES = ("decision", "work", "external")
 
+# Skills the develop skill dispatches subagents to invoke. A recorded dispatch
+# names the ones found in its prompt, which is what lets a phase-verification
+# checkbox be decided by a command instead of by the agent's own tick.
+#
+# The vocabulary is FIXED rather than globbed from ``skills/``: this module is
+# documented as runnable standalone (`python3 scripts/develop_gate_ledger.py`)
+# with no guarantee that $SPELLBOOK_DIR resolves, and a vocabulary that
+# silently empties when the directory is not found would make every lookup
+# return "no dispatch recorded" -- a false negative wearing the costume of a
+# real check. A stale name here instead fails loudly, because
+# tests/scripts/test_develop_gate_ledger.py asserts each one still exists as
+# skills/<name>/SKILL.md.
+DISPATCH_SKILLS = (
+    "auditing-green-mirage",
+    "dehallucination",
+    "devils-advocate",
+    "fact-checking",
+    "finishing-a-development-branch",
+    "requesting-code-review",
+    "reviewing-design-docs",
+    "reviewing-impl-plans",
+    "test-driven-development",
+)
+
+# Upper bound on the stored ``description``. The ledger is an audit trail, not
+# a transcript: the full dispatch prompt is deliberately NEVER stored (it can
+# carry file contents, credentials, and operator text), and only the skill
+# names recognized out of it are.
+DESCRIPTION_MAX = 200
+
 
 def default_ledger_path() -> Path:
     """Compute the per-project default ledger path for the current cwd.
@@ -683,6 +713,104 @@ def record_group_gate(
     return write_ledger({"groups": {group_id: {"gate_stack": entry}}}, path=path)
 
 
+def extract_skills(text: str | None) -> list[str]:
+    """Which ``DISPATCH_SKILLS`` names appear in ``text``.
+
+    Substring match, deliberately. A develop dispatch prompt names the skill it
+    wants invoked ("invoke the reviewing-design-docs skill", a
+    ``$SPELLBOOK_DIR/skills/reviewing-design-docs/SKILL.md`` path); a token or
+    word-boundary parse would have to model all of those shapes to gain
+    nothing. Returns sorted names so a recorded entry is stable to compare.
+    """
+    if not text:
+        return []
+    return sorted(name for name in DISPATCH_SKILLS if name in text)
+
+
+def record_dispatch(
+    *,
+    subagent_type: str | None = None,
+    description: str | None = None,
+    skills: Iterable[str] | None = None,
+    source: str | None = None,
+    timestamp: str | None = None,
+    path: Path | None = None,
+) -> dict[str, Any]:
+    """Record that a subagent dispatch happened, under ``dispatches.<key>``.
+
+    The point of this record is WHO WRITES IT. An agent that skips a dispatch
+    will also skip a self-recorded note of it, or write one falsely -- a record
+    authored by the party that would have skipped the step is a checkbox with
+    extra steps, which is exactly what the ``[SELF]`` marker in the develop
+    skill exists to admit. The intended writer is therefore the ``PostToolUse``
+    hook on the ``Task`` tool (``hooks/spellbook_hook.py``), which fires from
+    the harness without the agent's cooperation. This function is also exposed
+    on the CLI, because a ledger nobody can inspect is not an audit trail.
+
+    ``dispatches`` is a MAP keyed by timestamp for the same reason
+    ``ceremony_history`` is: the merge policy replaces lists wholesale, so a
+    list would lose every prior dispatch on the next sibling write -- and lose
+    them in precisely the audit trail that exists to prove a dispatch ran.
+    Keys collide when two dispatches land in the same second (parallel waves
+    make that ordinary, not rare), so a collision takes a zero-padded suffix,
+    matching ``archive_ceremony``.
+
+    Every field is optional because the hook records what the payload actually
+    carried and nothing more. An entry with no ``subagent_type`` and no
+    recognized skill still proves a dispatch occurred at a time -- less than
+    the caller wanted, but true.
+    """
+    target = path or ledger_path()
+    current = read_ledger(target)
+    stamp = timestamp or _utc_now()
+    dispatches = dict(current.get("dispatches") or {})
+    key = stamp
+    n = 2
+    while key in dispatches:
+        key = f"{stamp}#{n:03d}"
+        n += 1
+    entry: dict[str, Any] = {"recorded_at": stamp}
+    if subagent_type and subagent_type.strip():
+        entry["subagent_type"] = subagent_type.strip()[:DESCRIPTION_MAX]
+    if description and description.strip():
+        entry["description"] = description.strip()[:DESCRIPTION_MAX]
+    if source and source.strip():
+        entry["source"] = source.strip()[:DESCRIPTION_MAX]
+    entry["skills"] = sorted(set(skills or ()))
+    return write_ledger({"dispatches": {key: entry}}, path=path)
+
+
+def find_dispatches(
+    *,
+    skill: str | None = None,
+    since: str | None = None,
+    path: Path | None = None,
+) -> list[dict[str, Any]]:
+    """Recorded dispatches matching ``skill`` and/or recorded at/after ``since``.
+
+    ``since`` is the field that keeps a per-task checkbox honest. Phase 4 runs
+    its gates once per TASK; without a lower bound, one dispatch recorded in
+    task 1 would satisfy the same query for every task after it, and the check
+    would pass while proving nothing about the task in hand. Comparison is
+    lexical, which is exactly right for the ISO-8601 second-resolution stamps
+    this module writes, and it also orders the ``#NNN`` collision suffixes
+    within their second.
+    """
+    entries = read_ledger(path).get("dispatches") or {}
+    if not isinstance(entries, dict):
+        return []
+    found = []
+    for value in entries.values():
+        if not isinstance(value, dict):
+            continue
+        if skill and skill not in (value.get("skills") or []):
+            continue
+        if since and str(value.get("recorded_at") or "") < since:
+            continue
+        found.append(value)
+    return sorted(found, key=lambda e: str(e.get("recorded_at") or ""))
+
+
 def wave_discipline_status(
     wave_id: str, *, path: Path | None = None
 ) -> dict[str, Any] | None:
@@ -847,6 +975,42 @@ def _cmd_group_gate(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_record_dispatch(args: argparse.Namespace) -> int:
+    path = Path(args.path) if args.path else None
+    skills = extract_skills(args.prompt) if args.prompt else []
+    if args.skill:
+        skills = sorted(set(skills) | set(args.skill))
+    try:
+        record_dispatch(
+            subagent_type=args.subagent_type,
+            description=args.description,
+            skills=skills,
+            source=args.source or "cli",
+            timestamp=args.timestamp,
+            path=path,
+        )
+    except (ValueError, LedgerError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 2
+    print(f"dispatch recorded (skills: {', '.join(skills) or 'none recognized'})")
+    return 0
+
+
+def _cmd_dispatches(args: argparse.Namespace) -> int:
+    path = Path(args.path) if args.path else None
+    try:
+        found = find_dispatches(skill=args.skill, since=args.since, path=path)
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    print(json.dumps(found, indent=2, sort_keys=True))
+    # Exit 1 on no match so the command can BE a checkbox: `... dispatches
+    # --skill X && echo ok`. Printing an empty list with exit 0 would make
+    # "recorded" and "never happened" the same signal to any caller that reads
+    # the status -- the silent-failure shape this record exists to close.
+    return 0 if found else 1
+
+
 class LedgerError(Exception):
     """A ledger operation failed in a way the caller must handle."""
 
@@ -993,6 +1157,62 @@ def build_parser() -> argparse.ArgumentParser:
         help="ISO-8601 timestamp. Default: omitted.",
     )
     p_gg.set_defaults(func=_cmd_group_gate)
+
+    p_rd = sub.add_parser(
+        "record-dispatch",
+        help=(
+            "Record a subagent dispatch. Normally written by the PostToolUse "
+            "hook on the Task tool, not by hand."
+        ),
+    )
+    p_rd.add_argument(
+        "--subagent-type", default=None, help="Subagent type from the Task call."
+    )
+    p_rd.add_argument(
+        "--description", default=None, help="Short description of the dispatch."
+    )
+    p_rd.add_argument(
+        "--prompt",
+        default=None,
+        help=(
+            "Dispatch prompt to scan for skill names. The prompt itself is "
+            "NOT stored; only the recognized skill names are."
+        ),
+    )
+    p_rd.add_argument(
+        "--skill",
+        action="append",
+        default=None,
+        help="Record a skill name explicitly. Repeatable.",
+    )
+    p_rd.add_argument(
+        "--source", default=None, help="What wrote the record. Default: cli."
+    )
+    p_rd.add_argument(
+        "--timestamp", default=None, help="ISO-8601 timestamp. Default: now, UTC."
+    )
+    p_rd.set_defaults(func=_cmd_record_dispatch)
+
+    p_dl = sub.add_parser(
+        "dispatches",
+        help=(
+            "List recorded dispatches as JSON. Exits 1 when none match, so the "
+            "invocation can serve as a phase-verification check."
+        ),
+    )
+    p_dl.add_argument(
+        "--skill", default=None, help="Only dispatches naming this skill."
+    )
+    p_dl.add_argument(
+        "--since",
+        default=None,
+        help=(
+            "Only dispatches recorded at/after this ISO-8601 stamp. Use it for "
+            "per-task gates: without it, a dispatch from an earlier task "
+            "satisfies the check for every task after it."
+        ),
+    )
+    p_dl.set_defaults(func=_cmd_dispatches)
 
     return parser
 
