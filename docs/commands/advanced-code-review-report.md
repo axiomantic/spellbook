@@ -122,6 +122,22 @@ def verdict_rationale(verdict: str, findings: list[dict]) -> str:
 
 ## 5.4 Template Rendering
 
+<CRITICAL>
+Every review MUST report the base it used AND how that base was resolved. The
+`merge_target`, `merge_base`, `base_ref`, `resolved_via` and `fetch` fields are
+carried into `review-manifest.json` by Phase 1; this phase surfaces them at the
+head of `review-report.md`:
+
+```
+Base: <merge_target> @ <merge_base[:12]> (resolved via <resolved_via>, fetch <fetch>)
+Endpoint: <committed-only | includes working tree>
+```
+
+If `resolved_via` is `fallback-literal`, or `fetch` is not `ok`, flag it
+prominently — the base may be wrong or stale. Silent fallback is the exact
+failure this procedure exists to prevent.
+</CRITICAL>
+
 Use Python's `string.Template` for report generation:
 
 ```python
@@ -383,4 +399,35 @@ Before declaring review complete:
 - [ ] review-report.md written
 - [ ] review-summary.json written
 - [ ] All artifacts in correct directory
+
+## Final Self-Check (the whole review, not just this phase)
+
+Phase 5 is where the review is declared complete, so the whole-run gate is
+applied here.
+
+### Phase Completion
+- [ ] Phase 1: Target resolved, manifest written
+- [ ] Phase 2: Context loaded, previous items parsed
+- [ ] Phase 3: All passes complete, findings generated
+- [ ] Phase 4: All findings verified, REFUTED removed
+- [ ] Phase 5: Report rendered, artifacts written
+
+### Quality Gates
+- [ ] Every finding has: id, severity, category, file, line, evidence, **rule**
+- [ ] **Every `rule` names a catalogued rule (document + id) or a named correctness/logic bug**
+- [ ] **Base was DETECTED (no hardcoded literal), and base + `resolved_via` + fetch status are reported**
+- [ ] **Endpoint (committed-only vs. working tree) chosen deliberately and stated**
+- [ ] **Standards load completed; `rule-catalogue.json` written; if nothing was found, disclosed**
+- [ ] **Coverage reconciled N-of-N at hunk level; gaps listed with reasons**
+- [ ] No REFUTED findings in final report
+- [ ] INCONCLUSIVE findings flagged with [NEEDS VERIFICATION]
+- [ ] Declined items from previous review not re-raised
+- [ ] Signal-to-noise ratio calculated and reported
+
+### Output Verification
+- [ ] Every artifact named in the advanced-code-review skill's Outputs table exists and is valid
+
+<CRITICAL>
+If ANY self-check item fails, STOP and fix before declaring complete.
+</CRITICAL>
 ````

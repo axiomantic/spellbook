@@ -51,6 +51,41 @@ configuration that invites false confidence: `LARGE_DIFF_LINES` and
 exist. If a future edit removes a consumer, remove the row.
 </CRITICAL>
 
+## Mode Router
+
+| Target Pattern | Mode | Network Required | Source of Truth |
+|----------------|------|------------------|-----------------|
+| `feature/xyz` (branch name) | Local | No | Local files |
+| `#123` (PR number) | PR | Yes | **Diff only** |
+| `https://github.com/...` (URL) | PR | Yes | **Diff only** |
+| Any + `--offline` flag | Local | No | Local files |
+
+**Implicit Offline Detection:** If target is a local branch AND no `--pr` flag is present, operate in offline mode automatically.
+
+<CRITICAL>
+**PR Mode = Diff-Only Source**
+
+When target is a PR number or URL, the fetched diff is the ONLY authoritative representation of the changed code. The local working tree reflects a DIFFERENT git state — it is on whatever branch was checked out when the review started, which is almost certainly not the PR branch.
+
+Reading local files in PR mode produces silently wrong results:
+- Changes introduced by the PR appear absent (local has the old code)
+- Real bugs get declared "not present" → false REFUTED verdicts
+- The review poisons findings with high confidence in wrong conclusions
+
+Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR's changed file set.
+
+**Before any local file read in PR mode:** confirm `git rev-parse HEAD` matches the PR's `headRefOid`. If they differ, treat the local file as unavailable for that finding.
+
+**Load the `reviewing-prs` skill before dispatching any review subagent in PR
+mode.** It is the single source for the `review_source` decision table (including
+the worktree case, which converts a `DIFF_ONLY` review into a `LOCAL_FILES` one)
+and for the mandatory PR-review context block each subagent must be given.
+
+This rule binds every later phase, not just this one. Phase 4 verification is
+where it is most often violated: a REFUTED verdict reached by reading a local
+file during a PR review is the most dangerous error in this skill.
+</CRITICAL>
+
 ## 1.1 Target Resolution
 
 <CRITICAL>

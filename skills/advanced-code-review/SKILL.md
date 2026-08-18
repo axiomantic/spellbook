@@ -44,52 +44,17 @@ After each phase, reflect:
 
 ---
 
-## Posture
+## Posture and Scope Obligation
 
-A review is a GATE, not a courtesy pass. Be extremely discerning and apply zero
-tolerance.
-
-- Surface ANY deviation: rule violation, logic bug, design smell, untested
-  behavior, inconsistency — anything off.
-- Be **adversarial**. Verify each finding to filter false positives (that is what
-  Phase 4 is for), but **default to flagging** when in doubt.
-- A review that "found nothing" on a non-trivial diff is a **FAILED review**, not
-  a clean one. Treat an empty finding list as evidence about the review, not
-  about the code.
-
-**Build the failure. Do not just check the author's claim.** Both actions cost
-the same dispatch. Building the failure finds more problems.
-
-- Ask "can I make this fail?" Do not ask "does this pass?" The second question
-  only checks the author's own transcript. The first question does not.
-- A check that has never failed is not proven. If nobody has watched a check's
-  failure path fire, the check is a claim, not a mechanism.
-- For a claimed clean result — a mutation that should change nothing, a guard
-  that should stay silent — prove the change reached the code under test. A
-  no-op edit looks the same as a correct no-effect. Only the exit status cannot
-  tell them apart.
-- Reproduce the defect before you fix it. If you never saw the gap yourself, you
-  are guessing at the gap. A guessed fix cannot be tested.
-
-**Observed.** One guard failed four times, in four versions, each broken one level deeper than the last. Version 1 baked a path in at configure time; a reviewer defeated it by copying the tree. Version 2 replaced the real check with a flag; the reviewer deleted the check but kept the flag set. Version 3 checked a token at the end of the branch; the reviewer deleted one part of the branch and kept the token. Version 4 used per-site counters. Every version passed its own author's tests. A reviewer who rebuilt the failure — not one who reran the author's tests — broke every version. Separately, a reviewer built three silent failure modes in an isolated copy of the code. This method found a false-pass path that four prior readings of the same file had missed.
-
-**The known cost, stated plainly:** this posture produces more findings, and some
-of them will be noise. That trade is the point of the posture, and Phase 4
-verification is where the noise is filtered — not the finding stage.
-
-## Scope Obligation
-
-Consume every changed hunk in every changed file and hold each against the rule
-catalogue Phase 2 builds. No grep-sampling. No skimming. No "I read the hot
-files." Grep is fine to LOCATE things; it is never a substitute for reading the
-whole diff. For a large diff, chunk it across subagents (`LARGE_DIFF_LINES`,
-`SUBAGENT_THRESHOLD_FILES`) so that 100% of the diff is assigned and read line by
-line; `coverage-manifest.json` is how coverage is proven.
-
-When the operator names a narrower scope — a single file, a specific function,
-one subsystem, a numbered pull request, staged changes only (`--scope`) — honor
-that scope instead. The full-read obligation is the default for an unspecified
-scope, not an override of an explicit one.
+A review is a GATE, not a courtesy pass: zero tolerance, adversarial, and a
+"found nothing" verdict on a non-trivial diff is a FAILED review rather than a
+clean one. Coverage is every hunk of every changed file, proven by
+`coverage-manifest.json`, unless the operator named a narrower scope.
+`/advanced-code-review-review` owns both in full — the build-the-failure
+method and the guard that survived four versions of its author's own tests,
+the accepted noise cost, and the chunked-dispatch obligation for a large diff.
+Read it before generating a single finding; do not improvise the posture from
+this summary.
 
 ---
 
@@ -98,7 +63,7 @@ scope, not an override of an explicit one.
 | Input | Required | Default | Description |
 |-------|----------|---------|-------------|
 | `target` | Yes | - | Branch name, PR number (#123), or PR URL |
-| `--base` | No | *detected* | Override the base ref. When omitted, the base is DETECTED by `branch-context.sh` (never assumed) — see Diff Acquisition. |
+| `--base` | No | *detected* | Override the base ref. When omitted, the base is DETECTED by `branch-context.sh` (never assumed) — see Mode Router and Diff Acquisition. |
 | `--scope` | No | all | Limit to specific paths (glob pattern) |
 | `--offline` | No | auto | Force offline mode (no network operations) |
 | `--continue` | No | false | Resume previous review session |
@@ -124,83 +89,33 @@ scope, not an override of an explicit one.
 
 ---
 
-## Mode Router
-
-| Target Pattern | Mode | Network Required | Source of Truth |
-|----------------|------|------------------|-----------------|
-| `feature/xyz` (branch name) | Local | No | Local files |
-| `#123` (PR number) | PR | Yes | **Diff only** |
-| `https://github.com/...` (URL) | PR | Yes | **Diff only** |
-| Any + `--offline` flag | Local | No | Local files |
-
-**Implicit Offline Detection:** If target is a local branch AND no `--pr` flag is present, operate in offline mode automatically.
+## Mode Router and Diff Acquisition
 
 <CRITICAL>
-**PR Mode = Diff-Only Source**
-
-When target is a PR number or URL, the fetched diff is the ONLY authoritative representation of the changed code. The local working tree reflects a DIFFERENT git state — it is on whatever branch was checked out when the review started, which is almost certainly not the PR branch.
-
-Reading local files in PR mode produces silently wrong results:
-- Changes introduced by the PR appear absent (local has the old code)
-- Real bugs get declared "not present" → false REFUTED verdicts
-- The review poisons findings with high confidence in wrong conclusions
-
-Local files may only be read in PR mode for ONE purpose: loading project conventions (CLAUDE.md, linting config, sibling files for style context). Even then, only read files NOT in the PR's changed file set.
-
-**Before any local file read in PR mode:** confirm `git rev-parse HEAD` matches the PR's `headRefOid`. If they differ, treat the local file as unavailable for that finding.
-
-**Load the `reviewing-prs` skill before dispatching any review subagent in PR
-mode.** It is the single source for the `review_source` decision table (including
-the worktree case, which converts a `DIFF_ONLY` review into a `LOCAL_FILES` one)
-and for the mandatory PR-review context block each subagent must be given.
-</CRITICAL>
-
----
-
-## Diff Acquisition
-
-<CRITICAL>
-Never hand-roll the merge base. `scripts/branch-context.sh` (POSIX) and
-`scripts/branch-context.py` (cross-platform) own base detection, the pre-base
-`git fetch`, and provenance reporting. Shell out to one of them.
-
 **No base literal appears in this skill or its phase commands.** Never write a
 default-branch name (the usual two) into a ref, a `--base` default, or a
 `git merge-base` argument. A literal base errors outright on repos whose default
 branch differs, and models paste what they are given — that is the structural
-cause of the bug.
+cause of the bug. Never hand-roll the merge base either:
+`scripts/branch-context.sh` (POSIX) and `scripts/branch-context.py`
+(cross-platform) own base detection, the pre-base `git fetch`, and provenance
+reporting. Shell out to one of them.
 </CRITICAL>
 
-Two independent axes — BASE and ENDPOINT — and each is decided explicitly. The
-`branch-context` skill owns both: the detection ladder that resolves the merge
-target (`pr-base-ref`, then `upstream-tracking`, then `remote-head`, then a
-`fallback-literal` that is a guess and is reported as one), and the subcommand
-pair for each endpoint. `/advanced-code-review-plan` 1.1 and 1.2 apply that
-ladder to this skill, including the `--base` override (which skips detection and
-reports `resolved_via` as `explicit-override`, naming who supplied it) and the
-error rows for a failed, stale, or guessed base. Load those rather than
-restating them here.
+`/advanced-code-review-plan` owns the mode router (branch vs. PR-number vs. URL,
+implicit offline detection) and the PR-mode diff-only gate, including the
+`reviewing-prs` load and the `git rev-parse HEAD` check that must precede any
+local file read during a PR review. It also owns the BASE and ENDPOINT axes:
+the detection ladder (`pr-base-ref`, then `upstream-tracking`, then
+`remote-head`, then a `fallback-literal` that is a guess and is reported as
+one), the `--base` override reported as `explicit-override`, and the error rows
+for a failed, stale, or guessed base.
 
 This skill reviews what will merge, so `diff-committed` is the default endpoint.
 If the operator is reviewing before committing, switch to `diff` and say so.
-"Branch diff" is **not** a name for both endpoints.
-
-### Reporting requirement
-
-<CRITICAL>
-Every review MUST report the base it used AND how that base was resolved. Carry
-`merge_target`, `merge_base`, `base_ref`, `resolved_via`, and `fetch` into
-`review-manifest.json`, and surface them in `review-report.md`:
-
-```
-Base: <merge_target> @ <merge_base[:12]> (resolved via <resolved_via>, fetch <fetch>)
-Endpoint: <committed-only | includes working tree>
-```
-
-If `resolved_via` is `fallback-literal`, or `fetch` is not `ok`, flag it
-prominently — the base may be wrong or stale. Silent fallback is the exact
-failure this procedure exists to prevent.
-</CRITICAL>
+"Branch diff" is **not** a name for both endpoints. Every review reports the
+base it used and how that base was resolved; `/advanced-code-review-report` 5.4
+states the requirement and the flagging rule for a guessed or stale base.
 
 ---
 
@@ -214,65 +129,15 @@ failure this procedure exists to prevent.
 | 4 | Verification | Fact-check findings, remove false positives | `/advanced-code-review-verify` |
 | 5 | Report Generation | Produce final deliverables | `/advanced-code-review-report` |
 
----
-
-## Phase 1: Strategic Planning
-
-**Execute:** `/advanced-code-review-plan`
-
-**Outputs:** `review-manifest.json`, `review-plan.md`, `coverage-manifest.json`
-
-**Self-Check:** Base DETECTED (no literal) with `resolved_via` and fetch status recorded, endpoint chosen, files categorized, per-hunk coverage manifest built BEFORE review, complexity estimated, artifacts written.
-
----
-
-## Phase 2: Context Analysis
-
-**Execute:** `/advanced-code-review-context`
-
-**Outputs:** `rule-catalogue.json`, `context-analysis.md`, `previous-items.json`
-
-**Self-Check:** Standards loaded across the full document net (root AND subdirectory `AGENTS.md`, coding standards, testing instructions, lint config, and whatever those documents themselves reference — contributing guides, style guides), the operator's standing rules and any project memory the environment provides read, rule catalogue emitted, previous items loaded, PR context fetched (if online), re-check requests extracted.
+Run the phases in order. Each command carries its own Phase Self-Check and
+states the gate that must hold before the next phase starts; do not summarize
+those checks here, and do not proceed past a failed one.
 
 <CRITICAL>
 **Phase 2 is split on blocking behavior.** The standards load (2.0) BLOCKS;
 history (previous reviews, PR context) is non-blocking. `/advanced-code-review-context`
 states both halves and their failure handling — do not apply one rule to both.
 </CRITICAL>
-
----
-
-## Phase 3: Deep Review
-
-Multi-pass analysis: Security, Correctness, Quality, and Polish passes.
-
-**Execute:** `/advanced-code-review-review`
-
-**Outputs:** `findings.json`, `findings.md`
-
-**Self-Check:** Coverage reconciled N-of-N at hunk level with gaps disclosed, all passes complete, declined items respected, required fields present including `rule`.
-
-Findings about test adequacy are PLAUSIBLE at best until auditing-green-mirage has run on the test in question; Phase 4 must not promote such a finding to verified without it.
-
----
-
-## Phase 4: Verification
-
-**Execute:** `/advanced-code-review-verify`
-
-**Outputs:** `verification-audit.md`, updated `findings.json`
-
-**Self-Check:** All findings verified, REFUTED removed, INCONCLUSIVE flagged, signal-to-noise calculated.
-
----
-
-## Phase 5: Report Generation
-
-**Execute:** `/advanced-code-review-report`
-
-**Outputs:** `review-report.md`, `review-summary.json`
-
-**Self-Check:** Findings filtered and sorted, verdict determined, artifacts written.
 
 ---
 
@@ -337,33 +202,11 @@ fetched, what is skipped, and which capabilities are unavailable offline.
 
 ## Final Self-Check
 
-Before declaring review complete:
-
-### Phase Completion
-- [ ] Phase 1: Target resolved, manifest written
-- [ ] Phase 2: Context loaded, previous items parsed
-- [ ] Phase 3: All passes complete, findings generated
-- [ ] Phase 4: All findings verified, REFUTED removed
-- [ ] Phase 5: Report rendered, artifacts written
-
-### Quality Gates
-- [ ] Every finding has: id, severity, category, file, line, evidence, **rule**
-- [ ] **Every `rule` names a catalogued rule (document + id) or a named correctness/logic bug**
-- [ ] **Base was DETECTED (no hardcoded literal), and base + `resolved_via` + fetch status are reported**
-- [ ] **Endpoint (committed-only vs. working tree) chosen deliberately and stated**
-- [ ] **Standards load completed; `rule-catalogue.json` written; if nothing was found, disclosed**
-- [ ] **Coverage reconciled N-of-N at hunk level; gaps listed with reasons**
-- [ ] No REFUTED findings in final report
-- [ ] INCONCLUSIVE findings flagged with [NEEDS VERIFICATION]
-- [ ] Declined items from previous review not re-raised
-- [ ] Signal-to-noise ratio calculated and reported
-
-### Output Verification
-- [ ] All 10 artifact files exist and are valid
-
-<CRITICAL>
-If ANY self-check item fails, STOP and fix before declaring complete.
-</CRITICAL>
+The whole-run gate — phase completion, the quality gates covering every
+finding's `rule` field, base provenance, the standards load, N-of-N hunk
+coverage, and artifact existence — is applied by `/advanced-code-review-report`
+under "Final Self-Check". If ANY item fails, STOP and fix before declaring the
+review complete.
 
 ---
 

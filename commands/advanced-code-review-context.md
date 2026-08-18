@@ -94,6 +94,8 @@ mandatory:
 | `docs/code-review-instructions.md`, `.github/code-review-instructions.md` | Reactive fallback |
 | `CONTRIBUTING.md`, style guides | |
 | `pyproject.toml`, `setup.cfg`, `.eslintrc`, `biome.json`, `ruff.toml` | Lint/type config = enforceable rules |
+| The operator's standing rules, and any project memory the environment provides | Whatever the harness exposes — these are enforceable rules too |
+| Whatever the documents above themselves reference | Contributing guides, style guides, linked standards; follow the references outward |
 
 Subdirectory `AGENTS.md` discovery is driven by the changed-path set, so it
 depends on Phase 1's file list:
