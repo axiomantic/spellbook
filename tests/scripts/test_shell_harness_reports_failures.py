@@ -23,6 +23,12 @@ from pathlib import Path
 
 import pytest
 
+# The harness under test is a POSIX shell suite; CI runs shell-integration-tests
+# on ubuntu only. On Windows `bash` resolves to the WSL stub, which reports no
+# installed distribution rather than running anything.
+pytestmark = pytest.mark.posix_only
+
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HARNESS_DIR = REPO_ROOT / "tests" / "claude-code"
 RUNNER = HARNESS_DIR / "run-all-tests.sh"
