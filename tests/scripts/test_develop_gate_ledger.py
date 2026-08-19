@@ -8,10 +8,12 @@ skill's usage of the ledger, which is exercised by an actual develop
 run, not a Python test.
 """
 
+import argparse
 import ast
 import json
 import logging
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -2194,3 +2196,52 @@ def test_archive_ceremony_still_refuses_a_genuinely_empty_ceremony(tmp_ledger, r
     _write_raw_ledger(tmp_ledger, f'{{"ceremony": {raw}}}')
     with pytest.raises(ledger.LedgerError, match="no ceremony"):
         ledger.archive_ceremony("aborted the run")
+
+
+def _cli_subcommands() -> set[str]:
+    """Every subcommand `main` accepts, read off the parser itself."""
+    action = next(
+        a
+        for a in ledger.build_parser()._actions
+        if isinstance(a, argparse._SubParsersAction)
+    )
+    return set(action.choices)
+
+
+def test_every_named_remedy_is_a_command_the_cli_accepts():
+    """A refusal that names a command argparse rejects tells the reader to run
+    something that cannot run -- the refusal becomes a dead end at exactly the
+    moment the caller is stuck. The remedies are prose inside error strings, so
+    nothing but this test ties them to the parser they name.
+
+    The vocabulary is derived from `_STRUCTURED_FIELD_ROUTES` and from the
+    hyphenated backticked tokens in the module source, not from a hand-written
+    list beside them: a second copy of the remedy set would drift from the
+    messages exactly as silently as the messages drift from the parser.
+    """
+    commands = _cli_subcommands()
+    source = Path(ledger.__file__).read_text(encoding="utf-8")
+    named = set(re.findall(r"`{1,2}([a-z][a-z0-9]*(?:-[a-z0-9]+)+)", source))
+    for route in ledger._STRUCTURED_FIELD_ROUTES.values():
+        named |= set(re.findall(r"`([a-z][a-z0-9-]*)", route))
+    # Only tokens that look like a subcommand invocation are in scope; a
+    # backticked field name is not a remedy.
+    candidates = {n for n in named if "-" in n}
+    assert candidates, "no command-shaped remedy tokens found -- regex went stale"
+    unknown = sorted(n for n in candidates if n not in commands)
+    assert not unknown, (
+        f"refusal messages name commands the CLI does not accept: {unknown!r}; "
+        f"accepted subcommands are {sorted(commands)}"
+    )
+
+
+def test_every_structured_field_route_names_a_real_subcommand():
+    """Each `set` refusal routes to a recorder. If that recorder is spelled
+    wrong, the refusal is a dead end for the one operation it exists to
+    redirect."""
+    commands = _cli_subcommands()
+    for field, route in ledger._STRUCTURED_FIELD_ROUTES.items():
+        tokens = set(re.findall(r"`([a-z][a-z0-9-]*)", route))
+        assert tokens & commands, (
+            f"route for {field!r} names no accepted subcommand: {route!r}"
+        )
