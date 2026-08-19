@@ -102,7 +102,7 @@ Claude Code is the **primary** supported platform with full support. The others 
 ## Invariant Principles
 
 1. **Library vs Repo distinction**: Library items (`skills/`, `commands/`) ship to users and require docs. Repo items (`.claude/skills/`) are internal only.
-2. **Documentation follows code**: Library changes require CHANGELOG, README, docs updates. Pre-commit hooks enforce this.
+2. **Documentation follows code**: Library changes require CHANGELOG, README, and docs updates. The `check-docs-completeness` pre-commit hook enforces the README and `docs/` halves. **Nothing enforces the CHANGELOG entry** — no hook and no CI job reads it, so a library change ships with a stale CHANGELOG unless you update it yourself.
 3. **Test before commit**: `uv run pytest tests/` + `uv run install.py --dry-run` before any commit.
 
 ## Glossary
