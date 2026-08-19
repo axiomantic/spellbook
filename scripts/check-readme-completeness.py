@@ -16,9 +16,9 @@ Validates:
 5. The reverse direction: every README table entry, every README
    link-reference definition, every mkdocs.yml nav entry, and every page
    under each generated docs/ subtree resolves to a real source file. The
-   README-facing parts follow README_ARTIFACT_KINDS; the orphan-page sweep
-   reads docs/ rather than README, so it follows DOCUMENTED_TREES and
-   covers docs/rules/ as well.
+   README-facing parts follow README_ARTIFACT_KINDS; the nav checks and the
+   orphan-page sweep read mkdocs.yml and docs/ rather than README, so they
+   follow DOCUMENTED_TREES and cover rules as well.
 
 Checks 1-4 are one-directional -- they assert that every real item is
 documented, never that every documented item is real. That asymmetry let
@@ -56,8 +56,16 @@ ARTIFACT_PREFIXES = README_ARTIFACT_KINDS
 # them, so the sweep follows what is GENERATED, not what README tabulates.
 ORPHAN_SWEEP_TREES = DOCUMENTED_TREES
 
+# The nav publishes every generated tree, rules included, so both nav
+# directions follow DOCUMENTED_TREES rather than README_ARTIFACT_KINDS. The
+# alternation is BUILT from that tuple: a literal re-spelling of the same
+# names is the drift this module exists to prevent.
+NAV_TREES = DOCUMENTED_TREES
+
 LINK_DEF_RE = re.compile(r"^\[([^\]^]+)\]:[ \t]*(\S+)[ \t]*$", re.M)
-NAV_ENTRY_RE = re.compile(r"\b(skills|commands|agents)/([A-Za-z0-9._-]+)\.md\b")
+NAV_ENTRY_RE = re.compile(
+    rf"\b({'|'.join(re.escape(t) for t in NAV_TREES)})/([A-Za-z0-9._-]+)\.md\b"
+)
 
 
 def real_sources(repo_root):
@@ -286,6 +294,13 @@ def main():
     for agent in agents:
         if f"agents/{agent}.md" not in mkdocs_content:
             issues.append(f"mkdocs.yml nav missing: agents/{agent}.md")
+
+    # Rules have no README table, so they are absent from the checks above --
+    # but generate_docs.py publishes docs/rules/ and mkdocs.yml navigates it,
+    # so the nav direction applies to them exactly like the other trees.
+    for rule in sorted(real_sources(repo_root)["rules"]):
+        if f"rules/{rule}.md" not in mkdocs_content:
+            issues.append(f"mkdocs.yml nav missing: rules/{rule}.md")
 
     # Check the "(N total)" counts in README section headings and TOC anchors.
     for label, items in (("Skills", skills), ("Commands", commands), ("Agents", agents)):
