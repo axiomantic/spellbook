@@ -7,7 +7,11 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.mcp import get_mcp_auth_token, get_spellbook_server_url
+from ..components.mcp import (
+    get_mcp_auth_token,
+    get_spellbook_server_url,
+    write_token_bearing_file,
+)
 from ..components.symlinks import (
     create_symlink,
     create_skill_symlinks,
@@ -64,18 +68,18 @@ def _add_mcp_to_config_toml(
                 re.DOTALL,
             )
             new_content = pattern.sub(section, content)
-            config_path.write_text(new_content, encoding="utf-8")
+            write_token_bearing_file(config_path, new_content)
             return (True, "updated MCP server config")
         else:
             # Append new section
             if not content.endswith("\n"):
                 content += "\n"
             content += "\n" + section
-            config_path.write_text(content, encoding="utf-8")
+            write_token_bearing_file(config_path, content)
             return (True, "registered MCP server")
     else:
         # Create new config.toml
-        config_path.write_text(section, encoding="utf-8")
+        write_token_bearing_file(config_path, section)
         return (True, "created config.toml with MCP server")
 
 
@@ -99,7 +103,7 @@ def _remove_mcp_from_config_toml(
         re.DOTALL,
     )
     new_content = pattern.sub("", content)
-    config_path.write_text(new_content, encoding="utf-8")
+    write_token_bearing_file(config_path, new_content)
     return (True, "removed MCP server config")
 
 

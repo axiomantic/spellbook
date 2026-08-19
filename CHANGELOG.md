@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Every platform installer that copies the MCP bearer token into a harness
+  config file now writes that file with mode 0600, through one shared
+  `installer.components.mcp.write_token_bearing_file`. Measured on a real
+  machine before the fix: `~/.local/spellbook/.mcp-token` is 0600 at its
+  source, but `~/.codex/config.toml`, `~/.config/opencode/opencode.json` and
+  `~/.pi/agent/mcp.json` carried the live token at 0644, readable by any other
+  local account. The `os.open` mode argument applies only to files it creates,
+  so a config file already on disk at 0644 kept that mode through `O_TRUNC`;
+  an explicit `fchmod` on the descriptor is what tightens it, and it runs on
+  the next install for files that already exist. The pattern existed in
+  `installer/platforms/forgecode.py` and `goose.py` since their PR review and
+  was never generalised to the other four token-bearing installers
+  (`antigravity`, `codex`, `opencode`, `pi`). Files that do not carry the token
+  are unchanged. `tests/installer/test_token_file_permissions.py` derives the
+  installer set from `installer/platforms/` rather than a hand list, so a
+  platform added later is covered without anyone extending the test.
+
 ### Changed
 
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off

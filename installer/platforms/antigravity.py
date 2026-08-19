@@ -15,7 +15,12 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
+from ..components.mcp import (
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    get_mcp_auth_token,
+    write_token_bearing_file,
+)
 from ..components.rule_delivery import INSTALLED_GLOB
 from ..components.rule_modules import PER_FILE_CAP_BYTES
 from ..components.symlinks import create_symlink, remove_symlink
@@ -148,8 +153,10 @@ class AntigravityInstaller(PlatformInstaller):
 
         config["mcpServers"]["spellbook"] = server_config
 
-        content = json.dumps(config, indent=2) + "\n"
-        self.mcp_config_path.write_text(content, encoding="utf-8")
+        # mcp_config.json carries the bearer token in its headers map.
+        write_token_bearing_file(
+            self.mcp_config_path, json.dumps(config, indent=2) + "\n"
+        )
 
         return (True, action)
 
@@ -354,7 +361,10 @@ class AntigravityInstaller(PlatformInstaller):
                     config = json.loads(content)
                     if "mcpServers" in config and "spellbook" in config["mcpServers"]:
                         del config["mcpServers"]["spellbook"]
-                        self.mcp_config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+                        write_token_bearing_file(
+                            self.mcp_config_path,
+                            json.dumps(config, indent=2) + "\n",
+                        )
                         results.append(
                             InstallResult(
                                 component="mcp",

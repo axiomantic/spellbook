@@ -33,7 +33,12 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
+from ..components.mcp import (
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    get_mcp_auth_token,
+    write_token_bearing_file,
+)
 from ..components.rule_delivery import INSTALLED_GLOB
 from ..components.symlinks import create_symlink, remove_symlink
 from ..demarcation import get_installed_version, remove_demarcated_section
@@ -103,7 +108,7 @@ def _update_opencode_config(
         config["$schema"] = "https://opencode.ai/config.json"
 
     # Write config
-    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    write_token_bearing_file(config_path, json.dumps(config, indent=2) + "\n")
     return (True, action)
 
 
@@ -158,7 +163,7 @@ def _update_opencode_instructions(
         config["$schema"] = "https://opencode.ai/config.json"
 
     # Write config
-    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    write_token_bearing_file(config_path, json.dumps(config, indent=2) + "\n")
     return (True, action)
 
 
@@ -202,7 +207,7 @@ def _remove_opencode_instructions(
     config["instructions"] = instructions
 
     # Write config back
-    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    write_token_bearing_file(config_path, json.dumps(config, indent=2) + "\n")
     return (True, "removed instructions path")
 
 
@@ -229,7 +234,7 @@ def _remove_opencode_mcp_config(
     del config["mcp"]["spellbook"]
 
     # Write config back
-    config_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+    write_token_bearing_file(config_path, json.dumps(config, indent=2) + "\n")
     return (True, "removed MCP server config")
 
 

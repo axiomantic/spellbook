@@ -678,6 +678,47 @@ def get_mcp_auth_token() -> Optional[str]:
     return None
 
 
+# Mode for any file that carries a copy of the bearer token. TOKEN_PATH itself
+# is 0600; a copy must not be more readable than its source.
+TOKEN_FILE_MODE = 0o600
+
+
+def write_token_bearing_file(path: Path, content: str) -> None:
+    """Write ``content`` to ``path`` with mode 0600, tightening a broader mode.
+
+    Every platform installer that embeds the bearer token in a harness config
+    file writes it through here, so the permission decision lives in one place
+    instead of once per platform.
+
+    The ``mode`` argument to ``os.open`` applies only to files it CREATES. A
+    config file already on disk at 0644 -- written by an older spellbook, or
+    by the harness itself -- keeps its inode and its mode through ``O_TRUNC``,
+    so the token would land in a world-readable file. The explicit ``fchmod``
+    is what closes that; it operates on the descriptor rather than the path so
+    there is no window between the chmod and the write in which the token is
+    present at the broader mode.
+
+    ``hasattr(os, "fchmod")`` guards Windows, where POSIX mode bits do not
+    apply and chmod is effectively a no-op.
+    """
+    fd = os.open(
+        os.fspath(path),
+        os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
+        TOKEN_FILE_MODE,
+    )
+    try:
+        if hasattr(os, "fchmod"):
+            os.fchmod(fd, TOKEN_FILE_MODE)
+        # os.fdopen takes ownership of fd; its context manager closes it.
+        handle = os.fdopen(fd, "w", encoding="utf-8")
+    except BaseException:
+        os.close(fd)
+        raise
+
+    with handle:
+        handle.write(content)
+
+
 def get_launchd_plist_path() -> Path:
     """Get path to launchd plist file."""
     return Path.home() / "Library" / "LaunchAgents" / f"{LAUNCHD_LABEL}.plist"

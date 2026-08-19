@@ -44,6 +44,7 @@ from ..components.mcp import (
     DEFAULT_HOST,
     DEFAULT_PORT,
     get_mcp_auth_token,
+    write_token_bearing_file,
 )
 from ..components.symlinks import (
     create_skill_symlinks,
@@ -252,27 +253,8 @@ def _update_goose_mcp_config(
 
     new_text = _insert_spellbook_block(existing, _generate_mcp_yaml_list_item())
 
-    # Atomic write with mode 0600 (config.yaml contains a plaintext bearer token)
-    # BOT-B2 fix: `os.fdopen()` returns a file object that OWNS the fd. When
-    # `with os.fdopen(...)` exits (whether normally or via exception inside the
-    # block), the file object closes the fd. The previous code then called
-    # `os.close(fd)` in the except handler, which double-closed the same fd.
-    # On POSIX this is UB (can close a different fd acquired in the race
-    # window). Just let the context manager own the fd; if `f.write()` raises,
-    # the `with` block already closed fd before re-raising.
-    fd = os.open(
-        os.fspath(config_path),
-        os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
-        0o600,
-    )
-    # BOT-B2 fix: os.fdopen() owns fd. Its context manager closes fd (via the C
-    # extension) on either normal exit OR exception -- including f.write()
-    # raising. No explicit try/except / os.close needed; the original exception
-    # propagates automatically, and we never double-close.
-    if hasattr(os, "fchmod"):
-        os.fchmod(fd, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        f.write(new_text)
+    # config.yaml carries a plaintext bearer token, so it is written 0600.
+    write_token_bearing_file(config_path, new_text)
 
     return (True, action)
 
@@ -291,18 +273,7 @@ def _remove_goose_mcp_config(
         return (True, "MCP server was not configured")
 
     new_text = _strip_spellbook_block(existing)
-    # BOT-B2 fix: see _update_goose_mcp_config. fdopen() owns the fd; the
-    # except handler must NOT close fd again.
-    # BOT-B2 fix: see _update_goose_mcp_config. fdopen() owns the fd.
-    fd = os.open(
-        os.fspath(config_path),
-        os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
-        0o600,
-    )
-    if hasattr(os, "fchmod"):
-        os.fchmod(fd, 0o600)
-    with os.fdopen(fd, "w", encoding="utf-8") as f:
-        f.write(new_text)
+    write_token_bearing_file(config_path, new_text)
 
     return (True, "removed MCP server config")
 

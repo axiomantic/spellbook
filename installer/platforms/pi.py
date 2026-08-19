@@ -18,7 +18,11 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.mcp import get_mcp_auth_token, get_spellbook_server_url
+from ..components.mcp import (
+    get_mcp_auth_token,
+    get_spellbook_server_url,
+    write_token_bearing_file,
+)
 from ..components.symlinks import (
     cleanup_spellbook_symlinks,
     create_skill_symlinks,
@@ -60,18 +64,24 @@ def _load_mcp_config_dict(config_path: Path) -> dict:
 
 
 def _write_mcp_config(config_path: Path, config: dict) -> None:
-    """Write JSON config atomically.
+    """Write JSON config atomically, with mode 0600.
 
     Writes to a temporary file in the same directory as ``config_path`` (so
     ``os.replace`` is an atomic rename on the same filesystem) and then
     atomically replaces the target. On any failure the temporary file is
     removed so a partial write never lands at ``config_path``.
+
+    The temporary file is written through ``write_token_bearing_file`` because
+    mcp.json carries the bearer token, and ``os.replace`` carries the source
+    inode's mode onto the destination. That also tightens a pre-existing 0644
+    ``config_path``, whose inode is discarded by the rename. The token is
+    never present in a world-readable file, not even in the temporary one.
     """
     config_path.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(config, indent=2) + "\n"
     tmp_path = config_path.with_name(f"{config_path.name}.tmp.{os.getpid()}")
     try:
-        tmp_path.write_text(payload, encoding="utf-8")
+        write_token_bearing_file(tmp_path, payload)
         os.replace(tmp_path, config_path)
     except BaseException:
         try:

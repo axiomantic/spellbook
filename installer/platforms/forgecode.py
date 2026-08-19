@@ -11,11 +11,8 @@ Config dir resolution priority (per design Section 3):
 3. ~/.forge (default)
 
 The .mcp.json file is written with mode 0600 because it contains a plaintext
-bearer token. We use ``os.open`` with mode 0o600 to set restrictive
-permissions on creation, then ``os.fchmod`` on the fd to also tighten any
-pre-existing file (the ``mode`` arg to ``os.open`` only applies on creation,
-so an existing 0o644 file would otherwise survive ``O_TRUNC`` with broad
-permissions intact). The spellbook server entry sets ``oauth: false`` to
+bearer token; ``installer.components.mcp.write_token_bearing_file`` owns that
+rule for every platform. The spellbook server entry sets ``oauth: false`` to
 disable OAuth auto-detection on the forge client side.
 
 Reference: design doc 2026-04-30-forgecode-support-design.md, Section 3.
@@ -27,7 +24,12 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
+from ..components.mcp import (
+    DEFAULT_HOST,
+    DEFAULT_PORT,
+    get_mcp_auth_token,
+    write_token_bearing_file,
+)
 from ..components.rule_bundle import DELIVERY_MARKER_PREFIX
 from ..demarcation import (
     get_installed_version,
@@ -96,37 +98,8 @@ def _load_mcp_config_dict(config_path: Path) -> dict:
 
 
 def _write_mcp_config_secure(config_path: Path, config: dict) -> None:
-    """Write JSON config with mode 0600 atomically (no TOCTOU window).
-
-    ``os.open`` with mode 0o600 only applies to *newly created* files; if
-    ``config_path`` already exists with broader permissions (e.g. 0o644 from
-    a prior installer version), ``O_TRUNC`` preserves the existing mode.
-    We therefore explicitly ``os.fchmod`` the file descriptor after open to
-    tighten any pre-existing mode before writing the bearer token. This
-    closes the gap flagged in PR review (cycle 4): an existing 0o644
-    ``.mcp.json`` would otherwise leak the token to other local users.
-
-    Operating on the fd (not the path) avoids a TOCTOU window between
-    chmod and write. ``hasattr(os, "fchmod")`` guards Windows where chmod
-    is already a no-op.
-    """
-    payload = json.dumps(config, indent=2) + "\n"
-    fd = os.open(
-        os.fspath(config_path),
-        os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
-        0o600,
-    )
-    try:
-        if hasattr(os, "fchmod"):
-            os.fchmod(fd, 0o600)
-        # os.fdopen takes ownership of fd; its context manager closes it.
-        f = os.fdopen(fd, "w", encoding="utf-8")
-    except BaseException:
-        os.close(fd)
-        raise
-
-    with f:
-        f.write(payload)
+    """Write JSON config with mode 0600 (see ``write_token_bearing_file``)."""
+    write_token_bearing_file(config_path, json.dumps(config, indent=2) + "\n")
 
 
 def _update_forgecode_mcp_config(
