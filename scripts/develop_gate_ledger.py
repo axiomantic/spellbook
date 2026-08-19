@@ -577,6 +577,16 @@ def set_ceremony_field(
     and a first write after the lock is allowed -- the guard refuses a
     reposition, not the recording of the original selection.
 
+    Whether the ceremony is locked is decided on PRESENCE, matching the
+    sentence above, and never on truthiness. A ledger holding
+    ``locked_at: ""`` is locked; only an absent or ``null`` stamp is
+    unlocked. Testing truthiness made a blank stamp a master key that
+    disengaged every guard in this function at once, and a blank stamp is
+    exactly what the empty-string route wrote before the value guard below
+    existed. ``null`` reads as unlocked because it is JSON's spelling of
+    "no value" -- treating it as a lock would refuse the Phase 0 writes the
+    lock is meant to permit.
+
     ``selected``, ``core`` and ``declined`` stay writable after the lock,
     but in ONE DIRECTION only. Escalation is permitted mid-run ("the lock
     is a floor, not a ceiling"), so ``selected`` and ``core`` may grow and
@@ -594,10 +604,25 @@ def set_ceremony_field(
             f"invalid ceremony.gate_position {value!r}; "
             f"valid: {', '.join(GATE_POSITIONS)}"
         )
+    # A stamp whose value is blank is a lock in name only, and it is the one
+    # shape a caller could previously write through this very function -- the
+    # first write faces no existing lock, so nothing refused it, and every
+    # later guard then read it as unlocked. Refusing it here keeps the
+    # reachable route closed; the presence tests below keep a hand-edited one
+    # from paying off.
+    if name == "locked_at" and not value.strip():
+        raise ValueError(
+            f"ceremony.locked_at requires a non-blank timestamp; got {value!r}. "
+            "Its presence IS the lock, so a blank stamp is a lock nothing can "
+            "read -- and it would disengage the guards it is supposed to arm."
+        )
     current = read_ledger(path)
     existing_ceremony = _require_ceremony_dict(current)
     existing_locked = existing_ceremony.get("locked_at")
-    if name == "locked_at" and existing_locked and existing_locked != value:
+    # PRESENCE, not truthiness. See the docstring: `""`, `0` and `false` are
+    # all present, so all three are locked.
+    is_locked = existing_locked is not None
+    if name == "locked_at" and is_locked and existing_locked != value:
         raise LedgerError(
             f"refusing to rewrite ceremony.locked_at: existing={existing_locked!r} "
             f"new={value!r}. The lock is set once and never rewritten."
@@ -607,7 +632,7 @@ def set_ceremony_field(
     # as any other ceremony change. Guarding only locked_at would leave the
     # documented lock unenforced for the one field a mid-run session has a
     # motive to change.
-    if name == "gate_position" and existing_locked:
+    if name == "gate_position" and is_locked:
         existing_position = existing_ceremony.get("gate_position")
         if existing_position and existing_position != value:
             raise LedgerError(
@@ -625,7 +650,7 @@ def set_ceremony_field(
     # Direction is per-field: selected and core may only GROW, declined may
     # only SHRINK, because growing declined removes a gate from the run by
     # the back door. declined shrinks legitimately on promotion.
-    if name in _MONOTONIC_CEREMONY_FIELDS and existing_locked:
+    if name in _MONOTONIC_CEREMONY_FIELDS and is_locked:
         existing_value = existing_ceremony.get(name)
         # The comparison is UNCONDITIONAL. Guarding it on a truthy prior value
         # was correct for the grow fields and a bypass for the shrink field:
