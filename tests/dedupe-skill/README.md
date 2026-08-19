@@ -9,18 +9,27 @@ documented in the impl plan §2 Track D and design §16.
 From the repo root:
 
 ```sh
-bash tests/dedupe-skill/verify-structure.sh
-bash tests/dedupe-skill/verify-no-python.sh
-bash tests/dedupe-skill/verify-no-python-neg.sh
-bash tests/dedupe-skill/verify-anti-irony.sh
-bash tests/dedupe-skill/verify-anti-irony-neg.sh
-bash tests/dedupe-skill/verify-json-blocks.sh
-bash tests/dedupe-skill/verify-json-blocks-neg.sh
-bash tests/dedupe-skill/verify-markdown.sh
-bash tests/dedupe-skill/verify-references.sh
+bash tests/dedupe-skill/run-all-gates.sh
 ```
 
-All scripts must exit 0.
+The runner globs `verify-*.sh`, asserts the discovered count against a
+floor before running anything, and exits non-zero if any gate fails or if
+discovery comes up short. Every gate is uniformly exit-0-is-pass, and the
+runner does not invert any child's status — the `-neg` gates already
+invert internally.
+
+Individual gates still run standalone (`bash tests/dedupe-skill/verify-structure.sh`),
+which is the quicker loop when iterating on one invariant.
+
+## CI
+
+The `dedupe-skill-gates` job in `.github/workflows/test.yml` installs
+`jq`, `perl`, and `markdownlint-cli2`, then runs the runner.
+A pytest guard,
+`test_dedupe_skill_gates_are_wired` under `tests/scripts/`, covers the
+wiring itself: it asserts the workflow calls the runner, that the discovery floor
+has not been lowered, and — against a sandbox of synthetic gates — that a
+failing gate reaches the runner's exit status.
 
 ## Dependencies
 
