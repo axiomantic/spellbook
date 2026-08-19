@@ -1590,7 +1590,8 @@ def test_cli_blocker_open_without_type_errors(tmp_ledger):
 def test_cli_blocker_close_with_contradicting_type_errors(tmp_ledger):
     _run_cli("blocker", "B1", "--type", "decision", "--timestamp", "2026-08-11T09:00Z")
     proc = _run_cli("blocker", "B1", "--type", "work", "--close")
-    assert proc.returncode == 2
+    # 1, not 2: the stored blocker's type is what the operation cannot use.
+    assert proc.returncode == 1
     assert "type mismatch" in proc.stderr
     assert "closed_at" not in json.loads(tmp_ledger.read_text())["blockers"]["B1"]
 
@@ -1605,7 +1606,8 @@ def test_cli_blocker_rejects_invalid_type(tmp_ledger):
 @pytest.mark.allow("subprocess")
 def test_cli_blocker_close_nonexistent_errors(tmp_ledger):
     proc = _run_cli("blocker", "B9", "--type", "work", "--close")
-    assert proc.returncode == 2
+    # 1, not 2: the id is well-formed; the ledger holds no blocker under it.
+    assert proc.returncode == 1
     assert "no open blocker" in proc.stderr
 
 
@@ -2245,3 +2247,78 @@ def test_every_structured_field_route_names_a_real_subcommand():
         assert tokens & commands, (
             f"route for {field!r} names no accepted subcommand: {route!r}"
         )
+
+
+# ---- the documented exit-code split, on every subcommand ------------------
+#
+# `references/ledger-cli.md` states the contract: 1 means the STORED ledger is
+# not what the operation needs, 2 means the CALLER asked for something the
+# ledger does not accept. A caller can only branch on that split if it holds
+# everywhere. Five recorders collapsed both exceptions into a single exit 2, so
+# a corrupt ledger reached through `blocker` told the caller "fix the command"
+# while the ledger needed repair -- the wrong half of the split, and the half
+# that sends the reader looking at correct input.
+
+
+CORRUPT_LEDGER = "{not json at all"
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize(
+    ("name", "argv"),
+    [
+        ("archive-ceremony", ("archive-ceremony", "--reason", "re-select")),
+        ("wave-discipline", ("wave-discipline", "W1", "--status", "passed")),
+        ("blocker", ("blocker", "B1", "--type", "work")),
+        ("group-gate", ("group-gate", "G1", "--status", "passed")),
+        (
+            "record-dispatch",
+            ("record-dispatch", "--subagent-type", "impl", "--description", "d"),
+        ),
+    ],
+)
+def test_cli_exits_1_when_the_stored_ledger_is_corrupt(tmp_ledger, name, argv):
+    """A corrupt ledger is a stored-state failure on every route into it."""
+    _write_raw_ledger(tmp_ledger, CORRUPT_LEDGER)
+    proc = _run_cli(*argv)
+    assert proc.returncode == 1, (
+        f"{name!r} exited {proc.returncode} on a corrupt ledger; the documented "
+        f"contract reserves 1 for a stored-ledger failure. stderr: "
+        f"{proc.stderr.strip()}"
+    )
+    assert "not valid JSON" in proc.stderr
+    assert "Traceback" not in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize(
+    ("name", "argv", "expected_message"),
+    [
+        (
+            "archive-ceremony",
+            ("archive-ceremony", "--reason", "   "),
+            "non-blank reason",
+        ),
+        (
+            "wave-discipline",
+            ("wave-discipline", "W1", "--status", "failed"),
+            "at least one open row",
+        ),
+        ("blocker", ("blocker", "B1",), "requires --type"),
+        (
+            "group-gate",
+            ("group-gate", "G1", "--status", "failed"),
+            "at least one open finding",
+        ),
+    ],
+)
+def test_cli_exits_2_when_the_caller_asked_for_something_invalid(
+    tmp_ledger, name, argv, expected_message
+):
+    """The other half of the split: a well-formed ledger, a bad argument."""
+    proc = _run_cli(*argv)
+    assert proc.returncode == 2, (
+        f"{name!r} exited {proc.returncode} on a caller error; the documented "
+        f"contract reserves 2 for that. stderr: {proc.stderr.strip()}"
+    )
+    assert expected_message in proc.stderr

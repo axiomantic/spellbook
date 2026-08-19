@@ -1043,6 +1043,14 @@ def is_wave_done_claimable(wave_id: str, *, path: Path | None = None) -> bool:
 
 
 # ---- CLI ----------------------------------------------------------------
+#
+# Every handler splits its failures the same way: a LedgerError exits 1 ("the
+# STORED ledger is not what this operation needs -- repair it") and a
+# ValueError exits 2 ("the CALLER asked for something the ledger does not
+# accept -- fix the command"). A caller can only branch on that split if it
+# holds on every subcommand; where five recorders collapsed both into exit 2,
+# a corrupt ledger reached through `blocker` sent the reader to inspect
+# arguments that were already correct.
 
 
 def _cmd_show(args: argparse.Namespace) -> int:
@@ -1101,9 +1109,7 @@ def _cmd_set(args: argparse.Namespace) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except ValueError as exc:
-        # Value guards (e.g. ceremony.gate_position) raise ValueError. Exit 2
-        # to match the unknown-field path: both are "the caller asked for
-        # something the ledger does not accept", not a ledger I/O failure.
+        # The unknown-field path above returns 2 directly for the same reason.
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(f"set {args.field}={args.value!r}")
@@ -1114,7 +1120,10 @@ def _cmd_archive_ceremony(args: argparse.Namespace) -> int:
     path = Path(args.path) if args.path else None
     try:
         archive_ceremony(args.reason, timestamp=args.timestamp, path=path)
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(
@@ -1136,7 +1145,10 @@ def _cmd_wave_discipline(args: argparse.Namespace) -> int:
             reason=args.reason,
             path=path,
         )
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     claimable = is_wave_done_claimable(args.wave, path=path)
@@ -1158,7 +1170,10 @@ def _cmd_blocker(args: argparse.Namespace) -> int:
             timestamp=args.timestamp,
             path=path,
         )
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(
@@ -1185,7 +1200,10 @@ def _cmd_group_gate(args: argparse.Namespace) -> int:
             timestamp=args.timestamp,
             path=path,
         )
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(f"group {args.group_id}: gate_stack status={args.status}")
@@ -1206,7 +1224,10 @@ def _cmd_record_dispatch(args: argparse.Namespace) -> int:
             timestamp=args.timestamp,
             path=path,
         )
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(f"dispatch recorded (skills: {', '.join(skills) or 'none recognized'})")
