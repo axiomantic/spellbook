@@ -111,6 +111,15 @@ The CLI is intentionally narrow. The ledger is meant to be WRITTEN by
 the orchestrator's own discipline, not poked at from outside. Operations
 the skill describes -- "write ceremony.locked_at at Phase 0",
 "append gate completion" -- are supported; arbitrary edits are not.
+
+``set`` therefore REFUSES a bare write to any top-level field a dedicated
+recorder owns (``_STRUCTURED_FIELD_ROUTES``): ``set ceremony <value>``
+replaces the whole object rather than editing it, taking ``locked_at`` and
+every recorded entry with it, and it reaches none of the guards that
+``set ceremony.<field>`` and the recorder subcommands carry. The refusal
+names the route to use and does not depend on whether the ceremony is
+locked -- collapsing one of these objects to a scalar is not a narrower
+version of a legitimate operation, it is not one at all.
 """
 
 from __future__ import annotations
@@ -278,6 +287,21 @@ DISPATCH_SKILLS = (
 # names recognized out of it are.
 DESCRIPTION_MAX = 200
 
+# Top-level fields owned by a dedicated recorder, mapped to the route that
+# writes them. Each is a JSON OBJECT that accumulates entries, so a bare
+# `set <field> <value>` does not edit it -- it replaces it, discarding every
+# entry at once. Membership here is exactly "has another route": a structured
+# field with no recorder (`need_flags`) is absent, because refusing it would
+# leave it unwritable rather than write it correctly.
+_STRUCTURED_FIELD_ROUTES = {
+    "ceremony": "`set ceremony.<field>` (or `archive-ceremony` to supersede it)",
+    "ceremony_history": "the `archive-ceremony` command",
+    "blockers": "the `blocker` command",
+    "waves": "the `wave-discipline` command",
+    "groups": "the `group-gate` command",
+    "dispatches": "the `record-dispatch` command",
+}
+
 
 def default_ledger_path() -> Path:
     """Compute the per-project default ledger path for the current cwd.
@@ -430,11 +454,38 @@ def set_scalar(field: str, value: Any, *, path: Path | None = None) -> dict[str,
     For ceremony writes use ``set_ceremony_field``; for ``blockers``,
     ``groups``, and ``waves`` use the dedicated recorders, which carry the
     guards that make each entry trustworthy.
+
+    Every field in ``_STRUCTURED_FIELD_ROUTES`` is REFUSED here rather than
+    merely warned about. A guard is worth only what the narrowest route to
+    the same bytes enforces: ``set_ceremony_field`` refuses to narrow a
+    locked ``ceremony.selected``, but a single write of ``ceremony`` as a
+    scalar replaces the entire object -- ``locked_at`` included -- without
+    passing through any of it. ``_deep_merge`` warns on that collapse and
+    proceeds, which is correct for the merge primitive every recorder shares
+    but is not a gate: a warning the caller never reads leaves the write
+    exactly as done as no warning at all.
+
+    ``need_flags`` is an object in the documented shape and is deliberately
+    NOT guarded: it has no dedicated recorder, so refusing it would leave the
+    field with no route at all. The refusal covers fields that have somewhere
+    else to go.
     """
     if "/" in field or "." in field:
         raise ValueError(
             f"set_scalar only accepts top-level fields, got {field!r}. "
             "For ceremony writes use set_ceremony_field."
+        )
+    # Unconditional, and NOT predicated on ceremony.locked_at: replacing one
+    # of these objects with a scalar is never a legitimate operation, and a
+    # guard that fired only after the lock would leave the Phase-0 window --
+    # where the selection is still being written -- wide open.
+    if field in _STRUCTURED_FIELD_ROUTES:
+        raise ValueError(
+            f"refusing to overwrite {field!r}: it is written by a dedicated "
+            f"recorder, not by a bare set. Use {_STRUCTURED_FIELD_ROUTES[field]}. "
+            f"A bare set replaces the whole {field!r} object with this value, "
+            "discarding every entry under it -- which is the audit trail that "
+            "exists to prove those entries were recorded."
         )
     return write_ledger({field: value}, path=path)
 
@@ -930,7 +981,16 @@ def _cmd_set(args: argparse.Namespace) -> int:
                 name, args.value, path=Path(args.path) if args.path else None
             )
         else:
-            write_ledger({args.field: args.value}, path=Path(args.path) if args.path else None)
+            # Route through set_scalar, not write_ledger. write_ledger is the
+            # merge PRIMITIVE every recorder shares; it cannot refuse a
+            # structured-field write without refusing the recorders too. The
+            # guards therefore live in set_scalar, and a CLI that called the
+            # primitive directly walked straight past them -- which is how a
+            # bare `set ceremony <value>` overwrote a locked ceremony while
+            # `set ceremony.selected` was correctly refused.
+            set_scalar(
+                args.field, args.value, path=Path(args.path) if args.path else None
+            )
     except LedgerError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1

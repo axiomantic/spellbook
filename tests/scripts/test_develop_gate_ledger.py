@@ -446,6 +446,104 @@ def test_set_scalar_rejects_dotted_field(tmp_ledger):
         ledger.set_scalar("ceremony.selected", "x")
 
 
+# ---- structured-field bare-write refusal ---------------------------------
+#
+# The lock guards in set_ceremony_field are only worth what the narrowest
+# route to the same bytes enforces. A bare `set ceremony <value>` replaces
+# the whole object -- locked_at included -- without ever reaching those
+# guards. The same shape exists for every top-level field a dedicated
+# recorder owns, so these tests pin the refusal for all of them.
+
+
+def _seed_every_structured_field():
+    """Populate each guarded top-level field through its legitimate route."""
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.record_blocker("B1", blocker_type="decision", description="seed")
+    ledger.record_wave_discipline("3a", status="passed")
+    ledger.record_group_gate("G1", status="passed", gates=["4.4"])
+    ledger.record_dispatch(subagent_type="impl")
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["ceremony", "ceremony_history", "blockers", "waves", "groups", "dispatches"],
+)
+def test_set_scalar_refuses_structured_field(tmp_ledger, field):
+    """A warning is not a refusal. Replacing one of these objects with a
+    scalar is never a legitimate operation: it discards an audit trail that
+    exists precisely to prove a gate ran."""
+    _seed_every_structured_field()
+    ledger.archive_ceremony("seed the history")
+    ledger.set_ceremony_field("locked_at", "2026-08-12T09:00Z")
+    before = ledger.read_ledger()[field]
+
+    with pytest.raises(ValueError, match="dedicated recorder"):
+        ledger.set_scalar(field, "obliterated")
+
+    assert ledger.read_ledger()[field] == before
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["ceremony", "ceremony_history", "blockers", "waves", "groups", "dispatches"],
+)
+def test_set_scalar_refuses_structured_field_even_when_absent(tmp_ledger, field):
+    """The refusal is about the ROUTE, not about what happens to be stored.
+    Seeding the scalar first and letting a recorder trip over it later would
+    just move the failure somewhere less legible."""
+    with pytest.raises(ValueError, match="dedicated recorder"):
+        ledger.set_scalar(field, "obliterated")
+    assert field not in ledger.read_ledger()
+
+
+def test_set_scalar_refuses_ceremony_without_a_lock(tmp_ledger):
+    """Not conditioned on locked_at: collapsing the ceremony object to a
+    scalar is never legitimate, and a guard that only fires after the lock
+    leaves Phase 0 itself unprotected."""
+    ledger.set_ceremony_field("selected", "code review")
+    assert "locked_at" not in ledger.read_ledger()["ceremony"]
+
+    with pytest.raises(ValueError, match="dedicated recorder"):
+        ledger.set_scalar("ceremony", "obliterated")
+
+    assert ledger.read_ledger()["ceremony"]["selected"] == "code review"
+
+
+def test_set_scalar_still_writes_plain_scalar_fields(tmp_ledger):
+    """The refusal must not swallow the fields `set` exists to write."""
+    for field, value in (
+        ("current_phase", "4"),
+        ("plan_pointer", "/tmp/plan.md"),
+        ("remaining_gates", "code review\ngreen-mirage"),
+    ):
+        ledger.set_scalar(field, value)
+    data = ledger.read_ledger()
+    assert data["current_phase"] == "4"
+    assert data["plan_pointer"] == "/tmp/plan.md"
+    assert data["remaining_gates"] == "code review\ngreen-mirage"
+
+
+def test_set_scalar_allows_need_flags(tmp_ledger):
+    """`need_flags` is an object in the documented shape but has NO dedicated
+    recorder. Refusing it would strand the field with no route at all, so it
+    stays writable -- the refusal covers fields that have somewhere else to go."""
+    ledger.set_scalar("need_flags", {"needs_research": True})
+    assert ledger.read_ledger()["need_flags"] == {"needs_research": True}
+
+
+def test_structured_routes_still_work_after_the_guard(tmp_ledger):
+    """Each guarded field must remain writable through its own recorder."""
+    _seed_every_structured_field()
+    data = ledger.read_ledger()
+    assert data["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+    assert data["blockers"]["B1"]["type"] == "decision"
+    assert data["waves"]["3a"]["section_24_6_check"]["status"] == "passed"
+    assert data["groups"]["G1"]["gate_stack"]["status"] == "passed"
+    assert len(data["dispatches"]) == 1
+    ledger.archive_ceremony("operator aborted")
+    assert len(ledger.read_ledger()["ceremony_history"]) == 1
+
+
 # ---- archive-ceremony ----------------------------------------------------
 
 
@@ -920,6 +1018,52 @@ def test_cli_set_ceremony_unknown_field_errors(tmp_ledger):
     proc = _run_cli("set", "ceremony.bogus_field", "x")
     assert proc.returncode == 2
     assert "unknown ceremony field" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize(
+    "field,route",
+    [
+        ("ceremony", "set ceremony."),
+        ("ceremony_history", "archive-ceremony"),
+        ("blockers", "blocker"),
+        ("waves", "wave-discipline"),
+        ("groups", "group-gate"),
+        ("dispatches", "record-dispatch"),
+    ],
+)
+def test_cli_set_structured_field_refused(tmp_ledger, field, route):
+    """The CLI is the route the bypass was demonstrated through: `set
+    ceremony.selected` was refused while a bare `set ceremony` warned and
+    then wrote. Exit 2 matches the unknown-ceremony-field path -- the caller
+    asked for something the ledger does not accept."""
+    _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
+    _run_cli("blocker", "B1", "--type", "decision")
+    _run_cli("wave-discipline", "3a", "--status", "passed")
+    _run_cli("group-gate", "G1", "--status", "passed")
+    _run_cli("record-dispatch", "--subagent-type", "impl")
+    _run_cli("archive-ceremony", "--reason", "seed the history")
+    _run_cli("set", "ceremony.locked_at", "2026-08-12T09:00Z")
+    before = json.loads(tmp_ledger.read_text())[field]
+
+    proc = _run_cli("set", field, "obliterated")
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "dedicated recorder" in proc.stderr
+    assert route in proc.stderr
+    assert json.loads(tmp_ledger.read_text())[field] == before
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_dotted_non_ceremony_field_refused(tmp_ledger):
+    """The same `else` branch bypassed set_scalar's dotted-field guard too,
+    writing a top-level key literally named "need_flags.needs_research"."""
+    proc = _run_cli("set", "need_flags.needs_research", "true")
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "top-level fields" in proc.stderr
+    assert not tmp_ledger.exists() or "need_flags.needs_research" not in json.loads(
+        tmp_ledger.read_text()
+    )
 
 
 @pytest.mark.allow("subprocess")
