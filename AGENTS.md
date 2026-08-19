@@ -50,7 +50,6 @@ Pre-commit hooks auto-generate documentation files. If a hook fails:
 - `Generate documentation`: Runs `scripts/generate_docs.py` to regenerate `docs/` from skills/commands/agents/rules. Stage the generated files and re-commit.
 - `Check documentation completeness`: Ensures every skill/command has a generated doc page. If you added a new skill/command, the hook generates it automatically.
 - `Validate skill/command/agent/rule schemas`: Checks YAML frontmatter in skills, commands, agents, and rule modules. Fix the frontmatter.
-- `Scan changeset for security issues`: Security scanner on staged diffs. Fix the flagged issue.
 
 When a pre-commit hook fails, it often generates or modifies files. Stage those files (`git add`) and commit again.
 
