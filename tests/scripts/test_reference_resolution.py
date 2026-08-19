@@ -21,6 +21,7 @@ violation never touches the real tree.
 
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -36,6 +37,7 @@ from check_reference_resolution import (  # noqa: E402
     PROSE_SOURCE_LABEL,
     Reference,
     build_rows,
+    extract_prose_paths,
     is_allowlisted,
     registered_mcp_tools,
     run_row,
@@ -367,3 +369,65 @@ def test_every_allowlist_entry_still_suppresses_something():
             ):
                 unused.append(f"{row_name}: {entry.path_glob} :: {entry.anchor}")
     assert not unused, "Allowlist entries that suppress nothing:\n  " + "\n  ".join(unused)
+
+
+# ---------------------------------------------------------------------------
+# The scanned population is the COMMITTED repository
+# ---------------------------------------------------------------------------
+
+
+def _git_repo(tmp_path: Path) -> Path:
+    """A real one-commit git repository carrying one tracked prose file."""
+    root = tmp_path / "gitrepo"
+    (root / "rules").mkdir(parents=True)
+    (root / "rules" / "10-tracked.md").write_text(
+        "Run `scripts/ghost_tracked.py` first.\n", encoding="utf-8"
+    )
+    for argv in (
+        ["init", "-q"],
+        ["config", "user.email", "t@example.com"],
+        ["config", "user.name", "t"],
+        ["add", "rules/10-tracked.md"],
+        ["commit", "-qm", "init"],
+    ):
+        subprocess.run(["git", *argv], cwd=root, check=True, capture_output=True)
+    return root
+
+
+def test_untracked_file_on_disk_is_not_scanned(tmp_path):
+    """Generated and vendored files sit on a developer's disk, not in the repo.
+
+    A gate whose population is "whatever is on this disk" reports findings that
+    exist for one developer and not for CI. The population is the committed
+    repository.
+    """
+    root = _git_repo(tmp_path)
+    (root / "rules" / "20-untracked.md").write_text(
+        "Run `scripts/ghost_untracked.py` first.\n", encoding="utf-8"
+    )
+
+    targets = [ref.target for ref in extract_prose_paths(root)]
+
+    assert "scripts/ghost_tracked.py" in targets, (
+        "the tracked file must still be scanned; a filter that scans nothing "
+        "passes vacuously"
+    )
+    assert "scripts/ghost_untracked.py" not in targets
+
+
+def test_prose_scan_covers_every_file_when_tracked_ness_is_unknowable(tmp_path):
+    """Outside a git checkout the filter must widen, never narrow.
+
+    A tarball export, or the symlinked scratch repos below, have no index to
+    ask. Scanning everything is the conservative direction: it can only find
+    more, never silently fewer.
+    """
+    root = tmp_path / "notarepo"
+    (root / "rules").mkdir(parents=True)
+    (root / "rules" / "10-loose.md").write_text(
+        "Run `scripts/ghost_loose.py` first.\n", encoding="utf-8"
+    )
+
+    targets = [ref.target for ref in extract_prose_paths(root)]
+
+    assert "scripts/ghost_loose.py" in targets

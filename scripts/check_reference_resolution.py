@@ -65,6 +65,26 @@ absorb noise stops being evidence of anything.
 4. Only fenced/backticked references are extracted. A path written as bare
    prose is invisible to every prose row.
 
+The scanned population is the COMMITTED repository
+--------------------------------------------------
+The prose rows scan only files git tracks. ``rules/82-file-reading.md`` records
+untracked-blindness as a BUG -- a ``git grep`` that skipped untracked files
+produced two false "appears nowhere" findings in one day -- so the divergence is
+deliberate and rests on a different question. That rule governs a SEARCH, which
+asks whether a string exists anywhere on this disk; this gate asks whether the
+repository's committed prose is self-consistent, and a generated or vendored
+file sitting in a developer's checkout is not part of the repository. Scanning
+it makes the verdict depend on whose disk it runs on: ``extensions/`` holds four
+tracked Markdown files and roughly forty-six generated ones, so an installer run
+would add findings that CI can never see, and no allowlist state is green in
+both places at once.
+
+Tracked-ness is asked of git itself (``git ls-files``), never re-derived by
+parsing ``.gitignore``. When the answer is unavailable -- git not installed, or
+a root that is not a checkout -- the filter WIDENS to every file rather than
+narrowing to none. A gate that scans nothing when a subprocess fails is the
+vacuous pass this module exists to prevent.
+
 Allowlisting
 ------------
 Content-anchored, following ``scripts/check_removed_mode_tokens.py``: an entry
@@ -88,6 +108,7 @@ import argparse
 import fnmatch
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from functools import lru_cache
@@ -387,18 +408,68 @@ def make_mcp_tool_resolver(repo_root: Path) -> Callable[[Path, Reference], bool]
 # ---------------------------------------------------------------------------
 
 
+@lru_cache(maxsize=None)
+def tracked_files(repo_root: Path) -> frozenset[Path] | None:
+    """Every path git tracks under ``repo_root``, or None if git cannot say.
+
+    See "The scanned population is the COMMITTED repository" above for why the
+    gate asks this at all. Three answers, all explicit:
+
+    * git answers -- the tracked set, and only those files are scanned.
+    * git is absent, or ``repo_root`` is not a checkout -- ``None``, and the
+      caller scans EVERY file. Widening cannot hide a reference; narrowing to
+      an empty set would hide all of them.
+    * git answers with an empty list -- a checkout with no tracked files at all
+      is not a state this gate can meaningfully run against, so it raises
+      rather than reporting a clean pass over nothing.
+    """
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(repo_root), "ls-files", "-z", "--cached"],
+            capture_output=True,
+            check=False,
+        )
+    except OSError as exc:
+        print(
+            f"warning: git unavailable ({exc}); scanning every file on disk "
+            f"rather than only tracked ones",
+            file=sys.stderr,
+        )
+        return None
+    if completed.returncode != 0:
+        print(
+            f"warning: {repo_root} is not a git checkout "
+            f"(git ls-files exited {completed.returncode}); scanning every file "
+            f"on disk rather than only tracked ones",
+            file=sys.stderr,
+        )
+        return None
+    names = [name for name in completed.stdout.decode("utf-8").split("\0") if name]
+    if not names:
+        raise RuntimeError(
+            f"git tracks no files under {repo_root}. Every prose row would pass "
+            f"over an empty scan, which is indistinguishable from success."
+        )
+    return frozenset(repo_root / name for name in names)
+
+
 def iter_prose_files(repo_root: Path) -> Iterator[Path]:
-    """Yield every Markdown prose source, in deterministic order."""
+    """Yield every git-tracked Markdown prose source, in deterministic order."""
+    tracked = tracked_files(repo_root)
+
+    def scanned(path: Path) -> bool:
+        return tracked is None or path in tracked
+
     for name in PROSE_DIRS:
         base = repo_root / name
         if not base.is_dir():
             continue
         for path in sorted(base.rglob("*.md")):
-            if path.is_file() and not (SKIP_PARTS & set(path.parts)):
+            if path.is_file() and not (SKIP_PARTS & set(path.parts)) and scanned(path):
                 yield path
     for name in PROSE_FILES:
         path = repo_root / name
-        if path.is_file():
+        if path.is_file() and scanned(path):
             yield path
 
 
