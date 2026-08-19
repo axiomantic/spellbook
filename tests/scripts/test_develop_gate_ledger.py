@@ -8,6 +8,7 @@ skill's usage of the ledger, which is exercised by an actual develop
 run, not a Python test.
 """
 
+import ast
 import json
 import logging
 import os
@@ -542,6 +543,161 @@ def test_structured_routes_still_work_after_the_guard(tmp_ledger):
     assert len(data["dispatches"]) == 1
     ledger.archive_ceremony("operator aborted")
     assert len(ledger.read_ledger()["ceremony_history"]) == 1
+
+
+# ---- _STRUCTURED_FIELD_ROUTES drift ---------------------------------------
+#
+# The guard above is only as good as its membership list, and that list is
+# hand-maintained. A seventh recorder that forgets to add itself reopens the
+# bare-`set` bypass with no error and no symptom -- the same silent shape the
+# guard itself was written to close, one level up. So the list is not trusted:
+# it is DERIVED from the module's own writes and compared.
+#
+# Two writer shapes exist, and the derivation reads both:
+#
+# * ``write_ledger({"<key>": {...}})`` -- the dedicated recorders. A key is
+#   STRUCTURED when its value in the literal is itself a dict, i.e. the
+#   recorder accumulates entries under it. ``set_scalar``'s
+#   ``write_ledger({field: value})`` has a Name key, not a constant, so it
+#   contributes nothing -- which is right: it is the guarded route, not a
+#   recorder.
+# * ``_write_exact(target, updated)`` -- ``archive_ceremony``, which builds a
+#   whole replacement dict rather than a ``{key: ...}`` literal. Its keys
+#   arrive as ``updated["<key>"] = ...`` subscript assignments, so the
+#   derivation follows the Name passed to ``_write_exact`` back to those
+#   assignments in the same function. This is what lets ``ceremony_history``
+#   be derived rather than allowlisted; an allowlist here would be one more
+#   hand-maintained list with exactly the drift problem being fixed.
+
+_LEDGER_WRITERS = frozenset({"write_ledger", "_write_exact"})
+
+# Measured from the module when this test was written. The floor exists
+# because two empty sets compare equal: a derivation that stopped matching
+# anything would make the equality assertion below pass over nothing at all.
+_STRUCTURED_FIELD_FLOOR = 6
+
+
+def _is_dict_valued(node, bindings):
+    """Whether ``node`` evaluates to a dict, following one level of binding."""
+    if isinstance(node, ast.Dict):
+        return True
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "dict"
+    ):
+        return True
+    if isinstance(node, ast.Name) and node.id in bindings:
+        return _is_dict_valued(bindings[node.id], {})
+    return False
+
+
+def _dict_literal_keys(node):
+    """Constant string keys of a dict literal whose values are themselves dicts."""
+    if not isinstance(node, ast.Dict):
+        return set()
+    return {
+        key.value
+        for key, value in zip(node.keys, node.values)
+        if isinstance(key, ast.Constant)
+        and isinstance(key.value, str)
+        and isinstance(value, ast.Dict)
+    }
+
+
+def _derive_structured_fields():
+    """Derive the structured top-level ledger keys from the module's source.
+
+    Returns ``(fields, writer_call_count)``. One writer call is one ``Call``
+    node naming ``write_ledger`` or ``_write_exact`` inside a function body;
+    the count is returned so the caller can assert the walk saw the module at
+    all rather than an empty tree.
+    """
+    tree = ast.parse(SCRIPT_PATH.read_text(encoding="utf-8"))
+    fields = set()
+    writer_calls = 0
+    for func in ast.walk(tree):
+        if not isinstance(func, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        bindings = {
+            assign.targets[0].id: assign.value
+            for assign in ast.walk(func)
+            if isinstance(assign, ast.Assign)
+            and len(assign.targets) == 1
+            and isinstance(assign.targets[0], ast.Name)
+        }
+        for call in ast.walk(func):
+            if not (
+                isinstance(call, ast.Call)
+                and isinstance(call.func, ast.Name)
+                and call.func.id in _LEDGER_WRITERS
+            ):
+                continue
+            writer_calls += 1
+            if call.func.id == "write_ledger":
+                if call.args:
+                    fields |= _dict_literal_keys(call.args[0])
+                continue
+            # _write_exact(target, data): the payload is the SECOND argument.
+            if len(call.args) < 2:
+                continue
+            data = call.args[1]
+            fields |= _dict_literal_keys(data)
+            if not isinstance(data, ast.Name):
+                continue
+            for assign in ast.walk(func):
+                target = (
+                    assign.targets[0]
+                    if isinstance(assign, ast.Assign) and len(assign.targets) == 1
+                    else None
+                )
+                if (
+                    isinstance(target, ast.Subscript)
+                    and isinstance(target.value, ast.Name)
+                    and target.value.id == data.id
+                    and isinstance(target.slice, ast.Constant)
+                    and isinstance(target.slice.value, str)
+                    and _is_dict_valued(assign.value, bindings)
+                ):
+                    fields.add(target.slice.value)
+    return fields, writer_calls
+
+
+def test_structured_field_derivation_is_not_a_no_op():
+    """A derivation that matched nothing would make the drift test vacuous."""
+    fields, writer_calls = _derive_structured_fields()
+    assert writer_calls >= 9, (
+        f"Walked {writer_calls} ledger writer calls, below the 9 measured when "
+        f"this test was written. The module's write shape changed and this "
+        f"derivation is no longer reading it."
+    )
+    assert len(fields) >= _STRUCTURED_FIELD_FLOOR, (
+        f"Derived {len(fields)} structured fields ({sorted(fields)}) from "
+        f"{SCRIPT_PATH.name}, below the floor of {_STRUCTURED_FIELD_FLOOR}. "
+        f"The recorder write shape changed and this test silently stopped "
+        f"checking anything."
+    )
+
+
+def test_structured_field_routes_matches_the_recorders():
+    """The guard list is hand-maintained; only this makes its drift loud.
+
+    Asserted as set EQUALITY, not containment, because drift runs both ways:
+    a new recorder missing from the map reopens the bare-`set` bypass, and a
+    stale entry left behind after a recorder is removed refuses a write with
+    a message pointing at a route that no longer exists.
+    """
+    derived, _ = _derive_structured_fields()
+    assert derived == set(ledger._STRUCTURED_FIELD_ROUTES), (
+        f"_STRUCTURED_FIELD_ROUTES has drifted from the recorders in "
+        f"{SCRIPT_PATH.name}.\n"
+        f"  written by a recorder but NOT guarded: "
+        f"{sorted(derived - set(ledger._STRUCTURED_FIELD_ROUTES))}\n"
+        f"  guarded but written by NO recorder: "
+        f"{sorted(set(ledger._STRUCTURED_FIELD_ROUTES) - derived)}\n"
+        f"An unguarded structured field is writable by a bare `set`, which "
+        f"replaces the whole object and discards the audit trail under it."
+    )
 
 
 # ---- archive-ceremony ----------------------------------------------------
