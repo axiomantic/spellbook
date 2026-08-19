@@ -28,9 +28,10 @@ Rows
     ``extensions/**/*.ts`` -- every tool named by ``callTool('<name>')`` or by a
     ``/tool/<name>`` bridge URL must be registered in ``spellbook.mcp.tools``.
 ``prose-paths`` / ``prose-modules`` / ``prose-skills`` / ``prose-commands``
-    ``skills/``, ``commands/``, ``agents/``, ``rules/``, and ``AGENTS.md`` --
-    backticked repository paths, dotted ``spellbook.*`` module paths,
-    ``skills/<name>`` mentions, and ``/<command>`` mentions.
+    Every tree in ``PROSE_DIRS`` plus ``AGENTS.md`` -- backticked repository
+    paths, dotted ``spellbook.*`` module paths, ``skills/<name>`` mentions, and
+    ``/<command>`` mentions. The tree list is not repeated here; it would rot
+    against the tuple, which is what ``PROSE_SOURCE_LABEL`` exists to prevent.
 
 Deliberately NOT a row: ``.pre-commit-config.yaml`` local hook ``entry:``
 targets. ``tests/scripts/test_precommit_hook_entries_resolve.py`` already covers
@@ -117,14 +118,28 @@ from typing import Callable, Iterator
 
 import yaml
 
-from corpus_trees import DOCUMENTED_TREES
-
 # ---------------------------------------------------------------------------
 # Shared configuration
 # ---------------------------------------------------------------------------
 
 # Prose sources. AGENTS.md is a file; the rest are directories scanned for *.md.
-PROSE_DIRS = DOCUMENTED_TREES
+#
+# Membership reason: trees holding AUTHORED prose that names this repository's
+# own artifacts. ``patterns/`` and ``extensions/`` qualify -- a pattern document
+# cites the schema and script files it teaches against, and an extension README
+# names the installer and hook paths a reader is told to run -- and nothing else
+# checked those references. Their earlier absence was drift, not a decision.
+#
+# Deliberately a LOCAL tuple, not corpus_trees.DOCUMENTED_TREES (which this was
+# aliased to) nor ENUMERABLE_TREES (which differs from this set only by
+# profiles/). Those sets answer "which trees generate a docs/ page" and "which
+# trees constitute the enumerable corpus"; this one answers "which trees hold
+# prose whose references must resolve". Importing the set with the convenient
+# members would couple this gate to an unrelated decision -- a tree gaining a
+# docs page is not a reason to start resolving its references. profiles/ is the
+# case that separates them: it is corpus content, but it carries behavioural
+# tone rather than instructions, and names no repository artifact by path.
+PROSE_DIRS = ("skills", "commands", "agents", "rules", "patterns", "extensions")
 PROSE_FILES = ("AGENTS.md",)
 
 # Derived, never duplicated: this string is printed beside a reference count,
@@ -672,6 +687,16 @@ ALLOWLIST: dict[str, tuple[AllowEntry, ...]] = {
             anchor="tests/test_login.py",
             reason="illustrative test path in a tier-classification example",
         ),
+        AllowEntry(
+            path_glob="patterns/assertion-quality-standard.md",
+            anchor="Upstream's own",
+            reason="names a test file in the UPSTREAM repository the pattern analyses, not this one",
+        ),
+        AllowEntry(
+            path_glob="patterns/code-review-formats.md",
+            anchor="tests/api/client.test.ts",
+            reason="illustrative TypeScript test path in a review-format worked example",
+        ),
     ),
     "prose-commands": (
         AllowEntry(
@@ -710,6 +735,11 @@ ALLOWLIST: dict[str, tuple[AllowEntry, ...]] = {
             reason="harness built-in command, not a spellbook artifact",
         ),
         AllowEntry(
+            path_glob="extensions/prime-agent/README.md",
+            anchor="`/reload`",
+            reason="harness built-in command, not a spellbook artifact",
+        ),
+        AllowEntry(
             path_glob="AGENTS.md",
             anchor="Trigger by commenting `/ai-review` on a PR",
             reason="GitHub PR comment that triggers the external momus review bot, not a spellbook artifact",
@@ -730,6 +760,10 @@ class Row:
     ``min_refs`` is the silent-no-op guard. An extractor whose pattern stops
     matching -- because the source changed shape -- would otherwise report a
     clean pass over zero references, which is indistinguishable from success.
+    Each floor sits just under its row's measured total: low enough that
+    ordinary prose churn does not trip it, high enough that losing a scanned
+    tree does. A floor far below the measurement guards emptiness only, and a
+    row that quietly dropped a whole tree would still clear it.
     """
 
     name: str
@@ -773,7 +807,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
             extract=extract_prose_paths,
             resolve=resolve_prose_path,
             what="repository file or directory",
-            min_refs=100,
+            min_refs=140,
         ),
         Row(
             name="prose-modules",
@@ -797,7 +831,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
             extract=extract_prose_commands,
             resolve=resolve_slash_name,
             what="command or skill",
-            min_refs=200,
+            min_refs=310,
         ),
     )
 
