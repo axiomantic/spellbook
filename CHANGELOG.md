@@ -23,6 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
+  Within that filesystem read, a path whose case differs from the disk's
+  spelling now defers to git rather than being answered with the caller's
+  spelling. Because the result is a storage key, the two spellings addressed
+  two different ledger files on a case-insensitive volume, and a resumed
+  develop run silently started over. The spelling is checked against the
+  parent listing, never reconstructed: case folding is the filesystem's rule
+  and HFS+ also normalizes Unicode. Windows canonicalises case in `realpath`
+  and so confirms the spelling instead of deferring; both outcomes are sound,
+  and the property pinned is that the caller's spelling is never echoed back.
 
 ## [0.89.0] - 2026-08-17
 
