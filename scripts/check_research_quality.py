@@ -45,23 +45,36 @@ TOOL_RESOLUTIONS = (
     "alternative_found",
 )
 
-# Every pattern is anchored to a token that only a TOOL invocation produces.
-# The bare vocabulary of unavailability -- "not available", "unavailable",
-# "is missing", "couldn't find" -- is deliberately absent: those words carry no
-# tooling signal, and "the config option is not available in v2" is a finding,
-# not a blocker. "not installed" is admitted only alongside an installer or
-# PATH token on the same line, which is what separates "ripgrep was not
-# installed, so brew install ripgrep" from "not installed into site-packages".
-_INSTALLER = r"brew|apt|apt-get|yum|dnf|pacman|pip|pipx|uv|npm|pnpm|yarn|cargo|gem|go get|winget|choco|nix-env|asdf|mise"
+# A tool that is absent is NOT the signal. A survey legitimately reports what is
+# on the machine ("nng: NOT installed, but bottled in Homebrew; nothing was
+# installed"), and flagging that is noise -- measured against the research
+# artifacts on this machine, every advisory the tool-absence patterns produced
+# was a survey answer. The signal is a session saying its OWN findings are
+# WEAKER because something was absent: a survey says what is on the machine, a
+# blocker says what the session could not do.
+#
+# Two families, both kept:
+#   INVOCATION FAILURE -- a command the session actually ran and that failed.
+#     Only a tool invocation produces these tokens; prose does not.
+#   SELF-DOWNGRADE -- the session naming its own evidence as the weaker form.
+# "not installed" and "not on PATH" are deliberately absent from both: they
+# describe the machine, not the session, and the mandatory `tooling` record is
+# what blocks a session that hit a missing tool and stayed silent.
+_WEAKER = r"verif\w+|test\w+|measur\w+|benchmark\w+|reproduc\w+|run|execute\w*"
+_STRONGER = r"runtime|empirical\w*|actual\w*|direct\w*|hands-on|executed|observed|measured|tested"
 TOOLING_BLOCKER_PATTERNS = (
     re.compile(r"[\w.+-]{2,}\s*:\s*command not found", re.IGNORECASE),
     re.compile(r"command not found\s*:\s*[\w.+-]{2,}", re.IGNORECASE),
     re.compile(r"no such command\s*:\s*[\w.+-]{2,}", re.IGNORECASE),
     re.compile(r"is not recognized as an internal or external command", re.IGNORECASE),
     re.compile(r"executable (?:file )?not found", re.IGNORECASE),
-    re.compile(r"not (?:on|in|found on|found in) (?:the |your )?PATH\b"),
-    re.compile(rf"(?:is|was|are|were|it)?\s*not installed\b.*\b(?:{_INSTALLER})\b", re.IGNORECASE),
-    re.compile(rf"\b(?:{_INSTALLER})\b.*\bnot installed\b", re.IGNORECASE),
+    # "so this is source reading, not runtime verification"
+    re.compile(rf"\bnot\s+(?:a\s+|an\s+)?(?:{_STRONGER})[\s-]*(?:{_WEAKER})", re.IGNORECASE),
+    # "could not verify", "couldn't be measured", "unable to run"
+    re.compile(rf"\b(?:could|can|would)\s*(?:not|n't)\s+(?:be\s+)?(?:{_WEAKER})\b", re.IGNORECASE),
+    re.compile(rf"\bunable to\s+(?:be\s+)?(?:{_WEAKER})\b", re.IGNORECASE),
+    re.compile(r"\bunverified\b[^.]*\bbecause\b", re.IGNORECASE),
+    re.compile(rf"\bassumed\s+rather\s+than\s+(?:{_STRONGER})\b", re.IGNORECASE),
 )
 
 
@@ -185,6 +198,58 @@ def check_no_deferrals(data: dict) -> list[str]:
     return failures
 
 
+RULE_KINDS = ("testing", "style", "architecture", "process", "ci")
+RULE_SEVERITIES = ("MUST", "SHOULD")
+
+
+def _usable(entry: object) -> bool:
+    """A sources/globs element that actually names something.
+
+    `patterns_discovered.files` already validates its elements this way, so a
+    `sources: [null]` that certified the sweep was weaker than its own
+    neighbour. A source may be recorded as a bare path or as the
+    `{path, kind, summary}` object §1.2.5 specifies; both must name a path.
+    """
+    if isinstance(entry, dict):
+        return not _blank(entry.get("path"))
+    return not _blank(entry)
+
+
+def _binding_rule_failures(rules: object) -> list[str]:
+    """Validate `binding_rules` against the §1.2.5 RETURN FORMAT contract.
+
+    The contract fixes `kind` and `severity` to closed enums and requires the
+    rule text VERBATIM with its source. `applies_to` is required to be present
+    and non-blank but its value is NOT held to the contract's code/tests/both:
+    real artifacts scope rules to other audiences (`agents`), and rejecting
+    those would fail the sweep over a vocabulary gap in the contract rather
+    than over an unauditable record.
+    """
+    if rules is None:
+        return []
+    if not isinstance(rules, list):
+        return [f"standards sweep malformed: `binding_rules` is not a list -- {rules!r}"]
+    failures = []
+    for index, rule in enumerate(rules, start=1):
+        if not isinstance(rule, dict):
+            failures.append(f"binding rule {index}: not an object")
+            continue
+        for field in ("rule", "context", "source_path", "applies_to"):
+            if _blank(rule.get(field)):
+                failures.append(f"binding rule {index}: field missing or blank -- {field}")
+        if rule.get("kind") not in RULE_KINDS:
+            failures.append(
+                f"binding rule {index}: kind not one of "
+                f"{'/'.join(RULE_KINDS)} -- {rule.get('kind')!r}"
+            )
+        if rule.get("severity") not in RULE_SEVERITIES:
+            failures.append(
+                f"binding rule {index}: severity not one of "
+                f"{'/'.join(RULE_SEVERITIES)} -- {rule.get('severity')!r}"
+            )
+    return failures
+
+
 def check_standards_sweep_recorded(data: dict) -> list[str]:
     """The §1.2.5 governance sweep result is present and auditable."""
     standards = data.get("project_standards")
@@ -192,15 +257,22 @@ def check_standards_sweep_recorded(data: dict) -> list[str]:
         return ["standards sweep unrecorded: `project_standards` object missing"]
     if standards.get("searched") is not True:
         return [f"standards sweep not recorded as run (searched: {standards.get('searched')!r})"]
+    rule_failures = _binding_rule_failures(standards.get("binding_rules"))
     sources = standards.get("sources")
-    if isinstance(sources, list) and sources:
-        return []
+    if isinstance(sources, list) and [s for s in sources if _usable(s)]:
+        return rule_failures
     globs = standards.get("search_globs_used")
-    if standards.get("none_found") is True and isinstance(globs, list) and globs:
-        return []
-    return [
-        "standards sweep result unauditable: needs a non-empty `sources`, or "
-        "`none_found: true` together with a non-empty `search_globs_used`"
+    if (
+        standards.get("none_found") is True
+        and isinstance(globs, list)
+        and [g for g in globs if _usable(g)]
+    ):
+        return rule_failures
+    return rule_failures + [
+        (
+            "standards sweep result unauditable: needs a non-empty `sources`, or "
+            "`none_found: true` together with a non-empty `search_globs_used`"
+        )
     ]
 
 
@@ -294,13 +366,10 @@ def _without_verbatim_quotes(data: dict) -> dict:
 def advise_tooling_blockers(data: dict) -> list[str]:
     """Point at blocker-shaped prose the `tooling` record does not account for.
 
-    ADVISORY, not blocking. Re-measured against the research artifacts on this
-    machine, every line the patterns flag is a finding rather than a blocker --
-    "nvidia-smi is not on PATH" cited as evidence that the hardware is absent,
-    and a survey of which libraries are not installed and what would install
-    them. A non-zero false-positive rate on real material may not decide a
-    gate, so this warns and the mandatory record blocks. The reported session
-    is still caught: it carried no `tooling` record at all.
+    ADVISORY, not blocking. The patterns read prose, and prose about tools is
+    ambiguous in a way a gate should not arbitrate, so this warns and the
+    mandatory `tooling` record blocks. The reported session is still caught by
+    the record: it carried none at all.
     """
     _, names = _tooling_record_failures(data.get("tooling"))
     accounted = [re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE) for name in names]

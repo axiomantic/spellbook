@@ -376,3 +376,108 @@ def test_a_non_list_missing_is_rejected_rather_than_coerced_to_empty():
     broken = copy.deepcopy(COMPLETE)
     broken["tooling"] = {"checked": True, "none_missing": True, "missing": "hg"}
     assert any("`missing` is not a list" in f for f in failures_for(broken, "tooling-blockers-resolved"))
+
+
+def test_a_finding_downgraded_because_a_tool_was_absent_is_advised():
+    """The reported shape: absence, no install, and findings weakened because of it.
+
+    `probe-mlx-metal.json` carries this verbatim and the tool-absence patterns
+    miss it -- the sentence names no installer, so it reads as ordinary prose.
+    """
+    artifact = copy.deepcopy(COMPLETE)
+    artifact["findings"][0]["answer"] = (
+        "mlx-lm is not installed locally, so this is source reading, "
+        "not runtime verification."
+    )
+    assert any("runtime verification" in a for a in advisories_for(artifact))
+
+
+@pytest.mark.parametrize(
+    "prose",
+    [
+        "Could not verify the flag's effect: the harness has no fixture for it.",
+        "The throughput figure is unverified because nothing ran the benchmark.",
+        "The ordering is assumed rather than measured.",
+        "Findings are not runtime-verified.",
+    ],
+)
+def test_each_self_downgrade_phrasing_is_advised(prose):
+    artifact = copy.deepcopy(COMPLETE)
+    artifact["findings"][0]["answer"] = prose
+    assert advisories_for(artifact)
+
+
+@pytest.mark.parametrize(
+    "prose",
+    [
+        (
+            "NOT installed, but available as a bottled Homebrew formula. "
+            "`brew list --formula` returned only mlx. Nothing was installed."
+        ),
+        (
+            "NO. Confirmed, not assumed. nvidia-smi is not on PATH. "
+            "SPDisplaysDataType lists exactly one GPU, the built-in Apple M4 Pro."
+        ),
+    ],
+)
+def test_a_survey_of_what_is_on_the_machine_is_not_advised(prose):
+    """A survey reports the machine's state; it does not weaken its own answer."""
+    artifact = copy.deepcopy(COMPLETE)
+    artifact["findings"][0]["answer"] = prose
+    assert not advisories_for(artifact)
+
+
+def test_standards_sources_holding_only_blank_elements_is_rejected():
+    for element in (None, "", {}, {"path": "   "}):
+        broken = copy.deepcopy(COMPLETE)
+        broken["project_standards"]["sources"] = [element]
+        assert failures_for(broken, "standards-sweep-recorded"), element
+
+
+def test_empty_sweep_globs_holding_only_blank_elements_is_rejected():
+    broken = copy.deepcopy(COMPLETE)
+    broken["project_standards"]["sources"] = []
+    broken["project_standards"]["none_found"] = True
+    broken["project_standards"]["search_globs_used"] = [None]
+    assert failures_for(broken, "standards-sweep-recorded")
+
+
+def _rule(**overrides) -> dict:
+    rule = {
+        "rule": "Tests MUST run through the public entry point.",
+        "context": "Testing section of AGENTS.md.",
+        "source_path": "AGENTS.md",
+        "kind": "testing",
+        "severity": "MUST",
+        "applies_to": "tests",
+    }
+    rule.update(overrides)
+    return rule
+
+
+def test_a_well_formed_binding_rule_passes():
+    repaired = copy.deepcopy(COMPLETE)
+    repaired["project_standards"]["binding_rules"] = [_rule()]
+    assert not failures_for(repaired, "standards-sweep-recorded")
+
+
+@pytest.mark.parametrize(
+    "rule,marker",
+    [
+        (_rule(rule=""), "rule"),
+        (_rule(source_path=None), "source_path"),
+        (_rule(severity="CRITICAL"), "severity"),
+        (_rule(kind="vibes"), "kind"),
+        ("AGENTS.md says tests must run headless", "not an object"),
+    ],
+)
+def test_a_binding_rule_off_the_contract_is_rejected(rule, marker):
+    broken = copy.deepcopy(COMPLETE)
+    broken["project_standards"]["binding_rules"] = [rule]
+    assert any(marker in f for f in failures_for(broken, "standards-sweep-recorded"))
+
+
+def test_binding_rules_that_is_not_a_list_is_rejected():
+    broken = copy.deepcopy(COMPLETE)
+    broken["project_standards"]["binding_rules"] = {"rule": "tests MUST pass"}
+    assert any("binding_rules" in f for f in failures_for(broken, "standards-sweep-recorded"))
