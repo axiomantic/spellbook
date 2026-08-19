@@ -31,6 +31,9 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from check_reference_resolution import (  # noqa: E402
     ALLOWLIST,
+    PROSE_DIRS,
+    PROSE_FILES,
+    PROSE_SOURCE_LABEL,
     Reference,
     build_rows,
     is_allowlisted,
@@ -250,6 +253,69 @@ def test_red_prose_commands_accepts_commands_and_skills(tmp_path):
     unresolved = _targets("prose-commands", repo)
     for name in ("verify", "systematic-debugging", "develop"):
         assert name not in unresolved
+
+
+# ---------------------------------------------------------------------------
+# Row labels must describe the source actually scanned
+# ---------------------------------------------------------------------------
+
+
+PROSE_ROWS = ("prose-paths", "prose-modules", "prose-skills", "prose-commands")
+
+
+@pytest.mark.parametrize("row_name", PROSE_ROWS)
+def test_prose_row_label_matches_the_scanned_source(row_name):
+    """A hardcoded label misreports the moment the scanned set changes.
+
+    The label is what a reader sees beside a count, so a stale one turns a
+    widened scan into a false statement about what was checked. This was
+    OBSERVED: the four-tree label printed unchanged beside a nine-tree scan.
+
+    Not subsumed by the identity test below. Identity pins every row to the
+    same object; it says nothing about whether that object is right. Build
+    PROSE_SOURCE_LABEL with the wrong separator, or from PROSE_DIRS alone
+    with PROSE_FILES dropped, and every identity assertion still holds while
+    this one -- which recomputes the label independently -- is the only thing
+    that fails.
+    """
+    expected = ", ".join(
+        [f"{d}/" for d in PROSE_DIRS] + [str(f) for f in PROSE_FILES]
+    )
+    assert ROWS[row_name].source == expected, (
+        f"Row {row_name!r} labels its source {ROWS[row_name].source!r}, but it "
+        f"scans {expected!r}. The label is duplicated data, not derived data, "
+        f"so it can misreport what was checked."
+    )
+
+
+@pytest.mark.parametrize("row_name", PROSE_ROWS)
+def test_prose_row_label_is_derived_not_copied(row_name):
+    """Equality today is not derivation; a copy that matches still rots.
+
+    PROSE_SOURCE_LABEL is built at import time by ``join``, so it is not an
+    interned literal. A hardcoded label that happens to read the same is a
+    DIFFERENT object, and that is exactly the state this pins against: the
+    copy stays put while PROSE_DIRS moves underneath it.
+    """
+    assert ROWS[row_name].source is PROSE_SOURCE_LABEL, (
+        f"Row {row_name!r} carries its own copy of the source label instead of "
+        f"PROSE_SOURCE_LABEL. It reads correctly now and will not when "
+        f"PROSE_DIRS changes."
+    )
+
+
+def test_prose_row_label_names_every_scanned_dir():
+    """Derivation, not just equality: every scanned tree appears in the label."""
+    for row_name in PROSE_ROWS:
+        label = ROWS[row_name].source
+        for d in PROSE_DIRS:
+            assert f"{d}/" in label, (
+                f"Row {row_name!r} scans {d}/ but its label {label!r} omits it."
+            )
+        for f in PROSE_FILES:
+            assert str(f) in label, (
+                f"Row {row_name!r} scans {f} but its label {label!r} omits it."
+            )
 
 
 # ---------------------------------------------------------------------------

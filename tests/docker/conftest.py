@@ -30,6 +30,8 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Files and directories essential for a functional spellbook repo clone.
 # Directories are copied recursively; files are copied individually.
+# A copy manifest, not a corpus membership -- it is "what an install needs",
+# so it is deliberately not corpus_trees.
 ESSENTIAL_DIRS = [
     "installer",
     "spellbook",

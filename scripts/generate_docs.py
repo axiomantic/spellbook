@@ -13,6 +13,7 @@ from pathlib import Path
 
 import yaml
 
+from corpus_trees import DOCUMENTED_TREES
 from docs_config import (
     EXCLUDED_AGENTS,
     EXCLUDED_COMMANDS,
@@ -48,10 +49,11 @@ SUPERPOWERS_COMMANDS = {"design-explore", "execute-plan", "write-plan"}
 SUPERPOWERS_AGENTS = {"code-reviewer"}
 
 # The docs/ subtrees this script owns end to end. Pruning is confined to
-# these four: every other path under docs/ (getting-started/, reference/,
+# these: every other path under docs/ (getting-started/, reference/,
 # windows-support-report.md, ...) is hand-authored and must
-# never be touched by a generator run.
-GENERATED_SUBDIRS = ("skills", "commands", "agents", "rules")
+# never be touched by a generator run. This script is what MAKES a tree
+# documented, so it is the same membership as DOCUMENTED_TREES by definition.
+GENERATED_SUBDIRS = DOCUMENTED_TREES
 
 # Hand-authored pages that live INSIDE a generated subtree. Membership in
 # GENERATED_SUBDIRS is not sufficient to call a page generated, and this

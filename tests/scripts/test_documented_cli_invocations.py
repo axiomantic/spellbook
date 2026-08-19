@@ -35,12 +35,18 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from corpus_trees import DOCUMENTED_TREES  # noqa: E402
+
 CLI_REL = "scripts/develop_gate_ledger.py"
 CLI_PATH = REPO_ROOT / CLI_REL
 
 # docs/ is a generated mirror of these sources; scanning it would only
 # re-test the same strings. Freshness of that mirror is a separate check.
-SCAN_DIRS = ("commands", "skills", "rules", "agents")
+# The set to scan is exactly "what gets mirrored into docs/", so it is
+# DOCUMENTED_TREES by definition rather than by coincidence.
+SCAN_DIRS = DOCUMENTED_TREES
 
 # The documented invocations are illustrative, so they carry placeholders.
 # Substituting realistic values keeps the hard cases IN the sample; a check

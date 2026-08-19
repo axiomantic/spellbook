@@ -15,7 +15,10 @@ Validates:
    mechanism that reads these three.
 5. The reverse direction: every README table entry, every README
    link-reference definition, every mkdocs.yml nav entry, and every page
-   under docs/{skills,commands,agents}/ resolves to a real source file.
+   under each generated docs/ subtree resolves to a real source file. The
+   README-facing parts follow README_ARTIFACT_KINDS; the nav checks and the
+   orphan-page sweep read mkdocs.yml and docs/ rather than README, so they
+   follow DOCUMENTED_TREES and cover rules as well.
 
 Checks 1-4 are one-directional -- they assert that every real item is
 documented, never that every documented item is real. That asymmetry let
@@ -31,6 +34,7 @@ import re
 import sys
 from pathlib import Path
 
+from corpus_trees import DOCUMENTED_TREES, README_ARTIFACT_KINDS
 from docs_config import (
     EXCLUDED_SKILLS,
     EXCLUDED_COMMANDS,
@@ -43,11 +47,25 @@ DOCS_BASE_URL = "https://axiomantic.github.io/spellbook/latest/"
 
 # A link-reference definition may legitimately point at hand-authored docs
 # (guides, reference pages) rather than at a generated artifact page. Only
-# these three prefixes name an artifact whose source this script can resolve.
-ARTIFACT_PREFIXES = ("skills", "commands", "agents")
+# these three prefixes name an artifact with a README table and link
+# definitions; `rules` is absent because README has no Rules section.
+ARTIFACT_PREFIXES = README_ARTIFACT_KINDS
+
+# The orphan sweep reads docs/, not README, so the README-table exclusion of
+# `rules` never applied to it. Every tree that generates pages can orphan
+# them, so the sweep follows what is GENERATED, not what README tabulates.
+ORPHAN_SWEEP_TREES = DOCUMENTED_TREES
+
+# The nav publishes every generated tree, rules included, so both nav
+# directions follow DOCUMENTED_TREES rather than README_ARTIFACT_KINDS. The
+# alternation is BUILT from that tuple: a literal re-spelling of the same
+# names is the drift this module exists to prevent.
+NAV_TREES = DOCUMENTED_TREES
 
 LINK_DEF_RE = re.compile(r"^\[([^\]^]+)\]:[ \t]*(\S+)[ \t]*$", re.M)
-NAV_ENTRY_RE = re.compile(r"\b(skills|commands|agents)/([A-Za-z0-9._-]+)\.md\b")
+NAV_ENTRY_RE = re.compile(
+    rf"\b({'|'.join(re.escape(t) for t in NAV_TREES)})/([A-Za-z0-9._-]+)\.md\b"
+)
 
 
 def real_sources(repo_root):
@@ -80,7 +98,16 @@ def real_sources(repo_root):
             for f in (repo_root / "agents").glob("*.md")
             if not f.name.startswith("_") and "crystallized2" not in f.name
         }
-    return {"skills": skills, "commands": commands, "agents": agents}
+    # Rules have no README table, but they DO generate docs/rules/ pages, so
+    # the orphan sweep needs a real-source set to check those pages against.
+    rules = set()
+    if (repo_root / "rules").exists():
+        rules = {
+            f.stem
+            for f in (repo_root / "rules").glob("*.md")
+            if not f.name.startswith("_")
+        }
+    return {"skills": skills, "commands": commands, "agents": agents, "rules": rules}
 
 
 def section(readme_content, label):
@@ -160,7 +187,7 @@ def check_reverse(repo_root, readme_content, mkdocs_content, issues):
             )
 
     # Generated documentation pages.
-    for kind in ARTIFACT_PREFIXES:
+    for kind in ORPHAN_SWEEP_TREES:
         docs_subdir = repo_root / "docs" / kind
         if not docs_subdir.exists():
             continue
@@ -267,6 +294,13 @@ def main():
     for agent in agents:
         if f"agents/{agent}.md" not in mkdocs_content:
             issues.append(f"mkdocs.yml nav missing: agents/{agent}.md")
+
+    # Rules have no README table, so they are absent from the checks above --
+    # but generate_docs.py publishes docs/rules/ and mkdocs.yml navigates it,
+    # so the nav direction applies to them exactly like the other trees.
+    for rule in sorted(real_sources(repo_root)["rules"]):
+        if f"rules/{rule}.md" not in mkdocs_content:
+            issues.append(f"mkdocs.yml nav missing: rules/{rule}.md")
 
     # Check the "(N total)" counts in README section headings and TOC anchors.
     for label, items in (("Skills", skills), ("Commands", commands), ("Agents", agents)):

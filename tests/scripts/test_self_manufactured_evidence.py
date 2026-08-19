@@ -27,7 +27,9 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
+import corpus_trees
 from check_self_manufactured_evidence import (
+    CORPUS_MEMBERSHIP_NAMES,
     discover_script_checks,
     evaluate,
     rel_posix,
@@ -86,6 +88,62 @@ def test_test_shaped_discovery_floor():
 def test_the_gate_discovers_itself():
     """A checker that cannot see its own shape is not checking that shape."""
     assert "check_self_manufactured_evidence" in discover_script_checks(REPO_ROOT)
+
+
+# ---------------------------------------------------------------------------
+# The recognition list must track corpus_trees
+# ---------------------------------------------------------------------------
+
+
+def _exported_memberships() -> set[str]:
+    """Public module-level names in ``corpus_trees`` whose value is a tuple of str.
+
+    Derived from the imported module rather than parsed out of its source: a
+    membership is defined by its VALUE, so this sees one however it is spelled
+    -- a literal, a concatenation of two others, or something computed. A
+    source parser has to model each spelling, and the spelling it fails to
+    model drops out of the expected set silently, which is the very defect
+    this guard exists to catch.
+    """
+    return {
+        name
+        for name, value in vars(corpus_trees).items()
+        if not name.startswith("_")
+        and isinstance(value, tuple)
+        and all(isinstance(item, str) for item in value)
+    }
+
+
+def test_membership_derivation_meets_its_floor():
+    """A derivation that finds nothing would make the drift test pass vacuously."""
+    derived = _exported_memberships()
+    assert len(derived) >= 3, (
+        f"Derived only {len(derived)} membership tuple(s) from corpus_trees: "
+        f"{sorted(derived)}. Three were present when this floor was measured. "
+        "Either a membership was removed, or the derivation stopped seeing "
+        "them and this test silently stopped checking anything."
+    )
+
+
+def test_recognition_list_covers_every_corpus_membership():
+    """``CORPUS_MEMBERSHIP_NAMES`` is hand-maintained; both drifts are silent.
+
+    A membership missing from the list reopens the blind spot the list was
+    added to close -- a checker that imports it drops out of this inventory
+    while still enumerating the tree, and the run stays green. A stale name
+    left behind after a tuple is removed points the detector at a symbol no
+    file can spell, so it can never match. Neither direction announces itself,
+    so both are asserted here and reported separately.
+    """
+    derived = _exported_memberships()
+    unrecognised = sorted(derived - set(CORPUS_MEMBERSHIP_NAMES))
+    stale = sorted(set(CORPUS_MEMBERSHIP_NAMES) - derived)
+    assert not unrecognised and not stale, (
+        f"CORPUS_MEMBERSHIP_NAMES has drifted from corpus_trees.\n"
+        f"  unrecognised (exported by corpus_trees, absent from the list): "
+        f"{unrecognised}\n"
+        f"  stale (in the list, no longer exported by corpus_trees): {stale}"
+    )
 
 
 # ---------------------------------------------------------------------------

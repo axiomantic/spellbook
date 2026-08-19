@@ -29,6 +29,8 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 GENERATOR = REPO_ROOT / "scripts" / "generate_docs.py"
 DOCS_DIR = REPO_ROOT / "docs"
+# A copy manifest for the scratch repo, not a corpus membership -- it is
+# "what the generator needs to run", so it is deliberately not corpus_trees.
 SOURCE_DIRS = ("scripts", "skills", "commands", "agents", "rules", "docs")
 
 
