@@ -81,10 +81,14 @@ would add findings that CI can never see, and no allowlist state is green in
 both places at once.
 
 Tracked-ness is asked of git itself (``git ls-files``), never re-derived by
-parsing ``.gitignore``. When the answer is unavailable -- git not installed, or
-a root that is not a checkout -- the filter WIDENS to every file rather than
-narrowing to none. A gate that scans nothing when a subprocess fails is the
-vacuous pass this module exists to prevent.
+parsing ``.gitignore``. When the answer is unavailable -- git not installed, a
+root that is not a checkout, or a root that is merely a DIRECTORY INSIDE some
+other checkout -- the filter WIDENS to every file rather than narrowing to
+none. A gate that scans nothing when a subprocess fails is the vacuous pass
+this module exists to prevent. The third case is why the scan root is checked
+against ``git rev-parse --show-toplevel`` before its tracked set is trusted: an
+exit code cannot tell it apart from a checkout that tracks nothing, and reading
+it as the latter would make the verdict depend on where the scan root sits.
 
 Allowlisting
 ------------
@@ -428,19 +432,29 @@ def tracked_files(repo_root: Path) -> frozenset[Path] | None:
     """Every path git tracks under ``repo_root``, or None if git cannot say.
 
     See "The scanned population is the COMMITTED repository" above for why the
-    gate asks this at all. Three answers, all explicit:
+    gate asks this at all. Four answers, all explicit:
 
-    * git answers -- the tracked set, and only those files are scanned.
+    * ``repo_root`` IS a checkout root and git answers -- the tracked set, and
+      only those files are scanned.
     * git is absent, or ``repo_root`` is not a checkout -- ``None``, and the
       caller scans EVERY file. Widening cannot hide a reference; narrowing to
       an empty set would hide all of them.
-    * git answers with an empty list -- a checkout with no tracked files at all
-      is not a state this gate can meaningfully run against, so it raises
-      rather than reporting a clean pass over nothing.
+    * ``repo_root`` is a DIRECTORY INSIDE some other checkout -- ``None``, the
+      same widening. This case cannot be read off an exit code: ``git ls-files``
+      run under an untracked subdirectory of a checkout exits 0 and prints
+      nothing, exactly like a checkout that tracks no files. The two are
+      separated by asking which directory git considers the root, not by asking
+      whether the list came back empty. Without that question the verdict
+      depends on where the scan root sits relative to other checkouts -- the
+      environment-dependence this gate exists to remove.
+    * ``repo_root`` is a checkout root and git answers with an empty list -- a
+      checkout with no tracked files at all is not a state this gate can
+      meaningfully run against, so it raises rather than reporting a clean pass
+      over nothing.
     """
     try:
-        completed = subprocess.run(
-            ["git", "-C", str(repo_root), "ls-files", "-z", "--cached"],
+        toplevel = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--show-toplevel"],
             capture_output=True,
             check=False,
         )
@@ -451,6 +465,28 @@ def tracked_files(repo_root: Path) -> frozenset[Path] | None:
             file=sys.stderr,
         )
         return None
+    if toplevel.returncode != 0:
+        print(
+            f"warning: {repo_root} is not a git checkout "
+            f"(git rev-parse exited {toplevel.returncode}); scanning every file "
+            f"on disk rather than only tracked ones",
+            file=sys.stderr,
+        )
+        return None
+    root = Path(toplevel.stdout.decode("utf-8").strip())
+    if root.resolve() != repo_root.resolve():
+        print(
+            f"warning: {repo_root} is not the root of its checkout ({root}); "
+            f"the tracked set there would describe a different tree, so every "
+            f"file on disk is scanned rather than only tracked ones",
+            file=sys.stderr,
+        )
+        return None
+    completed = subprocess.run(
+        ["git", "-C", str(repo_root), "ls-files", "-z", "--cached"],
+        capture_output=True,
+        check=False,
+    )
     if completed.returncode != 0:
         print(
             f"warning: {repo_root} is not a git checkout "

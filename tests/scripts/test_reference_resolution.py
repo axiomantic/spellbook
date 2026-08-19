@@ -43,6 +43,7 @@ from check_reference_resolution import (  # noqa: E402
     iter_prose_files,
     registered_mcp_tools,
     run_row,
+    tracked_files,
 )
 
 ROWS = {row.name: row for row in build_rows(REPO_ROOT)}
@@ -458,6 +459,55 @@ def test_prose_scan_covers_every_file_when_tracked_ness_is_unknowable(tmp_path):
     targets = [ref.target for ref in extract_prose_paths(root)]
 
     assert "scripts/ghost_loose.py" in targets
+
+
+def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(root), *args], capture_output=True, check=True
+    )
+
+
+def test_tracked_files_widens_under_a_directory_nested_in_another_checkout(tmp_path):
+    """An untracked subdirectory of a checkout is not that checkout's root.
+
+    ``git ls-files`` run there exits 0 and prints NOTHING, which is
+    indistinguishable, by exit code alone, from a checkout that tracks no
+    files. Trusting the exit code makes the verdict depend on where the scan
+    root happens to sit relative to other checkouts -- a pytest ``tmp_path``
+    under ``--basetemp`` inside a checkout reaches this, and every scratch-repo
+    proof in this file breaks there. Widening is the documented direction.
+    """
+    outer = tmp_path / "outer"
+    outer.mkdir()
+    _git(outer, "init")
+    (outer / "tracked.md").write_text("real\n", encoding="utf-8")
+    _git(outer, "add", "tracked.md")
+    _git(outer, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", "init")
+
+    nested = outer / "nested"
+    (nested / "rules").mkdir(parents=True)
+    (nested / "rules" / "10-loose.md").write_text(
+        "Run `scripts/ghost_nested.py` first.\n", encoding="utf-8"
+    )
+
+    assert _git(nested, "ls-files", "--cached").stdout == b""
+    assert tracked_files(nested) is None
+    assert "scripts/ghost_nested.py" in [ref.target for ref in extract_prose_paths(nested)]
+
+
+def test_tracked_files_still_raises_for_a_checkout_root_tracking_nothing(tmp_path):
+    """The empty-list guard keeps the case it was written for.
+
+    A genuine checkout root -- ``rev-parse --show-toplevel`` IS this directory
+    -- that tracks no files is not a state this gate can run against, and must
+    stay loud. That is what separates it from the nested case above.
+    """
+    root = tmp_path / "empty"
+    root.mkdir()
+    _git(root, "init")
+
+    with pytest.raises(RuntimeError, match="tracks no files"):
+        tracked_files(root)
 
 
 # ---------------------------------------------------------------------------
