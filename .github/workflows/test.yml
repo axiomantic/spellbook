@@ -84,7 +84,7 @@ jobs:
       run: |
         jq --version
         perl -v
-        markdownlint-cli2 --help > /dev/null
+        markdownlint-cli2 --version > /dev/null
 
     - name: Run dedupe skill verification gates
       run: |
