@@ -40,7 +40,7 @@ All scripts must exit 0.
 
 | Script | Plan task | Purpose |
 |---|---|---|
-| `verify-structure.sh` | D1 | All 9 expected files exist (1 SKILL.md + 4 references + 4 commands) |
+| `verify-structure.sh` | D1 | All 10 expected files exist (1 SKILL.md + 5 references + 4 commands), are non-empty, and no orphans ship alongside them |
 | `verify-no-python.sh` | D2 | Zero Python residue in shipped skill files (skill is harness-agnostic) |
 | `verify-no-python-neg.sh` | D2-neg | D2 actually catches planted Python patterns in fixture |
 | `verify-anti-irony.sh` | D3 | M6 sub-gates: verdicts, safety markers, classifier schema, segmentation internals each live in exactly one canonical home |

@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-# D1: Verify the 9 expected dedupe skill files exist AND are non-empty AND
+# D1: Verify every expected dedupe skill file exists AND is non-empty AND
 # no unexpected (orphan) files are shipped alongside them.
 #
 # Layout:
 #   skills/dedupe/SKILL.md
-#   skills/dedupe/references/{verdict-taxonomy,safety-markers,counterfactual-prompt,segmentation-protocol}.md
+#   skills/dedupe/references/{verdict-taxonomy,safety-markers,counterfactual-prompt,
+#                            segmentation-protocol,template-headings}.md
 #   commands/dedupe-{setup,analyze,report,apply}.md
 #
 # Hardening (post green-mirage audit):
@@ -20,6 +21,7 @@ EXPECTED=(
     skills/dedupe/references/safety-markers.md
     skills/dedupe/references/counterfactual-prompt.md
     skills/dedupe/references/segmentation-protocol.md
+    skills/dedupe/references/template-headings.md
     commands/dedupe-setup.md
     commands/dedupe-analyze.md
     commands/dedupe-report.md
@@ -89,5 +91,5 @@ if [ "$FAILURES" -gt 0 ]; then
     exit 1
 fi
 
-echo "PASS: D1 (all 9 expected files present, non-empty, no orphans)"
+echo "PASS: D1 (all ${#EXPECTED[@]} expected files present, non-empty, no orphans)"
 exit 0
