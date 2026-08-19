@@ -61,6 +61,11 @@ COMPLETE = {
         "sources": [{"path": "AGENTS.md", "kind": "process", "summary": "run pytest"}],
         "binding_rules": [],
     },
+    "tooling": {
+        "checked": True,
+        "none_missing": True,
+        "missing": [],
+    },
 }
 
 
@@ -192,3 +197,143 @@ def test_no_percentage_is_printed(tmp_path, capsys):
     path.write_text(json.dumps(COMPLETE), encoding="utf-8")
     checker.main([str(path)])
     assert "%" not in capsys.readouterr().out
+
+
+def blocked_session() -> dict:
+    """The reported session: `hg: command not found`, then design around it."""
+    broken = copy.deepcopy(COMPLETE)
+    del broken["tooling"]
+    broken["findings"][0]["answer"] = (
+        "Could not compare against the upstream history: hg: command not found, "
+        "so the design assumes a git-only workflow."
+    )
+    return broken
+
+
+def test_missing_tool_mentioned_without_a_tooling_record_is_rejected():
+    failures = failures_for(blocked_session(), "tooling-blockers-resolved")
+    assert any("`tooling` object missing" in f for f in failures)
+
+
+def test_the_blocked_session_is_advised_on_the_line_that_names_the_tool():
+    advisories = dict(
+        (name, advise(blocked_session())) for name, advise in checker.ADVISORIES
+    )["tooling-blockers-mentioned"]
+    assert any("command not found" in a for a in advisories)
+
+
+def test_the_detector_is_advisory_and_does_not_change_exit_status(tmp_path, capsys):
+    artifact = copy.deepcopy(COMPLETE)
+    artifact["findings"][0]["answer"] = "The probe reported: hg: command not found."
+    path = tmp_path / "advisory.json"
+    path.write_text(json.dumps(artifact), encoding="utf-8")
+    assert checker.main([str(path)]) == 0
+    out = capsys.readouterr().out
+    assert "WARN  tooling-blockers-mentioned" in out
+    assert "Phase 1 gate: BLOCKED" not in out
+
+
+def test_tooling_record_missing_is_rejected_even_with_no_blocker_prose():
+    broken = copy.deepcopy(COMPLETE)
+    del broken["tooling"]
+    assert failures_for(broken, "tooling-blockers-resolved")
+
+
+def test_tooling_not_checked_is_rejected():
+    broken = copy.deepcopy(COMPLETE)
+    broken["tooling"]["checked"] = False
+    assert any("not recorded as run" in f for f in failures_for(broken, "tooling-blockers-resolved"))
+
+
+def test_nothing_missing_needs_the_affirmative_none_missing_branch():
+    broken = copy.deepcopy(COMPLETE)
+    broken["tooling"]["none_missing"] = False
+    assert failures_for(broken, "tooling-blockers-resolved")
+
+
+@pytest.mark.parametrize(
+    "resolution,extra",
+    [
+        ("installed", {}),
+        ("installation_proposed", {}),
+        ("operator_declined", {}),
+        ("alternative_found", {"alternative": "git-remote-hg"}),
+    ],
+)
+def test_each_accepted_resolution_passes(resolution, extra):
+    repaired = copy.deepcopy(COMPLETE)
+    repaired["findings"][0]["answer"] = "hg: command not found, so mercurial was installed."
+    repaired["tooling"] = {
+        "checked": True,
+        "none_missing": False,
+        "missing": [
+            {"tool": "hg", "resolution": resolution, "detail": "brew install mercurial", **extra}
+        ],
+    }
+    assert not failures_for(repaired, "tooling-blockers-resolved")
+
+
+def test_designed_around_is_not_an_accepted_resolution():
+    broken = copy.deepcopy(COMPLETE)
+    broken["tooling"] = {
+        "checked": True,
+        "none_missing": False,
+        "missing": [{"tool": "hg", "resolution": "designed_around", "detail": "used git only"}],
+    }
+    assert any("resolution not one of" in f for f in failures_for(broken, "tooling-blockers-resolved"))
+
+
+def test_alternative_found_must_name_the_alternative():
+    broken = copy.deepcopy(COMPLETE)
+    broken["tooling"] = {
+        "checked": True,
+        "none_missing": False,
+        "missing": [{"tool": "hg", "resolution": "alternative_found", "detail": "used a plugin"}],
+    }
+    assert any("alternative" in f for f in failures_for(broken, "tooling-blockers-resolved"))
+
+
+def test_missing_entry_needs_a_named_tool_and_detail():
+    broken = copy.deepcopy(COMPLETE)
+    broken["tooling"] = {
+        "checked": True,
+        "none_missing": False,
+        "missing": [{"tool": "   ", "resolution": "installed", "detail": ""}],
+    }
+    failures = failures_for(broken, "tooling-blockers-resolved")
+    assert any("tool" in f for f in failures)
+    assert any("detail" in f for f in failures)
+
+
+def advisories_for(data: dict) -> list[str]:
+    return dict((n, a(data)) for n, a in checker.ADVISORIES)["tooling-blockers-mentioned"]
+
+
+def test_blocker_prose_is_accepted_once_the_tooling_record_accounts_for_it():
+    repaired = copy.deepcopy(COMPLETE)
+    repaired["findings"][0]["answer"] = "ripgrep was not installed; installed it with brew."
+    repaired["tooling"] = {
+        "checked": True,
+        "none_missing": False,
+        "missing": [{"tool": "ripgrep", "resolution": "installed", "detail": "brew install ripgrep"}],
+    }
+    assert not failures_for(repaired, "tooling-blockers-resolved")
+    assert not advisories_for(repaired)
+
+
+@pytest.mark.parametrize(
+    "prose",
+    [
+        "The `strict` config option is not available in v2 of the parser.",
+        "The upstream mirror is currently unavailable, per the status page.",
+        "The `retries` field is missing from the serialized payload.",
+        "We couldn't find any caller of this helper outside the tests.",
+        "No such command exists in the CLI's public surface, per docs/cli.md.",
+        "The vendored copy is not installed into site-packages by the build.",
+    ],
+)
+def test_prose_findings_are_not_read_as_tooling_blockers(prose):
+    """Legitimate findings that use blocker-shaped words are not flagged."""
+    artifact = copy.deepcopy(COMPLETE)
+    artifact["findings"][0]["answer"] = prose
+    assert not advisories_for(artifact)

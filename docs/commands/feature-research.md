@@ -99,6 +99,11 @@ Task:
     4. FLAG any ambiguities or conflicting patterns
     5. EXPLICITLY state 'UNKNOWN' if evidence is insufficient
 
+    A MISSING TOOL IS NOT A CONSTRAINT TO DESIGN AROUND. If a tool you need is
+    absent, install it, or propose the installation to the operator — see
+    `rules/60-autonomy.md`. Either way, record it in `tooling` below. Research
+    built on an unrecorded missing tool rests on a premise nobody can re-check.
+
     CRITICAL: Mark confidence level for each answer:
     - HIGH: Direct evidence found (specific file references)
     - MEDIUM: Inferred from related code
@@ -126,8 +131,22 @@ Task:
           "description": "..."
         }
       ],
-      "unknowns": ["..."]
+      "unknowns": ["..."],
+      "tooling": {
+        "checked": true,
+        "none_missing": false,
+        "missing": [
+          {
+            "tool": "hg",
+            "resolution": "installed | installation_proposed | operator_declined | alternative_found",
+            "detail": "what was run, proposed, or declined",
+            "alternative": "named replacement — REQUIRED for alternative_found"
+          }
+        ]
+      }
     }
+
+    When no tool was missing, that is `"none_missing": true` with `"missing": []`.
 ```
 
 **ERROR HANDLING:**
@@ -354,6 +373,7 @@ Before proceeding to Phase 1.5, verify:
 - [ ] All ambiguities extracted and categorized
 - [ ] Findings stored in SESSION_CONTEXT.research_findings
 - [ ] `SESSION_CONTEXT.design_context.project_standards` populated whenever the §1.2.5 sweep ran
+- [ ] Every tool that was missing during §1.2 is recorded in `tooling` with its resolution
 
 If ANY unchecked: Complete Phase 1. Do NOT proceed.
 

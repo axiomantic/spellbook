@@ -38,6 +38,32 @@ DEFERRAL_PATTERNS = (
 
 PLACEHOLDER = re.compile(r"^\s*(\[\s*(\.\.\.|)\s*\]|\.\.\.)\s*$")
 
+TOOL_RESOLUTIONS = (
+    "installed",
+    "installation_proposed",
+    "operator_declined",
+    "alternative_found",
+)
+
+# Every pattern is anchored to a token that only a TOOL invocation produces.
+# The bare vocabulary of unavailability -- "not available", "unavailable",
+# "is missing", "couldn't find" -- is deliberately absent: those words carry no
+# tooling signal, and "the config option is not available in v2" is a finding,
+# not a blocker. "not installed" is admitted only alongside an installer or
+# PATH token on the same line, which is what separates "ripgrep was not
+# installed, so brew install ripgrep" from "not installed into site-packages".
+_INSTALLER = r"brew|apt|apt-get|yum|dnf|pacman|pip|pipx|uv|npm|pnpm|yarn|cargo|gem|go get|winget|choco|nix-env|asdf|mise"
+TOOLING_BLOCKER_PATTERNS = (
+    re.compile(r"[\w.+-]{2,}\s*:\s*command not found", re.IGNORECASE),
+    re.compile(r"command not found\s*:\s*[\w.+-]{2,}", re.IGNORECASE),
+    re.compile(r"no such command\s*:\s*[\w.+-]{2,}", re.IGNORECASE),
+    re.compile(r"is not recognized as an internal or external command", re.IGNORECASE),
+    re.compile(r"executable (?:file )?not found", re.IGNORECASE),
+    re.compile(r"not (?:on|in|found on|found in) (?:the |your )?PATH\b"),
+    re.compile(rf"(?:is|was|are|were|it)?\s*not installed\b.*\b(?:{_INSTALLER})\b", re.IGNORECASE),
+    re.compile(rf"\b(?:{_INSTALLER})\b.*\bnot installed\b", re.IGNORECASE),
+)
+
 
 def _blank(value: object) -> bool:
     return not isinstance(value, str) or not value.strip() or bool(PLACEHOLDER.match(value))
@@ -178,6 +204,88 @@ def check_standards_sweep_recorded(data: dict) -> list[str]:
     ]
 
 
+def _tooling_record_failures(tooling: object) -> tuple[list[str], list[str]]:
+    """Validate the `tooling` record. Returns (failures, names of missing tools)."""
+    if not isinstance(tooling, dict):
+        return ["tooling blockers unrecorded: `tooling` object missing"], []
+    if tooling.get("checked") is not True:
+        return [f"tooling sweep not recorded as run (checked: {tooling.get('checked')!r})"], []
+
+    entries = tooling.get("missing")
+    if not isinstance(entries, list):
+        entries = []
+    if not entries:
+        if tooling.get("none_missing") is True:
+            return [], []
+        return [
+            "tooling result unauditable: needs a non-empty `missing` list, or "
+            "`none_missing: true` when no tool was missing"
+        ], []
+
+    failures = []
+    names = []
+    for index, entry in enumerate(entries, start=1):
+        if not isinstance(entry, dict):
+            failures.append(f"missing tool {index}: not an object")
+            continue
+        tool = entry.get("tool")
+        if _blank(tool):
+            failures.append(f"missing tool {index}: field missing or blank -- tool")
+        else:
+            names.append(tool.strip())
+        if _blank(entry.get("detail")):
+            failures.append(f"missing tool {index}: field missing or blank -- detail")
+        resolution = entry.get("resolution")
+        if resolution not in TOOL_RESOLUTIONS:
+            failures.append(
+                f"missing tool {index}: resolution not one of "
+                f"{'/'.join(TOOL_RESOLUTIONS)} -- {resolution!r}"
+            )
+        elif resolution == "alternative_found" and _blank(entry.get("alternative")):
+            failures.append(
+                f"missing tool {index}: resolution alternative_found must name "
+                f"the alternative -- alternative"
+            )
+    return failures, names
+
+
+def check_tooling_blockers_resolved(data: dict) -> list[str]:
+    """A tool that was missing is installed or escalated, never designed around.
+
+    `rules/60-autonomy.md` already requires this. The rule was not followed, so
+    this is its mechanical form: the record is mandatory, which is what blocks
+    a session that hit a missing tool and stayed silent about it.
+    """
+    return _tooling_record_failures(data.get("tooling"))[0]
+
+
+def advise_tooling_blockers(data: dict) -> list[str]:
+    """Point at blocker-shaped prose the `tooling` record does not account for.
+
+    ADVISORY, not blocking. Measured against the research artifacts on this
+    machine the patterns flagged two lines, of which one -- "nvidia-smi is not
+    on PATH", cited as evidence that the hardware is absent -- is a finding
+    rather than a blocker. A non-zero false-positive rate on real material may
+    not decide a gate, so this warns and the mandatory record blocks. The
+    reported session is still caught: it carried no `tooling` record at all.
+    """
+    _, names = _tooling_record_failures(data.get("tooling"))
+    accounted = [re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE) for name in names]
+
+    advisories = []
+    text = json.dumps(data, indent=2)
+    for number, line in enumerate(text.splitlines(), start=1):
+        if not any(pattern.search(line) for pattern in TOOLING_BLOCKER_PATTERNS):
+            continue
+        if any(pattern.search(line) for pattern in accounted):
+            continue
+        advisories.append(
+            f"possible tooling blocker on line {number}, absent from the "
+            f"`tooling` record: {line.strip()}"
+        )
+    return advisories
+
+
 CHECKS = (
     ("schema-shape", check_schema_shape),
     ("finding-fields", check_finding_fields),
@@ -186,7 +294,11 @@ CHECKS = (
     ("patterns-sourced", check_patterns_sourced),
     ("no-deferrals", check_no_deferrals),
     ("standards-sweep-recorded", check_standards_sweep_recorded),
+    ("tooling-blockers-resolved", check_tooling_blockers_resolved),
 )
+
+# Warnings only: printed, never scored, never part of the exit status.
+ADVISORIES = (("tooling-blockers-mentioned", advise_tooling_blockers),)
 
 
 def run_checks(data: dict) -> list[tuple[str, list[str]]]:
@@ -218,6 +330,11 @@ def main(argv: list[str] | None = None) -> int:
         for failure in failures:
             print(f"        {failure}")
         failed += bool(failures)
+
+    for name, advisories in ((name, advise(data)) for name, advise in ADVISORIES):
+        for advisory in advisories:
+            print(f"WARN  {name}")
+            print(f"        {advisory}")
 
     print(f"\n{len(results) - failed}/{len(results)} mechanical checks passed")
     if failed:
