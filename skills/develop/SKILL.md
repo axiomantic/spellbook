@@ -613,7 +613,8 @@ sufficient referent on its own — the operative set is the one recorded in
    escalation: allowed at any time, but it MUST be written to
    `ceremony.promotions` with a reason before the dispatch that uses it.
 3. **The reverse move does not exist.** Nothing ever moves from `selected` to
-   `declined`. `selected` and `core` shrink only by completion, never by decision.
+   `declined`. `selected` and `core` never shrink; completion is tracked in
+   `remaining_gates`, not by editing the locked set.
 
 The Phase Declaration is required per Task() dispatch. A response that dispatches
 nothing — a status answer, a question to the operator — requires no declaration

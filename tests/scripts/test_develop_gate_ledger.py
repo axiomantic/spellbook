@@ -234,6 +234,210 @@ def test_gate_position_writable_again_after_archive_ceremony(tmp_ledger):
     assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
 
 
+# ---- de-escalation guards ------------------------------------------------
+#
+# The lock is a FLOOR: escalation stays legal at any time, de-escalation is
+# refused. Guarding locked_at and gate_position alone left the three fields
+# that actually carry the gate set unguarded, so the <CRITICAL> "a mid-run
+# request to drop a gate is REFUSED" was prose with no mechanism behind it.
+
+
+def test_set_ceremony_selected_shrink_after_lock_refused(tmp_ledger):
+    """Dropping a gate from the locked set is the de-escalation the skill
+    forbids outright. archive-ceremony is the only route to a smaller set.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage\ntdd-first")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to narrow"):
+        ledger.set_ceremony_field("selected", "code review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == (
+        "code review\ngreen-mirage\ntdd-first"
+    )
+
+
+def test_set_ceremony_selected_growth_after_lock_allowed(tmp_ledger):
+    """Escalation must stay legal -- the lock is a floor, not a ceiling."""
+    ledger.set_ceremony_field("selected", "code review")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    assert ledger.read_ledger()["ceremony"]["selected"] == (
+        "code review\ngreen-mirage"
+    )
+
+
+def test_set_ceremony_selected_same_value_after_lock_succeeds(tmp_ledger):
+    """Idempotent re-assertion drops nothing, so it is not a narrowing --
+    mirrors the gate_position guard's same-value allowance.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    assert ledger.read_ledger()["ceremony"]["selected"] == (
+        "code review\ngreen-mirage"
+    )
+
+
+def test_set_ceremony_selected_reorder_after_lock_succeeds(tmp_ledger):
+    """The comparison is over the SET of gates. Order carries no meaning in
+    this field, so a reordering drops nothing and must not be refused.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "green-mirage\ncode review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == (
+        "green-mirage\ncode review"
+    )
+
+
+def test_set_ceremony_selected_blank_lines_ignored_after_lock(tmp_ledger):
+    """An element is one non-blank stripped line. Whitespace churn is not a
+    gate being dropped.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "  code review  \n\n green-mirage \n")
+    assert "green-mirage" in ledger.read_ledger()["ceremony"]["selected"]
+
+
+def test_set_ceremony_selected_first_write_after_lock_succeeds(tmp_ledger):
+    """The guard refuses a NARROWING, not a first write. With no prior value
+    there is nothing to drop, and this is the original selection being
+    recorded -- the shape the archive test at set-then-lock order relies on.
+    """
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "code review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == "code review"
+
+
+def test_selected_narrowable_again_after_archive_ceremony(tmp_ledger):
+    """archive-ceremony clears the lock, so a fresh Phase 0 may legitimately
+    select a SMALLER set. This is the sanctioned de-escalation route the
+    refusal message points at, and it must actually work.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted; re-selecting")
+    ledger.set_ceremony_field("selected", "code review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == "code review"
+
+
+def test_set_ceremony_selected_shrink_before_lock_allowed(tmp_ledger):
+    """Before the lock, Phase 0 is still choosing. The guard is conditioned
+    on locked_at, not on the field having a prior value.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("selected", "code review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == "code review"
+
+
+def test_set_ceremony_core_shrink_after_lock_refused(tmp_ledger):
+    """`core` records what was never on the menu. Dropping from it is a
+    stronger de-escalation than dropping from `selected`: it retroactively
+    claims a non-negotiable gate was optional all along.
+    """
+    ledger.set_ceremony_field("core", "code review\niron law\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to narrow"):
+        ledger.set_ceremony_field("core", "code review")
+    assert ledger.read_ledger()["ceremony"]["core"] == (
+        "code review\niron law\ngreen-mirage"
+    )
+
+
+def test_set_ceremony_core_growth_after_lock_allowed(tmp_ledger):
+    ledger.set_ceremony_field("core", "code review")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("core", "code review\niron law")
+    assert ledger.read_ledger()["ceremony"]["core"] == "code review\niron law"
+
+
+def test_set_ceremony_core_same_value_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("core", "code review\niron law")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("core", "code review\niron law")
+    assert ledger.read_ledger()["ceremony"]["core"] == "code review\niron law"
+
+
+def test_set_ceremony_core_reorder_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("core", "code review\niron law")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("core", "iron law\ncode review")
+    assert ledger.read_ledger()["ceremony"]["core"] == "iron law\ncode review"
+
+
+def test_set_ceremony_core_first_write_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("core", "code review")
+    assert ledger.read_ledger()["ceremony"]["core"] == "code review"
+
+
+def test_core_narrowable_again_after_archive_ceremony(tmp_ledger):
+    ledger.set_ceremony_field("core", "code review\niron law")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted; re-selecting")
+    ledger.set_ceremony_field("core", "code review")
+    assert ledger.read_ledger()["ceremony"]["core"] == "code review"
+
+
+def test_set_ceremony_declined_growth_after_lock_refused(tmp_ledger):
+    """`declined` runs the OTHER way. Adding to it after the lock removes a
+    gate from the run by the back door -- the same de-escalation as dropping
+    from `selected`, dressed as a record of a decision already made.
+    """
+    ledger.set_ceremony_field("declined", "green-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to widen"):
+        ledger.set_ceremony_field("declined", "green-mirage\ncode review")
+    assert ledger.read_ledger()["ceremony"]["declined"] == "green-mirage"
+
+
+def test_set_ceremony_declined_shrink_after_lock_allowed(tmp_ledger):
+    """Promotion (declined -> selected) is an escalation and is legal at any
+    time, so `declined` losing an element must stay permitted.
+    """
+    ledger.set_ceremony_field("declined", "green-mirage\ntdd-first")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("declined", "green-mirage")
+    assert ledger.read_ledger()["ceremony"]["declined"] == "green-mirage"
+
+
+def test_set_ceremony_declined_same_value_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("declined", "green-mirage\ntdd-first")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("declined", "green-mirage\ntdd-first")
+    assert ledger.read_ledger()["ceremony"]["declined"] == (
+        "green-mirage\ntdd-first"
+    )
+
+
+def test_set_ceremony_declined_reorder_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("declined", "green-mirage\ntdd-first")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("declined", "tdd-first\ngreen-mirage")
+    assert ledger.read_ledger()["ceremony"]["declined"] == (
+        "tdd-first\ngreen-mirage"
+    )
+
+
+def test_set_ceremony_declined_first_write_after_lock_succeeds(tmp_ledger):
+    """Phase 0 may record the declined set after stamping the lock; with no
+    prior value nothing is being added to an existing decision.
+    """
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("declined", "green-mirage")
+    assert ledger.read_ledger()["ceremony"]["declined"] == "green-mirage"
+
+
+def test_declined_growable_again_after_archive_ceremony(tmp_ledger):
+    ledger.set_ceremony_field("declined", "green-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted; re-selecting")
+    ledger.set_ceremony_field("declined", "green-mirage\ncode review")
+    assert ledger.read_ledger()["ceremony"]["declined"] == (
+        "green-mirage\ncode review"
+    )
+
+
 def test_set_scalar_rejects_dotted_field(tmp_ledger):
     """Use set_ceremony_field for ceremony.* -- set_scalar is for the
     top level only, and a dotted argument is almost certainly a bug.

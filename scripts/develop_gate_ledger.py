@@ -236,6 +236,15 @@ CEREMONY_FIELDS = (
 # it as a meaningful third mode. The value guard makes the typo fail loudly.
 GATE_POSITIONS = ("per_task", "per_group")
 
+# Ceremony fields that may move in ONE direction only once the lock is set,
+# mapped to the direction that is allowed. "grow" means no element may be
+# dropped; "shrink" means no element may be added.
+_MONOTONIC_CEREMONY_FIELDS = {
+    "selected": "grow",
+    "core": "grow",
+    "declined": "shrink",
+}
+
 # Blocker kinds, per the develop skill's blocker taxonomy.
 BLOCKER_TYPES = ("decision", "work", "external")
 
@@ -430,6 +439,19 @@ def set_scalar(field: str, value: Any, *, path: Path | None = None) -> dict[str,
     return write_ledger({field: value}, path=path)
 
 
+def _ceremony_elements(value: str) -> set[str]:
+    """Split a newline-joined ceremony scalar into its elements.
+
+    These fields are newline-joined SCALAR strings, never lists (see the
+    ``remaining_gates`` note in the skill: ``_deep_merge`` appends lists but
+    replaces scalars). One element is one non-blank, stripped line, so blank
+    lines and surrounding whitespace carry no meaning. The result is a SET:
+    order carries no meaning either, and a reordering must not read as a
+    change.
+    """
+    return {line.strip() for line in value.splitlines() if line.strip()}
+
+
 def set_ceremony_field(
     name: str,
     value: str,
@@ -452,9 +474,13 @@ def set_ceremony_field(
     and a first write after the lock is allowed -- the guard refuses a
     reposition, not the recording of the original selection.
 
-    Other ceremony fields stay writable after the lock on purpose:
-    ``selected`` and ``promotions`` must accept escalation, which the
-    skill permits mid-run ("the lock is a floor, not a ceiling").
+    ``selected``, ``core`` and ``declined`` stay writable after the lock,
+    but in ONE DIRECTION only. Escalation is permitted mid-run ("the lock
+    is a floor, not a ceiling"), so ``selected`` and ``core`` may grow and
+    ``declined`` may shrink on promotion. The reverse of each is
+    de-escalation and is refused; ``archive_ceremony`` is again the
+    sanctioned path. ``promotions`` and the remaining fields are
+    unrestricted -- they record history rather than the gate set.
     """
     if name not in CEREMONY_FIELDS:
         raise ValueError(
@@ -488,6 +514,31 @@ def set_ceremony_field(
                 f"(locked_at={existing_locked!r}). Repositioning mid-run is not "
                 "a thing: archive-ceremony and re-select in a fresh Phase 0."
             )
+    # The gate SET is the thing the lock exists to hold. locked_at and
+    # gate_position were guarded; selected/core/declined were not, so the
+    # documented "a mid-run request to drop a gate is REFUSED" had no
+    # mechanism -- rewriting selected from five gates to one after the lock
+    # was accepted silently. These three guards are that mechanism.
+    #
+    # Direction is per-field: selected and core may only GROW, declined may
+    # only SHRINK, because growing declined removes a gate from the run by
+    # the back door. declined shrinks legitimately on promotion.
+    if name in _MONOTONIC_CEREMONY_FIELDS and existing_locked:
+        existing_value = current.get("ceremony", {}).get(name)
+        if existing_value:
+            old = _ceremony_elements(existing_value)
+            new = _ceremony_elements(value)
+            direction = _MONOTONIC_CEREMONY_FIELDS[name]
+            lost = old - new if direction == "grow" else new - old
+            if lost:
+                verb = "narrow" if direction == "grow" else "widen"
+                detail = "dropped" if direction == "grow" else "added"
+                raise LedgerError(
+                    f"refusing to {verb} ceremony.{name} after the lock: "
+                    f"{detail}={sorted(lost)} (locked_at={existing_locked!r}). "
+                    "De-escalation mid-run is not a thing: archive-ceremony "
+                    "and re-select in a fresh Phase 0."
+                )
     return write_ledger({"ceremony": {name: value}}, path=path)
 
 
