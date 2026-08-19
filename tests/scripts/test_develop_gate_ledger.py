@@ -420,13 +420,32 @@ def test_set_ceremony_declined_reorder_after_lock_succeeds(tmp_ledger):
     )
 
 
-def test_set_ceremony_declined_first_write_after_lock_succeeds(tmp_ledger):
-    """Phase 0 may record the declined set after stamping the lock; with no
-    prior value nothing is being added to an existing decision.
+def test_set_ceremony_declined_first_write_after_lock_refused(tmp_ledger):
+    """The first-write allowance is correct for the GROW fields and wrong for
+    the SHRINK field. A ceremony that locks with nothing declined is the
+    DEFAULT path (`source = "default_full"`), so a first write of `declined`
+    after the lock is not a Phase-0 record catching up -- it is a gate being
+    dropped from a running ceremony, which is exactly what the guard exists
+    to refuse.
     """
     ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
-    ledger.set_ceremony_field("declined", "green-mirage")
-    assert ledger.read_ledger()["ceremony"]["declined"] == "green-mirage"
+    with pytest.raises(ledger.LedgerError, match="refusing to widen"):
+        ledger.set_ceremony_field("declined", "green-mirage")
+    assert "declined" not in ledger.read_ledger()["ceremony"]
+
+
+def test_set_ceremony_declined_growth_from_empty_string_after_lock_refused(
+    tmp_ledger,
+):
+    """An explicitly-empty `declined` is the default path written out in full.
+    It must refuse growth exactly as an absent one does; otherwise the bypass
+    survives for every ceremony that records its empty decline set honestly.
+    """
+    ledger.set_ceremony_field("declined", "")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to widen"):
+        ledger.set_ceremony_field("declined", "green-mirage")
+    assert ledger.read_ledger()["ceremony"]["declined"] == ""
 
 
 def test_declined_growable_again_after_archive_ceremony(tmp_ledger):

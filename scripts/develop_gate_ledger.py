@@ -576,20 +576,31 @@ def set_ceremony_field(
     # the back door. declined shrinks legitimately on promotion.
     if name in _MONOTONIC_CEREMONY_FIELDS and existing_locked:
         existing_value = current.get("ceremony", {}).get(name)
-        if existing_value:
-            old = _ceremony_elements(existing_value)
-            new = _ceremony_elements(value)
-            direction = _MONOTONIC_CEREMONY_FIELDS[name]
-            lost = old - new if direction == "grow" else new - old
-            if lost:
-                verb = "narrow" if direction == "grow" else "widen"
-                detail = "dropped" if direction == "grow" else "added"
-                raise LedgerError(
-                    f"refusing to {verb} ceremony.{name} after the lock: "
-                    f"{detail}={sorted(lost)} (locked_at={existing_locked!r}). "
-                    "De-escalation mid-run is not a thing: archive-ceremony "
-                    "and re-select in a fresh Phase 0."
-                )
+        # The comparison is UNCONDITIONAL. Guarding it on a truthy prior value
+        # was correct for the grow fields and a bypass for the shrink field:
+        # an empty prior yields no dropped element for grow (so a first write
+        # of selected/core is still allowed, as before), but for `declined` it
+        # made every element of the new value invisible to the check. That is
+        # the whole hole, because locking with NOTHING declined is the DEFAULT
+        # path (`source = "default_full"`) -- so a single post-lock
+        # `set ceremony.declined <gate>` dropped a gate from `remaining_gates`
+        # in the most common configuration. `declined` is written atomically
+        # with `locked_at` at Phase 0 (the ONLY write that sets the lock), so
+        # no legitimate flow writes it first after the lock; the one legal
+        # post-lock move is PROMOTION, which SHRINKS it.
+        old = _ceremony_elements(existing_value or "")
+        new = _ceremony_elements(value)
+        direction = _MONOTONIC_CEREMONY_FIELDS[name]
+        lost = old - new if direction == "grow" else new - old
+        if lost:
+            verb = "narrow" if direction == "grow" else "widen"
+            detail = "dropped" if direction == "grow" else "added"
+            raise LedgerError(
+                f"refusing to {verb} ceremony.{name} after the lock: "
+                f"{detail}={sorted(lost)} (locked_at={existing_locked!r}). "
+                "De-escalation mid-run is not a thing: archive-ceremony "
+                "and re-select in a fresh Phase 0."
+            )
     return write_ledger({"ceremony": {name: value}}, path=path)
 
 
