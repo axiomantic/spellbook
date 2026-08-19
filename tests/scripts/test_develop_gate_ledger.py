@@ -8,6 +8,7 @@ skill's usage of the ledger, which is exercised by an actual develop
 run, not a Python test.
 """
 
+import ast
 import json
 import logging
 import os
@@ -234,12 +235,641 @@ def test_gate_position_writable_again_after_archive_ceremony(tmp_ledger):
     assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_group"
 
 
+# ---- de-escalation guards ------------------------------------------------
+#
+# The lock is a FLOOR: escalation stays legal at any time, de-escalation is
+# refused. Guarding locked_at and gate_position alone left the three fields
+# that actually carry the gate set unguarded, so the <CRITICAL> "a mid-run
+# request to drop a gate is REFUSED" was prose with no mechanism behind it.
+
+
+def test_set_ceremony_selected_shrink_after_lock_refused(tmp_ledger):
+    """Dropping a gate from the locked set is the de-escalation the skill
+    forbids outright. archive-ceremony is the only route to a smaller set.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage\ntdd-first")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to narrow"):
+        ledger.set_ceremony_field("selected", "code review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == (
+        "code review\ngreen-mirage\ntdd-first"
+    )
+
+
+def test_set_ceremony_selected_growth_after_lock_allowed(tmp_ledger):
+    """Escalation must stay legal -- the lock is a floor, not a ceiling."""
+    ledger.set_ceremony_field("selected", "code review")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    assert ledger.read_ledger()["ceremony"]["selected"] == (
+        "code review\ngreen-mirage"
+    )
+
+
+def test_set_ceremony_selected_same_value_after_lock_succeeds(tmp_ledger):
+    """Idempotent re-assertion drops nothing, so it is not a narrowing --
+    mirrors the gate_position guard's same-value allowance.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    assert ledger.read_ledger()["ceremony"]["selected"] == (
+        "code review\ngreen-mirage"
+    )
+
+
+def test_set_ceremony_selected_reorder_after_lock_succeeds(tmp_ledger):
+    """The comparison is over the SET of gates. Order carries no meaning in
+    this field, so a reordering drops nothing and must not be refused.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "green-mirage\ncode review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == (
+        "green-mirage\ncode review"
+    )
+
+
+def test_set_ceremony_selected_blank_lines_ignored_after_lock(tmp_ledger):
+    """An element is one non-blank stripped line. Whitespace churn is not a
+    gate being dropped.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "  code review  \n\n green-mirage \n")
+    assert "green-mirage" in ledger.read_ledger()["ceremony"]["selected"]
+
+
+def test_set_ceremony_selected_first_write_after_lock_succeeds(tmp_ledger):
+    """The guard refuses a NARROWING, not a first write. With no prior value
+    there is nothing to drop, and this is the original selection being
+    recorded -- the shape the archive test at set-then-lock order relies on.
+    """
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("selected", "code review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == "code review"
+
+
+def test_selected_narrowable_again_after_archive_ceremony(tmp_ledger):
+    """archive-ceremony clears the lock, so a fresh Phase 0 may legitimately
+    select a SMALLER set. This is the sanctioned de-escalation route the
+    refusal message points at, and it must actually work.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted; re-selecting")
+    ledger.set_ceremony_field("selected", "code review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == "code review"
+
+
+def test_set_ceremony_selected_shrink_before_lock_allowed(tmp_ledger):
+    """Before the lock, Phase 0 is still choosing. The guard is conditioned
+    on locked_at, not on the field having a prior value.
+    """
+    ledger.set_ceremony_field("selected", "code review\ngreen-mirage")
+    ledger.set_ceremony_field("selected", "code review")
+    assert ledger.read_ledger()["ceremony"]["selected"] == "code review"
+
+
+def test_set_ceremony_core_shrink_after_lock_refused(tmp_ledger):
+    """`core` records what was never on the menu. Dropping from it is a
+    stronger de-escalation than dropping from `selected`: it retroactively
+    claims a non-negotiable gate was optional all along.
+    """
+    ledger.set_ceremony_field("core", "code review\niron law\ngreen-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to narrow"):
+        ledger.set_ceremony_field("core", "code review")
+    assert ledger.read_ledger()["ceremony"]["core"] == (
+        "code review\niron law\ngreen-mirage"
+    )
+
+
+def test_set_ceremony_core_growth_after_lock_allowed(tmp_ledger):
+    ledger.set_ceremony_field("core", "code review")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("core", "code review\niron law")
+    assert ledger.read_ledger()["ceremony"]["core"] == "code review\niron law"
+
+
+def test_set_ceremony_core_same_value_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("core", "code review\niron law")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("core", "code review\niron law")
+    assert ledger.read_ledger()["ceremony"]["core"] == "code review\niron law"
+
+
+def test_set_ceremony_core_reorder_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("core", "code review\niron law")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("core", "iron law\ncode review")
+    assert ledger.read_ledger()["ceremony"]["core"] == "iron law\ncode review"
+
+
+def test_set_ceremony_core_first_write_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("core", "code review")
+    assert ledger.read_ledger()["ceremony"]["core"] == "code review"
+
+
+def test_core_narrowable_again_after_archive_ceremony(tmp_ledger):
+    ledger.set_ceremony_field("core", "code review\niron law")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted; re-selecting")
+    ledger.set_ceremony_field("core", "code review")
+    assert ledger.read_ledger()["ceremony"]["core"] == "code review"
+
+
+def test_set_ceremony_declined_growth_after_lock_refused(tmp_ledger):
+    """`declined` runs the OTHER way. Adding to it after the lock removes a
+    gate from the run by the back door -- the same de-escalation as dropping
+    from `selected`, dressed as a record of a decision already made.
+    """
+    ledger.set_ceremony_field("declined", "green-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to widen"):
+        ledger.set_ceremony_field("declined", "green-mirage\ncode review")
+    assert ledger.read_ledger()["ceremony"]["declined"] == "green-mirage"
+
+
+def test_set_ceremony_declined_shrink_after_lock_allowed(tmp_ledger):
+    """Promotion (declined -> selected) is an escalation and is legal at any
+    time, so `declined` losing an element must stay permitted.
+    """
+    ledger.set_ceremony_field("declined", "green-mirage\ntdd-first")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("declined", "green-mirage")
+    assert ledger.read_ledger()["ceremony"]["declined"] == "green-mirage"
+
+
+def test_set_ceremony_declined_same_value_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("declined", "green-mirage\ntdd-first")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("declined", "green-mirage\ntdd-first")
+    assert ledger.read_ledger()["ceremony"]["declined"] == (
+        "green-mirage\ntdd-first"
+    )
+
+
+def test_set_ceremony_declined_reorder_after_lock_succeeds(tmp_ledger):
+    ledger.set_ceremony_field("declined", "green-mirage\ntdd-first")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.set_ceremony_field("declined", "tdd-first\ngreen-mirage")
+    assert ledger.read_ledger()["ceremony"]["declined"] == (
+        "tdd-first\ngreen-mirage"
+    )
+
+
+def test_set_ceremony_declined_first_write_after_lock_refused(tmp_ledger):
+    """The first-write allowance is correct for the GROW fields and wrong for
+    the SHRINK field. A ceremony that locks with nothing declined is the
+    DEFAULT path (`source = "default_full"`), so a first write of `declined`
+    after the lock is not a Phase-0 record catching up -- it is a gate being
+    dropped from a running ceremony, which is exactly what the guard exists
+    to refuse.
+    """
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to widen"):
+        ledger.set_ceremony_field("declined", "green-mirage")
+    assert "declined" not in ledger.read_ledger()["ceremony"]
+
+
+def test_set_ceremony_declined_growth_from_empty_string_after_lock_refused(
+    tmp_ledger,
+):
+    """An explicitly-empty `declined` is the default path written out in full.
+    It must refuse growth exactly as an absent one does; otherwise the bypass
+    survives for every ceremony that records its empty decline set honestly.
+    """
+    ledger.set_ceremony_field("declined", "")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    with pytest.raises(ledger.LedgerError, match="refusing to widen"):
+        ledger.set_ceremony_field("declined", "green-mirage")
+    assert ledger.read_ledger()["ceremony"]["declined"] == ""
+
+
+def test_declined_growable_again_after_archive_ceremony(tmp_ledger):
+    ledger.set_ceremony_field("declined", "green-mirage")
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.archive_ceremony("operator aborted; re-selecting")
+    ledger.set_ceremony_field("declined", "green-mirage\ncode review")
+    assert ledger.read_ledger()["ceremony"]["declined"] == (
+        "green-mirage\ncode review"
+    )
+
+
+# ---- a blank locked_at is still a lock -----------------------------------
+#
+# The module's contract is "its presence IS the lock", but every guard tested
+# the value for TRUTHINESS. A ledger holding `locked_at: ""` therefore read as
+# unlocked to all four guards at once -- one write became a master key. The
+# value space is reachable by hand-edit (this module documents itself as
+# directly readable) and, before the write-time guard below, through the CLI.
+
+
+def _plant_ceremony(path, ceremony):
+    """Write a ceremony object straight to disk, bypassing every guard.
+
+    A hand-edited ledger is the state these guards must survive, so the
+    fixture has to be able to produce shapes the writers now refuse.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps({"ceremony": ceremony}), encoding="utf-8")
+
+
+@pytest.mark.parametrize("blank", ["", "   ", "\n"])
+def test_blank_locked_at_still_refuses_narrowing_selected(tmp_ledger, blank):
+    _plant_ceremony(tmp_ledger, {"locked_at": blank, "selected": "a\nb"})
+    with pytest.raises(ledger.LedgerError, match="refusing to narrow"):
+        ledger.set_ceremony_field("selected", "a")
+    assert ledger.read_ledger()["ceremony"]["selected"] == "a\nb"
+
+
+def test_blank_locked_at_still_refuses_narrowing_core(tmp_ledger):
+    _plant_ceremony(tmp_ledger, {"locked_at": "", "core": "a\nb"})
+    with pytest.raises(ledger.LedgerError, match="refusing to narrow"):
+        ledger.set_ceremony_field("core", "a")
+
+
+def test_blank_locked_at_still_refuses_widening_declined(tmp_ledger):
+    _plant_ceremony(tmp_ledger, {"locked_at": "", "declined": ""})
+    with pytest.raises(ledger.LedgerError, match="refusing to widen"):
+        ledger.set_ceremony_field("declined", "green-mirage")
+
+
+def test_blank_locked_at_still_refuses_gate_position_rewrite(tmp_ledger):
+    _plant_ceremony(tmp_ledger, {"locked_at": "", "gate_position": "per_task"})
+    with pytest.raises(ledger.LedgerError, match="refusing to rewrite"):
+        ledger.set_ceremony_field("gate_position", "per_group")
+    assert ledger.read_ledger()["ceremony"]["gate_position"] == "per_task"
+
+
+def test_blank_locked_at_still_refuses_a_locked_at_rewrite(tmp_ledger):
+    """Otherwise the master key also overwrites the lock stamp itself,
+    leaving a ledger that looks properly locked at a time of the writer's
+    choosing.
+    """
+    _plant_ceremony(tmp_ledger, {"locked_at": ""})
+    with pytest.raises(ledger.LedgerError, match="refusing to rewrite"):
+        ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+
+
+def test_null_locked_at_is_not_a_lock(tmp_ledger):
+    """``null`` is JSON's absent value, not a stamp. It must read as UNLOCKED,
+    the same as a missing key -- otherwise a ledger that never reached Phase 0
+    would refuse the writes Phase 0 exists to make.
+    """
+    _plant_ceremony(tmp_ledger, {"locked_at": None, "selected": "a\nb"})
+    ledger.set_ceremony_field("selected", "a")
+    assert ledger.read_ledger()["ceremony"]["selected"] == "a"
+
+
+@pytest.mark.parametrize("nonstring", [0, False])
+def test_nonstring_locked_at_is_still_a_lock(tmp_ledger, nonstring):
+    """Present but falsy. Only a hand-edit produces these, and the honest
+    reading of a malformed stamp is "locked, and in a shape to repair via
+    archive-ceremony" -- not "open season".
+    """
+    _plant_ceremony(tmp_ledger, {"locked_at": nonstring, "selected": "a\nb"})
+    with pytest.raises(ledger.LedgerError, match="refusing to narrow"):
+        ledger.set_ceremony_field("selected", "a")
+
+
+@pytest.mark.parametrize("blank", ["", "   ", "\n\t"])
+def test_set_ceremony_locked_at_rejects_a_blank_stamp(tmp_ledger, blank):
+    """A lock whose value is meaningless is a lock in name only. ValueError,
+    not LedgerError: the stored state is fine, the CALLER asked for a value
+    the ledger does not accept -- the same split as the gate_position and
+    unknown-field guards above.
+    """
+    with pytest.raises(ValueError, match="non-blank"):
+        ledger.set_ceremony_field("locked_at", blank)
+    assert "locked_at" not in ledger.read_ledger().get("ceremony", {})
+
+
 def test_set_scalar_rejects_dotted_field(tmp_ledger):
     """Use set_ceremony_field for ceremony.* -- set_scalar is for the
     top level only, and a dotted argument is almost certainly a bug.
     """
     with pytest.raises(ValueError, match="top-level fields"):
         ledger.set_scalar("ceremony.selected", "x")
+
+
+# ---- structured-field bare-write refusal ---------------------------------
+#
+# The lock guards in set_ceremony_field are only worth what the narrowest
+# route to the same bytes enforces. A bare `set ceremony <value>` replaces
+# the whole object -- locked_at included -- without ever reaching those
+# guards. The same shape exists for every top-level field a dedicated
+# recorder owns, so these tests pin the refusal for all of them.
+
+
+def _seed_every_structured_field():
+    """Populate each guarded top-level field through its legitimate route."""
+    ledger.set_ceremony_field("locked_at", "2026-08-10T14:02Z")
+    ledger.record_blocker("B1", blocker_type="decision", description="seed")
+    ledger.record_wave_discipline("3a", status="passed")
+    ledger.record_group_gate("G1", status="passed", gates=["4.4"])
+    ledger.record_dispatch(subagent_type="impl")
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["ceremony", "ceremony_history", "blockers", "waves", "groups", "dispatches"],
+)
+def test_set_scalar_refuses_structured_field(tmp_ledger, field):
+    """A warning is not a refusal. Replacing one of these objects with a
+    scalar is never a legitimate operation: it discards an audit trail that
+    exists precisely to prove a gate ran."""
+    _seed_every_structured_field()
+    ledger.archive_ceremony("seed the history")
+    ledger.set_ceremony_field("locked_at", "2026-08-12T09:00Z")
+    before = ledger.read_ledger()[field]
+
+    with pytest.raises(ValueError, match="dedicated recorder"):
+        ledger.set_scalar(field, "obliterated")
+
+    assert ledger.read_ledger()[field] == before
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["ceremony", "ceremony_history", "blockers", "waves", "groups", "dispatches"],
+)
+def test_set_scalar_refuses_structured_field_even_when_absent(tmp_ledger, field):
+    """The refusal is about the ROUTE, not about what happens to be stored.
+    Seeding the scalar first and letting a recorder trip over it later would
+    just move the failure somewhere less legible."""
+    with pytest.raises(ValueError, match="dedicated recorder"):
+        ledger.set_scalar(field, "obliterated")
+    assert field not in ledger.read_ledger()
+
+
+def test_set_scalar_refuses_ceremony_without_a_lock(tmp_ledger):
+    """Not conditioned on locked_at: collapsing the ceremony object to a
+    scalar is never legitimate, and a guard that only fires after the lock
+    leaves Phase 0 itself unprotected."""
+    ledger.set_ceremony_field("selected", "code review")
+    assert "locked_at" not in ledger.read_ledger()["ceremony"]
+
+    with pytest.raises(ValueError, match="dedicated recorder"):
+        ledger.set_scalar("ceremony", "obliterated")
+
+    assert ledger.read_ledger()["ceremony"]["selected"] == "code review"
+
+
+def test_set_scalar_still_writes_plain_scalar_fields(tmp_ledger):
+    """The refusal must not swallow the fields `set` exists to write."""
+    for field, value in (
+        ("current_phase", "4"),
+        ("plan_pointer", "/tmp/plan.md"),
+        ("remaining_gates", "code review\ngreen-mirage"),
+    ):
+        ledger.set_scalar(field, value)
+    data = ledger.read_ledger()
+    assert data["current_phase"] == "4"
+    assert data["plan_pointer"] == "/tmp/plan.md"
+    assert data["remaining_gates"] == "code review\ngreen-mirage"
+
+
+def test_set_scalar_allows_need_flags(tmp_ledger):
+    """`need_flags` is an object in the documented shape but has NO dedicated
+    recorder. Refusing it would strand the field with no route at all, so it
+    stays writable -- the refusal covers fields that have somewhere else to go."""
+    ledger.set_scalar("need_flags", {"needs_research": True})
+    assert ledger.read_ledger()["need_flags"] == {"needs_research": True}
+
+
+def test_structured_routes_still_work_after_the_guard(tmp_ledger):
+    """Each guarded field must remain writable through its own recorder."""
+    _seed_every_structured_field()
+    data = ledger.read_ledger()
+    assert data["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+    assert data["blockers"]["B1"]["type"] == "decision"
+    assert data["waves"]["3a"]["section_24_6_check"]["status"] == "passed"
+    assert data["groups"]["G1"]["gate_stack"]["status"] == "passed"
+    assert len(data["dispatches"]) == 1
+    ledger.archive_ceremony("operator aborted")
+    assert len(ledger.read_ledger()["ceremony_history"]) == 1
+
+
+# ---- _STRUCTURED_FIELD_ROUTES drift ---------------------------------------
+#
+# The guard above is only as good as its membership list, and that list is
+# hand-maintained. A seventh recorder that forgets to add itself reopens the
+# bare-`set` bypass with no error and no symptom -- the same silent shape the
+# guard itself was written to close, one level up. So the list is not trusted:
+# it is DERIVED from the module's own writes and compared.
+#
+# Two writer shapes exist, and the derivation reads both:
+#
+# * ``write_ledger({"<key>": {...}})`` -- the dedicated recorders. A key is
+#   STRUCTURED when its value in the literal is itself a dict, i.e. the
+#   recorder accumulates entries under it. ``set_scalar``'s
+#   ``write_ledger({field: value})`` has a Name key, not a constant, so it
+#   contributes nothing -- which is right: it is the guarded route, not a
+#   recorder.
+# * ``_write_exact(target, updated)`` -- ``archive_ceremony``, which builds a
+#   whole replacement dict rather than a ``{key: ...}`` literal. Its keys
+#   arrive as ``updated["<key>"] = ...`` subscript assignments, so the
+#   derivation follows the Name passed to ``_write_exact`` back to those
+#   assignments in the same function. This is what lets ``ceremony_history``
+#   be derived rather than allowlisted; an allowlist here would be one more
+#   hand-maintained list with exactly the drift problem being fixed.
+
+# Both branches follow a Name first/second argument back to its binding in the
+# same function, so a hoisted ``payload = {...}; write_ledger(payload)`` is
+# covered as well as the inline literal.
+#
+# What is still INVISIBLE, stated so the next author knows the boundary rather
+# than assuming coverage: a payload built by a dict COMPREHENSION or by
+# ``dict(...)``, one assembled across ``update()``/``|=`` calls, one whose key
+# is a name or an f-string instead of a string constant, one bound outside the
+# calling function, and any helper that wraps ``write_ledger`` under a name not
+# in ``_LEDGER_WRITERS``. This derivation encodes the shapes that exist; a new
+# shape needs a new branch here, and the equality assertion below is what makes
+# its absence loud.
+
+_LEDGER_WRITERS = frozenset({"write_ledger", "_write_exact"})
+
+# Measured from the module when this test was written. The floor exists
+# because two empty sets compare equal: a derivation that stopped matching
+# anything would make the equality assertion below pass over nothing at all.
+_STRUCTURED_FIELD_FLOOR = 6
+
+
+def _is_dict_valued(node, bindings):
+    """Whether ``node`` evaluates to a dict, following one level of binding."""
+    if isinstance(node, ast.Dict):
+        return True
+    if (
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "dict"
+    ):
+        return True
+    if isinstance(node, ast.Name) and node.id in bindings:
+        return _is_dict_valued(bindings[node.id], {})
+    return False
+
+
+def _dict_literal_keys(node):
+    """Constant string keys of a dict literal whose values are themselves dicts."""
+    if not isinstance(node, ast.Dict):
+        return set()
+    return {
+        key.value
+        for key, value in zip(node.keys, node.values)
+        if isinstance(key, ast.Constant)
+        and isinstance(key.value, str)
+        and isinstance(value, ast.Dict)
+    }
+
+
+def _resolve_dict_literal(node, bindings):
+    """Follow one level of Name binding to the dict literal behind ``node``.
+
+    Both writer branches need this. A recorder written as
+    ``payload = {...}; write_ledger(payload)`` is the same recorder as the
+    inline form, and a derivation that saw only the inline form would let a
+    hoisted payload add an unguarded structured field in total silence --
+    the floor below only catches a DECREASE, never an underivable addition.
+    """
+    if isinstance(node, ast.Name):
+        node = bindings.get(node.id)
+    return node
+
+
+def _derive_structured_fields(source=None):
+    """Derive the structured top-level ledger keys from the module's source.
+
+    Returns ``(fields, writer_call_count)``. One writer call is one ``Call``
+    node naming ``write_ledger`` or ``_write_exact`` inside a function body;
+    the count is returned so the caller can assert the walk saw the module at
+    all rather than an empty tree.
+
+    ``source`` defaults to the real module and exists so a test can feed the
+    derivation a planted recorder shape without editing the module itself.
+    """
+    if source is None:
+        source = SCRIPT_PATH.read_text(encoding="utf-8")
+    tree = ast.parse(source)
+    fields = set()
+    writer_calls = 0
+    for func in ast.walk(tree):
+        if not isinstance(func, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        bindings = {
+            assign.targets[0].id: assign.value
+            for assign in ast.walk(func)
+            if isinstance(assign, ast.Assign)
+            and len(assign.targets) == 1
+            and isinstance(assign.targets[0], ast.Name)
+        }
+        for call in ast.walk(func):
+            if not (
+                isinstance(call, ast.Call)
+                and isinstance(call.func, ast.Name)
+                and call.func.id in _LEDGER_WRITERS
+            ):
+                continue
+            writer_calls += 1
+            if call.func.id == "write_ledger":
+                if call.args:
+                    fields |= _dict_literal_keys(
+                        _resolve_dict_literal(call.args[0], bindings)
+                    )
+                continue
+            # _write_exact(target, data): the payload is the SECOND argument.
+            if len(call.args) < 2:
+                continue
+            data = call.args[1]
+            fields |= _dict_literal_keys(_resolve_dict_literal(data, bindings))
+            if not isinstance(data, ast.Name):
+                continue
+            for assign in ast.walk(func):
+                target = (
+                    assign.targets[0]
+                    if isinstance(assign, ast.Assign) and len(assign.targets) == 1
+                    else None
+                )
+                if (
+                    isinstance(target, ast.Subscript)
+                    and isinstance(target.value, ast.Name)
+                    and target.value.id == data.id
+                    and isinstance(target.slice, ast.Constant)
+                    and isinstance(target.slice.value, str)
+                    and _is_dict_valued(assign.value, bindings)
+                ):
+                    fields.add(target.slice.value)
+    return fields, writer_calls
+
+
+_HOISTED_RECORDER_SOURCE = """
+def record_something(entry_id):
+    payload = {"somethings": {entry_id: {"status": "open"}}}
+    return write_ledger(payload)
+"""
+
+
+def test_derivation_sees_a_hoisted_write_ledger_payload():
+    """A recorder that binds its payload to a name first is the same recorder.
+
+    Planted here rather than in the module: the derivation must cover the
+    shape BEFORE somebody writes it, and the equality assertion below would
+    otherwise be the thing that discovers it -- by failing in a way that reads
+    as "the guard map is stale" rather than "the derivation is blind".
+    """
+    fields, writer_calls = _derive_structured_fields(_HOISTED_RECORDER_SOURCE)
+    assert writer_calls == 1
+    assert fields == {"somethings"}
+
+
+def test_derivation_still_sees_an_inline_write_ledger_payload():
+    """The Name-following must not be traded for the literal form."""
+    inline = """
+def record_something(entry_id):
+    return write_ledger({"somethings": {entry_id: {"status": "open"}}})
+"""
+    fields, _ = _derive_structured_fields(inline)
+    assert fields == {"somethings"}
+
+
+def test_structured_field_derivation_is_not_a_no_op():
+    """A derivation that matched nothing would make the drift test vacuous."""
+    fields, writer_calls = _derive_structured_fields()
+    assert writer_calls >= 9, (
+        f"Walked {writer_calls} ledger writer calls, below the 9 measured when "
+        f"this test was written. The module's write shape changed and this "
+        f"derivation is no longer reading it."
+    )
+    assert len(fields) >= _STRUCTURED_FIELD_FLOOR, (
+        f"Derived {len(fields)} structured fields ({sorted(fields)}) from "
+        f"{SCRIPT_PATH.name}, below the floor of {_STRUCTURED_FIELD_FLOOR}. "
+        f"The recorder write shape changed and this test silently stopped "
+        f"checking anything."
+    )
+
+
+def test_structured_field_routes_matches_the_recorders():
+    """The guard list is hand-maintained; only this makes its drift loud.
+
+    Asserted as set EQUALITY, not containment, because drift runs both ways:
+    a new recorder missing from the map reopens the bare-`set` bypass, and a
+    stale entry left behind after a recorder is removed refuses a write with
+    a message pointing at a route that no longer exists.
+    """
+    derived, _ = _derive_structured_fields()
+    assert derived == set(ledger._STRUCTURED_FIELD_ROUTES), (
+        f"_STRUCTURED_FIELD_ROUTES has drifted from the recorders in "
+        f"{SCRIPT_PATH.name}.\n"
+        f"  written by a recorder but NOT guarded: "
+        f"{sorted(derived - set(ledger._STRUCTURED_FIELD_ROUTES))}\n"
+        f"  guarded but written by NO recorder: "
+        f"{sorted(set(ledger._STRUCTURED_FIELD_ROUTES) - derived)}\n"
+        f"An unguarded structured field is writable by a bare `set`, which "
+        f"replaces the whole object and discards the audit trail under it."
+    )
 
 
 # ---- archive-ceremony ----------------------------------------------------
@@ -719,6 +1349,52 @@ def test_cli_set_ceremony_unknown_field_errors(tmp_ledger):
 
 
 @pytest.mark.allow("subprocess")
+@pytest.mark.parametrize(
+    "field,route",
+    [
+        ("ceremony", "set ceremony."),
+        ("ceremony_history", "archive-ceremony"),
+        ("blockers", "blocker"),
+        ("waves", "wave-discipline"),
+        ("groups", "group-gate"),
+        ("dispatches", "record-dispatch"),
+    ],
+)
+def test_cli_set_structured_field_refused(tmp_ledger, field, route):
+    """The CLI is the route the bypass was demonstrated through: `set
+    ceremony.selected` was refused while a bare `set ceremony` warned and
+    then wrote. Exit 2 matches the unknown-ceremony-field path -- the caller
+    asked for something the ledger does not accept."""
+    _run_cli("set", "ceremony.locked_at", "2026-08-10T14:02Z")
+    _run_cli("blocker", "B1", "--type", "decision")
+    _run_cli("wave-discipline", "3a", "--status", "passed")
+    _run_cli("group-gate", "G1", "--status", "passed")
+    _run_cli("record-dispatch", "--subagent-type", "impl")
+    _run_cli("archive-ceremony", "--reason", "seed the history")
+    _run_cli("set", "ceremony.locked_at", "2026-08-12T09:00Z")
+    before = json.loads(tmp_ledger.read_text())[field]
+
+    proc = _run_cli("set", field, "obliterated")
+
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "dedicated recorder" in proc.stderr
+    assert route in proc.stderr
+    assert json.loads(tmp_ledger.read_text())[field] == before
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_dotted_non_ceremony_field_refused(tmp_ledger):
+    """The same `else` branch bypassed set_scalar's dotted-field guard too,
+    writing a top-level key literally named "need_flags.needs_research"."""
+    proc = _run_cli("set", "need_flags.needs_research", "true")
+    assert proc.returncode == 2, proc.stdout + proc.stderr
+    assert "top-level fields" in proc.stderr
+    assert not tmp_ledger.exists() or "need_flags.needs_research" not in json.loads(
+        tmp_ledger.read_text()
+    )
+
+
+@pytest.mark.allow("subprocess")
 def test_cli_set_ceremony_gate_position(tmp_ledger):
     """The proven-broken invocation from the finding: this exited 2."""
     proc = _run_cli("set", "ceremony.gate_position", "per_group")
@@ -778,6 +1454,21 @@ def test_cli_set_ceremony_locked_at_rewrite_refused(tmp_ledger):
     assert "refusing to rewrite" in proc.stderr
     data = json.loads(tmp_ledger.read_text())
     assert data["ceremony"]["locked_at"] == "2026-08-10T14:02Z"
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_locked_at_blank_refused(tmp_ledger):
+    """The CLI is the reachable route to a blank stamp: ``locked_at`` had no
+    value validation, so ``set ceremony.locked_at ""`` wrote a lock that every
+    guard then read as absent.
+    """
+    proc = _run_cli("set", "ceremony.locked_at", "")
+    # 2, not 1: the CLI already splits "you passed a bad value" (ValueError,
+    # exit 2) from "the stored state refuses this" (LedgerError, exit 1), and
+    # a blank stamp is the former.
+    assert proc.returncode == 2
+    assert "non-blank" in proc.stderr
+    assert not tmp_ledger.exists()
 
 
 @pytest.mark.allow("subprocess")
@@ -1357,3 +2048,149 @@ def test_record_dispatch_cli_extracts_skills_without_storing_the_prompt(tmp_ledg
     raw = tmp_ledger.read_text()
     assert "fact-checking" in raw
     assert "hunter2" not in raw
+
+
+# ---- malformed stored ceremony shape -------------------------------------
+#
+# A ledger whose `ceremony` is a scalar is not hypothetical: before the bare-
+# `set` refusal landed on this branch, `set ceremony <value>` collapsed the
+# whole object to a string and exited 0, so a ledger written by that shipped
+# code already carries the shape on disk. The module docstring also invites a
+# developer to edit the file directly. These are the RECOVERY path -- the tool
+# must say what is wrong and where to go, not traceback at the person trying
+# to repair it.
+
+
+def _write_raw_ledger(tmp_ledger, payload: str) -> None:
+    tmp_ledger.write_text(payload, encoding="utf-8")
+
+
+def test_set_ceremony_field_refuses_a_scalar_ceremony(tmp_ledger):
+    _write_raw_ledger(tmp_ledger, '{"ceremony": "heavy"}')
+    with pytest.raises(ledger.LedgerError) as exc:
+        ledger.set_ceremony_field("selected", "gate-a")
+    message = str(exc.value)
+    assert "archive-ceremony" in message
+    assert "str" in message
+
+
+def test_set_ceremony_field_refuses_a_list_valued_monotonic_field(tmp_ledger):
+    _write_raw_ledger(
+        tmp_ledger,
+        '{"ceremony": {"locked_at": "2026-01-01T00:00:00Z",'
+        ' "selected": ["gate-a", "gate-b"]}}',
+    )
+    with pytest.raises(ledger.LedgerError) as exc:
+        ledger.set_ceremony_field("selected", "gate-a")
+    message = str(exc.value)
+    assert "ceremony.selected" in message
+    assert "archive-ceremony" in message
+
+
+def test_ceremony_elements_refuses_a_non_string(tmp_ledger):
+    with pytest.raises(ledger.LedgerError):
+        ledger._ceremony_elements(["gate-a"], source="ceremony.selected")
+
+
+def test_set_ceremony_field_still_reads_a_well_formed_ceremony(tmp_ledger):
+    """The guards must not disturb the normal path they wrap."""
+    ledger.set_ceremony_field("selected", "gate-a")
+    ledger.set_ceremony_field("locked_at", "2026-01-01T00:00:00Z")
+    result = ledger.set_ceremony_field("selected", "gate-a\ngate-b")
+    assert ledger._ceremony_elements(
+        result["ceremony"]["selected"], source="ceremony.selected"
+    ) == {"gate-a", "gate-b"}
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_on_a_scalar_ceremony_refuses_without_a_traceback(
+    tmp_ledger,
+):
+    _write_raw_ledger(tmp_ledger, '{"ceremony": "heavy"}')
+    proc = _run_cli("set", "ceremony.selected", "gate-a")
+    assert proc.returncode == 1
+    assert "Traceback" not in proc.stderr
+    assert "AttributeError" not in proc.stderr
+    assert "archive-ceremony" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_on_a_list_valued_field_refuses_without_a_traceback(
+    tmp_ledger,
+):
+    _write_raw_ledger(
+        tmp_ledger,
+        '{"ceremony": {"locked_at": "2026-01-01T00:00:00Z",'
+        ' "selected": ["gate-a", "gate-b"]}}',
+    )
+    proc = _run_cli("set", "ceremony.selected", "gate-a")
+    assert proc.returncode == 1
+    assert "Traceback" not in proc.stderr
+    assert "AttributeError" not in proc.stderr
+    assert "archive-ceremony" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_archive_ceremony_still_repairs_a_scalar_ceremony(tmp_ledger):
+    """The remedy the refusal names must actually work on the broken shape."""
+    _write_raw_ledger(tmp_ledger, '{"ceremony": "heavy"}')
+    proc = _run_cli("archive-ceremony", "--reason", "repairing a collapsed ceremony")
+    assert proc.returncode == 0
+    assert ledger.read_ledger()["ceremony"] == {}
+
+
+# The refusal in `_require_ceremony_dict` admits ANY non-dict, so the remedy
+# it names has to hold across that whole space -- not at one representative
+# point in it. The truthy case above passed while every falsy shape was a dead
+# end: the field write refused, and the archive that refusal named refused too,
+# leaving hand-editing the JSON as the only way out. `""` was reachable through
+# the bare `set ceremony ""` bypass that shipped before it was closed.
+_FALSY_MALFORMED_CEREMONIES = [
+    pytest.param('""', "", id="empty-string"),
+    pytest.param("0", 0, id="zero"),
+    pytest.param("false", False, id="false"),
+    pytest.param("[]", [], id="empty-list"),
+]
+
+
+@pytest.mark.parametrize(("raw", "expected"), _FALSY_MALFORMED_CEREMONIES)
+def test_archive_ceremony_repairs_a_falsy_malformed_ceremony(
+    tmp_ledger, raw, expected
+):
+    """A PRESENT-but-falsy ceremony is malformed state to repair, not the
+    absent case. The archive preserves it under ceremony_history rather than
+    discarding the evidence of what the ledger held."""
+    _write_raw_ledger(tmp_ledger, f'{{"ceremony": {raw}}}')
+
+    with pytest.raises(ledger.LedgerError, match="archive-ceremony"):
+        ledger.set_ceremony_field("selected", "gate-a")
+
+    ledger.archive_ceremony("repairing it", timestamp="2026-01-02T00:00:00Z")
+
+    data = ledger.read_ledger()
+    assert data["ceremony"] == {}
+    archived = data["ceremony_history"]["2026-01-02T00:00:00Z"]
+    assert archived["ceremony"] == expected
+    assert archived["reason"] == "repairing it"
+
+
+@pytest.mark.parametrize(("raw", "expected"), _FALSY_MALFORMED_CEREMONIES)
+def test_falsy_malformed_ceremony_recovers_to_a_fresh_phase_0(
+    tmp_ledger, raw, expected
+):
+    """End of the recovery path: after the archive a fresh Phase 0 lock lands."""
+    _write_raw_ledger(tmp_ledger, f'{{"ceremony": {raw}}}')
+    ledger.archive_ceremony("repairing a collapsed ceremony")
+
+    ledger.set_ceremony_field("locked_at", "2026-01-03T00:00:00Z")
+    assert ledger.read_ledger()["ceremony"]["locked_at"] == "2026-01-03T00:00:00Z"
+
+
+@pytest.mark.parametrize("raw", ["null", "{}"])
+def test_archive_ceremony_still_refuses_a_genuinely_empty_ceremony(tmp_ledger, raw):
+    """The repair above must not swallow the absent case. `null` and `{}` are
+    the documented shape carrying no selection, and they are NOT dead ends --
+    the ordinary set path accepts them -- so archiving them stays refused."""
+    _write_raw_ledger(tmp_ledger, f'{{"ceremony": {raw}}}')
+    with pytest.raises(ledger.LedgerError, match="no ceremony"):
+        ledger.archive_ceremony("aborted the run")

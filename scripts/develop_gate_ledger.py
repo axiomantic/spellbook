@@ -111,6 +111,15 @@ The CLI is intentionally narrow. The ledger is meant to be WRITTEN by
 the orchestrator's own discipline, not poked at from outside. Operations
 the skill describes -- "write ceremony.locked_at at Phase 0",
 "append gate completion" -- are supported; arbitrary edits are not.
+
+``set`` therefore REFUSES a bare write to any top-level field a dedicated
+recorder owns (``_STRUCTURED_FIELD_ROUTES``): ``set ceremony <value>``
+replaces the whole object rather than editing it, taking ``locked_at`` and
+every recorded entry with it, and it reaches none of the guards that
+``set ceremony.<field>`` and the recorder subcommands carry. The refusal
+names the route to use and does not depend on whether the ceremony is
+locked -- collapsing one of these objects to a scalar is not a narrower
+version of a legitimate operation, it is not one at all.
 """
 
 from __future__ import annotations
@@ -236,6 +245,15 @@ CEREMONY_FIELDS = (
 # it as a meaningful third mode. The value guard makes the typo fail loudly.
 GATE_POSITIONS = ("per_task", "per_group")
 
+# Ceremony fields that may move in ONE direction only once the lock is set,
+# mapped to the direction that is allowed. "grow" means no element may be
+# dropped; "shrink" means no element may be added.
+_MONOTONIC_CEREMONY_FIELDS = {
+    "selected": "grow",
+    "core": "grow",
+    "declined": "shrink",
+}
+
 # Blocker kinds, per the develop skill's blocker taxonomy.
 BLOCKER_TYPES = ("decision", "work", "external")
 
@@ -268,6 +286,21 @@ DISPATCH_SKILLS = (
 # carry file contents, credentials, and operator text), and only the skill
 # names recognized out of it are.
 DESCRIPTION_MAX = 200
+
+# Top-level fields owned by a dedicated recorder, mapped to the route that
+# writes them. Each is a JSON OBJECT that accumulates entries, so a bare
+# `set <field> <value>` does not edit it -- it replaces it, discarding every
+# entry at once. Membership here is exactly "has another route": a structured
+# field with no recorder (`need_flags`) is absent, because refusing it would
+# leave it unwritable rather than write it correctly.
+_STRUCTURED_FIELD_ROUTES = {
+    "ceremony": "`set ceremony.<field>` (or `archive-ceremony` to supersede it)",
+    "ceremony_history": "the `archive-ceremony` command",
+    "blockers": "the `blocker` command",
+    "waves": "the `wave-discipline` command",
+    "groups": "the `group-gate` command",
+    "dispatches": "the `record-dispatch` command",
+}
 
 
 def default_ledger_path() -> Path:
@@ -421,13 +454,105 @@ def set_scalar(field: str, value: Any, *, path: Path | None = None) -> dict[str,
     For ceremony writes use ``set_ceremony_field``; for ``blockers``,
     ``groups``, and ``waves`` use the dedicated recorders, which carry the
     guards that make each entry trustworthy.
+
+    Every field in ``_STRUCTURED_FIELD_ROUTES`` is REFUSED here rather than
+    merely warned about. A guard is worth only what the narrowest route to
+    the same bytes enforces: ``set_ceremony_field`` refuses to narrow a
+    locked ``ceremony.selected``, but a single write of ``ceremony`` as a
+    scalar replaces the entire object -- ``locked_at`` included -- without
+    passing through any of it. ``_deep_merge`` warns on that collapse and
+    proceeds, which is correct for the merge primitive every recorder shares
+    but is not a gate: a warning the caller never reads leaves the write
+    exactly as done as no warning at all.
+
+    ``need_flags`` is an object in the documented shape and is deliberately
+    NOT guarded: it has no dedicated recorder, so refusing it would leave the
+    field with no route at all. The refusal covers fields that have somewhere
+    else to go.
     """
     if "/" in field or "." in field:
         raise ValueError(
             f"set_scalar only accepts top-level fields, got {field!r}. "
             "For ceremony writes use set_ceremony_field."
         )
+    # Unconditional, and NOT predicated on ceremony.locked_at: replacing one
+    # of these objects with a scalar is never a legitimate operation, and a
+    # guard that fired only after the lock would leave the Phase-0 window --
+    # where the selection is still being written -- wide open.
+    if field in _STRUCTURED_FIELD_ROUTES:
+        raise ValueError(
+            f"refusing to overwrite {field!r}: it is written by a dedicated "
+            f"recorder, not by a bare set. Use {_STRUCTURED_FIELD_ROUTES[field]}. "
+            f"A bare set replaces the whole {field!r} object with this value, "
+            "discarding every entry under it -- which is the audit trail that "
+            "exists to prove those entries were recorded."
+        )
     return write_ledger({field: value}, path=path)
+
+
+def _require_ceremony_dict(current: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the stored ``ceremony`` object, refusing a non-object shape.
+
+    ``ceremony`` is an object in the documented shape, but a ledger on disk
+    can hold a scalar there: the bare ``set ceremony <value>`` bypass that
+    this branch closes collapsed the whole object to a string and exited 0,
+    so any ledger written through that shipped code already carries the
+    shape. A developer editing the file by hand -- which the module
+    docstring invites -- can produce it too.
+
+    That makes this the RECOVERY path, and the recovery path is exactly
+    where a traceback is most expensive: the person reading it is already
+    holding a broken ledger and is trying to repair it. Refusing with the
+    route named turns the crash into an instruction.
+
+    ``LedgerError``, not ``ValueError``: the caller's arguments are fine and
+    the STORED state is not, which is the same category as the corrupt-JSON
+    refusal in ``read_ledger`` and the lock guards below. ``_cmd_set`` maps
+    that to exit 1, keeping exit 2 for "the caller asked for something the
+    ledger does not accept".
+    """
+    ceremony = current.get("ceremony")
+    if ceremony is None:
+        return {}
+    if not isinstance(ceremony, dict):
+        raise LedgerError(
+            f"ledger field 'ceremony' is a {type(ceremony).__name__}, not an "
+            f"object (value={ceremony!r}); refusing to edit a field on it. "
+            "A bare `set ceremony <value>` collapses the object to a scalar "
+            "and is now refused, but a ledger written before that guard can "
+            "still hold this shape. Use `archive-ceremony` to move it to "
+            "ceremony_history and clear it, then re-select in a fresh Phase 0."
+        )
+    return ceremony
+
+
+def _ceremony_elements(value: Any, *, source: str) -> set[str]:
+    """Split a newline-joined ceremony scalar into its elements.
+
+    These fields are newline-joined SCALAR strings, never lists (see the
+    ``remaining_gates`` note in the skill: ``_deep_merge`` appends lists but
+    replaces scalars). One element is one non-blank, stripped line, so blank
+    lines and surrounding whitespace carry no meaning. The result is a SET:
+    order carries no meaning either, and a reordering must not read as a
+    change.
+
+    A non-string arrives from the same place a non-object ``ceremony`` does
+    -- a ledger already on disk in the wrong shape -- so it is refused with
+    ``LedgerError`` and the same remedy rather than raising ``AttributeError``
+    out of ``splitlines``. ``source`` names which field, because the caller
+    compares two of them and the message is useless without knowing which
+    side is malformed.
+    """
+    if not isinstance(value, str):
+        raise LedgerError(
+            f"ledger field {source!r} is a {type(value).__name__}, not a "
+            f"newline-joined string (value={value!r}); refusing to compare it. "
+            "These fields are scalars by design -- the merge policy replaces "
+            "lists wholesale, so a list here cannot shrink the way the gate "
+            "set must. Use `archive-ceremony` to move the ceremony to "
+            "ceremony_history and clear it, then re-select in a fresh Phase 0."
+        )
+    return {line.strip() for line in value.splitlines() if line.strip()}
 
 
 def set_ceremony_field(
@@ -452,9 +577,23 @@ def set_ceremony_field(
     and a first write after the lock is allowed -- the guard refuses a
     reposition, not the recording of the original selection.
 
-    Other ceremony fields stay writable after the lock on purpose:
-    ``selected`` and ``promotions`` must accept escalation, which the
-    skill permits mid-run ("the lock is a floor, not a ceiling").
+    Whether the ceremony is locked is decided on PRESENCE, matching the
+    sentence above, and never on truthiness. A ledger holding
+    ``locked_at: ""`` is locked; only an absent or ``null`` stamp is
+    unlocked. Testing truthiness made a blank stamp a master key that
+    disengaged every guard in this function at once, and a blank stamp is
+    exactly what the empty-string route wrote before the value guard below
+    existed. ``null`` reads as unlocked because it is JSON's spelling of
+    "no value" -- treating it as a lock would refuse the Phase 0 writes the
+    lock is meant to permit.
+
+    ``selected``, ``core`` and ``declined`` stay writable after the lock,
+    but in ONE DIRECTION only. Escalation is permitted mid-run ("the lock
+    is a floor, not a ceiling"), so ``selected`` and ``core`` may grow and
+    ``declined`` may shrink on promotion. The reverse of each is
+    de-escalation and is refused; ``archive_ceremony`` is again the
+    sanctioned path. ``promotions`` and the remaining fields are
+    unrestricted -- they record history rather than the gate set.
     """
     if name not in CEREMONY_FIELDS:
         raise ValueError(
@@ -465,11 +604,25 @@ def set_ceremony_field(
             f"invalid ceremony.gate_position {value!r}; "
             f"valid: {', '.join(GATE_POSITIONS)}"
         )
+    # A stamp whose value is blank is a lock in name only, and it is the one
+    # shape a caller could previously write through this very function -- the
+    # first write faces no existing lock, so nothing refused it, and every
+    # later guard then read it as unlocked. Refusing it here keeps the
+    # reachable route closed; the presence tests below keep a hand-edited one
+    # from paying off.
+    if name == "locked_at" and not value.strip():
+        raise ValueError(
+            f"ceremony.locked_at requires a non-blank timestamp; got {value!r}. "
+            "Its presence IS the lock, so a blank stamp is a lock nothing can "
+            "read -- and it would disengage the guards it is supposed to arm."
+        )
     current = read_ledger(path)
-    existing_locked = (
-        current.get("ceremony", {}).get("locked_at") if current else None
-    )
-    if name == "locked_at" and existing_locked and existing_locked != value:
+    existing_ceremony = _require_ceremony_dict(current)
+    existing_locked = existing_ceremony.get("locked_at")
+    # PRESENCE, not truthiness. See the docstring: `""`, `0` and `false` are
+    # all present, so all three are locked.
+    is_locked = existing_locked is not None
+    if name == "locked_at" and is_locked and existing_locked != value:
         raise LedgerError(
             f"refusing to rewrite ceremony.locked_at: existing={existing_locked!r} "
             f"new={value!r}. The lock is set once and never rewritten."
@@ -479,14 +632,53 @@ def set_ceremony_field(
     # as any other ceremony change. Guarding only locked_at would leave the
     # documented lock unenforced for the one field a mid-run session has a
     # motive to change.
-    if name == "gate_position" and existing_locked:
-        existing_position = current.get("ceremony", {}).get("gate_position")
+    if name == "gate_position" and is_locked:
+        existing_position = existing_ceremony.get("gate_position")
         if existing_position and existing_position != value:
             raise LedgerError(
                 f"refusing to rewrite ceremony.gate_position after the lock: "
                 f"existing={existing_position!r} new={value!r} "
                 f"(locked_at={existing_locked!r}). Repositioning mid-run is not "
                 "a thing: archive-ceremony and re-select in a fresh Phase 0."
+            )
+    # The gate SET is the thing the lock exists to hold. locked_at and
+    # gate_position were guarded; selected/core/declined were not, so the
+    # documented "a mid-run request to drop a gate is REFUSED" had no
+    # mechanism -- rewriting selected from five gates to one after the lock
+    # was accepted silently. These three guards are that mechanism.
+    #
+    # Direction is per-field: selected and core may only GROW, declined may
+    # only SHRINK, because growing declined removes a gate from the run by
+    # the back door. declined shrinks legitimately on promotion.
+    if name in _MONOTONIC_CEREMONY_FIELDS and is_locked:
+        existing_value = existing_ceremony.get(name)
+        # The comparison is UNCONDITIONAL. Guarding it on a truthy prior value
+        # was correct for the grow fields and a bypass for the shrink field:
+        # an empty prior yields no dropped element for grow (so a first write
+        # of selected/core is still allowed, as before), but for `declined` it
+        # made every element of the new value invisible to the check. That is
+        # the whole hole, because locking with NOTHING declined is the DEFAULT
+        # path (`source = "default_full"`) -- so a single post-lock
+        # `set ceremony.declined <gate>` dropped a gate from `remaining_gates`
+        # in the most common configuration. `declined` is written atomically
+        # with `locked_at` at Phase 0 (the ONLY write that sets the lock), so
+        # no legitimate flow writes it first after the lock; the one legal
+        # post-lock move is PROMOTION, which SHRINKS it.
+        old = _ceremony_elements(
+            existing_value if existing_value is not None else "",
+            source=f"ceremony.{name}",
+        )
+        new = _ceremony_elements(value, source=f"ceremony.{name} (new value)")
+        direction = _MONOTONIC_CEREMONY_FIELDS[name]
+        lost = old - new if direction == "grow" else new - old
+        if lost:
+            verb = "narrow" if direction == "grow" else "widen"
+            detail = "dropped" if direction == "grow" else "added"
+            raise LedgerError(
+                f"refusing to {verb} ceremony.{name} after the lock: "
+                f"{detail}={sorted(lost)} (locked_at={existing_locked!r}). "
+                "De-escalation mid-run is not a thing: archive-ceremony "
+                "and re-select in a fresh Phase 0."
             )
     return write_ledger({"ceremony": {name: value}}, path=path)
 
@@ -513,6 +705,22 @@ def archive_ceremony(
     ``ceremony_history`` is a MAP keyed by archive timestamp, not a list:
     the merge policy replaces lists wholesale, so a list would lose every
     prior archive on the next sibling write.
+
+    "Nothing to archive" is decided on SHAPE, not on truthiness. ``ceremony``
+    is an object in the documented shape, so absent, ``null`` and ``{}`` are
+    the genuinely-empty case and stay refused. Any NON-object value is
+    malformed state, and this is the route ``_require_ceremony_dict`` names
+    to repair it -- so it must archive whatever its truthiness. Keying the
+    refusal off ``not ceremony`` conflated the two: a ledger holding ``""``,
+    ``0``, ``false`` or ``[]`` was refused by the field write AND by the
+    remedy that refusal named, leaving hand-editing the JSON as the only way
+    out. ``""`` was reachable through the bare ``set ceremony ""`` bypass
+    that shipped before it was closed.
+
+    The malformed value is archived rather than dropped: it is the evidence
+    of what the ledger held, and preserving it is why this path exists. It
+    nests under the entry's own ``ceremony`` key, so a scalar there cannot
+    corrupt the ``ceremony_history`` map.
     """
     if not reason or not reason.strip():
         raise ValueError(
@@ -522,7 +730,7 @@ def archive_ceremony(
     target = path or ledger_path()
     current = read_ledger(target)
     ceremony = current.get("ceremony")
-    if not ceremony:
+    if ceremony is None or (isinstance(ceremony, dict) and not ceremony):
         raise LedgerError(
             "no ceremony to archive: ceremony is absent or empty. "
             "Archiving is for superseding an existing selection."
@@ -879,7 +1087,16 @@ def _cmd_set(args: argparse.Namespace) -> int:
                 name, args.value, path=Path(args.path) if args.path else None
             )
         else:
-            write_ledger({args.field: args.value}, path=Path(args.path) if args.path else None)
+            # Route through set_scalar, not write_ledger. write_ledger is the
+            # merge PRIMITIVE every recorder shares; it cannot refuse a
+            # structured-field write without refusing the recorders too. The
+            # guards therefore live in set_scalar, and a CLI that called the
+            # primitive directly walked straight past them -- which is how a
+            # bare `set ceremony <value>` overwrote a locked ceremony while
+            # `set ceremony.selected` was correctly refused.
+            set_scalar(
+                args.field, args.value, path=Path(args.path) if args.path else None
+            )
     except LedgerError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
