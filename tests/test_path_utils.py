@@ -132,6 +132,23 @@ class TestDetectGitContext:
         )
 
 
+def _volume_is_case_insensitive(directory) -> bool:
+    """Whether ``directory``'s volume resolves one file under two spellings.
+
+    Probed, never assumed from ``sys.platform``: a macOS box can be either
+    (APFS is formatted case-insensitive by default but case-sensitive is a
+    supported choice), and a Linux box can mount either. The probe writes a
+    file and asks for it back under a different case, which is the property
+    the caller actually depends on.
+    """
+    probe = directory / "CaseProbe"
+    probe.write_text("")
+    try:
+        return (directory / "caseprobe").exists()
+    finally:
+        probe.unlink()
+
+
 def _git(*args, cwd):
     """Run git with a hermetic environment (no operator config, no global hooks)."""
     env = {
@@ -245,6 +262,44 @@ class TestResolveRepoRootMapping:
         repo_root = os.path.realpath(str(repo))
         for probe in (repo, worktree, worktree / "s"):
             assert _git_free_repo_root(str(probe)) == repo_root, probe
+
+    @pytest.mark.allow("subprocess")
+    def test_declines_a_path_spelled_in_a_case_the_disk_does_not_use(self, tmp_path):
+        """A case-variant input must not answer where it would answer WRONGLY.
+
+        ``realpath`` resolves symlinks but leaves case alone, so on a
+        case-insensitive volume ``/x/MYREPO`` reaches the end of the walk
+        spelled the way the caller wrote it, while git -- whose answer comes
+        from ``getcwd`` after a ``chdir`` -- reports ``/x/myrepo``. Both are
+        non-None and they disagree, which is the one outcome the walk is built
+        to avoid: ``encode_cwd`` turns the string into a storage key, so the
+        two spellings address two different ledger files and a resumed develop
+        run silently starts over.
+
+        The walk therefore declines rather than reconstructs the on-disk
+        spelling. Case folding is the filesystem's rule and not Python's, and
+        HFS+ also normalizes Unicode, so a reconstruction would be a guess;
+        deferring costs one process spawn and cannot be wrong.
+        """
+        if not _volume_is_case_insensitive(tmp_path):
+            pytest.skip("case-sensitive volume: no case-variant path resolves here")
+
+        repo = tmp_path / "myrepo"
+        (repo / "a").mkdir(parents=True)
+        _git("init", "-q", ".", cwd=repo)
+        _git("commit", "-q", "--allow-empty", "-m", "x", cwd=repo)
+
+        variant = str(tmp_path / "MYREPO")
+        expected = os.path.realpath(str(repo))
+
+        # The walk defers ...
+        assert _git_free_repo_root(variant) is None
+        assert _git_free_repo_root(os.path.join(variant, "A")) is None
+        # ... and the canonical spelling still takes the fast path.
+        assert _git_free_repo_root(str(repo)) == expected
+        # ... so the answer the CALLER sees is git's, under either spelling.
+        assert resolve_repo_root(variant) == expected
+        assert resolve_repo_root(os.path.join(variant, "A")) == expected
 
 
 class TestResolveRepoRootSpawnsNothing:

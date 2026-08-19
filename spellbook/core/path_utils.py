@@ -159,6 +159,36 @@ def _looks_like_git_dir(candidate: Path) -> bool:
         return False
 
 
+def _root_if_spelled_as_on_disk(directory: Path) -> Optional[str]:
+    """``directory`` as a root string, or None if its spelling is unconfirmed.
+
+    ``realpath`` resolves symlinks but leaves CASE alone, so on a
+    case-insensitive volume a caller's ``/x/MYREPO`` survives the walk exactly
+    as written, while git -- which chdirs and reads ``getcwd`` -- answers
+    ``/x/myrepo``. Both are non-None and they disagree, and since ``encode_cwd``
+    turns this string into a storage filename the disagreement is silent: the
+    caller reads the resulting miss as "no state for this project".
+
+    The spelling is CHECKED against the parent listing rather than
+    reconstructed from it. Reconstructing means folding case by Python's rules
+    where the filesystem's rules apply -- HFS+ also normalizes Unicode, and
+    other volumes fold differently again -- so a reconstruction is a guess of
+    exactly the kind this module refuses. A check can only ever cost a deferral.
+    """
+    root = os.path.normpath(str(directory))
+    current = Path(root)
+    while True:
+        parent = current.parent
+        if parent == current:
+            return root
+        try:
+            if current.name not in os.listdir(parent):
+                return None
+        except OSError:
+            return None
+        current = parent
+
+
 def _git_free_repo_root(path: str) -> Optional[str]:
     """The repo root for ``path`` read off the filesystem, or None to defer.
 
@@ -187,6 +217,10 @@ def _git_free_repo_root(path: str) -> Optional[str]:
       directory not named ``.git``, so the main-worktree parent derivation
       does not apply.
     - Anything under a ``GIT_*`` discovery override.
+
+    - Any path spelled in a case the disk does not use. ``realpath`` does not
+      canonicalize case, so on a case-insensitive volume the walk would answer
+      with the caller's spelling where git answers with the disk's.
 
     Git's own answer is realpath-based (it chdirs, and ``getcwd`` returns a
     resolved path), so the walk starts from ``os.path.realpath``. Git also
@@ -235,7 +269,7 @@ def _git_free_repo_root(path: str) -> Optional[str]:
         if is_dir:
             if not _looks_like_git_dir(dot_git):
                 return None
-            return os.path.normpath(str(directory))
+            return _root_if_spelled_as_on_disk(directory)
 
         if is_file:
             git_dir = _read_gitdir_pointer(dot_git, directory)
@@ -265,7 +299,7 @@ def _git_free_repo_root(path: str) -> Optional[str]:
                     return None
             except OSError:
                 return None
-            return os.path.normpath(str(main_root))
+            return _root_if_spelled_as_on_disk(main_root)
 
         if dot_git.exists():
             # Present but neither file nor directory. Git's acceptance rules
