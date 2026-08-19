@@ -270,6 +270,13 @@ def test_prose_row_label_matches_the_scanned_source(row_name):
     The label is what a reader sees beside a count, so a stale one turns a
     widened scan into a false statement about what was checked. This was
     OBSERVED: the four-tree label printed unchanged beside a nine-tree scan.
+
+    Not subsumed by the identity test below. Identity pins every row to the
+    same object; it says nothing about whether that object is right. Build
+    PROSE_SOURCE_LABEL with the wrong separator, or from PROSE_DIRS alone
+    with PROSE_FILES dropped, and every identity assertion still holds while
+    this one -- which recomputes the label independently -- is the only thing
+    that fails.
     """
     expected = ", ".join(
         [f"{d}/" for d in PROSE_DIRS] + [str(f) for f in PROSE_FILES]
