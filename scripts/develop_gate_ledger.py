@@ -490,7 +490,43 @@ def set_scalar(field: str, value: Any, *, path: Path | None = None) -> dict[str,
     return write_ledger({field: value}, path=path)
 
 
-def _ceremony_elements(value: str) -> set[str]:
+def _require_ceremony_dict(current: Mapping[str, Any]) -> dict[str, Any]:
+    """Return the stored ``ceremony`` object, refusing a non-object shape.
+
+    ``ceremony`` is an object in the documented shape, but a ledger on disk
+    can hold a scalar there: the bare ``set ceremony <value>`` bypass that
+    this branch closes collapsed the whole object to a string and exited 0,
+    so any ledger written through that shipped code already carries the
+    shape. A developer editing the file by hand -- which the module
+    docstring invites -- can produce it too.
+
+    That makes this the RECOVERY path, and the recovery path is exactly
+    where a traceback is most expensive: the person reading it is already
+    holding a broken ledger and is trying to repair it. Refusing with the
+    route named turns the crash into an instruction.
+
+    ``LedgerError``, not ``ValueError``: the caller's arguments are fine and
+    the STORED state is not, which is the same category as the corrupt-JSON
+    refusal in ``read_ledger`` and the lock guards below. ``_cmd_set`` maps
+    that to exit 1, keeping exit 2 for "the caller asked for something the
+    ledger does not accept".
+    """
+    ceremony = current.get("ceremony")
+    if ceremony is None:
+        return {}
+    if not isinstance(ceremony, dict):
+        raise LedgerError(
+            f"ledger field 'ceremony' is a {type(ceremony).__name__}, not an "
+            f"object (value={ceremony!r}); refusing to edit a field on it. "
+            "A bare `set ceremony <value>` collapses the object to a scalar "
+            "and is now refused, but a ledger written before that guard can "
+            "still hold this shape. Use `archive-ceremony` to move it to "
+            "ceremony_history and clear it, then re-select in a fresh Phase 0."
+        )
+    return ceremony
+
+
+def _ceremony_elements(value: Any, *, source: str) -> set[str]:
     """Split a newline-joined ceremony scalar into its elements.
 
     These fields are newline-joined SCALAR strings, never lists (see the
@@ -499,7 +535,23 @@ def _ceremony_elements(value: str) -> set[str]:
     lines and surrounding whitespace carry no meaning. The result is a SET:
     order carries no meaning either, and a reordering must not read as a
     change.
+
+    A non-string arrives from the same place a non-object ``ceremony`` does
+    -- a ledger already on disk in the wrong shape -- so it is refused with
+    ``LedgerError`` and the same remedy rather than raising ``AttributeError``
+    out of ``splitlines``. ``source`` names which field, because the caller
+    compares two of them and the message is useless without knowing which
+    side is malformed.
     """
+    if not isinstance(value, str):
+        raise LedgerError(
+            f"ledger field {source!r} is a {type(value).__name__}, not a "
+            f"newline-joined string (value={value!r}); refusing to compare it. "
+            "These fields are scalars by design -- the merge policy replaces "
+            "lists wholesale, so a list here cannot shrink the way the gate "
+            "set must. Use `archive-ceremony` to move the ceremony to "
+            "ceremony_history and clear it, then re-select in a fresh Phase 0."
+        )
     return {line.strip() for line in value.splitlines() if line.strip()}
 
 
@@ -543,9 +595,8 @@ def set_ceremony_field(
             f"valid: {', '.join(GATE_POSITIONS)}"
         )
     current = read_ledger(path)
-    existing_locked = (
-        current.get("ceremony", {}).get("locked_at") if current else None
-    )
+    existing_ceremony = _require_ceremony_dict(current)
+    existing_locked = existing_ceremony.get("locked_at")
     if name == "locked_at" and existing_locked and existing_locked != value:
         raise LedgerError(
             f"refusing to rewrite ceremony.locked_at: existing={existing_locked!r} "
@@ -557,7 +608,7 @@ def set_ceremony_field(
     # documented lock unenforced for the one field a mid-run session has a
     # motive to change.
     if name == "gate_position" and existing_locked:
-        existing_position = current.get("ceremony", {}).get("gate_position")
+        existing_position = existing_ceremony.get("gate_position")
         if existing_position and existing_position != value:
             raise LedgerError(
                 f"refusing to rewrite ceremony.gate_position after the lock: "
@@ -575,7 +626,7 @@ def set_ceremony_field(
     # only SHRINK, because growing declined removes a gate from the run by
     # the back door. declined shrinks legitimately on promotion.
     if name in _MONOTONIC_CEREMONY_FIELDS and existing_locked:
-        existing_value = current.get("ceremony", {}).get(name)
+        existing_value = existing_ceremony.get(name)
         # The comparison is UNCONDITIONAL. Guarding it on a truthy prior value
         # was correct for the grow fields and a bypass for the shrink field:
         # an empty prior yields no dropped element for grow (so a first write
@@ -588,8 +639,11 @@ def set_ceremony_field(
         # with `locked_at` at Phase 0 (the ONLY write that sets the lock), so
         # no legitimate flow writes it first after the lock; the one legal
         # post-lock move is PROMOTION, which SHRINKS it.
-        old = _ceremony_elements(existing_value or "")
-        new = _ceremony_elements(value)
+        old = _ceremony_elements(
+            existing_value if existing_value is not None else "",
+            source=f"ceremony.{name}",
+        )
+        new = _ceremony_elements(value, source=f"ceremony.{name} (new value)")
         direction = _MONOTONIC_CEREMONY_FIELDS[name]
         lost = old - new if direction == "grow" else new - old
         if lost:

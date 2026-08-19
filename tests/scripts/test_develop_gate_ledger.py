@@ -1880,3 +1880,92 @@ def test_record_dispatch_cli_extracts_skills_without_storing_the_prompt(tmp_ledg
     raw = tmp_ledger.read_text()
     assert "fact-checking" in raw
     assert "hunter2" not in raw
+
+
+# ---- malformed stored ceremony shape -------------------------------------
+#
+# A ledger whose `ceremony` is a scalar is not hypothetical: before the bare-
+# `set` refusal landed on this branch, `set ceremony <value>` collapsed the
+# whole object to a string and exited 0, so a ledger written by that shipped
+# code already carries the shape on disk. The module docstring also invites a
+# developer to edit the file directly. These are the RECOVERY path -- the tool
+# must say what is wrong and where to go, not traceback at the person trying
+# to repair it.
+
+
+def _write_raw_ledger(tmp_ledger, payload: str) -> None:
+    tmp_ledger.write_text(payload, encoding="utf-8")
+
+
+def test_set_ceremony_field_refuses_a_scalar_ceremony(tmp_ledger):
+    _write_raw_ledger(tmp_ledger, '{"ceremony": "heavy"}')
+    with pytest.raises(ledger.LedgerError) as exc:
+        ledger.set_ceremony_field("selected", "gate-a")
+    message = str(exc.value)
+    assert "archive-ceremony" in message
+    assert "str" in message
+
+
+def test_set_ceremony_field_refuses_a_list_valued_monotonic_field(tmp_ledger):
+    _write_raw_ledger(
+        tmp_ledger,
+        '{"ceremony": {"locked_at": "2026-01-01T00:00:00Z",'
+        ' "selected": ["gate-a", "gate-b"]}}',
+    )
+    with pytest.raises(ledger.LedgerError) as exc:
+        ledger.set_ceremony_field("selected", "gate-a")
+    message = str(exc.value)
+    assert "ceremony.selected" in message
+    assert "archive-ceremony" in message
+
+
+def test_ceremony_elements_refuses_a_non_string(tmp_ledger):
+    with pytest.raises(ledger.LedgerError):
+        ledger._ceremony_elements(["gate-a"], source="ceremony.selected")
+
+
+def test_set_ceremony_field_still_reads_a_well_formed_ceremony(tmp_ledger):
+    """The guards must not disturb the normal path they wrap."""
+    ledger.set_ceremony_field("selected", "gate-a")
+    ledger.set_ceremony_field("locked_at", "2026-01-01T00:00:00Z")
+    result = ledger.set_ceremony_field("selected", "gate-a\ngate-b")
+    assert ledger._ceremony_elements(
+        result["ceremony"]["selected"], source="ceremony.selected"
+    ) == {"gate-a", "gate-b"}
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_on_a_scalar_ceremony_refuses_without_a_traceback(
+    tmp_ledger,
+):
+    _write_raw_ledger(tmp_ledger, '{"ceremony": "heavy"}')
+    proc = _run_cli("set", "ceremony.selected", "gate-a")
+    assert proc.returncode == 1
+    assert "Traceback" not in proc.stderr
+    assert "AttributeError" not in proc.stderr
+    assert "archive-ceremony" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_set_ceremony_on_a_list_valued_field_refuses_without_a_traceback(
+    tmp_ledger,
+):
+    _write_raw_ledger(
+        tmp_ledger,
+        '{"ceremony": {"locked_at": "2026-01-01T00:00:00Z",'
+        ' "selected": ["gate-a", "gate-b"]}}',
+    )
+    proc = _run_cli("set", "ceremony.selected", "gate-a")
+    assert proc.returncode == 1
+    assert "Traceback" not in proc.stderr
+    assert "AttributeError" not in proc.stderr
+    assert "archive-ceremony" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+def test_cli_archive_ceremony_still_repairs_a_scalar_ceremony(tmp_ledger):
+    """The remedy the refusal names must actually work on the broken shape."""
+    _write_raw_ledger(tmp_ledger, '{"ceremony": "heavy"}')
+    proc = _run_cli("archive-ceremony", "--reason", "repairing a collapsed ceremony")
+    assert proc.returncode == 0
+    assert ledger.read_ledger()["ceremony"] == {}
