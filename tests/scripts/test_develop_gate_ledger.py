@@ -1518,9 +1518,9 @@ def test_cli_wave_discipline_failed_refused(tmp_ledger):
 
 @pytest.mark.allow("subprocess")
 def test_cli_wave_discipline_na_with_reason(tmp_ledger):
-    """The documented invocation from skills/develop/SKILL.md must actually
-    work from the CLI -- prose describing a flag that does not exist is the
-    defect this finding raised."""
+    """The documented invocation from skills/develop/references/ledger-cli.md
+    must actually work from the CLI -- prose describing a flag that does not
+    exist is the defect this finding raised."""
     proc = _run_cli(
         "wave-discipline", "plan",
         "--status", "n_a",
