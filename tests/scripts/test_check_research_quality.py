@@ -337,3 +337,42 @@ def test_prose_findings_are_not_read_as_tooling_blockers(prose):
     artifact = copy.deepcopy(COMPLETE)
     artifact["findings"][0]["answer"] = prose
     assert not advisories_for(artifact)
+
+
+def test_a_governance_rule_quoted_verbatim_is_not_read_as_this_session_blocker():
+    """`binding_rules[].rule` is someone else's words, not a session report.
+
+    `rules/60-autonomy.md` states the self-unblocking rule by quoting a shell
+    error, so a session that records that rule faithfully was being advised
+    about its own correct quotation of the rule this check enforces.
+    """
+    artifact = copy.deepcopy(COMPLETE)
+    artifact["project_standards"]["binding_rules"] = [
+        {
+            "rule": "Missing system tool (`hg: command not found`) -> install it "
+            "(`brew install mercurial`)",
+            "context": "Self-unblocking before declaring constraints; also `hg: command not found`.",
+            "source_path": "rules/60-autonomy.md",
+            "kind": "process",
+            "severity": "MUST",
+            "applies_to": "agents",
+        }
+    ]
+    assert not advisories_for(artifact)
+    assert not failures_for(artifact, "tooling-blockers-resolved")
+
+
+def test_a_blocker_elsewhere_in_project_standards_is_still_advised():
+    """The exclusion is the verbatim-quote fields, not the whole subtree."""
+    artifact = copy.deepcopy(COMPLETE)
+    artifact["project_standards"]["sources"] = [
+        {"path": "AGENTS.md", "kind": "process", "summary": "Could not read it: bat: command not found."}
+    ]
+    assert any("command not found" in a for a in advisories_for(artifact))
+
+
+def test_a_non_list_missing_is_rejected_rather_than_coerced_to_empty():
+    """A malformed `missing` must not pass as an audited nothing-found result."""
+    broken = copy.deepcopy(COMPLETE)
+    broken["tooling"] = {"checked": True, "none_missing": True, "missing": "hg"}
+    assert any("`missing` is not a list" in f for f in failures_for(broken, "tooling-blockers-resolved"))

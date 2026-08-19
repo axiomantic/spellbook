@@ -212,8 +212,12 @@ def _tooling_record_failures(tooling: object) -> tuple[list[str], list[str]]:
         return [f"tooling sweep not recorded as run (checked: {tooling.get('checked')!r})"], []
 
     entries = tooling.get("missing")
-    if not isinstance(entries, list):
+    if entries is None:
         entries = []
+    elif not isinstance(entries, list):
+        # Coercing this to [] would let `none_missing: true` below certify a
+        # record nobody can audit -- the exact shape this check exists to stop.
+        return [f"tooling record malformed: `missing` is not a list -- {entries!r}"], []
     if not entries:
         if tooling.get("none_missing") is True:
             return [], []
@@ -259,21 +263,50 @@ def check_tooling_blockers_resolved(data: dict) -> list[str]:
     return _tooling_record_failures(data.get("tooling"))[0]
 
 
+def _without_verbatim_quotes(data: dict) -> dict:
+    """Blank the two `binding_rules` fields §1.2.5 fills with quoted governance text.
+
+    Those two fields alone carry someone else's words. Everything else the
+    artifact holds -- `sources[].summary` included -- is the session reporting
+    on itself, which is what the advisory reads. Scoping the exclusion to the
+    quote fields rather than to all of `project_standards` costs one blind
+    spot: a session that misfiles its own narrative into a `rule` string is not
+    advised on it. The mandatory `tooling` record still blocks that session.
+
+    The replacement is blank rather than a deletion so reported line numbers
+    keep matching a plain dump of the artifact.
+    """
+    standards = data.get("project_standards")
+    rules = standards.get("binding_rules") if isinstance(standards, dict) else None
+    if not isinstance(rules, list):
+        return data
+    scrubbed = dict(data)
+    scrubbed["project_standards"] = dict(standards)
+    scrubbed["project_standards"]["binding_rules"] = [
+        {**rule, **{f: "" for f in ("rule", "context") if isinstance(rule.get(f), str)}}
+        if isinstance(rule, dict)
+        else rule
+        for rule in rules
+    ]
+    return scrubbed
+
+
 def advise_tooling_blockers(data: dict) -> list[str]:
     """Point at blocker-shaped prose the `tooling` record does not account for.
 
-    ADVISORY, not blocking. Measured against the research artifacts on this
-    machine the patterns flagged two lines, of which one -- "nvidia-smi is not
-    on PATH", cited as evidence that the hardware is absent -- is a finding
-    rather than a blocker. A non-zero false-positive rate on real material may
-    not decide a gate, so this warns and the mandatory record blocks. The
-    reported session is still caught: it carried no `tooling` record at all.
+    ADVISORY, not blocking. Re-measured against the research artifacts on this
+    machine, every line the patterns flag is a finding rather than a blocker --
+    "nvidia-smi is not on PATH" cited as evidence that the hardware is absent,
+    and a survey of which libraries are not installed and what would install
+    them. A non-zero false-positive rate on real material may not decide a
+    gate, so this warns and the mandatory record blocks. The reported session
+    is still caught: it carried no `tooling` record at all.
     """
     _, names = _tooling_record_failures(data.get("tooling"))
     accounted = [re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE) for name in names]
 
     advisories = []
-    text = json.dumps(data, indent=2)
+    text = json.dumps(_without_verbatim_quotes(data), indent=2)
     for number, line in enumerate(text.splitlines(), start=1):
         if not any(pattern.search(line) for pattern in TOOLING_BLOCKER_PATTERNS):
             continue
