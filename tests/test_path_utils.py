@@ -276,10 +276,15 @@ class TestResolveRepoRootMapping:
         two spellings address two different ledger files and a resumed develop
         run silently starts over.
 
-        The walk therefore declines rather than reconstructs the on-disk
-        spelling. Case folding is the filesystem's rule and not Python's, and
-        HFS+ also normalizes Unicode, so a reconstruction would be a guess;
-        deferring costs one process spawn and cannot be wrong.
+        Where the walk cannot confirm the spelling it declines rather than
+        reconstructing it. Case folding is the filesystem's rule and not
+        Python's, and HFS+ also normalizes Unicode, so a reconstruction would
+        be a guess; deferring costs one process spawn and cannot be wrong.
+
+        Windows differs: its ``realpath`` canonicalises case, so the walk CAN
+        confirm the spelling and answers correctly instead of deferring. Both
+        outcomes are sound, which is why this pins the property -- never a
+        spelling the disk does not use -- rather than the mechanism.
         """
         if not _volume_is_case_insensitive(tmp_path):
             pytest.skip("case-sensitive volume: no case-variant path resolves here")
@@ -292,9 +297,15 @@ class TestResolveRepoRootMapping:
         variant = str(tmp_path / "MYREPO")
         expected = os.path.realpath(str(repo))
 
-        # The walk defers ...
-        assert _git_free_repo_root(variant) is None
-        assert _git_free_repo_root(os.path.join(variant, "A")) is None
+        # The walk never answers with a spelling the disk does not use. Two
+        # outcomes satisfy that and they are platform-dependent: POSIX
+        # ``realpath`` leaves case alone, so the walk cannot confirm the
+        # spelling and declines; Windows canonicalises case, so the walk
+        # confirms it and answers correctly. A third value -- the caller's
+        # spelling -- is the failure, and is what this pins.
+        for probe in (variant, os.path.join(variant, "A")):
+            answer = _git_free_repo_root(probe)
+            assert answer is None or answer == expected, (probe, answer)
         # ... and the canonical spelling still takes the fast path.
         assert _git_free_repo_root(str(repo)) == expected
         # ... so the answer the CALLER sees is git's, under either spelling.
