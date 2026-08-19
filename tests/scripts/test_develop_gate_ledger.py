@@ -1969,3 +1969,60 @@ def test_cli_archive_ceremony_still_repairs_a_scalar_ceremony(tmp_ledger):
     proc = _run_cli("archive-ceremony", "--reason", "repairing a collapsed ceremony")
     assert proc.returncode == 0
     assert ledger.read_ledger()["ceremony"] == {}
+
+
+# The refusal in `_require_ceremony_dict` admits ANY non-dict, so the remedy
+# it names has to hold across that whole space -- not at one representative
+# point in it. The truthy case above passed while every falsy shape was a dead
+# end: the field write refused, and the archive that refusal named refused too,
+# leaving hand-editing the JSON as the only way out. `""` was reachable through
+# the bare `set ceremony ""` bypass that shipped before it was closed.
+_FALSY_MALFORMED_CEREMONIES = [
+    pytest.param('""', "", id="empty-string"),
+    pytest.param("0", 0, id="zero"),
+    pytest.param("false", False, id="false"),
+    pytest.param("[]", [], id="empty-list"),
+]
+
+
+@pytest.mark.parametrize(("raw", "expected"), _FALSY_MALFORMED_CEREMONIES)
+def test_archive_ceremony_repairs_a_falsy_malformed_ceremony(
+    tmp_ledger, raw, expected
+):
+    """A PRESENT-but-falsy ceremony is malformed state to repair, not the
+    absent case. The archive preserves it under ceremony_history rather than
+    discarding the evidence of what the ledger held."""
+    _write_raw_ledger(tmp_ledger, f'{{"ceremony": {raw}}}')
+
+    with pytest.raises(ledger.LedgerError, match="archive-ceremony"):
+        ledger.set_ceremony_field("selected", "gate-a")
+
+    ledger.archive_ceremony("repairing it", timestamp="2026-01-02T00:00:00Z")
+
+    data = ledger.read_ledger()
+    assert data["ceremony"] == {}
+    archived = data["ceremony_history"]["2026-01-02T00:00:00Z"]
+    assert archived["ceremony"] == expected
+    assert archived["reason"] == "repairing it"
+
+
+@pytest.mark.parametrize(("raw", "expected"), _FALSY_MALFORMED_CEREMONIES)
+def test_falsy_malformed_ceremony_recovers_to_a_fresh_phase_0(
+    tmp_ledger, raw, expected
+):
+    """End of the recovery path: after the archive a fresh Phase 0 lock lands."""
+    _write_raw_ledger(tmp_ledger, f'{{"ceremony": {raw}}}')
+    ledger.archive_ceremony("repairing a collapsed ceremony")
+
+    ledger.set_ceremony_field("locked_at", "2026-01-03T00:00:00Z")
+    assert ledger.read_ledger()["ceremony"]["locked_at"] == "2026-01-03T00:00:00Z"
+
+
+@pytest.mark.parametrize("raw", ["null", "{}"])
+def test_archive_ceremony_still_refuses_a_genuinely_empty_ceremony(tmp_ledger, raw):
+    """The repair above must not swallow the absent case. `null` and `{}` are
+    the documented shape carrying no selection, and they are NOT dead ends --
+    the ordinary set path accepts them -- so archiving them stays refused."""
+    _write_raw_ledger(tmp_ledger, f'{{"ceremony": {raw}}}')
+    with pytest.raises(ledger.LedgerError, match="no ceremony"):
+        ledger.archive_ceremony("aborted the run")

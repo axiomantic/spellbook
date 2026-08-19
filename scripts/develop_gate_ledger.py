@@ -680,6 +680,22 @@ def archive_ceremony(
     ``ceremony_history`` is a MAP keyed by archive timestamp, not a list:
     the merge policy replaces lists wholesale, so a list would lose every
     prior archive on the next sibling write.
+
+    "Nothing to archive" is decided on SHAPE, not on truthiness. ``ceremony``
+    is an object in the documented shape, so absent, ``null`` and ``{}`` are
+    the genuinely-empty case and stay refused. Any NON-object value is
+    malformed state, and this is the route ``_require_ceremony_dict`` names
+    to repair it -- so it must archive whatever its truthiness. Keying the
+    refusal off ``not ceremony`` conflated the two: a ledger holding ``""``,
+    ``0``, ``false`` or ``[]`` was refused by the field write AND by the
+    remedy that refusal named, leaving hand-editing the JSON as the only way
+    out. ``""`` was reachable through the bare ``set ceremony ""`` bypass
+    that shipped before it was closed.
+
+    The malformed value is archived rather than dropped: it is the evidence
+    of what the ledger held, and preserving it is why this path exists. It
+    nests under the entry's own ``ceremony`` key, so a scalar there cannot
+    corrupt the ``ceremony_history`` map.
     """
     if not reason or not reason.strip():
         raise ValueError(
@@ -689,7 +705,7 @@ def archive_ceremony(
     target = path or ledger_path()
     current = read_ledger(target)
     ceremony = current.get("ceremony")
-    if not ceremony:
+    if ceremony is None or (isinstance(ceremony, dict) and not ceremony):
         raise LedgerError(
             "no ceremony to archive: ceremony is absent or empty. "
             "Archiving is for superseding an existing selection."
