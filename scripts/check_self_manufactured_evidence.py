@@ -75,9 +75,25 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-CORPUS_DIRS = ("skills", "rules", "commands", "agents", "patterns", "profiles", "extensions")
+from corpus_trees import ENUMERABLE_TREES
+
+# The vocabulary that MARKS a Python file as corpus-facing. Naming one of
+# these is evidence about a file's subject, not a directory this script
+# walks; the scan roots are named explicitly in discover_script_checks.
+CORPUS_DIRS = ENUMERABLE_TREES
 _CORPUS_ALT = "|".join(CORPUS_DIRS)
-CORPUS_RE = re.compile(rf"""["']({_CORPUS_ALT})["']|/({_CORPUS_ALT})/""")
+# Importing a membership from corpus_trees names those trees just as much as
+# spelling them out, and this detection is textual. Without these symbols the
+# shared module would be a blind-spot generator: every checker that adopted it
+# would silently drop out of this inventory while still enumerating the tree.
+CORPUS_MEMBERSHIP_NAMES = frozenset(
+    {"DOCUMENTED_TREES", "ENUMERABLE_TREES", "README_ARTIFACT_KINDS"}
+)
+_CORPUS_SYMBOLS = ("corpus_trees", *sorted(CORPUS_MEMBERSHIP_NAMES))
+_SYMBOL_ALT = "|".join(_CORPUS_SYMBOLS)
+CORPUS_RE = re.compile(
+    rf"""["']({_CORPUS_ALT})["']|/({_CORPUS_ALT})/|\b({_SYMBOL_ALT})\b"""
+)
 CHECKER_RE = re.compile(
     r"^def (main|check_|find_|validate_|build_|scan_|collect_|run_)", re.MULTILINE
 )
@@ -210,7 +226,14 @@ class Tainter:
         return "neutral"
 
     def is_corpus(self, node: ast.AST) -> bool:
-        if self._names(node) & self.sets.corpus:
+        names = self._names(node)
+        if names & self.sets.corpus:
+            return True
+        # A membership imported from corpus_trees IS a list of corpus dirs;
+        # the constants simply live in another module. Without this, adopting
+        # the shared module would launder a corpus enumeration into an
+        # unrecognised one and drop the check out of the inventory.
+        if names & CORPUS_MEMBERSHIP_NAMES:
             return True
         return any(
             isinstance(n, ast.Constant) and isinstance(n.value, str) and n.value in CORPUS_DIRS
@@ -472,6 +495,7 @@ class Finding:
 def discover_script_checks(root: Path) -> dict[str, Path]:
     """Return {module_stem: path} for every corpus checker under scripts/hooks."""
     found: dict[str, Path] = {}
+    # Where CHECKERS live, not corpus trees -- deliberately not corpus_trees.
     for d in ("scripts", "hooks"):
         for p in sorted((root / d).glob("*.py")):
             src = p.read_text(encoding="utf-8", errors="replace")

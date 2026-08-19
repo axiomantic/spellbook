@@ -96,16 +96,26 @@ from typing import Callable, Iterator
 
 import yaml
 
+from corpus_trees import DOCUMENTED_TREES
+
 # ---------------------------------------------------------------------------
 # Shared configuration
 # ---------------------------------------------------------------------------
 
 # Prose sources. AGENTS.md is a file; the rest are directories scanned for *.md.
-PROSE_DIRS = ("skills", "commands", "agents", "rules")
+PROSE_DIRS = DOCUMENTED_TREES
 PROSE_FILES = ("AGENTS.md",)
+
+# Derived, never duplicated: this string is printed beside a reference count,
+# so a hardcoded copy states what was checked and can be wrong about it. That
+# was OBSERVED -- the four-tree label printed unchanged beside a nine-tree scan.
+PROSE_SOURCE_LABEL = ", ".join([f"{d}/" for d in PROSE_DIRS] + list(PROSE_FILES))
 
 # A prose path reference is checked only when its first segment names one of
 # these. See blind spot 1 and 2 in the module docstring for why `docs` is absent.
+# Deliberately NOT corpus_trees: this is a path-prefix vocabulary for reference
+# TARGETS, a different axis from the prose SOURCES scanned above, so it also
+# admits installer/, tests/, spellbook/, and .github/.
 ANCHOR_DIRS = frozenset(
     {
         ".github",
@@ -688,7 +698,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
         ),
         Row(
             name="prose-paths",
-            source="skills/, commands/, agents/, rules/, AGENTS.md",
+            source=PROSE_SOURCE_LABEL,
             extract=extract_prose_paths,
             resolve=resolve_prose_path,
             what="repository file or directory",
@@ -696,7 +706,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
         ),
         Row(
             name="prose-modules",
-            source="skills/, commands/, agents/, rules/, AGENTS.md",
+            source=PROSE_SOURCE_LABEL,
             extract=extract_prose_modules,
             resolve=resolve_prose_module,
             what="importable module or attribute",
@@ -704,7 +714,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
         ),
         Row(
             name="prose-skills",
-            source="skills/, commands/, agents/, rules/, AGENTS.md",
+            source=PROSE_SOURCE_LABEL,
             extract=extract_prose_skills,
             resolve=resolve_skill,
             what="skill directory",
@@ -712,7 +722,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
         ),
         Row(
             name="prose-commands",
-            source="skills/, commands/, agents/, rules/, AGENTS.md",
+            source=PROSE_SOURCE_LABEL,
             extract=extract_prose_commands,
             resolve=resolve_slash_name,
             what="command or skill",

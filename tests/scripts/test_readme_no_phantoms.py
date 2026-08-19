@@ -17,6 +17,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CHECKER = REPO_ROOT / "scripts" / "check-readme-completeness.py"
+# A copy manifest for the scratch repo, not a corpus membership -- it is
+# "what the checker needs to run", so it is deliberately not corpus_trees.
 SOURCE_DIRS = ("scripts", "skills", "commands", "agents", "rules", "docs")
 
 
@@ -105,6 +107,37 @@ def test_orphan_docs_page_is_named(tmp_path):
     result = _run(root)
     assert result.returncode == 1, result.stdout
     assert "docs/commands/ghost-command.md" in result.stdout, result.stdout
+
+
+def test_orphan_rules_docs_page_is_named(tmp_path):
+    """docs/rules/ is generated, so it can rot exactly like the other trees.
+
+    README has no Rules section, so the README-table checks correctly skip
+    rules. The orphan sweep reads docs/, not README, so that exclusion never
+    applied to it -- and 20 generated pages sat with no reverse-direction
+    guard at all.
+    """
+    root = _scratch_repo(tmp_path)
+    (root / "docs" / "rules" / "99-ghost-rule.md").write_text(
+        "# ghost\n", encoding="utf-8"
+    )
+
+    result = _run(root)
+    assert result.returncode == 1, result.stdout
+    assert "docs/rules/99-ghost-rule.md" in result.stdout, result.stdout
+
+
+def test_real_rules_pages_are_not_orphans():
+    """The sweep must not report the 20 legitimate generated rule pages."""
+    result = subprocess.run(
+        [sys.executable, str(CHECKER)],
+        capture_output=True,
+        text=True,
+        cwd=str(REPO_ROOT),
+        timeout=300,
+    )
+    assert "docs/rules/" not in result.stdout, result.stdout
+    assert result.returncode == 0, f"{result.stdout}{result.stderr}"
 
 
 def test_duplicated_link_definition_is_reported(tmp_path):
