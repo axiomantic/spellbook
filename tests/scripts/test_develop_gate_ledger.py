@@ -2210,31 +2210,147 @@ def _cli_subcommands() -> set[str]:
     return set(action.choices)
 
 
-def test_every_named_remedy_is_a_command_the_cli_accepts():
+LEDGER_DOC_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "skills"
+    / "develop"
+    / "references"
+    / "ledger-cli.md"
+)
+
+# A backticked span is treated as an invocation only through its FIRST
+# whitespace-separated token, and only when that token has the shape of a
+# hyphenated subcommand: lowercase alphanumeric words joined by hyphens. That
+# rule is what separates a remedy from the rest of the backticked text in these
+# files. It excludes flags (`--open-rows` starts with a dash), paths
+# (`scripts/develop_gate_ledger.py` contains a slash), dotted and underscored
+# field names (`ceremony.locked_at`, `ceremony_history`, `open_rows`), literal
+# values (`per_group` is underscored, `passed` has no hyphen), and exception
+# class names (`LedgerError` is not lowercase). It also excludes the
+# non-hyphenated subcommands, which cannot be told apart from field names by
+# shape alone -- `blocker` the command and `blockers` the field differ by one
+# letter. Those are covered by the "Use instead" table check below, which knows
+# from position that a cell holds a remedy.
+_COMMAND_TOKEN = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)+")
+
+
+def _hyphenated_command_tokens(text: str) -> set[str]:
+    tokens = set()
+    for span in re.findall(r"`+([^`\n]+)`+", text):
+        parts = span.split()
+        if parts and _COMMAND_TOKEN.fullmatch(parts[0]):
+            tokens.add(parts[0])
+    return tokens
+
+
+def test_hyphenated_command_token_extractor_is_not_vacuous():
+    """The floor for the extractor itself. An extractor that matched nothing
+    would let every check below pass by finding no work to do."""
+    assert _hyphenated_command_tokens("run `wave-discipline 3a --status passed`") == {
+        "wave-discipline"
+    }
+    # The exclusions are asserted, not assumed: each of these is a real span
+    # from the files under test that must NOT be read as a remedy.
+    assert _hyphenated_command_tokens(
+        "`--open-rows` `scripts/develop_gate_ledger.py` `ceremony.locked_at` "
+        "`ceremony_history` `open_rows` `per_group` `passed` `LedgerError` "
+        "`blockers`"
+    ) == set()
+
+
+def test_every_named_remedy_resolves_to_a_real_subcommand():
     """A refusal that names a command argparse rejects tells the reader to run
     something that cannot run -- the refusal becomes a dead end at exactly the
-    moment the caller is stuck. The remedies are prose inside error strings, so
-    nothing but this test ties them to the parser they name.
+    moment the caller is stuck. The remedies are prose inside error strings and
+    inside the reference doc, so nothing but this test ties them to the parser
+    they name.
 
-    The vocabulary is derived from `_STRUCTURED_FIELD_ROUTES` and from the
-    hyphenated backticked tokens in the module source, not from a hand-written
-    list beside them: a second copy of the remedy set would drift from the
-    messages exactly as silently as the messages drift from the parser.
+    Both sources are scanned. The module's messages and the doc's prose restate
+    the same vocabulary INDEPENDENTLY, so pinning only the Python side leaves a
+    remedy spelled wrong in the doc passing CI -- the hand-written list that
+    drifts, wearing a different hat.
+
+    The vocabulary is derived from the parser and from the text itself, never
+    from a list written beside them: a second copy of the remedy set would
+    drift from the messages exactly as silently as the messages drift from the
+    parser.
     """
     commands = _cli_subcommands()
-    source = Path(ledger.__file__).read_text(encoding="utf-8")
-    named = set(re.findall(r"`{1,2}([a-z][a-z0-9]*(?:-[a-z0-9]+)+)", source))
-    for route in ledger._STRUCTURED_FIELD_ROUTES.values():
-        named |= set(re.findall(r"`([a-z][a-z0-9-]*)", route))
-    # Only tokens that look like a subcommand invocation are in scope; a
-    # backticked field name is not a remedy.
-    candidates = {n for n in named if "-" in n}
-    assert candidates, "no command-shaped remedy tokens found -- regex went stale"
-    unknown = sorted(n for n in candidates if n not in commands)
-    assert not unknown, (
-        f"refusal messages name commands the CLI does not accept: {unknown!r}; "
-        f"accepted subcommands are {sorted(commands)}"
+    hyphenated = {c for c in commands if "-" in c}
+    assert hyphenated, "the parser declares no hyphenated subcommand -- floor gone"
+
+    sources = {
+        "module source": Path(ledger.__file__).read_text(encoding="utf-8"),
+        "reference doc": LEDGER_DOC_PATH.read_text(encoding="utf-8"),
+    }
+    for label, text in sources.items():
+        named = _hyphenated_command_tokens(text)
+        for route in ledger._STRUCTURED_FIELD_ROUTES.values():
+            named |= _hyphenated_command_tokens(route)
+        # Anti-no-op floor, derived from the parser rather than counted by
+        # hand: both files route to every hyphenated recorder, so an extractor
+        # that goes stale drops below this and fails instead of passing empty.
+        assert named >= hyphenated, (
+            f"{label} names only {sorted(named)}; the parser declares "
+            f"{sorted(hyphenated)}. The extractor has gone stale, or the "
+            f"file stopped naming a recorder it must route to."
+        )
+        unknown = sorted(n for n in named if n not in commands)
+        assert not unknown, (
+            f"{label} names commands the CLI does not accept: {unknown!r}; "
+            f"accepted subcommands are {sorted(commands)}"
+        )
+
+
+def _doc_use_instead_rows() -> list[tuple[str, str]]:
+    """The (field, remedy) rows of the doc's `set` refusal table.
+
+    Read by POSITION, not by shape: the second cell of a row under the
+    `Use instead` header is a remedy by construction, which is how the
+    non-hyphenated `blocker` gets covered at all.
+    """
+    lines = LEDGER_DOC_PATH.read_text(encoding="utf-8").splitlines()
+    rows: list[tuple[str, str]] = []
+    for i, line in enumerate(lines):
+        if not re.match(r"\s*\|\s*Field\s*\|\s*Use instead\s*\|", line):
+            continue
+        for row in lines[i + 2:]:
+            if not row.lstrip().startswith("|"):
+                break
+            cells = [c.strip() for c in row.strip().strip("|").split("|")]
+            if len(cells) == 2:
+                rows.append((cells[0].strip("`"), cells[1]))
+    return rows
+
+
+def test_doc_use_instead_table_covers_every_structured_field():
+    """The floor for the table reader. A reader that found no rows -- renamed
+    header, reformatted table -- would let the check below pass vacuously, and
+    the row set is fixed by `_STRUCTURED_FIELD_ROUTES`, not by a count here."""
+    fields = {field for field, _ in _doc_use_instead_rows()}
+    assert fields == set(ledger._STRUCTURED_FIELD_ROUTES), (
+        f"the doc's `Use instead` table covers {sorted(fields)}; the refusals "
+        f"cover {sorted(ledger._STRUCTURED_FIELD_ROUTES)}"
     )
+
+
+def test_every_doc_use_instead_remedy_names_a_real_subcommand():
+    """The doc's table is a second, independent copy of the routes. `blocker`
+    and `set` are not hyphenated, so only reading the cell by position catches
+    a misspelling of them."""
+    commands = _cli_subcommands()
+    rows = _doc_use_instead_rows()
+    assert rows, "no `Use instead` rows found -- the table reader went stale"
+    for field, remedy in rows:
+        tokens = {
+            span.split()[0]
+            for span in re.findall(r"`+([^`\n]+)`+", remedy)
+            if span.split()
+        }
+        assert tokens & commands, (
+            f"the doc routes {field!r} to {remedy!r}, which names no "
+            f"subcommand the CLI accepts; accepted are {sorted(commands)}"
+        )
 
 
 def test_every_structured_field_route_names_a_real_subcommand():
