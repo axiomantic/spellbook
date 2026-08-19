@@ -19,9 +19,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[2]
 CHECKER = REPO_ROOT / "scripts" / "check-readme-completeness.py"
 
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
-
-import corpus_trees  # noqa: E402  (needs the scripts/ path entry above)
+import corpus_trees
 # A copy manifest for the scratch repo, not a corpus membership -- it is
 # "what the checker needs to run", so it is deliberately not corpus_trees.
 SOURCE_DIRS = ("scripts", "skills", "commands", "agents", "rules", "docs")

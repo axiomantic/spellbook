@@ -19,13 +19,11 @@ correct: it drives the subject to prove the subject can fail. What makes this
 module honest is that the green above is not.
 """
 
-import sys
 from pathlib import Path, PureWindowsPath
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import corpus_trees
 from check_self_manufactured_evidence import (

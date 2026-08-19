@@ -35,9 +35,8 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from corpus_trees import DOCUMENTED_TREES  # noqa: E402
+from corpus_trees import DOCUMENTED_TREES
 
 CLI_REL = "scripts/develop_gate_ledger.py"
 CLI_PATH = REPO_ROOT / CLI_REL

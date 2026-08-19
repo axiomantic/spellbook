@@ -22,7 +22,6 @@ import pytest
 # can run the rest of spellbook's tests; we just make sure the path
 # resolves when the module is imported.
 SCRIPT_PATH = Path(__file__).resolve().parents[2] / "scripts" / "develop_gate_ledger.py"
-sys.path.insert(0, str(SCRIPT_PATH.parent))
 
 import develop_gate_ledger as ledger
 

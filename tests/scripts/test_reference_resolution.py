@@ -21,15 +21,13 @@ violation never touches the real tree.
 
 import os
 import shutil
-import sys
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from check_reference_resolution import (  # noqa: E402
+from check_reference_resolution import (
     ALLOWLIST,
     PROSE_DIRS,
     PROSE_FILES,
