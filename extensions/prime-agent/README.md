@@ -97,7 +97,7 @@ with it on the next install.
 
 ## Testing
 
-`tests/installer/test_prime_agent_rules_install.py` covers the installer
+`tests/integration/test_prime_agent_rules_install.py` covers the installer
 side: selection honored, symlinks created, deselection removes stale
 symlinks, extension file present, idempotent reinstall.
 
