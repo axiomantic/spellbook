@@ -24,6 +24,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
 
+### Removed
+
+- The OpenCode `context-curator` extension
+  (`extensions/opencode/context-curator/`) and its server half
+  (`spellbook/mcp/tools/curator.py`, its tests, its `spellbook.mcp.tools`
+  registration, its `context-curator-tests` CI job, and its
+  `.github/dependabot.yml` entry). The extension was never published: its
+  README told users to run `opencode plugin add spellbook-context-curator`,
+  and that package name returns 404 from the npm registry, with no `npm
+  publish` step anywhere in `.github/`. `package.json` declared
+  `"main": "./dist/index.js"`, and no `dist/` was ever built. The installer
+  never referenced the directory, so nothing on a user's machine could load
+  it. Source last changed 2026-02-02; every commit since was a dependabot
+  bump against a package no one could install. The two MCP tools it backed,
+  `mcp_curator_track_prune` and `mcp_curator_get_stats`, had no in-repo
+  caller other than the extension itself.
+  Two extraction floors in `scripts/check_reference_resolution.py` moved with
+  the sources they measure: `dependabot-directories` from 5 to 4, and
+  `extension-mcp-tools` from 2 to 0. The context-curator extension was the only
+  TypeScript source in the tree that called an MCP tool, so that row now
+  extracts nothing from the real tree; its liveness is still held by the two
+  RED proofs in `tests/scripts/test_reference_resolution.py`, which plant tool
+  calls under `extensions/prime-agent/`. Raise the floor again when a live
+  extension calls an MCP tool.
+
 ### Fixed
 
 - `scripts/develop_gate_ledger.py` now applies its documented exit-code split
