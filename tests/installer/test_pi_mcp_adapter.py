@@ -413,3 +413,103 @@ def test_dry_run_writes_nothing(spellbook_dir, config_dir):
 
     assert not (config_dir / "settings.json").exists()
     assert not (config_dir / "mcp.json").exists()
+
+
+# ---------------------------------------------------------------------------
+# The adapter-entry boundary: which settings.json entries ARE the adapter
+# ---------------------------------------------------------------------------
+
+
+def test_install_repins_a_version_less_adapter_entry(spellbook_dir, config_dir):
+    """A bare ``npm:pi-mcp-adapter`` with no version is spellbook-shaped.
+
+    An unpinned spec is the exact drift ``PI_MCP_ADAPTER_VERSION`` exists to
+    prevent: ``pi update --extensions`` skips pinned specs and moves unpinned
+    ones to whatever is latest, which is not the version verified end to end.
+    The entry is a bare string, which is the only shape spellbook writes, so it
+    is repinned rather than left alone.
+    """
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(
+        json.dumps({"packages": [f"npm:{PI_MCP_ADAPTER_NAME}"]}), encoding="utf-8"
+    )
+
+    _installer(spellbook_dir, config_dir).install()
+
+    packages = _read_pi_settings(settings_path)["packages"]
+    assert packages == [PI_MCP_ADAPTER_SPEC], (
+        "An unpinned bare-string entry must be repinned. Leaving it makes the "
+        "installer report a version it did not write."
+    )
+
+
+def test_a_package_whose_name_merely_starts_with_the_adapter_is_not_the_adapter(
+    spellbook_dir, config_dir
+):
+    """``npm:pi-mcp-adapter-extra`` is a DIFFERENT package.
+
+    A prefix test without a boundary matches it, which makes ``detect`` report
+    the adapter as declared while the real adapter is absent, and makes the
+    installer decline to declare the one thing it is responsible for.
+    """
+    settings_path = config_dir / "settings.json"
+    lookalike = f"npm:{PI_MCP_ADAPTER_NAME}-extra@1.0.0"
+    settings_path.write_text(json.dumps({"packages": [lookalike]}), encoding="utf-8")
+
+    _installer(spellbook_dir, config_dir).install()
+
+    packages = _read_pi_settings(settings_path)["packages"]
+    assert lookalike in packages, "the user's unrelated package must survive"
+    assert PI_MCP_ADAPTER_SPEC in packages, (
+        f"{lookalike!r} is not the adapter; the adapter must still be declared"
+    )
+
+
+def test_detect_does_not_count_a_lookalike_package_as_the_adapter(
+    spellbook_dir, config_dir
+):
+    """``detect`` must not report a registration a lookalike name cannot provide."""
+    (config_dir / "settings.json").write_text(
+        json.dumps({"packages": [f"npm:{PI_MCP_ADAPTER_NAME}-extra@1.0.0"]}),
+        encoding="utf-8",
+    )
+    (config_dir / "mcp.json").write_text(
+        json.dumps({"mcpServers": {SPELLBOOK_SERVER_KEY: {"url": "http://x/mcp"}}}),
+        encoding="utf-8",
+    )
+
+    status = _installer(spellbook_dir, config_dir).detect()
+
+    assert status.details["mcp_adapter_declared"] is False
+    assert status.details["mcp_registered"] is False
+
+
+def test_reported_message_never_names_a_version_spellbook_did_not_write(
+    spellbook_dir, config_dir
+):
+    """The object-form entry is left as is, so the pinned spec is NOT on disk.
+
+    Reporting "via npm:pi-mcp-adapter@<pinned>" here states a version that the
+    installer declined to write. The message must name the spec that actually
+    loads mcp.json -- the user's own.
+    """
+    settings_path = config_dir / "settings.json"
+    user_source = f"npm:{PI_MCP_ADAPTER_NAME}@2.0.0"
+    settings_path.write_text(
+        json.dumps({"packages": [{"source": user_source, "skills": []}]}),
+        encoding="utf-8",
+    )
+
+    results = _installer(spellbook_dir, config_dir).install()
+
+    packages = _read_pi_settings(settings_path)["packages"]
+    assert packages == [{"source": user_source, "skills": []}]
+
+    message = _result(results, "mcp_server").message
+    assert PI_MCP_ADAPTER_SPEC not in message, (
+        f"message names {PI_MCP_ADAPTER_SPEC!r}, but that spec was never "
+        f"written to settings.json: {message!r}"
+    )
+    assert user_source in message, (
+        f"the message must name the spec that actually loads mcp.json: {message!r}"
+    )
