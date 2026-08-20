@@ -28,9 +28,10 @@ Rows
     ``extensions/**/*.ts`` -- every tool named by ``callTool('<name>')`` or by a
     ``/tool/<name>`` bridge URL must be registered in ``spellbook.mcp.tools``.
 ``prose-paths`` / ``prose-modules`` / ``prose-skills`` / ``prose-commands``
-    ``skills/``, ``commands/``, ``agents/``, ``rules/``, and ``AGENTS.md`` --
-    backticked repository paths, dotted ``spellbook.*`` module paths,
-    ``skills/<name>`` mentions, and ``/<command>`` mentions.
+    Every tree in ``PROSE_DIRS`` plus ``AGENTS.md`` -- backticked repository
+    paths, dotted ``spellbook.*`` module paths, ``skills/<name>`` mentions, and
+    ``/<command>`` mentions. The tree list is not repeated here; it would rot
+    against the tuple, which is what ``PROSE_SOURCE_LABEL`` exists to prevent.
 
 Deliberately NOT a row: ``.pre-commit-config.yaml`` local hook ``entry:``
 targets. ``tests/scripts/test_precommit_hook_entries_resolve.py`` already covers
@@ -65,6 +66,30 @@ absorb noise stops being evidence of anything.
 4. Only fenced/backticked references are extracted. A path written as bare
    prose is invisible to every prose row.
 
+The scanned population is the COMMITTED repository
+--------------------------------------------------
+The prose rows scan only files git tracks. ``rules/82-file-reading.md`` records
+untracked-blindness as a BUG -- a ``git grep`` that skipped untracked files
+produced two false "appears nowhere" findings in one day -- so the divergence is
+deliberate and rests on a different question. That rule governs a SEARCH, which
+asks whether a string exists anywhere on this disk; this gate asks whether the
+repository's committed prose is self-consistent, and a generated or vendored
+file sitting in a developer's checkout is not part of the repository. Scanning
+it makes the verdict depend on whose disk it runs on: ``extensions/`` holds four
+tracked Markdown files and roughly forty-six generated ones, so an installer run
+would add findings that CI can never see, and no allowlist state is green in
+both places at once.
+
+Tracked-ness is asked of git itself (``git ls-files``), never re-derived by
+parsing ``.gitignore``. When the answer is unavailable -- git not installed, a
+root that is not a checkout, or a root that is merely a DIRECTORY INSIDE some
+other checkout -- the filter WIDENS to every file rather than narrowing to
+none. A gate that scans nothing when a subprocess fails is the vacuous pass
+this module exists to prevent. The third case is why the scan root is checked
+against ``git rev-parse --show-toplevel`` before its tracked set is trusted: an
+exit code cannot tell it apart from a checkout that tracks nothing, and reading
+it as the latter would make the verdict depend on where the scan root sits.
+
 Allowlisting
 ------------
 Content-anchored, following ``scripts/check_removed_mode_tokens.py``: an entry
@@ -88,6 +113,7 @@ import argparse
 import fnmatch
 import os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from functools import lru_cache
@@ -96,14 +122,28 @@ from typing import Callable, Iterator
 
 import yaml
 
-from corpus_trees import DOCUMENTED_TREES
-
 # ---------------------------------------------------------------------------
 # Shared configuration
 # ---------------------------------------------------------------------------
 
 # Prose sources. AGENTS.md is a file; the rest are directories scanned for *.md.
-PROSE_DIRS = DOCUMENTED_TREES
+#
+# Membership reason: trees holding AUTHORED prose that names this repository's
+# own artifacts. ``patterns/`` and ``extensions/`` qualify -- a pattern document
+# cites the schema and script files it teaches against, and an extension README
+# names the installer and hook paths a reader is told to run -- and nothing else
+# checked those references. Their earlier absence was drift, not a decision.
+#
+# Deliberately a LOCAL tuple, not corpus_trees.DOCUMENTED_TREES (which this was
+# aliased to) nor ENUMERABLE_TREES (which differs from this set only by
+# profiles/). Those sets answer "which trees generate a docs/ page" and "which
+# trees constitute the enumerable corpus"; this one answers "which trees hold
+# prose whose references must resolve". Importing the set with the convenient
+# members would couple this gate to an unrelated decision -- a tree gaining a
+# docs page is not a reason to start resolving its references. profiles/ is the
+# case that separates them: it is corpus content, but it carries behavioural
+# tone rather than instructions, and names no repository artifact by path.
+PROSE_DIRS = ("skills", "commands", "agents", "rules", "patterns", "extensions")
 PROSE_FILES = ("AGENTS.md",)
 
 # Derived, never duplicated: this string is printed beside a reference count,
@@ -387,18 +427,100 @@ def make_mcp_tool_resolver(repo_root: Path) -> Callable[[Path, Reference], bool]
 # ---------------------------------------------------------------------------
 
 
+@lru_cache(maxsize=None)
+def tracked_files(repo_root: Path) -> frozenset[Path] | None:
+    """Every path git tracks under ``repo_root``, or None if git cannot say.
+
+    See "The scanned population is the COMMITTED repository" above for why the
+    gate asks this at all. Four answers, all explicit:
+
+    * ``repo_root`` IS a checkout root and git answers -- the tracked set, and
+      only those files are scanned.
+    * git is absent, or ``repo_root`` is not a checkout -- ``None``, and the
+      caller scans EVERY file. Widening cannot hide a reference; narrowing to
+      an empty set would hide all of them.
+    * ``repo_root`` is a DIRECTORY INSIDE some other checkout -- ``None``, the
+      same widening. This case cannot be read off an exit code: ``git ls-files``
+      run under an untracked subdirectory of a checkout exits 0 and prints
+      nothing, exactly like a checkout that tracks no files. The two are
+      separated by asking which directory git considers the root, not by asking
+      whether the list came back empty. Without that question the verdict
+      depends on where the scan root sits relative to other checkouts -- the
+      environment-dependence this gate exists to remove.
+    * ``repo_root`` is a checkout root and git answers with an empty list -- a
+      checkout with no tracked files at all is not a state this gate can
+      meaningfully run against, so it raises rather than reporting a clean pass
+      over nothing.
+    """
+    try:
+        toplevel = subprocess.run(
+            ["git", "-C", str(repo_root), "rev-parse", "--show-toplevel"],
+            capture_output=True,
+            check=False,
+        )
+    except OSError as exc:
+        print(
+            f"warning: git unavailable ({exc}); scanning every file on disk "
+            f"rather than only tracked ones",
+            file=sys.stderr,
+        )
+        return None
+    if toplevel.returncode != 0:
+        print(
+            f"warning: {repo_root} is not a git checkout "
+            f"(git rev-parse exited {toplevel.returncode}); scanning every file "
+            f"on disk rather than only tracked ones",
+            file=sys.stderr,
+        )
+        return None
+    root = Path(toplevel.stdout.decode("utf-8").strip())
+    if root.resolve() != repo_root.resolve():
+        print(
+            f"warning: {repo_root} is not the root of its checkout ({root}); "
+            f"the tracked set there would describe a different tree, so every "
+            f"file on disk is scanned rather than only tracked ones",
+            file=sys.stderr,
+        )
+        return None
+    completed = subprocess.run(
+        ["git", "-C", str(repo_root), "ls-files", "-z", "--cached"],
+        capture_output=True,
+        check=False,
+    )
+    if completed.returncode != 0:
+        print(
+            f"warning: {repo_root} is not a git checkout "
+            f"(git ls-files exited {completed.returncode}); scanning every file "
+            f"on disk rather than only tracked ones",
+            file=sys.stderr,
+        )
+        return None
+    names = [name for name in completed.stdout.decode("utf-8").split("\0") if name]
+    if not names:
+        raise RuntimeError(
+            f"git tracks no files under {repo_root}. Every prose row would pass "
+            f"over an empty scan, which is indistinguishable from success."
+        )
+    return frozenset(repo_root / name for name in names)
+
+
 def iter_prose_files(repo_root: Path) -> Iterator[Path]:
-    """Yield every Markdown prose source, in deterministic order."""
+    """Yield every git-tracked Markdown prose source, in deterministic order."""
+    tracked = tracked_files(repo_root)
+
+    def scanned(path: Path) -> bool:
+        return tracked is None or path in tracked
+
     for name in PROSE_DIRS:
         base = repo_root / name
         if not base.is_dir():
             continue
         for path in sorted(base.rglob("*.md")):
-            if path.is_file() and not (SKIP_PARTS & set(path.parts)):
+            if path.is_file() and not (SKIP_PARTS & set(path.parts)) and scanned(path):
                 yield path
     for name in PROSE_FILES:
         path = repo_root / name
-        if path.is_file():
+        if path.is_file() and scanned(path):
             yield path
 
 
@@ -601,6 +723,16 @@ ALLOWLIST: dict[str, tuple[AllowEntry, ...]] = {
             anchor="tests/test_login.py",
             reason="illustrative test path in a tier-classification example",
         ),
+        AllowEntry(
+            path_glob="patterns/assertion-quality-standard.md",
+            anchor="Upstream's own",
+            reason="names a test file in the UPSTREAM repository the pattern analyses, not this one",
+        ),
+        AllowEntry(
+            path_glob="patterns/code-review-formats.md",
+            anchor="tests/api/client.test.ts",
+            reason="illustrative TypeScript test path in a review-format worked example",
+        ),
     ),
     "prose-commands": (
         AllowEntry(
@@ -639,6 +771,11 @@ ALLOWLIST: dict[str, tuple[AllowEntry, ...]] = {
             reason="harness built-in command, not a spellbook artifact",
         ),
         AllowEntry(
+            path_glob="extensions/prime-agent/README.md",
+            anchor="`/reload`",
+            reason="harness built-in command, not a spellbook artifact",
+        ),
+        AllowEntry(
             path_glob="AGENTS.md",
             anchor="Trigger by commenting `/ai-review` on a PR",
             reason="GitHub PR comment that triggers the external momus review bot, not a spellbook artifact",
@@ -659,6 +796,10 @@ class Row:
     ``min_refs`` is the silent-no-op guard. An extractor whose pattern stops
     matching -- because the source changed shape -- would otherwise report a
     clean pass over zero references, which is indistinguishable from success.
+    Each floor sits just under its row's measured total: low enough that
+    ordinary prose churn does not trip it, high enough that losing a scanned
+    tree does. A floor far below the measurement guards emptiness only, and a
+    row that quietly dropped a whole tree would still clear it.
     """
 
     name: str
@@ -702,7 +843,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
             extract=extract_prose_paths,
             resolve=resolve_prose_path,
             what="repository file or directory",
-            min_refs=100,
+            min_refs=140,
         ),
         Row(
             name="prose-modules",
@@ -726,7 +867,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
             extract=extract_prose_commands,
             resolve=resolve_slash_name,
             what="command or skill",
-            min_refs=200,
+            min_refs=310,
         ),
     )
 

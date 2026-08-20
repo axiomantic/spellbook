@@ -5,8 +5,8 @@
 """Grep gate: forbid tier-classifier tokens and removed execution-mode vocabulary.
 
 Implements the develop-rework design §10.2 / IMP-4 widened verification gate.
-Scans every Markdown file under ``skills/`` + ``commands/`` + ``agents/`` for two
-classes of forbidden tokens and FAILS (exit 1) on any non-allowlisted match:
+Scans every Markdown file under ``skills/`` + ``commands/`` + ``agents/`` +
+``rules/`` for two classes of forbidden tokens and FAILS (exit 1) on any non-allowlisted match:
 
 (a) Tier-as-classifier tokens:  ``\\b(TRIVIAL|SIMPLE|STANDARD|COMPLEX)\\b``
     Case-sensitive uppercase, so ordinary lowercase prose
@@ -40,7 +40,20 @@ from pathlib import Path
 # Directories scanned (repo-relative). The design scopes the gate to
 # skills/ + commands/; agents/ is included as a strict superset so a future
 # tier/removed-mode token cannot creep into a narrowing-role agent unnoticed.
-SCAN_DIRS = ("skills", "commands", "agents")
+# rules/ is included for the same superset reason, and more strongly: a rule
+# module is installed globally and read at the start of EVERY session, so a
+# stale tier or removed-mode token there is more visible than one in a skill
+# that loads on demand. Its earlier absence was drift, not a decision.
+#
+# This tuple is deliberately local rather than imported from corpus_trees.py,
+# whose DOCUMENTED_TREES happens to hold these same four names today. That set
+# answers "which trees generate a docs/ page"; this one answers "which trees
+# hold live agent-instruction prose". The reasons diverge where it matters: if
+# patterns/ ever gained a docs page it would join DOCUMENTED_TREES, yet it is
+# teaching material quoting OTHER repositories, where an uppercase STANDARD is
+# quotation rather than live vocabulary. Importing the set with the convenient
+# members would silently widen this gate on an unrelated decision.
+SCAN_DIRS = ("skills", "commands", "agents", "rules")
 
 # Token classes. Patterns are case-sensitive; tier tokens are uppercase-only
 # so lowercase prose is naturally excluded by the word boundaries.

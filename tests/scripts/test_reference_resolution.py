@@ -21,6 +21,7 @@ violation never touches the real tree.
 
 import os
 import shutil
+import subprocess
 import sys
 from pathlib import Path
 
@@ -34,11 +35,15 @@ from check_reference_resolution import (  # noqa: E402
     PROSE_DIRS,
     PROSE_FILES,
     PROSE_SOURCE_LABEL,
+    SKIP_PARTS,
     Reference,
     build_rows,
+    extract_prose_paths,
     is_allowlisted,
+    iter_prose_files,
     registered_mcp_tools,
     run_row,
+    tracked_files,
 )
 
 ROWS = {row.name: row for row in build_rows(REPO_ROOT)}
@@ -197,6 +202,31 @@ def test_red_extension_mcp_tools_accepts_a_registered_name(tmp_path):
 def test_red_prose_paths(tmp_path):
     repo = _scratch_repo(tmp_path, ("rules",))
     planted = repo / "rules" / "99-planted.md"
+    planted.write_text(
+        "Run `scripts/a_script_that_does_not_exist.py` before committing.\n",
+        encoding="utf-8",
+    )
+    assert "scripts/a_script_that_does_not_exist.py" in _targets("prose-paths", repo)
+
+
+@pytest.mark.parametrize(
+    "tree, planted_path",
+    [
+        ("patterns", "patterns/99-planted.md"),
+        ("extensions", "extensions/prime-agent/99-planted.md"),
+    ],
+    ids=["patterns", "extensions"],
+)
+def test_red_prose_paths_in_a_widened_tree(tmp_path, tree, planted_path):
+    """A widened tree must be able to FAIL, not merely appear in the label.
+
+    Set equality against git proves the walker reaches the tree. This proves
+    the reference it finds there travels all the way to a verdict: a filter
+    added between the walk and the resolver would leave set equality intact
+    while every finding in the tree vanished.
+    """
+    repo = _scratch_repo(tmp_path, (tree,))
+    planted = repo / planted_path
     planted.write_text(
         "Run `scripts/a_script_that_does_not_exist.py` before committing.\n",
         encoding="utf-8",
@@ -367,3 +397,165 @@ def test_every_allowlist_entry_still_suppresses_something():
             ):
                 unused.append(f"{row_name}: {entry.path_glob} :: {entry.anchor}")
     assert not unused, "Allowlist entries that suppress nothing:\n  " + "\n  ".join(unused)
+
+
+# ---------------------------------------------------------------------------
+# The scanned population is the COMMITTED repository
+# ---------------------------------------------------------------------------
+
+
+def _git_repo(tmp_path: Path) -> Path:
+    """A real one-commit git repository carrying one tracked prose file."""
+    root = tmp_path / "gitrepo"
+    (root / "rules").mkdir(parents=True)
+    (root / "rules" / "10-tracked.md").write_text(
+        "Run `scripts/ghost_tracked.py` first.\n", encoding="utf-8"
+    )
+    for argv in (
+        ["init", "-q"],
+        ["config", "user.email", "t@example.com"],
+        ["config", "user.name", "t"],
+        ["add", "rules/10-tracked.md"],
+        ["commit", "-qm", "init"],
+    ):
+        subprocess.run(["git", *argv], cwd=root, check=True, capture_output=True)
+    return root
+
+
+def test_untracked_file_on_disk_is_not_scanned(tmp_path):
+    """Generated and vendored files sit on a developer's disk, not in the repo.
+
+    A gate whose population is "whatever is on this disk" reports findings that
+    exist for one developer and not for CI. The population is the committed
+    repository.
+    """
+    root = _git_repo(tmp_path)
+    (root / "rules" / "20-untracked.md").write_text(
+        "Run `scripts/ghost_untracked.py` first.\n", encoding="utf-8"
+    )
+
+    targets = [ref.target for ref in extract_prose_paths(root)]
+
+    assert "scripts/ghost_tracked.py" in targets, (
+        "the tracked file must still be scanned; a filter that scans nothing "
+        "passes vacuously"
+    )
+    assert "scripts/ghost_untracked.py" not in targets
+
+
+def test_prose_scan_covers_every_file_when_tracked_ness_is_unknowable(tmp_path):
+    """Outside a git checkout the filter must widen, never narrow.
+
+    A tarball export, or the symlinked scratch repos below, have no index to
+    ask. Scanning everything is the conservative direction: it can only find
+    more, never silently fewer.
+    """
+    root = tmp_path / "notarepo"
+    (root / "rules").mkdir(parents=True)
+    (root / "rules" / "10-loose.md").write_text(
+        "Run `scripts/ghost_loose.py` first.\n", encoding="utf-8"
+    )
+
+    targets = [ref.target for ref in extract_prose_paths(root)]
+
+    assert "scripts/ghost_loose.py" in targets
+
+
+def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["git", "-C", str(root), *args], capture_output=True, check=True
+    )
+
+
+def test_tracked_files_widens_under_a_directory_nested_in_another_checkout(tmp_path):
+    """An untracked subdirectory of a checkout is not that checkout's root.
+
+    ``git ls-files`` run there exits 0 and prints NOTHING, which is
+    indistinguishable, by exit code alone, from a checkout that tracks no
+    files. Trusting the exit code makes the verdict depend on where the scan
+    root happens to sit relative to other checkouts -- a pytest ``tmp_path``
+    under ``--basetemp`` inside a checkout reaches this, and every scratch-repo
+    proof in this file breaks there. Widening is the documented direction.
+    """
+    outer = tmp_path / "outer"
+    outer.mkdir()
+    _git(outer, "init")
+    (outer / "tracked.md").write_text("real\n", encoding="utf-8")
+    _git(outer, "add", "tracked.md")
+    _git(outer, "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-m", "init")
+
+    nested = outer / "nested"
+    (nested / "rules").mkdir(parents=True)
+    (nested / "rules" / "10-loose.md").write_text(
+        "Run `scripts/ghost_nested.py` first.\n", encoding="utf-8"
+    )
+
+    assert _git(nested, "ls-files", "--cached").stdout == b""
+    assert tracked_files(nested) is None
+    assert "scripts/ghost_nested.py" in [ref.target for ref in extract_prose_paths(nested)]
+
+
+def test_tracked_files_still_raises_for_a_checkout_root_tracking_nothing(tmp_path):
+    """The empty-list guard keeps the case it was written for.
+
+    A genuine checkout root -- ``rev-parse --show-toplevel`` IS this directory
+    -- that tracks no files is not a state this gate can run against, and must
+    stay loud. That is what separates it from the nested case above.
+    """
+    root = tmp_path / "empty"
+    root.mkdir()
+    _git(root, "init")
+
+    with pytest.raises(RuntimeError, match="tracks no files"):
+        tracked_files(root)
+
+
+# ---------------------------------------------------------------------------
+# The scanned trees, and that the walker actually reaches each one
+# ---------------------------------------------------------------------------
+
+
+def test_prose_dirs_covers_every_authored_prose_tree():
+    """Naming the trees explicitly, so a widening or a narrowing is a decision.
+
+    ``patterns/`` and ``extensions/`` hold authored prose that names this
+    repository's own files by backticked path, and nothing else checked those
+    references. Their absence was drift, not a decision.
+    """
+    assert set(PROSE_DIRS) == {
+        "skills",
+        "commands",
+        "agents",
+        "rules",
+        "patterns",
+        "extensions",
+    }
+
+
+@pytest.mark.parametrize("tree", sorted(PROSE_DIRS), ids=sorted(PROSE_DIRS))
+def test_prose_scan_yields_every_tracked_markdown_under_each_tree(tree):
+    """A tree named in PROSE_DIRS that the walker never reaches scans nothing.
+
+    Adding a name to PROSE_DIRS is not evidence that the tree is scanned: every
+    existing assertion -- the floors, the labels, the clean-tree gate -- still
+    passes over a tree the enumerator silently skips. Set equality against what
+    git tracks is what forces the widening to be real.
+    """
+    completed = subprocess.run(
+        ["git", "-C", str(REPO_ROOT), "ls-files", "-z", "--cached", "--", tree],
+        capture_output=True,
+        check=True,
+    )
+    tracked = {
+        name
+        for name in completed.stdout.decode("utf-8").split("\0")
+        if name.endswith(".md") and not (SKIP_PARTS & set(Path(name).parts))
+    }
+    assert tracked, f"git tracks no Markdown under {tree}/; the assertion is vacuous"
+
+    scanned = {
+        path.relative_to(REPO_ROOT).as_posix()
+        for path in iter_prose_files(REPO_ROOT)
+        if path.relative_to(REPO_ROOT).parts[0] == tree
+    }
+    assert scanned == tracked
