@@ -41,7 +41,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   LAN client's request is refused with `403`. A wildcard bind is an address,
   not a reachable name: the client sends the name it dialed
   (`Host: 192.168.1.5:8765`), which matches no allowed value, so only loopback
-  `Host` values are accepted. This is intended -- the daemon is a local-only
+  `Host` values are accepted -- including against the literal `Host: 0.0.0.0`,
+  which `urlsplit` would otherwise hand back as a usable hostname. This is
+  intended -- the daemon is a local-only
   service, and remote access is out of scope. `SPELLBOOK_AUTH=disabled` is the
   only way to run that configuration, and it disables `Origin` and `Host`
   validation entirely, leaving the daemon reachable by any page the user

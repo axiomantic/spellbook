@@ -70,7 +70,13 @@ Origin validation addresses the actual threat directly and stores no secret anyw
 3. **A repeated `Origin` or `Host` is rejected.** More than one copy of either header is refused outright. Header collections disagree on which copy wins -- `dict()` keeps the last, Starlette's `Headers.get()` keeps the first -- so choosing either one only decides which smuggling direction succeeds. The count is taken over the raw ASGI header list, and header names are matched case-insensitively rather than trusting the server to have lowercased them.
 4. **`Host` is validated independently.** A value naming neither loopback nor the configured bind address is rejected. Under DNS rebinding the attacker's own hostname is what resolves to `127.0.0.1`, so it shows up here even when `Origin` does not help.
 
-Hostnames are extracted with `urllib.parse.urlsplit`, not string matching, so `localhost.evil.com` and `http://evil.com/localhost` do not read as loopback.
+    An **absent or empty `Host` is allowed**. HTTP/1.1 requires the header and every browser sends it, so its absence names no attacker; it is also not what a rebinding attack looks like.
+
+    A **wildcard bind adds no allowed name.** With `SPELLBOOK_HOST=0.0.0.0` (or `::`) the daemon listens on every interface, but a wildcard is an address, not a name: a LAN client sends `Host: 192.168.1.5:8765`, which matches nothing, and is refused. Only the loopback values remain allowed, and the literal `Host: 0.0.0.0` is refused too. The daemon is a local-only service; `SPELLBOOK_AUTH=disabled` is the only way to serve remote clients, and it disables both checks entirely.
+
+    An **unparseable `SPELLBOOK_PORT` trusts no origin implicitly.** The daemon's own origin is then unknown, and an unknown origin is matched against nothing rather than against a wildcard -- otherwise a `None` port would compare equal to a port-less `Origin`, making `http://localhost` (port 80: any local web server) trusted. `SPELLBOOK_ALLOWED_ORIGINS` still applies.
+
+Hostnames and origins are parsed with `urllib.parse.urlsplit` rather than matched as strings, so `localhost.evil.com` and `http://evil.com/localhost` do not read as loopback. Two results of that parse are then rejected explicitly, because the stdlib's reading is not the one an HTTP header needs: a value carrying userinfo (`evil.com@localhost`, whose hostname is `localhost`), and a wildcard bind address. Header values that are not valid UTF-8 are rejected rather than decoded lossily, so two different byte strings cannot map onto one allowed value.
 
 ### Status code
 
@@ -89,7 +95,7 @@ Multiple AI assistant sessions share a single HTTP server instance. There is no 
 | Multi-session | No (one client per pipe) | Yes (shared server) |
 | Default | Yes | No (opt-in via env var) |
 
-Source: `spellbook/auth.py`, `spellbook/server.py:build_http_run_kwargs()`
+Source: `spellbook/core/auth.py`, `spellbook/mcp/server.py:162` (`build_http_run_kwargs()`)
 
 ## RCE Kill Chain Analysis
 
@@ -164,20 +170,13 @@ When validation is disabled the server announces it rather than failing quietly:
 
 ### Revert Security Changes
 
-All security hardening was implemented in discrete, well-scoped commits. To revert a specific finding's fix:
+Find the commit that introduced the behaviour you want to undo, and revert that commit:
 
 ```bash
-# Find the commit for the fix you want to revert, then revert that commit.
-git log --oneline -- spellbook/security/
+git log --oneline -- spellbook/core/auth.py
 ```
 
-Do not treat the commits named in the findings table as revertible recipes. `bd6ed35` added the bearer-token middleware, which no longer exists; reverting it now reinstates a credential the daemon does not read.
-
-To revert all security hardening:
-
-```bash
-git revert --no-commit ab83dc2..HEAD
-```
+No revert recipe is given here, and the SHAs in the findings table above are not one. They record when a finding was addressed, not a command that is still correct: `bd6ed35` added the bearer-token middleware, which no longer exists, so reverting it reinstates a credential the daemon does not read. Read the log, then choose.
 
 ## Source Citations
 

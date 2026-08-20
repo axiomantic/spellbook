@@ -92,7 +92,7 @@ Relevant sources: `spellbook/security/spotlight.py`, `spellbook/security/sleuth.
 
 1. Server starts in HTTP mode (`SPELLBOOK_MCP_TRANSPORT=streamable-http`) and binds `SPELLBOOK_HOST` (default `127.0.0.1`)
 2. `OriginValidationMiddleware` is added to the ASGI middleware stack
-3. On every HTTP request the middleware reads `Host`. A value naming neither loopback nor the configured bind address is rejected with `403`. An absent or empty `Host` is allowed: HTTP/1.1 requires the header, and a browser always sends it, so its absence does not name an attacker. A wildcard bind (`0.0.0.0`) supplies no reachable name, so only loopback values remain allowed and remote clients are refused -- the daemon is local-only by design
+3. On every HTTP request the middleware reads `Host`. A value naming neither loopback nor the configured bind address is rejected with `403`. An absent or empty `Host` is allowed: HTTP/1.1 requires the header, and a browser always sends it, so its absence does not name an attacker. A wildcard bind (`0.0.0.0`, `::`) supplies no reachable name and is dropped from the allowed set explicitly, so only loopback values remain allowed and remote clients are refused -- the daemon is local-only by design
 4. It then reads `Origin`. An absent `Origin` is allowed
 5. A present `Origin` is allowed only when it matches the daemon's own origin exactly (scheme, host, and port) or appears in `SPELLBOOK_ALLOWED_ORIGINS`; otherwise `403`. A repeated `Origin` or `Host` header is `403`
 6. `/health` is subject to the same `Host` check, so monitoring does not become a rebinding hole

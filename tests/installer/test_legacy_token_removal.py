@@ -82,8 +82,15 @@ def test_stale_header_is_stripped_from_opencode_config(tmp_path):
 #
 # pi and opencode above rewrite a JSON entry. antigravity and forgecode do the
 # same; codex and goose instead regenerate a marker-delimited block, which is a
-# different mechanism and needs its own evidence. The CHANGELOG claims every
-# installer drops a stale header, so every installer is exercised here.
+# different mechanism and needs its own evidence.
+#
+# That is every installer that WRITES an MCP config, which is the population the
+# CHANGELOG claim is about -- not every installer. Of the nine platform modules,
+# claude_code registers by shelling out to `claude mcp add` (covered by
+# test_mcp_component_has_no_token_reader, since the header would have to come
+# from installer/components/mcp.py), and gemini and prime_agent write no MCP
+# config at all. The write-site census in test_no_auth_header_written.py pins
+# that same set of six independently.
 # ---------------------------------------------------------------------------
 
 
