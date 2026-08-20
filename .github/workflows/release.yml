@@ -84,35 +84,41 @@ jobs:
           MAJOR_TAG="${{ steps.version.outputs.major_tag }}"
           REPO="${{ github.repository }}"
 
-          # Extract the section for this version from CHANGELOG.md
-          if [[ -f "CHANGELOG.md" ]]; then
-            awk -v ver="$VERSION" '
-              /^## \[/ {
-                if (found) exit
-                if (index($0, "[" ver "]")) found=1
-              }
-              found { print }
-            ' CHANGELOG.md > /tmp/release_notes.md
-
-            if [[ -s /tmp/release_notes.md ]]; then
-              echo "Found release notes for version $VERSION in CHANGELOG.md"
-            else
-              echo "No release notes found for version $VERSION in CHANGELOG.md"
-              echo "## $VERSION" > /tmp/release_notes.md
-              echo "" >> /tmp/release_notes.md
-              echo "No release notes provided for this version." >> /tmp/release_notes.md
-            fi
-          else
-            echo "CHANGELOG.md not found, using commit log"
-            PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
-            echo "## What's Changed" > /tmp/release_notes.md
-            echo "" >> /tmp/release_notes.md
-            if [[ -n "$PREV_TAG" ]]; then
-              git log --oneline "$PREV_TAG"..HEAD --no-merges | head -20 >> /tmp/release_notes.md
-            else
-              git log --oneline -20 --no-merges >> /tmp/release_notes.md
-            fi
+          # Extract the section for this version from CHANGELOG.md.
+          #
+          # A missing section is a HARD FAILURE, not a placeholder. Substituting
+          # "No release notes provided for this version." shipped 16 releases
+          # (v0.71.0..v0.81.0 and others) with empty notes and no red build:
+          # a release with no notes looked exactly like a release with notes.
+          # This step runs before the tag is created, so failing here aborts
+          # the release without leaving a tag behind.
+          if [[ ! -f "CHANGELOG.md" ]]; then
+            echo "::error::CHANGELOG.md not found. Release notes cannot be extracted."
+            exit 1
           fi
+
+          awk -v ver="$VERSION" '
+            /^## \[/ {
+              if (found) exit
+              if (index($0, "[" ver "]")) found=1
+            }
+            found { print }
+          ' CHANGELOG.md > /tmp/release_notes.md
+
+          if [[ ! -s /tmp/release_notes.md ]]; then
+            echo "::error::No '## [$VERSION]' section found in CHANGELOG.md."
+            echo "::error::Add a '## [$VERSION] - YYYY-MM-DD' section describing this release, then re-run."
+            exit 1
+          fi
+
+          # A heading with no body under it is the same defect wearing a heading.
+          if [[ -z "$(tail -n +2 /tmp/release_notes.md | tr -d '[:space:]')" ]]; then
+            echo "::error::The '## [$VERSION]' section in CHANGELOG.md is empty."
+            echo "::error::Describe the release under that heading, then re-run."
+            exit 1
+          fi
+
+          echo "Found release notes for version $VERSION in CHANGELOG.md"
 
           # Append footer using heredoc (written to separate file, then appended)
           PREV_TAG=$(git tag -l 'v[0-9]*.[0-9]*.[0-9]*' --sort=-version:refname | head -1)
