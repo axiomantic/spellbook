@@ -22,6 +22,7 @@ import json
 from pathlib import Path
 
 import pytest
+import tripwire
 
 from installer.platforms.pi import (
     PI_MCP_ADAPTER_NAME,
@@ -173,12 +174,30 @@ def test_tool_prefix_none_is_what_prevents_a_doubled_spellbook_prefix():
 
 
 def test_emitted_config_keeps_the_bearer_header_shape():
-    """The adapter accepts a raw ``headers`` map; the daemon 401s without it."""
-    entry = _generate_mcp_json_section()
+    """The adapter accepts a raw ``headers`` map; the daemon 401s without it.
+
+    The token is mocked rather than read from ``~/.local/spellbook/.mcp-token``.
+    Guarding this assertion with ``if "headers" in entry`` made it vanish on
+    every machine without that file -- which is every clean CI runner, since
+    the file is written by the MCP server at startup. The header is emitted
+    only when a token is found, so forcing a token is what makes the one
+    assertion this test exists for actually run.
+    """
+    token = tripwire.mock("installer.platforms.pi:get_mcp_auth_token")
+    token.returns("test-token-abc123")
+
+    with tripwire:
+        entry = _generate_mcp_json_section()
+
+    # No args to assert: the accessor takes none. The mocked RETURN value is
+    # what the header assertion below pins, so it is verified there.
+    token.assert_call(args=(), kwargs={})
 
     assert entry["url"].endswith("/mcp")
-    if "headers" in entry:
-        assert entry["headers"]["Authorization"].startswith("Bearer ")
+    assert entry["headers"] == {"Authorization": "Bearer test-token-abc123"}, (
+        "The daemon authenticates on a raw Authorization header carrying the "
+        "'Bearer ' scheme. Any other shape 401s."
+    )
 
 
 # ---------------------------------------------------------------------------
