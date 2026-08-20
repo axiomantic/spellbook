@@ -1,95 +1,138 @@
-"""Bearer token authentication for MCP HTTP transport.
+"""Origin and Host validation for the MCP HTTP transport.
 
-Implements token generation, file management, and ASGI middleware
-for authenticating HTTP requests to the MCP server.
+The daemon binds loopback and holds no credentials. Binding loopback stops the
+network but not the browser: any page the user visits can issue requests to
+127.0.0.1. This module rejects those requests.
+
+Two headers carry the signal:
+
+``Origin``
+    A browser attaches it to every cross-origin request, and it names the
+    *attacking* page even under DNS rebinding. A request without an Origin was
+    not issued by a browser under a page's control, so its absence is allowed --
+    that is what every legitimate MCP client (Claude Code, curl, pi's adapter)
+    sends.
+
+``Host``
+    Under DNS rebinding the attacker's own hostname is what resolves to
+    127.0.0.1, so it appears here. Checking it closes the rebinding path at a
+    second layer, independent of Origin.
 """
 
-import os
-import secrets
-from pathlib import Path
+from urllib.parse import urlsplit
 
 from starlette.responses import JSONResponse
 
-TOKEN_PATH = Path.home() / ".local" / "spellbook" / ".mcp-token"
-
-
-def generate_and_store_token() -> str:
-    """Load existing token or generate a new one.
-
-    Reuses the token from TOKEN_PATH if it already exists and is non-empty,
-    so that the token remains stable across daemon restarts. Clients that
-    registered with the token (e.g., via ``claude mcp add --header``) will
-    continue to authenticate without re-registration.
-
-    Only generates a fresh token when no token file exists yet (first
-    install) or the file is empty/unreadable.
-    """
-    existing = load_token()
-    if existing:
-        return existing
-
-    token = secrets.token_urlsafe(32)
-    TOKEN_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-    # Atomic create with correct permissions (no TOCTOU race)
-    fd = os.open(
-        str(TOKEN_PATH),
-        os.O_WRONLY | os.O_CREAT | os.O_TRUNC,
-        0o600,
-    )
-    with os.fdopen(fd, "w") as f:
-        f.write(token)
-
-    return token
-
-
-def load_token() -> str | None:
-    """Load token from file if it exists."""
-    if TOKEN_PATH.exists():
-        return TOKEN_PATH.read_text().strip()
-    return None
+# Hostnames that denote this machine. An Origin or Host outside this set did not
+# come from software running locally under the user's own control.
+LOOPBACK_HOSTNAMES = frozenset({"localhost", "127.0.0.1", "::1"})
 
 
 def auth_is_disabled() -> bool:
-    """Check if auth is disabled via SPELLBOOK_MCP_AUTH=disabled env var."""
+    """Check if request validation is disabled via SPELLBOOK_AUTH=disabled."""
     from spellbook.core.config import get_env
 
     return (get_env("AUTH") or "").lower() == "disabled"
 
 
-class BearerAuthMiddleware:
-    """ASGI middleware for bearer token authentication.
+def _hostname_of(value: str) -> str | None:
+    """Extract the hostname from an Origin URL or a Host header value.
+
+    Returns None when the value is absent or cannot be parsed. Uses urlsplit so
+    that ports, IPv6 brackets, and userinfo are handled by the stdlib rather
+    than by string surgery -- ``localhost.evil.com`` must not read as localhost.
+    """
+    if not value:
+        return None
+    try:
+        # A bare Host header ("127.0.0.1:8765") is not a URL; the "//" prefix
+        # makes urlsplit treat it as an authority.
+        parsed = urlsplit(value if "//" in value else f"//{value}")
+        return parsed.hostname
+    except ValueError:
+        return None
+
+
+def get_allowed_origins() -> frozenset[str]:
+    """Return extra exact-match origins from SPELLBOOK_ALLOWED_ORIGINS.
+
+    Loopback origins are always allowed and are not listed here. This variable
+    exists for a browser-based MCP client served from somewhere else, which the
+    hostname rule cannot recognise.
+    """
+    from spellbook.core.config import get_env
+
+    raw = get_env("ALLOWED_ORIGINS") or ""
+    return frozenset(
+        item.strip().rstrip("/").lower() for item in raw.split(",") if item.strip()
+    )
+
+
+class OriginValidationMiddleware:
+    """ASGI middleware rejecting browser-issued cross-origin requests.
 
     Implemented as a pure ASGI middleware (not BaseHTTPMiddleware) for
     compatibility with Starlette's Middleware() wrapper used by FastMCP.
+
+    Configuration is read once at construction: it is process-wide daemon
+    config, and re-reading it per request would let a mid-flight environment
+    change alter the security boundary.
     """
 
-    def __init__(self, app, token: str):
+    def __init__(self, app):
         self.app = app
-        self.token = token
+        self.disabled = auth_is_disabled()
+        self.allowed_origins = get_allowed_origins()
+        self.allowed_hostnames = set(LOOPBACK_HOSTNAMES)
+
+        # An operator who binds a non-loopback address reaches the daemon under
+        # that name; refusing it would lock them out of their own deployment.
+        from spellbook.core.config import get_env
+
+        bind_host = _hostname_of(get_env("HOST", "127.0.0.1") or "")
+        if bind_host:
+            self.allowed_hostnames.add(bind_host.lower())
+
+    def _rejection(self, reason: str) -> JSONResponse:
+        # 403, not 401: there are no credentials, so nothing the caller could
+        # supply would change the outcome. 401 would promise a retry path that
+        # does not exist.
+        return JSONResponse({"error": f"Forbidden: {reason}"}, status_code=403)
+
+    def _check(self, scope) -> JSONResponse | None:
+        """Return a rejection response, or None when the request may proceed."""
+        headers = dict(scope.get("headers", []))
+
+        def header(name: bytes) -> str:
+            return headers.get(name, b"").decode("utf-8", errors="ignore")
+
+        host_value = header(b"host")
+        if host_value:
+            hostname = _hostname_of(host_value)
+            if hostname is None or hostname.lower() not in self.allowed_hostnames:
+                return self._rejection("unrecognized Host header")
+
+        origin_value = header(b"origin")
+        if not origin_value:
+            # No Origin: not a browser request under a page's control.
+            return None
+
+        normalized = origin_value.strip().rstrip("/").lower()
+        if normalized in self.allowed_origins:
+            return None
+
+        origin_host = _hostname_of(origin_value)
+        if origin_host and origin_host.lower() in LOOPBACK_HOSTNAMES:
+            return None
+
+        return self._rejection("origin not allowed")
 
     async def __call__(self, scope, receive, send):
-        if scope["type"] == "http":
-            # Allow health check without bearer auth
-            path = scope.get("path", "")
-            if path == "/health":
-                return await self.app(scope, receive, send)
+        if scope["type"] != "http" or self.disabled:
+            return await self.app(scope, receive, send)
 
-            # Extract Authorization header
-            headers = dict(scope.get("headers", []))
-            auth_value = headers.get(
-                b"authorization", b""
-            ).decode("utf-8", errors="ignore")
-
-            if not auth_value.startswith("Bearer ") or not secrets.compare_digest(
-                auth_value[7:], self.token
-            ):
-                response = JSONResponse(
-                    {
-                        "error": "Unauthorized. Configure bearer token from ~/.local/spellbook/.mcp-token"
-                    },
-                    status_code=401,
-                )
-                return await response(scope, receive, send)
+        rejection = self._check(scope)
+        if rejection is not None:
+            return await rejection(scope, receive, send)
 
         return await self.app(scope, receive, send)

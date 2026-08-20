@@ -132,37 +132,27 @@ atexit.register(shutdown)
 
 
 def build_http_run_kwargs() -> Dict[str, Any]:
-    """Build kwargs for mcp.run() with auth middleware for HTTP transport.
+    """Build kwargs for mcp.run() with request validation for HTTP transport.
 
-    Reads SPELLBOOK_MCP_HOST, SPELLBOOK_MCP_PORT, and SPELLBOOK_MCP_AUTH
-    from environment. When auth is not disabled, generates a bearer token,
-    writes it to the token file, and includes BearerAuthMiddleware in the
-    middleware list.
+    Reads SPELLBOOK_HOST and SPELLBOOK_PORT from environment and installs
+    OriginValidationMiddleware, which rejects browser-issued cross-origin
+    requests to the loopback daemon.
 
     Returns:
         Dict of kwargs to pass to mcp.run() for streamable-http transport.
     """
     from starlette.middleware import Middleware
 
-    from spellbook.core.auth import (
-        BearerAuthMiddleware,
-        auth_is_disabled,
-        generate_and_store_token,
-    )
+    from spellbook.core.auth import OriginValidationMiddleware
     from spellbook.core.config import get_env
 
     host = get_env("HOST", "127.0.0.1")
     port = int(get_env("PORT", "8765"))
-
-    auth_middleware = []
-    if not auth_is_disabled():
-        token = generate_and_store_token()
-        auth_middleware = [Middleware(BearerAuthMiddleware, token=token)]
 
     return {
         "transport": "streamable-http",
         "host": host,
         "port": port,
         "stateless_http": True,
-        "middleware": auth_middleware,
+        "middleware": [Middleware(OriginValidationMiddleware)],
     }
