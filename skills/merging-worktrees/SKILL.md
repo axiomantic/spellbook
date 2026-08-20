@@ -143,6 +143,8 @@ Dispatch: `/merge-worktree-verify`
 
 If merge goes wrong after commit:
 
+Prefer the non-destructive reset. It rewinds the commit and KEEPS the working tree:
+
 ```bash
 # Identify pre-merge commit
 git log --oneline -5
@@ -150,11 +152,32 @@ git log --oneline -5
 # Reset to before merge (preserve working tree)
 git reset --soft HEAD~1
 
-# Or hard reset if working tree also corrupted
-git reset --hard [pre-merge-commit-sha]
-
 # Re-attempt with lessons learned
 ```
+
+<CRITICAL>
+`git reset --hard` DISCARDS every uncommitted change in the tree, including work you
+did not author, and the reflog does not bring it back. Never run it as a routine next
+step when `--soft` did not obviously suffice.
+
+Before proposing it, enumerate exactly what it destroys:
+
+```bash
+git status --porcelain -uall
+```
+
+Then ask via AskUserQuestion, never as prose:
+
+- **question**: `Running: git reset --hard [pre-merge-commit-sha]` / `Effect: discards
+  the uncommitted changes listed above and every commit after
+  [pre-merge-commit-sha]` / `Recoverable: commits via reflog; uncommitted changes NOT
+  recoverable`
+- **options**: `Run it` (uncommitted work destroyed) and `Cancel` (keep the tree, fix
+  forward).
+
+Run it only after an explicit confirmation. Never run it and describe the impact
+afterwards.
+</CRITICAL>
 
 <FORBIDDEN>
 - Blind ours/theirs acceptance without 3-way analysis
@@ -162,9 +185,11 @@ git reset --hard [pre-merge-commit-sha]
 - Treating interface contracts as suggestions
 - Merging code that violates contracts
 - Ignoring type signature mismatches
-- Leaving worktrees or stale branches after success
+- Leaving worktrees or stale branches after success is confirmed AND the user has approved their removal
 - Proceeding after test failure
 - Not documenting merge decisions
+- Deleting worktrees or branches before explicit user confirmation
+- Running `git reset --hard` without first stating what it discards and getting an explicit confirmation via AskUserQuestion
 </FORBIDDEN>
 
 ## Self-Check
@@ -177,7 +202,7 @@ git reset --hard [pre-merge-commit-sha]
 - [ ] Verified interface contracts are honored?
 - [ ] Ran auditing-green-mirage on tests?
 - [ ] Ran code review on final result?
-- [ ] Deleted all worktrees after success?
+- [ ] Confirmed worktree removal with the user, and deleted only what they approved?
 - [ ] All tests passing?
 
 <reflection>
@@ -190,7 +215,7 @@ After each phase, verify: outputs produced, quality gates passed, no unresolved 
 - All interface contracts verified
 - All tests passing
 - Code review passes
-- All worktrees cleaned up
+- All worktrees cleaned up, each removal confirmed by the user first
 - Single unified branch ready for next steps
 
 <FINAL_EMPHASIS>

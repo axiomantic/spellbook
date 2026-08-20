@@ -38,6 +38,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `1` where it exited `2`. Verified end to end against a corrupt ledger on each
   of the five, with the true exit status captured directly rather than through
   a pipe.
+- Three instruction files told an agent to destroy uncommitted work, and each
+  file's own `<FORBIDDEN>` block failed to cover the procedure beside it.
+  `commands/merge-worktree-verify.md` ran `rm -rf [worktree-path]` gated on
+  exactly the condition that means work would be lost; it now tries the
+  non-forcing `git worktree remove` and requires a stated-impact confirmation
+  before any forced removal. `skills/debugging/SKILL.md` opened Phase 0 with an
+  unprompted `git stash`; it now reaches a clean baseline through a separate
+  worktree and reads committed content with `git show HEAD:<path>`.
+  `skills/merging-worktrees/SKILL.md` ran `git reset --hard` unguarded; it now
+  prefers `--soft` and gates `--hard` behind an AskUserQuestion that states what
+  is discarded. Each file's `<FORBIDDEN>` block gained the matching prohibition,
+  per `rules/50-git-safety.md`.
+- Resolved a contradiction between `skills/merging-worktrees/SKILL.md`, which
+  mandated deleting all worktrees after success with no confirmation gate, and
+  `commands/merge-work-packets.md`, which forbids deleting worktrees before user
+  confirmation. Resolved in favor of the safe reading: the skill's FORBIDDEN
+  item, self-check question, and success criterion now all require confirmation
+  before removal.
 
 ## [0.89.0] - 2026-08-17
 
