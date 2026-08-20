@@ -8,6 +8,7 @@ skill's usage of the ledger, which is exercised by an actual develop
 run, not a Python test.
 """
 
+import argparse
 import ast
 import json
 import logging
@@ -1519,9 +1520,9 @@ def test_cli_wave_discipline_failed_refused(tmp_ledger):
 
 @pytest.mark.allow("subprocess")
 def test_cli_wave_discipline_na_with_reason(tmp_ledger):
-    """The documented invocation from skills/develop/SKILL.md must actually
-    work from the CLI -- prose describing a flag that does not exist is the
-    defect this finding raised."""
+    """The documented invocation from skills/develop/references/ledger-cli.md
+    must actually work from the CLI -- prose describing a flag that does not
+    exist is the defect this finding raised."""
     proc = _run_cli(
         "wave-discipline", "plan",
         "--status", "n_a",
@@ -1589,7 +1590,8 @@ def test_cli_blocker_open_without_type_errors(tmp_ledger):
 def test_cli_blocker_close_with_contradicting_type_errors(tmp_ledger):
     _run_cli("blocker", "B1", "--type", "decision", "--timestamp", "2026-08-11T09:00Z")
     proc = _run_cli("blocker", "B1", "--type", "work", "--close")
-    assert proc.returncode == 2
+    # 1, not 2: the stored blocker's type is what the operation cannot use.
+    assert proc.returncode == 1
     assert "type mismatch" in proc.stderr
     assert "closed_at" not in json.loads(tmp_ledger.read_text())["blockers"]["B1"]
 
@@ -1604,7 +1606,8 @@ def test_cli_blocker_rejects_invalid_type(tmp_ledger):
 @pytest.mark.allow("subprocess")
 def test_cli_blocker_close_nonexistent_errors(tmp_ledger):
     proc = _run_cli("blocker", "B9", "--type", "work", "--close")
-    assert proc.returncode == 2
+    # 1, not 2: the id is well-formed; the ledger holds no blocker under it.
+    assert proc.returncode == 1
     assert "no open blocker" in proc.stderr
 
 
@@ -2197,6 +2200,246 @@ def test_archive_ceremony_still_refuses_a_genuinely_empty_ceremony(tmp_ledger, r
         ledger.archive_ceremony("aborted the run")
 
 
+def _cli_subcommands() -> set[str]:
+    """Every subcommand `main` accepts, read off the parser itself."""
+    action = next(
+        a
+        for a in ledger.build_parser()._actions
+        if isinstance(a, argparse._SubParsersAction)
+    )
+    return set(action.choices)
+
+
+LEDGER_DOC_PATH = (
+    Path(__file__).resolve().parents[2]
+    / "skills"
+    / "develop"
+    / "references"
+    / "ledger-cli.md"
+)
+
+# A backticked span is treated as an invocation only through its FIRST
+# whitespace-separated token, and only when that token has the shape of a
+# hyphenated subcommand: lowercase alphanumeric words joined by hyphens. That
+# rule is what separates a remedy from the rest of the backticked text in these
+# files. It excludes flags (`--open-rows` starts with a dash), paths
+# (`scripts/develop_gate_ledger.py` contains a slash), dotted and underscored
+# field names (`ceremony.locked_at`, `ceremony_history`, `open_rows`), literal
+# values (`per_group` is underscored, `passed` has no hyphen), and exception
+# class names (`LedgerError` is not lowercase). It also excludes the
+# non-hyphenated subcommands, which cannot be told apart from field names by
+# shape alone -- `blocker` the command and `blockers` the field differ by one
+# letter. Those are covered by the "Use instead" table check below, which knows
+# from position that a cell holds a remedy.
+_COMMAND_TOKEN = re.compile(r"[a-z][a-z0-9]*(?:-[a-z0-9]+)+")
+
+
+def _hyphenated_command_tokens(text: str) -> set[str]:
+    tokens = set()
+    for span in re.findall(r"`+([^`\n]+)`+", text):
+        parts = span.split()
+        if parts and _COMMAND_TOKEN.fullmatch(parts[0]):
+            tokens.add(parts[0])
+    return tokens
+
+
+def test_hyphenated_command_token_extractor_is_not_vacuous():
+    """The floor for the extractor itself. An extractor that matched nothing
+    would let every check below pass by finding no work to do."""
+    assert _hyphenated_command_tokens("run `wave-discipline 3a --status passed`") == {
+        "wave-discipline"
+    }
+    # The exclusions are asserted, not assumed: each of these is a real span
+    # from the files under test that must NOT be read as a remedy.
+    assert _hyphenated_command_tokens(
+        "`--open-rows` `scripts/develop_gate_ledger.py` `ceremony.locked_at` "
+        "`ceremony_history` `open_rows` `per_group` `passed` `LedgerError` "
+        "`blockers`"
+    ) == set()
+
+
+def test_every_named_remedy_resolves_to_a_real_subcommand():
+    """A refusal that names a command argparse rejects tells the reader to run
+    something that cannot run -- the refusal becomes a dead end at exactly the
+    moment the caller is stuck. The remedies are prose inside error strings and
+    inside the reference doc, so nothing but this test ties them to the parser
+    they name.
+
+    Both sources are scanned. The module's messages and the doc's prose restate
+    the same vocabulary INDEPENDENTLY, so pinning only the Python side leaves a
+    remedy spelled wrong in the doc passing CI -- the hand-written list that
+    drifts, wearing a different hat.
+
+    The vocabulary is derived from the parser and from the text itself, never
+    from a list written beside them: a second copy of the remedy set would
+    drift from the messages exactly as silently as the messages drift from the
+    parser.
+    """
+    commands = _cli_subcommands()
+    hyphenated = {c for c in commands if "-" in c}
+    assert hyphenated, "the parser declares no hyphenated subcommand -- floor gone"
+
+    sources = {
+        "module source": Path(ledger.__file__).read_text(encoding="utf-8"),
+        "reference doc": LEDGER_DOC_PATH.read_text(encoding="utf-8"),
+    }
+    for label, text in sources.items():
+        named = _hyphenated_command_tokens(text)
+        for route in ledger._STRUCTURED_FIELD_ROUTES.values():
+            named |= _hyphenated_command_tokens(route)
+        # Anti-no-op floor, derived from the parser rather than counted by
+        # hand: both files route to every hyphenated recorder, so an extractor
+        # that goes stale drops below this and fails instead of passing empty.
+        assert named >= hyphenated, (
+            f"{label} names only {sorted(named)}; the parser declares "
+            f"{sorted(hyphenated)}. The extractor has gone stale, or the "
+            f"file stopped naming a recorder it must route to."
+        )
+        unknown = sorted(n for n in named if n not in commands)
+        assert not unknown, (
+            f"{label} names commands the CLI does not accept: {unknown!r}; "
+            f"accepted subcommands are {sorted(commands)}"
+        )
+
+
+def _doc_use_instead_rows() -> list[tuple[str, str]]:
+    """The (field, remedy) rows of the doc's `set` refusal table.
+
+    Read by POSITION, not by shape: the second cell of a row under the
+    `Use instead` header is a remedy by construction, which is how the
+    non-hyphenated `blocker` gets covered at all.
+    """
+    lines = LEDGER_DOC_PATH.read_text(encoding="utf-8").splitlines()
+    rows: list[tuple[str, str]] = []
+    for i, line in enumerate(lines):
+        if not re.match(r"\s*\|\s*Field\s*\|\s*Use instead\s*\|", line):
+            continue
+        for row in lines[i + 2:]:
+            if not row.lstrip().startswith("|"):
+                break
+            cells = [c.strip() for c in row.strip().strip("|").split("|")]
+            if len(cells) == 2:
+                rows.append((cells[0].strip("`"), cells[1]))
+    return rows
+
+
+def test_doc_use_instead_table_covers_every_structured_field():
+    """The floor for the table reader. A reader that found no rows -- renamed
+    header, reformatted table -- would let the check below pass vacuously, and
+    the row set is fixed by `_STRUCTURED_FIELD_ROUTES`, not by a count here."""
+    fields = {field for field, _ in _doc_use_instead_rows()}
+    assert fields == set(ledger._STRUCTURED_FIELD_ROUTES), (
+        f"the doc's `Use instead` table covers {sorted(fields)}; the refusals "
+        f"cover {sorted(ledger._STRUCTURED_FIELD_ROUTES)}"
+    )
+
+
+def test_every_doc_use_instead_remedy_names_a_real_subcommand():
+    """The doc's table is a second, independent copy of the routes. `blocker`
+    and `set` are not hyphenated, so only reading the cell by position catches
+    a misspelling of them."""
+    commands = _cli_subcommands()
+    rows = _doc_use_instead_rows()
+    assert rows, "no `Use instead` rows found -- the table reader went stale"
+    for field, remedy in rows:
+        tokens = {
+            span.split()[0]
+            for span in re.findall(r"`+([^`\n]+)`+", remedy)
+            if span.split()
+        }
+        assert tokens & commands, (
+            f"the doc routes {field!r} to {remedy!r}, which names no "
+            f"subcommand the CLI accepts; accepted are {sorted(commands)}"
+        )
+
+
+def test_every_structured_field_route_names_a_real_subcommand():
+    """Each `set` refusal routes to a recorder. If that recorder is spelled
+    wrong, the refusal is a dead end for the one operation it exists to
+    redirect."""
+    commands = _cli_subcommands()
+    for field, route in ledger._STRUCTURED_FIELD_ROUTES.items():
+        tokens = set(re.findall(r"`([a-z][a-z0-9-]*)", route))
+        assert tokens & commands, (
+            f"route for {field!r} names no accepted subcommand: {route!r}"
+        )
+
+
+# ---- the documented exit-code split, on every subcommand ------------------
+#
+# `references/ledger-cli.md` states the contract: 1 means the STORED ledger is
+# not what the operation needs, 2 means the CALLER asked for something the
+# ledger does not accept. A caller can only branch on that split if it holds
+# everywhere. Five recorders collapsed both exceptions into a single exit 2, so
+# a corrupt ledger reached through `blocker` told the caller "fix the command"
+# while the ledger needed repair -- the wrong half of the split, and the half
+# that sends the reader looking at correct input.
+
+
+CORRUPT_LEDGER = "{not json at all"
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize(
+    ("name", "argv"),
+    [
+        ("archive-ceremony", ("archive-ceremony", "--reason", "re-select")),
+        ("wave-discipline", ("wave-discipline", "W1", "--status", "passed")),
+        ("blocker", ("blocker", "B1", "--type", "work")),
+        ("group-gate", ("group-gate", "G1", "--status", "passed")),
+        (
+            "record-dispatch",
+            ("record-dispatch", "--subagent-type", "impl", "--description", "d"),
+        ),
+    ],
+)
+def test_cli_exits_1_when_the_stored_ledger_is_corrupt(tmp_ledger, name, argv):
+    """A corrupt ledger is a stored-state failure on every route into it."""
+    _write_raw_ledger(tmp_ledger, CORRUPT_LEDGER)
+    proc = _run_cli(*argv)
+    assert proc.returncode == 1, (
+        f"{name!r} exited {proc.returncode} on a corrupt ledger; the documented "
+        f"contract reserves 1 for a stored-ledger failure. stderr: "
+        f"{proc.stderr.strip()}"
+    )
+    assert "not valid JSON" in proc.stderr
+    assert "Traceback" not in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize(
+    ("name", "argv", "expected_message"),
+    [
+        (
+            "archive-ceremony",
+            ("archive-ceremony", "--reason", "   "),
+            "non-blank reason",
+        ),
+        (
+            "wave-discipline",
+            ("wave-discipline", "W1", "--status", "failed"),
+            "at least one open row",
+        ),
+        ("blocker", ("blocker", "B1",), "requires --type"),
+        (
+            "group-gate",
+            ("group-gate", "G1", "--status", "failed"),
+            "at least one open finding",
+        ),
+    ],
+)
+def test_cli_exits_2_when_the_caller_asked_for_something_invalid(
+    tmp_ledger, name, argv, expected_message
+):
+    """The other half of the split: a well-formed ledger, a bad argument."""
+    proc = _run_cli(*argv)
+    assert proc.returncode == 2, (
+        f"{name!r} exited {proc.returncode} on a caller error; the documented "
+        f"contract reserves 2 for that. stderr: {proc.stderr.strip()}"
+    )
+    assert expected_message in proc.stderr
+
+
 # ---- malformed stored map shapes: blockers / waves / ceremony_history ----
 #
 # Same defect class as the malformed-ceremony block above, in the sibling
@@ -2330,7 +2573,10 @@ def test_cli_blocker_close_on_a_malformed_blockers_refuses_without_a_traceback(
 ):
     _write_raw_ledger(tmp_ledger, f'{{"blockers": {raw}}}')
     proc = _run_cli("blocker", "B1", "--close")
-    assert proc.returncode == 2
+    # 1, not 2: a malformed stored map is a LedgerError. The exit-code split is
+    # uniform across all eight subcommands as of the ledger-CLI reference work;
+    # this asserted 2 when `_cmd_blocker` still collapsed both exception types.
+    assert proc.returncode == 1
     assert "Traceback" not in proc.stderr
     assert "AttributeError" not in proc.stderr
     assert "blockers" in proc.stderr
