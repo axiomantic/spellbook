@@ -37,7 +37,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   in the CI pre-commit job. It requires `extensions/gemini/gemini-extension.json`
   to agree with `.version`, and requires CHANGELOG.md to carry a
   `## [<version>]` section for the version in `.version` before that version can
-  reach main.
+  reach main. A failure names the repair command verbatim.
+  `--fix` propagates `.version` into the manifests via
+  `installer.version.sync_version_to_files`, reports every path it wrote, and
+  re-validates afterwards so a repair that only half-lands still exits non-zero.
+  It is never run by the hook or by any automatic path -- a hook that silently
+  rewrites files turns a drift report into a drift eraser -- and it deliberately
+  will not touch CHANGELOG.md, since an auto-inserted empty release section is
+  the very artifact the release guard exists to prevent.
 
 ### Changed
 
