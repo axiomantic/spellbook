@@ -36,6 +36,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   export SPELLBOOK_ALLOWED_ORIGINS=http://localhost:3000
   ```
 
+  **BREAKING: a non-loopback bind no longer serves remote clients.** With
+  `SPELLBOOK_HOST=0.0.0.0` the daemon still listens on every interface, but a
+  LAN client's request is refused with `403`. A wildcard bind is an address,
+  not a reachable name: the client sends the name it dialed
+  (`Host: 192.168.1.5:8765`), which matches no allowed value, so only loopback
+  `Host` values are accepted. This is intended -- the daemon is a local-only
+  service, and remote access is out of scope. `SPELLBOOK_AUTH=disabled` is the
+  only way to run that configuration, and it disables `Origin` and `Host`
+  validation entirely, leaving the daemon reachable by any page the user
+  visits.
+
   **Existing installs are affected.** On the next `install.py` run the
   `~/.local/spellbook/.mcp-token` file is deleted, and each platform installer
   rewrites its MCP server entry whole, so an `Authorization` header written by
@@ -52,7 +63,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `spellbook/cli/daemon_client.py`. Also removed: `stream_events` from
   `spellbook/cli/daemon_client.py`, which exchanged a bearer token for a ticket
   at `/auth/ticket` and opened a WebSocket to `/events`. Neither route is
-  registered anywhere in the tree and the function had no callers.
+  registered anywhere in the tree and the function had no callers. With
+  `stream_events` gone the `websockets` dependency has no consumer left in the
+  tree and is dropped from `pyproject.toml`.
 
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
   the filesystem for the layouts that are determined by what is on disk (plain

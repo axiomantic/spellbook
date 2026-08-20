@@ -6,10 +6,10 @@ Spellbook's MCP server runs as a local process, typically launched by an AI codi
 
 | Threat Actor | Description | Attack Vector |
 |---|---|---|
-| Malicious local process | Another process on the same machine connecting to the HTTP transport | DNS rebinding, direct HTTP requests to 127.0.0.1 |
+| Malicious local process | Another process on the same machine connecting to the HTTP transport | Direct HTTP requests to 127.0.0.1 -- **NOT mitigated**. The daemon holds no credentials; a request carrying no `Origin` is indistinguishable from a legitimate client and is allowed. See Known Limitations |
 | Prompt injection via external content | Untrusted files, PRs, web pages processed by the AI assistant | Poisoned workflow state, crafted boot_prompt, injection patterns in DB fields |
 | Compromised database | Attacker gains write access to ~/.local/spellbook/spellbook.db | Injected workflow state, tampered trust registry, poisoned recovery context |
-| Browser-based DNS rebinding | Malicious web page rebinds DNS to localhost, sending requests to the MCP server | CVE-2025-53967-style attacks against unauthenticated local servers |
+| Browser-based DNS rebinding | Malicious web page rebinds DNS to localhost, sending requests to the MCP server | CVE-2025-53967-style attacks against unauthenticated local servers -- mitigated by `Host` validation, which carries the attacker's own name, independently of `Origin` |
 
 The server does NOT face internet-originating traffic. All connections are local. The primary risk is privilege escalation: an attacker who can influence MCP tool inputs or persisted state could achieve arbitrary code execution through the AI assistant.
 
@@ -92,7 +92,7 @@ Relevant sources: `spellbook/security/spotlight.py`, `spellbook/security/sleuth.
 
 1. Server starts in HTTP mode (`SPELLBOOK_MCP_TRANSPORT=streamable-http`) and binds `SPELLBOOK_HOST` (default `127.0.0.1`)
 2. `OriginValidationMiddleware` is added to the ASGI middleware stack
-3. On every HTTP request the middleware reads `Host`; a value naming neither loopback nor the configured bind address is rejected with `403`
+3. On every HTTP request the middleware reads `Host`. A value naming neither loopback nor the configured bind address is rejected with `403`. An absent or empty `Host` is allowed: HTTP/1.1 requires the header, and a browser always sends it, so its absence does not name an attacker. A wildcard bind (`0.0.0.0`) supplies no reachable name, so only loopback values remain allowed and remote clients are refused -- the daemon is local-only by design
 4. It then reads `Origin`. An absent `Origin` is allowed
 5. A present `Origin` is allowed only when it matches the daemon's own origin exactly (scheme, host, and port) or appears in `SPELLBOOK_ALLOWED_ORIGINS`; otherwise `403`. A repeated `Origin` or `Host` header is `403`
 6. `/health` is subject to the same `Host` check, so monitoring does not become a rebinding hole
@@ -101,13 +101,13 @@ When running via stdio transport (the default for Claude Code), these checks do 
 
 ## Findings Summary
 
-All findings from the MCP security audit have been addressed:
+Every finding from the MCP security audit was addressed. One has since been superseded rather than fixed -- listed as such, because a finding whose defense was later removed is not a fixed one:
 
 | # | Severity | Finding | Status | Commit |
 |---|---|---|---|---|
 | 1 | CRITICAL | RCE via workflow_state_save: arbitrary boot_prompt injection | FIXED | `1222913` |
 | 2 | CRITICAL | RCE via workflow_state_update: merge-based boot_prompt injection | FIXED | `1222913` |
-| 3 | HIGH | No authentication on HTTP transport | FIXED | `d0aa78a`, `bd6ed35` |
+| 3 | HIGH | No authentication on HTTP transport | SUPERSEDED -- the bearer token was removed. The daemon authenticates no caller; `OriginValidationMiddleware` defends the browser boundary instead, and direct local HTTP is accepted by design (see Known Limitations) | `d0aa78a`, `bd6ed35` |
 | 4 | HIGH | No rate limiting on spawn_claude_session | FIXED | `ce9c64f` |
 | 5 | HIGH | Path traversal via working_directory in spawn_claude_session | FIXED | `7b70e53` |
 | 6 | HIGH | Prompt injection in spawn_claude_session prompt parameter | FIXED | `ce9c64f` |
@@ -134,7 +134,7 @@ This hardening was motivated by vulnerabilities disclosed in the MCP ecosystem d
 ## Known Limitations
 
 - **No SQLCipher**: The SQLite database is not encrypted at rest. An attacker with filesystem read access can read all persisted state. Mitigation: 0600 file permissions and 0700 directory permissions.
-- **No authentication at all**: The server identifies no caller. Any local process running as the user can drive it. This is deliberate -- a token stored mode 0600 defends only against other local users, and any process running as the user could read that file anyway. Not suitable for multi-user or networked deployments.
+- **No authentication at all**: The server identifies no caller. Any local process, under **any** local user, can drive it: it need only reach the loopback port and send no `Origin` header. The removed 0600 token did defend that boundary against *other* local users, and dropping it is a deliberate trade -- on a single-user machine the token bought nothing, because any process running as the user could read the token file. On a shared machine this is a real reduction. Not suitable for multi-user or networked deployments.
 - **Regex detection is bypassable**: Pattern-based injection detection can be evaded with sufficient creativity (novel encodings, semantic equivalents, split payloads). The patterns cover known attack vectors but cannot guarantee completeness.
 - **No TLS**: HTTP transport uses plain HTTP on localhost. Traffic is loopback-only, so the risk is limited to local process sniffing.
 - **Rate limiting is per-server**: The spawn rate limit is persistent (backed by the SQLite database) and does NOT reset on server restart. However, a persistent attacker with filesystem access could delete or modify the database to bypass rate limits.
@@ -154,8 +154,8 @@ If you discover a security vulnerability in spellbook:
 |---|---|---|
 | `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation. Use only for debugging. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
 | `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated origins allowed to call the daemon from a browser, matched exactly on scheme, host, and port. Needed for a browser client on any origin other than the daemon's own, including another port on this machine. |
-| `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Do not change to `0.0.0.0` in production. |
-| `SPELLBOOK_MCP_PORT` | `8765` | Port for HTTP transport. |
+| `SPELLBOOK_HOST` | `127.0.0.1` | Bind address for HTTP transport. Do not change to `0.0.0.0` in production. |
+| `SPELLBOOK_PORT` | `8765` | Port for HTTP transport. |
 | `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode: `stdio` or `streamable-http`. |
 | `SPELLBOOK_CLI_COMMAND` | `claude` | CLI command for spawned sessions. Validated against allowlist: `claude`, `codex`, `gemini`, `opencode`. |
 

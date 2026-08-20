@@ -162,7 +162,7 @@ FORGE_CONFIG=<your-path> uv run install.py --platforms forgecode
 
 - Context and instructions via spellbook's demarcated section in `<config-dir>/AGENTS.md`
 - MCP server registration in `<config-dir>/.mcp.json` (mode 0600, top-level `mcpServers` key)
-- Bearer-token authentication via mustache-template-supported `headers` (literal token in v1)
+- No credential: the daemon holds none, so the entry carries no `headers` block. Requests are authorized by `Origin`/`Host` validation at the daemon
 - Platform self-identification via `You are Forge|Sage|Muse` system prompt opener for the three built-in agents
 
 ### Limitations

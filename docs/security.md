@@ -143,8 +143,8 @@ Test: `tests/test_workflow_state_security.py`
 |---|---|---|
 | `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation on HTTP transport. The server logs a warning and prints `request validation DISABLED` in its startup banner whenever this is in effect. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
 | `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated origins permitted to call the daemon from a browser, matched exactly on scheme, host, and port. Required for a browser client on any origin other than the daemon's own -- including one on another port of this machine. |
-| `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Binding to `0.0.0.0` exposes the server to the network and is strongly discouraged. |
-| `SPELLBOOK_MCP_PORT` | `8765` | Port number for HTTP transport. |
+| `SPELLBOOK_HOST` | `127.0.0.1` | Bind address for HTTP transport. Binding to `0.0.0.0` exposes the server to the network and is strongly discouraged. |
+| `SPELLBOOK_PORT` | `8765` | Port number for HTTP transport. |
 | `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode. `stdio` for direct pipe (default, used by Claude Code). `streamable-http` for HTTP with Origin/Host validation. |
 | `SPELLBOOK_CLI_COMMAND` | `claude` | CLI command invoked in spawned terminal sessions. Validated against allowlist: `claude`, `codex`, `gemini`, `opencode`. |
 
@@ -167,9 +167,11 @@ When validation is disabled the server announces it rather than failing quietly:
 All security hardening was implemented in discrete, well-scoped commits. To revert a specific finding's fix:
 
 ```bash
-# Example: revert only the auth middleware integration
-git revert bd6ed35
+# Find the commit for the fix you want to revert, then revert that commit.
+git log --oneline -- spellbook/security/
 ```
+
+Do not treat the commits named in the findings table as revertible recipes. `bd6ed35` added the bearer-token middleware, which no longer exists; reverting it now reinstates a credential the daemon does not read.
 
 To revert all security hardening:
 
