@@ -26,6 +26,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Three stale records that no mechanism read. `commands/audit-mirage-report.md`
+  gave the report template slots for 9 green mirage patterns while
+  `commands/audit-mirage-analyze.md` defines 11, so a Pattern 10 or Pattern 11
+  finding had nowhere to go and was dropped from a report that still looked
+  complete. The two missing slots are added, and
+  `tests/test_skills/test_audit_mirage_pattern_sync.py` now derives the expected
+  set from the analyze headings and fails on drift in either direction; proved
+  against a planted twelfth pattern. `skills/tooling-discovery/SKILL.md` said
+  tier 5-6 for trust warnings where `spellbook/tooling/discovery.py` populates
+  `risks` and `next_steps` from tier 4 up, and now keys off the presence of
+  those fields instead of restating a threshold the code owns.
+  `commands/feature-discover.md` forbade proceeding to design on a
+  `completeness_score` that was deleted with the fake validation functions; the
+  guard now names the Phase 1.5.5 self-assessed items that replaced it.
 - `scripts/develop_gate_ledger.py` now applies its documented exit-code split
   on every subcommand. `1` means the STORED ledger is not what the operation
   needs, `2` means the CALLER asked for something the ledger does not accept.

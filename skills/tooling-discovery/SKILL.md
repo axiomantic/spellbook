@@ -62,8 +62,9 @@ Group results by availability and trust:
 - List tools where `available: false`
 - For each: name, type, trust tier label, description, source URL
 
-**Trust Warnings** (tier 4+):
-- For any tool with trust_tier >= 4, prominently display risks and next_steps
+**Trust Warnings**:
+- The response populates `risks` and `next_steps` only for tools whose trust tier
+  warrants a warning. For any tool that carries either field, prominently display both.
 
 ### Step 4: Suggest Integration
 
@@ -74,7 +75,7 @@ For available but potentially unused tools:
 - For libraries: note they are already in project dependencies
 
 <FORBIDDEN>
-- Recommending tier 5-6 tools without displaying trust warnings
+- Recommending a tool that carries `risks` or `next_steps` without displaying its trust warnings
 - Skipping the availability check (always call the MCP tool)
 - Making up tools not in the registry
 </FORBIDDEN>
