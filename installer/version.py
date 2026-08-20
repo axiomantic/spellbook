@@ -109,26 +109,78 @@ def check_upgrade_needed(
         return (False, "version unchanged")
 
 
-def sync_version_to_files(spellbook_dir: Path, version: str) -> List[str]:
-    """
-    Synchronize version across all files that contain it.
-    Returns list of updated files.
-    """
-    updated = []
+def _version_manifests(spellbook_dir: Path) -> List[Path]:
+    """Manifests that carry a copy of ``.version`` and must track it."""
+    return [spellbook_dir / "extensions" / "gemini" / "gemini-extension.json"]
 
-    # 1. gemini-extension.json
-    gemini_ext = spellbook_dir / "extensions" / "gemini" / "gemini-extension.json"
-    if gemini_ext.exists():
+
+class VersionSyncError(Exception):
+    """A manifest could not be read or written during a version sync.
+
+    Raised instead of returning, because the swallowed form of this failure
+    was indistinguishable from a clean tree: both produced an empty list, so
+    a caller reported "nothing to do" and exited 0 on a broken manifest.
+
+    ``updated`` records the manifests that were written before the failure,
+    so a partial sync is still reportable; ``failures`` pairs each unusable
+    manifest with the reason it was unusable.
+    """
+
+    def __init__(self, updated: List[str], failures: List[Tuple[str, str]]) -> None:
+        self.updated = updated
+        self.failures = failures
+        detail = "; ".join(f"{path}: {reason}" for path, reason in failures)
+        super().__init__(f"version sync could not process {len(failures)} manifest(s): {detail}")
+
+
+def sync_version_to_files(spellbook_dir: Path, version: str) -> List[str]:
+    """Synchronize ``version`` across the manifests that carry it.
+
+    Returns the manifests actually written — empty when every manifest
+    already agreed with ``version``.
+
+    Raises:
+        VersionSyncError: a manifest exists but is malformed or unreadable.
+            Every other manifest is still processed first, so the error
+            reports the complete picture rather than the first failure.
+    """
+    updated: List[str] = []
+    failures: List[Tuple[str, str]] = []
+
+    for manifest in _version_manifests(spellbook_dir):
+        if not manifest.exists():
+            continue
         try:
-            data = json.loads(gemini_ext.read_text(encoding="utf-8"))
-            if data.get("version") != version:
-                data["version"] = version
-                gemini_ext.write_text(
-                    json.dumps(data, indent=2) + "\n", encoding="utf-8"
-                )
-                updated.append(str(gemini_ext))
-        except (json.JSONDecodeError, OSError):
-            pass
+            data = json.loads(manifest.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            failures.append((str(manifest), f"invalid JSON ({exc})"))
+            continue
+        except OSError as exc:
+            failures.append((str(manifest), f"could not be read ({exc.strerror})"))
+            continue
+
+        if not isinstance(data, dict):
+            # A non-object payload parses cleanly, so JSONDecodeError never
+            # fires; without this it reaches .get() and dies as an
+            # AttributeError that names neither the file nor the cause.
+            failures.append(
+                (str(manifest), f"expected a JSON object, found {type(data).__name__}")
+            )
+            continue
+
+        if data.get("version") == version:
+            continue
+
+        data["version"] = version
+        try:
+            manifest.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+        except OSError as exc:
+            failures.append((str(manifest), f"could not be written ({exc.strerror})"))
+            continue
+        updated.append(str(manifest))
+
+    if failures:
+        raise VersionSyncError(updated, failures)
 
     return updated
 
