@@ -185,15 +185,42 @@ def _write_pi_settings(settings_path: Path, settings: dict) -> None:
         raise
 
 
-def _is_spellbook_managed_adapter_entry(entry: object) -> bool:
-    """True for a bare ``npm:pi-mcp-adapter@<version>`` string.
+def _names_adapter(source: object) -> bool:
+    """True for an npm spec naming the adapter, versioned or not.
 
-    Spellbook writes and removes only this shape. Pi also accepts an object
-    form carrying resource filters; a user who wrote one configured it
+    The boundary is what makes this correct. A bare prefix test also matches
+    ``npm:pi-mcp-adapter-extra@1.0.0``, a DIFFERENT package, which would make
+    ``detect`` report the adapter as declared while the real adapter is absent.
+    An npm spec ends the package name at ``@`` or at end of string, so those
+    are the only two accepted forms.
+    """
+    if not isinstance(source, str):
+        return False
+    return source == f"npm:{PI_MCP_ADAPTER_NAME}" or source.startswith(
+        f"npm:{PI_MCP_ADAPTER_NAME}@"
+    )
+
+
+def _adapter_entry_source(entry: object) -> object:
+    """The npm spec an entry declares, for either shape pi accepts."""
+    return entry.get("source") if isinstance(entry, dict) else entry
+
+
+def _is_spellbook_managed_adapter_entry(entry: object) -> bool:
+    """True for a bare adapter string, with or without a pinned version.
+
+    Spellbook writes and removes only the bare-string shape. Pi also accepts an
+    object form carrying resource filters; a user who wrote one configured it
     deliberately, and flattening it back to a string would discard those
     filters silently.
+
+    A version-less bare string counts as managed. It is spellbook's own shape,
+    and leaving it unpinned is the drift ``PI_MCP_ADAPTER_VERSION`` exists to
+    prevent -- ``pi update --extensions`` skips pinned specs and moves unpinned
+    ones to latest. Repinning it is also what keeps the reported version equal
+    to the version on disk.
     """
-    return isinstance(entry, str) and entry.startswith(f"npm:{PI_MCP_ADAPTER_NAME}@")
+    return isinstance(entry, str) and _names_adapter(entry)
 
 
 def _adapter_entry_index(packages: list) -> Optional[int]:
@@ -203,8 +230,7 @@ def _adapter_entry_index(packages: list) -> Optional[int]:
     version are ambiguous rather than additive.
     """
     for i, entry in enumerate(packages):
-        source = entry.get("source") if isinstance(entry, dict) else entry
-        if isinstance(source, str) and source.startswith(f"npm:{PI_MCP_ADAPTER_NAME}"):
+        if _names_adapter(_adapter_entry_source(entry)):
             return i
     return None
 
@@ -249,7 +275,7 @@ def _adapter_installed_version(config_dir: Path) -> Optional[str]:
 
 def _declare_pi_adapter(
     config_dir: Path, dry_run: bool = False
-) -> Tuple[bool, str]:
+) -> Tuple[bool, str, str]:
     """Declare the pinned adapter in pi's settings.json.
 
     Writes the ``packages[]`` entry directly rather than shelling out to
@@ -258,16 +284,21 @@ def _declare_pi_adapter(
     declared-but-missing package, so the subprocess buys nothing an installer
     wants -- and costs a ``pi`` binary on PATH, network access, and a failure
     mode at install time that the settings write does not have.
+
+    Returns ``(ok, message, effective_spec)``. The third element is the spec
+    that will actually load mcp.json, which is NOT always the pinned one: a
+    user's object-form entry is left as is, and reporting the pinned spec in
+    that case would name a version this function declined to write.
     """
     settings_path = config_dir / "settings.json"
 
     if dry_run:
-        return (True, f"would declare {PI_MCP_ADAPTER_SPEC}")
+        return (True, f"would declare {PI_MCP_ADAPTER_SPEC}", PI_MCP_ADAPTER_SPEC)
 
     try:
         settings = _read_pi_settings(settings_path)
     except (OSError, ValueError, json.JSONDecodeError) as e:
-        return (False, f"could not read {settings_path.name}: {e}")
+        return (False, f"could not read {settings_path.name}: {e}", PI_MCP_ADAPTER_SPEC)
 
     packages = settings.get("packages")
     if not isinstance(packages, list):
@@ -275,10 +306,15 @@ def _declare_pi_adapter(
 
     index = _adapter_entry_index(packages)
     if index is not None and not _is_spellbook_managed_adapter_entry(packages[index]):
-        return (True, f"{PI_MCP_ADAPTER_NAME} already declared by the user; left as is")
+        user_source = _adapter_entry_source(packages[index])
+        return (
+            True,
+            f"{PI_MCP_ADAPTER_NAME} already declared by the user; left as is",
+            user_source if isinstance(user_source, str) else PI_MCP_ADAPTER_NAME,
+        )
 
     if index is not None and packages[index] == PI_MCP_ADAPTER_SPEC:
-        return (True, f"{PI_MCP_ADAPTER_SPEC} already declared")
+        return (True, f"{PI_MCP_ADAPTER_SPEC} already declared", PI_MCP_ADAPTER_SPEC)
 
     if index is not None:
         packages[index] = PI_MCP_ADAPTER_SPEC
@@ -291,8 +327,12 @@ def _declare_pi_adapter(
     try:
         _write_pi_settings(settings_path, settings)
     except OSError as e:
-        return (False, f"could not write {settings_path.name}: {e}")
-    return (True, action)
+        return (
+            False,
+            f"could not write {settings_path.name}: {e}",
+            PI_MCP_ADAPTER_SPEC,
+        )
+    return (True, action, PI_MCP_ADAPTER_SPEC)
 
 
 def _retract_pi_adapter(
@@ -701,7 +741,7 @@ class PiInstaller(PlatformInstaller):
         # that had no effect on pi whatsoever.
         if not skip_global_steps:
             self._step("Declaring MCP adapter")
-            adapter_ok, adapter_msg = _declare_pi_adapter(
+            adapter_ok, adapter_msg, adapter_spec = _declare_pi_adapter(
                 self.config_dir, self.dry_run
             )
             if adapter_ok and not self.dry_run:
@@ -735,7 +775,7 @@ class PiInstaller(PlatformInstaller):
                     f"reads mcp.json"
                 )
             else:
-                msg = f"{msg} via {PI_MCP_ADAPTER_SPEC}"
+                msg = f"{msg} via {adapter_spec}"
 
             results.append(
                 InstallResult(
