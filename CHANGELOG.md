@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
+- `config_schema_entries()` in `installer/components/rule_modules.py`, which
+  built one boolean config-schema entry per preference module for the deleted
+  web admin UI's config schema. No production call site remained: the only
+  references in the tree were its own definition and the single test that
+  exercised it, which is removed with it. The preference modules themselves,
+  their `config_key` property, and `CONFIG_KEY_PREFIX` are unaffected -- they
+  are still read by `resolve_selection()` off recorded config values.
+
 - Dead installer surface for the web admin interface, whose implementation was
   deleted in `7a8e9ab1`. `render_admin_info` on `InstallerRenderer`,
   `RichRenderer`, and `PlainTextRenderer`, and the `render_admin_info` panel in
