@@ -71,6 +71,32 @@ async def drive_raw(middleware, raw_headers, path="/mcp"):
     return status, body
 
 
+async def drive_bytes(middleware, raw_headers, path="/mcp"):
+    """Drive an ASGI middleware with header values that are already bytes.
+
+    ASGI header values are bytes and need not be valid UTF-8; drive_raw() takes
+    str and so cannot express a value that fails to decode.
+    """
+    scope = {
+        "type": "http",
+        "path": path,
+        "method": "POST",
+        "headers": list(raw_headers),
+    }
+    sent = []
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message):
+        sent.append(message)
+
+    await middleware(scope, receive, send)
+    status = next(m["status"] for m in sent if m["type"] == "http.response.start")
+    body = b"".join(m.get("body", b"") for m in sent if m["type"] == "http.response.body")
+    return status, body
+
+
 @pytest.fixture
 def app():
     return OriginValidationMiddleware(_ok_app)
@@ -247,11 +273,106 @@ async def test_loopback_hosts_are_allowed(app, host):
 
 @pytest.mark.asyncio
 async def test_configured_bind_host_is_allowed(monkeypatch):
-    """Binding a non-loopback address must not lock the operator out."""
+    """A bind address that is also a reachable name is allowed under that name."""
     monkeypatch.setenv("SPELLBOOK_HOST", "192.168.1.50")
     app = OriginValidationMiddleware(_ok_app)
     status, _ = await drive(app, {"Host": "192.168.1.50:8765"})
     assert status == 200
+
+
+@pytest.mark.parametrize("bind", ["0.0.0.0", "::"])
+@pytest.mark.parametrize("host", ["192.168.1.5:8765", "myhost.local:8765"])
+@pytest.mark.asyncio
+async def test_wildcard_bind_rejects_remote_hosts(monkeypatch, bind, host):
+    """A wildcard bind fails CLOSED, and that is the intended behaviour.
+
+    "0.0.0.0" is a bind address, not a reachable name: a LAN client sends the
+    address or name it dialed ("Host: 192.168.1.5:8765"), never "Host: 0.0.0.0".
+    So under a wildcard bind only the loopback Host values remain allowed and
+    every remote client is refused.
+
+    This is pinned deliberately. The daemon is a local-only service; remote
+    access is out of scope, and SPELLBOOK_AUTH=disabled is the only supported
+    way to run that configuration. Do not "fix" this by widening the allowed
+    hostnames -- that would reopen the DNS-rebinding path this module closes.
+
+    test_configured_bind_host_is_allowed above uses 192.168.1.50, a bind value
+    that happens to also be a reachable name, so it cannot see this case.
+    """
+    monkeypatch.setenv("SPELLBOOK_HOST", bind)
+    app = OriginValidationMiddleware(_ok_app)
+    status, _ = await drive(app, {"Host": host})
+    assert status == 403
+
+
+@pytest.mark.asyncio
+async def test_wildcard_bind_still_serves_loopback(monkeypatch):
+    """The negative half: a wildcard bind does not lock out the local client."""
+    monkeypatch.setenv("SPELLBOOK_HOST", "0.0.0.0")
+    app = OriginValidationMiddleware(_ok_app)
+    status, _ = await drive(app, {"Host": "127.0.0.1:8765"})
+    assert status == 200
+
+
+@pytest.mark.asyncio
+async def test_host_userinfo_does_not_smuggle_a_hostname():
+    """urlsplit reads userinfo; a Host header has no such field.
+
+    "evil.com@localhost" parses to hostname "localhost" and would otherwise be
+    admitted under the attacker's own name.
+    """
+    app = OriginValidationMiddleware(_ok_app)
+    status, _ = await drive(app, {"Host": "evil.com@localhost:8765"})
+    assert status == 403
+
+
+# ---------------------------------------------------------------------------
+# Unparseable port: an unknown self-origin trusts nothing
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "origin",
+    ["http://localhost", "http://127.0.0.1", "http://localhost:8765"],
+)
+@pytest.mark.asyncio
+async def test_unparseable_port_trusts_no_origin(monkeypatch, origin):
+    """A None port would compare equal to a port-less Origin.
+
+    http://localhost is port 80 -- any local web server. It must not inherit the
+    daemon's own trust just because the daemon's port could not be parsed.
+    """
+    monkeypatch.setenv("SPELLBOOK_PORT", "not-a-port")
+    app = OriginValidationMiddleware(_ok_app)
+    status, _ = await drive(app, {"Host": "127.0.0.1", "Origin": origin})
+    assert status == 403
+
+
+@pytest.mark.asyncio
+async def test_unparseable_port_still_allows_explicit_allowlist(monkeypatch):
+    """Failing closed on the self-origin does not disable the allowlist."""
+    monkeypatch.setenv("SPELLBOOK_PORT", "not-a-port")
+    monkeypatch.setenv("SPELLBOOK_ALLOWED_ORIGINS", "http://localhost:3000")
+    app = OriginValidationMiddleware(_ok_app)
+    status, _ = await drive(app, {"Host": "127.0.0.1", "Origin": "http://localhost:3000"})
+    assert status == 200
+
+
+@pytest.mark.parametrize("header", ["origin", "host"])
+@pytest.mark.asyncio
+async def test_undecodable_header_bytes_are_rejected(header):
+    """Two distinct byte strings must not map onto one allowed value.
+
+    errors="ignore" dropped the invalid byte, so b"http://local\\xffhost:8765"
+    decoded to the daemon's own origin.
+    """
+    app = OriginValidationMiddleware(_ok_app)
+    if header == "origin":
+        raw = [(b"host", b"127.0.0.1:8765"), (b"origin", b"http://local\xffhost:8765")]
+    else:
+        raw = [(b"host", b"local\xffhost:8765")]
+    status, _ = await drive_bytes(app, raw)
+    assert status == 403
 
 
 @pytest.mark.asyncio
@@ -268,8 +389,8 @@ async def test_health_endpoint_allowed_from_loopback(app):
 
 
 @pytest.mark.asyncio
-async def test_non_http_scope_passes_through(app):
-    """Lifespan and websocket scopes are not HTTP requests."""
+async def test_lifespan_scope_passes_through(app):
+    """A lifespan scope is not a request and carries no headers to check."""
     seen = []
 
     async def lifespan_app(scope, receive, send):
@@ -278,6 +399,39 @@ async def test_non_http_scope_passes_through(app):
     mw = OriginValidationMiddleware(lifespan_app)
     await mw({"type": "lifespan"}, None, None)
     assert seen == ["lifespan"]
+
+
+def test_configured_app_has_no_websocket_route():
+    """The precondition that makes the scope skip safe.
+
+    __call__ skips every non-"http" scope, so a "websocket" scope reaches the
+    inner app unchecked. That is safe only while no websocket route exists: a
+    browser may open ws:// to loopback cross-origin with no CORS preflight and
+    no Origin enforcement of its own, so a ws route would be reachable from any
+    page the user visits.
+
+    Builds the real configured app the way spellbook/mcp/__main__.py does, not
+    a stand-in. If a WebSocketRoute is ever added, this test goes red and the
+    skip in __call__ must be narrowed before it can go green again.
+    """
+    from starlette.middleware import Middleware
+    from starlette.routing import WebSocketRoute
+
+    from spellbook.mcp.server import mcp, register_all_tools
+
+    register_all_tools()
+    app = mcp.http_app(
+        stateless_http=True,
+        middleware=[Middleware(OriginValidationMiddleware)],
+    )
+
+    def walk(routes):
+        for route in routes:
+            yield route
+            yield from walk(getattr(route, "routes", None) or [])
+
+    found = [r for r in walk(app.routes) if isinstance(r, WebSocketRoute)]
+    assert found == [], f"websocket routes bypass Origin validation: {found}"
 
 
 @pytest.mark.asyncio
@@ -289,8 +443,38 @@ async def test_disabled_auth_skips_validation(monkeypatch):
     assert status == 200
 
 
-def test_auth_is_disabled_exists():
-    assert callable(auth_is_disabled)
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("disabled", True),
+        ("DISABLED", True),
+        ("Disabled", True),
+        (" disabled ", False),
+        ("enabled", False),
+        ("0", False),
+        ("false", False),
+        ("", False),
+        (None, False),
+    ],
+)
+def test_auth_is_disabled_reads_the_value(monkeypatch, value, expected):
+    """Pins the values, not the signature.
+
+    An assertion that auth_is_disabled is callable passes against
+    ``def auth_is_disabled(): return True`` -- which disables validation
+    everywhere.
+
+    " disabled " is False on purpose: the value is compared unstripped, so a
+    padded value leaves validation ON. That is the safe direction, and pinning
+    it keeps a later "tidy-up" from silently turning it into a bypass.
+    """
+    monkeypatch.delenv("SPELLBOOK_MCP_AUTH", raising=False)
+    if value is None:
+        monkeypatch.delenv("SPELLBOOK_AUTH", raising=False)
+    else:
+        monkeypatch.setenv("SPELLBOOK_AUTH", value)
+
+    assert auth_is_disabled() is expected
 
 
 # ---------------------------------------------------------------------------
