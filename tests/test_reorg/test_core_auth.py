@@ -281,15 +281,23 @@ async def test_configured_bind_host_is_allowed(monkeypatch):
 
 
 @pytest.mark.parametrize("bind", ["0.0.0.0", "::"])
-@pytest.mark.parametrize("host", ["192.168.1.5:8765", "myhost.local:8765"])
+@pytest.mark.parametrize(
+    "host", ["192.168.1.5:8765", "myhost.local:8765", "0.0.0.0:8765", "[::]:8765"]
+)
 @pytest.mark.asyncio
 async def test_wildcard_bind_rejects_remote_hosts(monkeypatch, bind, host):
     """A wildcard bind fails CLOSED, and that is the intended behaviour.
 
     "0.0.0.0" is a bind address, not a reachable name: a LAN client sends the
-    address or name it dialed ("Host: 192.168.1.5:8765"), never "Host: 0.0.0.0".
-    So under a wildcard bind only the loopback Host values remain allowed and
-    every remote client is refused.
+    address or name it dialed ("Host: 192.168.1.5:8765"). So under a wildcard
+    bind only the loopback Host values remain allowed and every remote client
+    is refused.
+
+    "0.0.0.0:8765" is in the params on purpose. It is the one value the claim
+    above is actually about, and the one the code got wrong: _hostname_of
+    parses "0.0.0.0" to the truthy hostname "0.0.0.0", which was then added to
+    the allowed set and admitted, while "::" yields None and disappeared on its
+    own. Two values the same sentence described, behaving differently.
 
     This is pinned deliberately. The daemon is a local-only service; remote
     access is out of scope, and SPELLBOOK_AUTH=disabled is the only supported
@@ -326,6 +334,22 @@ async def test_host_userinfo_does_not_smuggle_a_hostname():
     assert status == 403
 
 
+@pytest.mark.asyncio
+async def test_origin_userinfo_does_not_smuggle_a_hostname():
+    """The same guard on the Origin side.
+
+    A browser strips userinfo when it serializes an Origin, so this is not
+    browser-reachable -- but the two paths resolving one ambiguity in opposite
+    directions is how the Host case survived.
+    """
+    app = OriginValidationMiddleware(_ok_app)
+    status, _ = await drive(
+        app,
+        {"Host": "127.0.0.1:8765", "Origin": "http://evil.com@localhost:8765"},
+    )
+    assert status == 403
+
+
 # ---------------------------------------------------------------------------
 # Unparseable port: an unknown self-origin trusts nothing
 # ---------------------------------------------------------------------------
@@ -341,6 +365,11 @@ async def test_unparseable_port_trusts_no_origin(monkeypatch, origin):
 
     http://localhost is port 80 -- any local web server. It must not inherit the
     daemon's own trust just because the daemon's port could not be parsed.
+
+    Only the port-less params discriminate: "http://localhost:8765" was refused
+    by the old code too, since 8765 never equalled the None port. It is kept to
+    record what failing closed costs -- with the port unknown, even the real
+    daemon origin is refused -- not as evidence of the fix.
     """
     monkeypatch.setenv("SPELLBOOK_PORT", "not-a-port")
     app = OriginValidationMiddleware(_ok_app)

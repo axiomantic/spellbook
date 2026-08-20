@@ -32,6 +32,11 @@ from starlette.responses import JSONResponse
 # come from software running locally under the user's own control.
 LOOPBACK_HOSTNAMES = frozenset({"localhost", "127.0.0.1", "::1"})
 
+# Bind addresses meaning "every interface". They name no host, so they never
+# belong in the allowed set. urlsplit reduces "[::]" to "::"; both spellings are
+# listed because this set is also compared against raw configuration values.
+WILDCARD_BIND_ADDRESSES = frozenset({"0.0.0.0", "::", "[::]"})
+
 
 def auth_is_disabled() -> bool:
     """Check if request validation is disabled via SPELLBOOK_AUTH=disabled."""
@@ -44,19 +49,20 @@ def _hostname_of(value: str) -> str | None:
     """Extract the hostname from an Origin URL or a Host header value.
 
     Returns None when the value is absent or cannot be parsed. Uses urlsplit so
-    that ports, IPv6 brackets, and userinfo are handled by the stdlib rather
-    than by string surgery -- ``localhost.evil.com`` must not read as localhost.
+    that ports and IPv6 bracket forms are handled by the stdlib rather than by
+    string surgery -- ``localhost.evil.com`` must not read as localhost.
     """
     if not value:
-        return None
-    # urlsplit reads userinfo, so "evil.com@localhost" would yield "localhost".
-    # A Host header has no userinfo field; anything carrying one is not a Host.
-    if "@" in value:
         return None
     try:
         # A bare Host header ("127.0.0.1:8765") is not a URL; the "//" prefix
         # makes urlsplit treat it as an authority.
         parsed = urlsplit(value if "//" in value else f"//{value}")
+        # urlsplit reads userinfo, so "evil.com@localhost" yields hostname
+        # "localhost" and would be admitted under the attacker's own name. A
+        # Host header has no userinfo field; anything carrying one is not a Host.
+        if parsed.username is not None or parsed.password is not None:
+            return None
         return parsed.hostname
     except ValueError:
         return None
@@ -75,6 +81,12 @@ def _origin_parts(value: str) -> tuple[str, str, int | None] | None:
     except ValueError:
         return None
     if not parsed.scheme or not parsed.hostname:
+        return None
+    # Mirrors the Host guard. A serialized Origin carries no userinfo -- a
+    # browser strips it -- so anything here that does was hand-built, and
+    # accepting it would make "http://evil.com@localhost:8765" read as the
+    # daemon's own origin.
+    if parsed.username is not None or parsed.password is not None:
         return None
     try:
         port = parsed.port
@@ -116,16 +128,22 @@ class OriginValidationMiddleware:
         self.allowed_hostnames = set(LOOPBACK_HOSTNAMES)
 
         # The daemon is a local-only service. A configured bind host is added
-        # here only when it is itself a reachable name; a wildcard bind
-        # ("0.0.0.0", "::") supplies no name a client can send, so under it only
-        # the loopback Host values remain allowed and a request arriving as
-        # "Host: 192.168.1.5:8765" is refused. That is intended: remote access
-        # is out of scope, and SPELLBOOK_AUTH=disabled is the only way to serve
-        # it. Failing closed here costs a deployment this project does not
-        # support; failing open would cost the rebinding defense.
+        # here only when it is itself a reachable name; a wildcard bind supplies
+        # no name a client can send, so under it only the loopback Host values
+        # remain allowed and a request arriving as "Host: 192.168.1.5:8765" is
+        # refused. That is intended: remote access is out of scope, and
+        # SPELLBOOK_AUTH=disabled is the only way to serve it. Failing closed
+        # here costs a deployment this project does not support; failing open
+        # would cost the rebinding defense.
         from spellbook.core.config import get_env
 
         bind_host = _hostname_of(get_env("HOST", "127.0.0.1") or "")
+        # A wildcard bind must be dropped explicitly rather than left to parse
+        # away. "::" yields no hostname and disappears on its own, but "0.0.0.0"
+        # parses to "0.0.0.0" -- a name a client can literally put in a Host
+        # header -- so it would otherwise be added here and admitted.
+        if bind_host in WILDCARD_BIND_ADDRESSES:
+            bind_host = None
         if bind_host:
             self.allowed_hostnames.add(bind_host.lower())
 
