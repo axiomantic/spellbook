@@ -10634,375 +10634,266 @@
 <a id="__codelineno-0-1731" name="__codelineno-0-1731" href="#__codelineno-0-1731"></a>
 <a id="__codelineno-0-1732" name="__codelineno-0-1732" href="#__codelineno-0-1732"></a><span class="gu">### Ledger Writes (workflow_state — accountability + compaction recovery)</span>
 <a id="__codelineno-0-1733" name="__codelineno-0-1733" href="#__codelineno-0-1733"></a>
-<a id="__codelineno-0-1734" name="__codelineno-0-1734" href="#__codelineno-0-1734"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-1735" name="__codelineno-0-1735" href="#__codelineno-0-1735"></a>develop records its own phase/gate progress in a persistent state file so the work
-<a id="__codelineno-0-1736" name="__codelineno-0-1736" href="#__codelineno-0-1736"></a>survives context compaction and a resumed session can re-assert the remaining
-<a id="__codelineno-0-1737" name="__codelineno-0-1737" href="#__codelineno-0-1737"></a>gates instead of declaring "done" prematurely. This is design §5 (C4).
-<a id="__codelineno-0-1738" name="__codelineno-0-1738" href="#__codelineno-0-1738"></a>
-<a id="__codelineno-0-1739" name="__codelineno-0-1739" href="#__codelineno-0-1739"></a><span class="gs">**MERGE-ONLY, NEVER overwrite.**</span> develop writes via deep-merge and MUST NEVER
-<a id="__codelineno-0-1740" name="__codelineno-0-1740" href="#__codelineno-0-1740"></a>use full overwrite. The hooks (<span class="sb">`_handle_pre_compact`</span>) write <span class="sb">`compaction_flag`</span> and
-<a id="__codelineno-0-1741" name="__codelineno-0-1741" href="#__codelineno-0-1741"></a><span class="sb">`stint_stack`</span> into the SAME state row; an overwrite from develop would clobber
-<a id="__codelineno-0-1742" name="__codelineno-0-1742" href="#__codelineno-0-1742"></a>them, and vice versa. <span class="sb">`_deep_merge`</span> preserves sibling keys, so disjoint-key writes
-<a id="__codelineno-0-1743" name="__codelineno-0-1743" href="#__codelineno-0-1743"></a>never lose a field (design §5.2/§5.5). An overwrite here is a Risk §13 regression
-<a id="__codelineno-0-1744" name="__codelineno-0-1744" href="#__codelineno-0-1744"></a>— do not do it.
-<a id="__codelineno-0-1745" name="__codelineno-0-1745" href="#__codelineno-0-1745"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-1746" name="__codelineno-0-1746" href="#__codelineno-0-1746"></a>
-<a id="__codelineno-0-1747" name="__codelineno-0-1747" href="#__codelineno-0-1747"></a><span class="gs">**The ledger shape (`develop_gate_ledger`, design §5.3):**</span>
-<a id="__codelineno-0-1748" name="__codelineno-0-1748" href="#__codelineno-0-1748"></a>
-<a id="__codelineno-0-1749" name="__codelineno-0-1749" href="#__codelineno-0-1749"></a><span class="sb">```typescript</span>
-<a id="__codelineno-0-1750" name="__codelineno-0-1750" href="#__codelineno-0-1750"></a><span class="nx">develop_gate_ledger</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-1751" name="__codelineno-0-1751" href="#__codelineno-0-1751"></a><span class="w">  </span><span class="nx">current_phase</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// "0" | "1" | "1.5" | "2" | "3" | "4" | "fast-path"</span>
-<a id="__codelineno-0-1752" name="__codelineno-0-1752" href="#__codelineno-0-1752"></a><span class="w">  </span><span class="nx">need_flags</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">needs_research</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w"> </span><span class="nx">needs_design</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="p">;</span><span class="w"> </span><span class="nx">needs_infrastructure</span><span class="o">:</span><span class="w"> </span><span class="kt">boolean</span><span class="w"> </span><span class="p">};</span>
-<a id="__codelineno-0-1753" name="__codelineno-0-1753" href="#__codelineno-0-1753"></a><span class="w">  </span><span class="nx">remaining_gates</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// NEWLINE-JOINED SCALAR (NOT a list), e.g.</span>
-<a id="__codelineno-0-1754" name="__codelineno-0-1754" href="#__codelineno-0-1754"></a><span class="w">                                </span><span class="c1">// "design review\ncode review\ngreen-mirage\ntest suite"</span>
-<a id="__codelineno-0-1755" name="__codelineno-0-1755" href="#__codelineno-0-1755"></a><span class="w">  </span><span class="nx">plan_pointer</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// absolute path to impl plan / design doc / understanding doc</span>
-<a id="__codelineno-0-1756" name="__codelineno-0-1756" href="#__codelineno-0-1756"></a><span class="w">  </span><span class="nx">ceremony</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w">                   </span><span class="c1">// the ONE-TIME ceremony selection (feature-config §0.8)</span>
-<a id="__codelineno-0-1757" name="__codelineno-0-1757" href="#__codelineno-0-1757"></a><span class="w">    </span><span class="nx">locked_at</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">          </span><span class="c1">// ISO 8601. Its PRESENCE is the lock. Never rewritten.</span>
-<a id="__codelineno-0-1758" name="__codelineno-0-1758" href="#__codelineno-0-1758"></a><span class="w">    </span><span class="nx">source</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">             </span><span class="c1">// "operator_selected" | "recommendation_accepted" | "default_full"</span>
-<a id="__codelineno-0-1759" name="__codelineno-0-1759" href="#__codelineno-0-1759"></a><span class="w">    </span><span class="nx">assessment</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// newline-joined "D{n} {dimension}={low|high}: {evidence}" (§0.7.5)</span>
-<a id="__codelineno-0-1760" name="__codelineno-0-1760" href="#__codelineno-0-1760"></a><span class="w">    </span><span class="nx">core</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">               </span><span class="c1">// newline-joined non-negotiable gates — never were selectable</span>
-<a id="__codelineno-0-1761" name="__codelineno-0-1761" href="#__codelineno-0-1761"></a><span class="w">    </span><span class="nx">selected</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">           </span><span class="c1">// newline-joined optional gates chosen to RUN</span>
-<a id="__codelineno-0-1762" name="__codelineno-0-1762" href="#__codelineno-0-1762"></a><span class="w">    </span><span class="nx">declined</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">           </span><span class="c1">// newline-joined optional gates chosen to SKIP (recorded, not absent)</span>
-<a id="__codelineno-0-1763" name="__codelineno-0-1763" href="#__codelineno-0-1763"></a><span class="w">    </span><span class="nx">promotions</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// newline-joined "{gate} &lt;- {reason} ({ISO ts})" escalation record</span>
-<a id="__codelineno-0-1764" name="__codelineno-0-1764" href="#__codelineno-0-1764"></a><span class="w">    </span><span class="nx">gate_position</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// "per_task" | "per_group", default "per_task". "per_group" is</span>
-<a id="__codelineno-0-1765" name="__codelineno-0-1765" href="#__codelineno-0-1765"></a><span class="w">                                 </span><span class="c1">// offered only when SESSION_PREFERENCES.task_granularity ==</span>
-<a id="__codelineno-0-1766" name="__codelineno-0-1766" href="#__codelineno-0-1766"></a><span class="w">                                 </span><span class="c1">// "capability" (feature-config §0.7 Step 2.5) — that answer is</span>
-<a id="__codelineno-0-1767" name="__codelineno-0-1767" href="#__codelineno-0-1767"></a><span class="w">                                 </span><span class="c1">// recorded in Phase 0, before any plan exists. Locked with the</span>
-<a id="__codelineno-0-1768" name="__codelineno-0-1768" href="#__codelineno-0-1768"></a><span class="w">                                 </span><span class="c1">// rest of ceremony at locked_at; never changed mid-run.</span>
-<a id="__codelineno-0-1769" name="__codelineno-0-1769" href="#__codelineno-0-1769"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-1770" name="__codelineno-0-1770" href="#__codelineno-0-1770"></a><span class="w">  </span><span class="nx">ceremony_history</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w">            </span><span class="c1">// archive of superseded `ceremony` blocks, keyed by ISO archive</span>
-<a id="__codelineno-0-1771" name="__codelineno-0-1771" href="#__codelineno-0-1771"></a><span class="w">                                  </span><span class="c1">// timestamp. Written only on a deliberate re-invocation over an</span>
-<a id="__codelineno-0-1772" name="__codelineno-0-1772" href="#__codelineno-0-1772"></a><span class="w">                                  </span><span class="c1">// existing ledger — the old `ceremony` block is archived here</span>
-<a id="__codelineno-0-1773" name="__codelineno-0-1773" href="#__codelineno-0-1773"></a><span class="w">                                  </span><span class="c1">// with a reason before a new Phase 0 sets `ceremony` fresh.</span>
-<a id="__codelineno-0-1774" name="__codelineno-0-1774" href="#__codelineno-0-1774"></a><span class="w">    </span><span class="p">[</span><span class="nx">archived_at</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-1775" name="__codelineno-0-1775" href="#__codelineno-0-1775"></a><span class="w">      </span><span class="nx">ceremony</span><span class="o">:</span><span class="w"> </span><span class="kt">object</span><span class="p">;</span><span class="w">          </span><span class="c1">// the full superseded ceremony block, verbatim</span>
-<a id="__codelineno-0-1776" name="__codelineno-0-1776" href="#__codelineno-0-1776"></a><span class="w">      </span><span class="nx">reason</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">            </span><span class="c1">// why the operator re-invoked and re-selected</span>
-<a id="__codelineno-0-1777" name="__codelineno-0-1777" href="#__codelineno-0-1777"></a><span class="w">      </span><span class="nx">archived_at</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">       </span><span class="c1">// ISO 8601; also written INTO the entry by archive_ceremony,</span>
-<a id="__codelineno-0-1778" name="__codelineno-0-1778" href="#__codelineno-0-1778"></a><span class="w">                                  </span><span class="c1">// duplicating the key this entry is stored under</span>
-<a id="__codelineno-0-1779" name="__codelineno-0-1779" href="#__codelineno-0-1779"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-1780" name="__codelineno-0-1780" href="#__codelineno-0-1780"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-1781" name="__codelineno-0-1781" href="#__codelineno-0-1781"></a><span class="w">  </span><span class="nx">blockers</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w">                    </span><span class="c1">// open blockers keyed by id; each row carries a type so the</span>
-<a id="__codelineno-0-1782" name="__codelineno-0-1782" href="#__codelineno-0-1782"></a><span class="w">                                  </span><span class="c1">// orchestrator can count them at phase/wave boundaries</span>
-<a id="__codelineno-0-1783" name="__codelineno-0-1783" href="#__codelineno-0-1783"></a><span class="w">    </span><span class="p">[</span><span class="nx">blocker_id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-1784" name="__codelineno-0-1784" href="#__codelineno-0-1784"></a><span class="w">      </span><span class="kr">type</span><span class="o">:</span><span class="w"> </span><span class="s2">"decision"</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">"work"</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">"external"</span><span class="p">;</span>
-<a id="__codelineno-0-1785" name="__codelineno-0-1785" href="#__codelineno-0-1785"></a><span class="w">      </span><span class="nx">description?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">      </span><span class="c1">// omitted by record_blocker when --description is blank or absent</span>
-<a id="__codelineno-0-1786" name="__codelineno-0-1786" href="#__codelineno-0-1786"></a><span class="w">      </span><span class="nx">opened_at</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">         </span><span class="c1">// ISO 8601</span>
-<a id="__codelineno-0-1787" name="__codelineno-0-1787" href="#__codelineno-0-1787"></a><span class="w">      </span><span class="nx">closed_at?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// ISO 8601. `_deep_merge` never deletes keys, so a blocker row</span>
-<a id="__codelineno-0-1788" name="__codelineno-0-1788" href="#__codelineno-0-1788"></a><span class="w">                                  </span><span class="c1">// is permanent once written — closure is a FIELD, never an</span>
-<a id="__codelineno-0-1789" name="__codelineno-0-1789" href="#__codelineno-0-1789"></a><span class="w">                                  </span><span class="c1">// absence. A blocker is OPEN iff it has no `closed_at`.</span>
-<a id="__codelineno-0-1790" name="__codelineno-0-1790" href="#__codelineno-0-1790"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-1791" name="__codelineno-0-1791" href="#__codelineno-0-1791"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-1792" name="__codelineno-0-1792" href="#__codelineno-0-1792"></a><span class="w">  </span><span class="nx">waves</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w">                      </span><span class="c1">// §24.6 wave-discipline check records, keyed by wave id</span>
-<a id="__codelineno-0-1793" name="__codelineno-0-1793" href="#__codelineno-0-1793"></a><span class="w">    </span><span class="p">[</span><span class="nx">wave_id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-1794" name="__codelineno-0-1794" href="#__codelineno-0-1794"></a><span class="w">      </span><span class="nx">section_24_6_check</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-1795" name="__codelineno-0-1795" href="#__codelineno-0-1795"></a><span class="w">        </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s2">"passed"</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">"failed"</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">"n_a"</span><span class="p">;</span>
-<a id="__codelineno-0-1796" name="__codelineno-0-1796" href="#__codelineno-0-1796"></a><span class="w">        </span><span class="nx">open_rows</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w">    </span><span class="c1">// the W&lt;n&gt;- ids still open; written on EVERY status, empty</span>
-<a id="__codelineno-0-1797" name="__codelineno-0-1797" href="#__codelineno-0-1797"></a><span class="w">                                </span><span class="c1">// included. `_deep_merge` replaces lists but never deletes</span>
-<a id="__codelineno-0-1798" name="__codelineno-0-1798" href="#__codelineno-0-1798"></a><span class="w">                                </span><span class="c1">// keys, so an omitted key cannot SHRINK -- a passing</span>
-<a id="__codelineno-0-1799" name="__codelineno-0-1799" href="#__codelineno-0-1799"></a><span class="w">                                </span><span class="c1">// re-record would inherit the prior failure's rows.</span>
-<a id="__codelineno-0-1800" name="__codelineno-0-1800" href="#__codelineno-0-1800"></a><span class="w">                                </span><span class="c1">// status=failed is REFUSED with an empty list.</span>
-<a id="__codelineno-0-1801" name="__codelineno-0-1801" href="#__codelineno-0-1801"></a><span class="w">        </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">     </span><span class="c1">// ISO 8601; the develop skill writes it on each entry</span>
-<a id="__codelineno-0-1802" name="__codelineno-0-1802" href="#__codelineno-0-1802"></a><span class="w">        </span><span class="nx">reason?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// free-form context; records WHY on status=n_a</span>
-<a id="__codelineno-0-1803" name="__codelineno-0-1803" href="#__codelineno-0-1803"></a><span class="w">      </span><span class="p">};</span>
-<a id="__codelineno-0-1804" name="__codelineno-0-1804" href="#__codelineno-0-1804"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-1805" name="__codelineno-0-1805" href="#__codelineno-0-1805"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-1806" name="__codelineno-0-1806" href="#__codelineno-0-1806"></a><span class="w">  </span><span class="nx">groups</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w">                     </span><span class="c1">// gate_position: per_group boundary-gate check records, keyed by</span>
-<a id="__codelineno-0-1807" name="__codelineno-0-1807" href="#__codelineno-0-1807"></a><span class="w">                                 </span><span class="c1">// group id. Without this record, "the boundary gate stack ran"</span>
-<a id="__codelineno-0-1808" name="__codelineno-0-1808" href="#__codelineno-0-1808"></a><span class="w">                                 </span><span class="c1">// and "it never ran" are indistinguishable — the same</span>
-<a id="__codelineno-0-1809" name="__codelineno-0-1809" href="#__codelineno-0-1809"></a><span class="w">                                 </span><span class="c1">// mechanism-vs-discipline gap §24.6 closes for waves.</span>
-<a id="__codelineno-0-1810" name="__codelineno-0-1810" href="#__codelineno-0-1810"></a><span class="w">    </span><span class="p">[</span><span class="nx">group_id</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-1811" name="__codelineno-0-1811" href="#__codelineno-0-1811"></a><span class="w">      </span><span class="nx">gate_stack</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-0-1812" name="__codelineno-0-1812" href="#__codelineno-0-1812"></a><span class="w">        </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s2">"passed"</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">"failed"</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="s2">"n_a"</span><span class="p">;</span>
-<a id="__codelineno-0-1813" name="__codelineno-0-1813" href="#__codelineno-0-1813"></a><span class="w">        </span><span class="nx">gates</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w">           </span><span class="c1">// the gates run at this group boundary</span>
-<a id="__codelineno-0-1814" name="__codelineno-0-1814" href="#__codelineno-0-1814"></a><span class="w">        </span><span class="nx">open_findings</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">[];</span><span class="w">   </span><span class="c1">// the findings still open at this boundary</span>
-<a id="__codelineno-0-1815" name="__codelineno-0-1815" href="#__codelineno-0-1815"></a><span class="w">                                   </span><span class="c1">// Both lists follow the `open_rows` shrink rule: written on</span>
-<a id="__codelineno-0-1816" name="__codelineno-0-1816" href="#__codelineno-0-1816"></a><span class="w">                                   </span><span class="c1">// EVERY status, empty included, because a conditionally</span>
-<a id="__codelineno-0-1817" name="__codelineno-0-1817" href="#__codelineno-0-1817"></a><span class="w">                                   </span><span class="c1">// written field can never shrink. A re-record that omitted</span>
-<a id="__codelineno-0-1818" name="__codelineno-0-1818" href="#__codelineno-0-1818"></a><span class="w">                                   </span><span class="c1">// them would retain stale findings on a pass, or a coverage</span>
-<a id="__codelineno-0-1819" name="__codelineno-0-1819" href="#__codelineno-0-1819"></a><span class="w">                                   </span><span class="c1">// claim the re-record never asserted.</span>
-<a id="__codelineno-0-1820" name="__codelineno-0-1820" href="#__codelineno-0-1820"></a><span class="w">                                   </span><span class="c1">// status=failed is REFUSED with an empty open_findings.</span>
-<a id="__codelineno-0-1821" name="__codelineno-0-1821" href="#__codelineno-0-1821"></a><span class="w">        </span><span class="nx">timestamp?</span><span class="o">:</span><span class="w"> </span><span class="kt">string</span><span class="p">;</span><span class="w">        </span><span class="c1">// ISO 8601</span>
-<a id="__codelineno-0-1822" name="__codelineno-0-1822" href="#__codelineno-0-1822"></a><span class="w">      </span><span class="p">};</span>
-<a id="__codelineno-0-1823" name="__codelineno-0-1823" href="#__codelineno-0-1823"></a><span class="w">    </span><span class="p">};</span>
-<a id="__codelineno-0-1824" name="__codelineno-0-1824" href="#__codelineno-0-1824"></a><span class="w">  </span><span class="p">};</span>
-<a id="__codelineno-0-1825" name="__codelineno-0-1825" href="#__codelineno-0-1825"></a><span class="p">}</span>
-<a id="__codelineno-0-1826" name="__codelineno-0-1826" href="#__codelineno-0-1826"></a><span class="sb">```</span>
-<a id="__codelineno-0-1827" name="__codelineno-0-1827" href="#__codelineno-0-1827"></a>
-<a id="__codelineno-0-1828" name="__codelineno-0-1828" href="#__codelineno-0-1828"></a><span class="gs">**Defect register rows carry a `class:` tag.**</span> The tag lives in the defect
-<a id="__codelineno-0-1829" name="__codelineno-0-1829" href="#__codelineno-0-1829"></a>register (plan/ledger-adjacent, not a <span class="sb">`develop_gate_ledger`</span> field), and the
-<a id="__codelineno-0-1830" name="__codelineno-0-1830" href="#__codelineno-0-1830"></a>orchestrator reads it to detect a recurring-defect shape: two open rows
-<a id="__codelineno-0-1831" name="__codelineno-0-1831" href="#__codelineno-0-1831"></a>sharing one <span class="sb">`class:`</span> tag.
+<a id="__codelineno-0-1734" name="__codelineno-0-1734" href="#__codelineno-0-1734"></a>develop records its own phase/gate progress in a persistent state file so the
+<a id="__codelineno-0-1735" name="__codelineno-0-1735" href="#__codelineno-0-1735"></a>work survives context compaction and a resumed session can re-assert the
+<a id="__codelineno-0-1736" name="__codelineno-0-1736" href="#__codelineno-0-1736"></a>remaining gates instead of declaring "done" prematurely (design §5, C4).
+<a id="__codelineno-0-1737" name="__codelineno-0-1737" href="#__codelineno-0-1737"></a>
+<a id="__codelineno-0-1738" name="__codelineno-0-1738" href="#__codelineno-0-1738"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-1739" name="__codelineno-0-1739" href="#__codelineno-0-1739"></a>**Writes go through <span class="sb">`scripts/develop_gate_ledger.py`</span>. MERGE-ONLY, NEVER
+<a id="__codelineno-0-1740" name="__codelineno-0-1740" href="#__codelineno-0-1740"></a>overwrite.** Hand-writing the JSON is a full overwrite and clobbers sibling keys
+<a id="__codelineno-0-1741" name="__codelineno-0-1741" href="#__codelineno-0-1741"></a>written by other develop writes or by the spellbook hooks' <span class="sb">`workflow_state`</span> row.
+<a id="__codelineno-0-1742" name="__codelineno-0-1742" href="#__codelineno-0-1742"></a>When the skill tells you to "write the ledger", it means call this CLI.
+<a id="__codelineno-0-1743" name="__codelineno-0-1743" href="#__codelineno-0-1743"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-1744" name="__codelineno-0-1744" href="#__codelineno-0-1744"></a>
+<a id="__codelineno-0-1745" name="__codelineno-0-1745" href="#__codelineno-0-1745"></a>| Need | Where |
+<a id="__codelineno-0-1746" name="__codelineno-0-1746" href="#__codelineno-0-1746"></a>|------|-------|
+<a id="__codelineno-0-1747" name="__codelineno-0-1747" href="#__codelineno-0-1747"></a>| The <span class="sb">`develop_gate_ledger`</span> shape — every field, and why each is a scalar, a map, or a list | <span class="sb">`skills/develop/references/ledger-cli.md`</span> |
+<a id="__codelineno-0-1748" name="__codelineno-0-1748" href="#__codelineno-0-1748"></a>| The CLI surface — every subcommand and flag | <span class="sb">`skills/develop/references/ledger-cli.md`</span> |
+<a id="__codelineno-0-1749" name="__codelineno-0-1749" href="#__codelineno-0-1749"></a>| Every refusal, its exit code, and the remedy it names | <span class="sb">`skills/develop/references/ledger-cli.md`</span> |
+<a id="__codelineno-0-1750" name="__codelineno-0-1750" href="#__codelineno-0-1750"></a>
+<a id="__codelineno-0-1751" name="__codelineno-0-1751" href="#__codelineno-0-1751"></a>Read <span class="sb">`skills/develop/references/ledger-cli.md`</span> before your first ledger write. The CLI REFUSES
+<a id="__codelineno-0-1752" name="__codelineno-0-1752" href="#__codelineno-0-1752"></a>a bare <span class="sb">`set`</span> on the six structured fields, refuses a blank or rewritten
+<a id="__codelineno-0-1753" name="__codelineno-0-1753" href="#__codelineno-0-1753"></a><span class="sb">`ceremony.locked_at`</span>, and refuses de-escalation of the locked gate set — a write
+<a id="__codelineno-0-1754" name="__codelineno-0-1754" href="#__codelineno-0-1754"></a>that assumes otherwise exits non-zero, and the reference is where the remedy is.
+<a id="__codelineno-0-1755" name="__codelineno-0-1755" href="#__codelineno-0-1755"></a>
+<a id="__codelineno-0-1756" name="__codelineno-0-1756" href="#__codelineno-0-1756"></a><span class="gu">### Ceremony Ledger</span>
+<a id="__codelineno-0-1757" name="__codelineno-0-1757" href="#__codelineno-0-1757"></a>
+<a id="__codelineno-0-1758" name="__codelineno-0-1758" href="#__codelineno-0-1758"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-1759" name="__codelineno-0-1759" href="#__codelineno-0-1759"></a><span class="sb">`ceremony`</span> is what makes a VARIABLE ceremony enforceable. The Phase Declaration's
+<a id="__codelineno-0-1760" name="__codelineno-0-1760" href="#__codelineno-0-1760"></a>"one row of the table" referent only ever worked because the table was fixed; the
+<a id="__codelineno-0-1761" name="__codelineno-0-1761" href="#__codelineno-0-1761"></a>recorded ceremony restores a fixed referent by writing the chosen set down at Phase 0
+<a id="__codelineno-0-1762" name="__codelineno-0-1762" href="#__codelineno-0-1762"></a>and binding every declaration to it (see Pre-Dispatch Ritual above).
+<a id="__codelineno-0-1763" name="__codelineno-0-1763" href="#__codelineno-0-1763"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-1764" name="__codelineno-0-1764" href="#__codelineno-0-1764"></a>
+<a id="__codelineno-0-1765" name="__codelineno-0-1765" href="#__codelineno-0-1765"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Written once, at Phase 0 completion**</span>, in the same state write that
+<a id="__codelineno-0-1766" name="__codelineno-0-1766" href="#__codelineno-0-1766"></a>  first writes the ledger. <span class="sb">`locked_at`</span> is set then and NEVER rewritten.
+<a id="__codelineno-0-1767" name="__codelineno-0-1767" href="#__codelineno-0-1767"></a><span class="k">-</span><span class="w"> </span><span class="gs">**`declined` is the load-bearing field.**</span> A gate the operator chose to skip is
+<a id="__codelineno-0-1768" name="__codelineno-0-1768" href="#__codelineno-0-1768"></a>  recorded as declined, not simply left out. Absence cannot distinguish "not chosen"
+<a id="__codelineno-0-1769" name="__codelineno-0-1769" href="#__codelineno-0-1769"></a>  from "not yet run"; a resumed session that cannot tell those apart will either
+<a id="__codelineno-0-1770" name="__codelineno-0-1770" href="#__codelineno-0-1770"></a>  re-run settled decisions or silently drop live gates. <span class="sb">`declined`</span> removes the
+<a id="__codelineno-0-1771" name="__codelineno-0-1771" href="#__codelineno-0-1771"></a>  ambiguity.
+<a id="__codelineno-0-1772" name="__codelineno-0-1772" href="#__codelineno-0-1772"></a><span class="k">-</span><span class="w"> </span><span class="gs">**`core` records what was never on the menu**</span>, so a resumed session can see that
+<a id="__codelineno-0-1773" name="__codelineno-0-1773" href="#__codelineno-0-1773"></a>  code review, green-mirage, the conditional test run, TDD-first for behavioral
+<a id="__codelineno-0-1774" name="__codelineno-0-1774" href="#__codelineno-0-1774"></a>  changes, and the Iron Law were not options that happened to be selected.
+<a id="__codelineno-0-1775" name="__codelineno-0-1775" href="#__codelineno-0-1775"></a><span class="k">-</span><span class="w"> </span><span class="gs">**`remaining_gates` stays the run-queue**</span> and is derived exactly as today from
+<a id="__codelineno-0-1776" name="__codelineno-0-1776" href="#__codelineno-0-1776"></a>  the Tiered Review Floor tables applied to
+<a id="__codelineno-0-1777" name="__codelineno-0-1777" href="#__codelineno-0-1777"></a>  (<span class="sb">`need_flags`</span>, <span class="sb">`current_phase`</span>, <span class="sb">`tests_exist`</span>, <span class="sb">`completed_gates`</span>), then filtered
+<a id="__codelineno-0-1778" name="__codelineno-0-1778" href="#__codelineno-0-1778"></a>  by removing anything in <span class="sb">`ceremony.declined`</span>. When <span class="sb">`declined`</span> is empty
+<a id="__codelineno-0-1779" name="__codelineno-0-1779" href="#__codelineno-0-1779"></a>  — the default path — the filter is the identity function and <span class="sb">`remaining_gates`</span> is
+<a id="__codelineno-0-1780" name="__codelineno-0-1780" href="#__codelineno-0-1780"></a>  byte-identical to today's scalar. The derivation itself is UNCHANGED.
+<a id="__codelineno-0-1781" name="__codelineno-0-1781" href="#__codelineno-0-1781"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Escalation only.**</span> <span class="sb">`ceremony.promotions`</span> records every declined → selected move
+<a id="__codelineno-0-1782" name="__codelineno-0-1782" href="#__codelineno-0-1782"></a>  with its reason; there is no recorded form for the reverse move because the reverse
+<a id="__codelineno-0-1783" name="__codelineno-0-1783" href="#__codelineno-0-1783"></a>  move is forbidden. Scope drift (Re-Flag and Continue) may set a need-flag and thereby
+<a id="__codelineno-0-1784" name="__codelineno-0-1784" href="#__codelineno-0-1784"></a>  ADD gates mid-run; it may never clear one.
+<a id="__codelineno-0-1785" name="__codelineno-0-1785" href="#__codelineno-0-1785"></a>
+<a id="__codelineno-0-1786" name="__codelineno-0-1786" href="#__codelineno-0-1786"></a><span class="sb">`remaining_gates`</span> is a <span class="gs">**newline-joined scalar string**</span>, never a list. <span class="sb">`_deep_merge`</span>
+<a id="__codelineno-0-1787" name="__codelineno-0-1787" href="#__codelineno-0-1787"></a>APPENDS lists but REPLACES scalars; a list would accumulate an append-forever
+<a id="__codelineno-0-1788" name="__codelineno-0-1788" href="#__codelineno-0-1788"></a>checklist that never shrinks as gates complete. develop writes the authoritative
+<a id="__codelineno-0-1789" name="__codelineno-0-1789" href="#__codelineno-0-1789"></a>FULL scalar on each transition; the merge replaces it wholesale (CRIT-1, design §5.5).
+<a id="__codelineno-0-1790" name="__codelineno-0-1790" href="#__codelineno-0-1790"></a><span class="sb">`current_phase`</span> uses the literal <span class="sb">`"fast-path"`</span> for the zero-flag path (NOT
+<a id="__codelineno-0-1791" name="__codelineno-0-1791" href="#__codelineno-0-1791"></a><span class="sb">`"direct"`</span>, NOT an auto-exit sentinel — develop stays resident).
+<a id="__codelineno-0-1792" name="__codelineno-0-1792" href="#__codelineno-0-1792"></a>
+<a id="__codelineno-0-1793" name="__codelineno-0-1793" href="#__codelineno-0-1793"></a><span class="gs">**Deriving `remaining_gates`:**</span> develop computes the scalar itself from four
+<a id="__codelineno-0-1794" name="__codelineno-0-1794" href="#__codelineno-0-1794"></a>inputs — <span class="sb">`need_flags`</span>, <span class="sb">`current_phase`</span>, <span class="sb">`tests_exist`</span>, <span class="sb">`completed_gates`</span> —
+<a id="__codelineno-0-1795" name="__codelineno-0-1795" href="#__codelineno-0-1795"></a>against the tiered floor (design §3.2), flag-gated depth (§3.3), the TDD-first
+<a id="__codelineno-0-1796" name="__codelineno-0-1796" href="#__codelineno-0-1796"></a>waiver on the fast path (§3.4), and phase ordering (§2.1). **Those tables are the
+<a id="__codelineno-0-1797" name="__codelineno-0-1797" href="#__codelineno-0-1797"></a>single source of truth and they have no executable form**: nothing in this repo
+<a id="__codelineno-0-1798" name="__codelineno-0-1798" href="#__codelineno-0-1798"></a>derives the gate set, so a mis-derivation fails silently and only a reader of the
+<a id="__codelineno-0-1799" name="__codelineno-0-1799" href="#__codelineno-0-1799"></a>ledger will catch it. <span class="sb">`tests_exist`</span> is develop's own judgement from its
+<a id="__codelineno-0-1800" name="__codelineno-0-1800" href="#__codelineno-0-1800"></a>touched-file analysis (do existing tests cover the files about to be edited?). On
+<a id="__codelineno-0-1801" name="__codelineno-0-1801" href="#__codelineno-0-1801"></a>the fast path with no covering tests, emit the explicit sentinel line
+<a id="__codelineno-0-1802" name="__codelineno-0-1802" href="#__codelineno-0-1802"></a><span class="sb">`"test suite (n/a — no tests cover touched code)"`</span> inside the scalar so "not
+<a id="__codelineno-0-1803" name="__codelineno-0-1803" href="#__codelineno-0-1803"></a>applicable" is never silently dropped. As each gate completes, re-derive with
+<a id="__codelineno-0-1804" name="__codelineno-0-1804" href="#__codelineno-0-1804"></a>that gate in <span class="sb">`completed_gates`</span> (pruning = REPLACE the scalar with it removed).
+<a id="__codelineno-0-1805" name="__codelineno-0-1805" href="#__codelineno-0-1805"></a><span class="sb">`scripts/develop_gate_ledger.py`</span> RECORDS the derived scalar; it does not compute
+<a id="__codelineno-0-1806" name="__codelineno-0-1806" href="#__codelineno-0-1806"></a>it.
+<a id="__codelineno-0-1807" name="__codelineno-0-1807" href="#__codelineno-0-1807"></a>
+<a id="__codelineno-0-1808" name="__codelineno-0-1808" href="#__codelineno-0-1808"></a><span class="gs">**Transition points where develop writes (design §5.4):**</span>
+<a id="__codelineno-0-1809" name="__codelineno-0-1809" href="#__codelineno-0-1809"></a>
+<a id="__codelineno-0-1810" name="__codelineno-0-1810" href="#__codelineno-0-1810"></a><span class="k">1.</span> <span class="gs">**At develop ENTRY (before the Phase-0 wizard):**</span> write ONLY
+<a id="__codelineno-0-1811" name="__codelineno-0-1811" href="#__codelineno-0-1811"></a>   state write: <span class="sb">`{"active_skill": "develop", "skill_phase": "0"}`</span>.
+<a id="__codelineno-0-1812" name="__codelineno-0-1812" href="#__codelineno-0-1812"></a>   This marks ownership + phase. It does <span class="gs">**NOT**</span> write <span class="sb">`develop_gate_ledger`</span> yet.
+<a id="__codelineno-0-1813" name="__codelineno-0-1813" href="#__codelineno-0-1813"></a>   This split is load-bearing for the accountability nudge (design §6.1, IMP-1):
+<a id="__codelineno-0-1814" name="__codelineno-0-1814" href="#__codelineno-0-1814"></a>   writing the ledger at entry would make the nudge unfireable; not gating the
+<a id="__codelineno-0-1815" name="__codelineno-0-1815" href="#__codelineno-0-1815"></a>   nudge on "past Phase 0" would make it false-fire on every wizard prompt.
+<a id="__codelineno-0-1816" name="__codelineno-0-1816" href="#__codelineno-0-1816"></a><span class="k">2.</span> <span class="gs">**At Phase 0 completion (flags resolved AND ceremony locked):**</span> write the ledger for
+<a id="__codelineno-0-1817" name="__codelineno-0-1817" href="#__codelineno-0-1817"></a>   the FIRST time —
+<a id="__codelineno-0-1818" name="__codelineno-0-1818" href="#__codelineno-0-1818"></a>   state write: <span class="sb">`{"develop_gate_ledger": {need_flags, current_phase: &lt;next&gt;, remaining_gates: &lt;derived scalar, minus ceremony.declined&gt;, plan_pointer: "", ceremony: {locked_at, source, assessment, core, selected, declined, promotions: ""}}, "active_skill": "develop", "skill_phase": &lt;next&gt;}`</span>.
+<a id="__codelineno-0-1819" name="__codelineno-0-1819" href="#__codelineno-0-1819"></a>   Advance <span class="sb">`skill_phase`</span> past <span class="sb">`"0"`</span>. This is the ONLY write that sets <span class="sb">`locked_at`</span>.
+<a id="__codelineno-0-1820" name="__codelineno-0-1820" href="#__codelineno-0-1820"></a><span class="k">3.</span> **At each subsequent phase entry (1, 1.5, 2, 3, 4) and each in-phase gate
+<a id="__codelineno-0-1821" name="__codelineno-0-1821" href="#__codelineno-0-1821"></a>   completion:**
+<a id="__codelineno-0-1822" name="__codelineno-0-1822" href="#__codelineno-0-1822"></a>   state write: <span class="sb">`{"develop_gate_ledger": {current_phase: "&lt;phase&gt;", need_flags, remaining_gates: &lt;re-derived scalar&gt;, plan_pointer: &lt;path&gt;}, "active_skill": "develop", "skill_phase": "&lt;phase&gt;"}`</span>.
+<a id="__codelineno-0-1823" name="__codelineno-0-1823" href="#__codelineno-0-1823"></a>   Re-derive <span class="sb">`remaining_gates`</span> as the full scalar with completed gates pruned —
+<a id="__codelineno-0-1824" name="__codelineno-0-1824" href="#__codelineno-0-1824"></a>   REPLACE the whole value, never append (CRIT-1).
+<a id="__codelineno-0-1825" name="__codelineno-0-1825" href="#__codelineno-0-1825"></a><span class="k">4.</span> <span class="gs">**At fast-path entry (zero flags):**</span> <span class="sb">`current_phase="fast-path"`</span>,
+<a id="__codelineno-0-1826" name="__codelineno-0-1826" href="#__codelineno-0-1826"></a>   <span class="sb">`remaining_gates`</span> = the lighter-floor scalar from the same derivation
+<a id="__codelineno-0-1827" name="__codelineno-0-1827" href="#__codelineno-0-1827"></a>   (<span class="sb">`"code review\ngreen-mirage"`</span> plus <span class="sb">`"test suite"`</span> when <span class="sb">`tests_exist`</span>, else the
+<a id="__codelineno-0-1828" name="__codelineno-0-1828" href="#__codelineno-0-1828"></a>   n/a sentinel; TDD-first omitted per the §3.4 waiver). develop STAYS RESIDENT.
+<a id="__codelineno-0-1829" name="__codelineno-0-1829" href="#__codelineno-0-1829"></a>
+<a id="__codelineno-0-1830" name="__codelineno-0-1830" href="#__codelineno-0-1830"></a>Each write is a single MCP call from the main orchestrator context. The
+<a id="__codelineno-0-1831" name="__codelineno-0-1831" href="#__codelineno-0-1831"></a><span class="sb">`current_phase`</span>/<span class="sb">`skill_phase`</span> you write must agree with the human handoff (above).
 <a id="__codelineno-0-1832" name="__codelineno-0-1832" href="#__codelineno-0-1832"></a>
-<a id="__codelineno-0-1833" name="__codelineno-0-1833" href="#__codelineno-0-1833"></a><span class="gs">**Writes go through `scripts/develop_gate_ledger.py`.**</span> The Python
-<a id="__codelineno-0-1834" name="__codelineno-0-1834" href="#__codelineno-0-1834"></a>implementation is the only path that respects the merge contract --
-<a id="__codelineno-0-1835" name="__codelineno-0-1835" href="#__codelineno-0-1835"></a>it deep-merges, and refuses <span class="sb">`section_24_6_check.status=failed`</span> without
-<a id="__codelineno-0-1836" name="__codelineno-0-1836" href="#__codelineno-0-1836"></a>open rows. Ordinary <span class="sb">`set`</span> refuses to rewrite <span class="sb">`ceremony.locked_at`</span>; the
-<a id="__codelineno-0-1837" name="__codelineno-0-1837" href="#__codelineno-0-1837"></a>ONLY sanctioned path that supersedes a lock is <span class="sb">`archive-ceremony`</span>, which
-<a id="__codelineno-0-1838" name="__codelineno-0-1838" href="#__codelineno-0-1838"></a>archives the old <span class="sb">`ceremony`</span> block into <span class="sb">`ceremony_history`</span> before writing
-<a id="__codelineno-0-1839" name="__codelineno-0-1839" href="#__codelineno-0-1839"></a>a new one, and cannot run without a <span class="sb">`--reason`</span>. Hand-writing the
-<a id="__codelineno-0-1840" name="__codelineno-0-1840" href="#__codelineno-0-1840"></a>JSON is a full overwrite and will clobber sibling keys written by
-<a id="__codelineno-0-1841" name="__codelineno-0-1841" href="#__codelineno-0-1841"></a>other develop writes or by the spellbook hooks' <span class="sb">`workflow_state`</span> row;
-<a id="__codelineno-0-1842" name="__codelineno-0-1842" href="#__codelineno-0-1842"></a>do not do it. The CLI surface is intentionally narrow:
-<a id="__codelineno-0-1843" name="__codelineno-0-1843" href="#__codelineno-0-1843"></a>
-<a id="__codelineno-0-1844" name="__codelineno-0-1844" href="#__codelineno-0-1844"></a><span class="k">-</span><span class="w"> </span><span class="sb">`python3 scripts/develop_gate_ledger.py show [--field ceremony.locked_at]`</span>
-<a id="__codelineno-0-1845" name="__codelineno-0-1845" href="#__codelineno-0-1845"></a><span class="k">-</span><span class="w"> </span><span class="sb">`python3 scripts/develop_gate_ledger.py set &lt;field&gt; &lt;value&gt;`</span> (top-level or <span class="sb">`ceremony.*`</span>,
-<a id="__codelineno-0-1846" name="__codelineno-0-1846" href="#__codelineno-0-1846"></a>  including <span class="sb">`set ceremony.gate_position per_task|per_group`</span> — refused once <span class="sb">`locked_at`</span>
-<a id="__codelineno-0-1847" name="__codelineno-0-1847" href="#__codelineno-0-1847"></a>  is set and a different position is already recorded; use <span class="sb">`archive-ceremony`</span> to reposition)
-<a id="__codelineno-0-1848" name="__codelineno-0-1848" href="#__codelineno-0-1848"></a><span class="k">-</span><span class="w"> </span><span class="sb">`python3 scripts/develop_gate_ledger.py wave-discipline &lt;wave_id&gt; --status {passed|failed|n_a} [--open-rows W3a-2,W3a-5] [--timestamp ISO]`</span>
-<a id="__codelineno-0-1849" name="__codelineno-0-1849" href="#__codelineno-0-1849"></a><span class="k">-</span><span class="w"> </span><span class="sb">`python3 scripts/develop_gate_ledger.py archive-ceremony --reason "&lt;text&gt;" [--timestamp ISO]`</span>
-<a id="__codelineno-0-1850" name="__codelineno-0-1850" href="#__codelineno-0-1850"></a><span class="k">-</span><span class="w"> </span><span class="sb">`python3 scripts/develop_gate_ledger.py blocker &lt;id&gt; --type decision|work|external [--description "&lt;text&gt;"] [--close]`</span>
-<a id="__codelineno-0-1851" name="__codelineno-0-1851" href="#__codelineno-0-1851"></a><span class="k">-</span><span class="w"> </span><span class="sb">`python3 scripts/develop_gate_ledger.py group-gate &lt;group_id&gt; --status passed|failed|n_a [--gates ...] [--open-findings ...]`</span> —
-<a id="__codelineno-0-1852" name="__codelineno-0-1852" href="#__codelineno-0-1852"></a>  writes <span class="sb">`develop_gate_ledger.groups.&lt;group_id&gt;.gate_stack`</span>; <span class="sb">`status=failed`</span> requires
-<a id="__codelineno-0-1853" name="__codelineno-0-1853" href="#__codelineno-0-1853"></a>  <span class="sb">`--open-findings`</span>, mirroring the wave-discipline guard.
-<a id="__codelineno-0-1854" name="__codelineno-0-1854" href="#__codelineno-0-1854"></a>
-<a id="__codelineno-0-1855" name="__codelineno-0-1855" href="#__codelineno-0-1855"></a>When the skill tells you to "write the ledger", it means call this
-<a id="__codelineno-0-1856" name="__codelineno-0-1856" href="#__codelineno-0-1856"></a>CLI, not write the JSON yourself. The contract is enforced in Python
-<a id="__codelineno-0-1857" name="__codelineno-0-1857" href="#__codelineno-0-1857"></a>because it is enforced in Python; the LLM-side discipline is just
-<a id="__codelineno-0-1858" name="__codelineno-0-1858" href="#__codelineno-0-1858"></a>the trigger.
-<a id="__codelineno-0-1859" name="__codelineno-0-1859" href="#__codelineno-0-1859"></a>
-<a id="__codelineno-0-1860" name="__codelineno-0-1860" href="#__codelineno-0-1860"></a>**Every <span class="sb">`ceremony`</span> field is a newline-joined SCALAR, for the same CRIT-1 reason as
-<a id="__codelineno-0-1861" name="__codelineno-0-1861" href="#__codelineno-0-1861"></a><span class="sb">`remaining_gates`</span>: <span class="sb">`_deep_merge`</span> APPENDS lists but REPLACES scalars, so a list-valued
-<a id="__codelineno-0-1862" name="__codelineno-0-1862" href="#__codelineno-0-1862"></a><span class="sb">`declined`</span> would accumulate forever and a list-valued <span class="sb">`selected`</span> could never shrink.
-<a id="__codelineno-0-1863" name="__codelineno-0-1863" href="#__codelineno-0-1863"></a>Write each as the authoritative full scalar; the merge replaces it wholesale.**
-<a id="__codelineno-0-1864" name="__codelineno-0-1864" href="#__codelineno-0-1864"></a>
-<a id="__codelineno-0-1865" name="__codelineno-0-1865" href="#__codelineno-0-1865"></a><span class="gu">### Ceremony Ledger</span>
-<a id="__codelineno-0-1866" name="__codelineno-0-1866" href="#__codelineno-0-1866"></a>
-<a id="__codelineno-0-1867" name="__codelineno-0-1867" href="#__codelineno-0-1867"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-1868" name="__codelineno-0-1868" href="#__codelineno-0-1868"></a><span class="sb">`ceremony`</span> is what makes a VARIABLE ceremony enforceable. The Phase Declaration's
-<a id="__codelineno-0-1869" name="__codelineno-0-1869" href="#__codelineno-0-1869"></a>"one row of the table" referent only ever worked because the table was fixed; the
-<a id="__codelineno-0-1870" name="__codelineno-0-1870" href="#__codelineno-0-1870"></a>recorded ceremony restores a fixed referent by writing the chosen set down at Phase 0
-<a id="__codelineno-0-1871" name="__codelineno-0-1871" href="#__codelineno-0-1871"></a>and binding every declaration to it (see Pre-Dispatch Ritual above).
-<a id="__codelineno-0-1872" name="__codelineno-0-1872" href="#__codelineno-0-1872"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-1873" name="__codelineno-0-1873" href="#__codelineno-0-1873"></a>
-<a id="__codelineno-0-1874" name="__codelineno-0-1874" href="#__codelineno-0-1874"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Written once, at Phase 0 completion**</span>, in the same state write that
-<a id="__codelineno-0-1875" name="__codelineno-0-1875" href="#__codelineno-0-1875"></a>  first writes the ledger. <span class="sb">`locked_at`</span> is set then and NEVER rewritten.
-<a id="__codelineno-0-1876" name="__codelineno-0-1876" href="#__codelineno-0-1876"></a><span class="k">-</span><span class="w"> </span><span class="gs">**`declined` is the load-bearing field.**</span> A gate the operator chose to skip is
-<a id="__codelineno-0-1877" name="__codelineno-0-1877" href="#__codelineno-0-1877"></a>  recorded as declined, not simply left out. Absence cannot distinguish "not chosen"
-<a id="__codelineno-0-1878" name="__codelineno-0-1878" href="#__codelineno-0-1878"></a>  from "not yet run"; a resumed session that cannot tell those apart will either
-<a id="__codelineno-0-1879" name="__codelineno-0-1879" href="#__codelineno-0-1879"></a>  re-run settled decisions or silently drop live gates. <span class="sb">`declined`</span> removes the
-<a id="__codelineno-0-1880" name="__codelineno-0-1880" href="#__codelineno-0-1880"></a>  ambiguity.
-<a id="__codelineno-0-1881" name="__codelineno-0-1881" href="#__codelineno-0-1881"></a><span class="k">-</span><span class="w"> </span><span class="gs">**`core` records what was never on the menu**</span>, so a resumed session can see that
-<a id="__codelineno-0-1882" name="__codelineno-0-1882" href="#__codelineno-0-1882"></a>  code review, green-mirage, the conditional test run, TDD-first for behavioral
-<a id="__codelineno-0-1883" name="__codelineno-0-1883" href="#__codelineno-0-1883"></a>  changes, and the Iron Law were not options that happened to be selected.
-<a id="__codelineno-0-1884" name="__codelineno-0-1884" href="#__codelineno-0-1884"></a><span class="k">-</span><span class="w"> </span><span class="gs">**`remaining_gates` stays the run-queue**</span> and is derived exactly as today from
-<a id="__codelineno-0-1885" name="__codelineno-0-1885" href="#__codelineno-0-1885"></a>  the Tiered Review Floor tables applied to
-<a id="__codelineno-0-1886" name="__codelineno-0-1886" href="#__codelineno-0-1886"></a>  (<span class="sb">`need_flags`</span>, <span class="sb">`current_phase`</span>, <span class="sb">`tests_exist`</span>, <span class="sb">`completed_gates`</span>), then filtered
-<a id="__codelineno-0-1887" name="__codelineno-0-1887" href="#__codelineno-0-1887"></a>  by removing anything in <span class="sb">`ceremony.declined`</span>. When <span class="sb">`declined`</span> is empty
-<a id="__codelineno-0-1888" name="__codelineno-0-1888" href="#__codelineno-0-1888"></a>  — the default path — the filter is the identity function and <span class="sb">`remaining_gates`</span> is
-<a id="__codelineno-0-1889" name="__codelineno-0-1889" href="#__codelineno-0-1889"></a>  byte-identical to today's scalar. The derivation itself is UNCHANGED.
-<a id="__codelineno-0-1890" name="__codelineno-0-1890" href="#__codelineno-0-1890"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Escalation only.**</span> <span class="sb">`ceremony.promotions`</span> records every declined → selected move
-<a id="__codelineno-0-1891" name="__codelineno-0-1891" href="#__codelineno-0-1891"></a>  with its reason; there is no recorded form for the reverse move because the reverse
-<a id="__codelineno-0-1892" name="__codelineno-0-1892" href="#__codelineno-0-1892"></a>  move is forbidden. Scope drift (Re-Flag and Continue) may set a need-flag and thereby
-<a id="__codelineno-0-1893" name="__codelineno-0-1893" href="#__codelineno-0-1893"></a>  ADD gates mid-run; it may never clear one.
-<a id="__codelineno-0-1894" name="__codelineno-0-1894" href="#__codelineno-0-1894"></a>
-<a id="__codelineno-0-1895" name="__codelineno-0-1895" href="#__codelineno-0-1895"></a><span class="sb">`remaining_gates`</span> is a <span class="gs">**newline-joined scalar string**</span>, never a list. <span class="sb">`_deep_merge`</span>
-<a id="__codelineno-0-1896" name="__codelineno-0-1896" href="#__codelineno-0-1896"></a>APPENDS lists but REPLACES scalars; a list would accumulate an append-forever
-<a id="__codelineno-0-1897" name="__codelineno-0-1897" href="#__codelineno-0-1897"></a>checklist that never shrinks as gates complete. develop writes the authoritative
-<a id="__codelineno-0-1898" name="__codelineno-0-1898" href="#__codelineno-0-1898"></a>FULL scalar on each transition; the merge replaces it wholesale (CRIT-1, design §5.5).
-<a id="__codelineno-0-1899" name="__codelineno-0-1899" href="#__codelineno-0-1899"></a><span class="sb">`current_phase`</span> uses the literal <span class="sb">`"fast-path"`</span> for the zero-flag path (NOT
-<a id="__codelineno-0-1900" name="__codelineno-0-1900" href="#__codelineno-0-1900"></a><span class="sb">`"direct"`</span>, NOT an auto-exit sentinel — develop stays resident).
-<a id="__codelineno-0-1901" name="__codelineno-0-1901" href="#__codelineno-0-1901"></a>
-<a id="__codelineno-0-1902" name="__codelineno-0-1902" href="#__codelineno-0-1902"></a><span class="gs">**Deriving `remaining_gates`:**</span> develop computes the scalar itself from four
-<a id="__codelineno-0-1903" name="__codelineno-0-1903" href="#__codelineno-0-1903"></a>inputs — <span class="sb">`need_flags`</span>, <span class="sb">`current_phase`</span>, <span class="sb">`tests_exist`</span>, <span class="sb">`completed_gates`</span> —
-<a id="__codelineno-0-1904" name="__codelineno-0-1904" href="#__codelineno-0-1904"></a>against the tiered floor (design §3.2), flag-gated depth (§3.3), the TDD-first
-<a id="__codelineno-0-1905" name="__codelineno-0-1905" href="#__codelineno-0-1905"></a>waiver on the fast path (§3.4), and phase ordering (§2.1). **Those tables are the
-<a id="__codelineno-0-1906" name="__codelineno-0-1906" href="#__codelineno-0-1906"></a>single source of truth and they have no executable form**: nothing in this repo
-<a id="__codelineno-0-1907" name="__codelineno-0-1907" href="#__codelineno-0-1907"></a>derives the gate set, so a mis-derivation fails silently and only a reader of the
-<a id="__codelineno-0-1908" name="__codelineno-0-1908" href="#__codelineno-0-1908"></a>ledger will catch it. <span class="sb">`tests_exist`</span> is develop's own judgement from its
-<a id="__codelineno-0-1909" name="__codelineno-0-1909" href="#__codelineno-0-1909"></a>touched-file analysis (do existing tests cover the files about to be edited?). On
-<a id="__codelineno-0-1910" name="__codelineno-0-1910" href="#__codelineno-0-1910"></a>the fast path with no covering tests, emit the explicit sentinel line
-<a id="__codelineno-0-1911" name="__codelineno-0-1911" href="#__codelineno-0-1911"></a><span class="sb">`"test suite (n/a — no tests cover touched code)"`</span> inside the scalar so "not
-<a id="__codelineno-0-1912" name="__codelineno-0-1912" href="#__codelineno-0-1912"></a>applicable" is never silently dropped. As each gate completes, re-derive with
-<a id="__codelineno-0-1913" name="__codelineno-0-1913" href="#__codelineno-0-1913"></a>that gate in <span class="sb">`completed_gates`</span> (pruning = REPLACE the scalar with it removed).
-<a id="__codelineno-0-1914" name="__codelineno-0-1914" href="#__codelineno-0-1914"></a><span class="sb">`scripts/develop_gate_ledger.py`</span> RECORDS the derived scalar; it does not compute
-<a id="__codelineno-0-1915" name="__codelineno-0-1915" href="#__codelineno-0-1915"></a>it.
+<a id="__codelineno-0-1833" name="__codelineno-0-1833" href="#__codelineno-0-1833"></a><span class="gu">### Session Handoff Protocol</span>
+<a id="__codelineno-0-1834" name="__codelineno-0-1834" href="#__codelineno-0-1834"></a>
+<a id="__codelineno-0-1835" name="__codelineno-0-1835" href="#__codelineno-0-1835"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-1836" name="__codelineno-0-1836" href="#__codelineno-0-1836"></a>Long develop sessions hit context limits. The skill assumes one session
+<a id="__codelineno-0-1837" name="__codelineno-0-1837" href="#__codelineno-0-1837"></a>completes all phases; reality is that large features often span sessions.
+<a id="__codelineno-0-1838" name="__codelineno-0-1838" href="#__codelineno-0-1838"></a>Without a standard handoff, the next session re-discovers state and drifts.
+<a id="__codelineno-0-1839" name="__codelineno-0-1839" href="#__codelineno-0-1839"></a>The <span class="sb">`develop_gate_ledger`</span> written to workflow_state (see Ledger Writes below)
+<a id="__codelineno-0-1840" name="__codelineno-0-1840" href="#__codelineno-0-1840"></a>is the machine-readable counterpart to this human handoff; both must agree.
+<a id="__codelineno-0-1841" name="__codelineno-0-1841" href="#__codelineno-0-1841"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-1842" name="__codelineno-0-1842" href="#__codelineno-0-1842"></a>
+<a id="__codelineno-0-1843" name="__codelineno-0-1843" href="#__codelineno-0-1843"></a><span class="gs">**When to write a handoff:**</span> before context compaction, when the operator
+<a id="__codelineno-0-1844" name="__codelineno-0-1844" href="#__codelineno-0-1844"></a>pauses an in-flight develop session, or whenever the orchestrator estimates
+<a id="__codelineno-0-1845" name="__codelineno-0-1845" href="#__codelineno-0-1845"></a>remaining context cannot complete the current phase plus the next gate.
+<a id="__codelineno-0-1846" name="__codelineno-0-1846" href="#__codelineno-0-1846"></a>
+<a id="__codelineno-0-1847" name="__codelineno-0-1847" href="#__codelineno-0-1847"></a><span class="gs">**Where:**</span> <span class="sb">`~/.local/spellbook/handoffs/YYYY-MM-DD-&lt;feature-slug&gt;.md`</span>
+<a id="__codelineno-0-1848" name="__codelineno-0-1848" href="#__codelineno-0-1848"></a>(or <span class="sb">`&lt;project_root&gt;/HANDOFF.md`</span> if the operator established that convention).
+<a id="__codelineno-0-1849" name="__codelineno-0-1849" href="#__codelineno-0-1849"></a>
+<a id="__codelineno-0-1850" name="__codelineno-0-1850" href="#__codelineno-0-1850"></a><span class="gs">**Schema:**</span>
+<a id="__codelineno-0-1851" name="__codelineno-0-1851" href="#__codelineno-0-1851"></a>
+<a id="__codelineno-0-1852" name="__codelineno-0-1852" href="#__codelineno-0-1852"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-1853" name="__codelineno-0-1853" href="#__codelineno-0-1853"></a><span class="gh"># Handoff: &lt;feature-slug&gt;</span>
+<a id="__codelineno-0-1854" name="__codelineno-0-1854" href="#__codelineno-0-1854"></a>Generated: YYYY-MM-DD HH:MM
+<a id="__codelineno-0-1855" name="__codelineno-0-1855" href="#__codelineno-0-1855"></a>Session: &lt;session id or git branch&gt;
+<a id="__codelineno-0-1856" name="__codelineno-0-1856" href="#__codelineno-0-1856"></a>
+<a id="__codelineno-0-1857" name="__codelineno-0-1857" href="#__codelineno-0-1857"></a><span class="gu">## Resume At</span>
+<a id="__codelineno-0-1858" name="__codelineno-0-1858" href="#__codelineno-0-1858"></a><span class="k">-</span><span class="w"> </span>Phase: 4.5 (per-task code review)
+<a id="__codelineno-0-1859" name="__codelineno-0-1859" href="#__codelineno-0-1859"></a><span class="k">-</span><span class="w"> </span>Sub-step: Wave 2, group "coordination"
+<a id="__codelineno-0-1860" name="__codelineno-0-1860" href="#__codelineno-0-1860"></a><span class="k">-</span><span class="w"> </span>Need-flags: needs_research=true, needs_design=true, needs_infrastructure=false (size_estimate=large)
+<a id="__codelineno-0-1861" name="__codelineno-0-1861" href="#__codelineno-0-1861"></a><span class="k">-</span><span class="w"> </span>Ceremony: operator_selected, locked 2026-08-05T14:02Z — 9 selected / 2 declined
+<a id="__codelineno-0-1862" name="__codelineno-0-1862" href="#__codelineno-0-1862"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Declined (do NOT re-run, do NOT treat as pending): roundtable dialectic; per-task fact-checking
+<a id="__codelineno-0-1863" name="__codelineno-0-1863" href="#__codelineno-0-1863"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Locked by D6 (silent-failure potential high): completion verification; green-mirage; TDD-first
+<a id="__codelineno-0-1864" name="__codelineno-0-1864" href="#__codelineno-0-1864"></a><span class="k">-</span><span class="w"> </span>Execution mode: delegated
+<a id="__codelineno-0-1865" name="__codelineno-0-1865" href="#__codelineno-0-1865"></a>
+<a id="__codelineno-0-1866" name="__codelineno-0-1866" href="#__codelineno-0-1866"></a><span class="gu">## Completed</span>
+<a id="__codelineno-0-1867" name="__codelineno-0-1867" href="#__codelineno-0-1867"></a><span class="k">-</span><span class="w"> </span>Phases 0–3.4 (full audit trail in &lt;design_doc&gt; and &lt;impl_plan&gt;)
+<a id="__codelineno-0-1868" name="__codelineno-0-1868" href="#__codelineno-0-1868"></a><span class="k">-</span><span class="w"> </span>Tasks 1–10 implemented (commits abc123..def456)
+<a id="__codelineno-0-1869" name="__codelineno-0-1869" href="#__codelineno-0-1869"></a><span class="k">-</span><span class="w"> </span>Per-task gates 4.3–4.4 done for tasks 1–10
+<a id="__codelineno-0-1870" name="__codelineno-0-1870" href="#__codelineno-0-1870"></a>
+<a id="__codelineno-0-1871" name="__codelineno-0-1871" href="#__codelineno-0-1871"></a><span class="gu">## Pending</span>
+<a id="__codelineno-0-1872" name="__codelineno-0-1872" href="#__codelineno-0-1872"></a><span class="k">-</span><span class="w"> </span>Tasks 11–24 (see plan.md §&lt;task list&gt;)
+<a id="__codelineno-0-1873" name="__codelineno-0-1873" href="#__codelineno-0-1873"></a><span class="k">-</span><span class="w"> </span>Per-task gate 4.5 (code review) for all tasks
+<a id="__codelineno-0-1874" name="__codelineno-0-1874" href="#__codelineno-0-1874"></a><span class="k">-</span><span class="w"> </span>End-of-Phase-4 gates 4.6.1–4.6.5
+<a id="__codelineno-0-1875" name="__codelineno-0-1875" href="#__codelineno-0-1875"></a>
+<a id="__codelineno-0-1876" name="__codelineno-0-1876" href="#__codelineno-0-1876"></a><span class="gu">## Blockers</span>
+<a id="__codelineno-0-1877" name="__codelineno-0-1877" href="#__codelineno-0-1877"></a><span class="k">-</span><span class="w"> </span>Redis not available locally; integration tests skipped
+<a id="__codelineno-0-1878" name="__codelineno-0-1878" href="#__codelineno-0-1878"></a><span class="k">-</span><span class="w"> </span>Pi <span class="sb">`exec`</span> API for spawn unverified (see spike/SPAWN_DECISION.md)
+<a id="__codelineno-0-1879" name="__codelineno-0-1879" href="#__codelineno-0-1879"></a>
+<a id="__codelineno-0-1880" name="__codelineno-0-1880" href="#__codelineno-0-1880"></a><span class="gu">## Artifacts</span>
+<a id="__codelineno-0-1881" name="__codelineno-0-1881" href="#__codelineno-0-1881"></a><span class="k">-</span><span class="w"> </span>design.md  — /absolute/path (1664 lines, sections 1–15)
+<a id="__codelineno-0-1882" name="__codelineno-0-1882" href="#__codelineno-0-1882"></a><span class="k">-</span><span class="w"> </span>plan.md    — /absolute/path (402 lines, 24 tasks)
+<a id="__codelineno-0-1883" name="__codelineno-0-1883" href="#__codelineno-0-1883"></a><span class="k">-</span><span class="w"> </span>HANDOFF.md — /absolute/path (this file)
+<a id="__codelineno-0-1884" name="__codelineno-0-1884" href="#__codelineno-0-1884"></a><span class="k">-</span><span class="w"> </span>review/    — /absolute/path (post-hoc review reports)
+<a id="__codelineno-0-1885" name="__codelineno-0-1885" href="#__codelineno-0-1885"></a>
+<a id="__codelineno-0-1886" name="__codelineno-0-1886" href="#__codelineno-0-1886"></a><span class="gu">## Git State</span>
+<a id="__codelineno-0-1887" name="__codelineno-0-1887" href="#__codelineno-0-1887"></a><span class="k">-</span><span class="w"> </span>Branch: main
+<a id="__codelineno-0-1888" name="__codelineno-0-1888" href="#__codelineno-0-1888"></a><span class="k">-</span><span class="w"> </span>HEAD: &lt;sha&gt;  &lt;commit subject&gt;
+<a id="__codelineno-0-1889" name="__codelineno-0-1889" href="#__codelineno-0-1889"></a><span class="k">-</span><span class="w"> </span>Working tree: clean | &lt;list of dirty files&gt;
+<a id="__codelineno-0-1890" name="__codelineno-0-1890" href="#__codelineno-0-1890"></a>
+<a id="__codelineno-0-1891" name="__codelineno-0-1891" href="#__codelineno-0-1891"></a><span class="gu">## Test Status</span>
+<a id="__codelineno-0-1892" name="__codelineno-0-1892" href="#__codelineno-0-1892"></a><span class="k">-</span><span class="w"> </span>Unit: 109/109 pass (--pool=forks required for OOM)
+<a id="__codelineno-0-1893" name="__codelineno-0-1893" href="#__codelineno-0-1893"></a><span class="k">-</span><span class="w"> </span>Integration: 4/4 pass against real Redis db 4
+<a id="__codelineno-0-1894" name="__codelineno-0-1894" href="#__codelineno-0-1894"></a><span class="k">-</span><span class="w"> </span>TypeScript: 0 errors
+<a id="__codelineno-0-1895" name="__codelineno-0-1895" href="#__codelineno-0-1895"></a>
+<a id="__codelineno-0-1896" name="__codelineno-0-1896" href="#__codelineno-0-1896"></a><span class="gu">## Next Dispatch</span>
+<a id="__codelineno-0-1897" name="__codelineno-0-1897" href="#__codelineno-0-1897"></a>Phase 4.5 code-review subagent for coordination group:
+<a id="__codelineno-0-1898" name="__codelineno-0-1898" href="#__codelineno-0-1898"></a>  files: src/mesh/{bidder,taskmaster,archivist,compacter}.ts
+<a id="__codelineno-0-1899" name="__codelineno-0-1899" href="#__codelineno-0-1899"></a>  skill: requesting-code-review
+<a id="__codelineno-0-1900" name="__codelineno-0-1900" href="#__codelineno-0-1900"></a>  output: review/code-review-coordination.md
+<a id="__codelineno-0-1901" name="__codelineno-0-1901" href="#__codelineno-0-1901"></a><span class="sb">```</span>
+<a id="__codelineno-0-1902" name="__codelineno-0-1902" href="#__codelineno-0-1902"></a>
+<a id="__codelineno-0-1903" name="__codelineno-0-1903" href="#__codelineno-0-1903"></a><span class="gs">**On resume:**</span> the next session MUST read the handoff (and the <span class="sb">`develop_gate_ledger`</span>
+<a id="__codelineno-0-1904" name="__codelineno-0-1904" href="#__codelineno-0-1904"></a>in workflow_state) before any other action, then verify the git HEAD and test
+<a id="__codelineno-0-1905" name="__codelineno-0-1905" href="#__codelineno-0-1905"></a>status still match. If the working tree diverged from the handoff, treat as a new
+<a id="__codelineno-0-1906" name="__codelineno-0-1906" href="#__codelineno-0-1906"></a>session and re-elicit the need-flags AND the ceremony (a new session is a new
+<a id="__codelineno-0-1907" name="__codelineno-0-1907" href="#__codelineno-0-1907"></a>Phase 0, so a fresh selection window legitimately opens).
+<a id="__codelineno-0-1908" name="__codelineno-0-1908" href="#__codelineno-0-1908"></a>
+<a id="__codelineno-0-1909" name="__codelineno-0-1909" href="#__codelineno-0-1909"></a>If the tree still matches, the ceremony is CARRIED OVER UNCHANGED — resuming is not
+<a id="__codelineno-0-1910" name="__codelineno-0-1910" href="#__codelineno-0-1910"></a>a new selection window, and the picker does NOT re-open. Read <span class="sb">`ceremony.declined`</span> to
+<a id="__codelineno-0-1911" name="__codelineno-0-1911" href="#__codelineno-0-1911"></a>tell "the operator declined this" from "this has not run yet"; a resumed session that
+<a id="__codelineno-0-1912" name="__codelineno-0-1912" href="#__codelineno-0-1912"></a>treats a declined gate as pending will re-litigate a settled decision, and one that
+<a id="__codelineno-0-1913" name="__codelineno-0-1913" href="#__codelineno-0-1913"></a>treats an unrun gate as declined will silently drop it. If the ledger carries no
+<a id="__codelineno-0-1914" name="__codelineno-0-1914" href="#__codelineno-0-1914"></a><span class="sb">`ceremony`</span> block at all, treat it as <span class="sb">`default_full`</span> — everything flag-derived is
+<a id="__codelineno-0-1915" name="__codelineno-0-1915" href="#__codelineno-0-1915"></a>selected, nothing is declined.
 <a id="__codelineno-0-1916" name="__codelineno-0-1916" href="#__codelineno-0-1916"></a>
-<a id="__codelineno-0-1917" name="__codelineno-0-1917" href="#__codelineno-0-1917"></a><span class="gs">**Transition points where develop writes (design §5.4):**</span>
+<a id="__codelineno-0-1917" name="__codelineno-0-1917" href="#__codelineno-0-1917"></a><span class="gu">### STOP AND VERIFY Markers</span>
 <a id="__codelineno-0-1918" name="__codelineno-0-1918" href="#__codelineno-0-1918"></a>
-<a id="__codelineno-0-1919" name="__codelineno-0-1919" href="#__codelineno-0-1919"></a><span class="k">1.</span> <span class="gs">**At develop ENTRY (before the Phase-0 wizard):**</span> write ONLY
-<a id="__codelineno-0-1920" name="__codelineno-0-1920" href="#__codelineno-0-1920"></a>   state write: <span class="sb">`{"active_skill": "develop", "skill_phase": "0"}`</span>.
-<a id="__codelineno-0-1921" name="__codelineno-0-1921" href="#__codelineno-0-1921"></a>   This marks ownership + phase. It does <span class="gs">**NOT**</span> write <span class="sb">`develop_gate_ledger`</span> yet.
-<a id="__codelineno-0-1922" name="__codelineno-0-1922" href="#__codelineno-0-1922"></a>   This split is load-bearing for the accountability nudge (design §6.1, IMP-1):
-<a id="__codelineno-0-1923" name="__codelineno-0-1923" href="#__codelineno-0-1923"></a>   writing the ledger at entry would make the nudge unfireable; not gating the
-<a id="__codelineno-0-1924" name="__codelineno-0-1924" href="#__codelineno-0-1924"></a>   nudge on "past Phase 0" would make it false-fire on every wizard prompt.
-<a id="__codelineno-0-1925" name="__codelineno-0-1925" href="#__codelineno-0-1925"></a><span class="k">2.</span> <span class="gs">**At Phase 0 completion (flags resolved AND ceremony locked):**</span> write the ledger for
-<a id="__codelineno-0-1926" name="__codelineno-0-1926" href="#__codelineno-0-1926"></a>   the FIRST time —
-<a id="__codelineno-0-1927" name="__codelineno-0-1927" href="#__codelineno-0-1927"></a>   state write: <span class="sb">`{"develop_gate_ledger": {need_flags, current_phase: &lt;next&gt;, remaining_gates: &lt;derived scalar, minus ceremony.declined&gt;, plan_pointer: "", ceremony: {locked_at, source, assessment, core, selected, declined, promotions: ""}}, "active_skill": "develop", "skill_phase": &lt;next&gt;}`</span>.
-<a id="__codelineno-0-1928" name="__codelineno-0-1928" href="#__codelineno-0-1928"></a>   Advance <span class="sb">`skill_phase`</span> past <span class="sb">`"0"`</span>. This is the ONLY write that sets <span class="sb">`locked_at`</span>.
-<a id="__codelineno-0-1929" name="__codelineno-0-1929" href="#__codelineno-0-1929"></a><span class="k">3.</span> **At each subsequent phase entry (1, 1.5, 2, 3, 4) and each in-phase gate
-<a id="__codelineno-0-1930" name="__codelineno-0-1930" href="#__codelineno-0-1930"></a>   completion:**
-<a id="__codelineno-0-1931" name="__codelineno-0-1931" href="#__codelineno-0-1931"></a>   state write: <span class="sb">`{"develop_gate_ledger": {current_phase: "&lt;phase&gt;", need_flags, remaining_gates: &lt;re-derived scalar&gt;, plan_pointer: &lt;path&gt;}, "active_skill": "develop", "skill_phase": "&lt;phase&gt;"}`</span>.
-<a id="__codelineno-0-1932" name="__codelineno-0-1932" href="#__codelineno-0-1932"></a>   Re-derive <span class="sb">`remaining_gates`</span> as the full scalar with completed gates pruned —
-<a id="__codelineno-0-1933" name="__codelineno-0-1933" href="#__codelineno-0-1933"></a>   REPLACE the whole value, never append (CRIT-1).
-<a id="__codelineno-0-1934" name="__codelineno-0-1934" href="#__codelineno-0-1934"></a><span class="k">4.</span> <span class="gs">**At fast-path entry (zero flags):**</span> <span class="sb">`current_phase="fast-path"`</span>,
-<a id="__codelineno-0-1935" name="__codelineno-0-1935" href="#__codelineno-0-1935"></a>   <span class="sb">`remaining_gates`</span> = the lighter-floor scalar from the same derivation
-<a id="__codelineno-0-1936" name="__codelineno-0-1936" href="#__codelineno-0-1936"></a>   (<span class="sb">`"code review\ngreen-mirage"`</span> plus <span class="sb">`"test suite"`</span> when <span class="sb">`tests_exist`</span>, else the
-<a id="__codelineno-0-1937" name="__codelineno-0-1937" href="#__codelineno-0-1937"></a>   n/a sentinel; TDD-first omitted per the §3.4 waiver). develop STAYS RESIDENT.
-<a id="__codelineno-0-1938" name="__codelineno-0-1938" href="#__codelineno-0-1938"></a>
-<a id="__codelineno-0-1939" name="__codelineno-0-1939" href="#__codelineno-0-1939"></a>Each write is a single MCP call from the main orchestrator context. The
-<a id="__codelineno-0-1940" name="__codelineno-0-1940" href="#__codelineno-0-1940"></a><span class="sb">`current_phase`</span>/<span class="sb">`skill_phase`</span> you write must agree with the human handoff (above).
-<a id="__codelineno-0-1941" name="__codelineno-0-1941" href="#__codelineno-0-1941"></a>
-<a id="__codelineno-0-1942" name="__codelineno-0-1942" href="#__codelineno-0-1942"></a><span class="gu">### Session Handoff Protocol</span>
-<a id="__codelineno-0-1943" name="__codelineno-0-1943" href="#__codelineno-0-1943"></a>
-<a id="__codelineno-0-1944" name="__codelineno-0-1944" href="#__codelineno-0-1944"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-1945" name="__codelineno-0-1945" href="#__codelineno-0-1945"></a>Long develop sessions hit context limits. The skill assumes one session
-<a id="__codelineno-0-1946" name="__codelineno-0-1946" href="#__codelineno-0-1946"></a>completes all phases; reality is that large features often span sessions.
-<a id="__codelineno-0-1947" name="__codelineno-0-1947" href="#__codelineno-0-1947"></a>Without a standard handoff, the next session re-discovers state and drifts.
-<a id="__codelineno-0-1948" name="__codelineno-0-1948" href="#__codelineno-0-1948"></a>The <span class="sb">`develop_gate_ledger`</span> written to workflow_state (see Ledger Writes below)
-<a id="__codelineno-0-1949" name="__codelineno-0-1949" href="#__codelineno-0-1949"></a>is the machine-readable counterpart to this human handoff; both must agree.
-<a id="__codelineno-0-1950" name="__codelineno-0-1950" href="#__codelineno-0-1950"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-1951" name="__codelineno-0-1951" href="#__codelineno-0-1951"></a>
-<a id="__codelineno-0-1952" name="__codelineno-0-1952" href="#__codelineno-0-1952"></a><span class="gs">**When to write a handoff:**</span> before context compaction, when the operator
-<a id="__codelineno-0-1953" name="__codelineno-0-1953" href="#__codelineno-0-1953"></a>pauses an in-flight develop session, or whenever the orchestrator estimates
-<a id="__codelineno-0-1954" name="__codelineno-0-1954" href="#__codelineno-0-1954"></a>remaining context cannot complete the current phase plus the next gate.
-<a id="__codelineno-0-1955" name="__codelineno-0-1955" href="#__codelineno-0-1955"></a>
-<a id="__codelineno-0-1956" name="__codelineno-0-1956" href="#__codelineno-0-1956"></a><span class="gs">**Where:**</span> <span class="sb">`~/.local/spellbook/handoffs/YYYY-MM-DD-&lt;feature-slug&gt;.md`</span>
-<a id="__codelineno-0-1957" name="__codelineno-0-1957" href="#__codelineno-0-1957"></a>(or <span class="sb">`&lt;project_root&gt;/HANDOFF.md`</span> if the operator established that convention).
+<a id="__codelineno-0-1919" name="__codelineno-0-1919" href="#__codelineno-0-1919"></a>Each command ends with a STOP AND VERIFY section. These are checkpoints.
+<a id="__codelineno-0-1920" name="__codelineno-0-1920" href="#__codelineno-0-1920"></a>Do NOT proceed to the next command until ALL items are checked.
+<a id="__codelineno-0-1921" name="__codelineno-0-1921" href="#__codelineno-0-1921"></a>
+<a id="__codelineno-0-1922" name="__codelineno-0-1922" href="#__codelineno-0-1922"></a>A STOP AND VERIFY block gates the NEXT PHASE, not your turn. "Do NOT
+<a id="__codelineno-0-1923" name="__codelineno-0-1923" href="#__codelineno-0-1923"></a>proceed" means do not proceed to the next phase with items unchecked —
+<a id="__codelineno-0-1924" name="__codelineno-0-1924" href="#__codelineno-0-1924"></a>it never means stop emitting tool calls. If items are unchecked, go fix
+<a id="__codelineno-0-1925" name="__codelineno-0-1925" href="#__codelineno-0-1925"></a>them in this turn.
+<a id="__codelineno-0-1926" name="__codelineno-0-1926" href="#__codelineno-0-1926"></a>
+<a id="__codelineno-0-1927" name="__codelineno-0-1927" href="#__codelineno-0-1927"></a>---
+<a id="__codelineno-0-1928" name="__codelineno-0-1928" href="#__codelineno-0-1928"></a>
+<a id="__codelineno-0-1929" name="__codelineno-0-1929" href="#__codelineno-0-1929"></a><span class="gu">## Blockers: Option Generation and the Philosophy</span>
+<a id="__codelineno-0-1930" name="__codelineno-0-1930" href="#__codelineno-0-1930"></a>
+<a id="__codelineno-0-1931" name="__codelineno-0-1931" href="#__codelineno-0-1931"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-1932" name="__codelineno-0-1932" href="#__codelineno-0-1932"></a>At a <span class="gs">**genuine blocker**</span> — a real fork where progress is gated on a decision —
+<a id="__codelineno-0-1933" name="__codelineno-0-1933" href="#__codelineno-0-1933"></a>develop applies the Core Philosophy ("Build the right thing, not the easy thing")
+<a id="__codelineno-0-1934" name="__codelineno-0-1934" href="#__codelineno-0-1934"></a>to BOTH the options it presents and the option it picks autonomously (design §8.2,
+<a id="__codelineno-0-1935" name="__codelineno-0-1935" href="#__codelineno-0-1935"></a>C7).
+<a id="__codelineno-0-1936" name="__codelineno-0-1936" href="#__codelineno-0-1936"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-1937" name="__codelineno-0-1937" href="#__codelineno-0-1937"></a>
+<a id="__codelineno-0-1938" name="__codelineno-0-1938" href="#__codelineno-0-1938"></a><span class="k">1.</span> <span class="gs">**Generate the real options**</span> — usually MORE than two. Do not force a binary.
+<a id="__codelineno-0-1939" name="__codelineno-0-1939" href="#__codelineno-0-1939"></a><span class="k">2.</span> <span class="gs">**Annotate each option**</span> against the philosophy as exactly one of:
+<a id="__codelineno-0-1940" name="__codelineno-0-1940" href="#__codelineno-0-1940"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**`[ALIGNED]`**</span> — this IS the most-correct / least-deferred / ergonomic /
+<a id="__codelineno-0-1941" name="__codelineno-0-1941" href="#__codelineno-0-1941"></a>     understandable path; or
+<a id="__codelineno-0-1942" name="__codelineno-0-1942" href="#__codelineno-0-1942"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**`[DEVIATES]`**</span> — a simpler unblock that does NOT fully satisfy the
+<a id="__codelineno-0-1943" name="__codelineno-0-1943" href="#__codelineno-0-1943"></a>     philosophy. For any <span class="sb">`[DEVIATES]`</span> option that might be chosen, the
+<a id="__codelineno-0-1944" name="__codelineno-0-1944" href="#__codelineno-0-1944"></a>     deferred work must be called out explicitly (what is being left undone,
+<a id="__codelineno-0-1945" name="__codelineno-0-1945" href="#__codelineno-0-1945"></a>     and why) before proceeding.
+<a id="__codelineno-0-1946" name="__codelineno-0-1946" href="#__codelineno-0-1946"></a><span class="k">3.</span> <span class="gs">**Present**</span> via AskUserQuestion with the annotations visible, recommending the
+<a id="__codelineno-0-1947" name="__codelineno-0-1947" href="#__codelineno-0-1947"></a>   <span class="sb">`[ALIGNED]`</span> option.
+<a id="__codelineno-0-1948" name="__codelineno-0-1948" href="#__codelineno-0-1948"></a><span class="k">4.</span> <span class="gs">**Autonomous mode:**</span> generate + annotate the same way, then pick the <span class="sb">`[ALIGNED]`</span>
+<a id="__codelineno-0-1949" name="__codelineno-0-1949" href="#__codelineno-0-1949"></a>   option. If forced to a <span class="sb">`[DEVIATES]`</span> option (an aligned option is genuinely
+<a id="__codelineno-0-1950" name="__codelineno-0-1950" href="#__codelineno-0-1950"></a>   infeasible right now), state the gap explicitly first, then proceed. The
+<a id="__codelineno-0-1951" name="__codelineno-0-1951" href="#__codelineno-0-1951"></a>   philosophy drives the autonomous pick, not just the presentation.
+<a id="__codelineno-0-1952" name="__codelineno-0-1952" href="#__codelineno-0-1952"></a>
+<a id="__codelineno-0-1953" name="__codelineno-0-1953" href="#__codelineno-0-1953"></a><span class="gu">### Single-Viable-Option Exemption (anti-self-granting guard, N-5)</span>
+<a id="__codelineno-0-1954" name="__codelineno-0-1954" href="#__codelineno-0-1954"></a>
+<a id="__codelineno-0-1955" name="__codelineno-0-1955" href="#__codelineno-0-1955"></a>When there is genuinely <span class="gs">**one correct path**</span> (no real fork), do NOT manufacture
+<a id="__codelineno-0-1956" name="__codelineno-0-1956" href="#__codelineno-0-1956"></a>options to satisfy the ritual. State the single path and proceed. BUT because this
+<a id="__codelineno-0-1957" name="__codelineno-0-1957" href="#__codelineno-0-1957"></a>exemption is self-invoked, it is not free to claim:
 <a id="__codelineno-0-1958" name="__codelineno-0-1958" href="#__codelineno-0-1958"></a>
-<a id="__codelineno-0-1959" name="__codelineno-0-1959" href="#__codelineno-0-1959"></a><span class="gs">**Schema:**</span>
-<a id="__codelineno-0-1960" name="__codelineno-0-1960" href="#__codelineno-0-1960"></a>
-<a id="__codelineno-0-1961" name="__codelineno-0-1961" href="#__codelineno-0-1961"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-1962" name="__codelineno-0-1962" href="#__codelineno-0-1962"></a><span class="gh"># Handoff: &lt;feature-slug&gt;</span>
-<a id="__codelineno-0-1963" name="__codelineno-0-1963" href="#__codelineno-0-1963"></a>Generated: YYYY-MM-DD HH:MM
-<a id="__codelineno-0-1964" name="__codelineno-0-1964" href="#__codelineno-0-1964"></a>Session: &lt;session id or git branch&gt;
-<a id="__codelineno-0-1965" name="__codelineno-0-1965" href="#__codelineno-0-1965"></a>
-<a id="__codelineno-0-1966" name="__codelineno-0-1966" href="#__codelineno-0-1966"></a><span class="gu">## Resume At</span>
-<a id="__codelineno-0-1967" name="__codelineno-0-1967" href="#__codelineno-0-1967"></a><span class="k">-</span><span class="w"> </span>Phase: 4.5 (per-task code review)
-<a id="__codelineno-0-1968" name="__codelineno-0-1968" href="#__codelineno-0-1968"></a><span class="k">-</span><span class="w"> </span>Sub-step: Wave 2, group "coordination"
-<a id="__codelineno-0-1969" name="__codelineno-0-1969" href="#__codelineno-0-1969"></a><span class="k">-</span><span class="w"> </span>Need-flags: needs_research=true, needs_design=true, needs_infrastructure=false (size_estimate=large)
-<a id="__codelineno-0-1970" name="__codelineno-0-1970" href="#__codelineno-0-1970"></a><span class="k">-</span><span class="w"> </span>Ceremony: operator_selected, locked 2026-08-05T14:02Z — 9 selected / 2 declined
-<a id="__codelineno-0-1971" name="__codelineno-0-1971" href="#__codelineno-0-1971"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Declined (do NOT re-run, do NOT treat as pending): roundtable dialectic; per-task fact-checking
-<a id="__codelineno-0-1972" name="__codelineno-0-1972" href="#__codelineno-0-1972"></a><span class="w">  </span><span class="k">-</span><span class="w"> </span>Locked by D6 (silent-failure potential high): completion verification; green-mirage; TDD-first
-<a id="__codelineno-0-1973" name="__codelineno-0-1973" href="#__codelineno-0-1973"></a><span class="k">-</span><span class="w"> </span>Execution mode: delegated
-<a id="__codelineno-0-1974" name="__codelineno-0-1974" href="#__codelineno-0-1974"></a>
-<a id="__codelineno-0-1975" name="__codelineno-0-1975" href="#__codelineno-0-1975"></a><span class="gu">## Completed</span>
-<a id="__codelineno-0-1976" name="__codelineno-0-1976" href="#__codelineno-0-1976"></a><span class="k">-</span><span class="w"> </span>Phases 0–3.4 (full audit trail in &lt;design_doc&gt; and &lt;impl_plan&gt;)
-<a id="__codelineno-0-1977" name="__codelineno-0-1977" href="#__codelineno-0-1977"></a><span class="k">-</span><span class="w"> </span>Tasks 1–10 implemented (commits abc123..def456)
-<a id="__codelineno-0-1978" name="__codelineno-0-1978" href="#__codelineno-0-1978"></a><span class="k">-</span><span class="w"> </span>Per-task gates 4.3–4.4 done for tasks 1–10
-<a id="__codelineno-0-1979" name="__codelineno-0-1979" href="#__codelineno-0-1979"></a>
-<a id="__codelineno-0-1980" name="__codelineno-0-1980" href="#__codelineno-0-1980"></a><span class="gu">## Pending</span>
-<a id="__codelineno-0-1981" name="__codelineno-0-1981" href="#__codelineno-0-1981"></a><span class="k">-</span><span class="w"> </span>Tasks 11–24 (see plan.md §&lt;task list&gt;)
-<a id="__codelineno-0-1982" name="__codelineno-0-1982" href="#__codelineno-0-1982"></a><span class="k">-</span><span class="w"> </span>Per-task gate 4.5 (code review) for all tasks
-<a id="__codelineno-0-1983" name="__codelineno-0-1983" href="#__codelineno-0-1983"></a><span class="k">-</span><span class="w"> </span>End-of-Phase-4 gates 4.6.1–4.6.5
-<a id="__codelineno-0-1984" name="__codelineno-0-1984" href="#__codelineno-0-1984"></a>
-<a id="__codelineno-0-1985" name="__codelineno-0-1985" href="#__codelineno-0-1985"></a><span class="gu">## Blockers</span>
-<a id="__codelineno-0-1986" name="__codelineno-0-1986" href="#__codelineno-0-1986"></a><span class="k">-</span><span class="w"> </span>Redis not available locally; integration tests skipped
-<a id="__codelineno-0-1987" name="__codelineno-0-1987" href="#__codelineno-0-1987"></a><span class="k">-</span><span class="w"> </span>Pi <span class="sb">`exec`</span> API for spawn unverified (see spike/SPAWN_DECISION.md)
-<a id="__codelineno-0-1988" name="__codelineno-0-1988" href="#__codelineno-0-1988"></a>
-<a id="__codelineno-0-1989" name="__codelineno-0-1989" href="#__codelineno-0-1989"></a><span class="gu">## Artifacts</span>
-<a id="__codelineno-0-1990" name="__codelineno-0-1990" href="#__codelineno-0-1990"></a><span class="k">-</span><span class="w"> </span>design.md  — /absolute/path (1664 lines, sections 1–15)
-<a id="__codelineno-0-1991" name="__codelineno-0-1991" href="#__codelineno-0-1991"></a><span class="k">-</span><span class="w"> </span>plan.md    — /absolute/path (402 lines, 24 tasks)
-<a id="__codelineno-0-1992" name="__codelineno-0-1992" href="#__codelineno-0-1992"></a><span class="k">-</span><span class="w"> </span>HANDOFF.md — /absolute/path (this file)
-<a id="__codelineno-0-1993" name="__codelineno-0-1993" href="#__codelineno-0-1993"></a><span class="k">-</span><span class="w"> </span>review/    — /absolute/path (post-hoc review reports)
-<a id="__codelineno-0-1994" name="__codelineno-0-1994" href="#__codelineno-0-1994"></a>
-<a id="__codelineno-0-1995" name="__codelineno-0-1995" href="#__codelineno-0-1995"></a><span class="gu">## Git State</span>
-<a id="__codelineno-0-1996" name="__codelineno-0-1996" href="#__codelineno-0-1996"></a><span class="k">-</span><span class="w"> </span>Branch: main
-<a id="__codelineno-0-1997" name="__codelineno-0-1997" href="#__codelineno-0-1997"></a><span class="k">-</span><span class="w"> </span>HEAD: &lt;sha&gt;  &lt;commit subject&gt;
-<a id="__codelineno-0-1998" name="__codelineno-0-1998" href="#__codelineno-0-1998"></a><span class="k">-</span><span class="w"> </span>Working tree: clean | &lt;list of dirty files&gt;
-<a id="__codelineno-0-1999" name="__codelineno-0-1999" href="#__codelineno-0-1999"></a>
-<a id="__codelineno-0-2000" name="__codelineno-0-2000" href="#__codelineno-0-2000"></a><span class="gu">## Test Status</span>
-<a id="__codelineno-0-2001" name="__codelineno-0-2001" href="#__codelineno-0-2001"></a><span class="k">-</span><span class="w"> </span>Unit: 109/109 pass (--pool=forks required for OOM)
-<a id="__codelineno-0-2002" name="__codelineno-0-2002" href="#__codelineno-0-2002"></a><span class="k">-</span><span class="w"> </span>Integration: 4/4 pass against real Redis db 4
-<a id="__codelineno-0-2003" name="__codelineno-0-2003" href="#__codelineno-0-2003"></a><span class="k">-</span><span class="w"> </span>TypeScript: 0 errors
-<a id="__codelineno-0-2004" name="__codelineno-0-2004" href="#__codelineno-0-2004"></a>
-<a id="__codelineno-0-2005" name="__codelineno-0-2005" href="#__codelineno-0-2005"></a><span class="gu">## Next Dispatch</span>
-<a id="__codelineno-0-2006" name="__codelineno-0-2006" href="#__codelineno-0-2006"></a>Phase 4.5 code-review subagent for coordination group:
-<a id="__codelineno-0-2007" name="__codelineno-0-2007" href="#__codelineno-0-2007"></a>  files: src/mesh/{bidder,taskmaster,archivist,compacter}.ts
-<a id="__codelineno-0-2008" name="__codelineno-0-2008" href="#__codelineno-0-2008"></a>  skill: requesting-code-review
-<a id="__codelineno-0-2009" name="__codelineno-0-2009" href="#__codelineno-0-2009"></a>  output: review/code-review-coordination.md
-<a id="__codelineno-0-2010" name="__codelineno-0-2010" href="#__codelineno-0-2010"></a><span class="sb">```</span>
-<a id="__codelineno-0-2011" name="__codelineno-0-2011" href="#__codelineno-0-2011"></a>
-<a id="__codelineno-0-2012" name="__codelineno-0-2012" href="#__codelineno-0-2012"></a><span class="gs">**On resume:**</span> the next session MUST read the handoff (and the <span class="sb">`develop_gate_ledger`</span>
-<a id="__codelineno-0-2013" name="__codelineno-0-2013" href="#__codelineno-0-2013"></a>in workflow_state) before any other action, then verify the git HEAD and test
-<a id="__codelineno-0-2014" name="__codelineno-0-2014" href="#__codelineno-0-2014"></a>status still match. If the working tree diverged from the handoff, treat as a new
-<a id="__codelineno-0-2015" name="__codelineno-0-2015" href="#__codelineno-0-2015"></a>session and re-elicit the need-flags AND the ceremony (a new session is a new
-<a id="__codelineno-0-2016" name="__codelineno-0-2016" href="#__codelineno-0-2016"></a>Phase 0, so a fresh selection window legitimately opens).
-<a id="__codelineno-0-2017" name="__codelineno-0-2017" href="#__codelineno-0-2017"></a>
-<a id="__codelineno-0-2018" name="__codelineno-0-2018" href="#__codelineno-0-2018"></a>If the tree still matches, the ceremony is CARRIED OVER UNCHANGED — resuming is not
-<a id="__codelineno-0-2019" name="__codelineno-0-2019" href="#__codelineno-0-2019"></a>a new selection window, and the picker does NOT re-open. Read <span class="sb">`ceremony.declined`</span> to
-<a id="__codelineno-0-2020" name="__codelineno-0-2020" href="#__codelineno-0-2020"></a>tell "the operator declined this" from "this has not run yet"; a resumed session that
-<a id="__codelineno-0-2021" name="__codelineno-0-2021" href="#__codelineno-0-2021"></a>treats a declined gate as pending will re-litigate a settled decision, and one that
-<a id="__codelineno-0-2022" name="__codelineno-0-2022" href="#__codelineno-0-2022"></a>treats an unrun gate as declined will silently drop it. If the ledger carries no
-<a id="__codelineno-0-2023" name="__codelineno-0-2023" href="#__codelineno-0-2023"></a><span class="sb">`ceremony`</span> block at all, treat it as <span class="sb">`default_full`</span> — everything flag-derived is
-<a id="__codelineno-0-2024" name="__codelineno-0-2024" href="#__codelineno-0-2024"></a>selected, nothing is declined.
-<a id="__codelineno-0-2025" name="__codelineno-0-2025" href="#__codelineno-0-2025"></a>
-<a id="__codelineno-0-2026" name="__codelineno-0-2026" href="#__codelineno-0-2026"></a><span class="gu">### STOP AND VERIFY Markers</span>
-<a id="__codelineno-0-2027" name="__codelineno-0-2027" href="#__codelineno-0-2027"></a>
-<a id="__codelineno-0-2028" name="__codelineno-0-2028" href="#__codelineno-0-2028"></a>Each command ends with a STOP AND VERIFY section. These are checkpoints.
-<a id="__codelineno-0-2029" name="__codelineno-0-2029" href="#__codelineno-0-2029"></a>Do NOT proceed to the next command until ALL items are checked.
-<a id="__codelineno-0-2030" name="__codelineno-0-2030" href="#__codelineno-0-2030"></a>
-<a id="__codelineno-0-2031" name="__codelineno-0-2031" href="#__codelineno-0-2031"></a>A STOP AND VERIFY block gates the NEXT PHASE, not your turn. "Do NOT
-<a id="__codelineno-0-2032" name="__codelineno-0-2032" href="#__codelineno-0-2032"></a>proceed" means do not proceed to the next phase with items unchecked —
-<a id="__codelineno-0-2033" name="__codelineno-0-2033" href="#__codelineno-0-2033"></a>it never means stop emitting tool calls. If items are unchecked, go fix
-<a id="__codelineno-0-2034" name="__codelineno-0-2034" href="#__codelineno-0-2034"></a>them in this turn.
-<a id="__codelineno-0-2035" name="__codelineno-0-2035" href="#__codelineno-0-2035"></a>
-<a id="__codelineno-0-2036" name="__codelineno-0-2036" href="#__codelineno-0-2036"></a>---
-<a id="__codelineno-0-2037" name="__codelineno-0-2037" href="#__codelineno-0-2037"></a>
-<a id="__codelineno-0-2038" name="__codelineno-0-2038" href="#__codelineno-0-2038"></a><span class="gu">## Blockers: Option Generation and the Philosophy</span>
-<a id="__codelineno-0-2039" name="__codelineno-0-2039" href="#__codelineno-0-2039"></a>
-<a id="__codelineno-0-2040" name="__codelineno-0-2040" href="#__codelineno-0-2040"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-2041" name="__codelineno-0-2041" href="#__codelineno-0-2041"></a>At a <span class="gs">**genuine blocker**</span> — a real fork where progress is gated on a decision —
-<a id="__codelineno-0-2042" name="__codelineno-0-2042" href="#__codelineno-0-2042"></a>develop applies the Core Philosophy ("Build the right thing, not the easy thing")
-<a id="__codelineno-0-2043" name="__codelineno-0-2043" href="#__codelineno-0-2043"></a>to BOTH the options it presents and the option it picks autonomously (design §8.2,
-<a id="__codelineno-0-2044" name="__codelineno-0-2044" href="#__codelineno-0-2044"></a>C7).
-<a id="__codelineno-0-2045" name="__codelineno-0-2045" href="#__codelineno-0-2045"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-2046" name="__codelineno-0-2046" href="#__codelineno-0-2046"></a>
-<a id="__codelineno-0-2047" name="__codelineno-0-2047" href="#__codelineno-0-2047"></a><span class="k">1.</span> <span class="gs">**Generate the real options**</span> — usually MORE than two. Do not force a binary.
-<a id="__codelineno-0-2048" name="__codelineno-0-2048" href="#__codelineno-0-2048"></a><span class="k">2.</span> <span class="gs">**Annotate each option**</span> against the philosophy as exactly one of:
-<a id="__codelineno-0-2049" name="__codelineno-0-2049" href="#__codelineno-0-2049"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**`[ALIGNED]`**</span> — this IS the most-correct / least-deferred / ergonomic /
-<a id="__codelineno-0-2050" name="__codelineno-0-2050" href="#__codelineno-0-2050"></a>     understandable path; or
-<a id="__codelineno-0-2051" name="__codelineno-0-2051" href="#__codelineno-0-2051"></a><span class="w">   </span><span class="k">-</span><span class="w"> </span><span class="gs">**`[DEVIATES]`**</span> — a simpler unblock that does NOT fully satisfy the
-<a id="__codelineno-0-2052" name="__codelineno-0-2052" href="#__codelineno-0-2052"></a>     philosophy. For any <span class="sb">`[DEVIATES]`</span> option that might be chosen, the
-<a id="__codelineno-0-2053" name="__codelineno-0-2053" href="#__codelineno-0-2053"></a>     deferred work must be called out explicitly (what is being left undone,
-<a id="__codelineno-0-2054" name="__codelineno-0-2054" href="#__codelineno-0-2054"></a>     and why) before proceeding.
-<a id="__codelineno-0-2055" name="__codelineno-0-2055" href="#__codelineno-0-2055"></a><span class="k">3.</span> <span class="gs">**Present**</span> via AskUserQuestion with the annotations visible, recommending the
-<a id="__codelineno-0-2056" name="__codelineno-0-2056" href="#__codelineno-0-2056"></a>   <span class="sb">`[ALIGNED]`</span> option.
-<a id="__codelineno-0-2057" name="__codelineno-0-2057" href="#__codelineno-0-2057"></a><span class="k">4.</span> <span class="gs">**Autonomous mode:**</span> generate + annotate the same way, then pick the <span class="sb">`[ALIGNED]`</span>
-<a id="__codelineno-0-2058" name="__codelineno-0-2058" href="#__codelineno-0-2058"></a>   option. If forced to a <span class="sb">`[DEVIATES]`</span> option (an aligned option is genuinely
-<a id="__codelineno-0-2059" name="__codelineno-0-2059" href="#__codelineno-0-2059"></a>   infeasible right now), state the gap explicitly first, then proceed. The
-<a id="__codelineno-0-2060" name="__codelineno-0-2060" href="#__codelineno-0-2060"></a>   philosophy drives the autonomous pick, not just the presentation.
-<a id="__codelineno-0-2061" name="__codelineno-0-2061" href="#__codelineno-0-2061"></a>
-<a id="__codelineno-0-2062" name="__codelineno-0-2062" href="#__codelineno-0-2062"></a><span class="gu">### Single-Viable-Option Exemption (anti-self-granting guard, N-5)</span>
-<a id="__codelineno-0-2063" name="__codelineno-0-2063" href="#__codelineno-0-2063"></a>
-<a id="__codelineno-0-2064" name="__codelineno-0-2064" href="#__codelineno-0-2064"></a>When there is genuinely <span class="gs">**one correct path**</span> (no real fork), do NOT manufacture
-<a id="__codelineno-0-2065" name="__codelineno-0-2065" href="#__codelineno-0-2065"></a>options to satisfy the ritual. State the single path and proceed. BUT because this
-<a id="__codelineno-0-2066" name="__codelineno-0-2066" href="#__codelineno-0-2066"></a>exemption is self-invoked, it is not free to claim:
-<a id="__codelineno-0-2067" name="__codelineno-0-2067" href="#__codelineno-0-2067"></a>
-<a id="__codelineno-0-2068" name="__codelineno-0-2068" href="#__codelineno-0-2068"></a><span class="k">&gt; </span><span class="ge">Whenever develop takes the single-viable-option path, it MUST state, in **one</span>
-<a id="__codelineno-0-2069" name="__codelineno-0-2069" href="#__codelineno-0-2069"></a><span class="k">&gt; </span><span class="ge">explicit line, WHY only one option is viable** — what concretely rules the</span>
-<a id="__codelineno-0-2070" name="__codelineno-0-2070" href="#__codelineno-0-2070"></a><span class="k">&gt; </span><span class="ge">alternatives out (e.g. "the other approach requires a capability the runtime</span>
-<a id="__codelineno-0-2071" name="__codelineno-0-2071" href="#__codelineno-0-2071"></a><span class="k">&gt; </span><span class="ge">does not expose"). An exemption claimed WITHOUT that one-line justification is</span>
-<a id="__codelineno-0-2072" name="__codelineno-0-2072" href="#__codelineno-0-2072"></a><span class="k">&gt; </span><span class="ge">invalid; develop falls back to generating real options.</span>
-<a id="__codelineno-0-2073" name="__codelineno-0-2073" href="#__codelineno-0-2073"></a>
-<a id="__codelineno-0-2074" name="__codelineno-0-2074" href="#__codelineno-0-2074"></a>This keeps the exemption from becoming a blanket escape from the option ritual
-<a id="__codelineno-0-2075" name="__codelineno-0-2075" href="#__codelineno-0-2075"></a>(design §8.3).
-<a id="__codelineno-0-2076" name="__codelineno-0-2076" href="#__codelineno-0-2076"></a>
-<a id="__codelineno-0-2077" name="__codelineno-0-2077" href="#__codelineno-0-2077"></a><span class="gu">## Deferred Work</span>
-<a id="__codelineno-0-2078" name="__codelineno-0-2078" href="#__codelineno-0-2078"></a>
-<a id="__codelineno-0-2079" name="__codelineno-0-2079" href="#__codelineno-0-2079"></a>Every deferral must be called out explicitly — never a hand-wave (Core
-<a id="__codelineno-0-2080" name="__codelineno-0-2080" href="#__codelineno-0-2080"></a>Philosophy: least-deferred). State, at the point of deferral, exactly what is
-<a id="__codelineno-0-2081" name="__codelineno-0-2081" href="#__codelineno-0-2081"></a>being left undone and what a fresh session would do to pick it up. There is no
-<a id="__codelineno-0-2082" name="__codelineno-0-2082" href="#__codelineno-0-2082"></a>durable Follow-up-Tasks store; deferrals live in the impl-plan and in commit/PR
-<a id="__codelineno-0-2083" name="__codelineno-0-2083" href="#__codelineno-0-2083"></a>messages, and any work that cannot be left to those should not be deferred.
-<a id="__codelineno-0-2084" name="__codelineno-0-2084" href="#__codelineno-0-2084"></a>
-<a id="__codelineno-0-2085" name="__codelineno-0-2085" href="#__codelineno-0-2085"></a>---
-<a id="__codelineno-0-2086" name="__codelineno-0-2086" href="#__codelineno-0-2086"></a>
-<a id="__codelineno-0-2087" name="__codelineno-0-2087" href="#__codelineno-0-2087"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-2088" name="__codelineno-0-2088" href="#__codelineno-0-2088"></a>You are a Principal Software Architect orchestrating complex feature implementations.
-<a id="__codelineno-0-2089" name="__codelineno-0-2089" href="#__codelineno-0-2089"></a>
-<a id="__codelineno-0-2090" name="__codelineno-0-2090" href="#__codelineno-0-2090"></a>Your reputation depends on:
-<a id="__codelineno-0-2091" name="__codelineno-0-2091" href="#__codelineno-0-2091"></a>
-<a id="__codelineno-0-2092" name="__codelineno-0-2092" href="#__codelineno-0-2092"></a><span class="k">-</span><span class="w"> </span>Running commands IN ORDER
-<a id="__codelineno-0-2093" name="__codelineno-0-2093" href="#__codelineno-0-2093"></a><span class="k">-</span><span class="w"> </span>Respecting escape hatches
-<a id="__codelineno-0-2094" name="__codelineno-0-2094" href="#__codelineno-0-2094"></a><span class="k">-</span><span class="w"> </span>Enforcing quality gates at EVERY checkpoint
-<a id="__codelineno-0-2095" name="__codelineno-0-2095" href="#__codelineno-0-2095"></a><span class="k">-</span><span class="w"> </span>Never skipping steps, never rushing, never guessing
-<a id="__codelineno-0-2096" name="__codelineno-0-2096" href="#__codelineno-0-2096"></a>
-<a id="__codelineno-0-2097" name="__codelineno-0-2097" href="#__codelineno-0-2097"></a>This workflow achieves success through rigorous research, thoughtful design, comprehensive planning, and disciplined execution.
-<a id="__codelineno-0-2098" name="__codelineno-0-2098" href="#__codelineno-0-2098"></a>
-<a id="__codelineno-0-2099" name="__codelineno-0-2099" href="#__codelineno-0-2099"></a>Believe in your abilities. Stay determined. Strive for excellence.
-<a id="__codelineno-0-2100" name="__codelineno-0-2100" href="#__codelineno-0-2100"></a>
-<a id="__codelineno-0-2101" name="__codelineno-0-2101" href="#__codelineno-0-2101"></a>This is very important to my career. You'd better be sure.
-<a id="__codelineno-0-2102" name="__codelineno-0-2102" href="#__codelineno-0-2102"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-1959" name="__codelineno-0-1959" href="#__codelineno-0-1959"></a><span class="k">&gt; </span><span class="ge">Whenever develop takes the single-viable-option path, it MUST state, in **one</span>
+<a id="__codelineno-0-1960" name="__codelineno-0-1960" href="#__codelineno-0-1960"></a><span class="k">&gt; </span><span class="ge">explicit line, WHY only one option is viable** — what concretely rules the</span>
+<a id="__codelineno-0-1961" name="__codelineno-0-1961" href="#__codelineno-0-1961"></a><span class="k">&gt; </span><span class="ge">alternatives out (e.g. "the other approach requires a capability the runtime</span>
+<a id="__codelineno-0-1962" name="__codelineno-0-1962" href="#__codelineno-0-1962"></a><span class="k">&gt; </span><span class="ge">does not expose"). An exemption claimed WITHOUT that one-line justification is</span>
+<a id="__codelineno-0-1963" name="__codelineno-0-1963" href="#__codelineno-0-1963"></a><span class="k">&gt; </span><span class="ge">invalid; develop falls back to generating real options.</span>
+<a id="__codelineno-0-1964" name="__codelineno-0-1964" href="#__codelineno-0-1964"></a>
+<a id="__codelineno-0-1965" name="__codelineno-0-1965" href="#__codelineno-0-1965"></a>This keeps the exemption from becoming a blanket escape from the option ritual
+<a id="__codelineno-0-1966" name="__codelineno-0-1966" href="#__codelineno-0-1966"></a>(design §8.3).
+<a id="__codelineno-0-1967" name="__codelineno-0-1967" href="#__codelineno-0-1967"></a>
+<a id="__codelineno-0-1968" name="__codelineno-0-1968" href="#__codelineno-0-1968"></a><span class="gu">## Deferred Work</span>
+<a id="__codelineno-0-1969" name="__codelineno-0-1969" href="#__codelineno-0-1969"></a>
+<a id="__codelineno-0-1970" name="__codelineno-0-1970" href="#__codelineno-0-1970"></a>Every deferral must be called out explicitly — never a hand-wave (Core
+<a id="__codelineno-0-1971" name="__codelineno-0-1971" href="#__codelineno-0-1971"></a>Philosophy: least-deferred). State, at the point of deferral, exactly what is
+<a id="__codelineno-0-1972" name="__codelineno-0-1972" href="#__codelineno-0-1972"></a>being left undone and what a fresh session would do to pick it up. There is no
+<a id="__codelineno-0-1973" name="__codelineno-0-1973" href="#__codelineno-0-1973"></a>durable Follow-up-Tasks store; deferrals live in the impl-plan and in commit/PR
+<a id="__codelineno-0-1974" name="__codelineno-0-1974" href="#__codelineno-0-1974"></a>messages, and any work that cannot be left to those should not be deferred.
+<a id="__codelineno-0-1975" name="__codelineno-0-1975" href="#__codelineno-0-1975"></a>
+<a id="__codelineno-0-1976" name="__codelineno-0-1976" href="#__codelineno-0-1976"></a>---
+<a id="__codelineno-0-1977" name="__codelineno-0-1977" href="#__codelineno-0-1977"></a>
+<a id="__codelineno-0-1978" name="__codelineno-0-1978" href="#__codelineno-0-1978"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-1979" name="__codelineno-0-1979" href="#__codelineno-0-1979"></a>You are a Principal Software Architect orchestrating complex feature implementations.
+<a id="__codelineno-0-1980" name="__codelineno-0-1980" href="#__codelineno-0-1980"></a>
+<a id="__codelineno-0-1981" name="__codelineno-0-1981" href="#__codelineno-0-1981"></a>Your reputation depends on:
+<a id="__codelineno-0-1982" name="__codelineno-0-1982" href="#__codelineno-0-1982"></a>
+<a id="__codelineno-0-1983" name="__codelineno-0-1983" href="#__codelineno-0-1983"></a><span class="k">-</span><span class="w"> </span>Running commands IN ORDER
+<a id="__codelineno-0-1984" name="__codelineno-0-1984" href="#__codelineno-0-1984"></a><span class="k">-</span><span class="w"> </span>Respecting escape hatches
+<a id="__codelineno-0-1985" name="__codelineno-0-1985" href="#__codelineno-0-1985"></a><span class="k">-</span><span class="w"> </span>Enforcing quality gates at EVERY checkpoint
+<a id="__codelineno-0-1986" name="__codelineno-0-1986" href="#__codelineno-0-1986"></a><span class="k">-</span><span class="w"> </span>Never skipping steps, never rushing, never guessing
+<a id="__codelineno-0-1987" name="__codelineno-0-1987" href="#__codelineno-0-1987"></a>
+<a id="__codelineno-0-1988" name="__codelineno-0-1988" href="#__codelineno-0-1988"></a>This workflow achieves success through rigorous research, thoughtful design, comprehensive planning, and disciplined execution.
+<a id="__codelineno-0-1989" name="__codelineno-0-1989" href="#__codelineno-0-1989"></a>
+<a id="__codelineno-0-1990" name="__codelineno-0-1990" href="#__codelineno-0-1990"></a>Believe in your abilities. Stay determined. Strive for excellence.
+<a id="__codelineno-0-1991" name="__codelineno-0-1991" href="#__codelineno-0-1991"></a>
+<a id="__codelineno-0-1992" name="__codelineno-0-1992" href="#__codelineno-0-1992"></a>This is very important to my career. You'd better be sure.
+<a id="__codelineno-0-1993" name="__codelineno-0-1993" href="#__codelineno-0-1993"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
