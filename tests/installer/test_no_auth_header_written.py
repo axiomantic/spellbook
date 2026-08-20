@@ -6,8 +6,14 @@ a helper self-blinds: a site reverted to a plain ``write_text`` would silently
 *leave* the derived set instead of failing the guard.
 
 One unit = one AST Call node that writes file contents (``write_text``,
-``write_bytes``, ``open(..., "w")``, or a file handle's ``.write``) located in
-``installer/platforms/*.py``.
+``write_bytes``, ``open(..., "w")``, a file handle's ``.write``, or a
+serializer writing to a handle: ``json.dump(obj, fp)`` /
+``yaml.safe_dump(obj, fp)``) located in ``installer/platforms/*.py``.
+
+The serializer forms are detected even though no platform uses one today. A
+detector that only recognises the forms currently present is accurate now and
+blind on the day one appears -- which is the day the census stops covering the
+write it was built to cover.
 """
 
 import ast
@@ -21,6 +27,9 @@ PLATFORM_DIR = Path(__file__).resolve().parents[2] / "installer" / "platforms"
 EXCLUDED_MODULES = {"base.py", "__init__.py"}
 
 FORBIDDEN_SUBSTRINGS = ("authorization", "bearer")
+
+# Serializers that write to a destination handle rather than returning a string.
+SERIALIZER_WRITERS = {"dump", "safe_dump", "dump_all", "safe_dump_all"}
 
 
 def _primitive_write_calls(tree):
@@ -36,6 +45,15 @@ def _primitive_write_calls(tree):
             "writelines",
         }:
             yield node, func.attr
+        elif isinstance(func, ast.Attribute) and func.attr in SERIALIZER_WRITERS:
+            # json.dump(obj, fp) and yaml.safe_dump(obj, fp) write a file
+            # without any of the names above appearing. The dumps() variants
+            # return a string and are not writes; the destination argument is
+            # what distinguishes them.
+            if len(node.args) >= 2 or any(
+                kw.arg in {"fp", "stream"} for kw in node.keywords
+            ):
+                yield node, func.attr
         elif isinstance(func, ast.Name) and func.id == "open":
             modes = [a.value for a in node.args[1:] if isinstance(a, ast.Constant)]
             modes += [
@@ -71,6 +89,32 @@ def _census():
         for node, kind in _primitive_write_calls(tree):
             rows.append((path.name, node.lineno, _enclosing_function(node, parents), kind))
     return rows
+
+
+def test_detector_finds_serializer_writes():
+    """The detector is itself an aggregator, so plant the forms and check.
+
+    No platform uses json.dump/yaml.safe_dump today, so the real census cannot
+    show whether these are detected: it would look identical either way.
+    """
+    source = """
+import json, yaml
+def write(path, data):
+    with open(path, "w") as fp:
+        json.dump(data, fp)
+    with open(path, "w") as fp:
+        yaml.safe_dump(data, fp)
+    with open(path, "w") as fp:
+        yaml.safe_dump(data, stream=fp)
+    blob = json.dumps(data)
+    inline = yaml.safe_dump(data)
+    return blob, inline
+"""
+    kinds = [kind for _, kind in _primitive_write_calls(ast.parse(source))]
+    assert kinds.count("dump") == 1, "json.dump(obj, fp) not detected"
+    assert kinds.count("safe_dump") == 2, "yaml.safe_dump to a handle not detected"
+    # json.dumps/yaml.safe_dump(data) return a string; they are not writes.
+    assert "dumps" not in kinds
 
 
 def test_census_covers_every_platform_module():
