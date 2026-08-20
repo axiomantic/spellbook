@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Develop records subagent dispatches from the harness rather than from the
+  agent. A `PostToolUse` hook on `Task` writes an entry under
+  `dispatches.<timestamp>` in the project's develop gate ledger, and a new
+  `dispatches` subcommand of `scripts/develop_gate_ledger.py` queries it: exit
+  `0` when something matches, exit `1` when nothing does, so a phase-verification
+  item can BE the invocation instead of a box the agent ticks for itself.
+  `--since` bounds the query, without which one dispatch recorded during the
+  first task satisfies the same check for every task after it. The dispatch
+  prompt is deliberately not stored -- it routinely carries file contents and
+  operator text -- only the recognized skill names, the subagent type, and a
+  description truncated to 200 characters. A companion `record-dispatch`
+  subcommand writes an entry directly.
+- Develop's per-phase artifact-verification items now declare what decides each
+  one. Fourteen are marked `[CHECKED]` and name the command whose exit status or
+  output is the verdict; eight are marked `[SELF]` and are stated on the record
+  as self-assertions no mechanism reads. Previously every item was a bare
+  checkbox, which gave identical weight to a command's result and to a claim by
+  the party who would have skipped the step.
+- Two guards for shapes that previously read as coverage while proving nothing:
+  `scripts/check_self_manufactured_evidence.py` reports a corpus check whose
+  every input was built by the test that gave it and which nothing aims at the
+  real checkout, and a new test rejects a workflow job gated on an event its
+  workflow never declares under `on:` -- such a job cannot run under any event
+  and never appears as a failure.
+- `scripts/check_version_consistency.py` runs as a pre-commit hook, and so also
+  in the CI pre-commit job. It requires `extensions/gemini/gemini-extension.json`
+  to agree with `.version`, and requires CHANGELOG.md to carry a
+  `## [<version>]` section for the version in `.version` before that version can
+  reach main.
+
 ### Changed
 
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
@@ -23,6 +55,92 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
+- Develop's two percentage gates are gone. Phase 1's "Research Quality Score"
+  and Phase 1.5's "Completeness Score" were presented as executable TypeScript
+  requiring 100% to proceed, and nothing ever executed them -- there is no
+  TypeScript runtime in this pipeline and no caller. Each gate is now split into
+  the half a machine decides and the half only the agent can.
+  `scripts/check_research_quality.py` computes seven structural checks over the
+  Phase 1.2 research artifact and `scripts/check_understanding_doc.py` computes
+  six over the Phase 1.5.6 understanding document; exit status is the gate, and
+  both refuse on a deferral marker (`TBD`, "to be determined", "figure it out
+  later"). The judgment items are recorded YES / NO / N-A with one line of
+  evidence each, and reporting them as a percentage is now FORBIDDEN. This
+  deliberately LOWERS the stated strength of those items to what was always
+  true of them.
+- `scripts/develop_gate_ledger.py` refuses several writes it previously
+  accepted. A bare `set <field> <value>` on any of the six recorder-owned
+  fields (`ceremony`, `ceremony_history`, `blockers`, `waves`, `groups`,
+  `dispatches`) replaced the whole object with a scalar and exited `0`, logging
+  a warning while the write landed; those six are now refused by name, and each
+  refusal points at the route that writes the field. After the ceremony lock,
+  `ceremony.selected` and `ceremony.core` may not shrink and `ceremony.declined`
+  may not grow -- growing `declined` dropped a gate by the back door, since
+  `remaining_gates` is derived with declined gates filtered out. The lock is now
+  decided on the presence of `ceremony.locked_at` rather than its truthiness,
+  which had let an empty stamp read as unlocked to every guard at once, and a
+  blank stamp is refused on write. `archive-ceremony` remains the sanctioned
+  de-escalation route; escalation stays legal in every direction.
+- Several repository gates widened to trees they had quietly excluded, and stop
+  depending on whose disk they run on. `scripts/check_removed_mode_tokens.py`
+  now scans `rules/` as well -- a rule module installs globally and is read at
+  the start of every session, which makes it the tree with the weakest case for
+  exclusion (242 files scanned, zero violations in both the old and new scope).
+  The prose rows of `scripts/check_reference_resolution.py` now scan tracked
+  files only, so a local installer run no longer adds findings CI can never see.
+  The mkdocs nav check covers `rules/` in both directions, closing a gap where
+  deleting a rule left a stale nav entry that nothing reported. Corpus tree
+  memberships that were spelled out across eleven sites now come from
+  `scripts/corpus_trees.py` as three named sets, each carrying its reason.
+- `scripts/validate_schemas.py` replaces the blanket size exemption with a
+  per-file ratchet. An exempt file had no ceiling at all, so the exemption set
+  recorded which files were too large and then stopped measuring them.
+  `scripts/size_ceilings.json` records a per-file bytes/lines ceiling that is
+  checked INSTEAD of the global limits; ceilings only ever decrease, enforced by
+  the code rather than by convention, and a ceiling above the truncation limits
+  additionally requires a recorded rationale.
+- The always-loaded communication rules now name the mechanism generically as a
+  "structured question", with `AskUserQuestion` given as the Claude Code
+  instance of it -- spellbook installs to nine harnesses, and a rule naming a
+  tool that does not exist on yours is one you can satisfy by doing nothing. The
+  rules also cover decisions disguised as recommendations: "I recommend",
+  "flagging", "worth noting", "your call" all leave a choice open while reading
+  as a report. Prose is now reserved for facts and completed work, and anything
+  that defers a choice or hands it back must reach the operator as a structured
+  question. Batching decisions into fewer, larger question sets is encouraged
+  and never licenses demoting one back into prose.
+- Eleven skill parents no longer restate detail their own sub-commands are
+  responsible for executing: `advanced-code-review`, `code-review`,
+  `fractal-thinking`, `finding-dead-code`, `documenting-projects`,
+  `creating-issues-and-pull-requests`, `auditing-green-mirage`, `agent2agent`,
+  `fixing-tests`, `reviewing-impl-plans`, and `develop`. Each parent keeps its
+  dispatch table, its invariants, and a pointer; the detail moves verbatim into
+  the command that acts on it. A second copy of a gate drifts from the first
+  with nothing to notice. Nothing was summarized away.
+- The develop skill gained four amendments, each earned by an observed failure.
+  Gate 4.4's completion audit walked four lists that all iterated over something
+  the PLAN declared, so an instruction living only as a sentence in a task body
+  belonged to none of them and the audit could return COMPLETE without
+  mentioning it; a fifth list now enumerates the task's imperatives and names a
+  decider for each. The overall verdict was emitted with no derivation rule, so
+  a reported per-item failure could still aggregate to COMPLETE -- the
+  aggregation rule is now stated.
+
+### Removed
+
+- `scripts/install-hooks.sh` is deleted. It wrote `.git/hooks/pre-commit`
+  directly, and the repository adopted the pre-commit framework one day after
+  the script landed; the framework's generated hook occupies that same path, so
+  running the script would have silently replaced it and disabled all configured
+  hooks with no error and no visible symptom. Both of its jobs are already
+  covered -- doctoc by the framework, markdownlint by the lint workflow.
+  `CONTRIBUTING.md` and `AGENTS.md` advertised it as the hook installation step
+  and now point at `uvx pre-commit install`.
+- `scripts/scan_supply_chain.py` is deleted. It was a survivor of the earlier
+  security cleanup that removed the unused defensive scanners as a cohort: 401
+  lines, no test module, and no invoker anywhere in the tree. A checker nothing
+  runs is worse than no checker, because it reads as coverage to anyone auditing
+  what guards this repository while its verdict has never reached a caller.
 
 ### Fixed
 
@@ -47,6 +165,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `1` where it exited `2`. Verified end to end against a corrupt ledger on each
   of the five, with the true exit status captured directly rather than through
   a pipe.
+- The release workflow no longer ships a placeholder in place of release notes.
+  When `.github/workflows/release.yml` could not find a `## [$VERSION]` heading
+  in CHANGELOG.md it substituted "No release notes provided for this version."
+  and continued, so sixteen releases (`v0.71.0` through `v0.81.0`) shipped empty
+  notes as a green build: a release with no notes was indistinguishable from a
+  release with notes. A missing CHANGELOG.md, a missing section, and a section
+  with a heading but no body are now three hard failures. The step runs before
+  the tag is created, so an abort leaves no tag behind. The sixteen historical
+  release bodies are not reconstructed here.
+- `installer.version.validate_version_consistency` and `sync_version_to_files`
+  were written to catch exactly the class of drift that left the gemini manifest
+  88 minor releases behind `.version`, and neither had a caller anywhere in the
+  tree. A validator nothing invokes caught nothing across 88 releases.
+  `scripts/check_version_consistency.py` is now that caller.
+- `scripts/develop_gate_ledger.py` refuses a malformed ledger instead of exiting
+  with a raw traceback. A scalar `ceremony`, or a list-valued
+  `ceremony.selected`, raised `AttributeError` straight through the CLI, and the
+  sibling `blockers` and `waves` maps had the same shape assumption. These
+  states are reachable: the bare-`set` bypass described above wrote them and
+  exited `0`. That makes this the RECOVERY path, where a traceback costs the
+  most -- the reader already holds a broken ledger and is trying to repair it.
+  Each refusal now names `archive-ceremony` as the remedy, and `archive-ceremony`
+  itself was fixed to accept a present-but-falsy `ceremony` (`""`, `0`, `false`,
+  `[]`), which the field write and the archive it pointed at had both rejected,
+  leaving hand-editing the JSON as the only route.
+- `scripts/check_self_manufactured_evidence.py` emits POSIX-shaped paths at all
+  five emission sites. Verdict names, evidence locations, and `referenced_by`
+  entries were built with `str(Path)`, so the same checkout emitted
+  `tests/test_corpus_shape.py` on POSIX and `tests\test_corpus_shape.py` on
+  Windows, failing two Windows CI tests. A tool whose own output changes shape
+  by platform is the defect; relaxing the assertions would have hidden it.
+- `extensions/prime-agent/README.md` named
+  `tests/installer/test_prime_agent_rules_install.py` in its Testing section.
+  That path does not exist; the file is at `tests/integration/`. No prose row
+  scans `extensions/`, which is why the reference gate never saw it.
 
 ## [0.89.0] - 2026-08-17
 
