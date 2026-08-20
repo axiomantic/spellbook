@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
+  the filesystem for the layouts that are determined by what is on disk (plain
+  repository, linked worktree, any subdirectory of either, no repository at
+  all), and spawns `git worktree list --porcelain` only for the layouts that
+  are not (submodule, bare repository, worktree of a bare repository, any
+  `GIT_*` discovery override). The `Task` PostToolUse hook reached this on every
+  dispatch once any develop ledger existed on the machine; measured end to end
+  with a PATH-shimmed `git`, a real hook process on this checkout now invokes
+  git 0 times, against 1 before. Memoization was not an option: the hook is one
+  process per event, so an in-process cache is written once and never read.
+  This function's output is a storage key, so the mapping is pinned by
+  `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
+  and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
+  held against it as a standing differential.
+
 ### Fixed
 
 - `finish-branch-cleanup` no longer deletes the worktree for "Keep the branch
@@ -29,26 +46,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pr-conventions` rule module forbids by name. Option 2 now pushes and then
   invokes the `creating-issues-and-pull-requests` skill, which discovers and
   applies the repository's own PR template.
-
-### Changed
-
-- `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
-  the filesystem for the layouts that are determined by what is on disk (plain
-  repository, linked worktree, any subdirectory of either, no repository at
-  all), and spawns `git worktree list --porcelain` only for the layouts that
-  are not (submodule, bare repository, worktree of a bare repository, any
-  `GIT_*` discovery override). The `Task` PostToolUse hook reached this on every
-  dispatch once any develop ledger existed on the machine; measured end to end
-  with a PATH-shimmed `git`, a real hook process on this checkout now invokes
-  git 0 times, against 1 before. Memoization was not an option: the hook is one
-  process per event, so an in-process cache is written once and never read.
-  This function's output is a storage key, so the mapping is pinned by
-  `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
-  and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
-  held against it as a standing differential.
-
-### Fixed
-
 - `scripts/develop_gate_ledger.py` now applies its documented exit-code split
   on every subcommand. `1` means the STORED ledger is not what the operation
   needs, `2` means the CALLER asked for something the ledger does not accept.
