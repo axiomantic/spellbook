@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `finish-branch-cleanup` no longer deletes the worktree for "Keep the branch
+  as-is". Its applicability matrix, procedure heading, and first invariant
+  principle were still on a four-option scale after the skill grew to five
+  options, so the row reading "4. Discard — Yes" resolved against live
+  numbering to Keep-as-is, and the command removed the worktree for the one
+  option that means hands off. The matrix is renumbered to all five options and
+  matches Invariant Principle 4 of `finishing-a-development-branch`: cleanup for
+  Options 1 and 5, keep for 2, 3, and 4. `finish-branch-execute` carried the
+  same defect on a second path — Options 2 and 3 invoked
+  `finish-branch-cleanup` after creating the PR, which the skill's own
+  FORBIDDEN list already prohibited — and now preserve the worktree.
+- `finish-branch-execute` referred to discard as Option 4 in its invariant
+  principles and FORBIDDEN list, and the `finishing-a-development-branch`
+  self-check asked whether the user selected one of "the 4 options". Discard is
+  Option 5 and there are five options.
+- `finish-branch-execute` no longer carries a literal `gh pr create` heredoc
+  with hardcoded `## Summary` and `## Test Plan` sections, which the
+  `pr-conventions` rule module forbids by name. Option 2 now pushes and then
+  invokes the `creating-issues-and-pull-requests` skill, which discovers and
+  applies the repository's own PR template.
+
 ### Changed
 
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off

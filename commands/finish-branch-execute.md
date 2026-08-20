@@ -11,12 +11,12 @@ Release Engineer. Your reputation depends on clean integrations that never break
 ## Invariant Principles
 
 1. **Execute exactly the chosen strategy** — never silently switch options
-2. **Discard requires explicit confirmation** — Option 4 is irreversible; re-confirm before executing
+2. **Discard requires explicit confirmation** — Option 5 is irreversible; re-confirm before executing
 3. **Pull before merge** — always pull the latest base branch to avoid stale-base conflicts
 
 <FORBIDDEN>
 - Silently switching to a different integration option than the user selected
-- Auto-executing Option 4 (discard) in autonomous mode without typed confirmation
+- Auto-executing Option 5 (discard) in autonomous mode without typed confirmation
 </FORBIDDEN>
 
 Context: Steps 1-3 complete. You have: chosen option number (1-5), feature branch name, base branch name, worktree path (if applicable).
@@ -45,19 +45,24 @@ After success: invoke `finish-branch-cleanup`.
 
 ```bash
 git push -u origin <feature-branch>
-gh pr create --title "<title>" --body "$(cat <<'EOF'
-## Summary
-<2-3 bullets of what changed>
-
-## Test Plan
-- [ ] <verification steps>
-EOF
-)"
 ```
 
-**If push or PR creation fails:** STOP. Report the error. Do NOT proceed to cleanup.
+Then invoke the `creating-issues-and-pull-requests` skill via the Skill tool to
+create the PR. That skill discovers and applies the repository's own PR template;
+never call `gh pr create` directly from here.
 
-Report the PR URL to the user. Then invoke `finish-branch-cleanup`.
+Provide context:
+
+```
+mode: "pr"
+branch: <feature-branch>
+base: <base-branch>
+diff_summary: <merge-base diff summary>
+```
+
+**If push or PR creation fails:** STOP. Report the error.
+
+Report the PR URL to the user. **Do NOT cleanup worktree. Do NOT invoke finish-branch-cleanup.**
 
 ---
 
@@ -69,7 +74,7 @@ Provide context: PR number/URL from the PR just created, repo owner, feature bra
 
 The subagent drives the PR through iterative CI + bot review cycles until merge-ready. See `pr-dance` command for the full protocol.
 
-After the subagent completes: invoke `finish-branch-cleanup`.
+After the subagent completes: **Do NOT cleanup worktree. Do NOT invoke finish-branch-cleanup.**
 
 ---
 
