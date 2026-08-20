@@ -2438,3 +2438,278 @@ def test_cli_exits_2_when_the_caller_asked_for_something_invalid(
         f"contract reserves 2 for that. stderr: {proc.stderr.strip()}"
     )
     assert expected_message in proc.stderr
+
+
+# ---- malformed stored map shapes: blockers / waves / ceremony_history ----
+#
+# Same defect class as the malformed-ceremony block above, in the sibling
+# fields left out of that pass. Every one of these shapes is reachable: the
+# shipped CLI wrote `{"blockers": "collapsed"}`, `{"waves": "collapsed"}`,
+# `{"ceremony_history": "collapsed"}` and `{"dispatches": "collapsed"}` at
+# exit 0 before the bare-`set` refusal closed that route, so a ledger written
+# by that code already carries them on disk.
+#
+# The two halves are NOT symmetric, and the asymmetry is the point. A read
+# that gates a claim REFUSES, because operating on a shape it cannot parse
+# would answer the gate question with a guess. A write on the RECOVERY path
+# must never refuse, because refusing there is the dead end PR 469 shipped:
+# a remedy that is itself blocked leaves hand-editing the JSON as the only
+# way out.
+
+_MALFORMED_NON_EMPTY = ['"collapsed"', '["a"]', "7"]
+_MALFORMED_FALSY = ['""', "0", "false", "[]"]
+
+
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY + _MALFORMED_FALSY)
+def test_record_blocker_close_refuses_a_malformed_blockers(tmp_ledger, raw):
+    """A non-object `blockers` raised AttributeError out of `.get`.
+
+    The falsy shapes did not crash -- `or {}` swallowed them -- but they
+    reported "no open blocker to close", which names a MISSING ENTRY when
+    the real fault is a malformed field. That message sends the reader
+    looking for the wrong thing.
+    """
+    _write_raw_ledger(tmp_ledger, f'{{"blockers": {raw}}}')
+    with pytest.raises(ledger.LedgerError) as exc:
+        ledger.record_blocker("B1", close=True)
+    message = str(exc.value)
+    assert "blockers" in message
+    assert "--type" in message
+
+
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY + _MALFORMED_FALSY)
+def test_wave_discipline_status_refuses_a_malformed_waves(tmp_ledger, raw):
+    """`waves` gates every "Wave N done" claim through is_wave_done_claimable."""
+    _write_raw_ledger(tmp_ledger, f'{{"waves": {raw}}}')
+    with pytest.raises(ledger.LedgerError) as exc:
+        ledger.wave_discipline_status("W1")
+    message = str(exc.value)
+    assert "waves" in message
+    assert "wave-discipline" in message
+
+
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY + _MALFORMED_FALSY)
+def test_is_wave_done_claimable_refuses_rather_than_answering(tmp_ledger, raw):
+    """The gate must not answer False on a shape it could not read.
+
+    False and "the ledger is malformed" are different facts. Returning the
+    first for the second is survivable here only because the claim is
+    refused either way -- but the operator is then told the wave did not
+    pass, when what actually happened is that nothing could be read.
+    """
+    _write_raw_ledger(tmp_ledger, f'{{"waves": {raw}}}')
+    with pytest.raises(ledger.LedgerError):
+        ledger.is_wave_done_claimable("W1")
+
+
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY + _MALFORMED_FALSY)
+def test_archive_ceremony_survives_a_malformed_ceremony_history(tmp_ledger, raw):
+    """The remedy every ceremony refusal names must work, whatever else is broken.
+
+    `dict(current.get("ceremony_history") or {})` raised `ValueError:
+    dictionary update sequence element #0 has length 1; 2 is required` on a
+    string or list, and `TypeError: 'int' object is not iterable` on a
+    number -- a raw traceback, since `_cmd_archive_ceremony` catches neither.
+    Refusing here is not an option: this IS the recovery route.
+    """
+    _write_raw_ledger(
+        tmp_ledger, f'{{"ceremony": {{"selected": "gate-a"}}, "ceremony_history": {raw}}}'
+    )
+    result = ledger.archive_ceremony("repairing a collapsed ledger")
+    history = result["ceremony_history"]
+    assert isinstance(history, dict)
+    assert len(history) == 1
+    entry = next(iter(history.values()))
+    assert entry["ceremony"] == {"selected": "gate-a"}
+    # The malformed value is EVIDENCE of what the ledger held, not litter.
+    assert entry["prior_ceremony_history"] == json.loads(raw)
+    assert result["ceremony"] == {}
+
+
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY + _MALFORMED_FALSY)
+def test_record_dispatch_survives_a_malformed_dispatches(tmp_ledger, raw):
+    """Same `dict(... or {})` shape, on the path a harness hook drives.
+
+    `record_dispatch` is written by the `PostToolUse` hook, which fires
+    without the agent's cooperation -- a traceback there breaks recording
+    for a party that cannot see the error, so this write must not refuse
+    either.
+    """
+    _write_raw_ledger(tmp_ledger, f'{{"dispatches": {raw}}}')
+    result = ledger.record_dispatch(subagent_type="impl")
+    dispatches = result["dispatches"]
+    assert isinstance(dispatches, dict)
+    assert len(dispatches) == 1
+    entry = next(iter(dispatches.values()))
+    assert entry["subagent_type"] == "impl"
+    assert entry["prior_dispatches"] == json.loads(raw)
+
+
+def test_absent_maps_do_not_gain_a_prior_key(tmp_ledger):
+    """Absent and null are the ORDINARY fresh-ledger case, not malformed."""
+    _write_raw_ledger(tmp_ledger, '{"ceremony": {"selected": "g"}, "dispatches": null}')
+    dispatched = ledger.record_dispatch(subagent_type="impl")
+    assert "prior_dispatches" not in next(iter(dispatched["dispatches"].values()))
+    archived = ledger.archive_ceremony("ordinary supersede")
+    entry = next(iter(archived["ceremony_history"].values()))
+    assert "prior_ceremony_history" not in entry
+
+
+def test_well_formed_maps_are_undisturbed(tmp_ledger):
+    """The guards must not disturb the normal paths they wrap."""
+    ledger.record_blocker("B1", blocker_type="decision")
+    assert ledger.record_blocker("B1", close=True)["blockers"]["B1"]["closed_at"]
+    ledger.record_wave_discipline("W1", status="passed")
+    assert ledger.wave_discipline_status("W1")["status"] == "passed"
+    assert ledger.is_wave_done_claimable("W1") is True
+    assert ledger.wave_discipline_status("W-absent") is None
+    assert ledger.is_wave_done_claimable("W-absent") is False
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY)
+def test_cli_blocker_close_on_a_malformed_blockers_refuses_without_a_traceback(
+    tmp_ledger, raw
+):
+    _write_raw_ledger(tmp_ledger, f'{{"blockers": {raw}}}')
+    proc = _run_cli("blocker", "B1", "--close")
+    # 1, not 2: a malformed stored map is a LedgerError. The exit-code split is
+    # uniform across all eight subcommands as of the ledger-CLI reference work;
+    # this asserted 2 when `_cmd_blocker` still collapsed both exception types.
+    assert proc.returncode == 1
+    assert "Traceback" not in proc.stderr
+    assert "AttributeError" not in proc.stderr
+    assert "blockers" in proc.stderr
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY)
+def test_cli_blocker_open_repairs_a_malformed_blockers(tmp_ledger, raw):
+    """The remedy the refusal names has to work on the shape it was named for."""
+    _write_raw_ledger(tmp_ledger, f'{{"blockers": {raw}}}')
+    assert _run_cli("blocker", "B1", "--type", "decision").returncode == 0
+    assert _run_cli("blocker", "B1", "--close").returncode == 0
+    assert ledger.read_ledger()["blockers"]["B1"]["closed_at"]
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY)
+def test_cli_wave_discipline_repairs_a_malformed_waves(tmp_ledger, raw):
+    _write_raw_ledger(tmp_ledger, f'{{"waves": {raw}}}')
+    proc = _run_cli("wave-discipline", "W1", "--status", "passed")
+    assert proc.returncode == 0
+    assert "Traceback" not in proc.stderr
+    assert ledger.is_wave_done_claimable("W1") is True
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY)
+def test_cli_archive_ceremony_repairs_a_malformed_ceremony_history(tmp_ledger, raw):
+    _write_raw_ledger(
+        tmp_ledger, f'{{"ceremony": "heavy", "ceremony_history": {raw}}}'
+    )
+    proc = _run_cli("archive-ceremony", "--reason", "repairing a collapsed ledger")
+    assert proc.returncode == 0
+    assert "Traceback" not in proc.stderr
+    assert ledger.read_ledger()["ceremony"] == {}
+    # Normal operation resumes: a fresh Phase 0 may now set the lock.
+    assert _run_cli("set", "ceremony.locked_at", "2026-01-01T00:00:00Z").returncode == 0
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY)
+def test_cli_record_dispatch_survives_a_malformed_dispatches(tmp_ledger, raw):
+    _write_raw_ledger(tmp_ledger, f'{{"dispatches": {raw}}}')
+    proc = _run_cli("record-dispatch", "--subagent-type", "impl")
+    assert proc.returncode == 0
+    assert "Traceback" not in proc.stderr
+    assert len(ledger.read_ledger()["dispatches"]) == 1
+
+
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY)
+def test_wave_discipline_status_refuses_a_malformed_wave_entry(tmp_ledger, raw):
+    """The shape assumption repeats at every level the read walks down.
+
+    Guarding only the top level moves the AttributeError one `.get` deeper
+    instead of removing it -- the reported crash site was not the first one
+    on the ceremony path either.
+    """
+    _write_raw_ledger(tmp_ledger, f'{{"waves": {{"W1": {raw}}}}}')
+    with pytest.raises(ledger.LedgerError) as exc:
+        ledger.wave_discipline_status("W1")
+    assert "waves.W1" in str(exc.value)
+
+
+@pytest.mark.parametrize("raw", _MALFORMED_NON_EMPTY)
+def test_is_wave_done_claimable_refuses_a_malformed_check_entry(tmp_ledger, raw):
+    _write_raw_ledger(
+        tmp_ledger, f'{{"waves": {{"W1": {{"section_24_6_check": {raw}}}}}}}'
+    )
+    with pytest.raises(ledger.LedgerError) as exc:
+        ledger.is_wave_done_claimable("W1")
+    assert "section_24_6_check" in str(exc.value)
+
+
+# ---- the named remedies must be RUNNABLE ---------------------------------
+#
+# PR 469 shipped a refusal whose named remedy was itself refused, and the
+# first draft of the guards above did it again in a smaller way: the message
+# named `show blockers`, which argparse rejects with exit 2 -- the real
+# spelling is `show --field blockers`. Prose review did not catch either one.
+# Extracting the commands from the message and RUNNING them does.
+
+
+def _remedy_commands(message: str) -> list[list[str]]:
+    """The backtick-quoted CLI commands a refusal message names.
+
+    A remedy is only a remedy if the reader can type it. Placeholders in
+    angle brackets are filled with values valid for the command, because
+    what is under test is the SPELLING argparse accepts, not the argument.
+    """
+    commands = []
+    for quoted in re.findall(r"`([^`]+)`", message):
+        parts = quoted.split()
+        if not parts or parts[0] in ("set",):
+            continue
+        filled = []
+        for part in parts:
+            if part == "<id>":
+                filled.append("REMEDY-1")
+            elif part == "<wave>":
+                filled.append("W1")
+            elif part.startswith("<") and part.endswith(">"):
+                filled.append(part.strip("<>").split("/")[0])
+            else:
+                filled.append(part)
+        commands.append(filled)
+    return commands
+
+
+def test_remedy_extractor_finds_and_fills_placeholders():
+    """The extractor must not be vacuous, or the checks below prove nothing."""
+    assert _remedy_commands("run `blocker <id> --type decision/work/external`") == [
+        ["blocker", "REMEDY-1", "--type", "decision/work/external"]
+    ]
+    assert _remedy_commands("no commands here") == []
+
+
+@pytest.mark.allow("subprocess")
+@pytest.mark.parametrize(
+    ("field", "trigger"),
+    [
+        ("blockers", lambda: ledger.record_blocker("B1", close=True)),
+        ("waves", lambda: ledger.wave_discipline_status("W1")),
+    ],
+)
+def test_every_named_remedy_is_a_command_the_cli_accepts(tmp_ledger, field, trigger):
+    _write_raw_ledger(tmp_ledger, f'{{"{field}": "collapsed"}}')
+    with pytest.raises(ledger.LedgerError) as exc:
+        trigger()
+    commands = _remedy_commands(str(exc.value))
+    assert commands, f"the {field!r} refusal names no runnable remedy"
+    for command in commands:
+        proc = _run_cli(*command)
+        assert proc.returncode == 0, (
+            f"refusal for {field!r} names `{' '.join(command)}`, which the CLI "
+            f"rejects with exit {proc.returncode}: {proc.stderr.strip()}"
+        )
