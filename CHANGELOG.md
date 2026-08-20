@@ -53,6 +53,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
 
+### Removed
+
+- **The `docs/admin/` documentation section.** It documented a browser-based
+  admin interface that is no longer part of this repository: the implementation
+  under `spellbook/admin/` was deleted in `7a8e9ab1` ("feat: prime-agent
+  platform support + major subsystem removal"). The pages instructed readers to
+  open `http://localhost:8765/admin/` and authenticate at a login page against
+  software that is not present, using the MCP bearer token that this same
+  release removes. Ten pages and eleven screenshots are gone, along with their
+  `mkdocs.yml` nav section and the "Web Admin Interface" section of `README.md`.
+  The published docs site loses that section.
+
 ## [0.89.0] - 2026-08-17
 
 ### Added
