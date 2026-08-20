@@ -391,19 +391,3 @@ def resolve_selection(
         unanswered_ids=unanswered,
     )
 
-
-def config_schema_entries(modules: Sequence[RuleModule]) -> List[Dict[str, Any]]:
-    """Generate one boolean config-schema entry per preference module.
-
-    The entry format supports only boolean, number, and string, so a per-module
-    map is not expressible; one boolean key per preference module is.
-    """
-    return [
-        {
-            "key": module.config_key,
-            "type": "boolean",
-            "description": module.benefit,
-            "default": module.default_on,
-        }
-        for module in preference_modules(modules)
-    ]

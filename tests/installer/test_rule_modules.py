@@ -34,7 +34,6 @@ from installer.components.rule_migration import (
 )
 from installer.components.rule_modules import (
     RuleModuleError,
-    config_schema_entries,
     get_rules_dir,
     load_rule_modules,
     parse_rule_module,
@@ -256,19 +255,6 @@ class TestSelection:
         assert "session-modes" not in selection.selected_ids
         assert "session-modes" in selection.declined_ids
         assert "session-modes" not in selection.unanswered_ids
-
-    def test_schema_entries_cover_exactly_the_preference_modules(self, rules_dir: Path):
-        modules = load_rule_modules(rules_dir)
-        entries = config_schema_entries(modules)
-
-        assert {e["key"] for e in entries} == {
-            "rules.module.session",
-            "rules.module.autonomy",
-            "rules.module.review-posture",
-        }
-        assert all(e["type"] == "boolean" for e in entries)
-        posture = next(e for e in entries if e["key"].endswith("review-posture"))
-        assert posture["default"] is False
 
 
 class TestBundle:
