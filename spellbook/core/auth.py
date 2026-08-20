@@ -58,12 +58,33 @@ def _hostname_of(value: str) -> str | None:
         return None
 
 
-def get_allowed_origins() -> frozenset[str]:
-    """Return extra exact-match origins from SPELLBOOK_ALLOWED_ORIGINS.
+def _origin_parts(value: str) -> tuple[str, str, int | None] | None:
+    """Split an Origin into (scheme, hostname, port), or None if unparseable.
 
-    Loopback origins are always allowed and are not listed here. This variable
-    exists for a browser-based MCP client served from somewhere else, which the
-    hostname rule cannot recognise.
+    Comparing the parts, not the string, keeps IPv6 bracket forms and a
+    redundant explicit port from changing the answer.
+    """
+    if not value:
+        return None
+    try:
+        parsed = urlsplit(value.strip())
+    except ValueError:
+        return None
+    if not parsed.scheme or not parsed.hostname:
+        return None
+    try:
+        port = parsed.port
+    except ValueError:
+        return None
+    return parsed.scheme.lower(), parsed.hostname.lower(), port
+
+
+def get_allowed_origins() -> frozenset[str]:
+    """Return exact-match origins from SPELLBOOK_ALLOWED_ORIGINS.
+
+    Matching is exact on scheme, host, and port. Nothing beyond the daemon's
+    own origin is allowed implicitly: a browser-based MCP client -- local or
+    remote -- must be listed here.
     """
     from spellbook.core.config import get_env
 
@@ -98,6 +119,17 @@ class OriginValidationMiddleware:
         if bind_host:
             self.allowed_hostnames.add(bind_host.lower())
 
+        # The daemon's own origin, and only that one: same scheme, same host,
+        # same port. A page served from another port on this machine is a
+        # different origin and gets no implicit trust from being local.
+        try:
+            bind_port: int | None = int(get_env("PORT", "8765") or "8765")
+        except ValueError:
+            bind_port = None
+        self.self_origins = frozenset(
+            ("http", hostname, bind_port) for hostname in self.allowed_hostnames
+        )
+
     def _rejection(self, reason: str) -> JSONResponse:
         # 403, not 401: there are no credentials, so nothing the caller could
         # supply would change the outcome. 401 would promise a retry path that
@@ -106,18 +138,37 @@ class OriginValidationMiddleware:
 
     def _check(self, scope) -> JSONResponse | None:
         """Return a rejection response, or None when the request may proceed."""
-        headers = dict(scope.get("headers", []))
+        raw = scope.get("headers", []) or []
 
-        def header(name: bytes) -> str:
-            return headers.get(name, b"").decode("utf-8", errors="ignore")
+        def values(name: str) -> list[str]:
+            # Case-folded on our side rather than trusting the ASGI server to
+            # have lowercased the names: a server or shim that does not would
+            # otherwise make this check silently vanish.
+            target = name.encode()
+            return [
+                value.decode("utf-8", errors="ignore")
+                for key, value in raw
+                if key.lower() == target
+            ]
 
-        host_value = header(b"host")
+        # More than one copy of either header is a request-smuggling shape, not
+        # a legitimate client. Neither first-wins nor last-wins is safe: each
+        # merely picks which smuggling direction succeeds, so refuse outright.
+        host_values = values("host")
+        if len(host_values) > 1:
+            return self._rejection("duplicate Host header")
+
+        origin_values = values("origin")
+        if len(origin_values) > 1:
+            return self._rejection("duplicate Origin header")
+
+        host_value = host_values[0] if host_values else ""
         if host_value:
             hostname = _hostname_of(host_value)
             if hostname is None or hostname.lower() not in self.allowed_hostnames:
                 return self._rejection("unrecognized Host header")
 
-        origin_value = header(b"origin")
+        origin_value = origin_values[0] if origin_values else ""
         if not origin_value:
             # No Origin: not a browser request under a page's control.
             return None
@@ -126,8 +177,8 @@ class OriginValidationMiddleware:
         if normalized in self.allowed_origins:
             return None
 
-        origin_host = _hostname_of(origin_value)
-        if origin_host and origin_host.lower() in LOOPBACK_HOSTNAMES:
+        parts = _origin_parts(origin_value)
+        if parts is not None and parts in self.self_origins:
             return None
 
         return self._rejection("origin not allowed")

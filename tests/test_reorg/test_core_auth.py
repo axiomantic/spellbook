@@ -45,6 +45,32 @@ async def drive(middleware, headers, path="/mcp"):
     return status, body
 
 
+async def drive_raw(middleware, raw_headers, path="/mcp"):
+    """Drive an ASGI middleware with a raw header list.
+
+    A dict cannot express a repeated header or a name whose case the ASGI
+    server did not fold, and both are exactly what the smuggling cases need.
+    """
+    scope = {
+        "type": "http",
+        "path": path,
+        "method": "POST",
+        "headers": [(k.encode(), v.encode()) for k, v in raw_headers],
+    }
+    sent = []
+
+    async def receive():
+        return {"type": "http.request", "body": b"", "more_body": False}
+
+    async def send(message):
+        sent.append(message)
+
+    await middleware(scope, receive, send)
+    status = next(m["status"] for m in sent if m["type"] == "http.response.start")
+    body = b"".join(m.get("body", b"") for m in sent if m["type"] == "http.response.body")
+    return status, body
+
+
 @pytest.fixture
 def app():
     return OriginValidationMiddleware(_ok_app)
@@ -84,18 +110,93 @@ async def test_non_localhost_host_is_rejected(app):
 
 @pytest.mark.parametrize(
     "origin",
+    ["http://localhost:8765", "http://127.0.0.1:8765", "http://[::1]:8765"],
+)
+@pytest.mark.asyncio
+async def test_daemon_own_origin_is_allowed(app, origin):
+    """The daemon's own origin -- its scheme, its host, its port -- is allowed."""
+    status, _ = await drive(app, {"Host": "127.0.0.1:8765", "Origin": origin})
+    assert status == 200
+
+
+@pytest.mark.parametrize(
+    "origin",
     [
         "http://localhost:3000",
         "http://127.0.0.1:5173",
         "http://[::1]:8080",
         "https://localhost",
+        "https://localhost:8765",
+        "http://localhost",
     ],
 )
 @pytest.mark.asyncio
-async def test_loopback_origins_are_allowed(app, origin):
-    """A browser MCP client served from the user's own machine is allowed."""
+async def test_loopback_on_another_origin_is_rejected(app, origin):
+    """Being local buys nothing: a different port or scheme is a different origin.
+
+    A local browser client must be named in SPELLBOOK_ALLOWED_ORIGINS.
+    """
     status, _ = await drive(app, {"Host": "127.0.0.1:8765", "Origin": origin})
+    assert status == 403
+
+
+@pytest.mark.asyncio
+async def test_local_browser_client_via_allowlist(monkeypatch):
+    """The documented way back to a local browser client on another port."""
+    monkeypatch.setenv("SPELLBOOK_ALLOWED_ORIGINS", "http://localhost:3000")
+    app = OriginValidationMiddleware(_ok_app)
+    status, _ = await drive(app, {"Host": "127.0.0.1:8765", "Origin": "http://localhost:3000"})
     assert status == 200
+
+
+# ---------------------------------------------------------------------------
+# Duplicate headers and header-name case
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "origins",
+    [
+        ["http://localhost:8765", "http://evil.com"],
+        ["http://evil.com", "http://localhost:8765"],
+    ],
+    ids=["benign-first", "hostile-first"],
+)
+@pytest.mark.asyncio
+async def test_duplicate_origin_is_rejected(app, origins):
+    """Neither first-wins nor last-wins is safe, so two Origins are refused.
+
+    Picking either one only chooses which smuggling direction succeeds.
+    """
+    headers = [("host", "127.0.0.1:8765")] + [("origin", o) for o in origins]
+    status, body = await drive_raw(app, headers)
+    assert status == 403
+    assert b"duplicate Origin" in body
+
+
+@pytest.mark.asyncio
+async def test_duplicate_host_is_rejected(app):
+    """Same reasoning applies to a repeated Host."""
+    headers = [("host", "127.0.0.1:8765"), ("host", "attacker.example.com")]
+    status, body = await drive_raw(app, headers)
+    assert status == 403
+    assert b"duplicate Host" in body
+
+
+@pytest.mark.asyncio
+async def test_header_names_are_matched_case_insensitively(app):
+    """The check must not depend on the server having lowercased header names."""
+    headers = [("Host", "127.0.0.1:8765"), ("Origin", "http://evil.com")]
+    status, _ = await drive_raw(app, headers)
+    assert status == 403
+
+
+@pytest.mark.asyncio
+async def test_mixed_case_host_is_still_checked(app):
+    """An unfolded Host name must not slip the rebinding check."""
+    status, body = await drive_raw(app, [("HOST", "attacker.example.com")])
+    assert status == 403
+    assert b"Host" in body
 
 
 @pytest.mark.parametrize(

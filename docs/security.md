@@ -50,8 +50,25 @@ Origin validation addresses the actual threat directly and stores no secret anyw
     !!! warning "Constraint on new routes"
 
         Adding a GET or HEAD route that mutates state, or whose response body is sensitive enough to matter when an attacker page loads it as a subresource, breaks this invariant. Such a route must carry its own check; `Origin` will not cover it.
-2. **`Origin` present: rejected unless allowlisted.** Loopback origins (`localhost`, `127.0.0.1`, `::1`, any scheme, any port) are always allowed, so a browser-based MCP client served from the user's own machine works. `SPELLBOOK_ALLOWED_ORIGINS` adds exact-match origins for a client hosted elsewhere.
-3. **`Host` is validated independently.** A value naming neither loopback nor the configured bind address is rejected. Under DNS rebinding the attacker's own hostname is what resolves to `127.0.0.1`, so it shows up here even when `Origin` does not help.
+2. **`Origin` present: rejected unless it matches exactly.** Matching is exact on scheme, host, *and* port. Only two things pass:
+
+    - **the daemon's own origin** -- `http://` on the configured bind host or a loopback alias (`localhost`, `127.0.0.1`, `::1`), at the configured port. `http://localhost:8765` passes; `https://localhost:8765` and `http://localhost:3000` do not.
+    - **an origin listed in `SPELLBOOK_ALLOWED_ORIGINS`**, compared the same way.
+
+    Being local buys nothing on its own. A page served from another port on the user's own machine is a different origin, and untrusted local web content is exactly the case that a blanket loopback allowance would hand the daemon to.
+
+    !!! note "Running a browser-based MCP client locally"
+
+        Name its origin explicitly. For a client served from `http://localhost:3000`:
+
+        ```bash
+        export SPELLBOOK_ALLOWED_ORIGINS=http://localhost:3000
+        ```
+
+        Several are comma-separated. Each must carry the scheme and, unless it is the default for that scheme, the port.
+
+3. **A repeated `Origin` or `Host` is rejected.** More than one copy of either header is refused outright. Header collections disagree on which copy wins -- `dict()` keeps the last, Starlette's `Headers.get()` keeps the first -- so choosing either one only decides which smuggling direction succeeds. The count is taken over the raw ASGI header list, and header names are matched case-insensitively rather than trusting the server to have lowercased them.
+4. **`Host` is validated independently.** A value naming neither loopback nor the configured bind address is rejected. Under DNS rebinding the attacker's own hostname is what resolves to `127.0.0.1`, so it shows up here even when `Origin` does not help.
 
 Hostnames are extracted with `urllib.parse.urlsplit`, not string matching, so `localhost.evil.com` and `http://evil.com/localhost` do not read as loopback.
 
@@ -107,7 +124,7 @@ Test: `tests/test_workflow_state_security.py`
 |---|---|---|---|---|---|
 | 1 | RCE via workflow_state_save: arbitrary boot_prompt | CRITICAL | `spellbook/resume.py`, `spellbook/server.py` | Schema validation with allowlisted keys, size caps, boot_prompt content restrictions, dangerous operation blocklist | `tests/test_workflow_state_security.py` |
 | 2 | RCE via workflow_state_update: merge-based injection | CRITICAL | `spellbook/server.py` | Pre-merge AND post-merge validation; validates both updates dict and merged result | `tests/test_workflow_state_security.py` |
-| 3 | Browser-reachable HTTP transport | HIGH | `spellbook/core/auth.py`, `spellbook/mcp/server.py` | `OriginValidationMiddleware`: rejects non-allowlisted `Origin`, validates `Host` against loopback and the bind address. Supersedes the original bearer-token middleware, which defended against local users rather than the browser. | `tests/test_reorg/test_core_auth.py` |
+| 3 | Browser-reachable HTTP transport | HIGH | `spellbook/core/auth.py`, `spellbook/mcp/server.py` | `OriginValidationMiddleware`: rejects any `Origin` that is not exactly the daemon's own or allowlisted, rejects a repeated `Origin`/`Host`, validates `Host` against loopback and the bind address. Supersedes the original bearer-token middleware, which defended against local users rather than the browser. | `tests/test_reorg/test_core_auth.py` |
 | 4 | No rate limiting on spawn_claude_session | HIGH | `spellbook/server.py` | DB-backed rate limiter: max 1 spawn per 5 minutes, fail-closed on DB error | `tests/test_terminal_security.py` |
 | 5 | Path traversal via working_directory | HIGH | `spellbook/server.py` | `_validate_working_directory()`: symlink resolution, existence check, scope restriction to $HOME or project dir | `tests/test_terminal_security.py` |
 | 6 | Prompt injection in spawn prompt | HIGH | `spellbook/server.py` | MCP-level security guard: `check_tool_input()` scan before spawn, audit log on block | `tests/test_terminal_security.py` |
@@ -125,7 +142,7 @@ Test: `tests/test_workflow_state_security.py`
 | Variable | Default | Description |
 |---|---|---|
 | `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation on HTTP transport. The server logs a warning and prints `request validation DISABLED` in its startup banner whenever this is in effect. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
-| `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated extra origins permitted to call the daemon from a browser. Loopback origins are always allowed. |
+| `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated origins permitted to call the daemon from a browser, matched exactly on scheme, host, and port. Required for a browser client on any origin other than the daemon's own -- including one on another port of this machine. |
 | `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Binding to `0.0.0.0` exposes the server to the network and is strongly discouraged. |
 | `SPELLBOOK_MCP_PORT` | `8765` | Port number for HTTP transport. |
 | `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode. `stdio` for direct pipe (default, used by Claude Code). `streamable-http` for HTTP with Origin/Host validation. |

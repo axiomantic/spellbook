@@ -48,7 +48,7 @@ Spellbook employs a multi-layer defense model:
 
 `OriginValidationMiddleware` rejects browser-issued cross-origin requests. Binding loopback removes the network as an attack path but not the browser: any page the user visits can issue requests to `127.0.0.1`.
 
-A request carrying no `Origin` header is allowed, and every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. A request carrying an `Origin` is rejected unless the origin is loopback or is listed in `SPELLBOOK_ALLOWED_ORIGINS`. The `Host` header is validated independently against loopback and the configured bind address, which closes DNS rebinding at a second layer -- a rebound request arrives naming the attacker's own host.
+A request carrying no `Origin` header is allowed, and every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. A request carrying an `Origin` is rejected unless that origin matches -- exactly, on scheme, host, and port -- either the daemon's own origin or an entry in `SPELLBOOK_ALLOWED_ORIGINS`; a loopback hostname on another port or scheme does not qualify. A request carrying more than one `Origin` or `Host` header is rejected outright. The `Host` header is validated independently against loopback and the configured bind address, which closes DNS rebinding at a second layer -- a rebound request arrives naming the attacker's own host.
 
 Allowing an absent `Origin` does *not* rest on browsers always sending one, because they do not: a browser omits `Origin` on cross-origin GET navigations and on `<img>`, `<script>`, `<link>`, and `<iframe src>` subresource loads, and attaches it to `fetch`/`XHR` and to cross-origin form submissions. The invariant is narrower and worth stating exactly: **every cross-origin request a page can make without an `Origin` header is a GET or HEAD, and no GET or HEAD route on this daemon has a side effect.** Adding a GET or HEAD route that mutates state, or whose response body matters when an attacker page loads it as a subresource, breaks the invariant -- such a route needs its own check rather than relying on `Origin`.
 
@@ -94,7 +94,7 @@ Relevant sources: `spellbook/security/spotlight.py`, `spellbook/security/sleuth.
 2. `OriginValidationMiddleware` is added to the ASGI middleware stack
 3. On every HTTP request the middleware reads `Host`; a value naming neither loopback nor the configured bind address is rejected with `403`
 4. It then reads `Origin`. An absent `Origin` is allowed
-5. A present `Origin` is allowed only when it is loopback or appears in `SPELLBOOK_ALLOWED_ORIGINS`; otherwise `403`
+5. A present `Origin` is allowed only when it matches the daemon's own origin exactly (scheme, host, and port) or appears in `SPELLBOOK_ALLOWED_ORIGINS`; otherwise `403`. A repeated `Origin` or `Host` header is `403`
 6. `/health` is subject to the same `Host` check, so monitoring does not become a rebinding hole
 
 When running via stdio transport (the default for Claude Code), these checks do not apply as the transport is a direct pipe with no network exposure.
@@ -153,7 +153,7 @@ If you discover a security vulnerability in spellbook:
 | Environment Variable | Default | Description |
 |---|---|---|
 | `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation. Use only for debugging. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
-| `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated extra origins allowed to call the daemon from a browser. Loopback origins are always allowed. |
+| `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated origins allowed to call the daemon from a browser, matched exactly on scheme, host, and port. Needed for a browser client on any origin other than the daemon's own, including another port on this machine. |
 | `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Do not change to `0.0.0.0` in production. |
 | `SPELLBOOK_MCP_PORT` | `8765` | Port for HTTP transport. |
 | `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode: `stdio` or `streamable-http`. |

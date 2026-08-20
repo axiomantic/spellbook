@@ -17,22 +17,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   browser -- any page the user visits can issue requests to `127.0.0.1`.
   `OriginValidationMiddleware` allows a request with no `Origin` header (what
   Claude Code, curl, and pi's adapter all send), rejects any `Origin` that is
-  neither loopback nor listed in the new `SPELLBOOK_ALLOWED_ORIGINS`, and
-  independently rejects a `Host` naming neither loopback nor the configured
-  bind address, which closes DNS rebinding at a second layer. Rejections are
-  `403`, not `401`: no credentials exist, so nothing the caller could send
-  would change the outcome.
+  neither the daemon's own origin nor listed in the new
+  `SPELLBOOK_ALLOWED_ORIGINS`, and independently rejects a `Host` naming
+  neither loopback nor the configured bind address, which closes DNS
+  rebinding at a second layer. Rejections are `403`, not `401`: no credentials
+  exist, so nothing the caller could send would change the outcome.
 
-  **Known limitation, unchanged from the token in one respect and weaker in
-  another.** Origin matching is by hostname, so *any* loopback origin is
-  accepted regardless of scheme or port: a dev server on
-  `http://localhost:3000` can reach the daemon, where the bearer token would
-  have returned `401`. This is the documented rule 2 in `docs/security.md`,
-  kept so a browser-based MCP client served from the user's own machine keeps
-  working, but it is a real narrowing of protection for anyone who runs
-  untrusted local web content. Tightening it to exact scheme+host+port
-  matching is deliberately left to a follow-up, because it would break that
-  documented client case.
+  **BREAKING: a loopback `Origin` is no longer trusted for being loopback.**
+  Origin matching is now exact on scheme, host, *and* port. Only the daemon's
+  own origin -- `http://` on the configured bind host or a loopback alias, at
+  the configured port -- is allowed implicitly. A page served from another
+  local port, such as a dev server on `http://localhost:3000`, is now rejected
+  with `403` where an earlier build of this branch allowed it. Untrusted local
+  web content can no longer drive the daemon. **To restore a local browser MCP
+  client, name its origin explicitly:**
+
+  ```bash
+  export SPELLBOOK_ALLOWED_ORIGINS=http://localhost:3000
+  ```
 
   **Existing installs are affected.** On the next `install.py` run the
   `~/.local/spellbook/.mcp-token` file is deleted, and each platform installer
@@ -68,6 +70,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   held against it as a standing differential.
 
 ### Fixed
+
+- **Security: duplicate `Origin` or `Host` headers are rejected.** A request
+  carrying more than one of either header is refused with `403`. Header
+  collections disagree on which copy wins -- `dict()` takes the last, Starlette's
+  `Headers.get()` takes the first -- so picking either one only selects which
+  smuggling direction succeeds. The count is taken over the raw ASGI header
+  list. Header names are also matched case-insensitively rather than trusting
+  the ASGI server to have lowercased them, so the check cannot silently vanish
+  under a server or shim that does not.
 
 - **The MCP startup banner now reports the real request-validation state.** It
   derived the "auth enabled" / "auth DISABLED" text from whether the run kwargs
