@@ -49,6 +49,10 @@ def _hostname_of(value: str) -> str | None:
     """
     if not value:
         return None
+    # urlsplit reads userinfo, so "evil.com@localhost" would yield "localhost".
+    # A Host header has no userinfo field; anything carrying one is not a Host.
+    if "@" in value:
+        return None
     try:
         # A bare Host header ("127.0.0.1:8765") is not a URL; the "//" prefix
         # makes urlsplit treat it as an authority.
@@ -111,8 +115,14 @@ class OriginValidationMiddleware:
         self.allowed_origins = get_allowed_origins()
         self.allowed_hostnames = set(LOOPBACK_HOSTNAMES)
 
-        # An operator who binds a non-loopback address reaches the daemon under
-        # that name; refusing it would lock them out of their own deployment.
+        # The daemon is a local-only service. A configured bind host is added
+        # here only when it is itself a reachable name; a wildcard bind
+        # ("0.0.0.0", "::") supplies no name a client can send, so under it only
+        # the loopback Host values remain allowed and a request arriving as
+        # "Host: 192.168.1.5:8765" is refused. That is intended: remote access
+        # is out of scope, and SPELLBOOK_AUTH=disabled is the only way to serve
+        # it. Failing closed here costs a deployment this project does not
+        # support; failing open would cost the rebinding defense.
         from spellbook.core.config import get_env
 
         bind_host = _hostname_of(get_env("HOST", "127.0.0.1") or "")
@@ -122,13 +132,20 @@ class OriginValidationMiddleware:
         # The daemon's own origin, and only that one: same scheme, same host,
         # same port. A page served from another port on this machine is a
         # different origin and gets no implicit trust from being local.
+        self.self_origins: frozenset[tuple[str, str, int]] = frozenset()
         try:
-            bind_port: int | None = int(get_env("PORT", "8765") or "8765")
+            bind_port = int(get_env("PORT", "8765") or "8765")
         except ValueError:
-            bind_port = None
-        self.self_origins = frozenset(
-            ("http", hostname, bind_port) for hostname in self.allowed_hostnames
-        )
+            # An unparseable port leaves the daemon's own origin unknown, and an
+            # unknown origin cannot be matched -- a None port would compare equal
+            # to a port-less Origin, making http://localhost (port 80: any local
+            # web server) trusted while the real daemon origin is refused. Trust
+            # nothing implicitly instead.
+            pass
+        else:
+            self.self_origins = frozenset(
+                ("http", hostname, bind_port) for hostname in self.allowed_hostnames
+            )
 
     def _rejection(self, reason: str) -> JSONResponse:
         # 403, not 401: there are no credentials, so nothing the caller could
@@ -140,25 +157,39 @@ class OriginValidationMiddleware:
         """Return a rejection response, or None when the request may proceed."""
         raw = scope.get("headers", []) or []
 
-        def values(name: str) -> list[str]:
+        def values(name: str) -> list[str] | None:
             # Case-folded on our side rather than trusting the ASGI server to
             # have lowercased the names: a server or shim that does not would
             # otherwise make this check silently vanish.
+            #
+            # None signals undecodable bytes. Dropping them (errors="ignore")
+            # would map two distinct byte strings onto one allowed value:
+            # b"http://local\xffhost:8765" would read as the daemon's own
+            # origin. Same ambiguity the duplicate-header case refuses, so it
+            # gets the same answer.
             target = name.encode()
-            return [
-                value.decode("utf-8", errors="ignore")
-                for key, value in raw
-                if key.lower() == target
-            ]
+            found = []
+            for key, value in raw:
+                if key.lower() != target:
+                    continue
+                try:
+                    found.append(value.decode("utf-8"))
+                except UnicodeDecodeError:
+                    return None
+            return found
 
         # More than one copy of either header is a request-smuggling shape, not
         # a legitimate client. Neither first-wins nor last-wins is safe: each
         # merely picks which smuggling direction succeeds, so refuse outright.
         host_values = values("host")
+        if host_values is None:
+            return self._rejection("undecodable Host header")
         if len(host_values) > 1:
             return self._rejection("duplicate Host header")
 
         origin_values = values("origin")
+        if origin_values is None:
+            return self._rejection("undecodable Origin header")
         if len(origin_values) > 1:
             return self._rejection("duplicate Origin header")
 
