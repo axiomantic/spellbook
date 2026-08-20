@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Dead installer surface for the web admin interface, whose implementation was
+  deleted in `7a8e9ab1`. `render_admin_info` on `InstallerRenderer`,
+  `RichRenderer`, and `PlainTextRenderer`, and the `render_admin_info` panel in
+  `installer/tui.py`, had no call site anywhere in the tree: the plain-text
+  renderer's `Admin interface: {url}` line and the Rich panel advertising
+  `http://localhost:8765/admin`, `spellbook admin open`, and a `--no-admin`
+  flag were unreachable, and none of those three targets still exist. Also
+  removed the `spellbook/admin/static/` rule from `.gitignore`, which ignored a
+  path that no longer exists. Prose in `AGENTS.md`,
+  `installer/wizards/defaults.py`, `installer/components/rule_modules.py`, and
+  `spellbook/core/config.py` that described config keys as reachable through
+  the admin UI, or that cited the deleted `CONFIG_SCHEMA` symbol, now states
+  the surviving convention -- every user-facing key is reached through the
+  install wizards -- without naming the removed interface.
+
 ### Changed
 
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
