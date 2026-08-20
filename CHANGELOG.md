@@ -26,6 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `extensions/gemini/gemini-extension.json` declared version `0.1.0` while
+  `.version` declared `0.89.0`. `installer.version.sync_version_to_files` and
+  `validate_version_consistency` both treat that manifest as tracking
+  `.version`, so the two disagreed by 88 minor releases. Neither function has a
+  caller, so nothing reported the drift; the manifest is corrected here and the
+  missing wiring is recorded separately.
+- The `[0.2.1]` heading was dated `2025-01-08`, a year before `[0.2.0]`
+  (`2025-12-31`) and `[0.3.0]` (`2026-01-09`). The commit that introduced the
+  section is dated 2026-01-08; the heading now reads `2026-01-08`.
 - `scripts/develop_gate_ledger.py` now applies its documented exit-code split
   on every subcommand. `1` means the STORED ledger is not what the operation
   needs, `2` means the CALLER asked for something the ledger does not accept.
@@ -3923,7 +3932,7 @@ validator, and the pre-commit scanner.
 - **Uninstaller enhanced** - removes MCP system services and cleans up old server variants
 - **instruction-engineering skill** - delegates to emotional-stakes for persona selection
 
-## [0.2.1] - 2025-01-08
+## [0.2.1] - 2026-01-08
 
 ### Added
 - **OpenCode YOLO mode agents** - autonomous execution without permission prompts
