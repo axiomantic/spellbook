@@ -8,10 +8,9 @@ implement. Two concrete implementations are provided elsewhere:
 
 Superseded design decisions reflected here:
 
-SD-1: ``render_admin_info`` accepts ``admin_url: str`` and ``show_token: bool``
-    rather than the original ``(admin_url, token)`` from the design doc. The
-    raw token is never passed to the renderer; the caller controls whether
-    token visibility is requested.
+SD-1: ``render_admin_info`` accepts only ``admin_url: str``. The design doc's
+    ``(admin_url, token)`` signature described bearer-token auth, which the
+    daemon no longer uses.
 """
 
 from __future__ import annotations
@@ -276,21 +275,13 @@ class InstallerRenderer(ABC):
         ...
 
     @abstractmethod
-    def render_admin_info(
-        self, admin_url: str, show_token: bool = False
-    ) -> None:
+    def render_admin_info(self, admin_url: str) -> None:
         """Display admin web interface information.
-
-        Shows the admin URL and optionally indicates that a token is
-        available. The raw token string is never passed to this method;
-        the caller controls ``show_token`` (SD-1).
 
         Args:
             admin_url: URL of the admin interface (e.g.
                 ``"http://localhost:8765/admin"``). Pass an empty string
                 when admin is disabled.
-            show_token: If ``True``, indicate that an auth token exists and
-                where to find it (e.g. ``~/.local/spellbook/.mcp-token``).
         """
         ...
 
@@ -732,18 +723,10 @@ class RichRenderer(InstallerRenderer):
             elapsed_seconds=elapsed,
         )
 
-    def render_admin_info(self, admin_url: str, show_token: bool = False) -> None:
+    def render_admin_info(self, admin_url: str) -> None:
         from .tui import render_admin_info as _tui_admin
         console = self._get_console()
-        admin_enabled = bool(admin_url)
-        _tui_admin(console, admin_enabled=admin_enabled)
-        if show_token and admin_enabled:
-            from rich.panel import Panel
-            console.print(Panel(
-                "Auth token: [dim]~/.local/spellbook/.mcp-token[/dim]",
-                border_style="dim",
-                padding=(0, 2),
-            ))
+        _tui_admin(console, admin_enabled=bool(admin_url))
 
     def render_post_install(self, notes: list[str]) -> None:
         if not notes:
@@ -1067,13 +1050,11 @@ class PlainTextRenderer(InstallerRenderer):
         for p in failed:
             print(f"  [FAILED] {p}")
 
-    def render_admin_info(self, admin_url: str, show_token: bool = False) -> None:
+    def render_admin_info(self, admin_url: str) -> None:
         if admin_url:
             print(f"\nAdmin interface: {admin_url}")
         else:
             print("\nAdmin interface: disabled")
-        if show_token and admin_url:
-            print("Auth token: ~/.local/spellbook/.mcp-token")
 
     def render_post_install(self, notes: list[str]) -> None:
         if not notes:

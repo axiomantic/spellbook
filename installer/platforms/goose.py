@@ -12,7 +12,7 @@ Capabilities installed:
   Requires goose v1.41.0+ for the global hints discovery path; on older
   versions the file is still installed but goose will not auto-load it.
 - Spellbook MCP server registered in ~/.config/goose/config.yaml as an
-  extension (streamable_http transport with Bearer auth).
+  extension (streamable_http transport).
 - A starter .goosehints template shipped in extensions/goose/.goosehints that
   users can copy into a project root to load spellbook behavior per-project.
 
@@ -43,7 +43,6 @@ from typing import TYPE_CHECKING
 from ..components.mcp import (
     DEFAULT_HOST,
     DEFAULT_PORT,
-    get_mcp_auth_token,
 )
 from ..components.symlinks import (
     create_skill_symlinks,
@@ -95,13 +94,7 @@ def _generate_mcp_yaml_list_item() -> str:
     and replaced on subsequent installs.
     """
     url = f"http://{DEFAULT_HOST}:{DEFAULT_PORT}/mcp"
-    token = get_mcp_auth_token()
-    if token:
-        # Literal Bearer header (parity with forgecode/codex/opencode).
-        # File mode 0600 protects the token from other local users.
-        headers_line = f'    headers: {{Authorization: "Bearer {token}"}}'
-    else:
-        headers_line = "    headers: {}"
+    headers_line = "    headers: {}"
 
     lines = [
         SPELLBOOK_START_MARKER,
@@ -252,7 +245,7 @@ def _update_goose_mcp_config(
 
     new_text = _insert_spellbook_block(existing, _generate_mcp_yaml_list_item())
 
-    # Atomic write with mode 0600 (config.yaml contains a plaintext bearer token)
+    # Atomic write with mode 0600 (config.yaml is user-private agent config)
     # BOT-B2 fix: `os.fdopen()` returns a file object that OWNS the fd. When
     # `with os.fdopen(...)` exits (whether normally or via exception inside the
     # block), the file object closes the fd. The previous code then called
