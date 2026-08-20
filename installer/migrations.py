@@ -21,6 +21,26 @@ _LEGACY_ALIAS_START = "# SPELLBOOK_ALIASES:START"
 _LEGACY_ALIAS_END = "# SPELLBOOK_ALIASES:END"
 
 
+# The daemon authenticated with a bearer token before it moved to Origin/Host
+# validation. Nothing reads this file now, so leaving it behind would strand a
+# credential on disk that looks live. Safe to remove this migration after a few
+# releases.
+_LEGACY_MCP_TOKEN = Path.home() / ".local" / "spellbook" / ".mcp-token"
+
+
+def remove_legacy_mcp_token(token_path: Path | None = None) -> bool:
+    """Delete the obsolete bearer-token file. Returns True if one was removed."""
+    path = token_path if token_path is not None else _LEGACY_MCP_TOKEN
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        return False
+    except OSError as exc:
+        logger.warning("Could not remove legacy MCP token %s: %s", path, exc)
+        return False
+    return True
+
+
 def _candidate_rc_files() -> list[Path]:
     home = Path.home()
     return [
@@ -99,4 +119,7 @@ def run_all_migrations() -> list[Path]:
         if cleanup_legacy_alias_block(rc_path):
             modified.append(rc_path)
             logger.info("Removed legacy alias block from %s", rc_path)
+    if remove_legacy_mcp_token():
+        modified.append(_LEGACY_MCP_TOKEN)
+        logger.info("Removed obsolete MCP token %s", _LEGACY_MCP_TOKEN)
     return modified

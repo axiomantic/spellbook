@@ -7,27 +7,9 @@ running MCP server.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 from typing import Any, AsyncIterator
 from urllib.error import URLError
 from urllib.request import Request, urlopen
-
-
-def _token_path() -> Path:
-    """Return the path to the bearer token file."""
-    return Path.home() / ".local" / "spellbook" / ".mcp-token"
-
-
-def get_token() -> str | None:
-    """Read the bearer token from ``~/.local/spellbook/.mcp-token``.
-
-    Returns ``None`` when the file is missing or empty.
-    """
-    try:
-        text = _token_path().read_text().strip()
-        return text or None
-    except FileNotFoundError:
-        return None
 
 
 def daemon_request(
@@ -77,10 +59,6 @@ def daemon_request(
     headers: dict[str, str] = {"Accept": "application/json"}
     if body is not None:
         headers["Content-Type"] = "application/json"
-
-    token = get_token()
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
 
     req = Request(url, data=body, headers=headers, method=method)
 

@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Security model: the MCP daemon no longer uses a bearer token.** It binds
+  loopback and validates the `Origin` and `Host` headers instead. The token
+  defended the wrong threat: mode `0600` stops other local users, but on a
+  single-user machine any process running as the user could read the token
+  file anyway. The threat that loopback binding does *not* stop is the
+  browser -- any page the user visits can issue requests to `127.0.0.1`.
+  `OriginValidationMiddleware` allows a request with no `Origin` header (what
+  Claude Code, curl, and pi's adapter all send), rejects any `Origin` that is
+  neither loopback nor listed in the new `SPELLBOOK_ALLOWED_ORIGINS`, and
+  independently rejects a `Host` naming neither loopback nor the configured
+  bind address, which closes DNS rebinding at a second layer. Rejections are
+  `403`, not `401`: no credentials exist, so nothing the caller could send
+  would change the outcome.
+
+  **Existing installs are affected.** On the next `install.py` run the
+  `~/.local/spellbook/.mcp-token` file is deleted, and each platform installer
+  rewrites its MCP server entry whole, so an `Authorization` header written by
+  an earlier version is dropped rather than left inert. No user action is
+  required. Anyone who registered the daemon by hand with an explicit
+  `--header` should remove that header; the daemon now ignores it.
+
+  Removed with the token: `BearerAuthMiddleware`, `generate_and_store_token`,
+  `load_token`, and `TOKEN_PATH` from `spellbook/core/auth.py`;
+  `get_mcp_auth_token` from `installer/components/mcp.py`; the
+  `Authorization` header from the antigravity, codex, forgecode, goose,
+  opencode, and pi installers and from `claude mcp add` registration; and the
+  token read from `hooks/spellbook_hook.py` and
+  `spellbook/cli/daemon_client.py`.
+
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
   the filesystem for the layouts that are determined by what is on disk (plain
   repository, linked worktree, any subdirectory of either, no repository at

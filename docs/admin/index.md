@@ -11,9 +11,9 @@ The admin interface is a web-based dashboard served from the Spellbook MCP daemo
 
 ## Authentication
 
-Token-based auth. The admin reads the MCP bearer token from `~/.local/spellbook/.mcp-token`. On first visit, you see the login page. Paste the token to authenticate. Session persists via HTTP-only cookie.
-
-![Login](screenshots/login.png)
+The MCP bearer token this page previously described no longer exists: the daemon
+now validates the `Origin` and `Host` headers instead, and the token file is
+removed on upgrade. See [Security Architecture](../security.md).
 
 ## Navigation
 

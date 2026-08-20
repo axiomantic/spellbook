@@ -6,10 +6,10 @@ Technical documentation for spellbook's MCP server security hardening. For a hig
 
 ```mermaid
 graph TD
-    Client["AI Assistant<br>(Claude Code / Codex / Gemini)"] -->|"HTTP + Bearer token"| Auth["BearerAuthMiddleware<br>(ASGI layer)"]
+    Client["AI Assistant<br>(Claude Code / Codex / Gemini)"] -->|"HTTP (loopback)"| Auth["OriginValidationMiddleware<br>(ASGI layer)"]
     Client -->|"stdio pipe"| Stdio["stdio transport<br>(no auth needed)"]
 
-    Auth -->|"authenticated request"| Dispatch["FastMCP Tool Dispatch"]
+    Auth -->|"validated request"| Dispatch["FastMCP Tool Dispatch"]
     Stdio --> Dispatch
 
     Dispatch --> Validation["Input Validation Pipeline<br>(check_tool_input)"]
@@ -31,30 +31,38 @@ graph TD
     style Block fill:#ffebee
 ```
 
-## Auth Flow Detail
+## Request Validation Detail
 
-### Token Lifecycle
+### Why Origin and not a token
 
-1. **Generation**: On server startup in HTTP mode, `generate_and_store_token()` calls `secrets.token_urlsafe(32)` to produce a 43-character cryptographic token.
-2. **Storage**: The token is written atomically using `os.open()` with flags `O_WRONLY | O_CREAT | O_TRUNC` and mode `0o600`. This avoids the TOCTOU race inherent in `Path.write_text()` followed by `os.chmod()`.
-3. **Distribution**: The token file lives at `~/.local/spellbook/.mcp-token`. Clients read this file to obtain the token.
-4. **Validation**: `BearerAuthMiddleware` extracts the `Authorization` header, strips the `Bearer` prefix, and compares using `secrets.compare_digest()` (constant-time, prevents timing side-channels).
-5. **Expiry**: Tokens are per-server-instance. Restarting the server generates a new token, invalidating all prior tokens.
+The daemon binds loopback, so no remote host can route a packet to it. One remote actor can reach it anyway: the browser. Any page the user visits can issue requests to `127.0.0.1`, which is why Jupyter added token auth and why Docker's API socket is a recurring CVE source.
+
+A bearer token stored at mode `0o600` does not address that threat well and carries its own cost. It defends only against *other local users*, and any process running as the user -- including the attacker's, if one is running -- can read the token file. Meanwhile the token had to be copied into six platform config files, which produced world-readable copies on three platforms and one leak into a session log.
+
+Origin validation addresses the actual threat directly and stores no secret anywhere.
+
+### The rules
+
+1. **No `Origin` header: allowed.** A browser always attaches `Origin` to a cross-origin request. Every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. This is the standard localhost-service pattern.
+2. **`Origin` present: rejected unless allowlisted.** Loopback origins (`localhost`, `127.0.0.1`, `::1`, any scheme, any port) are always allowed, so a browser-based MCP client served from the user's own machine works. `SPELLBOOK_ALLOWED_ORIGINS` adds exact-match origins for a client hosted elsewhere.
+3. **`Host` is validated independently.** A value naming neither loopback nor the configured bind address is rejected. Under DNS rebinding the attacker's own hostname is what resolves to `127.0.0.1`, so it shows up here even when `Origin` does not help.
+
+Hostnames are extracted with `urllib.parse.urlsplit`, not string matching, so `localhost.evil.com` and `http://evil.com/localhost` do not read as loopback.
+
+### Status code
+
+Rejections are `403 Forbidden`. The server holds no credentials, so no header the caller adds would change the result. `401 Unauthorized` would advertise a retry path that does not exist.
 
 ### Multi-Session Behavior
 
-Multiple AI assistant sessions can share a single HTTP server instance. Each session reads the same token file. When the server restarts:
-
-- A new token is generated and written to the token file
-- Existing sessions with the old token will receive 401 Unauthorized
-- Sessions must re-read the token file to reconnect
+Multiple AI assistant sessions share a single HTTP server instance. There is no per-session credential, so a server restart does not invalidate anything and sessions reconnect without re-reading any file.
 
 ### stdio vs HTTP
 
 | Property | stdio | HTTP (streamable-http) |
 |---|---|---|
-| Auth required | No (direct pipe, no network) | Yes (bearer token) |
-| DNS rebinding risk | None | Mitigated by auth |
+| Auth required | No (direct pipe, no network) | No credentials; Origin/Host validated |
+| DNS rebinding risk | None | Mitigated by Host validation |
 | Multi-session | No (one client per pipe) | Yes (shared server) |
 | Default | Yes | No (opt-in via env var) |
 
@@ -93,7 +101,7 @@ Test: `tests/test_workflow_state_security.py`
 |---|---|---|---|---|---|
 | 1 | RCE via workflow_state_save: arbitrary boot_prompt | CRITICAL | `spellbook/resume.py`, `spellbook/server.py` | Schema validation with allowlisted keys, size caps, boot_prompt content restrictions, dangerous operation blocklist | `tests/test_workflow_state_security.py` |
 | 2 | RCE via workflow_state_update: merge-based injection | CRITICAL | `spellbook/server.py` | Pre-merge AND post-merge validation; validates both updates dict and merged result | `tests/test_workflow_state_security.py` |
-| 3 | No authentication on HTTP transport | HIGH | `spellbook/auth.py`, `spellbook/server.py`, `pyproject.toml` | Bearer token ASGI middleware with atomic token file creation (0600), constant-time comparison, /health exemption | `tests/test_auth.py` |
+| 3 | Browser-reachable HTTP transport | HIGH | `spellbook/core/auth.py`, `spellbook/mcp/server.py` | `OriginValidationMiddleware`: rejects non-allowlisted `Origin`, validates `Host` against loopback and the bind address. Supersedes the original bearer-token middleware, which defended against local users rather than the browser. | `tests/test_reorg/test_core_auth.py` |
 | 4 | No rate limiting on spawn_claude_session | HIGH | `spellbook/server.py` | DB-backed rate limiter: max 1 spawn per 5 minutes, fail-closed on DB error | `tests/test_terminal_security.py` |
 | 5 | Path traversal via working_directory | HIGH | `spellbook/server.py` | `_validate_working_directory()`: symlink resolution, existence check, scope restriction to $HOME or project dir | `tests/test_terminal_security.py` |
 | 6 | Prompt injection in spawn prompt | HIGH | `spellbook/server.py` | MCP-level security guard: `check_tool_input()` scan before spawn, audit log on block | `tests/test_terminal_security.py` |
@@ -110,23 +118,24 @@ Test: `tests/test_workflow_state_security.py`
 
 | Variable | Default | Description |
 |---|---|---|
-| `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip bearer token authentication on HTTP transport. The server logs a warning when auth is disabled. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
+| `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation on HTTP transport. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
+| `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated extra origins permitted to call the daemon from a browser. Loopback origins are always allowed. |
 | `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Binding to `0.0.0.0` exposes the server to the network and is strongly discouraged. |
 | `SPELLBOOK_MCP_PORT` | `8765` | Port number for HTTP transport. |
-| `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode. `stdio` for direct pipe (default, used by Claude Code). `streamable-http` for HTTP with auth. |
+| `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode. `stdio` for direct pipe (default, used by Claude Code). `streamable-http` for HTTP with Origin/Host validation. |
 | `SPELLBOOK_CLI_COMMAND` | `claude` | CLI command invoked in spawned terminal sessions. Validated against allowlist: `claude`, `codex`, `gemini`, `opencode`. |
 
 ## Rollback Instructions
 
-### Disable Authentication
+### Disable Request Validation
 
 Set the environment variable before starting the server:
 
 ```bash
-SPELLBOOK_MCP_AUTH=disabled
+SPELLBOOK_AUTH=disabled
 ```
 
-The server will log a warning: `MCP auth disabled via SPELLBOOK_MCP_AUTH=disabled`.
+This turns off Origin and Host validation, leaving the daemon reachable by any page the user visits. Use only for debugging.
 
 ### Revert Security Changes
 

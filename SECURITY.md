@@ -18,11 +18,11 @@ The server does NOT face internet-originating traffic. All connections are local
 ```mermaid
 graph LR
     User["User"] -->|"direct interaction"| Claude["AI Assistant<br>(Claude Code / Codex / Gemini)"]
-    Claude -->|"MCP protocol<br>+ Bearer token"| Server["Spellbook MCP Server<br>(fastmcp)"]
+    Claude -->|"MCP protocol<br>(loopback)"| Server["Spellbook MCP Server<br>(fastmcp)"]
     Server -->|"parameterized queries"| DB["SQLite DB<br>(~/.local/spellbook/spellbook.db)"]
     Server -->|"validated spawn"| Terminal["Terminal<br>(spawned sessions)"]
 
-    subgraph "Trust Boundary: Transport Auth"
+    subgraph "Trust Boundary: Transport Origin"
         Server
     end
 
@@ -36,7 +36,7 @@ graph LR
 
 **Key boundaries:**
 
-1. **Transport**: Bearer token authentication on all HTTP endpoints (except /health). Token generated per server instance, stored at `~/.local/spellbook/.mcp-token` with 0600 permissions.
+1. **Transport**: The server binds loopback and validates the `Origin` and `Host` headers on every HTTP request. This blocks the browser, which is the only remote actor that can reach a loopback port.
 2. **Tool dispatch**: All tool inputs pass through a validation pipeline (injection detection, pattern matching, schema validation).
 3. **State persistence**: Workflow state loaded from the database is validated against a strict schema before use. Invalid state is marked hostile in the trust registry.
 
@@ -44,11 +44,15 @@ graph LR
 
 Spellbook employs a multi-layer defense model:
 
-### Layer 1: Transport Authentication
+### Layer 1: Transport Origin Validation
 
-Bearer token authentication for HTTP transport, implemented as ASGI middleware. The server generates a cryptographic token on startup, writes it atomically to `~/.local/spellbook/.mcp-token` with 0600 permissions (no TOCTOU race), and requires all HTTP requests to include it as an `Authorization: Bearer <token>` header. Token comparison uses `secrets.compare_digest` to prevent timing attacks.
+`OriginValidationMiddleware` rejects browser-issued cross-origin requests. Binding loopback removes the network as an attack path but not the browser: any page the user visits can issue requests to `127.0.0.1`.
 
-Relevant source: `spellbook/auth.py`
+A request carrying no `Origin` header is allowed, because no browser omits it on a cross-origin request and every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. A request carrying an `Origin` is rejected unless the origin is loopback or is listed in `SPELLBOOK_ALLOWED_ORIGINS`. The `Host` header is validated independently against loopback and the configured bind address, which closes DNS rebinding at a second layer -- a rebound request arrives naming the attacker's own host.
+
+Rejections are `403 Forbidden`. There are no credentials, so nothing the caller could supply would change the outcome; `401` would imply a retry path that does not exist.
+
+Relevant source: `spellbook/core/auth.py`
 
 ### Layer 2: Input Validation Pipeline
 
@@ -82,17 +86,16 @@ A defense-in-depth system with 5 concentric layers protects against prompt injec
 
 Relevant sources: `spellbook/security/spotlight.py`, `spellbook/security/sleuth.py`, `spellbook/security/crypto.py`, `spellbook/security/accumulator.py`
 
-## Auth Flow
+## Request Validation Flow
 
-1. Server starts in HTTP mode (`SPELLBOOK_MCP_TRANSPORT=streamable-http`)
-2. `generate_and_store_token()` creates a 32-byte URL-safe token via `secrets.token_urlsafe`
-3. Token is written atomically to `~/.local/spellbook/.mcp-token` with 0600 permissions using `os.open()` with `O_CREAT | O_TRUNC` (no TOCTOU race between create and chmod)
-4. `BearerAuthMiddleware` is added to the ASGI middleware stack
-5. Clients read the token from the file and include it as `Authorization: Bearer <token>` in every request
-6. The middleware validates the token on every HTTP request using `secrets.compare_digest` (constant-time comparison)
-7. The `/health` endpoint is exempted from auth for monitoring
+1. Server starts in HTTP mode (`SPELLBOOK_MCP_TRANSPORT=streamable-http`) and binds `SPELLBOOK_HOST` (default `127.0.0.1`)
+2. `OriginValidationMiddleware` is added to the ASGI middleware stack
+3. On every HTTP request the middleware reads `Host`; a value naming neither loopback nor the configured bind address is rejected with `403`
+4. It then reads `Origin`. An absent `Origin` is allowed
+5. A present `Origin` is allowed only when it is loopback or appears in `SPELLBOOK_ALLOWED_ORIGINS`; otherwise `403`
+6. `/health` is subject to the same `Host` check, so monitoring does not become a rebinding hole
 
-When running via stdio transport (the default for Claude Code), authentication is not needed as the transport is a direct pipe with no network exposure.
+When running via stdio transport (the default for Claude Code), these checks do not apply as the transport is a direct pipe with no network exposure.
 
 ## Findings Summary
 
@@ -129,9 +132,9 @@ This hardening was motivated by vulnerabilities disclosed in the MCP ecosystem d
 ## Known Limitations
 
 - **No SQLCipher**: The SQLite database is not encrypted at rest. An attacker with filesystem read access can read all persisted state. Mitigation: 0600 file permissions and 0700 directory permissions.
-- **No OAuth/OIDC**: Authentication is a shared secret (bearer token), not a full OAuth flow. Sufficient for local single-user operation but not suitable for multi-user or networked deployments.
+- **No authentication at all**: The server identifies no caller. Any local process running as the user can drive it. This is deliberate -- a token stored mode 0600 defends only against other local users, and any process running as the user could read that file anyway. Not suitable for multi-user or networked deployments.
 - **Regex detection is bypassable**: Pattern-based injection detection can be evaded with sufficient creativity (novel encodings, semantic equivalents, split payloads). The patterns cover known attack vectors but cannot guarantee completeness.
-- **No TLS**: HTTP transport uses plain HTTP on localhost. The bearer token travels unencrypted, but since traffic is loopback-only, the risk is limited to local process sniffing.
+- **No TLS**: HTTP transport uses plain HTTP on localhost. Traffic is loopback-only, so the risk is limited to local process sniffing.
 - **Rate limiting is per-server**: The spawn rate limit is persistent (backed by the SQLite database) and does NOT reset on server restart. However, a persistent attacker with filesystem access could delete or modify the database to bypass rate limits.
 
 ## Responsible Disclosure
@@ -147,7 +150,8 @@ If you discover a security vulnerability in spellbook:
 
 | Environment Variable | Default | Description |
 |---|---|---|
-| `SPELLBOOK_MCP_AUTH` | (enabled) | Set to `disabled` to skip bearer token auth. Use only for debugging. |
+| `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation. Use only for debugging. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
+| `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated extra origins allowed to call the daemon from a browser. Loopback origins are always allowed. |
 | `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Do not change to `0.0.0.0` in production. |
 | `SPELLBOOK_MCP_PORT` | `8765` | Port for HTTP transport. |
 | `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode: `stdio` or `streamable-http`. |

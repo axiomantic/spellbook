@@ -953,7 +953,7 @@ Ten pages cover the full operational surface:
 | **Config** | Runtime configuration editor (TTS, notifications, general) |
 | **Fractal** | Interactive Cytoscape.js graph explorer for fractal-thinking |
 
-Authentication uses the MCP bearer token from `~/.local/spellbook/.mcp-token`. Full documentation: [docs/admin/](docs/admin/index.md).
+Full documentation: [docs/admin/](docs/admin/index.md).
 
 ## Development
 
