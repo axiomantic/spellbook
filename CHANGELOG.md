@@ -56,6 +56,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   confirmation. Resolved in favor of the safe reading: the skill's FORBIDDEN
   item, self-check question, and success criterion now all require confirmation
   before removal.
+- `skills/merging-worktrees/SKILL.md` offered "Stash and proceed" as an
+  AskUserQuestion option with no impact statement. The confirmation existed, so
+  the option survived a sweep for unguarded destructive commands -- but
+  `rules/50-git-safety.md` requires the impact be disclosed BEFORE the operator
+  answers, and "a confirmation obtained without the impact statement is not a
+  confirmation". An operator reading those three words pictures their own edits
+  being set aside, not another agent's uncommitted work being swept up by a
+  tree-wide `git stash`. The options are now ordered least-destructive-first,
+  with commit and abort ahead of naming exact paths, and tree-wide stash last
+  and labelled as such; each option states its own recoverability, including
+  that a `git stash pop` conflict can leave the tree half-applied. The
+  truncation sweep is now required after any stash or set-aside. Three matching
+  FORBIDDEN items added.
 
 ## [0.89.0] - 2026-08-17
 

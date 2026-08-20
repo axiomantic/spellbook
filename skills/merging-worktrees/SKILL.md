@@ -135,9 +135,63 @@ Dispatch: `/merge-worktree-verify`
 
 | Error | Response |
 |-------|----------|
-| **Uncommitted changes in worktree** | AskUserQuestion: "Worktree [path] has uncommitted changes. Options: (1) Commit with message '[suggested]', (2) Stash and proceed, (3) Abort for manual handling" |
+| **Uncommitted changes in worktree** | Do NOT stash by reflex. Follow the procedure below. |
 | **Tests fail after merge** | STOP. Do NOT proceed to next round. Invoke systematic-debugging. Fix. Retest. Only continue when passing. |
 | **Interface contract violation** | CRITICAL: "Contract violation detected. Contract: [spec]. Expected: [X]. Actual: [Y]. Location: [file:line]. MUST fix before merge proceeds." |
+
+### Uncommitted Changes in a Worktree
+
+Show what is actually at risk before offering any option:
+
+```bash
+git -C [worktree-path] status --porcelain -uall
+git -C [worktree-path] diff              # Unstaged
+git -C [worktree-path] diff --staged     # Staged
+```
+
+To inspect committed content for comparison, read it; do not mutate the tree:
+
+```bash
+git show HEAD:<path>
+```
+
+Then ask via AskUserQuestion, in this order — least destructive first:
+
+- **question**: `Worktree [path] has uncommitted changes.` / `Effect of each option
+  below` / `Recoverable: varies by option, stated per option`
+- **options**:
+  1. `Commit them` — nothing is discarded; message `[suggested]`. Recoverable.
+  2. `Abort for manual handling` — nothing is touched. Recoverable.
+  3. `Set aside specific files` — name the EXACT paths; never `.`, never a bare
+     directory. Scope is limited to the paths you name.
+  4. `Stash the whole tree` — LAST RESORT. `git stash` is TREE-WIDE: it captures
+     every uncommitted change in the checkout, not only the files being merged. In
+     a checkout shared with another agent it will take work the operator did not
+     author and cannot see. Recovery is `git stash list` then `git stash pop` — but
+     a pop CONFLICT can leave the tree in a partial state, half-applied and with
+     the stash entry still present.
+
+<CRITICAL>
+Never present option 4 as "stash and proceed" with no impact statement. An operator
+reading those words pictures their own edits being set aside and restored; they are
+not picturing another agent's uncommitted work being swept up. A confirmation
+obtained without the impact statement is not a confirmation.
+
+If the operator chooses option 3 or 4, VERIFY afterwards — a stash round-trip damages
+staged, modified, and untracked files alike, and it fails silently:
+
+```sh
+git status --porcelain -uall | grep -v '^D \|^.D' | sed 's/^...//;s/.* -> //' |
+while IFS= read -r f; do
+  case "$f" in *__init__.py|*.gitkeep|*/py.typed) continue;; esac
+  [ -f "$f" ] && [ ! -s "$f" ] && echo "TRUNCATED: $f"
+done; echo "sweep complete"
+```
+
+Any name it prints that you did not deliberately empty is a truncation. Output of
+only `sweep complete` is clean; NO output at all means the pipeline itself failed and
+the check did not run.
+</CRITICAL>
 
 ## Rollback Procedure
 
@@ -190,6 +244,9 @@ afterwards.
 - Not documenting merge decisions
 - Deleting worktrees or branches before explicit user confirmation
 - Running `git reset --hard` without first stating what it discards and getting an explicit confirmation via AskUserQuestion
+- Running `git stash` in a checkout that may hold uncommitted work you did not author, without an impact statement made before the operator answers
+- Offering "stash and proceed" as an option without disclosing that `git stash` is tree-wide
+- Skipping the truncation sweep after a stash or a set-aside operation
 </FORBIDDEN>
 
 ## Self-Check
