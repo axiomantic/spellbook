@@ -6,6 +6,8 @@ on Origin (present only on browser-issued cross-origin requests) and Host
 (which carries the attacker's name under DNS rebinding).
 """
 
+import logging
+
 import pytest
 
 from spellbook.core.auth import OriginValidationMiddleware, auth_is_disabled
@@ -201,3 +203,83 @@ def test_no_token_symbols_remain():
 
     for name in ("BearerAuthMiddleware", "generate_and_store_token", "load_token", "TOKEN_PATH"):
         assert not hasattr(auth, name), f"{name} still present"
+
+
+# ---------------------------------------------------------------------------
+# The disabled state must announce itself
+#
+# test_disabled_auth_skips_validation above proves the bypass WORKS. That is
+# only half the contract: a bypass that works silently is the dangerous half.
+# The banner once derived its text from whether the run kwargs carried a
+# middleware list, which is always non-empty, so SPELLBOOK_AUTH=disabled
+# printed "auth enabled" and logged nothing at all.
+# ---------------------------------------------------------------------------
+
+
+def test_disabled_auth_logs_a_warning(monkeypatch, caplog):
+    from spellbook.mcp.server import (
+        AUTH_DISABLED_WARNING,
+        announce_request_validation_status,
+    )
+
+    monkeypatch.setenv("SPELLBOOK_AUTH", "disabled")
+    with caplog.at_level(logging.WARNING, logger="spellbook.mcp.server"):
+        announce_request_validation_status("127.0.0.1", 8765)
+
+    assert AUTH_DISABLED_WARNING in caplog.text
+
+
+def test_disabled_auth_banner_says_disabled(monkeypatch, capsys):
+    from spellbook.mcp.server import announce_request_validation_status
+
+    monkeypatch.setenv("SPELLBOOK_AUTH", "disabled")
+    banner = announce_request_validation_status("127.0.0.1", 8765)
+
+    assert "DISABLED" in banner
+    assert "127.0.0.1:8765" in banner
+    assert "DISABLED" in capsys.readouterr().out
+
+
+def test_deprecated_alias_also_announces(monkeypatch, caplog):
+    """SPELLBOOK_MCP_AUTH is still live, so it must announce itself too."""
+    from spellbook.mcp.server import announce_request_validation_status
+
+    monkeypatch.delenv("SPELLBOOK_AUTH", raising=False)
+    monkeypatch.setenv("SPELLBOOK_MCP_AUTH", "disabled")
+    with caplog.at_level(logging.WARNING, logger="spellbook.mcp.server"):
+        banner = announce_request_validation_status("127.0.0.1", 8765)
+
+    assert "DISABLED" in banner
+    assert "disabled" in caplog.text.lower()
+
+
+def test_enabled_auth_is_quiet_and_honest(monkeypatch, caplog):
+    """The negative case: no warning, and no false alarm in the banner."""
+    monkeypatch.delenv("SPELLBOOK_AUTH", raising=False)
+    monkeypatch.delenv("SPELLBOOK_MCP_AUTH", raising=False)
+    from spellbook.mcp.server import announce_request_validation_status
+
+    with caplog.at_level(logging.WARNING, logger="spellbook.mcp.server"):
+        banner = announce_request_validation_status("127.0.0.1", 8765)
+
+    assert "DISABLED" not in banner
+    assert "enabled" in banner
+    assert caplog.text == ""
+
+
+def test_banner_does_not_depend_on_middleware_list(monkeypatch):
+    """Guards the exact defect: status derived from run-kwargs shape.
+
+    build_http_run_kwargs() always returns a non-empty middleware list, so any
+    implementation reading that list reports "enabled" here and fails.
+    """
+    from spellbook.mcp.server import (
+        announce_request_validation_status,
+        build_http_run_kwargs,
+    )
+
+    monkeypatch.setenv("SPELLBOOK_AUTH", "disabled")
+    kwargs = build_http_run_kwargs()
+    assert kwargs.get("middleware"), "precondition: middleware list is non-empty"
+
+    assert "DISABLED" in announce_request_validation_status("127.0.0.1", 8765)

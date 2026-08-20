@@ -37,13 +37,19 @@ graph TD
 
 The daemon binds loopback, so no remote host can route a packet to it. One remote actor can reach it anyway: the browser. Any page the user visits can issue requests to `127.0.0.1`, which is why Jupyter added token auth and why Docker's API socket is a recurring CVE source.
 
-A bearer token stored at mode `0o600` does not address that threat well and carries its own cost. It defends only against *other local users*, and any process running as the user -- including the attacker's, if one is running -- can read the token file. Meanwhile the token had to be copied into six platform config files, which produced world-readable copies on three platforms and one leak into a session log.
+A bearer token stored at mode `0o600` does not address that threat well and carries its own cost. It defends only against *other local users*, and any process running as the user -- including the attacker's, if one is running -- can read the token file. Meanwhile the token had to be copied into a per-platform config file for every platform spellbook installs to, multiplying the number of on-disk copies whose permissions had to be right.
 
 Origin validation addresses the actual threat directly and stores no secret anywhere.
 
 ### The rules
 
-1. **No `Origin` header: allowed.** A browser always attaches `Origin` to a cross-origin request. Every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. This is the standard localhost-service pattern.
+1. **No `Origin` header: allowed.** Every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. This is the standard localhost-service pattern.
+
+    Note what this does *not* rest on. A browser does not attach `Origin` to every cross-origin request: it omits it on cross-origin GET navigations and on `<img>`, `<script>`, `<link>`, and `<iframe src>` subresource loads, and attaches it to `fetch`/`XHR` and cross-origin form submissions. Allowing an absent `Origin` is correct because **every cross-origin request a page can make without one is a GET or HEAD, and no GET or HEAD route on this daemon has a side effect.**
+
+    !!! warning "Constraint on new routes"
+
+        Adding a GET or HEAD route that mutates state, or whose response body is sensitive enough to matter when an attacker page loads it as a subresource, breaks this invariant. Such a route must carry its own check; `Origin` will not cover it.
 2. **`Origin` present: rejected unless allowlisted.** Loopback origins (`localhost`, `127.0.0.1`, `::1`, any scheme, any port) are always allowed, so a browser-based MCP client served from the user's own machine works. `SPELLBOOK_ALLOWED_ORIGINS` adds exact-match origins for a client hosted elsewhere.
 3. **`Host` is validated independently.** A value naming neither loopback nor the configured bind address is rejected. Under DNS rebinding the attacker's own hostname is what resolves to `127.0.0.1`, so it shows up here even when `Origin` does not help.
 
@@ -118,7 +124,7 @@ Test: `tests/test_workflow_state_security.py`
 
 | Variable | Default | Description |
 |---|---|---|
-| `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation on HTTP transport. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
+| `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation on HTTP transport. The server logs a warning and prints `request validation DISABLED` in its startup banner whenever this is in effect. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
 | `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated extra origins permitted to call the daemon from a browser. Loopback origins are always allowed. |
 | `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Binding to `0.0.0.0` exposes the server to the network and is strongly discouraged. |
 | `SPELLBOOK_MCP_PORT` | `8765` | Port number for HTTP transport. |
@@ -136,6 +142,8 @@ SPELLBOOK_AUTH=disabled
 ```
 
 This turns off Origin and Host validation, leaving the daemon reachable by any page the user visits. Use only for debugging.
+
+When validation is disabled the server announces it rather than failing quietly: the startup banner reads `request validation DISABLED`, and the server logs the warning `MCP request validation disabled via SPELLBOOK_AUTH=disabled; any web page you visit can reach this daemon`. If you set this variable and do not see both, the daemon is not running the configuration you think it is.
 
 ### Revert Security Changes
 

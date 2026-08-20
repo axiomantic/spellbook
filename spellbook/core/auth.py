@@ -7,11 +7,16 @@ network but not the browser: any page the user visits can issue requests to
 Two headers carry the signal:
 
 ``Origin``
-    A browser attaches it to every cross-origin request, and it names the
-    *attacking* page even under DNS rebinding. A request without an Origin was
-    not issued by a browser under a page's control, so its absence is allowed --
-    that is what every legitimate MCP client (Claude Code, curl, pi's adapter)
-    sends.
+    Present on the browser-issued requests that can carry a side effect --
+    ``fetch``/XHR and cross-origin form submissions -- and it names the
+    *attacking* page even under DNS rebinding. Its absence is allowed, which is
+    what every legitimate MCP client (Claude Code, curl, pi's adapter) sends.
+
+    A browser does *not* send it on every cross-origin request: it is omitted on
+    GET navigations and on ``<img>``/``<script>``/``<link>``/``<iframe src>``
+    subresource loads. Allowing an absent Origin is therefore safe only while no
+    GET or HEAD route here has a side effect. A new GET route with a side effect
+    needs its own check; see docs/security.md.
 
 ``Host``
     Under DNS rebinding the attacker's own hostname is what resolves to

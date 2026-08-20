@@ -23,6 +23,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `403`, not `401`: no credentials exist, so nothing the caller could send
   would change the outcome.
 
+  **Known limitation, unchanged from the token in one respect and weaker in
+  another.** Origin matching is by hostname, so *any* loopback origin is
+  accepted regardless of scheme or port: a dev server on
+  `http://localhost:3000` can reach the daemon, where the bearer token would
+  have returned `401`. This is the documented rule 2 in `docs/security.md`,
+  kept so a browser-based MCP client served from the user's own machine keeps
+  working, but it is a real narrowing of protection for anyone who runs
+  untrusted local web content. Tightening it to exact scheme+host+port
+  matching is deliberately left to a follow-up, because it would break that
+  documented client case.
+
   **Existing installs are affected.** On the next `install.py` run the
   `~/.local/spellbook/.mcp-token` file is deleted, and each platform installer
   rewrites its MCP server entry whole, so an `Authorization` header written by
@@ -36,7 +47,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Authorization` header from the antigravity, codex, forgecode, goose,
   opencode, and pi installers and from `claude mcp add` registration; and the
   token read from `hooks/spellbook_hook.py` and
-  `spellbook/cli/daemon_client.py`.
+  `spellbook/cli/daemon_client.py`. Also removed: `stream_events` from
+  `spellbook/cli/daemon_client.py`, which exchanged a bearer token for a ticket
+  at `/auth/ticket` and opened a WebSocket to `/events`. Neither route is
+  registered anywhere in the tree and the function had no callers.
 
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
   the filesystem for the layouts that are determined by what is on disk (plain
@@ -52,6 +66,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
+
+### Fixed
+
+- **The MCP startup banner now reports the real request-validation state.** It
+  derived the "auth enabled" / "auth DISABLED" text from whether the run kwargs
+  carried a non-empty middleware list. That list is always non-empty, so
+  `SPELLBOOK_AUTH=disabled` (or the deprecated `SPELLBOOK_MCP_AUTH=disabled`)
+  turned validation off while the banner announced it as enabled and no warning
+  was logged. The decision now comes from `auth_is_disabled()` -- the same
+  function the middleware consults -- via a new
+  `spellbook.mcp.server.announce_request_validation_status`, which exists as a
+  function so the disabled path is reachable by a test. `docs/security.md`
+  documents the banner text and the warning again.
+
+- **ForgeCode health check no longer fails on a missing `Authorization`
+  header.** `check_forgecode_mcp` in `scripts/mcp-health-check.py` hard-failed
+  with `missing_auth` when `mcpServers.spellbook.headers.Authorization` was
+  absent or not `Bearer <token>`. Installers stopped writing that header when
+  the token was removed, so every correctly-installed ForgeCode user was
+  reported permanently `unhealthy`, pointing at a credential that no longer
+  exists. The validation is deleted, the docstring now describes six ordered
+  validations rather than seven, and `has_auth` / `auth_format_ok` are gone
+  from the reported contract. This file had no test coverage, which is why the
+  breakage survived; `tests/test_scripts/test_mcp_health_check_forgecode.py`
+  now covers it.
+
+- **`SECURITY.md` and `docs/security.md` no longer claim that a browser always
+  sends `Origin` on a cross-origin request.** Browsers omit it on cross-origin
+  GET navigations and on `<img>`, `<script>`, `<link>`, and `<iframe src>`
+  subresource loads. Allowing an absent `Origin` is still correct, but for a
+  different reason, and both documents now state the actual invariant --
+  every cross-origin request a page can make without an `Origin` is a GET or
+  HEAD, and no GET or HEAD route on this daemon has a side effect -- together
+  with the constraint that places on anyone adding a route.
+
+- **Removed three unsourceable figures from `docs/security.md`.** The claim
+  that the token was copied into "six platform config files, which produced
+  world-readable copies on three platforms and one leak into a session log"
+  could not be substantiated against the tree. The argument does not need the
+  numbers and now makes the same point without them.
 
 ### Removed
 

@@ -48,7 +48,9 @@ Spellbook employs a multi-layer defense model:
 
 `OriginValidationMiddleware` rejects browser-issued cross-origin requests. Binding loopback removes the network as an attack path but not the browser: any page the user visits can issue requests to `127.0.0.1`.
 
-A request carrying no `Origin` header is allowed, because no browser omits it on a cross-origin request and every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. A request carrying an `Origin` is rejected unless the origin is loopback or is listed in `SPELLBOOK_ALLOWED_ORIGINS`. The `Host` header is validated independently against loopback and the configured bind address, which closes DNS rebinding at a second layer -- a rebound request arrives naming the attacker's own host.
+A request carrying no `Origin` header is allowed, and every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. A request carrying an `Origin` is rejected unless the origin is loopback or is listed in `SPELLBOOK_ALLOWED_ORIGINS`. The `Host` header is validated independently against loopback and the configured bind address, which closes DNS rebinding at a second layer -- a rebound request arrives naming the attacker's own host.
+
+Allowing an absent `Origin` does *not* rest on browsers always sending one, because they do not: a browser omits `Origin` on cross-origin GET navigations and on `<img>`, `<script>`, `<link>`, and `<iframe src>` subresource loads, and attaches it to `fetch`/`XHR` and to cross-origin form submissions. The invariant is narrower and worth stating exactly: **every cross-origin request a page can make without an `Origin` header is a GET or HEAD, and no GET or HEAD route on this daemon has a side effect.** Adding a GET or HEAD route that mutates state, or whose response body matters when an attacker page loads it as a subresource, breaks the invariant -- such a route needs its own check rather than relying on `Origin`.
 
 Rejections are `403 Forbidden`. There are no credentials, so nothing the caller could supply would change the outcome; `401` would imply a retry path that does not exist.
 

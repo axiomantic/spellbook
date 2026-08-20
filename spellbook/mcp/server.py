@@ -15,6 +15,7 @@ import fastmcp as _fastmcp_module
 from fastmcp import FastMCP
 
 
+from spellbook.core.auth import auth_is_disabled
 from spellbook.mcp import state
 
 logger = logging.getLogger(__name__)
@@ -129,6 +130,33 @@ def shutdown() -> None:
 
 atexit.register(shutdown)
 
+
+
+AUTH_DISABLED_WARNING = (
+    "MCP request validation disabled via SPELLBOOK_AUTH=disabled; "
+    "any web page you visit can reach this daemon"
+)
+
+
+def announce_request_validation_status(host: str, port: int) -> str:
+    """Print the startup banner and warn when request validation is off.
+
+    Lives here rather than inline in ``__main__`` so the disabled state is
+    reachable by a test. The state is read from ``auth_is_disabled()`` -- the
+    same function the middleware consults -- because deriving it from the shape
+    of the run kwargs once let a real bypass print "auth enabled".
+
+    Returns the banner line, for the caller and for tests.
+    """
+    disabled = auth_is_disabled()
+    status = (
+        "request validation DISABLED" if disabled else "request validation enabled"
+    )
+    banner = f"Starting spellbook MCP server on {host}:{port} ({status})"
+    print(banner)
+    if disabled:
+        logger.warning(AUTH_DISABLED_WARNING)
+    return banner
 
 
 def build_http_run_kwargs() -> Dict[str, Any]:
