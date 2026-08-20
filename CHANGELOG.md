@@ -9,6 +9,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Pi's MCP registration was a silent no-op and now actually registers.
+  `installer/platforms/pi.py` wrote `~/.pi/agent/mcp.json` and reported
+  "registered MCP server", but pi has no native MCP support: its `dist/`
+  references neither `mcpServers` nor `mcp.json` (0 files, `rg -l`), and its
+  `docs/usage.md` states it "intentionally does not include built-in MCP".
+  Nothing read the file the installer wrote, so the success message was the
+  only artifact the operation produced. MCP now arrives through the
+  `pi-mcp-adapter` npm package, declared in `~/.pi/agent/settings.json` and
+  pinned to `2.26.1` -- the version verified end to end against a running
+  daemon (connect, `tools/list`, and tool invocation with the Bearer header).
+  The pin is a named constant, so a bump is a deliberate edit; pi skips
+  versioned npm specs during `pi update --extensions`. The emitted server entry
+  gains three adapter settings that correct defaults which would otherwise
+  leave the tools unusable: `directTools: true` (the default routes all tools
+  through a single proxy tool named `mcp`), `toolPrefix: "none"` (the default
+  prepends the server name, yielding `spellbook_spellbook_health_check` for
+  tools already named `spellbook_*`), and `lifecycle: "eager"`.
+  `protocolVersion` is deliberately unset so the adapter's `legacy` default
+  negotiates. Reporting is now conditioned on the adapter declaration rather
+  than on a file having been written: with the adapter undeclared the installer
+  says MCP is not registered and fails the step, and `detect()` no longer counts
+  a bare `mcp.json` entry as a registration. The installer makes no request to
+  the daemon, so it claims only what it did -- declared and wrote -- and never
+  that the server is reachable. Uninstall removes the adapter declaration only
+  when no other server remains in `mcp.json`, and never touches a user-authored
+  object-form entry.
+
 - Every platform installer that copies the MCP bearer token into a harness
   config file now writes that file with mode 0600, through one shared
   `installer.components.mcp.write_token_bearing_file`. Measured on a real
