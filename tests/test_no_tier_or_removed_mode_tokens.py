@@ -1,7 +1,8 @@
 """Grep gate: forbid tier-classifier tokens and removed execution-mode vocabulary.
 
 Implements the §10.2 / IMP-4 widened verification gate from the develop-rework
-design. Greps the whole ``skills/`` + ``commands/`` + ``agents/`` tree for two
+design. Greps the whole ``skills/`` + ``commands/`` + ``agents/`` + ``rules/``
+tree for two
 classes of forbidden tokens and FAILS on any non-allowlisted match:
 
 (a) Tier-as-classifier tokens:  ``\\b(TRIVIAL|SIMPLE|STANDARD|COMPLEX)\\b``
@@ -18,7 +19,7 @@ test loads it and asserts both directions of the contract:
   - the gate PASSES on the current clean worktree (allowlisted occurrences
     tolerated), and
   - the gate FAILS when a forbidden, non-allowlisted token is planted in a
-    ``skills/`` / ``commands/`` / ``agents/`` file.
+    ``skills/`` / ``commands/`` / ``agents/`` / ``rules/`` file.
 """
 
 from __future__ import annotations
@@ -59,7 +60,7 @@ def test_clean_worktree_has_zero_nonallowlisted_violations(checker):
 
     Asserts EXACT emptiness of the violation list (Full Assertion Principle):
     any non-allowlisted tier token or removed-mode token anywhere under
-    skills/ + commands/ + agents/ would surface here as a Violation and fail
+    skills/ + commands/ + agents/ + rules/ would surface here as a Violation and fail
     this assertion with an actionable file:line message.
     """
     violations = checker.find_violations(REPO_ROOT)
@@ -247,5 +248,75 @@ def test_work_items_anchored_exception_is_line_scoped(checker, tmp_path):
             token="work_items",
             token_class="removed-mode",
             line="Use the work_items execution mode here.",
+        )
+    ]
+
+
+# ---------------------------------------------------------------------------
+# (4) Scan scope: rules/ is in scope. Rule modules install globally and are
+#     read every session, so a stale tier or removed-mode token there is at
+#     least as visible as one in a skill.
+# ---------------------------------------------------------------------------
+
+
+def test_rules_tree_is_actually_enumerated(checker):
+    """The real ``rules/`` tree contributes files to the scan.
+
+    Guards the failure mode a planted-token test cannot see: a widening that
+    names a tree the enumerator never reaches (wrong root, wrong glob) scans
+    nothing and still passes every violation assertion. Asserts against the
+    live repository, where ``rules/`` is non-empty.
+    """
+    scanned = {p.relative_to(REPO_ROOT).as_posix() for p in checker._iter_markdown_files(REPO_ROOT)}
+    from_rules = {p for p in scanned if p.startswith("rules/")}
+    on_disk = {p.relative_to(REPO_ROOT).as_posix() for p in (REPO_ROOT / "rules").rglob("*.md")}
+
+    assert on_disk, "fixture precondition: rules/ holds Markdown modules"
+    assert from_rules == on_disk
+
+
+def test_planted_token_in_rules_is_detected(checker, tmp_path):
+    """A tier token planted in rules/ is reported (rules/ is in scope)."""
+    (tmp_path / "skills").mkdir()
+    (tmp_path / "commands").mkdir()
+    (tmp_path / "agents").mkdir()
+    rules_dir = tmp_path / "rules"
+    rules_dir.mkdir()
+    rule_file = rules_dir / "20-orchestration.md"
+    source_line = "Dispatch at the STANDARD tier when the task is bounded."
+    rule_file.write_text(f"{source_line}\n", encoding="utf-8")
+
+    violations = checker.find_violations(tmp_path)
+
+    assert violations == [
+        checker.Violation(
+            path="rules/20-orchestration.md",
+            lineno=1,
+            token="STANDARD",
+            token_class="tier",
+            line=source_line,
+        )
+    ]
+
+
+def test_planted_removed_mode_token_in_rules_is_detected(checker, tmp_path):
+    """A removed-mode token planted in rules/ is reported, not only a tier one."""
+    (tmp_path / "skills").mkdir()
+    (tmp_path / "commands").mkdir()
+    (tmp_path / "agents").mkdir()
+    rules_dir = tmp_path / "rules"
+    rules_dir.mkdir()
+    source_line = "Set execution_mode before the first dispatch."
+    (rules_dir / "40-develop-discipline.md").write_text(f"{source_line}\n", encoding="utf-8")
+
+    violations = checker.find_violations(tmp_path)
+
+    assert violations == [
+        checker.Violation(
+            path="rules/40-develop-discipline.md",
+            lineno=1,
+            token="execution_mode",
+            token_class="removed-mode",
+            line=source_line,
         )
     ]

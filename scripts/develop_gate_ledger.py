@@ -133,7 +133,7 @@ import sys
 from collections.abc import Iterable, Mapping
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, NamedTuple
 
 # This module's own docstring says "a developer or subagent can read it
 # directly", and every doc instructs invoking it as
@@ -490,6 +490,105 @@ def set_scalar(field: str, value: Any, *, path: Path | None = None) -> dict[str,
     return write_ledger({field: value}, path=path)
 
 
+def _require_ledger_map(
+    container: Mapping[str, Any],
+    key: str,
+    *,
+    remedy: str,
+    label: str | None = None,
+) -> dict[str, Any]:
+    """Return the object at ``key``, refusing a non-object shape.
+
+    The READ half of the malformed-shape contract, and the sibling of
+    ``_require_ceremony_dict`` for the accumulating maps: ``blockers``,
+    ``waves``, and the entries nested inside them. Every one of these
+    shapes is reachable -- the shipped CLI wrote ``{"blockers":
+    "collapsed"}`` and ``{"waves": "collapsed"}`` at exit 0 before the
+    bare-``set`` refusal closed that route -- so a ledger on disk can
+    already hold them, and the module docstring separately invites a
+    developer to edit the file by hand.
+
+    A read that GATES A CLAIM must refuse rather than answer. Feeding a
+    scalar to ``.get`` raised ``AttributeError`` and escaped as a raw
+    traceback; swallowing it with ``or {}`` was worse, because the falsy
+    shapes then reported "no open blocker to close" and "this wave did not
+    pass" -- both of which name a MISSING ENTRY when the real fault is a
+    malformed field, sending the reader to look for the wrong thing.
+    ``is_wave_done_claimable`` is the case that makes this matter: "False"
+    and "nothing could be read" are different facts, and only one of them
+    is about the wave.
+
+    ``None`` returns ``{}``: that is JSON's spelling of absent, and an
+    absent map is the ordinary fresh-ledger state, not damage. Every other
+    non-object is refused, matching the value space ``_require_ceremony_dict``
+    admits so the two guards cannot disagree about what "malformed" means.
+
+    ``remedy`` is the caller's, because the route differs per field and a
+    refusal naming a remedy that does not work is the dead end this whole
+    defect class keeps producing. Each one passed in here is covered by a
+    test that runs it against the broken shape.
+    """
+    value = container.get(key)
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise LedgerError(
+            f"ledger field {label or key!r} is a {type(value).__name__}, not an "
+            f"object (value={value!r}); refusing to read an entry out of it. "
+            "A bare `set` that collapsed the object to a scalar is now refused, "
+            "but a ledger written before that guard can still hold this shape. "
+            f"{remedy}"
+        )
+    return value
+
+
+class _DisplacedMap(NamedTuple):
+    """An accumulating map made usable, plus the malformed value it displaced.
+
+    A named pair rather than a bare tuple because the caller unpacks it at a
+    distance from this definition, and ``usable``/``evidence`` say which is
+    which where a positional tuple would not.
+    """
+
+    usable: dict[str, Any]
+    evidence: dict[str, Any]
+
+
+def _displace_malformed_map(current: Mapping[str, Any], field: str) -> _DisplacedMap:
+    """Return the accumulating map at ``field``, made usable, with any evidence.
+
+    The WRITE half, and it is deliberately NOT the mirror of
+    ``_require_ledger_map``. Both fields that use it -- ``ceremony_history``
+    and ``dispatches`` -- are on paths that must not refuse:
+    ``archive_ceremony`` IS the recovery route every ceremony refusal names,
+    and ``record_dispatch`` is driven by the ``PostToolUse`` hook, which
+    fires without the agent's cooperation and has nobody to show an error to.
+    Refusing on either is the dead end PR 469 shipped, where the remedy a
+    refusal named was itself refused.
+
+    ``dict(current.get(field) or {})`` was the crash: a string or list raised
+    ``ValueError: dictionary update sequence element #0 has length 1; 2 is
+    required``, and a number raised ``TypeError: 'int' object is not
+    iterable``. Neither message named the field or a way out, and the
+    ``TypeError`` escaped as a traceback because the CLI handlers catch only
+    ``ValueError`` and ``LedgerError``.
+
+    The malformed value is returned as EVIDENCE rather than dropped, on the
+    same reasoning ``archive_ceremony`` preserves a scalar ``ceremony``: it is
+    the record of what the ledger held, and this is the one path that gets to
+    see it. The caller folds it under a ``prior_<field>`` key INSIDE the new
+    entry, where a scalar cannot corrupt the map it was displaced from. The
+    falsy shapes were previously swallowed by ``or {}`` and lost silently,
+    which is the same erasure without the crash to notice it by.
+    """
+    value = current.get(field)
+    if isinstance(value, dict):
+        return _DisplacedMap(dict(value), {})
+    if value is None:
+        return _DisplacedMap({}, {})
+    return _DisplacedMap({}, {f"prior_{field}": value})
+
+
 def _require_ceremony_dict(current: Mapping[str, Any]) -> dict[str, Any]:
     """Return the stored ``ceremony`` object, refusing a non-object shape.
 
@@ -736,7 +835,8 @@ def archive_ceremony(
             "Archiving is for superseding an existing selection."
         )
     stamp = timestamp or _utc_now()
-    history = dict(current.get("ceremony_history") or {})
+    prior = _displace_malformed_map(current, "ceremony_history")
+    history = dict(prior.usable)
     # Two archives in the same second would collide on the map key and the
     # earlier one would vanish -- silently, and only in the audit trail. Key
     # collisions get a suffix so append-only holds regardless of clock
@@ -754,6 +854,7 @@ def archive_ceremony(
         "reason": reason.strip(),
         "archived_at": stamp,
         "ceremony": ceremony,
+        **prior.evidence,
     }
     updated = dict(current)
     updated["ceremony_history"] = history
@@ -848,7 +949,20 @@ def record_blocker(
     stamp = timestamp or _utc_now()
     if close:
         current = read_ledger(path)
-        existing = (current.get("blockers") or {}).get(blocker_id)
+        existing = _require_ledger_map(
+            current,
+            "blockers",
+            # Every backticked command is LITERAL, down to the argument:
+            # `--type decision/work/external` reads as a helpful alternation
+            # and is a spelling argparse rejects, so the alternatives sit
+            # OUTSIDE the backticks.
+            remedy=(
+                "Read it with `show --field blockers` first -- the repair "
+                "DISCARDS it -- then re-establish the map by opening a "
+                f"blocker: `blocker <id> --type {BLOCKER_TYPES[0]}` "
+                f"(or {'/'.join(BLOCKER_TYPES[1:])})."
+            ),
+        ).get(blocker_id)
         if not existing:
             raise LedgerError(
                 f"no open blocker {blocker_id!r} to close. Closing a blocker "
@@ -971,13 +1085,14 @@ def record_dispatch(
     target = path or ledger_path()
     current = read_ledger(target)
     stamp = timestamp or _utc_now()
-    dispatches = dict(current.get("dispatches") or {})
+    prior = _displace_malformed_map(current, "dispatches")
+    dispatches = dict(prior.usable)
     key = stamp
     n = 2
     while key in dispatches:
         key = f"{stamp}#{n:03d}"
         n += 1
-    entry: dict[str, Any] = {"recorded_at": stamp}
+    entry: dict[str, Any] = {"recorded_at": stamp, **prior.evidence}
     if subagent_type and subagent_type.strip():
         entry["subagent_type"] = subagent_type.strip()[:DESCRIPTION_MAX]
     if description and description.strip():
@@ -1019,14 +1134,44 @@ def find_dispatches(
     return sorted(found, key=lambda e: str(e.get("recorded_at") or ""))
 
 
+# Every backticked command here is LITERAL, argument alternations included: a
+# remedy is spelled the way the reader will type it, and
+# `--status passed/failed/n_a` is a spelling argparse rejects.
+_WAVE_REMEDY = (
+    "Read it with `show --field waves` first -- the repair DISCARDS it -- "
+    "then re-establish the map by recording a check: "
+    "`wave-discipline <wave> --status passed` (or failed/n_a)."
+)
+
+
 def wave_discipline_status(
     wave_id: str, *, path: Path | None = None
 ) -> dict[str, Any] | None:
-    """Return the recorded §24.6 entry for a wave, or None if absent."""
+    """Return the recorded §24.6 entry for a wave, or None if absent.
+
+    Refuses a malformed ``waves`` rather than reading through it. This
+    read is what ``is_wave_done_claimable`` decides on, so a shape it
+    cannot parse must not be answered with a verdict -- see
+    ``_require_ledger_map``. The guard repeats at EVERY level the walk
+    descends: guarding only the top would have moved the
+    ``AttributeError`` one ``.get`` deeper instead of removing it.
+    """
     current = read_ledger(path)
-    waves = current.get("waves") or {}
-    wave = waves.get(wave_id) or {}
-    return wave.get("section_24_6_check")
+    waves = _require_ledger_map(current, "waves", remedy=_WAVE_REMEDY)
+    wave = _require_ledger_map(
+        waves, wave_id, remedy=_WAVE_REMEDY, label=f"waves.{wave_id}"
+    )
+    # Absent and explicit null both mean "no check recorded" and return
+    # None, the answer this function has always given for them. Only a
+    # PRESENT non-object is malformed.
+    if wave.get("section_24_6_check") is None:
+        return None
+    return _require_ledger_map(
+        wave,
+        "section_24_6_check",
+        remedy=_WAVE_REMEDY,
+        label=f"waves.{wave_id}.section_24_6_check",
+    )
 
 
 def is_wave_done_claimable(wave_id: str, *, path: Path | None = None) -> bool:
@@ -1043,6 +1188,14 @@ def is_wave_done_claimable(wave_id: str, *, path: Path | None = None) -> bool:
 
 
 # ---- CLI ----------------------------------------------------------------
+#
+# Every handler splits its failures the same way: a LedgerError exits 1 ("the
+# STORED ledger is not what this operation needs -- repair it") and a
+# ValueError exits 2 ("the CALLER asked for something the ledger does not
+# accept -- fix the command"). A caller can only branch on that split if it
+# holds on every subcommand; where five recorders collapsed both into exit 2,
+# a corrupt ledger reached through `blocker` sent the reader to inspect
+# arguments that were already correct.
 
 
 def _cmd_show(args: argparse.Namespace) -> int:
@@ -1101,9 +1254,7 @@ def _cmd_set(args: argparse.Namespace) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 1
     except ValueError as exc:
-        # Value guards (e.g. ceremony.gate_position) raise ValueError. Exit 2
-        # to match the unknown-field path: both are "the caller asked for
-        # something the ledger does not accept", not a ledger I/O failure.
+        # The unknown-field path above returns 2 directly for the same reason.
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(f"set {args.field}={args.value!r}")
@@ -1114,7 +1265,10 @@ def _cmd_archive_ceremony(args: argparse.Namespace) -> int:
     path = Path(args.path) if args.path else None
     try:
         archive_ceremony(args.reason, timestamp=args.timestamp, path=path)
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(
@@ -1136,7 +1290,10 @@ def _cmd_wave_discipline(args: argparse.Namespace) -> int:
             reason=args.reason,
             path=path,
         )
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     claimable = is_wave_done_claimable(args.wave, path=path)
@@ -1158,7 +1315,10 @@ def _cmd_blocker(args: argparse.Namespace) -> int:
             timestamp=args.timestamp,
             path=path,
         )
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(
@@ -1185,7 +1345,10 @@ def _cmd_group_gate(args: argparse.Namespace) -> int:
             timestamp=args.timestamp,
             path=path,
         )
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(f"group {args.group_id}: gate_stack status={args.status}")
@@ -1206,7 +1369,10 @@ def _cmd_record_dispatch(args: argparse.Namespace) -> int:
             timestamp=args.timestamp,
             path=path,
         )
-    except (ValueError, LedgerError) as exc:
+    except LedgerError as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+    except ValueError as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     print(f"dispatch recorded (skills: {', '.join(skills) or 'none recognized'})")

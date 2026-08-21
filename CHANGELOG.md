@@ -133,6 +133,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   could not be substantiated against the tree. The argument does not need the
   numbers and now makes the same point without them.
 
+- `scripts/develop_gate_ledger.py` now applies its documented exit-code split
+  on every subcommand. `1` means the STORED ledger is not what the operation
+  needs, `2` means the CALLER asked for something the ledger does not accept.
+  Five recorders -- `archive-ceremony`, `wave-discipline`, `blocker`,
+  `group-gate`, `record-dispatch` -- collapsed both into a single exit `2`, so
+  a corrupt ledger reached through `blocker` reported "fix the command" while
+  the ledger needed repair. A convention holding on three of eight subcommands
+  is not one a caller can branch on. This is a user-visible CLI contract
+  change: an invocation that hit a stored-state refusal on those five now exits
+  `1` where it exited `2`. Verified end to end against a corrupt ledger on each
+  of the five, with the true exit status captured directly rather than through
+  a pipe.
+
 ### Removed
 
 - **The `docs/admin/` documentation section.** It documented a browser-based
