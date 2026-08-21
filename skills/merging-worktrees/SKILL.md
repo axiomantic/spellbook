@@ -185,12 +185,13 @@ git status --porcelain -uall | grep -v '^D \|^.D' | sed 's/^...//;s/.* -> //' |
 while IFS= read -r f; do
   case "$f" in *__init__.py|*.gitkeep|*/py.typed) continue;; esac
   [ -f "$f" ] && [ ! -s "$f" ] && echo "TRUNCATED: $f"
-done; echo "sweep complete"
+done && echo "sweep complete"
 ```
 
 Any name it prints that you did not deliberately empty is a truncation. Output of
-only `sweep complete` is clean; NO output at all means the pipeline itself failed and
-the check did not run.
+only `sweep complete` is clean. If the `echo` is absent, the pipeline itself
+failed (e.g. `git status` errored) and the check did not run — re-run it
+manually before trusting the result.
 </CRITICAL>
 
 ## Rollback Procedure

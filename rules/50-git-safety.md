@@ -41,7 +41,7 @@ only on the files you are working on.
   while IFS= read -r f; do
     case "$f" in *__init__.py|*.gitkeep|*/py.typed) continue;; esac
     [ -f "$f" ] && [ ! -s "$f" ] && echo "TRUNCATED: $f"
-  done; echo "sweep complete"
+  done && echo "sweep complete"
   ```
 
   Each clause earns its place. `-uall` covers UNTRACKED files, and the porcelain
@@ -51,8 +51,9 @@ only on the files you are working on.
   would otherwise report as truncated. The `sed` strips the status column and resolves
   rename entries to their destination. The `case` skips names that are legitimately
   empty. Any name the sweep prints that you did not deliberately empty is a truncation.
-  A sweep that prints only `sweep complete` is clean; no output at all means the
-  pipeline itself failed and the check did not run.
+  A sweep that prints only `sweep complete` is clean; if the `echo` is absent,
+  the pipeline itself failed (e.g. `git status` errored) and the check did not
+  run — re-run it manually before trusting the result.
 
 A real incident: `git stash -u` followed by `git stash pop`, run in a checkout shared
 with two concurrently running agents, truncated a source file to 0 bytes and left 13
