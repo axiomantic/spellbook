@@ -7,7 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- Dead installer surface for the web admin interface, whose implementation was
+  deleted in `7a8e9ab1`. `render_admin_info` on `InstallerRenderer`,
+  `RichRenderer`, and `PlainTextRenderer`, and the `render_admin_info` panel in
+  `installer/tui.py`, had no call site anywhere in the tree: the plain-text
+  renderer's `Admin interface: {url}` line and the Rich panel advertising
+  `http://localhost:8765/admin`, `spellbook admin open`, and a `--no-admin`
+  flag were unreachable, and none of those three targets still exist. Also
+  removed the `spellbook/admin/static/` rule from `.gitignore`, which ignored a
+  path that no longer exists. Prose in `AGENTS.md`,
+  `installer/wizards/defaults.py`, `installer/components/rule_modules.py`, and
+  `spellbook/core/config.py` that described config keys as reachable through
+  the admin UI, or that cited the deleted `CONFIG_SCHEMA` symbol, now states
+  the surviving convention -- every user-facing key is reached through the
+  install wizards -- without naming the removed interface.
+
 ### Changed
+
+- The `generate-docs` pre-commit hook runs `scripts/generate_docs.py --check`
+  instead of the write mode. The gate is unchanged in what it catches -- a
+  commit that leaves the `docs/` mirror stale still fails -- but it now detects
+  staleness by comparing in memory rather than by mutating the tree and letting
+  pre-commit notice the modification. A hook that writes makes pre-commit's
+  unstaged-change stash load-bearing on every commit touching `skills/`,
+  `commands/`, `agents/`, or `rules/`; a stash round-trip in this repository has
+  already truncated a source file to 0 bytes and left 13 stray empty files with
+  nothing failing loudly. The accepted cost is that the author now runs the
+  regeneration by hand: `--check` names each stale page and prints
+  `Run: python3 scripts/generate_docs.py`, which pre-commit surfaces verbatim.
+  `AGENTS.md`, `CONTRIBUTING.md`, and `docs/reference/contributing.md` said the
+  mirror regenerated automatically on commit and no longer do.
 
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
   the filesystem for the layouts that are determined by what is on disk (plain
@@ -23,6 +54,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
+
+### Removed
+
+- The OpenCode `context-curator` extension
+  (`extensions/opencode/context-curator/`) and its server half
+  (`spellbook/mcp/tools/curator.py`, its tests, its `spellbook.mcp.tools`
+  registration, its `context-curator-tests` CI job, and its
+  `.github/dependabot.yml` entry). The extension was never published: its
+  README told users to run `opencode plugin add spellbook-context-curator`,
+  and that package name returns 404 from the npm registry, with no `npm
+  publish` step anywhere in `.github/`. `package.json` declared
+  `"main": "./dist/index.js"`, and no `dist/` was ever built. The installer
+  never referenced the directory, so nothing on a user's machine could load
+  it. Source last changed 2026-02-02; every commit since was a dependabot
+  bump against a package no one could install. The two MCP tools it backed,
+  `mcp_curator_track_prune` and `mcp_curator_get_stats`, had no in-repo
+  caller other than the extension itself.
+  Two extraction floors in `scripts/check_reference_resolution.py` moved with
+  the sources they measure: `dependabot-directories` from 5 to 4, and
+  `extension-mcp-tools` from 2 to 0. The context-curator extension was the only
+  TypeScript source in the tree that called an MCP tool, so that row now
+  extracts nothing from the real tree; its liveness is still held by the two
+  RED proofs in `tests/scripts/test_reference_resolution.py`, which plant tool
+  calls under `extensions/prime-agent/`. Raise the floor again when a live
+  extension calls an MCP tool.
 
 ### Fixed
 
@@ -46,6 +102,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pr-conventions` rule module forbids by name. Option 2 now pushes and then
   invokes the `creating-issues-and-pull-requests` skill, which discovers and
   applies the repository's own PR template.
+- Gate 4.6.5 (Pre-PR Claim Validation and Embarrassment Sweep) is now
+  dispatchable. It is a `Task:` dispatch in `commands/feature-implement-execute.md`
+  but owned no row of the develop dispatch table, so the Phase Declaration
+  requirement that a dispatch cover "EXACTLY ONE row of the dispatch table" was
+  unsatisfiable and every dispatch of it was malformed -- taking the 8-point
+  embarrassment sweep with it. The ceremony menu compounded this with a single
+  line, `Comprehensive fact-checking (4.6.4/4.6.5)`, naming two gates: running
+  them separately produced two dispatches citing one ledger line, and combining
+  them tripped the ban on phrasings that merge two dispatch-table rows. A
+  `4.6.5` row now exists, and the menu line is split into
+  `Comprehensive fact-checking (4.6.4)` and `Pre-PR claim validation (4.6.5)`,
+  so "Verbatim or invalid" resolves for both. Dispatch-table rows are also back in ordinal
+  order (`2.4` preceded `2.5`), which is where a missing row hides.
+- Gate 4.6.5 no longer hardcodes `main` as its diff base. `rules/55-diff-semantics.md`
+  forbids the literal by name; on a repository whose default branch is `master`
+  the gate scoped itself to a nonexistent ref. It now detects the target and
+  uses `git diff $(git merge-base HEAD <target>)...HEAD`, matching the skill it
+  delegates to.
+- Invariant Principle 5 of `commands/feature-implement-execute.md` named the
+  per-task gate set as "4.4 through 4.6.3". The range end rotted when 4.5.1 was
+  inserted, and 4.6 is headed "Quality Gates After All Tasks" -- read literally
+  it demanded a full test-suite run and a green-mirage audit per task. It now
+  names 4.4, 4.5, and 4.5.1, matching the file's own two other statements of
+  that set.
 - `scripts/develop_gate_ledger.py` now applies its documented exit-code split
   on every subcommand. `1` means the STORED ledger is not what the operation
   needs, `2` means the CALLER asked for something the ledger does not accept.
@@ -58,6 +138,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `1` where it exited `2`. Verified end to end against a corrupt ledger on each
   of the five, with the true exit status captured directly rather than through
   a pipe.
+- `installer.version.sync_version_to_files` raises `VersionSyncError` when a
+  manifest exists but cannot be parsed or read, instead of swallowing
+  `json.JSONDecodeError` and `OSError` and returning an empty list. The empty
+  list is also what a clean tree returns, so a caller that trusted the return
+  value reported "nothing to do" and exited `0` on a broken manifest --
+  measured: a caller of that shape printed `nothing to do; manifests already
+  agree` and exited `0` against a manifest containing `{ this is not json`, and
+  now exits `1` naming the file and the parse position. The exception carries
+  `updated` and `failures`, so a partial sync is still reportable and each
+  unusable manifest is paired with its reason; a payload that parses to a
+  non-object is reported as such rather than reaching `.get()` as an
+  `AttributeError` that names neither file nor cause. A caller that catches
+  `VersionSyncError` is not thereby excused from re-validating against disk.
+  `validate_version_consistency` does not share this defect: it already emits
+  an issue for an unreadable manifest, and is unchanged.
 
 ## [0.89.0] - 2026-08-17
 

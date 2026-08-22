@@ -29,7 +29,7 @@ is never zero.
 2. **Delegate actual work** - Main context orchestrates; subagents write code, run tests, perform reviews
 3. **Quality gates are mandatory** - Code review, fact-checking, and green mirage audit after every task; no exceptions
 4. **Behavior preservation in refactoring** - Test verification at every transformation; no behavior changes without approval
-5. **No batch exemption** - A batched or multi-task dispatch exempts NOTHING: every task the batch covers passes gates 4.4 (Implementation Completion Verification) through 4.6.3 (Green Mirage Audit) individually before it may be marked complete. Batch size never substitutes for per-task gating.
+5. **No batch exemption** - A batched or multi-task dispatch exempts NOTHING: every task the batch covers passes the per-task gates 4.4, 4.5, and 4.5.1 individually before it may be marked complete. Batch size never substitutes for per-task gating.
 
 <analysis>
 Before executing Phase 4:
@@ -41,7 +41,7 @@ Before executing Phase 4:
 <reflection>
 After executing Phase 4:
 - Was every per-task gate (4.4, 4.5, 4.5.1) dispatched to a subagent, for EVERY task?
-- Did all end-of-phase gates (4.6.1 - 4.6.5) run and reach clean?
+- Did all five end-of-phase gates (4.6.1-4.6.5; 4.6.2 is a direct test-suite run, the rest Task dispatches) run and reach clean?
 - Did I use Write, Edit, or Bash directly in main context at any point? If yes, the workflow failed.
 </reflection>
 
@@ -821,7 +821,7 @@ If issues found: Fix, re-run until clean.
 
 #### 4.6.5 Pre-PR Claim Validation and Embarrassment Sweep
 
-<RULE>Before any PR creation, run the final fact-checking pass AND the embarrassment sweep. The fact-check validates that claims are TRUE; the sweep validates that the diff is CLEAN. Both gate the PR.</RULE>
+<RULE>Before any PR, run the final fact-check AND the embarrassment sweep. The fact-check validates claims are TRUE; the sweep validates the diff is CLEAN. Both gate the PR.</RULE>
 
 ```
 Task:
@@ -832,18 +832,18 @@ Task:
 
     ## Context for the Skill
 
-    Scope: Branch changes (all commits since merge-base with main)
+    Scope: `git diff $(git merge-base HEAD <target>)...HEAD`, `<target>`
+    DETECTED per `rules/55-diff-semantics.md` -- never assumed `main`.
 
-    This is the absolute last line of defense.
-    Nothing ships with false claims.
+    Last line of defense. Nothing ships with false claims.
 
     ## Embarrassment sweep (diff hygiene)
 
     After fact-checking, run the embarrassment sweep over the same branch
-    diff. This is the named pre-PR diff-hygiene pass — the things that are
-    embarrassing to ship, separate from whether claims are true. The full
-    8-point checklist lives in the finishing-a-development-branch skill;
-    apply it here. Each point is scoped to what the branch introduced:
+    diff — the things that are embarrassing to ship, separate from whether
+    claims are true. The full 8-point checklist lives in the
+    finishing-a-development-branch skill; apply it here. Each point is
+    scoped to what the branch introduced:
 
     1. Debug leftovers (print/console.log/debugger/breakpoints added by the branch)
     2. Branch-introduced TODO/FIXME/XXX/HACK markers promising nonexistent work
