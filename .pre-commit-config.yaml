@@ -9,8 +9,8 @@ repos:
   - repo: local
     hooks:
       - id: generate-docs
-        name: Generate documentation
-        entry: uv run scripts/generate_docs.py
+        name: Check generated documentation is current
+        entry: uv run scripts/generate_docs.py --check
         language: system
         pass_filenames: false
         files: ^(skills/|commands/|agents/|rules/)

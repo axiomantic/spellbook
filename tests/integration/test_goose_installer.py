@@ -57,21 +57,6 @@ def goose_env(tmp_path, monkeypatch):
     return fake_home
 
 
-@pytest.fixture
-def mock_mcp_token():
-    """Mock get_mcp_auth_token via tripwire so it returns a deterministic token.
-
-    The installer imports get_mcp_auth_token into installer.platforms.goose at
-    module load; tripwire can intercept the bound name. The MCP server URL
-    helpers read DEFAULT_HOST/DEFAULT_PORT directly so they don't need mocking.
-    """
-    import tripwire
-
-    return tripwire.mock("installer.platforms.goose:get_mcp_auth_token").returns(
-        "test-token-abc123"
-    )
-
-
 # ---------------------------------------------------------------------
 # Detection
 # ---------------------------------------------------------------------
@@ -177,10 +162,8 @@ def test_goose_install_creates_global_hints_symlink(spellbook_dir, goose_env):
     assert hints.resolve() == (spellbook_dir / "rules" / "00-core.md").resolve()
 
 
-def test_goose_install_registers_mcp_in_config_yaml(spellbook_dir, goose_env, mock_mcp_token):
-    """config.yaml gets a spellbook MCP extension block with Bearer header."""
-    import tripwire
-
+def test_goose_install_registers_mcp_in_config_yaml(spellbook_dir, goose_env):
+    """config.yaml gets a spellbook MCP extension block, carrying no credential."""
     from installer.platforms.goose import GooseInstaller
 
     (goose_env / ".config" / "goose").mkdir(parents=True, exist_ok=True)
@@ -192,9 +175,7 @@ def test_goose_install_registers_mcp_in_config_yaml(spellbook_dir, goose_env, mo
         dry_run=False,
     )
 
-    with tripwire:
-        installer.install()
-    mock_mcp_token.assert_call()
+    installer.install()
 
     cfg = goose_env / ".config" / "goose" / "config.yaml"
     assert cfg.exists()
@@ -206,15 +187,14 @@ def test_goose_install_registers_mcp_in_config_yaml(spellbook_dir, goose_env, mo
     assert "extensions:" in content
     assert "name: spellbook" in content
     assert "uri: http://127.0.0.1:8765/mcp" in content
-    # Bearer token is inlined
-    assert "Bearer test-token-abc123" in content
+    # No credential is written: the daemon validates Origin/Host instead.
+    assert "Authorization" not in content
+    assert "Bearer" not in content
 
-    # File mode is 0600 (token protection). Windows has no POSIX mode bits:
-    # os.chmod there only toggles the read-only flag, and stat() reports
-    # 0o666 whatever the installer asked for. Asserting 0600 on Windows
-    # would be testing the platform, not the installer -- and the token
-    # registration above (the part that carries the secret) is still
-    # covered there.
+    # File mode is 0600. Windows has no POSIX mode bits: os.chmod there only
+    # toggles the read-only flag, and stat() reports 0o666 whatever the
+    # installer asked for, so asserting 0600 on Windows would be testing the
+    # platform rather than the installer.
     if sys.platform != "win32":
         mode = cfg.stat().st_mode & 0o777
         assert mode == 0o600, f"Expected mode 0600, got {oct(mode)}"
@@ -239,10 +219,8 @@ def test_goose_install_skipped_when_config_dir_missing(spellbook_dir, goose_env)
     assert "not found" in skipped[0].message
 
 
-def test_goose_install_preserves_existing_extensions(spellbook_dir, goose_env, mock_mcp_token):
+def test_goose_install_preserves_existing_extensions(spellbook_dir, goose_env):
     """Re-running install preserves user-added extensions in config.yaml."""
-    import tripwire
-
     from installer.platforms.goose import GooseInstaller
 
     (goose_env / ".config" / "goose").mkdir(parents=True, exist_ok=True)
@@ -263,9 +241,7 @@ def test_goose_install_preserves_existing_extensions(spellbook_dir, goose_env, m
         dry_run=False,
     )
 
-    with tripwire:
-        installer.install()
-    mock_mcp_token.assert_call()
+    installer.install()
 
     content = cfg.read_text()
     # User extension preserved
@@ -290,10 +266,6 @@ def test_goose_install_is_idempotent(spellbook_dir, goose_env):
     )
 
     # Idempotency: install twice; both must succeed without raising.
-    # tripwire's strict mock lifecycle is awkward with multiple-install tests
-    # that share a single mock target, so this test asserts file content
-    # directly without mocking get_mcp_auth_token (the MCP-token-specific
-    # behavior is covered by test_goose_install_registers_mcp_in_config_yaml).
     installer.install()
     installer.install()
 
@@ -337,10 +309,8 @@ def test_goose_install_dry_run_does_not_modify_filesystem(spellbook_dir, goose_e
 # Uninstall
 # ---------------------------------------------------------------------
 
-def test_goose_uninstall_removes_symlinks_and_mcp_block(spellbook_dir, goose_env, mock_mcp_token):
+def test_goose_uninstall_removes_symlinks_and_mcp_block(spellbook_dir, goose_env):
     """Uninstall reverses install: removes skill symlinks, hints symlink, MCP block."""
-    import tripwire
-
     from installer.platforms.goose import GooseInstaller
 
     (goose_env / ".config" / "goose").mkdir(parents=True, exist_ok=True)
@@ -352,10 +322,8 @@ def test_goose_uninstall_removes_symlinks_and_mcp_block(spellbook_dir, goose_env
         dry_run=False,
     )
 
-    with tripwire:
-        installer.install()
-        installer.uninstall()
-    mock_mcp_token.assert_call()
+    installer.install()
+    installer.uninstall()
 
     # Skills removed
     skills_dir = goose_env / ".agents" / "skills"
@@ -409,7 +377,7 @@ def test_goose_uninstall_preserves_user_skills(spellbook_dir, goose_env):
 # ---------------------------------------------------------------------
 
 def test_goose_install_inserts_when_extensions_is_last_line_no_newline(
-    spellbook_dir, goose_env, mock_mcp_token
+    spellbook_dir, goose_env
 ):
     """MCP block is inserted even when extensions: is the last line without \n.
 
@@ -418,8 +386,6 @@ def test_goose_install_inserts_when_extensions_is_last_line_no_newline(
     If a user's config.yaml ends with bare ``extensions:`` and no newline,
     the installer used to silently fail to register the MCP server.
     """
-    import tripwire
-
     from installer.platforms.goose import GooseInstaller
 
     (goose_env / ".config" / "goose").mkdir(parents=True, exist_ok=True)
@@ -434,9 +400,7 @@ def test_goose_install_inserts_when_extensions_is_last_line_no_newline(
         dry_run=False,
     )
 
-    with tripwire:
-        installer.install()
-    mock_mcp_token.assert_call()
+    installer.install()
 
     content = cfg.read_text()
     assert "# SPELLBOOK:START" in content, (

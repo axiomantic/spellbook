@@ -64,7 +64,6 @@
   - [Heads Up Claude](#heads-up-claude)
   - [MCP Language Server](#mcp-language-server)
 - [Key Skills](#key-skills)
-- [Web Admin Interface](#web-admin-interface)
 - [Development](#development)
   - [Serve Documentation Locally](#serve-documentation-locally)
   - [Run MCP Server Directly](#run-mcp-server-directly)
@@ -931,29 +930,6 @@ Five skills worth highlighting:
 **fact-checking** -- Claim verification engine. Extracts factual claims from documents, designs, or code comments, then dispatches parallel verification agents to trace each claim to evidence in the codebase. Produces a graded trust report with sourced verdicts.
 
 **advanced-code-review** -- Multi-phase deep review. Builds a semantic model of the codebase, generates a review plan, and executes deep analysis across architectural, security, performance, and correctness dimensions. Then verifies its own findings against the code before reporting, reducing false positives.
-
-## Web Admin Interface
-
-Spellbook includes a browser-based admin interface served by the MCP daemon at `http://localhost:8765/admin/`. When the MCP server is running, visit that URL to access the dashboard.
-
-![Spellbook Admin Dashboard](docs/admin/screenshots/dashboard.png)
-
-Ten pages cover the full operational surface:
-
-| Page | What it shows |
-|------|--------------|
-| **Dashboard** | Server status, database sizes, focus tracking summary, live event feed |
-| **Memory** | Stored memories with search, type filtering, and citation details |
-| **Security** | Security event log with severity and event type filters |
-| **Sessions** | Tracked sessions with multi-project filtering and content search |
-| **Analytics** | Tool call frequency, error rates, and timeline from security events |
-| **Health** | Database health matrix across all 4 SQLite databases |
-| **Events** | Live WebSocket event bus monitor with subsystem filtering |
-| **Focus** | Zeigarnik focus stacks and correction event log |
-| **Config** | Runtime configuration editor (TTS, notifications, general) |
-| **Fractal** | Interactive Cytoscape.js graph explorer for fractal-thinking |
-
-Authentication uses the MCP bearer token from `~/.local/spellbook/.mcp-token`. Full documentation: [docs/admin/](docs/admin/index.md).
 
 ## Development
 

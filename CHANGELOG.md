@@ -7,46 +7,130 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
+### Removed
 
-- Develop records subagent dispatches from the harness rather than from the
-  agent. A `PostToolUse` hook on `Task` writes an entry under
-  `dispatches.<timestamp>` in the project's develop gate ledger, and a new
-  `dispatches` subcommand of `scripts/develop_gate_ledger.py` queries it: exit
-  `0` when something matches, exit `1` when nothing does, so a phase-verification
-  item can BE the invocation instead of a box the agent ticks for itself.
-  `--since` bounds the query, without which one dispatch recorded during the
-  first task satisfies the same check for every task after it. The dispatch
-  prompt is deliberately not stored -- it routinely carries file contents and
-  operator text -- only the recognized skill names, the subagent type, and a
-  description truncated to 200 characters. A companion `record-dispatch`
-  subcommand writes an entry directly.
-- Develop's per-phase artifact-verification items now declare what decides each
-  one. Fourteen are marked `[CHECKED]` and name the command whose exit status or
-  output is the verdict; eight are marked `[SELF]` and are stated on the record
-  as self-assertions no mechanism reads. Previously every item was a bare
-  checkbox, which gave identical weight to a command's result and to a claim by
-  the party who would have skipped the step.
-- Two guards for shapes that previously read as coverage while proving nothing:
-  `scripts/check_self_manufactured_evidence.py` reports a corpus check whose
-  every input was built by the test that gave it and which nothing aims at the
-  real checkout, and a new test rejects a workflow job gated on an event its
-  workflow never declares under `on:` -- such a job cannot run under any event
-  and never appears as a failure.
-- `scripts/check_version_consistency.py` runs as a pre-commit hook, and so also
-  in the CI pre-commit job. It requires `extensions/gemini/gemini-extension.json`
-  to agree with `.version`, and requires CHANGELOG.md to carry a
-  `## [<version>]` section for the version in `.version` before that version can
-  reach main. A failure names the repair command verbatim.
-  `--fix` propagates `.version` into the manifests via
-  `installer.version.sync_version_to_files`, reports every path it wrote, and
-  re-validates afterwards so a repair that only half-lands still exits non-zero.
-  It is never run by the hook or by any automatic path -- a hook that silently
-  rewrites files turns a drift report into a drift eraser -- and it deliberately
-  will not touch CHANGELOG.md, since an auto-inserted empty release section is
-  the very artifact the release guard exists to prevent.
+- Dead installer surface for the web admin interface, whose implementation was
+  deleted in `7a8e9ab1`. `render_admin_info` on `InstallerRenderer`,
+  `RichRenderer`, and `PlainTextRenderer`, and the `render_admin_info` panel in
+  `installer/tui.py`, had no call site anywhere in the tree: the plain-text
+  renderer's `Admin interface: {url}` line and the Rich panel advertising
+  `http://localhost:8765/admin`, `spellbook admin open`, and a `--no-admin`
+  flag were unreachable, and none of those three targets still exist. Also
+  removed the `spellbook/admin/static/` rule from `.gitignore`, which ignored a
+  path that no longer exists. Prose in `AGENTS.md`,
+  `installer/wizards/defaults.py`, `installer/components/rule_modules.py`, and
+  `spellbook/core/config.py` that described config keys as reachable through
+  the admin UI, or that cited the deleted `CONFIG_SCHEMA` symbol, now states
+  the surviving convention -- every user-facing key is reached through the
+  install wizards -- without naming the removed interface.
+
+- The OpenCode `context-curator` extension
+  (`extensions/opencode/context-curator/`) and its server half
+  (`spellbook/mcp/tools/curator.py`, its tests, its `spellbook.mcp.tools`
+  registration, its `context-curator-tests` CI job, and its
+  `.github/dependabot.yml` entry). The extension was never published: its
+  README told users to run `opencode plugin add spellbook-context-curator`,
+  and that package name returns 404 from the npm registry, with no `npm
+  publish` step anywhere in `.github/`. `package.json` declared
+  `"main": "./dist/index.js"`, and no `dist/` was ever built. The installer
+  never referenced the directory, so nothing on a user's machine could load
+  it. Source last changed 2026-02-02; every commit since was a dependabot
+  bump against a package no one could install. The two MCP tools it backed,
+  `mcp_curator_track_prune` and `mcp_curator_get_stats`, had no in-repo
+  caller other than the extension itself.
+  Two extraction floors in `scripts/check_reference_resolution.py` moved with
+  the sources they measure: `dependabot-directories` from 5 to 4, and
+  `extension-mcp-tools` from 2 to 0. The context-curator extension was the only
+  TypeScript source in the tree that called an MCP tool, so that row now
+  extracts nothing from the real tree; its liveness is still held by the two
+  RED proofs in `tests/scripts/test_reference_resolution.py`, which plant tool
+  calls under `extensions/prime-agent/`. Raise the floor again when a live
+  extension calls an MCP tool.
+
+- **The `docs/admin/` documentation section.** It documented a browser-based
+  admin interface that is no longer part of this repository: the implementation
+  under `spellbook/admin/` was deleted in `7a8e9ab1` ("feat: prime-agent
+  platform support + major subsystem removal"). The pages instructed readers to
+  open `http://localhost:8765/admin/` and authenticate at a login page against
+  software that is not present, using the MCP bearer token that this same
+  release removes. Ten pages and eleven screenshots are gone, along with their
+  `mkdocs.yml` nav section and the "Web Admin Interface" section of `README.md`.
+  The published docs site loses that section.
 
 ### Changed
+
+- **Security model: the MCP daemon no longer uses a bearer token.** It binds
+  loopback and validates the `Origin` and `Host` headers instead. The token
+  defended the wrong threat: mode `0600` stops other local users, but on a
+  single-user machine any process running as the user could read the token
+  file anyway. The threat that loopback binding does *not* stop is the
+  browser -- any page the user visits can issue requests to `127.0.0.1`.
+  `OriginValidationMiddleware` allows a request with no `Origin` header (what
+  Claude Code, curl, and pi's adapter all send), rejects any `Origin` that is
+  neither the daemon's own origin nor listed in the new
+  `SPELLBOOK_ALLOWED_ORIGINS`, and independently rejects a `Host` naming
+  neither loopback nor the configured bind address, which closes DNS
+  rebinding at a second layer. Rejections are `403`, not `401`: no credentials
+  exist, so nothing the caller could send would change the outcome.
+
+  **BREAKING: a loopback `Origin` is no longer trusted for being loopback.**
+  Origin matching is now exact on scheme, host, *and* port. Only the daemon's
+  own origin -- `http://` on the configured bind host or a loopback alias, at
+  the configured port -- is allowed implicitly. A page served from another
+  local port, such as a dev server on `http://localhost:3000`, is now rejected
+  with `403` where an earlier build of this branch allowed it. Untrusted local
+  web content can no longer drive the daemon. **To restore a local browser MCP
+  client, name its origin explicitly:**
+
+  ```bash
+  export SPELLBOOK_ALLOWED_ORIGINS=http://localhost:3000
+  ```
+
+  **BREAKING: a non-loopback bind no longer serves remote clients.** With
+  `SPELLBOOK_HOST=0.0.0.0` the daemon still listens on every interface, but a
+  LAN client's request is refused with `403`. A wildcard bind is an address,
+  not a reachable name: the client sends the name it dialed
+  (`Host: 192.168.1.5:8765`), which matches no allowed value, so only loopback
+  `Host` values are accepted -- including against the literal `Host: 0.0.0.0`,
+  which `urlsplit` would otherwise hand back as a usable hostname. This is
+  intended -- the daemon is a local-only
+  service, and remote access is out of scope. `SPELLBOOK_AUTH=disabled` is the
+  only way to run that configuration, and it disables `Origin` and `Host`
+  validation entirely, leaving the daemon reachable by any page the user
+  visits.
+
+  **Existing installs are affected.** On the next `install.py` run the
+  `~/.local/spellbook/.mcp-token` file is deleted, and each platform installer
+  rewrites its MCP server entry whole, so an `Authorization` header written by
+  an earlier version is dropped rather than left inert. No user action is
+  required. Anyone who registered the daemon by hand with an explicit
+  `--header` should remove that header; the daemon now ignores it.
+
+  Removed with the token: `BearerAuthMiddleware`, `generate_and_store_token`,
+  `load_token`, and `TOKEN_PATH` from `spellbook/core/auth.py`;
+  `get_mcp_auth_token` from `installer/components/mcp.py`; the
+  `Authorization` header from the antigravity, codex, forgecode, goose,
+  opencode, and pi installers and from `claude mcp add` registration; and the
+  token read from `hooks/spellbook_hook.py` and
+  `spellbook/cli/daemon_client.py`. Also removed: `stream_events` from
+  `spellbook/cli/daemon_client.py`, which exchanged a bearer token for a ticket
+  at `/auth/ticket` and opened a WebSocket to `/events`. Neither route is
+  registered anywhere in the tree and the function had no callers. With
+  `stream_events` gone the `websockets` dependency has no consumer left in the
+  tree and is dropped from `pyproject.toml`.
+- The `generate-docs` pre-commit hook runs `scripts/generate_docs.py --check`
+  instead of the write mode. The gate is unchanged in what it catches -- a
+  commit that leaves the `docs/` mirror stale still fails -- but it now detects
+  staleness by comparing in memory rather than by mutating the tree and letting
+  pre-commit notice the modification. A hook that writes makes pre-commit's
+  unstaged-change stash load-bearing on every commit touching `skills/`,
+  `commands/`, `agents/`, or `rules/`; a stash round-trip in this repository has
+  already truncated a source file to 0 bytes and left 13 stray empty files with
+  nothing failing loudly. The accepted cost is that the author now runs the
+  regeneration by hand: `--check` names each stale page and prints
+  `Run: python3 scripts/generate_docs.py`, which pre-commit surfaces verbatim.
+  `AGENTS.md`, `CONTRIBUTING.md`, and `docs/reference/contributing.md` said the
+  mirror regenerated automatically on commit and no longer do.
 
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
   the filesystem for the layouts that are determined by what is on disk (plain
@@ -62,104 +146,137 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
-- Develop's two percentage gates are gone. Phase 1's "Research Quality Score"
-  and Phase 1.5's "Completeness Score" were presented as executable TypeScript
-  requiring 100% to proceed, and nothing ever executed them -- there is no
-  TypeScript runtime in this pipeline and no caller. Each gate is now split into
-  the half a machine decides and the half only the agent can.
-  `scripts/check_research_quality.py` computes seven structural checks over the
-  Phase 1.2 research artifact and `scripts/check_understanding_doc.py` computes
-  six over the Phase 1.5.6 understanding document; exit status is the gate, and
-  both refuse on a deferral marker (`TBD`, "to be determined", "figure it out
-  later"). The judgment items are recorded YES / NO / N-A with one line of
-  evidence each, and reporting them as a percentage is now FORBIDDEN. This
-  deliberately LOWERS the stated strength of those items to what was always
-  true of them.
-- `scripts/develop_gate_ledger.py` refuses several writes it previously
-  accepted. A bare `set <field> <value>` on any of the six recorder-owned
-  fields (`ceremony`, `ceremony_history`, `blockers`, `waves`, `groups`,
-  `dispatches`) replaced the whole object with a scalar and exited `0`, logging
-  a warning while the write landed; those six are now refused by name, and each
-  refusal points at the route that writes the field. After the ceremony lock,
-  `ceremony.selected` and `ceremony.core` may not shrink and `ceremony.declined`
-  may not grow -- growing `declined` dropped a gate by the back door, since
-  `remaining_gates` is derived with declined gates filtered out. The lock is now
-  decided on the presence of `ceremony.locked_at` rather than its truthiness,
-  which had let an empty stamp read as unlocked to every guard at once, and a
-  blank stamp is refused on write. `archive-ceremony` remains the sanctioned
-  de-escalation route; escalation stays legal in every direction.
-- Several repository gates widened to trees they had quietly excluded, and stop
-  depending on whose disk they run on. `scripts/check_removed_mode_tokens.py`
-  now scans `rules/` as well -- a rule module installs globally and is read at
-  the start of every session, which makes it the tree with the weakest case for
-  exclusion (242 files scanned, zero violations in both the old and new scope).
-  The prose rows of `scripts/check_reference_resolution.py` now scan tracked
-  files only, so a local installer run no longer adds findings CI can never see.
-  The mkdocs nav check covers `rules/` in both directions, closing a gap where
-  deleting a rule left a stale nav entry that nothing reported. Corpus tree
-  memberships that were spelled out across eleven sites now come from
-  `scripts/corpus_trees.py` as three named sets, each carrying its reason.
-- `scripts/validate_schemas.py` replaces the blanket size exemption with a
-  per-file ratchet. An exempt file had no ceiling at all, so the exemption set
-  recorded which files were too large and then stopped measuring them.
-  `scripts/size_ceilings.json` records a per-file bytes/lines ceiling that is
-  checked INSTEAD of the global limits; ceilings only ever decrease, enforced by
-  the code rather than by convention, and a ceiling above the truncation limits
-  additionally requires a recorded rationale.
-- The always-loaded communication rules now name the mechanism generically as a
-  "structured question", with `AskUserQuestion` given as the Claude Code
-  instance of it -- spellbook installs to nine harnesses, and a rule naming a
-  tool that does not exist on yours is one you can satisfy by doing nothing. The
-  rules also cover decisions disguised as recommendations: "I recommend",
-  "flagging", "worth noting", "your call" all leave a choice open while reading
-  as a report. Prose is now reserved for facts and completed work, and anything
-  that defers a choice or hands it back must reach the operator as a structured
-  question. Batching decisions into fewer, larger question sets is encouraged
-  and never licenses demoting one back into prose.
-- Eleven skill parents no longer restate detail their own sub-commands are
-  responsible for executing: `advanced-code-review`, `code-review`,
-  `fractal-thinking`, `finding-dead-code`, `documenting-projects`,
-  `creating-issues-and-pull-requests`, `auditing-green-mirage`, `agent2agent`,
-  `fixing-tests`, `reviewing-impl-plans`, and `develop`. Each parent keeps its
-  dispatch table, its invariants, and a pointer; the detail moves verbatim into
-  the command that acts on it. A second copy of a gate drifts from the first
-  with nothing to notice. Nothing was summarized away.
-- The develop skill gained four amendments, each earned by an observed failure.
-  Gate 4.4's completion audit walked four lists that all iterated over something
-  the PLAN declared, so an instruction living only as a sentence in a task body
-  belonged to none of them and the audit could return COMPLETE without
-  mentioning it; a fifth list now enumerates the task's imperatives and names a
-  decider for each. The overall verdict was emitted with no derivation rule, so
-  a reported per-item failure could still aggregate to COMPLETE -- the
-  aggregation rule is now stated.
 
-### Removed
-
-- `scripts/install-hooks.sh` is deleted. It wrote `.git/hooks/pre-commit`
-  directly, and the repository adopted the pre-commit framework one day after
-  the script landed; the framework's generated hook occupies that same path, so
-  running the script would have silently replaced it and disabled all configured
-  hooks with no error and no visible symptom. Both of its jobs are already
-  covered -- doctoc by the framework, markdownlint by the lint workflow.
-  `CONTRIBUTING.md` and `AGENTS.md` advertised it as the hook installation step
-  and now point at `uvx pre-commit install`.
-- `scripts/scan_supply_chain.py` is deleted. It was a survivor of the earlier
-  security cleanup that removed the unused defensive scanners as a cohort: 401
-  lines, no test module, and no invoker anywhere in the tree. A checker nothing
-  runs is worse than no checker, because it reads as coverage to anyone auditing
-  what guards this repository while its verdict has never reached a caller.
+- The OpenCode `context-curator` extension
+  (`extensions/opencode/context-curator/`) and its server half
+  (`spellbook/mcp/tools/curator.py`, its tests, its `spellbook.mcp.tools`
+  registration, its `context-curator-tests` CI job, and its
+  `.github/dependabot.yml` entry). The extension was never published: its
+  README told users to run `opencode plugin add spellbook-context-curator`,
+  and that package name returns 404 from the npm registry, with no `npm
+  publish` step anywhere in `.github/`. `package.json` declared
+  `"main": "./dist/index.js"`, and no `dist/` was ever built. The installer
+  never referenced the directory, so nothing on a user's machine could load
+  it. Source last changed 2026-02-02; every commit since was a dependabot
+  bump against a package no one could install. The two MCP tools it backed,
+  `mcp_curator_track_prune` and `mcp_curator_get_stats`, had no in-repo
+  caller other than the extension itself.
+  Two extraction floors in `scripts/check_reference_resolution.py` moved with
+  the sources they measure: `dependabot-directories` from 5 to 4, and
+  `extension-mcp-tools` from 2 to 0. The context-curator extension was the only
+  TypeScript source in the tree that called an MCP tool, so that row now
+  extracts nothing from the real tree; its liveness is still held by the two
+  RED proofs in `tests/scripts/test_reference_resolution.py`, which plant tool
+  calls under `extensions/prime-agent/`. Raise the floor again when a live
+  extension calls an MCP tool.
 
 ### Fixed
 
-- `extensions/gemini/gemini-extension.json` declared version `0.1.0` while
-  `.version` declared `0.89.0`. `installer.version.sync_version_to_files` and
-  `validate_version_consistency` both treat that manifest as tracking
-  `.version`, so the two disagreed by 88 minor releases. Neither function has a
-  caller, so nothing reported the drift; the manifest is corrected here and the
-  missing wiring is recorded separately.
-- The `[0.2.1]` heading was dated `2025-01-08`, a year before `[0.2.0]`
-  (`2025-12-31`) and `[0.3.0]` (`2026-01-09`). The commit that introduced the
-  section is dated 2026-01-08; the heading now reads `2026-01-08`.
+- **Security: duplicate `Origin` or `Host` headers are rejected.** A request
+  carrying more than one of either header is refused with `403`. Header
+  collections disagree on which copy wins -- `dict()` takes the last, Starlette's
+  `Headers.get()` takes the first -- so picking either one only selects which
+  smuggling direction succeeds. The count is taken over the raw ASGI header
+  list. Header names are also matched case-insensitively rather than trusting
+  the ASGI server to have lowercased them, so the check cannot silently vanish
+  under a server or shim that does not.
+
+- **The MCP startup banner now reports the real request-validation state.** It
+  derived the "auth enabled" / "auth DISABLED" text from whether the run kwargs
+  carried a non-empty middleware list. That list is always non-empty, so
+  `SPELLBOOK_AUTH=disabled` (or the deprecated `SPELLBOOK_MCP_AUTH=disabled`)
+  turned validation off while the banner announced it as enabled and no warning
+  was logged. The decision now comes from `auth_is_disabled()` -- the same
+  function the middleware consults -- via a new
+  `spellbook.mcp.server.announce_request_validation_status`, which exists as a
+  function so the disabled path is reachable by a test. `docs/security.md`
+  documents the banner text and the warning again.
+
+- **ForgeCode health check no longer fails on a missing `Authorization`
+  header.** `check_forgecode_mcp` in `scripts/mcp-health-check.py` hard-failed
+  with `missing_auth` when `mcpServers.spellbook.headers.Authorization` was
+  absent or not `Bearer <token>`. Installers stopped writing that header when
+  the token was removed, so every correctly-installed ForgeCode user was
+  reported permanently `unhealthy`, pointing at a credential that no longer
+  exists. The validation is deleted, the docstring now describes six ordered
+  validations rather than seven, and `has_auth` / `auth_format_ok` are gone
+  from the reported contract. This file had no test coverage, which is why the
+  breakage survived; `tests/test_scripts/test_mcp_health_check_forgecode.py`
+  now covers it.
+
+- **`SECURITY.md` and `docs/security.md` no longer claim that a browser always
+  sends `Origin` on a cross-origin request.** Browsers omit it on cross-origin
+  GET navigations and on `<img>`, `<script>`, `<link>`, and `<iframe src>`
+  subresource loads. Allowing an absent `Origin` is still correct, but for a
+  different reason, and both documents now state the actual invariant --
+  every cross-origin request a page can make without an `Origin` is a GET or
+  HEAD, and no GET or HEAD route on this daemon has a side effect -- together
+  with the constraint that places on anyone adding a route.
+
+- **Removed three unsourceable figures from `docs/security.md`.** The claim
+  that the token was copied into "six platform config files, which produced
+  world-readable copies on three platforms and one leak into a session log"
+  could not be substantiated against the tree. The argument does not need the
+  numbers and now makes the same point without them.
+
+- `finish-branch-cleanup` no longer deletes the worktree for "Keep the branch
+  as-is". Its applicability matrix, procedure heading, and first invariant
+  principle were still on a four-option scale after the skill grew to five
+  options, so the row reading "4. Discard — Yes" resolved against live
+  numbering to Keep-as-is, and the command removed the worktree for the one
+  option that means hands off. The matrix is renumbered to all five options and
+  matches Invariant Principle 4 of `finishing-a-development-branch`: cleanup for
+  Options 1 and 5, keep for 2, 3, and 4. `finish-branch-execute` carried the
+  same defect on a second path — Options 2 and 3 invoked
+  `finish-branch-cleanup` after creating the PR, which the skill's own
+  FORBIDDEN list already prohibited — and now preserve the worktree.
+- `finish-branch-execute` referred to discard as Option 4 in its invariant
+  principles and FORBIDDEN list, and the `finishing-a-development-branch`
+  self-check asked whether the user selected one of "the 4 options". Discard is
+  Option 5 and there are five options.
+- `finish-branch-execute` no longer carries a literal `gh pr create` heredoc
+  with hardcoded `## Summary` and `## Test Plan` sections, which the
+  `pr-conventions` rule module forbids by name. Option 2 now pushes and then
+  invokes the `creating-issues-and-pull-requests` skill, which discovers and
+  applies the repository's own PR template.
+- Three stale records that no mechanism read. `commands/audit-mirage-report.md`
+  gave the report template slots for 9 green mirage patterns while
+  `commands/audit-mirage-analyze.md` defines 11, so a Pattern 10 or Pattern 11
+  finding had nowhere to go and was dropped from a report that still looked
+  complete. The two missing slots are added, and
+  `tests/test_skills/test_audit_mirage_pattern_sync.py` now derives the expected
+  set from the analyze headings and fails on drift in either direction; proved
+  against a planted twelfth pattern. `skills/tooling-discovery/SKILL.md` said
+  tier 5-6 for trust warnings where `spellbook/tooling/discovery.py` populates
+  `risks` and `next_steps` from tier 4 up, and now keys off the presence of
+  those fields instead of restating a threshold the code owns.
+  `commands/feature-discover.md` forbade proceeding to design on a
+  `completeness_score` that was deleted with the fake validation functions; the
+  guard now names the Phase 1.5.5 self-assessed items that replaced it.
+- Gate 4.6.5 (Pre-PR Claim Validation and Embarrassment Sweep) is now
+  dispatchable. It is a `Task:` dispatch in `commands/feature-implement-execute.md`
+  but owned no row of the develop dispatch table, so the Phase Declaration
+  requirement that a dispatch cover "EXACTLY ONE row of the dispatch table" was
+  unsatisfiable and every dispatch of it was malformed -- taking the 8-point
+  embarrassment sweep with it. The ceremony menu compounded this with a single
+  line, `Comprehensive fact-checking (4.6.4/4.6.5)`, naming two gates: running
+  them separately produced two dispatches citing one ledger line, and combining
+  them tripped the ban on phrasings that merge two dispatch-table rows. A
+  `4.6.5` row now exists, and the menu line is split into
+  `Comprehensive fact-checking (4.6.4)` and `Pre-PR claim validation (4.6.5)`,
+  so "Verbatim or invalid" resolves for both. Dispatch-table rows are also back in ordinal
+  order (`2.4` preceded `2.5`), which is where a missing row hides.
+- Gate 4.6.5 no longer hardcodes `main` as its diff base. `rules/55-diff-semantics.md`
+  forbids the literal by name; on a repository whose default branch is `master`
+  the gate scoped itself to a nonexistent ref. It now detects the target and
+  uses `git diff $(git merge-base HEAD <target>)...HEAD`, matching the skill it
+  delegates to.
+- Invariant Principle 5 of `commands/feature-implement-execute.md` named the
+  per-task gate set as "4.4 through 4.6.3". The range end rotted when 4.5.1 was
+  inserted, and 4.6 is headed "Quality Gates After All Tasks" -- read literally
+  it demanded a full test-suite run and a green-mirage audit per task. It now
+  names 4.4, 4.5, and 4.5.1, matching the file's own two other statements of
+  that set.
 - `scripts/develop_gate_ledger.py` now applies its documented exit-code split
   on every subcommand. `1` means the STORED ledger is not what the operation
   needs, `2` means the CALLER asked for something the ledger does not accept.
@@ -172,41 +289,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `1` where it exited `2`. Verified end to end against a corrupt ledger on each
   of the five, with the true exit status captured directly rather than through
   a pipe.
-- The release workflow no longer ships a placeholder in place of release notes.
-  When `.github/workflows/release.yml` could not find a `## [$VERSION]` heading
-  in CHANGELOG.md it substituted "No release notes provided for this version."
-  and continued, so sixteen releases (`v0.71.0` through `v0.81.0`) shipped empty
-  notes as a green build: a release with no notes was indistinguishable from a
-  release with notes. A missing CHANGELOG.md, a missing section, and a section
-  with a heading but no body are now three hard failures. The step runs before
-  the tag is created, so an abort leaves no tag behind. The sixteen historical
-  release bodies are not reconstructed here.
-- `installer.version.validate_version_consistency` and `sync_version_to_files`
-  were written to catch exactly the class of drift that left the gemini manifest
-  88 minor releases behind `.version`, and neither had a caller anywhere in the
-  tree. A validator nothing invokes caught nothing across 88 releases.
-  `scripts/check_version_consistency.py` is now that caller.
-- `scripts/develop_gate_ledger.py` refuses a malformed ledger instead of exiting
-  with a raw traceback. A scalar `ceremony`, or a list-valued
-  `ceremony.selected`, raised `AttributeError` straight through the CLI, and the
-  sibling `blockers` and `waves` maps had the same shape assumption. These
-  states are reachable: the bare-`set` bypass described above wrote them and
-  exited `0`. That makes this the RECOVERY path, where a traceback costs the
-  most -- the reader already holds a broken ledger and is trying to repair it.
-  Each refusal now names `archive-ceremony` as the remedy, and `archive-ceremony`
-  itself was fixed to accept a present-but-falsy `ceremony` (`""`, `0`, `false`,
-  `[]`), which the field write and the archive it pointed at had both rejected,
-  leaving hand-editing the JSON as the only route.
-- `scripts/check_self_manufactured_evidence.py` emits POSIX-shaped paths at all
-  five emission sites. Verdict names, evidence locations, and `referenced_by`
-  entries were built with `str(Path)`, so the same checkout emitted
-  `tests/test_corpus_shape.py` on POSIX and `tests\test_corpus_shape.py` on
-  Windows, failing two Windows CI tests. A tool whose own output changes shape
-  by platform is the defect; relaxing the assertions would have hidden it.
-- `extensions/prime-agent/README.md` named
-  `tests/installer/test_prime_agent_rules_install.py` in its Testing section.
-  That path does not exist; the file is at `tests/integration/`. No prose row
-  scans `extensions/`, which is why the reference gate never saw it.
+- `installer.version.sync_version_to_files` raises `VersionSyncError` when a
+  manifest exists but cannot be parsed or read, instead of swallowing
+  `json.JSONDecodeError` and `OSError` and returning an empty list. The empty
+  list is also what a clean tree returns, so a caller that trusted the return
+  value reported "nothing to do" and exited `0` on a broken manifest --
+  measured: a caller of that shape printed `nothing to do; manifests already
+  agree` and exited `0` against a manifest containing `{ this is not json`, and
+  now exits `1` naming the file and the parse position. The exception carries
+  `updated` and `failures`, so a partial sync is still reportable and each
+  unusable manifest is paired with its reason; a payload that parses to a
+  non-object is reported as such rather than reaching `.get()` as an
+  `AttributeError` that names neither file nor cause. A caller that catches
+  `VersionSyncError` is not thereby excused from re-validating against disk.
+  `validate_version_consistency` does not share this defect: it already emits
+  an issue for an unreadable manifest, and is unchanged.
 
 ## [0.89.0] - 2026-08-17
 
@@ -4092,7 +4189,7 @@ validator, and the pre-commit scanner.
 - **Uninstaller enhanced** - removes MCP system services and cleans up old server variants
 - **instruction-engineering skill** - delegates to emotional-stakes for persona selection
 
-## [0.2.1] - 2026-01-08
+## [0.2.1] - 2025-01-08
 
 ### Added
 - **OpenCode YOLO mode agents** - autonomous execution without permission prompts

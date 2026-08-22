@@ -15,7 +15,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
+from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT
 from ..components.rule_delivery import INSTALLED_GLOB
 from ..components.rule_modules import PER_FILE_CAP_BYTES
 from ..components.symlinks import create_symlink, remove_symlink
@@ -142,10 +142,9 @@ class AntigravityInstaller(PlatformInstaller):
             "url": daemon_url,
             "transport": "http",
         }
-        token = get_mcp_auth_token()
-        if token:
-            server_config["headers"] = {"Authorization": f"Bearer {token}"}
 
+        # Whole-entry replacement: any stale auth header from a previous
+        # install disappears here rather than being merged forward.
         config["mcpServers"]["spellbook"] = server_config
 
         content = json.dumps(config, indent=2) + "\n"

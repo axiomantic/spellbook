@@ -359,27 +359,6 @@ def render_completion_summary(
     console.print(panel)
 
 
-def render_admin_info(console: "Any", admin_enabled: bool) -> None:
-    """Render admin web interface info as a Rich panel."""
-    from rich.panel import Panel
-
-    if admin_enabled:
-        body = (
-            "Status:  [green]enabled[/green]\n"
-            "URL:     http://localhost:8765/admin\n"
-            "Open:    [cyan]spellbook admin open[/cyan]\n"
-            "Disable: set admin_enabled=false or reinstall with --no-admin"
-        )
-        panel = Panel(body, title="Admin Web Interface", border_style="blue", padding=(0, 2))
-    else:
-        body = (
-            "Status:  [yellow]disabled[/yellow]\n"
-            "Enable:  set admin_enabled=true or reinstall without --no-admin"
-        )
-        panel = Panel(body, title="Admin Web Interface", border_style="dim", padding=(0, 2))
-    console.print(panel)
-
-
 def render_post_install_notes(
     console: "Any",
     platforms: List[str],

@@ -1028,19 +1028,21 @@ def _resolve_forgecode_config_dir(config_dir: Optional[Path] = None) -> Path:
 def check_forgecode_mcp(verbose: bool = False, config_dir: Optional[Path] = None) -> HealthCheckResult:
     """Validate spellbook MCP entry in ForgeCode .mcp.json.
 
-    Mirrors the structure of check_opencode_mcp; implements the seven ordered
+    Mirrors the structure of check_opencode_mcp; implements the six ordered
     validations from design Section 6:
 
     1. .mcp.json exists at resolved config dir.
     2. File parses as JSON.
     3. Top-level mcpServers key exists.
     4. mcpServers.spellbook entry exists with matching daemon URL.
-    5. headers.Authorization matches "Bearer .+".
-    6. oauth is exactly False.
-    7. File mode is 0600 (soft warning if not).
+    5. oauth is exactly False.
+    6. File mode is 0600 (soft warning if not).
 
-    Steps 1-6 short-circuit on failure. Step 7 always runs after 1-6 pass and
+    Steps 1-5 short-circuit on failure. Step 6 always runs after 1-5 pass and
     reports a soft warning (healthy=True, status=insecure_mode) on chmod drift.
+
+    The daemon holds no credentials, so no Authorization header is validated;
+    installers do not write one.
     """
     result = HealthCheckResult(healthy=False, platform="forgecode")
 
@@ -1057,8 +1059,6 @@ def check_forgecode_mcp(verbose: bool = False, config_dir: Optional[Path] = None
         "path": str(config_path),
         "url": None,
         "expected_url": daemon_url,
-        "has_auth": False,
-        "auth_format_ok": False,
         "oauth": None,
         "mode": None,
         "status": "missing_file",
@@ -1206,37 +1206,7 @@ def check_forgecode_mcp(verbose: bool = False, config_dir: Optional[Path] = None
         message=f"url matches daemon URL: {daemon_url}",
     ))
 
-    # Step 5: headers.Authorization matches "Bearer .+".
-    headers = spellbook_entry.get("headers") or {}
-    auth_value = headers.get("Authorization") if isinstance(headers, dict) else None
-    contract["has_auth"] = auth_value is not None
-    auth_format_ok = bool(
-        isinstance(auth_value, str) and re.match(r"^Bearer .+", auth_value)
-    )
-    contract["auth_format_ok"] = auth_format_ok
-    if not auth_format_ok:
-        contract["status"] = "missing_auth"
-        result.error = "mcpServers.spellbook.headers.Authorization missing or malformed"
-        result.diagnostics.append(DiagnosticResult(
-            check="mcp_auth_header",
-            passed=False,
-            message="Authorization header missing or not 'Bearer <token>'",
-        ))
-        result.diagnostics.append(DiagnosticResult(
-            check="forgecode_contract",
-            passed=False,
-            message="missing_auth",
-            details=contract,
-        ))
-        return result
-
-    result.diagnostics.append(DiagnosticResult(
-        check="mcp_auth_header",
-        passed=True,
-        message="Authorization: Bearer <token> present",
-    ))
-
-    # Step 6: oauth is exactly False.
+    # Step 5: oauth is exactly False.
     oauth_value = spellbook_entry.get("oauth")
     contract["oauth"] = oauth_value
     if oauth_value is not False:
@@ -1261,7 +1231,7 @@ def check_forgecode_mcp(verbose: bool = False, config_dir: Optional[Path] = None
         message="oauth is false",
     ))
 
-    # Step 7: file mode 0600 (soft warning, always runs after steps 1-6 pass).
+    # Step 6: file mode 0600 (soft warning, always runs after steps 1-5 pass).
     try:
         mode_bits = os.stat(config_path).st_mode & 0o777
         mode_str = f"{mode_bits:04o}"

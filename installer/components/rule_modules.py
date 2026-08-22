@@ -393,9 +393,9 @@ def resolve_selection(
 
 
 def config_schema_entries(modules: Sequence[RuleModule]) -> List[Dict[str, Any]]:
-    """Generate one boolean admin-schema entry per preference module.
+    """Generate one boolean config-schema entry per preference module.
 
-    ``CONFIG_SCHEMA`` supports only boolean, number, and string, so a per-module
+    The entry format supports only boolean, number, and string, so a per-module
     map is not expressible; one boolean key per preference module is.
     """
     return [

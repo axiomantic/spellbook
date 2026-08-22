@@ -1,9 +1,9 @@
 """Shared defaults wizard for previously never-prompted config keys.
 
-Several keys have entries in ``CONFIG_SCHEMA`` but no installer prompt:
+Several keys have a runtime default but no installer prompt:
 ``security_gates_enabled``, ``notify_enabled``, ``notify_title``,
-``auto_update``. Without a prompt users discover them only via the admin
-UI or by reading source.
+``auto_update``. Without a prompt users discover them only by reading
+source.
 
 This wizard closes the gap by walking the user through each key on
 fresh installs. It respects the idempotency rule defined in AGENTS.md:

@@ -44,7 +44,7 @@ A passing run shows something like `X passed` with exit code 0.
    ```
 2. Write the skill body following existing skills as examples
 3. Run `python3 scripts/generate_docs.py` to generate the docs page
-4. Pre-commit hooks will validate the schema and update documentation
+4. Pre-commit hooks will validate the schema and check that the docs mirror is current
 
 ## Adding a Command
 
@@ -54,7 +54,7 @@ A passing run shows something like `X passed` with exit code 0.
    description: "Brief description of the command"
    ---
    ```
-2. Pre-commit hooks will generate docs and update the index
+2. Run `python3 scripts/generate_docs.py` to generate the docs page and update the index
 
 ## Code Style
 
@@ -90,10 +90,10 @@ Code is not the only way to contribute. We welcome:
 
 ## Pre-commit Hooks
 
-Pre-commit hooks auto-generate documentation files. If a hook fails:
+Apart from `doctoc`, pre-commit hooks check files rather than rewrite them. If a hook fails:
 
-1. Check the output for which files were modified
-2. Stage the generated files with `git add`
+1. Read the output for the command it tells you to run -- a stale docs mirror reports `Run: python3 scripts/generate_docs.py`
+2. Run that command, then stage the regenerated files with `git add`
 3. Commit again
 
 This is normal and expected when adding new skills or commands.
