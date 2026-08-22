@@ -8865,7 +8865,7 @@
 <a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">2.</span> <span class="gs">**Delegate actual work**</span> - Main context orchestrates; subagents write code, run tests, perform reviews
 <a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="k">3.</span> <span class="gs">**Quality gates are mandatory**</span> - Code review, fact-checking, and green mirage audit after every task; no exceptions
 <a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a><span class="k">4.</span> <span class="gs">**Behavior preservation in refactoring**</span> - Test verification at every transformation; no behavior changes without approval
-<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">5.</span> <span class="gs">**No batch exemption**</span> - A batched or multi-task dispatch exempts NOTHING: every task the batch covers passes gates 4.4 (Implementation Completion Verification) through 4.6.3 (Green Mirage Audit) individually before it may be marked complete. Batch size never substitutes for per-task gating.
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="k">5.</span> <span class="gs">**No batch exemption**</span> - A batched or multi-task dispatch exempts NOTHING: every task the batch covers passes the per-task gates 4.4, 4.5, and 4.5.1 individually before it may be marked complete. Batch size never substitutes for per-task gating.
 <a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>
 <a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>&lt;analysis&gt;
 <a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>Before executing Phase 4:
@@ -8877,7 +8877,7 @@
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>&lt;reflection&gt;
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a>After executing Phase 4:
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a><span class="k">-</span><span class="w"> </span>Was every per-task gate (4.4, 4.5, 4.5.1) dispatched to a subagent, for EVERY task?
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span>Did all end-of-phase gates (4.6.1 - 4.6.5) run and reach clean?
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">-</span><span class="w"> </span>Did all five end-of-phase gates (4.6.1-4.6.5; 4.6.2 is a direct test-suite run, the rest Task dispatches) run and reach clean?
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a><span class="k">-</span><span class="w"> </span>Did I use Write, Edit, or Bash directly in main context at any point? If yes, the workflow failed.
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a>&lt;/reflection&gt;
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
@@ -9657,7 +9657,7 @@
 <a id="__codelineno-0-817" name="__codelineno-0-817" href="#__codelineno-0-817"></a>
 <a id="__codelineno-0-818" name="__codelineno-0-818" href="#__codelineno-0-818"></a><span class="gu">#### 4.6.5 Pre-PR Claim Validation and Embarrassment Sweep</span>
 <a id="__codelineno-0-819" name="__codelineno-0-819" href="#__codelineno-0-819"></a>
-<a id="__codelineno-0-820" name="__codelineno-0-820" href="#__codelineno-0-820"></a>&lt;RULE&gt;Before any PR creation, run the final fact-checking pass AND the embarrassment sweep. The fact-check validates that claims are TRUE; the sweep validates that the diff is CLEAN. Both gate the PR.&lt;/RULE&gt;
+<a id="__codelineno-0-820" name="__codelineno-0-820" href="#__codelineno-0-820"></a>&lt;RULE&gt;Before any PR, run the final fact-check AND the embarrassment sweep. The fact-check validates claims are TRUE; the sweep validates the diff is CLEAN. Both gate the PR.&lt;/RULE&gt;
 <a id="__codelineno-0-821" name="__codelineno-0-821" href="#__codelineno-0-821"></a>
 <a id="__codelineno-0-822" name="__codelineno-0-822" href="#__codelineno-0-822"></a><span class="sb">```</span>
 <a id="__codelineno-0-823" name="__codelineno-0-823" href="#__codelineno-0-823"></a><span class="sb">Task:</span>
@@ -9668,18 +9668,18 @@
 <a id="__codelineno-0-828" name="__codelineno-0-828" href="#__codelineno-0-828"></a>
 <a id="__codelineno-0-829" name="__codelineno-0-829" href="#__codelineno-0-829"></a><span class="sb">    ## Context for the Skill</span>
 <a id="__codelineno-0-830" name="__codelineno-0-830" href="#__codelineno-0-830"></a>
-<a id="__codelineno-0-831" name="__codelineno-0-831" href="#__codelineno-0-831"></a><span class="sb">    Scope: Branch changes (all commits since merge-base with main)</span>
-<a id="__codelineno-0-832" name="__codelineno-0-832" href="#__codelineno-0-832"></a>
-<a id="__codelineno-0-833" name="__codelineno-0-833" href="#__codelineno-0-833"></a><span class="sb">    This is the absolute last line of defense.</span>
-<a id="__codelineno-0-834" name="__codelineno-0-834" href="#__codelineno-0-834"></a><span class="sb">    Nothing ships with false claims.</span>
+<a id="__codelineno-0-831" name="__codelineno-0-831" href="#__codelineno-0-831"></a><span class="sb">    Scope: `git diff $(git merge-base HEAD &lt;target&gt;)...HEAD`, `&lt;target&gt;`</span>
+<a id="__codelineno-0-832" name="__codelineno-0-832" href="#__codelineno-0-832"></a><span class="sb">    DETECTED per `rules/55-diff-semantics.md` -- never assumed `main`.</span>
+<a id="__codelineno-0-833" name="__codelineno-0-833" href="#__codelineno-0-833"></a>
+<a id="__codelineno-0-834" name="__codelineno-0-834" href="#__codelineno-0-834"></a><span class="sb">    Last line of defense. Nothing ships with false claims.</span>
 <a id="__codelineno-0-835" name="__codelineno-0-835" href="#__codelineno-0-835"></a>
 <a id="__codelineno-0-836" name="__codelineno-0-836" href="#__codelineno-0-836"></a><span class="sb">    ## Embarrassment sweep (diff hygiene)</span>
 <a id="__codelineno-0-837" name="__codelineno-0-837" href="#__codelineno-0-837"></a>
 <a id="__codelineno-0-838" name="__codelineno-0-838" href="#__codelineno-0-838"></a><span class="sb">    After fact-checking, run the embarrassment sweep over the same branch</span>
-<a id="__codelineno-0-839" name="__codelineno-0-839" href="#__codelineno-0-839"></a><span class="sb">    diff. This is the named pre-PR diff-hygiene pass — the things that are</span>
-<a id="__codelineno-0-840" name="__codelineno-0-840" href="#__codelineno-0-840"></a><span class="sb">    embarrassing to ship, separate from whether claims are true. The full</span>
-<a id="__codelineno-0-841" name="__codelineno-0-841" href="#__codelineno-0-841"></a><span class="sb">    8-point checklist lives in the finishing-a-development-branch skill;</span>
-<a id="__codelineno-0-842" name="__codelineno-0-842" href="#__codelineno-0-842"></a><span class="sb">    apply it here. Each point is scoped to what the branch introduced:</span>
+<a id="__codelineno-0-839" name="__codelineno-0-839" href="#__codelineno-0-839"></a><span class="sb">    diff — the things that are embarrassing to ship, separate from whether</span>
+<a id="__codelineno-0-840" name="__codelineno-0-840" href="#__codelineno-0-840"></a><span class="sb">    claims are true. The full 8-point checklist lives in the</span>
+<a id="__codelineno-0-841" name="__codelineno-0-841" href="#__codelineno-0-841"></a><span class="sb">    finishing-a-development-branch skill; apply it here. Each point is</span>
+<a id="__codelineno-0-842" name="__codelineno-0-842" href="#__codelineno-0-842"></a><span class="sb">    scoped to what the branch introduced:</span>
 <a id="__codelineno-0-843" name="__codelineno-0-843" href="#__codelineno-0-843"></a>
 <a id="__codelineno-0-844" name="__codelineno-0-844" href="#__codelineno-0-844"></a><span class="sb">    1. Debug leftovers (print/console.log/debugger/breakpoints added by the branch)</span>
 <a id="__codelineno-0-845" name="__codelineno-0-845" href="#__codelineno-0-845"></a><span class="sb">    2. Branch-introduced TODO/FIXME/XXX/HACK markers promising nonexistent work</span>

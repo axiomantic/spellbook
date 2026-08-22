@@ -9409,7 +9409,7 @@
 <a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a>| D1 unfamiliarity | Research (Phase 1) + Discovery (1.5) + dehallucination (1.5.7) |
 <a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a>| D2 fuzziness | Discovery (1.5) + devil's advocate (1.6) |
 <a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a>| D3 blast radius | Design review (2.2) + impl-plan review (3.2) + comprehensive audit (4.6.1) |
-<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a>| D4 coupling | Impl-plan review (3.2) + comprehensive fact-checking (4.6.4/4.6.5) |
+<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a>| D4 coupling | Impl-plan review (3.2) + fact-checking (4.6.4, 4.6.5) |
 <a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a>| D5 verification difficulty | Checkability passes (2.1.5 / 3.1.5) + green-mirage (4.6.3) — <span class="gs">**LOCKED**</span> |
 <a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a>| D6 silent-failure potential | Completion verification (4.4) + comprehensive audit (4.6.1) + green-mirage (4.6.3) + TDD-first (4.3), waiver revoked — <span class="gs">**LOCKED**</span> |
 <a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a>| D7 precedent absent | Research (Phase 1) + Design (Phase 2) |
@@ -9576,28 +9576,28 @@
 <a id="__codelineno-0-736" name="__codelineno-0-736" href="#__codelineno-0-736"></a><span class="gu">#### Step 2: Build the menu from the assessment (do NOT show a fixed 12-item list)</span>
 <a id="__codelineno-0-737" name="__codelineno-0-737" href="#__codelineno-0-737"></a>
 <a id="__codelineno-0-738" name="__codelineno-0-738" href="#__codelineno-0-738"></a>Offer ONLY components the assessment made relevant. A change with every dimension
-<a id="__codelineno-0-739" name="__codelineno-0-739" href="#__codelineno-0-739"></a><span class="sb">`low`</span> gets a two-item menu or none at all; do not tax a small request with a long
-<a id="__codelineno-0-740" name="__codelineno-0-740" href="#__codelineno-0-740"></a>questionnaire. Candidate components, each shown only when its dimension row fired or
-<a id="__codelineno-0-741" name="__codelineno-0-741" href="#__codelineno-0-741"></a>its need-flag is set:
-<a id="__codelineno-0-742" name="__codelineno-0-742" href="#__codelineno-0-742"></a>
-<a id="__codelineno-0-743" name="__codelineno-0-743" href="#__codelineno-0-743"></a>| Component | Offered when |
-<a id="__codelineno-0-744" name="__codelineno-0-744" href="#__codelineno-0-744"></a>|---|---|
-<a id="__codelineno-0-745" name="__codelineno-0-745" href="#__codelineno-0-745"></a>| Research (Phase 1) | <span class="sb">`needs_research`</span>, or D1/D7 high |
-<a id="__codelineno-0-746" name="__codelineno-0-746" href="#__codelineno-0-746"></a>| Discovery + dehallucination (1.5) | <span class="sb">`needs_research`</span>, or D1/D2 high |
-<a id="__codelineno-0-747" name="__codelineno-0-747" href="#__codelineno-0-747"></a>| Devil's advocate (1.6) | <span class="sb">`needs_design`</span> or <span class="sb">`needs_research`</span>, or D2 high |
-<a id="__codelineno-0-748" name="__codelineno-0-748" href="#__codelineno-0-748"></a>| Design doc + design review (2.1/2.2) | <span class="sb">`needs_design`</span>, or D3/D7 high |
-<a id="__codelineno-0-749" name="__codelineno-0-749" href="#__codelineno-0-749"></a>| Assumption verification (2.5) | <span class="sb">`needs_design`</span> |
-<a id="__codelineno-0-750" name="__codelineno-0-750" href="#__codelineno-0-750"></a>| Checkability passes (2.1.5/3.1.5) | D5 high — <span class="gs">**LOCKED, shown as already-on**</span> |
-<a id="__codelineno-0-751" name="__codelineno-0-751" href="#__codelineno-0-751"></a>| Impl plan + plan review (3.1/3.2) | <span class="sb">`needs_design`</span> or <span class="sb">`needs_infrastructure`</span>, or D3/D4 high |
-<a id="__codelineno-0-752" name="__codelineno-0-752" href="#__codelineno-0-752"></a>| Per-task fact-checking (4.5.1) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span> |
-<a id="__codelineno-0-753" name="__codelineno-0-753" href="#__codelineno-0-753"></a>| Completion verification (4.4) | D6 high — <span class="gs">**LOCKED, shown as already-on**</span> |
-<a id="__codelineno-0-754" name="__codelineno-0-754" href="#__codelineno-0-754"></a>| Comprehensive audit (4.6.1) | D3/D6 high |
-<a id="__codelineno-0-755" name="__codelineno-0-755" href="#__codelineno-0-755"></a>| Comprehensive fact-checking (4.6.4/4.6.5) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span>, or D4 high |
-<a id="__codelineno-0-756" name="__codelineno-0-756" href="#__codelineno-0-756"></a>| Roundtable dialectic | never auto-recommended; offered only if the operator asked for it in §0.4 |
+<a id="__codelineno-0-739" name="__codelineno-0-739" href="#__codelineno-0-739"></a><span class="sb">`low`</span> gets a two-item menu or none; never tax a small request with a long
+<a id="__codelineno-0-740" name="__codelineno-0-740" href="#__codelineno-0-740"></a>questionnaire. Show a component only when its dimension row fired or its flag set:
+<a id="__codelineno-0-741" name="__codelineno-0-741" href="#__codelineno-0-741"></a>
+<a id="__codelineno-0-742" name="__codelineno-0-742" href="#__codelineno-0-742"></a>| Component | Offered when |
+<a id="__codelineno-0-743" name="__codelineno-0-743" href="#__codelineno-0-743"></a>|---|---|
+<a id="__codelineno-0-744" name="__codelineno-0-744" href="#__codelineno-0-744"></a>| Research (Phase 1) | <span class="sb">`needs_research`</span>, or D1/D7 high |
+<a id="__codelineno-0-745" name="__codelineno-0-745" href="#__codelineno-0-745"></a>| Discovery + dehallucination (1.5) | <span class="sb">`needs_research`</span>, or D1/D2 high |
+<a id="__codelineno-0-746" name="__codelineno-0-746" href="#__codelineno-0-746"></a>| Devil's advocate (1.6) | <span class="sb">`needs_design`</span> or <span class="sb">`needs_research`</span>, or D2 high |
+<a id="__codelineno-0-747" name="__codelineno-0-747" href="#__codelineno-0-747"></a>| Design doc + design review (2.1/2.2) | <span class="sb">`needs_design`</span>, or D3/D7 high |
+<a id="__codelineno-0-748" name="__codelineno-0-748" href="#__codelineno-0-748"></a>| Assumption verification (2.5) | <span class="sb">`needs_design`</span> |
+<a id="__codelineno-0-749" name="__codelineno-0-749" href="#__codelineno-0-749"></a>| Checkability passes (2.1.5/3.1.5) | D5 high — <span class="gs">**LOCKED, shown as already-on**</span> |
+<a id="__codelineno-0-750" name="__codelineno-0-750" href="#__codelineno-0-750"></a>| Impl plan + plan review (3.1/3.2) | <span class="sb">`needs_design`</span> or <span class="sb">`needs_infrastructure`</span>, or D3/D4 high |
+<a id="__codelineno-0-751" name="__codelineno-0-751" href="#__codelineno-0-751"></a>| Per-task fact-checking (4.5.1) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span> |
+<a id="__codelineno-0-752" name="__codelineno-0-752" href="#__codelineno-0-752"></a>| Completion verification (4.4) | D6 high — <span class="gs">**LOCKED, shown as already-on**</span> |
+<a id="__codelineno-0-753" name="__codelineno-0-753" href="#__codelineno-0-753"></a>| Comprehensive audit (4.6.1) | D3/D6 high |
+<a id="__codelineno-0-754" name="__codelineno-0-754" href="#__codelineno-0-754"></a>| Comprehensive fact-checking (4.6.4) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span>, or D4 high |
+<a id="__codelineno-0-755" name="__codelineno-0-755" href="#__codelineno-0-755"></a>| Pre-PR claim validation (4.6.5) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span>, or D4 high |
+<a id="__codelineno-0-756" name="__codelineno-0-756" href="#__codelineno-0-756"></a>| Roundtable dialectic | never auto-recommended; only if the operator asked in §0.4 |
 <a id="__codelineno-0-757" name="__codelineno-0-757" href="#__codelineno-0-757"></a>
-<a id="__codelineno-0-758" name="__codelineno-0-758" href="#__codelineno-0-758"></a>LOCKED rows are DISPLAYED (so the operator can see what they are getting and why) but
-<a id="__codelineno-0-759" name="__codelineno-0-759" href="#__codelineno-0-759"></a>carry no deselect option. State the reason inline: "locked because silent-failure
-<a id="__codelineno-0-760" name="__codelineno-0-760" href="#__codelineno-0-760"></a>potential is high — this is the gate that catches a success report over a no-op."
+<a id="__codelineno-0-758" name="__codelineno-0-758" href="#__codelineno-0-758"></a>LOCKED rows are DISPLAYED (so the operator sees what they get) but carry no
+<a id="__codelineno-0-759" name="__codelineno-0-759" href="#__codelineno-0-759"></a>deselect option. State the reason inline: "locked because silent-failure potential is
+<a id="__codelineno-0-760" name="__codelineno-0-760" href="#__codelineno-0-760"></a>high — the gate that catches a success report over a no-op."
 <a id="__codelineno-0-761" name="__codelineno-0-761" href="#__codelineno-0-761"></a>
 <a id="__codelineno-0-762" name="__codelineno-0-762" href="#__codelineno-0-762"></a><span class="gu">#### Step 3: Ask (via AskUserQuestion)</span>
 <a id="__codelineno-0-763" name="__codelineno-0-763" href="#__codelineno-0-763"></a>
