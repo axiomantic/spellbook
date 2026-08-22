@@ -43,6 +43,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Gate 4.6.5 (Pre-PR Claim Validation and Embarrassment Sweep) is now
+  dispatchable. It is a `Task:` dispatch in `commands/feature-implement-execute.md`
+  but owned no row of the develop dispatch table, so the Phase Declaration
+  requirement that a dispatch cover "EXACTLY ONE row of the dispatch table" was
+  unsatisfiable and every dispatch of it was malformed -- taking the 8-point
+  embarrassment sweep with it. The ceremony menu compounded this with a single
+  line, `Comprehensive fact-checking (4.6.4/4.6.5)`, naming two gates: running
+  them separately produced two dispatches citing one ledger line, and combining
+  them tripped the ban on phrasings that merge two dispatch-table rows. A
+  `4.6.5` row now exists, and the menu line is split into
+  `Comprehensive fact-checking (4.6.4)` and `Pre-PR claim validation (4.6.5)`,
+  so "Verbatim or invalid" resolves for both. Dispatch-table rows are also back in ordinal
+  order (`2.4` preceded `2.5`), which is where a missing row hides.
+- Gate 4.6.5 no longer hardcodes `main` as its diff base. `rules/55-diff-semantics.md`
+  forbids the literal by name; on a repository whose default branch is `master`
+  the gate scoped itself to a nonexistent ref. It now detects the target and
+  uses `git diff $(git merge-base HEAD <target>)...HEAD`, matching the skill it
+  delegates to.
+- Invariant Principle 5 of `commands/feature-implement-execute.md` named the
+  per-task gate set as "4.4 through 4.6.3". The range end rotted when 4.5.1 was
+  inserted, and 4.6 is headed "Quality Gates After All Tasks" -- read literally
+  it demanded a full test-suite run and a green-mirage audit per task. It now
+  names 4.4, 4.5, and 4.5.1, matching the file's own two other statements of
+  that set.
+
 - `scripts/develop_gate_ledger.py` now applies its documented exit-code split
   on every subcommand. `1` means the STORED ledger is not what the operation
   needs, `2` means the CALLER asked for something the ledger does not accept.
