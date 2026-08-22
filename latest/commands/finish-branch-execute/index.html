@@ -8847,12 +8847,12 @@
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="gu">## Invariant Principles</span>
 <a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
 <a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="k">1.</span> <span class="gs">**Execute exactly the chosen strategy**</span> — never silently switch options
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Discard requires explicit confirmation**</span> — Option 4 is irreversible; re-confirm before executing
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="k">2.</span> <span class="gs">**Discard requires explicit confirmation**</span> — Option 5 is irreversible; re-confirm before executing
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="k">3.</span> <span class="gs">**Pull before merge**</span> — always pull the latest base branch to avoid stale-base conflicts
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
 <a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="k">-</span><span class="w"> </span>Silently switching to a different integration option than the user selected
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Auto-executing Option 4 (discard) in autonomous mode without typed confirmation
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="k">-</span><span class="w"> </span>Auto-executing Option 5 (discard) in autonomous mode without typed confirmation
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
 <a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>Context: Steps 1-3 complete. You have: chosen option number (1-5), feature branch name, base branch name, worktree path (if applicable).
@@ -8881,70 +8881,75 @@
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="sb">```bash</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>git<span class="w"> </span>push<span class="w"> </span>-u<span class="w"> </span>origin<span class="w"> </span>&lt;feature-branch&gt;
-<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a>gh<span class="w"> </span>pr<span class="w"> </span>create<span class="w"> </span>--title<span class="w"> </span><span class="s2">"&lt;title&gt;"</span><span class="w"> </span>--body<span class="w"> </span><span class="s2">"</span><span class="k">$(</span>cat<span class="w"> </span><span class="s">&lt;&lt;'EOF'</span>
-<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a><span class="s">## Summary</span>
-<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="s">&lt;2-3 bullets of what changed&gt;</span>
-<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>
-<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="s">## Test Plan</span>
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a><span class="s">- [ ] &lt;verification steps&gt;</span>
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a><span class="s">EOF</span>
-<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a><span class="k">)</span><span class="s2">"</span>
+<a id="__codelineno-0-44" name="__codelineno-0-44" href="#__codelineno-0-44"></a><span class="sb">```</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45" href="#__codelineno-0-45"></a>
+<a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a>Then invoke the <span class="sb">`creating-issues-and-pull-requests`</span> skill via the Skill tool to
+<a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>create the PR. That skill discovers and applies the repository's own PR template;
+<a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a>never call <span class="sb">`gh pr create`</span> directly from here.
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>Provide context:
+<a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="sb">```</span>
-<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
-<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="gs">**If push or PR creation fails:**</span> STOP. Report the error. Do NOT proceed to cleanup.
-<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a>
-<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a>Report the PR URL to the user. Then invoke <span class="sb">`finish-branch-cleanup`</span>.
-<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
-<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>---
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gu">## Option 3: Push, Create PR, and Do the PR Dance</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>Execute Option 2 steps first (push + create PR). Then dispatch a subagent with command: <span class="sb">`pr-dance`</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>Provide context: PR number/URL from the PR just created, repo owner, feature branch name.
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>The subagent drives the PR through iterative CI + bot review cycles until merge-ready. See <span class="sb">`pr-dance`</span> command for the full protocol.
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>After the subagent completes: invoke <span class="sb">`finish-branch-cleanup`</span>.
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>---
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="gu">## Option 4: Keep As-Is</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>Report: "Keeping branch <span class="sb">`&lt;name&gt;`</span>. Worktree preserved at <span class="sb">`&lt;path&gt;`</span>."
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gs">**Do NOT cleanup worktree. Do NOT invoke finish-branch-cleanup.**</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>---
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gu">## Option 5: Discard</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gs">**Confirm first with explicit typed confirmation:**</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="sb">```</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="sb">This will permanently delete:</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="sb">- Branch &lt;name&gt;</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a><span class="sb">- All commits: &lt;commit-list&gt;</span>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="sb">- Worktree at &lt;path&gt;</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="sb">Type 'discard' to confirm.</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">```</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>Wait for exact string <span class="sb">`discard`</span>. Do NOT proceed on partial match.
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>Do NOT auto-execute in autonomous mode. This is a circuit breaker.
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>If confirmed:
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>git<span class="w"> </span>checkout<span class="w"> </span>&lt;base-branch&gt;
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>&lt;feature-branch&gt;
-<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="sb">```</span>
-<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
-<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>After confirmed discard: invoke <span class="sb">`finish-branch-cleanup`</span>.
-<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>
-<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>Execute the strategy the user chose — nothing more, nothing less. Clean integrations protect the team. When in doubt on discard: stop and ask again.
-<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a><span class="sb">mode: "pr"</span>
+<a id="__codelineno-0-54" name="__codelineno-0-54" href="#__codelineno-0-54"></a><span class="sb">branch: &lt;feature-branch&gt;</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55" href="#__codelineno-0-55"></a><span class="sb">base: &lt;base-branch&gt;</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="sb">diff_summary: &lt;merge-base diff summary&gt;</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="sb">```</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a><span class="gs">**If push or PR creation fails:**</span> STOP. Report the error.
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>Report the PR URL to the user. <span class="gs">**Do NOT cleanup worktree. Do NOT invoke finish-branch-cleanup.**</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>---
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gu">## Option 3: Push, Create PR, and Do the PR Dance</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>Execute Option 2 steps first (push + create PR). Then dispatch a subagent with command: <span class="sb">`pr-dance`</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>Provide context: PR number/URL from the PR just created, repo owner, feature branch name.
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>The subagent drives the PR through iterative CI + bot review cycles until merge-ready. See <span class="sb">`pr-dance`</span> command for the full protocol.
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>After the subagent completes: <span class="gs">**Do NOT cleanup worktree. Do NOT invoke finish-branch-cleanup.**</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>---
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a><span class="gu">## Option 4: Keep As-Is</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>Report: "Keeping branch <span class="sb">`&lt;name&gt;`</span>. Worktree preserved at <span class="sb">`&lt;path&gt;`</span>."
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a><span class="gs">**Do NOT cleanup worktree. Do NOT invoke finish-branch-cleanup.**</span>
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>---
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="gu">## Option 5: Discard</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a>
+<a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gs">**Confirm first with explicit typed confirmation:**</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a><span class="sb">```</span>
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="sb">This will permanently delete:</span>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="sb">- Branch &lt;name&gt;</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="sb">- All commits: &lt;commit-list&gt;</span>
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="sb">- Worktree at &lt;path&gt;</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="sb">Type 'discard' to confirm.</span>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="sb">```</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>Wait for exact string <span class="sb">`discard`</span>. Do NOT proceed on partial match.
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>Do NOT auto-execute in autonomous mode. This is a circuit breaker.
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>If confirmed:
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>git<span class="w"> </span>checkout<span class="w"> </span>&lt;base-branch&gt;
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>git<span class="w"> </span>branch<span class="w"> </span>-D<span class="w"> </span>&lt;feature-branch&gt;
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="sb">```</span>
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>After confirmed discard: invoke <span class="sb">`finish-branch-cleanup`</span>.
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>Execute the strategy the user chose — nothing more, nothing less. Clean integrations protect the team. When in doubt on discard: stop and ask again.
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
