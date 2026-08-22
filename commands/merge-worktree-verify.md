@@ -38,14 +38,39 @@ If any step fails, stop. Do not proceed to Phase 5.
 Only execute after Phase 4 fully passes. Cleanup is irreversible.
 </CRITICAL>
 
+Remove each worktree with the non-destructive form first:
+
 ```bash
-# Delete worktrees
+git worktree remove [worktree-path]
+```
+
+<CRITICAL>
+A plain `git worktree remove` fails when the worktree holds uncommitted changes. That
+failure is the signal that work would be LOST, not an obstacle to route around. Do NOT
+reach for `--force` or `rm -rf` to make the error go away.
+
+On failure, list what is at risk and ask via AskUserQuestion, never as prose:
+
+```bash
+git -C [worktree-path] status --porcelain -uall
+```
+
+- **question**: `Running: git worktree remove [worktree-path] --force` /
+  `Effect: discards the uncommitted changes listed above` / `Recoverable: no`
+- **options**: `Run it` (uncommitted work in that worktree is destroyed) and
+  `Cancel` (worktree kept intact).
+
+Only after an explicit confirmation may you run the forced removal:
+
+```bash
 git worktree remove [worktree-path] --force
-
-# If worktree has uncommitted changes
-rm -rf [worktree-path]
 git worktree prune
+```
 
+Never run a destructive removal and describe its impact afterwards.
+</CRITICAL>
+
+```bash
 # Delete branches if no longer needed
 git branch -d [worktree-branch]
 ```
@@ -69,6 +94,8 @@ All interface contracts verified: yes
 - Using a test subset instead of the full suite
 - Skipping auditing-green-mirage or code-reviewer invocations
 - Assuming contracts match without explicit verification
+- Force-removing a worktree (`git worktree remove --force`, `rm -rf`) without explicit user confirmation
+- Using `rm -rf` on a worktree path in place of `git worktree remove`
 </FORBIDDEN>
 
 <FINAL_EMPHASIS>

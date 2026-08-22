@@ -70,12 +70,29 @@ BASELINE CHECKLIST:
 ```
 
 **If working with external code (upstream repo, dependency):**
+
+Reach the clean state WITHOUT mutating the current working tree. The checkout may hold
+uncommitted work you did not author — the operator's, or another agent's — and
+`git stash`, `git checkout`, and `git pull` all act tree-wide.
+
 ```bash
-git stash                    # Save local changes
-git checkout main            # Or upstream branch
-git pull                     # Get latest
-# Build/run from clean state and verify expected behavior works
+git fetch origin                                   # Updates origin/main, no working-tree effect
+git worktree add ../baseline-check origin/main     # Clean state, separate directory
+# Build/run in ../baseline-check and verify expected behavior works
 ```
+
+To compare a single file against its committed content, read it; do not mutate:
+
+```bash
+git show HEAD:<path>         # Prints committed content, leaves the tree untouched
+```
+
+<CRITICAL>
+Do NOT run `git stash`, `git checkout <branch>`, `git pull`, or any other tree-wide
+operation to establish the baseline. If a baseline genuinely requires mutating this
+working tree, STOP and ask via AskUserQuestion, stating which uncommitted changes are
+at risk (`git status --porcelain -uall`) and whether they are recoverable.
+</CRITICAL>
 
 **Record the baseline:**
 ```
@@ -149,6 +166,7 @@ CODE STATE CHECK:
 - Making changes and forgetting what you changed
 - Assuming you're on clean state without verifying
 - "Let me try this change" without recording it
+- Running `git stash`, `git checkout <branch>`, or any tree-wide operation to reach a baseline, without explicit user confirmation
 </FORBIDDEN>
 
 ---
@@ -433,6 +451,7 @@ Returning to debugging...
 - Test on unknown code state (always know what you're testing)
 - Forget what modifications you've made
 - Assume you're on clean state without verifying
+- Stash or discard uncommitted changes to reach a baseline instead of using a separate worktree
 
 **Investigation violations:**
 - Skip verification after fix claim

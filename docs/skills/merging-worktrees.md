@@ -138,13 +138,72 @@ Dispatch: `/merge-worktree-verify`
 
 | Error | Response |
 |-------|----------|
-| **Uncommitted changes in worktree** | AskUserQuestion: "Worktree [path] has uncommitted changes. Options: (1) Commit with message '[suggested]', (2) Stash and proceed, (3) Abort for manual handling" |
+| **Uncommitted changes in worktree** | Do NOT stash by reflex. Follow the procedure below. |
 | **Tests fail after merge** | STOP. Do NOT proceed to next round. Invoke systematic-debugging. Fix. Retest. Only continue when passing. |
 | **Interface contract violation** | CRITICAL: "Contract violation detected. Contract: [spec]. Expected: [X]. Actual: [Y]. Location: [file:line]. MUST fix before merge proceeds." |
+
+### Uncommitted Changes in a Worktree
+
+Show what is actually at risk before offering any option:
+
+```bash
+git -C [worktree-path] status --porcelain -uall
+git -C [worktree-path] diff              # Unstaged
+git -C [worktree-path] diff --staged     # Staged
+```
+
+To inspect committed content for comparison, read it; do not mutate the tree:
+
+```bash
+git show HEAD:<path>
+```
+
+Then ask via AskUserQuestion, in this order — least destructive first:
+
+- **question**: `Worktree [path] has uncommitted changes.` / `Effect of each option
+  below` / `Recoverable: varies by option, stated per option`
+- **options**:
+  1. `Commit them` — nothing is discarded; message `[suggested]`. Recoverable.
+  2. `Abort for manual handling` — nothing is touched. Recoverable.
+  3. `Set aside specific files` — name the EXACT paths; never `.`, never a bare
+     directory. Scope is limited to the paths you name.
+  4. `Stash the whole tree` — LAST RESORT. `git stash` is TREE-WIDE: it captures
+     every uncommitted change in the checkout, not only the files being merged. In
+     a checkout shared with another agent it will take work the operator did not
+     author and cannot see. Recovery is `git stash list` then `git stash pop` — but
+     a pop CONFLICT can leave the tree in a partial state, half-applied and with
+     the stash entry still present.
+
+<CRITICAL>
+Never present option 4 as "stash and proceed" with no impact statement. An operator
+reading those words pictures their own edits being set aside and restored; they are
+not picturing another agent's uncommitted work being swept up. A confirmation
+obtained without the impact statement is not a confirmation.
+
+If the operator chooses option 3 or 4, VERIFY afterwards — a stash round-trip damages
+staged, modified, and untracked files alike, and it fails silently:
+
+```sh
+files=$(git status --porcelain -uall) || { echo "sweep failed: git status errored"; exit 1; }
+printf '%s\n' "$files" | grep -v '^D \|^.D' | sed 's/^...//;s/.* -> //' |
+while IFS= read -r f; do
+  case "$f" in *__init__.py|*.gitkeep|*/py.typed) continue;; esac
+  [ -f "$f" ] && [ ! -s "$f" ] && echo "TRUNCATED: $f"
+done
+echo "sweep complete"
+```
+
+Any name it prints that you did not deliberately empty is a truncation. Output of
+only `sweep complete` is clean. `git status` is checked explicitly: if it errors,
+the sweep prints `sweep failed` and exits 1 rather than silently reporting an
+empty result as clean.
+</CRITICAL>
 
 ## Rollback Procedure
 
 If merge goes wrong after commit:
+
+Prefer the non-destructive reset. It rewinds the commit and KEEPS the working tree:
 
 ```bash
 # Identify pre-merge commit
@@ -153,11 +212,32 @@ git log --oneline -5
 # Reset to before merge (preserve working tree)
 git reset --soft HEAD~1
 
-# Or hard reset if working tree also corrupted
-git reset --hard [pre-merge-commit-sha]
-
 # Re-attempt with lessons learned
 ```
+
+<CRITICAL>
+`git reset --hard` DISCARDS every uncommitted change in the tree, including work you
+did not author, and the reflog does not bring it back. Never run it as a routine next
+step when `--soft` did not obviously suffice.
+
+Before proposing it, enumerate exactly what it destroys:
+
+```bash
+git status --porcelain -uall
+```
+
+Then ask via AskUserQuestion, never as prose:
+
+- **question**: `Running: git reset --hard [pre-merge-commit-sha]` / `Effect: discards
+  the uncommitted changes listed above and every commit after
+  [pre-merge-commit-sha]` / `Recoverable: commits via reflog; uncommitted changes NOT
+  recoverable`
+- **options**: `Run it` (uncommitted work destroyed) and `Cancel` (keep the tree, fix
+  forward).
+
+Run it only after an explicit confirmation. Never run it and describe the impact
+afterwards.
+</CRITICAL>
 
 <FORBIDDEN>
 - Blind ours/theirs acceptance without 3-way analysis
@@ -165,9 +245,14 @@ git reset --hard [pre-merge-commit-sha]
 - Treating interface contracts as suggestions
 - Merging code that violates contracts
 - Ignoring type signature mismatches
-- Leaving worktrees or stale branches after success
+- Leaving worktrees or stale branches after success is confirmed AND the user has approved their removal
 - Proceeding after test failure
 - Not documenting merge decisions
+- Deleting worktrees or branches before explicit user confirmation
+- Running `git reset --hard` without first stating what it discards and getting an explicit confirmation via AskUserQuestion
+- Running `git stash` in a checkout that may hold uncommitted work you did not author, without an impact statement made before the operator answers
+- Offering "stash and proceed" as an option without disclosing that `git stash` is tree-wide
+- Skipping the truncation sweep after a stash or a set-aside operation
 </FORBIDDEN>
 
 ## Self-Check
@@ -180,7 +265,7 @@ git reset --hard [pre-merge-commit-sha]
 - [ ] Verified interface contracts are honored?
 - [ ] Ran auditing-green-mirage on tests?
 - [ ] Ran code review on final result?
-- [ ] Deleted all worktrees after success?
+- [ ] Confirmed worktree removal with the user, and deleted only what they approved?
 - [ ] All tests passing?
 
 <reflection>
@@ -193,7 +278,7 @@ After each phase, verify: outputs produced, quality gates passed, no unresolved 
 - All interface contracts verified
 - All tests passing
 - Code review passes
-- All worktrees cleaned up
+- All worktrees cleaned up, each removal confirmed by the user first
 - Single unified branch ready for next steps
 
 <FINAL_EMPHASIS>
