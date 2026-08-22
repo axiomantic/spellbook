@@ -22,6 +22,11 @@ The findings report MUST include BOTH:
 
 ## Machine-Parseable YAML Block
 
+`patterns_found` below and the Patterns list under Human-Readable Summary MUST each
+carry one slot per `### Pattern N` defined in `commands/audit-mirage-analyze.md`. A
+pattern with no slot is a finding silently dropped from a report that looks complete.
+`tests/test_skills/test_audit_mirage_pattern_sync.py` fails when the two drift.
+
 ```yaml
 ---
 audit_metadata:
@@ -48,6 +53,8 @@ patterns_found:
   pattern_7_state_mutation: 1
   pattern_8_incomplete_branches: 4
   pattern_9_skipped_tests: 2
+  pattern_10_strengthened_still_partial: 1
+  pattern_11_self_manufactured_evidence: 2
 
 findings:
   - id: "finding-1"
@@ -128,6 +135,8 @@ Patterns Found:
 |-- Pattern 7 (State Mutation): N instances
 |-- Pattern 8 (Incomplete Branches): N instances
 |-- Pattern 9 (Skipped Tests): N instances (M unjustified)
+|-- Pattern 10 (Strengthened Assertion Still Partial): N instances
+|-- Pattern 11 (Self-Manufactured Evidence): N instances
 
 Effort Breakdown:
 |-- Trivial fixes: N (< 5 min each)
