@@ -105,6 +105,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `1` where it exited `2`. Verified end to end against a corrupt ledger on each
   of the five, with the true exit status captured directly rather than through
   a pipe.
+- `installer.version.sync_version_to_files` raises `VersionSyncError` when a
+  manifest exists but cannot be parsed or read, instead of swallowing
+  `json.JSONDecodeError` and `OSError` and returning an empty list. The empty
+  list is also what a clean tree returns, so a caller that trusted the return
+  value reported "nothing to do" and exited `0` on a broken manifest --
+  measured: a caller of that shape printed `nothing to do; manifests already
+  agree` and exited `0` against a manifest containing `{ this is not json`, and
+  now exits `1` naming the file and the parse position. The exception carries
+  `updated` and `failures`, so a partial sync is still reportable and each
+  unusable manifest is paired with its reason; a payload that parses to a
+  non-object is reported as such rather than reaching `.get()` as an
+  `AttributeError` that names neither file nor cause. A caller that catches
+  `VersionSyncError` is not thereby excused from re-validating against disk.
+  `validate_version_consistency` does not share this defect: it already emits
+  an issue for an unreadable manifest, and is unchanged.
 
 ## [0.89.0] - 2026-08-17
 
