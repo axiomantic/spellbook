@@ -8690,67 +8690,152 @@
 <a id="__codelineno-0-128" name="__codelineno-0-128" href="#__codelineno-0-128"></a>
 <a id="__codelineno-0-129" name="__codelineno-0-129" href="#__codelineno-0-129"></a>| Error | Response |
 <a id="__codelineno-0-130" name="__codelineno-0-130" href="#__codelineno-0-130"></a>|-------|----------|
-<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>| <span class="gs">**Uncommitted changes in worktree**</span> | AskUserQuestion: "Worktree [path] has uncommitted changes. Options: (1) Commit with message '[suggested]', (2) Stash and proceed, (3) Abort for manual handling" |
+<a id="__codelineno-0-131" name="__codelineno-0-131" href="#__codelineno-0-131"></a>| <span class="gs">**Uncommitted changes in worktree**</span> | Do NOT stash by reflex. Follow the procedure below. |
 <a id="__codelineno-0-132" name="__codelineno-0-132" href="#__codelineno-0-132"></a>| <span class="gs">**Tests fail after merge**</span> | STOP. Do NOT proceed to next round. Invoke systematic-debugging. Fix. Retest. Only continue when passing. |
 <a id="__codelineno-0-133" name="__codelineno-0-133" href="#__codelineno-0-133"></a>| <span class="gs">**Interface contract violation**</span> | CRITICAL: "Contract violation detected. Contract: [spec]. Expected: [X]. Actual: [Y]. Location: [file:line]. MUST fix before merge proceeds." |
 <a id="__codelineno-0-134" name="__codelineno-0-134" href="#__codelineno-0-134"></a>
-<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gu">## Rollback Procedure</span>
+<a id="__codelineno-0-135" name="__codelineno-0-135" href="#__codelineno-0-135"></a><span class="gu">### Uncommitted Changes in a Worktree</span>
 <a id="__codelineno-0-136" name="__codelineno-0-136" href="#__codelineno-0-136"></a>
-<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>If merge goes wrong after commit:
+<a id="__codelineno-0-137" name="__codelineno-0-137" href="#__codelineno-0-137"></a>Show what is actually at risk before offering any option:
 <a id="__codelineno-0-138" name="__codelineno-0-138" href="#__codelineno-0-138"></a>
 <a id="__codelineno-0-139" name="__codelineno-0-139" href="#__codelineno-0-139"></a><span class="sb">```bash</span>
-<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a><span class="c1"># Identify pre-merge commit</span>
-<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span>-5
-<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>
-<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="c1"># Reset to before merge (preserve working tree)</span>
-<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
-<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>
-<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a><span class="c1"># Or hard reset if working tree also corrupted</span>
-<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a>git<span class="w"> </span>reset<span class="w"> </span>--hard<span class="w"> </span><span class="o">[</span>pre-merge-commit-sha<span class="o">]</span>
-<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>
-<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="c1"># Re-attempt with lessons learned</span>
-<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a><span class="sb">```</span>
-<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>
-<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="k">-</span><span class="w"> </span>Blind ours/theirs acceptance without 3-way analysis
-<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a><span class="k">-</span><span class="w"> </span>Skipping tests between rounds ("I'll test at the end")
-<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="k">-</span><span class="w"> </span>Treating interface contracts as suggestions
-<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="k">-</span><span class="w"> </span>Merging code that violates contracts
-<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="k">-</span><span class="w"> </span>Ignoring type signature mismatches
-<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="k">-</span><span class="w"> </span>Leaving worktrees or stale branches after success
-<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a><span class="k">-</span><span class="w"> </span>Proceeding after test failure
-<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="k">-</span><span class="w"> </span>Not documenting merge decisions
-<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>&lt;/FORBIDDEN&gt;
-<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>
-<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a><span class="gu">## Self-Check</span>
-<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>
-<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>&lt;RULE&gt;Before completing worktree merge, verify ALL items. If ANY unchecked: STOP and fix.&lt;/RULE&gt;
+<a id="__codelineno-0-140" name="__codelineno-0-140" href="#__codelineno-0-140"></a>git<span class="w"> </span>-C<span class="w"> </span><span class="o">[</span>worktree-path<span class="o">]</span><span class="w"> </span>status<span class="w"> </span>--porcelain<span class="w"> </span>-uall
+<a id="__codelineno-0-141" name="__codelineno-0-141" href="#__codelineno-0-141"></a>git<span class="w"> </span>-C<span class="w"> </span><span class="o">[</span>worktree-path<span class="o">]</span><span class="w"> </span>diff<span class="w">              </span><span class="c1"># Unstaged</span>
+<a id="__codelineno-0-142" name="__codelineno-0-142" href="#__codelineno-0-142"></a>git<span class="w"> </span>-C<span class="w"> </span><span class="o">[</span>worktree-path<span class="o">]</span><span class="w"> </span>diff<span class="w"> </span>--staged<span class="w">     </span><span class="c1"># Staged</span>
+<a id="__codelineno-0-143" name="__codelineno-0-143" href="#__codelineno-0-143"></a><span class="sb">```</span>
+<a id="__codelineno-0-144" name="__codelineno-0-144" href="#__codelineno-0-144"></a>
+<a id="__codelineno-0-145" name="__codelineno-0-145" href="#__codelineno-0-145"></a>To inspect committed content for comparison, read it; do not mutate the tree:
+<a id="__codelineno-0-146" name="__codelineno-0-146" href="#__codelineno-0-146"></a>
+<a id="__codelineno-0-147" name="__codelineno-0-147" href="#__codelineno-0-147"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-148" name="__codelineno-0-148" href="#__codelineno-0-148"></a>git<span class="w"> </span>show<span class="w"> </span>HEAD:&lt;path&gt;
+<a id="__codelineno-0-149" name="__codelineno-0-149" href="#__codelineno-0-149"></a><span class="sb">```</span>
+<a id="__codelineno-0-150" name="__codelineno-0-150" href="#__codelineno-0-150"></a>
+<a id="__codelineno-0-151" name="__codelineno-0-151" href="#__codelineno-0-151"></a>Then ask via AskUserQuestion, in this order — least destructive first:
+<a id="__codelineno-0-152" name="__codelineno-0-152" href="#__codelineno-0-152"></a>
+<a id="__codelineno-0-153" name="__codelineno-0-153" href="#__codelineno-0-153"></a><span class="k">-</span><span class="w"> </span><span class="gs">**question**</span>: <span class="sb">`Worktree [path] has uncommitted changes.`</span> / `Effect of each option
+<a id="__codelineno-0-154" name="__codelineno-0-154" href="#__codelineno-0-154"></a>  below` / <span class="sb">`Recoverable: varies by option, stated per option`</span>
+<a id="__codelineno-0-155" name="__codelineno-0-155" href="#__codelineno-0-155"></a><span class="k">-</span><span class="w"> </span><span class="gs">**options**</span>:
+<a id="__codelineno-0-156" name="__codelineno-0-156" href="#__codelineno-0-156"></a><span class="w">  </span><span class="k">1.</span> <span class="sb">`Commit them`</span> — nothing is discarded; message <span class="sb">`[suggested]`</span>. Recoverable.
+<a id="__codelineno-0-157" name="__codelineno-0-157" href="#__codelineno-0-157"></a><span class="w">  </span><span class="k">2.</span> <span class="sb">`Abort for manual handling`</span> — nothing is touched. Recoverable.
+<a id="__codelineno-0-158" name="__codelineno-0-158" href="#__codelineno-0-158"></a><span class="w">  </span><span class="k">3.</span> <span class="sb">`Set aside specific files`</span> — name the EXACT paths; never <span class="sb">`.`</span>, never a bare
+<a id="__codelineno-0-159" name="__codelineno-0-159" href="#__codelineno-0-159"></a>     directory. Scope is limited to the paths you name.
+<a id="__codelineno-0-160" name="__codelineno-0-160" href="#__codelineno-0-160"></a><span class="w">  </span><span class="k">4.</span> <span class="sb">`Stash the whole tree`</span> — LAST RESORT. <span class="sb">`git stash`</span> is TREE-WIDE: it captures
+<a id="__codelineno-0-161" name="__codelineno-0-161" href="#__codelineno-0-161"></a>     every uncommitted change in the checkout, not only the files being merged. In
+<a id="__codelineno-0-162" name="__codelineno-0-162" href="#__codelineno-0-162"></a>     a checkout shared with another agent it will take work the operator did not
+<a id="__codelineno-0-163" name="__codelineno-0-163" href="#__codelineno-0-163"></a>     author and cannot see. Recovery is <span class="sb">`git stash list`</span> then <span class="sb">`git stash pop`</span> — but
+<a id="__codelineno-0-164" name="__codelineno-0-164" href="#__codelineno-0-164"></a>     a pop CONFLICT can leave the tree in a partial state, half-applied and with
+<a id="__codelineno-0-165" name="__codelineno-0-165" href="#__codelineno-0-165"></a>     the stash entry still present.
 <a id="__codelineno-0-166" name="__codelineno-0-166" href="#__codelineno-0-166"></a>
-<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a><span class="k">- [ ]</span> Merged worktrees in dependency order?
-<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a><span class="k">- [ ]</span> Ran tests after EACH round?
-<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a><span class="k">- [ ]</span> Performed 3-way analysis for ALL conflicts?
-<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a><span class="k">- [ ]</span> Verified interface contracts are honored?
-<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a><span class="k">- [ ]</span> Ran auditing-green-mirage on tests?
-<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a><span class="k">- [ ]</span> Ran code review on final result?
-<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a><span class="k">- [ ]</span> Deleted all worktrees after success?
-<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a><span class="k">- [ ]</span> All tests passing?
+<a id="__codelineno-0-167" name="__codelineno-0-167" href="#__codelineno-0-167"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-168" name="__codelineno-0-168" href="#__codelineno-0-168"></a>Never present option 4 as "stash and proceed" with no impact statement. An operator
+<a id="__codelineno-0-169" name="__codelineno-0-169" href="#__codelineno-0-169"></a>reading those words pictures their own edits being set aside and restored; they are
+<a id="__codelineno-0-170" name="__codelineno-0-170" href="#__codelineno-0-170"></a>not picturing another agent's uncommitted work being swept up. A confirmation
+<a id="__codelineno-0-171" name="__codelineno-0-171" href="#__codelineno-0-171"></a>obtained without the impact statement is not a confirmation.
+<a id="__codelineno-0-172" name="__codelineno-0-172" href="#__codelineno-0-172"></a>
+<a id="__codelineno-0-173" name="__codelineno-0-173" href="#__codelineno-0-173"></a>If the operator chooses option 3 or 4, VERIFY afterwards — a stash round-trip damages
+<a id="__codelineno-0-174" name="__codelineno-0-174" href="#__codelineno-0-174"></a>staged, modified, and untracked files alike, and it fails silently:
 <a id="__codelineno-0-175" name="__codelineno-0-175" href="#__codelineno-0-175"></a>
-<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a>&lt;reflection&gt;
-<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a>After each phase, verify: outputs produced, quality gates passed, no unresolved merge conflicts or test failures remaining.
-<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a>&lt;/reflection&gt;
-<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a>
-<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="gu">## Success Criteria</span>
-<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a>
-<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="k">-</span><span class="w"> </span>All worktrees merged into base branch
-<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="k">-</span><span class="w"> </span>All interface contracts verified
-<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="k">-</span><span class="w"> </span>All tests passing
-<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a><span class="k">-</span><span class="w"> </span>Code review passes
-<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a><span class="k">-</span><span class="w"> </span>All worktrees cleaned up
-<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a><span class="k">-</span><span class="w"> </span>Single unified branch ready for next steps
-<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>
-<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>&lt;FINAL_EMPHASIS&gt;
-<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict requires 3-way analysis. Every round requires testing. Every merge requires verification. Interface contracts are mandatory, not suggestions. No feature left behind. No bug introduced. You'd better be sure.
-<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>&lt;/FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-176" name="__codelineno-0-176" href="#__codelineno-0-176"></a><span class="sb">```sh</span>
+<a id="__codelineno-0-177" name="__codelineno-0-177" href="#__codelineno-0-177"></a><span class="nv">files</span><span class="o">=</span><span class="k">$(</span>git<span class="w"> </span>status<span class="w"> </span>--porcelain<span class="w"> </span>-uall<span class="k">)</span><span class="w"> </span><span class="o">||</span><span class="w"> </span><span class="o">{</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"sweep failed: git status errored"</span><span class="p">;</span><span class="w"> </span><span class="nb">exit</span><span class="w"> </span><span class="m">1</span><span class="p">;</span><span class="w"> </span><span class="o">}</span>
+<a id="__codelineno-0-178" name="__codelineno-0-178" href="#__codelineno-0-178"></a><span class="nb">printf</span><span class="w"> </span><span class="s1">'%s\n'</span><span class="w"> </span><span class="s2">"</span><span class="nv">$files</span><span class="s2">"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-v<span class="w"> </span><span class="s1">'^D \|^.D'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">'s/^...//;s/.* -&gt; //'</span><span class="w"> </span><span class="p">|</span>
+<a id="__codelineno-0-179" name="__codelineno-0-179" href="#__codelineno-0-179"></a><span class="k">while</span><span class="w"> </span><span class="nv">IFS</span><span class="o">=</span><span class="w"> </span><span class="nb">read</span><span class="w"> </span>-r<span class="w"> </span>f<span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a id="__codelineno-0-180" name="__codelineno-0-180" href="#__codelineno-0-180"></a><span class="w">  </span><span class="k">case</span><span class="w"> </span><span class="s2">"</span><span class="nv">$f</span><span class="s2">"</span><span class="w"> </span><span class="k">in</span><span class="w"> </span>*__init__.py<span class="p">|</span>*.gitkeep<span class="p">|</span>*/py.typed<span class="o">)</span><span class="w"> </span><span class="k">continue</span><span class="p">;;</span><span class="w"> </span><span class="k">esac</span>
+<a id="__codelineno-0-181" name="__codelineno-0-181" href="#__codelineno-0-181"></a><span class="w">  </span><span class="o">[</span><span class="w"> </span>-f<span class="w"> </span><span class="s2">"</span><span class="nv">$f</span><span class="s2">"</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="o">[</span><span class="w"> </span>!<span class="w"> </span>-s<span class="w"> </span><span class="s2">"</span><span class="nv">$f</span><span class="s2">"</span><span class="w"> </span><span class="o">]</span><span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"TRUNCATED: </span><span class="nv">$f</span><span class="s2">"</span>
+<a id="__codelineno-0-182" name="__codelineno-0-182" href="#__codelineno-0-182"></a><span class="k">done</span>
+<a id="__codelineno-0-183" name="__codelineno-0-183" href="#__codelineno-0-183"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">"sweep complete"</span>
+<a id="__codelineno-0-184" name="__codelineno-0-184" href="#__codelineno-0-184"></a><span class="sb">```</span>
+<a id="__codelineno-0-185" name="__codelineno-0-185" href="#__codelineno-0-185"></a>
+<a id="__codelineno-0-186" name="__codelineno-0-186" href="#__codelineno-0-186"></a>Any name it prints that you did not deliberately empty is a truncation. Output of
+<a id="__codelineno-0-187" name="__codelineno-0-187" href="#__codelineno-0-187"></a>only <span class="sb">`sweep complete`</span> is clean. <span class="sb">`git status`</span> is checked explicitly: if it errors,
+<a id="__codelineno-0-188" name="__codelineno-0-188" href="#__codelineno-0-188"></a>the sweep prints <span class="sb">`sweep failed`</span> and exits 1 rather than silently reporting an
+<a id="__codelineno-0-189" name="__codelineno-0-189" href="#__codelineno-0-189"></a>empty result as clean.
+<a id="__codelineno-0-190" name="__codelineno-0-190" href="#__codelineno-0-190"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-191" name="__codelineno-0-191" href="#__codelineno-0-191"></a>
+<a id="__codelineno-0-192" name="__codelineno-0-192" href="#__codelineno-0-192"></a><span class="gu">## Rollback Procedure</span>
+<a id="__codelineno-0-193" name="__codelineno-0-193" href="#__codelineno-0-193"></a>
+<a id="__codelineno-0-194" name="__codelineno-0-194" href="#__codelineno-0-194"></a>If merge goes wrong after commit:
+<a id="__codelineno-0-195" name="__codelineno-0-195" href="#__codelineno-0-195"></a>
+<a id="__codelineno-0-196" name="__codelineno-0-196" href="#__codelineno-0-196"></a>Prefer the non-destructive reset. It rewinds the commit and KEEPS the working tree:
+<a id="__codelineno-0-197" name="__codelineno-0-197" href="#__codelineno-0-197"></a>
+<a id="__codelineno-0-198" name="__codelineno-0-198" href="#__codelineno-0-198"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-199" name="__codelineno-0-199" href="#__codelineno-0-199"></a><span class="c1"># Identify pre-merge commit</span>
+<a id="__codelineno-0-200" name="__codelineno-0-200" href="#__codelineno-0-200"></a>git<span class="w"> </span>log<span class="w"> </span>--oneline<span class="w"> </span>-5
+<a id="__codelineno-0-201" name="__codelineno-0-201" href="#__codelineno-0-201"></a>
+<a id="__codelineno-0-202" name="__codelineno-0-202" href="#__codelineno-0-202"></a><span class="c1"># Reset to before merge (preserve working tree)</span>
+<a id="__codelineno-0-203" name="__codelineno-0-203" href="#__codelineno-0-203"></a>git<span class="w"> </span>reset<span class="w"> </span>--soft<span class="w"> </span>HEAD~1
+<a id="__codelineno-0-204" name="__codelineno-0-204" href="#__codelineno-0-204"></a>
+<a id="__codelineno-0-205" name="__codelineno-0-205" href="#__codelineno-0-205"></a><span class="c1"># Re-attempt with lessons learned</span>
+<a id="__codelineno-0-206" name="__codelineno-0-206" href="#__codelineno-0-206"></a><span class="sb">```</span>
+<a id="__codelineno-0-207" name="__codelineno-0-207" href="#__codelineno-0-207"></a>
+<a id="__codelineno-0-208" name="__codelineno-0-208" href="#__codelineno-0-208"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-209" name="__codelineno-0-209" href="#__codelineno-0-209"></a><span class="sb">`git reset --hard`</span> DISCARDS every uncommitted change in the tree, including work you
+<a id="__codelineno-0-210" name="__codelineno-0-210" href="#__codelineno-0-210"></a>did not author, and the reflog does not bring it back. Never run it as a routine next
+<a id="__codelineno-0-211" name="__codelineno-0-211" href="#__codelineno-0-211"></a>step when <span class="sb">`--soft`</span> did not obviously suffice.
+<a id="__codelineno-0-212" name="__codelineno-0-212" href="#__codelineno-0-212"></a>
+<a id="__codelineno-0-213" name="__codelineno-0-213" href="#__codelineno-0-213"></a>Before proposing it, enumerate exactly what it destroys:
+<a id="__codelineno-0-214" name="__codelineno-0-214" href="#__codelineno-0-214"></a>
+<a id="__codelineno-0-215" name="__codelineno-0-215" href="#__codelineno-0-215"></a><span class="sb">```bash</span>
+<a id="__codelineno-0-216" name="__codelineno-0-216" href="#__codelineno-0-216"></a>git<span class="w"> </span>status<span class="w"> </span>--porcelain<span class="w"> </span>-uall
+<a id="__codelineno-0-217" name="__codelineno-0-217" href="#__codelineno-0-217"></a><span class="sb">```</span>
+<a id="__codelineno-0-218" name="__codelineno-0-218" href="#__codelineno-0-218"></a>
+<a id="__codelineno-0-219" name="__codelineno-0-219" href="#__codelineno-0-219"></a>Then ask via AskUserQuestion, never as prose:
+<a id="__codelineno-0-220" name="__codelineno-0-220" href="#__codelineno-0-220"></a>
+<a id="__codelineno-0-221" name="__codelineno-0-221" href="#__codelineno-0-221"></a><span class="k">-</span><span class="w"> </span><span class="gs">**question**</span>: <span class="sb">`Running: git reset --hard [pre-merge-commit-sha]`</span> / `Effect: discards
+<a id="__codelineno-0-222" name="__codelineno-0-222" href="#__codelineno-0-222"></a>  the uncommitted changes listed above and every commit after
+<a id="__codelineno-0-223" name="__codelineno-0-223" href="#__codelineno-0-223"></a>  [pre-merge-commit-sha]` / `Recoverable: commits via reflog; uncommitted changes NOT
+<a id="__codelineno-0-224" name="__codelineno-0-224" href="#__codelineno-0-224"></a>  recoverable`
+<a id="__codelineno-0-225" name="__codelineno-0-225" href="#__codelineno-0-225"></a><span class="k">-</span><span class="w"> </span><span class="gs">**options**</span>: <span class="sb">`Run it`</span> (uncommitted work destroyed) and <span class="sb">`Cancel`</span> (keep the tree, fix
+<a id="__codelineno-0-226" name="__codelineno-0-226" href="#__codelineno-0-226"></a>  forward).
+<a id="__codelineno-0-227" name="__codelineno-0-227" href="#__codelineno-0-227"></a>
+<a id="__codelineno-0-228" name="__codelineno-0-228" href="#__codelineno-0-228"></a>Run it only after an explicit confirmation. Never run it and describe the impact
+<a id="__codelineno-0-229" name="__codelineno-0-229" href="#__codelineno-0-229"></a>afterwards.
+<a id="__codelineno-0-230" name="__codelineno-0-230" href="#__codelineno-0-230"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-231" name="__codelineno-0-231" href="#__codelineno-0-231"></a>
+<a id="__codelineno-0-232" name="__codelineno-0-232" href="#__codelineno-0-232"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-233" name="__codelineno-0-233" href="#__codelineno-0-233"></a><span class="k">-</span><span class="w"> </span>Blind ours/theirs acceptance without 3-way analysis
+<a id="__codelineno-0-234" name="__codelineno-0-234" href="#__codelineno-0-234"></a><span class="k">-</span><span class="w"> </span>Skipping tests between rounds ("I'll test at the end")
+<a id="__codelineno-0-235" name="__codelineno-0-235" href="#__codelineno-0-235"></a><span class="k">-</span><span class="w"> </span>Treating interface contracts as suggestions
+<a id="__codelineno-0-236" name="__codelineno-0-236" href="#__codelineno-0-236"></a><span class="k">-</span><span class="w"> </span>Merging code that violates contracts
+<a id="__codelineno-0-237" name="__codelineno-0-237" href="#__codelineno-0-237"></a><span class="k">-</span><span class="w"> </span>Ignoring type signature mismatches
+<a id="__codelineno-0-238" name="__codelineno-0-238" href="#__codelineno-0-238"></a><span class="k">-</span><span class="w"> </span>Leaving worktrees or stale branches after success is confirmed AND the user has approved their removal
+<a id="__codelineno-0-239" name="__codelineno-0-239" href="#__codelineno-0-239"></a><span class="k">-</span><span class="w"> </span>Proceeding after test failure
+<a id="__codelineno-0-240" name="__codelineno-0-240" href="#__codelineno-0-240"></a><span class="k">-</span><span class="w"> </span>Not documenting merge decisions
+<a id="__codelineno-0-241" name="__codelineno-0-241" href="#__codelineno-0-241"></a><span class="k">-</span><span class="w"> </span>Deleting worktrees or branches before explicit user confirmation
+<a id="__codelineno-0-242" name="__codelineno-0-242" href="#__codelineno-0-242"></a><span class="k">-</span><span class="w"> </span>Running <span class="sb">`git reset --hard`</span> without first stating what it discards and getting an explicit confirmation via AskUserQuestion
+<a id="__codelineno-0-243" name="__codelineno-0-243" href="#__codelineno-0-243"></a><span class="k">-</span><span class="w"> </span>Running <span class="sb">`git stash`</span> in a checkout that may hold uncommitted work you did not author, without an impact statement made before the operator answers
+<a id="__codelineno-0-244" name="__codelineno-0-244" href="#__codelineno-0-244"></a><span class="k">-</span><span class="w"> </span>Offering "stash and proceed" as an option without disclosing that <span class="sb">`git stash`</span> is tree-wide
+<a id="__codelineno-0-245" name="__codelineno-0-245" href="#__codelineno-0-245"></a><span class="k">-</span><span class="w"> </span>Skipping the truncation sweep after a stash or a set-aside operation
+<a id="__codelineno-0-246" name="__codelineno-0-246" href="#__codelineno-0-246"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-247" name="__codelineno-0-247" href="#__codelineno-0-247"></a>
+<a id="__codelineno-0-248" name="__codelineno-0-248" href="#__codelineno-0-248"></a><span class="gu">## Self-Check</span>
+<a id="__codelineno-0-249" name="__codelineno-0-249" href="#__codelineno-0-249"></a>
+<a id="__codelineno-0-250" name="__codelineno-0-250" href="#__codelineno-0-250"></a>&lt;RULE&gt;Before completing worktree merge, verify ALL items. If ANY unchecked: STOP and fix.&lt;/RULE&gt;
+<a id="__codelineno-0-251" name="__codelineno-0-251" href="#__codelineno-0-251"></a>
+<a id="__codelineno-0-252" name="__codelineno-0-252" href="#__codelineno-0-252"></a><span class="k">- [ ]</span> Merged worktrees in dependency order?
+<a id="__codelineno-0-253" name="__codelineno-0-253" href="#__codelineno-0-253"></a><span class="k">- [ ]</span> Ran tests after EACH round?
+<a id="__codelineno-0-254" name="__codelineno-0-254" href="#__codelineno-0-254"></a><span class="k">- [ ]</span> Performed 3-way analysis for ALL conflicts?
+<a id="__codelineno-0-255" name="__codelineno-0-255" href="#__codelineno-0-255"></a><span class="k">- [ ]</span> Verified interface contracts are honored?
+<a id="__codelineno-0-256" name="__codelineno-0-256" href="#__codelineno-0-256"></a><span class="k">- [ ]</span> Ran auditing-green-mirage on tests?
+<a id="__codelineno-0-257" name="__codelineno-0-257" href="#__codelineno-0-257"></a><span class="k">- [ ]</span> Ran code review on final result?
+<a id="__codelineno-0-258" name="__codelineno-0-258" href="#__codelineno-0-258"></a><span class="k">- [ ]</span> Confirmed worktree removal with the user, and deleted only what they approved?
+<a id="__codelineno-0-259" name="__codelineno-0-259" href="#__codelineno-0-259"></a><span class="k">- [ ]</span> All tests passing?
+<a id="__codelineno-0-260" name="__codelineno-0-260" href="#__codelineno-0-260"></a>
+<a id="__codelineno-0-261" name="__codelineno-0-261" href="#__codelineno-0-261"></a>&lt;reflection&gt;
+<a id="__codelineno-0-262" name="__codelineno-0-262" href="#__codelineno-0-262"></a>After each phase, verify: outputs produced, quality gates passed, no unresolved merge conflicts or test failures remaining.
+<a id="__codelineno-0-263" name="__codelineno-0-263" href="#__codelineno-0-263"></a>&lt;/reflection&gt;
+<a id="__codelineno-0-264" name="__codelineno-0-264" href="#__codelineno-0-264"></a>
+<a id="__codelineno-0-265" name="__codelineno-0-265" href="#__codelineno-0-265"></a><span class="gu">## Success Criteria</span>
+<a id="__codelineno-0-266" name="__codelineno-0-266" href="#__codelineno-0-266"></a>
+<a id="__codelineno-0-267" name="__codelineno-0-267" href="#__codelineno-0-267"></a><span class="k">-</span><span class="w"> </span>All worktrees merged into base branch
+<a id="__codelineno-0-268" name="__codelineno-0-268" href="#__codelineno-0-268"></a><span class="k">-</span><span class="w"> </span>All interface contracts verified
+<a id="__codelineno-0-269" name="__codelineno-0-269" href="#__codelineno-0-269"></a><span class="k">-</span><span class="w"> </span>All tests passing
+<a id="__codelineno-0-270" name="__codelineno-0-270" href="#__codelineno-0-270"></a><span class="k">-</span><span class="w"> </span>Code review passes
+<a id="__codelineno-0-271" name="__codelineno-0-271" href="#__codelineno-0-271"></a><span class="k">-</span><span class="w"> </span>All worktrees cleaned up, each removal confirmed by the user first
+<a id="__codelineno-0-272" name="__codelineno-0-272" href="#__codelineno-0-272"></a><span class="k">-</span><span class="w"> </span>Single unified branch ready for next steps
+<a id="__codelineno-0-273" name="__codelineno-0-273" href="#__codelineno-0-273"></a>
+<a id="__codelineno-0-274" name="__codelineno-0-274" href="#__codelineno-0-274"></a>&lt;FINAL_EMPHASIS&gt;
+<a id="__codelineno-0-275" name="__codelineno-0-275" href="#__codelineno-0-275"></a>Your reputation depends on merging parallel work without losing features or introducing bugs. Every conflict requires 3-way analysis. Every round requires testing. Every merge requires verification. Interface contracts are mandatory, not suggestions. No feature left behind. No bug introduced. You'd better be sure.
+<a id="__codelineno-0-276" name="__codelineno-0-276" href="#__codelineno-0-276"></a>&lt;/FINAL_EMPHASIS&gt;
 </code></pre></div>
 
 
