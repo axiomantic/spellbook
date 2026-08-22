@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the surviving convention -- every user-facing key is reached through the
   install wizards -- without naming the removed interface.
 
+- The OpenCode `context-curator` extension
+
 ### Changed
 
 - The `generate-docs` pre-commit hook runs `scripts/generate_docs.py --check`
@@ -54,8 +56,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
-
-### Removed
 
 - The OpenCode `context-curator` extension
   (`extensions/opencode/context-curator/`) and its server half
@@ -102,6 +102,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pr-conventions` rule module forbids by name. Option 2 now pushes and then
   invokes the `creating-issues-and-pull-requests` skill, which discovers and
   applies the repository's own PR template.
+- Three stale records that no mechanism read. `commands/audit-mirage-report.md`
+  gave the report template slots for 9 green mirage patterns while
+  `commands/audit-mirage-analyze.md` defines 11, so a Pattern 10 or Pattern 11
+  finding had nowhere to go and was dropped from a report that still looked
+  complete. The two missing slots are added, and
+  `tests/test_skills/test_audit_mirage_pattern_sync.py` now derives the expected
+  set from the analyze headings and fails on drift in either direction; proved
+  against a planted twelfth pattern. `skills/tooling-discovery/SKILL.md` said
+  tier 5-6 for trust warnings where `spellbook/tooling/discovery.py` populates
+  `risks` and `next_steps` from tier 4 up, and now keys off the presence of
+  those fields instead of restating a threshold the code owns.
+  `commands/feature-discover.md` forbade proceeding to design on a
+  `completeness_score` that was deleted with the fake validation functions; the
+  guard now names the Phase 1.5.5 self-assessed items that replaced it.
 - Gate 4.6.5 (Pre-PR Claim Validation and Embarrassment Sweep) is now
   dispatchable. It is a `Task:` dispatch in `commands/feature-implement-execute.md`
   but owned no row of the develop dispatch table, so the Phase Declaration

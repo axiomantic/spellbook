@@ -614,7 +614,7 @@ Run `detect_missing_flags()`. If it returns a non-empty set, follow the "When dr
 
 <FORBIDDEN>
 - Asking questions that Phase 1 research already answered
-- Proceeding to design with completeness_score < 100% without explicit user bypass
+- Proceeding to design with any Phase 1.5.5 self-assessed item at NO, absent a recorded operator bypass naming that item
 - Blocking on glossary persistence when user chose session-only (A)
 - Running devil's advocate review in main context instead of dispatching subagent
 - Treating DesignContext structure as defined here — always reference develop skill for field definitions
