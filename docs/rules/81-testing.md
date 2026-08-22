@@ -24,4 +24,6 @@ How many test commands run at once and how test scope is matched to change scope
 <RULE>Never run the full test suite when targeted tests suffice. Match test scope to change scope.</RULE>
 
 Load `testing-strategy` skill for test tier classification, selecting what to run, test marks, batching, and cross-module regression guidance.
+
+<RULE>NEVER write tests that assert on documentation content -- no grepping the design doc, README, or any prose artifact for a sentence or figure and asserting it exists or matches. Doc-integrity tests verify the document, not the code; they pass while the code is wrong and go red when prose is edited. If a documented number matters, test the BEHAVIOR that produces it (compute it and assert on the computation, with the expected value as a literal). Documentation consistency is a lint/reviewer concern, never a unit test.</RULE>
 ```

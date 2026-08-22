@@ -67,6 +67,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The testing rule module forbids tests that assert on documentation content:
+  no grepping a design doc, README, or any prose artifact for a sentence or
+  figure and asserting it exists or matches. A doc-integrity test verifies the
+  document rather than the code -- it passes while the code is wrong and goes
+  red when prose is edited. Where a documented number matters, the rule
+  requires testing the behavior that produces it, with the expected value as a
+  literal; documentation consistency is a lint and reviewer concern, never a
+  unit test.
 - The subagent dispatch skill gained a fourth Dispatch Protocol convention,
   **content density**: no social framing in dispatches or returns; common
   vocabulary only, never binary encodings; delimiters for data but grammar for
