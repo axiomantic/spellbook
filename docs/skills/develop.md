@@ -673,11 +673,10 @@ even if the work product is correct.
 ## CRITICAL: Subagent Dispatch Points
 
 <CRITICAL>
-The following steps MUST use subagents. Direct execution in main context is FORBIDDEN.
-If you find yourself using Write, Edit, or Bash tools directly during these steps: STOP.
-Dispatch a subagent instead.
+These steps MUST use subagents; direct execution in main context is FORBIDDEN.
+If you use Write, Edit, or Bash directly during these steps: STOP. Dispatch a subagent.
 
-If a subagent fails or returns empty results: re-dispatch with additional context. After 3 consecutive failures on the same step, STOP and ask the user before continuing.
+If a subagent fails or returns empty: re-dispatch with more context. After 3 consecutive failures on the same step, STOP and ask the user.
 </CRITICAL>
 
 | Phase | Step                     | Skill to Invoke                  | Direct Execution |
@@ -688,8 +687,8 @@ If a subagent fails or returns empty results: re-dispatch with additional contex
 | 2.1   | Design creation          | design-exploration (SYNTHESIS MODE) | FORBIDDEN     |
 | 2.1.5 | Checkability pass (design) | (inline mechanization prompt, no skill) | FORBIDDEN |
 | 2.2   | Design review            | reviewing-design-docs            | FORBIDDEN        |
-| 2.5   | Assumption verification  | fact-checking                    | FORBIDDEN        |
 | 2.4   | Fix design               | executing-plans                  | FORBIDDEN        |
+| 2.5   | Assumption verification  | fact-checking                    | FORBIDDEN        |
 | 3.1   | Plan creation            | writing-plans                    | FORBIDDEN        |
 | 3.1.5 | Checkability pass (plan) | (inline mechanization prompt, no skill) | FORBIDDEN  |
 | 3.2   | Plan review              | reviewing-impl-plans             | FORBIDDEN        |
@@ -701,14 +700,14 @@ If a subagent fails or returns empty results: re-dispatch with additional contex
 | 4.6.1 | Comprehensive audit      | (inline audit prompt, no skill)  | FORBIDDEN        |
 | 4.6.3 | Green mirage             | auditing-green-mirage            | FORBIDDEN        |
 | 4.6.4 | Comprehensive fact-check | fact-checking                    | FORBIDDEN        |
+| 4.6.5 | Pre-PR claim validation  | fact-checking                    | FORBIDDEN        |
 | 4.7   | Finishing                | finishing-a-development-branch   | FORBIDDEN        |
 
 ### Conditional Companion Skills
 
-These do not own a row of the table: each rides along inside the dispatch for the
-phase named, and only when its trigger is present. A dispatch that meets a
-trigger MUST name the companion skill in its prompt alongside the phase's own
-skill; the Phase Declaration is unchanged, because the row is unchanged.
+These own no row: each rides along inside the dispatch for the phase named, when
+its trigger is present. A dispatch meeting a trigger MUST name the companion
+skill alongside the phase's own skill. The Phase Declaration is unchanged.
 
 | Trigger | Phase | Skill to name in the dispatch |
 | ------- | ----- | ----------------------------- |
@@ -1349,7 +1348,7 @@ Phase 4: Implementation (direct or delegated)
   ├─ 4.6.2: Run test suite (invoke systematic-debugging if failures)
   ├─ 4.6.3: Subagent invokes audit-green-mirage
   ├─ 4.6.4: Comprehensive fact-checking (if needs_research OR needs_design)
-  ├─ 4.6.5: Pre-PR fact-checking
+  ├─ 4.6.5: Pre-PR claim validation
   └─ 4.7: Subagent invokes finishing-a-development-branch
 
 Direct/Lightweight Path (zero flags — develop STAYS RESIDENT, never exits):
@@ -1881,7 +1880,7 @@ Session: <session id or git branch>
 ## Pending
 - Tasks 11–24 (see plan.md §<task list>)
 - Per-task gate 4.5 (code review) for all tasks
-- End-of-Phase-4 gates 4.6.1–4.6.5
+- End-of-Phase-4 gates 4.6.1–4.6.5 (4.6.2 is a direct run, not a dispatch)
 
 ## Blockers
 - Redis not available locally; integration tests skipped

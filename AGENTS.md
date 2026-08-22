@@ -18,7 +18,7 @@ uv run pytest tests/ -x --override-ini="addopts=" -m "not docker"
 # Run linting
 uv run ruff check .
 
-# Generate documentation (auto-runs via pre-commit hook)
+# Generate documentation (pre-commit only checks freshness; run this yourself)
 uv run scripts/generate_docs.py
 ```
 
@@ -45,14 +45,14 @@ If a pre-release exists that is newer than the last actual release, ask: "There'
 
 ## Pre-commit Hooks
 
-Pre-commit hooks auto-generate documentation files. If a hook fails:
+Only `doctoc` writes files. Every other hook reports and leaves the tree alone. If a hook fails:
 - `doctoc` failures: Table of contents in markdown files needs regeneration. Usually fixes itself on re-commit.
-- `Generate documentation`: Runs `scripts/generate_docs.py` to regenerate `docs/` from skills/commands/agents/rules. Stage the generated files and re-commit.
-- `Check documentation completeness`: Ensures every skill/command has a generated doc page. If you added a new skill/command, the hook generates it automatically.
+- `Check generated documentation is current`: The `docs/` mirror is stale. The hook runs `scripts/generate_docs.py --check`, which names each stale page and writes nothing. Run `uv run scripts/generate_docs.py`, stage the regenerated files, and re-commit.
+- `Check documentation completeness`: A skill/command has no generated doc page. Run `uv run scripts/generate_docs.py` and stage the result; the hook only checks.
 - `Validate skill/command/agent/rule schemas`: Checks YAML frontmatter in skills, commands, agents, and rule modules. Fix the frontmatter.
 - `Scan changeset for security issues`: Security scanner on staged diffs. Fix the flagged issue.
 
-When a pre-commit hook fails, it often generates or modifies files. Stage those files (`git add`) and commit again.
+Apart from `doctoc`, a failing hook does not repair anything for you. Run the command it names, stage the result (`git add`), and commit again.
 
 ## Switching Between Worktrees
 
@@ -166,9 +166,9 @@ uv run install.py --dry-run                       # Test installer
 
 ## Pre-commit Hooks
 
-Updates: TOC in README.md, docs from skills/commands/agents.
+Updates TOC in README.md. Checks -- does not write -- the `docs/` mirror of skills/commands/agents/rules.
 
-**Hook failure**: Stage generated files, retry commit.
+**Hook failure**: Run the command the hook names, stage the result, retry commit.
 
 ## Shell/PowerShell Parity
 
@@ -535,7 +535,7 @@ Before any commit, verify:
 
 1. `uv run pytest tests/` passes (fast tests only, heavy markers auto-skipped)
 2. `uv run install.py --dry-run` succeeds
-3. Allow hooks to regenerate docs
+3. `uv run scripts/generate_docs.py` if you touched `skills/`, `commands/`, `agents/`, or `rules/` (the hook checks freshness; it does not regenerate)
 
 <FINAL_EMPHASIS>
 Every library change ships to users across four platforms. Skipping tests or documentation means breaking real developer environments. Run the checklist. Every time.

@@ -827,7 +827,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
             extract=extract_dependabot_directories,
             resolve=resolve_directory,
             what="directory",
-            min_refs=5,
+            min_refs=4,
         ),
         Row(
             name="extension-mcp-tools",
@@ -835,7 +835,7 @@ def build_rows(repo_root: Path) -> tuple[Row, ...]:
             extract=extract_extension_tool_calls,
             resolve=make_mcp_tool_resolver(repo_root),
             what="registered MCP tool",
-            min_refs=2,
+            min_refs=0,
         ),
         Row(
             name="prose-paths",

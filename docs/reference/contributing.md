@@ -103,7 +103,7 @@ description: Use when [trigger] - [what it does]
 
 The repository uses pre-commit hooks for:
 
-- **generate-docs** - Auto-regenerate skill/command/agent documentation
+- **generate-docs** - Check that skill/command/agent documentation is current (reports stale pages; run `uv run scripts/generate_docs.py` to fix)
 - **check-docs-completeness** - Ensure all items are documented
 
 Run hooks manually:

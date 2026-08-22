@@ -37,12 +37,3 @@ updates:
     labels:
       - "dependencies"
       - "tests"
-
-  # Node - OpenCode extensions
-  - package-ecosystem: "npm"
-    directory: "/extensions/opencode/context-curator"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels:
-      - "dependencies"
