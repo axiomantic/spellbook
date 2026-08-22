@@ -26,6 +26,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The `generate-docs` pre-commit hook runs `scripts/generate_docs.py --check`
+  instead of the write mode. The gate is unchanged in what it catches -- a
+  commit that leaves the `docs/` mirror stale still fails -- but it now detects
+  staleness by comparing in memory rather than by mutating the tree and letting
+  pre-commit notice the modification. A hook that writes makes pre-commit's
+  unstaged-change stash load-bearing on every commit touching `skills/`,
+  `commands/`, `agents/`, or `rules/`; a stash round-trip in this repository has
+  already truncated a source file to 0 bytes and left 13 stray empty files with
+  nothing failing loudly. The accepted cost is that the author now runs the
+  regeneration by hand: `--check` names each stale page and prints
+  `Run: python3 scripts/generate_docs.py`, which pre-commit surfaces verbatim.
+  `AGENTS.md`, `CONTRIBUTING.md`, and `docs/reference/contributing.md` said the
+  mirror regenerated automatically on commit and no longer do.
+
 - `spellbook.core.path_utils.resolve_repo_root` reads the repository root off
   the filesystem for the layouts that are determined by what is on disk (plain
   repository, linked worktree, any subdirectory of either, no repository at
