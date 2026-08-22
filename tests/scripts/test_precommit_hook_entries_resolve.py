@@ -104,3 +104,31 @@ def test_hook_entry_resolves(hook):
         "module nor a repository script. Extend this test to classify it "
         "rather than letting it go unchecked."
     )
+
+
+# A hook that repairs the tree instead of reporting on it converts a drift
+# report into a drift eraser: the contributor sees a passing commit and the
+# manifest changes underneath them. --fix on check_version_consistency.py
+# writes files and is documented as human-invoked only. Nothing stops a later
+# edit from "helpfully" adding it to the hook except this test.
+_MUTATING_FLAG = "--fix"
+
+
+def test_version_consistency_hook_is_configured():
+    """The --fix guard below would pass vacuously if the hook were renamed."""
+    ids = {hook["id"] for hook in LOCAL_HOOKS}
+    assert "check-version-consistency" in ids, (
+        "Hook 'check-version-consistency' is not in "
+        f"{CONFIG_PATH}. Parsed ids: {sorted(ids)}"
+    )
+
+
+@pytest.mark.parametrize(
+    "hook", LOCAL_HOOKS, ids=[h["id"] for h in LOCAL_HOOKS]
+)
+def test_hook_does_not_pass_mutating_fix_flag(hook):
+    invocation = shlex.split(hook["entry"]) + list(hook.get("args", []))
+    assert _MUTATING_FLAG not in invocation, (
+        f"Hook {hook['id']!r} passes {_MUTATING_FLAG}. A pre-commit hook must "
+        "report drift, never silently repair it; run the repair by hand."
+    )
