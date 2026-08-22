@@ -61,7 +61,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/feature-implement](feature-implement.md) | Phase 3 of develop: Create, review, and approve the implementation plan (Phase 4... | spellbook |
 | [/feature-implement-execute](feature-implement-execute.md) | Phase 4 of develop: Execute the implementation plan with per-task TDD, quality g... | spellbook |
 | [/feature-research](feature-research.md) | Phase 1 of develop: Research strategy, codebase exploration, ambiguity detection... | spellbook |
-| [/finish-branch-cleanup](finish-branch-cleanup.md) | Step 5 of finishing-a-development-branch: Worktree cleanup for Options 1, 2, and... | spellbook |
+| [/finish-branch-cleanup](finish-branch-cleanup.md) | Step 5 of finishing-a-development-branch: Worktree cleanup for Options 1 and 5 | spellbook |
 | [/finish-branch-execute](finish-branch-execute.md) | Step 4 of finishing-a-development-branch: Execute chosen integration option (mer... | spellbook |
 | [/fix-tests-execute](fix-tests-execute.md) | Phase 2 of fixing-tests: Fix Execution - investigate, classify, fix, verify, and... | spellbook |
 | [/fix-tests-parse](fix-tests-parse.md) | Phase 0 of fixing-tests: Input Processing — parse audit reports and build work i... | spellbook |
