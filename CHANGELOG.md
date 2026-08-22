@@ -67,6 +67,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The subagent dispatch skill gained a fourth Dispatch Protocol convention,
+  **content density**: no social framing in dispatches or returns; common
+  vocabulary only, never binary encodings; delimiters for data but grammar for
+  instructions; shared jargon only, calibrated to the receiving tier; explicit
+  scope bounding; and returns compressed before dispatches. The canonical
+  return envelope and vocabulary stay byte-identical. It also gained five
+  **dispatch survival protocols** for dispatches that die mid-work --
+  artifact-first reporting, compact-verdict budgets, heartbeat lines,
+  tree-verify-first truncation recovery with same-agent-resume preference, and
+  two-phase deep reads -- each with its when-to-apply trigger. Offsetting
+  trims (merged duplicate worktree-preamble sections, removed a redundant
+  flowchart) keep the file under its recorded size ceiling.
 - **Security model: the MCP daemon no longer uses a bearer token.** It binds
   loopback and validates the `Origin` and `Host` headers instead. The token
   defended the wrong threat: mode `0600` stops other local users, but on a
