@@ -8959,22 +8959,23 @@
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a><span class="k">-</span><span class="w"> </span>List tools where <span class="sb">`available: false`</span>
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a><span class="k">-</span><span class="w"> </span>For each: name, type, trust tier label, description, source URL
 <a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>
-<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gs">**Trust Warnings**</span> (tier 4+):
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">-</span><span class="w"> </span>For any tool with trust_tier &gt;= 4, prominently display risks and next_steps
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gu">### Step 4: Suggest Integration</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
-<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>For available but potentially unused tools:
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="k">-</span><span class="w"> </span>Suggest how to leverage them in the current workflow
-<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">-</span><span class="w"> </span>For MCP servers: note they are already connected
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">-</span><span class="w"> </span>For CLIs: note they can be called via Bash tool
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>For libraries: note they are already in project dependencies
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a><span class="k">-</span><span class="w"> </span>Recommending tier 5-6 tools without displaying trust warnings
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>Skipping the availability check (always call the MCP tool)
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>Making up tools not in the registry
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a><span class="gs">**Trust Warnings**</span>:
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">-</span><span class="w"> </span>The response populates <span class="sb">`risks`</span> and <span class="sb">`next_steps`</span> only for tools whose trust tier
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>  warrants a warning. For any tool that carries either field, prominently display both.
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a><span class="gu">### Step 4: Suggest Integration</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>For available but potentially unused tools:
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a><span class="k">-</span><span class="w"> </span>Suggest how to leverage them in the current workflow
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="k">-</span><span class="w"> </span>For MCP servers: note they are already connected
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a><span class="k">-</span><span class="w"> </span>For CLIs: note they can be called via Bash tool
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a><span class="k">-</span><span class="w"> </span>For libraries: note they are already in project dependencies
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a><span class="k">-</span><span class="w"> </span>Recommending a tool that carries <span class="sb">`risks`</span> or <span class="sb">`next_steps`</span> without displaying its trust warnings
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a><span class="k">-</span><span class="w"> </span>Skipping the availability check (always call the MCP tool)
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a><span class="k">-</span><span class="w"> </span>Making up tools not in the registry
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 
