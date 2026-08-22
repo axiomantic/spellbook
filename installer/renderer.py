@@ -5,12 +5,6 @@ implement. Two concrete implementations are provided elsewhere:
 
 - ``installer/rich_renderer.py`` -- Rich-based TUI renderer
 - ``installer/plain_renderer.py`` -- Plain-text renderer for non-TTY / CI use
-
-Superseded design decisions reflected here:
-
-SD-1: ``render_admin_info`` accepts only ``admin_url: str``. The design doc's
-    ``(admin_url, token)`` signature described bearer-token auth, which the
-    daemon no longer uses.
 """
 
 from __future__ import annotations
@@ -271,17 +265,6 @@ class InstallerRenderer(ABC):
         Args:
             results: ``InstallSession`` instance from ``Installer.run()``.
             elapsed: Total elapsed time in seconds.
-        """
-        ...
-
-    @abstractmethod
-    def render_admin_info(self, admin_url: str) -> None:
-        """Display admin web interface information.
-
-        Args:
-            admin_url: URL of the admin interface (e.g.
-                ``"http://localhost:8765/admin"``). Pass an empty string
-                when admin is disabled.
         """
         ...
 
@@ -723,11 +706,6 @@ class RichRenderer(InstallerRenderer):
             elapsed_seconds=elapsed,
         )
 
-    def render_admin_info(self, admin_url: str) -> None:
-        from .tui import render_admin_info as _tui_admin
-        console = self._get_console()
-        _tui_admin(console, admin_enabled=bool(admin_url))
-
     def render_post_install(self, notes: list[str]) -> None:
         if not notes:
             return
@@ -1049,12 +1027,6 @@ class PlainTextRenderer(InstallerRenderer):
             print(f"  [OK]     {p}")
         for p in failed:
             print(f"  [FAILED] {p}")
-
-    def render_admin_info(self, admin_url: str) -> None:
-        if admin_url:
-            print(f"\nAdmin interface: {admin_url}")
-        else:
-            print("\nAdmin interface: disabled")
 
     def render_post_install(self, notes: list[str]) -> None:
         if not notes:
