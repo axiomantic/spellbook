@@ -7,7 +7,7 @@ import re
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.mcp import get_mcp_auth_token, get_spellbook_server_url
+from ..components.mcp import get_spellbook_server_url
 from ..components.symlinks import (
     create_symlink,
     create_skill_symlinks,
@@ -30,16 +30,11 @@ TOML_END_MARKER = "# SPELLBOOK:END"
 def _generate_mcp_toml_section() -> str:
     """Generate the TOML section for spellbook MCP server (HTTP transport)."""
     url = get_spellbook_server_url()
-    token = get_mcp_auth_token()
     lines = [
         TOML_START_MARKER,
         "[mcp_servers.spellbook]",
         f'url = "{url}"',
     ]
-    if token:
-        lines.append("")
-        lines.append("[mcp_servers.spellbook.headers]")
-        lines.append(f'Authorization = "Bearer {token}"')
     lines.append(TOML_END_MARKER)
     lines.append("")
     return "\n".join(lines)

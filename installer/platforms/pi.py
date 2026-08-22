@@ -5,7 +5,7 @@ Pi (https://github.com/badlogic/pi) supports:
 - Skills via Agent Skills standard in ~/.pi/agent/skills/ (directories or flat .md files)
 - Prompt templates as .md files in ~/.pi/agent/prompts/
 - MCP servers via JSON config in ~/.pi/agent/mcp.json (Claude Code shape)
-- HTTP MCP transport with headers map for Bearer auth
+- HTTP MCP transport
 
 Reference:
 - https://github.com/badlogic/pi-coding-agent/docs/skills.md
@@ -18,7 +18,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.mcp import get_mcp_auth_token, get_spellbook_server_url
+from ..components.mcp import get_spellbook_server_url
 from ..components.symlinks import (
     cleanup_spellbook_symlinks,
     create_skill_symlinks,
@@ -84,12 +84,11 @@ def _write_mcp_config(config_path: Path, config: dict) -> None:
 def _generate_mcp_json_section() -> dict:
     """Generate the MCP server entry for spellbook (HTTP transport)."""
     url = get_spellbook_server_url()
+    # Whole-entry replacement by the caller: any stale auth header from a
+    # previous install disappears rather than being merged forward.
     server_entry: dict = {
         "url": url,
     }
-    token = get_mcp_auth_token()
-    if token:
-        server_entry["headers"] = {"Authorization": f"Bearer {token}"}
     return server_entry
 
 

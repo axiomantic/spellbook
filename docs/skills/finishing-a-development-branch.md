@@ -199,7 +199,7 @@ Provide context: chosen option number, feature branch name, base branch name, wo
 
 **Dispatch subagent** with command: `finish-branch-cleanup`
 
-Provide context: chosen option number, worktree path. Note: Option 4 skips cleanup entirely.
+Provide context: chosen option number, worktree path. Note: Options 2, 3, and 4 skip cleanup entirely.
 
 ---
 
@@ -235,7 +235,7 @@ Provide context: chosen option number, worktree path. Note: Option 4 skips clean
 Before completing:
 - [ ] Tests pass on current branch
 - [ ] Tests pass after merge (Option 1 only)
-- [ ] User explicitly selected one of the 4 options
+- [ ] User explicitly selected one of the 5 options
 - [ ] Typed "discard" received (Option 5 only)
 - [ ] Worktree cleaned only for Options 1 or 5
 

@@ -6,10 +6,10 @@ Spellbook's MCP server runs as a local process, typically launched by an AI codi
 
 | Threat Actor | Description | Attack Vector |
 |---|---|---|
-| Malicious local process | Another process on the same machine connecting to the HTTP transport | DNS rebinding, direct HTTP requests to 127.0.0.1 |
+| Malicious local process | Another process on the same machine connecting to the HTTP transport | Direct HTTP requests to 127.0.0.1 -- **NOT mitigated**. The daemon holds no credentials; a request carrying no `Origin` is indistinguishable from a legitimate client and is allowed. See Known Limitations |
 | Prompt injection via external content | Untrusted files, PRs, web pages processed by the AI assistant | Poisoned workflow state, crafted boot_prompt, injection patterns in DB fields |
 | Compromised database | Attacker gains write access to ~/.local/spellbook/spellbook.db | Injected workflow state, tampered trust registry, poisoned recovery context |
-| Browser-based DNS rebinding | Malicious web page rebinds DNS to localhost, sending requests to the MCP server | CVE-2025-53967-style attacks against unauthenticated local servers |
+| Browser-based DNS rebinding | Malicious web page rebinds DNS to localhost, sending requests to the MCP server | CVE-2025-53967-style attacks against unauthenticated local servers -- mitigated by `Host` validation, which carries the attacker's own name, independently of `Origin` |
 
 The server does NOT face internet-originating traffic. All connections are local. The primary risk is privilege escalation: an attacker who can influence MCP tool inputs or persisted state could achieve arbitrary code execution through the AI assistant.
 
@@ -18,11 +18,11 @@ The server does NOT face internet-originating traffic. All connections are local
 ```mermaid
 graph LR
     User["User"] -->|"direct interaction"| Claude["AI Assistant<br>(Claude Code / Codex / Gemini)"]
-    Claude -->|"MCP protocol<br>+ Bearer token"| Server["Spellbook MCP Server<br>(fastmcp)"]
+    Claude -->|"MCP protocol<br>(loopback)"| Server["Spellbook MCP Server<br>(fastmcp)"]
     Server -->|"parameterized queries"| DB["SQLite DB<br>(~/.local/spellbook/spellbook.db)"]
     Server -->|"validated spawn"| Terminal["Terminal<br>(spawned sessions)"]
 
-    subgraph "Trust Boundary: Transport Auth"
+    subgraph "Trust Boundary: Transport Origin"
         Server
     end
 
@@ -36,7 +36,7 @@ graph LR
 
 **Key boundaries:**
 
-1. **Transport**: Bearer token authentication on all HTTP endpoints (except /health). Token generated per server instance, stored at `~/.local/spellbook/.mcp-token` with 0600 permissions.
+1. **Transport**: The server binds loopback and validates the `Origin` and `Host` headers on every HTTP request. This blocks the browser, which is the only remote actor that can reach a loopback port.
 2. **Tool dispatch**: All tool inputs pass through a validation pipeline (injection detection, pattern matching, schema validation).
 3. **State persistence**: Workflow state loaded from the database is validated against a strict schema before use. Invalid state is marked hostile in the trust registry.
 
@@ -44,11 +44,17 @@ graph LR
 
 Spellbook employs a multi-layer defense model:
 
-### Layer 1: Transport Authentication
+### Layer 1: Transport Origin Validation
 
-Bearer token authentication for HTTP transport, implemented as ASGI middleware. The server generates a cryptographic token on startup, writes it atomically to `~/.local/spellbook/.mcp-token` with 0600 permissions (no TOCTOU race), and requires all HTTP requests to include it as an `Authorization: Bearer <token>` header. Token comparison uses `secrets.compare_digest` to prevent timing attacks.
+`OriginValidationMiddleware` rejects browser-issued cross-origin requests. Binding loopback removes the network as an attack path but not the browser: any page the user visits can issue requests to `127.0.0.1`.
 
-Relevant source: `spellbook/auth.py`
+A request carrying no `Origin` header is allowed, and every legitimate MCP client (Claude Code, curl, pi's adapter) sends none. A request carrying an `Origin` is rejected unless that origin matches -- exactly, on scheme, host, and port -- either the daemon's own origin or an entry in `SPELLBOOK_ALLOWED_ORIGINS`; a loopback hostname on another port or scheme does not qualify. A request carrying more than one `Origin` or `Host` header is rejected outright. The `Host` header is validated independently against loopback and the configured bind address, which closes DNS rebinding at a second layer -- a rebound request arrives naming the attacker's own host.
+
+Allowing an absent `Origin` does *not* rest on browsers always sending one, because they do not: a browser omits `Origin` on cross-origin GET navigations and on `<img>`, `<script>`, `<link>`, and `<iframe src>` subresource loads, and attaches it to `fetch`/`XHR` and to cross-origin form submissions. The invariant is narrower and worth stating exactly: **every cross-origin request a page can make without an `Origin` header is a GET or HEAD, and no GET or HEAD route on this daemon has a side effect.** Adding a GET or HEAD route that mutates state, or whose response body matters when an attacker page loads it as a subresource, breaks the invariant -- such a route needs its own check rather than relying on `Origin`.
+
+Rejections are `403 Forbidden`. There are no credentials, so nothing the caller could supply would change the outcome; `401` would imply a retry path that does not exist.
+
+Relevant source: `spellbook/core/auth.py`
 
 ### Layer 2: Input Validation Pipeline
 
@@ -82,27 +88,26 @@ A defense-in-depth system with 5 concentric layers protects against prompt injec
 
 Relevant sources: `spellbook/security/spotlight.py`, `spellbook/security/sleuth.py`, `spellbook/security/crypto.py`, `spellbook/security/accumulator.py`
 
-## Auth Flow
+## Request Validation Flow
 
-1. Server starts in HTTP mode (`SPELLBOOK_MCP_TRANSPORT=streamable-http`)
-2. `generate_and_store_token()` creates a 32-byte URL-safe token via `secrets.token_urlsafe`
-3. Token is written atomically to `~/.local/spellbook/.mcp-token` with 0600 permissions using `os.open()` with `O_CREAT | O_TRUNC` (no TOCTOU race between create and chmod)
-4. `BearerAuthMiddleware` is added to the ASGI middleware stack
-5. Clients read the token from the file and include it as `Authorization: Bearer <token>` in every request
-6. The middleware validates the token on every HTTP request using `secrets.compare_digest` (constant-time comparison)
-7. The `/health` endpoint is exempted from auth for monitoring
+1. Server starts in HTTP mode (`SPELLBOOK_MCP_TRANSPORT=streamable-http`) and binds `SPELLBOOK_HOST` (default `127.0.0.1`)
+2. `OriginValidationMiddleware` is added to the ASGI middleware stack
+3. On every HTTP request the middleware reads `Host`. A value naming neither loopback nor the configured bind address is rejected with `403`. An absent or empty `Host` is allowed: HTTP/1.1 requires the header, and a browser always sends it, so its absence does not name an attacker. A wildcard bind (`0.0.0.0`, `::`) supplies no reachable name and is dropped from the allowed set explicitly, so only loopback values remain allowed and remote clients are refused -- the daemon is local-only by design
+4. It then reads `Origin`. An absent `Origin` is allowed
+5. A present `Origin` is allowed only when it matches the daemon's own origin exactly (scheme, host, and port) or appears in `SPELLBOOK_ALLOWED_ORIGINS`; otherwise `403`. A repeated `Origin` or `Host` header is `403`
+6. `/health` is subject to the same `Host` check, so monitoring does not become a rebinding hole
 
-When running via stdio transport (the default for Claude Code), authentication is not needed as the transport is a direct pipe with no network exposure.
+When running via stdio transport (the default for Claude Code), these checks do not apply as the transport is a direct pipe with no network exposure.
 
 ## Findings Summary
 
-All findings from the MCP security audit have been addressed:
+Every finding from the MCP security audit was addressed. One has since been superseded rather than fixed -- listed as such, because a finding whose defense was later removed is not a fixed one:
 
 | # | Severity | Finding | Status | Commit |
 |---|---|---|---|---|
 | 1 | CRITICAL | RCE via workflow_state_save: arbitrary boot_prompt injection | FIXED | `1222913` |
 | 2 | CRITICAL | RCE via workflow_state_update: merge-based boot_prompt injection | FIXED | `1222913` |
-| 3 | HIGH | No authentication on HTTP transport | FIXED | `d0aa78a`, `bd6ed35` |
+| 3 | HIGH | No authentication on HTTP transport | SUPERSEDED -- the bearer token was removed. The daemon authenticates no caller; `OriginValidationMiddleware` defends the browser boundary instead, and direct local HTTP is accepted by design (see Known Limitations) | `d0aa78a`, `bd6ed35` |
 | 4 | HIGH | No rate limiting on spawn_claude_session | FIXED | `ce9c64f` |
 | 5 | HIGH | Path traversal via working_directory in spawn_claude_session | FIXED | `7b70e53` |
 | 6 | HIGH | Prompt injection in spawn_claude_session prompt parameter | FIXED | `ce9c64f` |
@@ -129,9 +134,9 @@ This hardening was motivated by vulnerabilities disclosed in the MCP ecosystem d
 ## Known Limitations
 
 - **No SQLCipher**: The SQLite database is not encrypted at rest. An attacker with filesystem read access can read all persisted state. Mitigation: 0600 file permissions and 0700 directory permissions.
-- **No OAuth/OIDC**: Authentication is a shared secret (bearer token), not a full OAuth flow. Sufficient for local single-user operation but not suitable for multi-user or networked deployments.
+- **No authentication at all**: The server identifies no caller. Any local process, under **any** local user, can drive it: it need only reach the loopback port and send no `Origin` header. The removed 0600 token did defend that boundary against *other* local users, and dropping it is a deliberate trade -- on a single-user machine the token bought nothing, because any process running as the user could read the token file. On a shared machine this is a real reduction. Not suitable for multi-user or networked deployments.
 - **Regex detection is bypassable**: Pattern-based injection detection can be evaded with sufficient creativity (novel encodings, semantic equivalents, split payloads). The patterns cover known attack vectors but cannot guarantee completeness.
-- **No TLS**: HTTP transport uses plain HTTP on localhost. The bearer token travels unencrypted, but since traffic is loopback-only, the risk is limited to local process sniffing.
+- **No TLS**: HTTP transport uses plain HTTP on localhost. Traffic is loopback-only, so the risk is limited to local process sniffing.
 - **Rate limiting is per-server**: The spawn rate limit is persistent (backed by the SQLite database) and does NOT reset on server restart. However, a persistent attacker with filesystem access could delete or modify the database to bypass rate limits.
 
 ## Responsible Disclosure
@@ -147,9 +152,10 @@ If you discover a security vulnerability in spellbook:
 
 | Environment Variable | Default | Description |
 |---|---|---|
-| `SPELLBOOK_MCP_AUTH` | (enabled) | Set to `disabled` to skip bearer token auth. Use only for debugging. |
-| `SPELLBOOK_MCP_HOST` | `127.0.0.1` | Bind address for HTTP transport. Do not change to `0.0.0.0` in production. |
-| `SPELLBOOK_MCP_PORT` | `8765` | Port for HTTP transport. |
+| `SPELLBOOK_AUTH` | (enabled) | Set to `disabled` to skip Origin/Host validation. Use only for debugging. (`SPELLBOOK_MCP_AUTH` is accepted as a deprecated alias.) |
+| `SPELLBOOK_ALLOWED_ORIGINS` | (empty) | Comma-separated origins allowed to call the daemon from a browser, matched exactly on scheme, host, and port. Needed for a browser client on any origin other than the daemon's own, including another port on this machine. |
+| `SPELLBOOK_HOST` | `127.0.0.1` | Bind address for HTTP transport. Do not change to `0.0.0.0` in production. |
+| `SPELLBOOK_PORT` | `8765` | Port for HTTP transport. |
 | `SPELLBOOK_MCP_TRANSPORT` | `stdio` | Transport mode: `stdio` or `streamable-http`. |
 | `SPELLBOOK_CLI_COMMAND` | `claude` | CLI command for spawned sessions. Validated against allowlist: `claude`, `codex`, `gemini`, `opencode`. |
 
