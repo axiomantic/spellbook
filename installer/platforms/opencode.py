@@ -33,7 +33,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Tuple
 
-from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
+from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT
 from ..components.rule_delivery import INSTALLED_GLOB
 from ..components.symlinks import create_symlink, remove_symlink
 from ..demarcation import get_installed_version, remove_demarcated_section
@@ -93,9 +93,9 @@ def _update_opencode_config(
         "url": daemon_url,
         "enabled": True,
     }
-    token = get_mcp_auth_token()
-    if token:
-        server_config["headers"] = {"Authorization": f"Bearer {token}"}
+
+    # Whole-entry replacement: any stale auth header from a previous
+    # install disappears here rather than being merged forward.
     config["mcp"]["spellbook"] = server_config
 
     # Ensure schema is set to OpenCode schema

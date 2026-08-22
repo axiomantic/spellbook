@@ -303,7 +303,7 @@ class Installer:
         # Run one-shot legacy-state migrations before any component
         # installation. These are idempotent and cheap on clean machines.
         if not dry_run:
-            _on_step("Cleaning up legacy alias block")
+            _on_step("Cleaning up legacy state")
             try:
                 # run_all_migrations() logs each modified file at INFO.
                 run_all_migrations()

@@ -25,9 +25,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   install wizards -- without naming the removed interface.
 
 - The OpenCode `context-curator` extension
+  (`extensions/opencode/context-curator/`) and its server half
+  (`spellbook/mcp/tools/curator.py`, its tests, its `spellbook.mcp.tools`
+  registration, its `context-curator-tests` CI job, and its
+  `.github/dependabot.yml` entry). The extension was never published: its
+  README told users to run `opencode plugin add spellbook-context-curator`,
+  and that package name returns 404 from the npm registry, with no `npm
+  publish` step anywhere in `.github/`. `package.json` declared
+  `"main": "./dist/index.js"`, and no `dist/` was ever built. The installer
+  never referenced the directory, so nothing on a user's machine could load
+  it. Source last changed 2026-02-02; every commit since was a dependabot
+  bump against a package no one could install. The two MCP tools it backed,
+  `mcp_curator_track_prune` and `mcp_curator_get_stats`, had no in-repo
+  caller other than the extension itself.
+  Two extraction floors in `scripts/check_reference_resolution.py` moved with
+  the sources they measure: `dependabot-directories` from 5 to 4, and
+  `extension-mcp-tools` from 2 to 0. The context-curator extension was the only
+  TypeScript source in the tree that called an MCP tool, so that row now
+  extracts nothing from the real tree; its liveness is still held by the two
+  RED proofs in `tests/scripts/test_reference_resolution.py`, which plant tool
+  calls under `extensions/prime-agent/`. Raise the floor again when a live
+  extension calls an MCP tool.
+
+- **The `docs/admin/` documentation section.** It documented a browser-based
+  admin interface that is no longer part of this repository: the implementation
+  under `spellbook/admin/` was deleted in `7a8e9ab1` ("feat: prime-agent
+  platform support + major subsystem removal"). The pages instructed readers to
+  open `http://localhost:8765/admin/` and authenticate at a login page against
+  software that is not present, using the MCP bearer token that this same
+  release removes. Ten pages and eleven screenshots are gone, along with their
+  `mkdocs.yml` nav section and the "Web Admin Interface" section of `README.md`.
+  The published docs site loses that section.
 
 ### Changed
 
+- **Security model: the MCP daemon no longer uses a bearer token.** It binds
+  loopback and validates the `Origin` and `Host` headers instead. The token
+  defended the wrong threat: mode `0600` stops other local users, but on a
+  single-user machine any process running as the user could read the token
+  file anyway. The threat that loopback binding does *not* stop is the
+  browser -- any page the user visits can issue requests to `127.0.0.1`.
+  `OriginValidationMiddleware` allows a request with no `Origin` header (what
+  Claude Code, curl, and pi's adapter all send), rejects any `Origin` that is
+  neither the daemon's own origin nor listed in the new
+  `SPELLBOOK_ALLOWED_ORIGINS`, and independently rejects a `Host` naming
+  neither loopback nor the configured bind address, which closes DNS
+  rebinding at a second layer. Rejections are `403`, not `401`: no credentials
+  exist, so nothing the caller could send would change the outcome.
+
+  **BREAKING: a loopback `Origin` is no longer trusted for being loopback.**
+  Origin matching is now exact on scheme, host, *and* port. Only the daemon's
+  own origin -- `http://` on the configured bind host or a loopback alias, at
+  the configured port -- is allowed implicitly. A page served from another
+  local port, such as a dev server on `http://localhost:3000`, is now rejected
+  with `403` where an earlier build of this branch allowed it. Untrusted local
+  web content can no longer drive the daemon. **To restore a local browser MCP
+  client, name its origin explicitly:**
+
+  ```bash
+  export SPELLBOOK_ALLOWED_ORIGINS=http://localhost:3000
+  ```
+
+  **BREAKING: a non-loopback bind no longer serves remote clients.** With
+  `SPELLBOOK_HOST=0.0.0.0` the daemon still listens on every interface, but a
+  LAN client's request is refused with `403`. A wildcard bind is an address,
+  not a reachable name: the client sends the name it dialed
+  (`Host: 192.168.1.5:8765`), which matches no allowed value, so only loopback
+  `Host` values are accepted -- including against the literal `Host: 0.0.0.0`,
+  which `urlsplit` would otherwise hand back as a usable hostname. This is
+  intended -- the daemon is a local-only
+  service, and remote access is out of scope. `SPELLBOOK_AUTH=disabled` is the
+  only way to run that configuration, and it disables `Origin` and `Host`
+  validation entirely, leaving the daemon reachable by any page the user
+  visits.
+
+  **Existing installs are affected.** On the next `install.py` run the
+  `~/.local/spellbook/.mcp-token` file is deleted, and each platform installer
+  rewrites its MCP server entry whole, so an `Authorization` header written by
+  an earlier version is dropped rather than left inert. No user action is
+  required. Anyone who registered the daemon by hand with an explicit
+  `--header` should remove that header; the daemon now ignores it.
+
+  Removed with the token: `BearerAuthMiddleware`, `generate_and_store_token`,
+  `load_token`, and `TOKEN_PATH` from `spellbook/core/auth.py`;
+  `get_mcp_auth_token` from `installer/components/mcp.py`; the
+  `Authorization` header from the antigravity, codex, forgecode, goose,
+  opencode, and pi installers and from `claude mcp add` registration; and the
+  token read from `hooks/spellbook_hook.py` and
+  `spellbook/cli/daemon_client.py`. Also removed: `stream_events` from
+  `spellbook/cli/daemon_client.py`, which exchanged a bearer token for a ticket
+  at `/auth/ticket` and opened a WebSocket to `/events`. Neither route is
+  registered anywhere in the tree and the function had no callers. With
+  `stream_events` gone the `websockets` dependency has no consumer left in the
+  tree and is dropped from `pyproject.toml`.
 - The `generate-docs` pre-commit hook runs `scripts/generate_docs.py --check`
   instead of the write mode. The gate is unchanged in what it catches -- a
   commit that leaves the `docs/` mirror stale still fails -- but it now detects
@@ -81,6 +171,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   extension calls an MCP tool.
 
 ### Fixed
+
+- **Security: duplicate `Origin` or `Host` headers are rejected.** A request
+  carrying more than one of either header is refused with `403`. Header
+  collections disagree on which copy wins -- `dict()` takes the last, Starlette's
+  `Headers.get()` takes the first -- so picking either one only selects which
+  smuggling direction succeeds. The count is taken over the raw ASGI header
+  list. Header names are also matched case-insensitively rather than trusting
+  the ASGI server to have lowercased them, so the check cannot silently vanish
+  under a server or shim that does not.
+
+- **The MCP startup banner now reports the real request-validation state.** It
+  derived the "auth enabled" / "auth DISABLED" text from whether the run kwargs
+  carried a non-empty middleware list. That list is always non-empty, so
+  `SPELLBOOK_AUTH=disabled` (or the deprecated `SPELLBOOK_MCP_AUTH=disabled`)
+  turned validation off while the banner announced it as enabled and no warning
+  was logged. The decision now comes from `auth_is_disabled()` -- the same
+  function the middleware consults -- via a new
+  `spellbook.mcp.server.announce_request_validation_status`, which exists as a
+  function so the disabled path is reachable by a test. `docs/security.md`
+  documents the banner text and the warning again.
+
+- **ForgeCode health check no longer fails on a missing `Authorization`
+  header.** `check_forgecode_mcp` in `scripts/mcp-health-check.py` hard-failed
+  with `missing_auth` when `mcpServers.spellbook.headers.Authorization` was
+  absent or not `Bearer <token>`. Installers stopped writing that header when
+  the token was removed, so every correctly-installed ForgeCode user was
+  reported permanently `unhealthy`, pointing at a credential that no longer
+  exists. The validation is deleted, the docstring now describes six ordered
+  validations rather than seven, and `has_auth` / `auth_format_ok` are gone
+  from the reported contract. This file had no test coverage, which is why the
+  breakage survived; `tests/test_scripts/test_mcp_health_check_forgecode.py`
+  now covers it.
+
+- **`SECURITY.md` and `docs/security.md` no longer claim that a browser always
+  sends `Origin` on a cross-origin request.** Browsers omit it on cross-origin
+  GET navigations and on `<img>`, `<script>`, `<link>`, and `<iframe src>`
+  subresource loads. Allowing an absent `Origin` is still correct, but for a
+  different reason, and both documents now state the actual invariant --
+  every cross-origin request a page can make without an `Origin` is a GET or
+  HEAD, and no GET or HEAD route on this daemon has a side effect -- together
+  with the constraint that places on anyone adding a route.
+
+- **Removed three unsourceable figures from `docs/security.md`.** The claim
+  that the token was copied into "six platform config files, which produced
+  world-readable copies on three platforms and one leak into a session log"
+  could not be substantiated against the tree. The argument does not need the
+  numbers and now makes the same point without them.
 
 - `finish-branch-cleanup` no longer deletes the worktree for "Keep the branch
   as-is". Its applicability matrix, procedure heading, and first invariant

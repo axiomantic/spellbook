@@ -15,6 +15,7 @@ import fastmcp as _fastmcp_module
 from fastmcp import FastMCP
 
 
+from spellbook.core.auth import auth_is_disabled
 from spellbook.mcp import state
 
 logger = logging.getLogger(__name__)
@@ -131,38 +132,55 @@ atexit.register(shutdown)
 
 
 
-def build_http_run_kwargs() -> Dict[str, Any]:
-    """Build kwargs for mcp.run() with auth middleware for HTTP transport.
+AUTH_DISABLED_WARNING = (
+    "MCP request validation disabled via SPELLBOOK_AUTH=disabled; "
+    "any web page you visit can reach this daemon"
+)
 
-    Reads SPELLBOOK_MCP_HOST, SPELLBOOK_MCP_PORT, and SPELLBOOK_MCP_AUTH
-    from environment. When auth is not disabled, generates a bearer token,
-    writes it to the token file, and includes BearerAuthMiddleware in the
-    middleware list.
+
+def announce_request_validation_status(host: str, port: int) -> str:
+    """Print the startup banner and warn when request validation is off.
+
+    Lives here rather than inline in ``__main__`` so the disabled state is
+    reachable by a test. The state is read from ``auth_is_disabled()`` -- the
+    same function the middleware consults -- because deriving it from the shape
+    of the run kwargs once let a real bypass print "auth enabled".
+
+    Returns the banner line, for the caller and for tests.
+    """
+    disabled = auth_is_disabled()
+    status = (
+        "request validation DISABLED" if disabled else "request validation enabled"
+    )
+    banner = f"Starting spellbook MCP server on {host}:{port} ({status})"
+    print(banner)
+    if disabled:
+        logger.warning(AUTH_DISABLED_WARNING)
+    return banner
+
+
+def build_http_run_kwargs() -> Dict[str, Any]:
+    """Build kwargs for mcp.run() with request validation for HTTP transport.
+
+    Reads SPELLBOOK_HOST and SPELLBOOK_PORT from environment and installs
+    OriginValidationMiddleware, which rejects browser-issued cross-origin
+    requests to the loopback daemon.
 
     Returns:
         Dict of kwargs to pass to mcp.run() for streamable-http transport.
     """
     from starlette.middleware import Middleware
 
-    from spellbook.core.auth import (
-        BearerAuthMiddleware,
-        auth_is_disabled,
-        generate_and_store_token,
-    )
+    from spellbook.core.auth import OriginValidationMiddleware
     from spellbook.core.config import get_env
 
     host = get_env("HOST", "127.0.0.1")
     port = int(get_env("PORT", "8765"))
-
-    auth_middleware = []
-    if not auth_is_disabled():
-        token = generate_and_store_token()
-        auth_middleware = [Middleware(BearerAuthMiddleware, token=token)]
 
     return {
         "transport": "streamable-http",
         "host": host,
         "port": port,
         "stateless_http": True,
-        "middleware": auth_middleware,
+        "middleware": [Middleware(OriginValidationMiddleware)],
     }

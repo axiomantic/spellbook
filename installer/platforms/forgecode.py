@@ -3,15 +3,15 @@
 ForgeCode (tailcallhq/forgecode) supports:
 - AGENTS.md custom rules at <config_dir>/AGENTS.md
 - MCP via .mcp.json with top-level mcpServers (Claude Code shape)
-- HTTP MCP transport with headers map for Bearer auth
+- HTTP MCP transport
 
 Config dir resolution priority (per design Section 3):
 1. $FORGE_CONFIG (when set)
 2. ~/forge (legacy, only when pre-existing AND default config dir)
 3. ~/.forge (default)
 
-The .mcp.json file is written with mode 0600 because it contains a plaintext
-bearer token. We use ``os.open`` with mode 0o600 to set restrictive
+The .mcp.json file is written with mode 0600 because MCP config may name
+local endpoints. We use ``os.open`` with mode 0o600 to set restrictive
 permissions on creation, then ``os.fchmod`` on the fd to also tighten any
 pre-existing file (the ``mode`` arg to ``os.open`` only applies on creation,
 so an existing 0o644 file would otherwise survive ``O_TRUNC`` with broad
@@ -27,7 +27,7 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT, get_mcp_auth_token
+from ..components.mcp import DEFAULT_HOST, DEFAULT_PORT
 from ..components.rule_bundle import DELIVERY_MARKER_PREFIX
 from ..demarcation import (
     get_installed_version,
@@ -102,9 +102,9 @@ def _write_mcp_config_secure(config_path: Path, config: dict) -> None:
     ``config_path`` already exists with broader permissions (e.g. 0o644 from
     a prior installer version), ``O_TRUNC`` preserves the existing mode.
     We therefore explicitly ``os.fchmod`` the file descriptor after open to
-    tighten any pre-existing mode before writing the bearer token. This
-    closes the gap flagged in PR review (cycle 4): an existing 0o644
-    ``.mcp.json`` would otherwise leak the token to other local users.
+    tighten any pre-existing mode before writing. This also narrows any
+    0o644 ``.mcp.json`` left behind by an installer version that wrote a
+    credential into it.
 
     Operating on the fd (not the path) avoids a TOCTOU window between
     chmod and write. ``hasattr(os, "fchmod")`` guards Windows where chmod
@@ -154,10 +154,9 @@ def _update_forgecode_mcp_config(
         "url": daemon_url,
         "oauth": False,
     }
-    token = get_mcp_auth_token()
-    if token:
-        server_entry["headers"] = {"Authorization": f"Bearer {token}"}
 
+    # Whole-entry replacement: any stale auth header from a previous
+    # install disappears here rather than being merged forward.
     config["mcpServers"][SPELLBOOK_SERVER_KEY] = server_entry
 
     _write_mcp_config_secure(config_path, config)

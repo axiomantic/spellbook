@@ -24,11 +24,22 @@ logger = logging.getLogger("spellbook.hook")
 # ---------------------------------------------------------------------------
 # MCP Communication
 # ---------------------------------------------------------------------------
-MCP_HOST = os.environ.get("SPELLBOOK_MCP_HOST", "127.0.0.1")
-MCP_PORT = os.environ.get("SPELLBOOK_MCP_PORT", "8765")
+def _mcp_env(canonical: str, legacy: str, default: str) -> str:
+    """Read the canonical SPELLBOOK_* name, falling back to the SPELLBOOK_MCP_* one.
+
+    Mirrors spellbook.core.config._ENV_ALIASES, which this module cannot use:
+    hooks run as standalone scripts with no spellbook package on sys.path. Read
+    in the same order, or an operator who sets only the canonical name gets a
+    daemon bound to one port and hooks posting to another -- a mismatch whose
+    only symptom is a hook that silently reaches nothing.
+    """
+    return os.environ.get(canonical) or os.environ.get(legacy) or default
+
+
+MCP_HOST = _mcp_env("SPELLBOOK_HOST", "SPELLBOOK_MCP_HOST", "127.0.0.1")
+MCP_PORT = _mcp_env("SPELLBOOK_PORT", "SPELLBOOK_MCP_PORT", "8765")
 _host_part = f"[{MCP_HOST}]" if ":" in MCP_HOST else MCP_HOST  # IPv6 bracket
 MCP_URL = f"http://{_host_part}:{MCP_PORT}/mcp"
-TOKEN_FILE = Path.home() / ".local" / "spellbook" / ".mcp-token"
 CONFIG_PATH = Path(os.environ.get(
     "SPELLBOOK_CONFIG_PATH",
     str(Path.home() / ".config" / "spellbook" / "spellbook.json"),
@@ -65,11 +76,6 @@ def _mcp_call(tool_name: str, arguments: dict | None = None) -> dict | None:
         "Accept": "application/json, text/event-stream",
     }
     headers["X-Spellbook-Client"] = _detect_platform()
-    if TOKEN_FILE.exists():
-        try:
-            headers["Authorization"] = f"Bearer {TOKEN_FILE.read_text().strip()}"
-        except OSError:
-            pass
 
     body = json.dumps({
         "jsonrpc": "2.0",
@@ -182,11 +188,6 @@ def _http_post(path: str, payload: dict, timeout: float = 5) -> dict | None:
     """Direct HTTP POST (not JSON-RPC) to a daemon REST endpoint."""
     url = f"http://{_host_part}:{MCP_PORT}{path}"
     headers = {"Content-Type": "application/json"}
-    if TOKEN_FILE.exists():
-        try:
-            headers["Authorization"] = f"Bearer {TOKEN_FILE.read_text().strip()}"
-        except OSError:
-            pass
     try:
         req = urllib.request.Request(
             url, data=json.dumps(payload).encode(),
