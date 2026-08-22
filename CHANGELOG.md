@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.90.0] - 2026-08-22
+
 ### Removed
 
 - `config_schema_entries()` in `installer/components/rule_modules.py`, which
