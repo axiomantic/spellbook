@@ -184,17 +184,19 @@ If the operator chooses option 3 or 4, VERIFY afterwards — a stash round-trip 
 staged, modified, and untracked files alike, and it fails silently:
 
 ```sh
-git status --porcelain -uall | grep -v '^D \|^.D' | sed 's/^...//;s/.* -> //' |
+files=$(git status --porcelain -uall) || { echo "sweep failed: git status errored"; exit 1; }
+printf '%s\n' "$files" | grep -v '^D \|^.D' | sed 's/^...//;s/.* -> //' |
 while IFS= read -r f; do
   case "$f" in *__init__.py|*.gitkeep|*/py.typed) continue;; esac
   [ -f "$f" ] && [ ! -s "$f" ] && echo "TRUNCATED: $f"
-done && echo "sweep complete"
+done
+echo "sweep complete"
 ```
 
 Any name it prints that you did not deliberately empty is a truncation. Output of
-only `sweep complete` is clean. If the `echo` is absent, the pipeline itself
-failed (e.g. `git status` errored) and the check did not run — re-run it
-manually before trusting the result.
+only `sweep complete` is clean. `git status` is checked explicitly: if it errors,
+the sweep prints `sweep failed` and exits 1 rather than silently reporting an
+empty result as clean.
 </CRITICAL>
 
 ## Rollback Procedure

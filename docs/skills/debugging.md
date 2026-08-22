@@ -76,7 +76,7 @@ uncommitted work you did not author — the operator's, or another agent's — a
 `git stash`, `git checkout`, and `git pull` all act tree-wide.
 
 ```bash
-git fetch origin main:main                         # Updates origin/main ref, no working-tree effect
+git fetch origin                                   # Updates origin/main, no working-tree effect
 git worktree add ../baseline-check origin/main     # Clean state, separate directory
 # Build/run in ../baseline-check and verify expected behavior works
 ```
