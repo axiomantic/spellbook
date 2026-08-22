@@ -573,7 +573,7 @@ failure. Every other dimension's implied gates are freely selectable.
 | D1 unfamiliarity | Research (Phase 1) + Discovery (1.5) + dehallucination (1.5.7) |
 | D2 fuzziness | Discovery (1.5) + devil's advocate (1.6) |
 | D3 blast radius | Design review (2.2) + impl-plan review (3.2) + comprehensive audit (4.6.1) |
-| D4 coupling | Impl-plan review (3.2) + comprehensive fact-checking (4.6.4/4.6.5) |
+| D4 coupling | Impl-plan review (3.2) + fact-checking (4.6.4, 4.6.5) |
 | D5 verification difficulty | Checkability passes (2.1.5 / 3.1.5) + green-mirage (4.6.3) — **LOCKED** |
 | D6 silent-failure potential | Completion verification (4.4) + comprehensive audit (4.6.1) + green-mirage (4.6.3) + TDD-first (4.3), waiver revoked — **LOCKED** |
 | D7 precedent absent | Research (Phase 1) + Design (Phase 2) |
@@ -740,9 +740,8 @@ Store the answer as `develop_gate_ledger.ceremony.gate_position ∈ {"per_task",
 #### Step 2: Build the menu from the assessment (do NOT show a fixed 12-item list)
 
 Offer ONLY components the assessment made relevant. A change with every dimension
-`low` gets a two-item menu or none at all; do not tax a small request with a long
-questionnaire. Candidate components, each shown only when its dimension row fired or
-its need-flag is set:
+`low` gets a two-item menu or none; never tax a small request with a long
+questionnaire. Show a component only when its dimension row fired or its flag set:
 
 | Component | Offered when |
 |---|---|
@@ -756,12 +755,13 @@ its need-flag is set:
 | Per-task fact-checking (4.5.1) | `needs_research` or `needs_design` |
 | Completion verification (4.4) | D6 high — **LOCKED, shown as already-on** |
 | Comprehensive audit (4.6.1) | D3/D6 high |
-| Comprehensive fact-checking (4.6.4/4.6.5) | `needs_research` or `needs_design`, or D4 high |
-| Roundtable dialectic | never auto-recommended; offered only if the operator asked for it in §0.4 |
+| Comprehensive fact-checking (4.6.4) | `needs_research` or `needs_design`, or D4 high |
+| Pre-PR claim validation (4.6.5) | `needs_research` or `needs_design`, or D4 high |
+| Roundtable dialectic | never auto-recommended; only if the operator asked in §0.4 |
 
-LOCKED rows are DISPLAYED (so the operator can see what they are getting and why) but
-carry no deselect option. State the reason inline: "locked because silent-failure
-potential is high — this is the gate that catches a success report over a no-op."
+LOCKED rows are DISPLAYED (so the operator sees what they get) but carry no
+deselect option. State the reason inline: "locked because silent-failure potential is
+high — the gate that catches a success report over a no-op."
 
 #### Step 3: Ask (via AskUserQuestion)
 
