@@ -185,7 +185,7 @@ Any changes to shell scripts (`.sh` files in `hooks/`, `scripts/`, or elsewhere)
 ## Adding Config Options
 
 <CRITICAL>
-Any new user-facing config key MUST satisfy all three points below. Missing any point means a silently-unseen feature, a spammy re-prompt, or a config that only the admin UI can ever set.
+Any new user-facing config key MUST satisfy all three points below. Missing any point means a silently-unseen feature, a spammy re-prompt, or a config the user can only set by hand-editing `~/.config/spellbook/spellbook.json`.
 </CRITICAL>
 
 A "user-facing config" is anything that governs behavior the user cares about (feature flags, endpoints, modes, thresholds). Internal state and cached values are not user-facing.
@@ -285,15 +285,15 @@ Spellbook stores persistent key-value data in two places. Pick the right one:
 | `~/.local/spellbook/state.json` | `spellbook.core.state` | Runtime state (what the code wrote for itself) |
 
 **Config** keys are user-facing preferences and feature flags: `auto_update`,
-`session_mode`, `notify_enabled`, `worker_llm_*`. They appear in the admin UI
-(`CONFIG_SCHEMA`) and on install wizards. Reading uses `config_get(key)`,
-writing uses `config_set(key, value)`.
+`session_mode`, `notify_enabled`, `worker_llm_*`. They are surfaced by the
+install wizards. Reading uses `config_get(key)`, writing uses
+`config_set(key, value)`.
 
 **State** keys are facts the code discovered or counters the code maintains:
 `auto_update_branch` (auto-detected from git), `update_check_failures`
-(watcher failure counter). They must never appear in wizards and must never be
-edited via the admin UI. Reading uses `get_state(key)`, writing uses
-`set_state(key, value)`.
+(watcher failure counter). They must never appear in wizards and must never
+be presented to the user as a configurable option. Reading uses
+`get_state(key)`, writing uses `set_state(key, value)`.
 
 When you add a new persistent key, decide up front:
 * Did the user choose this? -> config
@@ -324,8 +324,7 @@ cannot be computed without doing real work at import time MUST NOT go in
 `CONFIG_DEFAULTS`. `spellbook/core/config.py` is imported by the MCP server and
 the hooks, so an import-time computation is paid by every consumer whether or not
 it ever reads that key. Register such families through
-`config_default_for()` instead, backed by a memoized resolver, and keep the
-`CONFIG_SCHEMA` entry as normal so admin-UI visibility is unchanged.
+`config_default_for()` instead, backed by a memoized resolver.
 
 The one family using this today is `rules.module.*`
 (`rule_module_config_defaults()`): resolving it means globbing and parsing every
