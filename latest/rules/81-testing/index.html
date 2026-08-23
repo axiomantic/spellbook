@@ -8516,6 +8516,8 @@
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>&lt;RULE&gt;Never run the full test suite when targeted tests suffice. Match test scope to change scope.&lt;/RULE&gt;
 <a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>Load <span class="sb">`testing-strategy`</span> skill for test tier classification, selecting what to run, test marks, batching, and cross-module regression guidance.
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>&lt;RULE&gt;NEVER write tests that assert on documentation content -- no grepping the design doc, README, or any prose artifact for a sentence or figure and asserting it exists or matches. Doc-integrity tests verify the document, not the code; they pass while the code is wrong and go red when prose is edited. If a documented number matters, test the BEHAVIOR that produces it (compute it and assert on the computation, with the expected value as a literal). Documentation consistency is a lint/reviewer concern, never a unit test.&lt;/RULE&gt;
 </code></pre></div>
 
 
