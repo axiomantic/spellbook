@@ -420,7 +420,7 @@ POST_COMPACT_FALLBACK_DIRECTIVE = (
 POST_COMPACT_DEVELOP_DIRECTIVE = (
     "A develop_gate_ledger exists for this project, so a develop run may be "
     "in progress. Before your next dispatch, re-read "
-    "$SPELLBOOK_DIR/skills/develop/SKILL.md (phase non-fungibility, the "
+    "$SPELLBOOK_DIR/commands/develop-configure.md (phase non-fungibility, the "
     "Phase-0 ceremony lock, wave discipline, stop semantics, and the "
     "incidentals protocol) and re-read the ledger itself to recover the "
     "locked ceremony and the current phase."

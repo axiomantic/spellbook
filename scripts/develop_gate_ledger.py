@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Develop Gate Ledger: persistent state for the develop skill.
 
-The develop skill (skills/develop/SKILL.md) describes a "develop_gate_ledger"
+The develop workflow (commands/develop-configure.md) describes a "develop_gate_ledger"
 that records per-task gate completion and ceremony selection so a resumed
 session can re-assert the remaining gates instead of declaring "done"
 prematurely. The skill defines the shape in TypeScript; this module is
@@ -226,7 +226,7 @@ def default_state_dir() -> Path:
         ) from exc
     return home / ".local" / "spellbook"
 
-# Fields the ledger may contain, per skills/develop/SKILL.md
+# Fields the ledger may contain, per commands/develop-configure.md
 # "Ledger shape (develop_gate_ledger, design §5.3)" section.
 # ceremony.* is a record of the one-time ceremony selection (§0.8).
 CEREMONY_FIELDS = (

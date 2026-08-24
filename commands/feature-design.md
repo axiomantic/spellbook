@@ -134,7 +134,7 @@ Task:
     ## Autonomous Mode Context
 
     **Mode:** AUTONOMOUS - Proceed without asking questions
-    **Protocol:** See the Autonomous Mode Behavior section of skills/develop/SKILL.md
+    **Protocol:** See the Autonomous Mode Behavior section of commands/develop-configure.md
     **Circuit breakers:** Only pause for security-critical or contradictory requirements
 
     ## Primary Source

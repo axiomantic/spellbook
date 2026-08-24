@@ -74,7 +74,7 @@ Key skills you will need:
 
 | Skill | Path | Purpose |
 |-------|------|---------|
-| develop | `$SPELLBOOK_DIR/skills/develop/SKILL.md` | Orchestrates the complete implementation workflow |
+| develop | `$SPELLBOOK_DIR/skills/develop/SKILL.md` | Entry gate: asks which ceremony path, then loads `$SPELLBOOK_DIR/commands/develop-configure.md` |
 | test-driven-development | `$SPELLBOOK_DIR/skills/test-driven-development/SKILL.md` | Ensures tests are written before implementation |
 | instruction-engineering | `$SPELLBOOK_DIR/skills/instruction-engineering/SKILL.md` | Patterns for engineering effective prompts |
 

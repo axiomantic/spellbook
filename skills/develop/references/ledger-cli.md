@@ -3,7 +3,7 @@
 Canonical reference for the `develop_gate_ledger` state shape, the merge
 contract every write obeys, and the `scripts/develop_gate_ledger.py` CLI
 surface — including every refusal the CLI raises and the remedy each one
-names. `skills/develop/SKILL.md` and the commands that write the ledger
+names. `commands/develop-configure.md` and the commands that write the ledger
 (`/feature-config`, `/feature-implement`, `/feature-implement-execute`)
 resolve field names, subcommand spellings, and refusal semantics here
 rather than restating them.

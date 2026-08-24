@@ -746,7 +746,7 @@ ALLOWLIST: dict[str, tuple[AllowEntry, ...]] = {
             reason="explicit placeholder for the paired remove-command name",
         ),
         AllowEntry(
-            path_glob="skills/develop/SKILL.md",
+            path_glob="commands/develop-configure.md",
             anchor="`/skill:name`",
             reason="explicit placeholder for the harness skill-invocation syntax",
         ),

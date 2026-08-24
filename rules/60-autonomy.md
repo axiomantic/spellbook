@@ -61,7 +61,7 @@ are completion bias, not blockers.
 
 Both rules are stated in full — with the scope-expansion examples, the
 non-blocker list, and the announce-then-stop rule — in
-`$SPELLBOOK_DIR/skills/develop/SKILL.md`, which is where sustained autonomous
-runs happen. **After a compaction in the middle of an autonomous run, RE-READ
+`$SPELLBOOK_DIR/commands/develop-configure.md`, the develop orchestrator body,
+which is where sustained autonomous runs happen. **After a compaction in the middle of an autonomous run, RE-READ
 that file** before the next dispatch.
 </CRITICAL>

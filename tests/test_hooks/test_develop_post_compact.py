@@ -50,7 +50,7 @@ def test_directive_names_develop_when_a_ledger_exists(dev_dir, tmp_path):
     )
     context = _session_start(str(tmp_path))
     assert spellbook_hook.POST_COMPACT_FALLBACK_DIRECTIVE in context
-    assert "skills/develop/SKILL.md" in context
+    assert "commands/develop-configure.md" in context
     assert "develop_gate_ledger" in context
 
 

@@ -75,12 +75,14 @@ OVER_LIMIT_RATIONALE = {
         "crystallize's PURPOSE is to shrink/consolidate other docs, so it "
         "legitimately carries extensive instructional content."
     ),
-    "skills/develop/SKILL.md": (
-        "governance-dense central orchestrator; its untouchable + "
-        "mandatory-preserve content exceeds the byte limit and crystallize's "
+    "commands/develop-configure.md": (
+        "the governance-dense develop orchestrator body, moved here verbatim "
+        "when skills/develop/SKILL.md became a thin entry gate. Its untouchable "
+        "+ mandatory-preserve content exceeds the byte limit and crystallize's "
         "80% preservation floor cannot reach it without dropping protected "
-        "rules. Operator-approved (2026-05-24). The ratchet ceiling is the "
-        "mechanism that makes the split enforceable: it can only go down."
+        "rules. Operator-approved (2026-05-24), carried across the move. The "
+        "ratchet ceiling is the mechanism that makes the split enforceable: it "
+        "can only go down."
     ),
 }
 

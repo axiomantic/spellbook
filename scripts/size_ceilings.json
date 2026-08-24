@@ -5,6 +5,10 @@
       "bytes": 51033,
       "lines": 1084
     },
+    "commands/develop-configure.md": {
+      "bytes": 102822,
+      "lines": 1998
+    },
     "commands/feature-config.md": {
       "bytes": 44560,
       "lines": 863
@@ -16,10 +20,6 @@
     "skills/advanced-code-review/SKILL.md": {
       "bytes": 11527,
       "lines": 225
-    },
-    "skills/develop/SKILL.md": {
-      "bytes": 103975,
-      "lines": 2001
     },
     "skills/dispatching-parallel-agents/SKILL.md": {
       "bytes": 40941,

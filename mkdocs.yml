@@ -239,6 +239,7 @@ nav:
       - commands/decompose-claims.md
       - commands/deep-research-plan.md
       - commands/design-assessment.md
+      - commands/develop-configure.md
       - commands/docs-audit.md
       - commands/docs-plan.md
       - commands/docs-write.md

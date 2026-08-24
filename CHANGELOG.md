@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `develop` is now a thin entry gate. Its triggers fire on almost any "let's
+  build X" phrasing, so the full 2000-line orchestrator body loaded before the
+  operator could decline it. `skills/develop/SKILL.md` is now ~110 lines: it asks
+  which path to take -- full ceremony, fast path, or skip develop entirely -- and
+  then loads the body. The body moved verbatim to the new
+  `commands/develop-configure.md`, which inherits the over-limit size ceiling that
+  governed it before the move; the ratchet can still only go down. The
+  "skip entirely" option did not exist before and states plainly which reviews the
+  operator gives up. Autonomous mode still asks, because ceremony is a scope
+  decision; only a genuinely unreachable operator gets a default, and that default
+  is full ceremony, announced. The option descriptions deliberately name no gate,
+  number, or threshold -- the always-loaded file would otherwise become a second,
+  stale copy of the gate roster -- and point at the *Tiered Review Floor* tables in
+  `commands/develop-configure.md`, which remain the single source of truth.
+- `rules/40-develop-discipline.md` now attaches the ceremony lock at the moment the
+  operator CHOOSES a ceremony rather than at the moment develop is invoked, which
+  became false once invocation only asks a question. The no-de-escalation
+  guarantee, ABORT-and-re-invoke, phase non-fungibility, and the
+  after-compaction re-read are unchanged; only the attachment point and the path
+  to the authoritative treatment moved.
 - The dedupe skill's structural-template floor now names how its bucket key is
   derived. `skills/dedupe/SKILL.md` and `commands/dedupe-analyze.md` referred to
   a bare `bucket_key`, which is a real field but was unanchored at both consumer

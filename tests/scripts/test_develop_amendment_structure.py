@@ -64,7 +64,7 @@ import pytest
 # the RED half of each structural claim can be demonstrated against a
 # mutated scratch copy without ever mutating the repository's own files.
 REPO_ROOT = Path(os.environ.get("SPELLBOOK_TEST_ROOT") or Path(__file__).resolve().parents[2])
-DEVELOP_SKILL = REPO_ROOT / "skills" / "develop" / "SKILL.md"
+DEVELOP_SKILL = REPO_ROOT / "commands" / "develop-configure.md"
 EXECUTE_COMMAND = REPO_ROOT / "commands" / "feature-implement-execute.md"
 FILE_READING_RULE = REPO_ROOT / "rules" / "82-file-reading.md"
 
