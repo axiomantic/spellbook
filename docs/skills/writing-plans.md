@@ -228,7 +228,7 @@ The plan MUST declare its `class:` vocabulary in one named place (e.g., a "Defec
 Vocabulary" list near the register). Proposal O1 triggers on `class:` tag EQUALITY, so
 two agents tagging the same shape differently silently disables the fork; an undeclared
 vocabulary makes that drift undetectable. This ties into the decidable claim already
-listed in `skills/develop/SKILL.md` §3.1.5 ("every tag comes from the declared
+listed in `commands/develop-configure.md` §3.1.5 ("every tag comes from the declared
 vocabulary") — 3.1.5 must build and red-test that check against the `class:` tags here.
 
 The wave-completion check (the ledger's §24.6-class check) reads ONLY partition (a).

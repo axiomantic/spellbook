@@ -9,6 +9,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `develop` is now a thin entry gate. Its triggers fire on almost any "let's
+  build X" phrasing, so the full 2000-line orchestrator body loaded before the
+  operator could decline it. `skills/develop/SKILL.md` is now ~110 lines: it asks
+  which path to take -- full ceremony, fast path, or skip develop entirely -- and
+  then loads the body. The body moved verbatim to the new
+  `commands/develop-configure.md`, which inherits the over-limit size ceiling that
+  governed it before the move; the ratchet can still only go down. The
+  "skip entirely" option did not exist before and states plainly which reviews the
+  operator gives up. Autonomous mode still asks, because ceremony is a scope
+  decision; only a genuinely unreachable operator gets a default, and that default
+  is full ceremony, announced. The option descriptions deliberately name no gate,
+  number, or threshold -- the always-loaded file would otherwise become a second,
+  stale copy of the gate roster -- and point at the *Tiered Review Floor* tables in
+  `commands/develop-configure.md`, which remain the single source of truth.
+  Phase 0's ceremony picker (`commands/feature-config.md` §0.8) followed from that
+  move. It claimed to be the only moment ceremony is negotiable, which the entry
+  gate made false; it now says the gate chose the path and attached the lock, and
+  that the picker refines which components run inside that path and is the last
+  moment any of it is negotiable. The lock itself is unweakened -- immutable for
+  the run, escalation legal, de-escalation never, mid-run gate drops refused. The
+  picker also no longer runs at all on the fast path, where the operator has
+  already answered a ceremony question at the gate; the non-negotiable core, the
+  Tiered Review Floor, and the D5/D6 locked gates (which a zero-flag change can
+  still trigger, since the need-flags say nothing about verifiability) all still
+  apply, and the ceremony is still recorded and locked -- only the question is
+  dropped. The operator contract in `commands/develop-configure.md` ("Develop =
+  Thoroughness Mode") carried the same stale claim at its source -- it said
+  thoroughness is selectable in a single window at Phase 0, "before any work
+  begins", and that this is the only moment ceremony is negotiable -- so the
+  corrected §0.8 was citing an uncorrected authority. It now describes the two
+  stages: the entry gate asks which path and the lock attaches at that answer,
+  and §0.8 refines which components run inside that path and is the last moment
+  any of it is negotiable, with its picker skipped on the fast path. Nothing in
+  the contract was weakened; the surrounding prose was tightened to pay for the
+  correction within the file's size ceiling, which did not move.
+- `rules/40-develop-discipline.md` now attaches the ceremony lock at the moment the
+  operator CHOOSES a ceremony rather than at the moment develop is invoked, which
+  became false once invocation only asks a question. The no-de-escalation
+  guarantee, ABORT-and-re-invoke, phase non-fungibility, and the
+  after-compaction re-read are unchanged; only the attachment point and the path
+  to the authoritative treatment moved.
 - The dedupe skill's structural-template floor now names how its bucket key is
   derived. `skills/dedupe/SKILL.md` and `commands/dedupe-analyze.md` referred to
   a bare `bucket_key`, which is a real field but was unanchored at both consumer

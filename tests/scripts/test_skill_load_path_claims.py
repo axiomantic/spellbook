@@ -149,10 +149,24 @@ def claimed_pairs():
             yield name, target
 
 
+# A skill whose SKILL.md is a thin entry gate keeps its dispatch surface in a
+# command it loads. The claim "loaded by develop" is satisfied by the body
+# develop loads, not only by the gate that routes to it, so the body's file
+# counts as one of the target's files.
+DELEGATED_BODIES: dict[str, tuple[str, ...]] = {
+    "develop": ("develop-configure",),
+}
+
+
 def target_files(target: str) -> list[Path]:
     skill_dir = SKILLS_DIR / target
     if (skill_dir / "SKILL.md").is_file():
-        return sorted(skill_dir.rglob("*.md"))
+        files = sorted(skill_dir.rglob("*.md"))
+        for body in DELEGATED_BODIES.get(target, ()):
+            command = COMMANDS_DIR / f"{body}.md"
+            assert command.is_file(), f"delegated body {command} is missing"
+            files.append(command)
+        return files
     command = COMMANDS_DIR / f"{target}.md"
     if command.is_file():
         return [command]

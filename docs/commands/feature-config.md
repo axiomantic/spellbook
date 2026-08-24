@@ -539,29 +539,25 @@ and is EXCLUDED from the `size_estimate` derivation, which stays based on D1–D
 | D7 | **precedent (in-repo)** | Is there an in-repo pattern to copy? | No existing example of this shape exists in the repo |
 | D8 | **precedent (external)** | Does adjacent prior art exist outside the repo, and has it been surveyed? | Rated `known-unsurveyed` or `unknown` — see note below |
 
-**D8 uses a four-value scale, not low/high**: `surveyed` / `known-unsurveyed` /
-`none` / `unknown`. `surveyed` means someone has already checked the ecosystem
-outside the repo (other implementations, corpora, schemas, captures of the thing
-being built) and recorded what was found. `none` means the survey was done and
-nothing adjacent exists. `known-unsurveyed` means prior art is believed to exist but
-nobody has looked. `unknown` means nobody has even asked the question yet.
+**D8 uses a four-value scale, not low/high.** `surveyed`: the ecosystem outside the
+repo (other implementations, corpora, schemas, captures) was checked and what was
+found is recorded. `none`: surveyed, nothing adjacent exists. `known-unsurveyed`:
+prior art is believed to exist but nobody looked. `unknown`: nobody asked yet.
 
-D8's only consequence (the survey scheduled below) applies solely to
-research-flagged runs. When `needs_research = no`, D8 resolves to `unknown`
-WITHOUT costing an interview turn — do not ask about it; record `unknown` and move
-on. Assess D8 for real only when `needs_research = yes`.
+D8's only consequence (the survey below) applies solely to research-flagged runs.
+When `needs_research = no`, D8 resolves to `unknown` WITHOUT costing an interview
+turn — do not ask; record `unknown` and move on. Assess it only when research is set.
 
 **Why these eight, and not size.** Cost tracks these dimensions, not volume. The
-motivating case: work that was small by every size measure cost enormously because
-its defects were invisible-failure-shaped — an installer that reported success while
-writing files no harness read, tests that passed against an inert feature, a check
-that grepped for a string which did not exist. Every one of those is D5/D6 high and
-D1–D4 unremarkable. Size predicted nothing. D5 and D6 predicted all of it.
+motivating case: work small by every size measure cost enormously because its defects
+were invisible-failure-shaped — an installer reporting success while writing files no
+harness read, tests passing against an inert feature, a check grepping for a string
+that did not exist. All D5/D6 high, D1–D4 unremarkable. Size predicted nothing.
 
 <CRITICAL>
 **D5 and D6 are ESCALATION-ONLY.** If `verification_difficulty` or
-`silent_failure_potential` is `high`, the gates they imply are marked LOCKED in the
-§0.8 picker and are NOT offered for removal. The operator may still abort develop
+`silent_failure_potential` is `high`, the gates they imply are LOCKED and NOT offered
+for removal — on every path, fast path included. The operator may abort develop
 entirely; they may not quietly deselect the only gates that catch an invisible
 failure. Every other dimension's implied gates are freely selectable.
 </CRITICAL>
@@ -580,10 +576,9 @@ failure. Every other dimension's implied gates are freely selectable.
 | D8 `known-unsurveyed` or `unknown` | Bounded external-precedent survey task scheduled in Phase 1, with licence posture and survey budget recorded alongside it |
 
 **D8 survey scheduling.** When D8 rates `known-unsurveyed` or `unknown` on a
-research-flagged run (`needs_research = yes`), schedule a bounded survey task in
-Phase 1 (external prior art — implementations, corpora, schemas, or captures already
-in the ecosystem outside this repo). Record two required sub-answers alongside the
-scheduled task, not after it starts:
+research-flagged run, schedule a bounded Phase 1 survey task (external prior art —
+implementations, corpora, schemas, or captures outside this repo). Record two required
+sub-answers alongside the scheduled task, not after it starts:
 
 - **Licence posture** — may this project read or reuse what the survey finds? A
   clean-room project may answer "read-only, no reuse" or "excluded entirely." This is
@@ -593,15 +588,13 @@ scheduled task, not after it starts:
 A survey scheduled without both sub-answers recorded is an incomplete Phase 0 item.
 
 **Derive `size_estimate`** from D1–D7 only, instead of asking: `large` if four or
-more of D1–D7 are `high`, `medium` if two or three, else `small`. D8 does NOT count
-toward this derivation — it uses a different scale and answers a different question.
-Store in `SESSION_PREFERENCES.size_estimate`. Its downstream meaning is UNCHANGED — it
-tunes parallelization and checkpoint frequency and NEVER gates a review step.
+more are `high`, `medium` if two or three, else `small`. D8 does NOT count — different
+scale, different question. Store in `SESSION_PREFERENCES.size_estimate`. Its meaning is
+UNCHANGED: it tunes parallelization and checkpointing, never gates a review step.
 
 **Scope drift upward.** If the assessment rates D1 or D2 `high` on a change the
-operator flagged zero, say so plainly and set the corresponding need-flag before
-building the picker (Scope-Drift Protocol: Re-Flag and Continue). The assessment may
-ADD flags; it may never clear one the operator set.
+operator flagged zero, say so plainly and set the need-flag before building the picker
+(Scope-Drift Protocol: Re-Flag and Continue). It may ADD flags, never clear one.
 
 **Present the assessment as a suggestion, in these words:**
 
@@ -676,15 +669,28 @@ Store the subject-kind tags and the operator-lane membership in
 ### 0.8 Ceremony Picker (the operator chooses; the choice is then LOCKED)
 
 <CRITICAL>
-The ceremony is chosen EXACTLY ONCE, here, before any work begins — and is IMMUTABLE
-for the rest of the run. This is the ONLY moment develop's ceremony is negotiable.
-After the lock, mid-run requests to drop a gate are REFUSED; the two honest answers
-to "this is taking too long" are FINISH or ABORT, never a quiet narrowing.
-Escalation (adding gates) stays legal all run; de-escalation never becomes legal.
-The operator contract this lock enforces — including the phrasings that do NOT
-reopen it — is stated in full in `$SPELLBOOK_DIR/skills/develop/SKILL.md` under
-"Develop = Thoroughness Mode (Operator Contract)".
+The develop entry gate chose the PATH and attached the lock at that answer. This
+picker does not reopen it — it REFINES which components run inside the chosen path,
+and is the LAST moment any of it is negotiable. After it the ceremony is IMMUTABLE for
+the run: mid-run requests to drop a gate are REFUSED, and the two honest answers to
+"this is taking too long" are FINISH or ABORT-and-re-invoke, never a quiet narrowing.
+Escalation stays legal all run; de-escalation never becomes legal. The full operator
+contract — including the phrasings that do NOT reopen the lock — is in
+`$SPELLBOOK_DIR/commands/develop-configure.md` under "Develop = Thoroughness Mode".
 </CRITICAL>
+
+#### Step 0: Skip condition — the fast path does not run this picker
+
+When §0.7 Step 3 routed the run to the **fast path** (zero need-flags), the picker is
+NOT presented: the operator already answered a ceremony question at the entry gate.
+Skipping the PICKER does NOT skip the CORE — Step 1 is not a picker item and runs on
+every path. The fast path's lighter floor is already fixed by the Tiered Review Floor
+tables, not derived from a picker answer. D5/D6 LOCKED gates still attach: a zero-flag
+change can rate D5 or D6 `high` (the need-flags cover research/design/infrastructure,
+not verifiability), and those gates were never selectable, so skipping the picker
+cannot drop them — add them to `ceremony.selected` and name them when announcing. The
+ceremony is still written and LOCKED at Step 4 (`source = "fast_path"`, `declined`
+empty); it is simply not re-asked.
 
 #### Step 1: The non-negotiable core (NEVER appears in the picker)
 
@@ -693,30 +699,28 @@ MUST NOT be presented as such:
 
 - Code review (4.5)
 - Green-mirage audit (4.6.3)
-- Test-suite run (4.6.2) whenever tests cover the touched code
+- Test-suite run (4.6.2) when tests cover the touched code
 - TDD-first (4.3) for any change carrying behavioral logic (the §3.4 literal/config
   waiver survives ONLY when D6 silent-failure potential is `low`)
-- **The Iron Law** — no skill created or edited without a failing test first. This sits
-  OUTSIDE the picker at every level; see `write-skill-test` and `writing-skills`. A
-  test-first rule that can be switched off is not a rule.
+- **The Iron Law** — no skill created or edited without a failing test first. OUTSIDE
+  the picker at every level (see `write-skill-test`, `writing-skills`): a test-first
+  rule that can be switched off is not a rule.
 - Author ≠ Judge, the artifact-verification protocol, and the Phase Declaration ritual
-  (these are structural, not gates — nothing about them is selectable)
+  (structural, not gates — nothing about them is selectable)
 
 #### Step 1a: Gate position axis (`gate_position`)
 
 <CRITICAL>
-`gate_position` changes gate POSITION, never gate PRESENCE. Every gate the operator
-selects still runs; this axis decides only where in the task stream it runs. This is
-NOT a way to drop a gate — elision (running fewer gates than the locked ceremony
-selected) stays forbidden; repositioning (running every selected gate at a declared
-boundary recorded in the ledger) is a Phase-0 choice.
+`gate_position` changes gate POSITION, never gate PRESENCE. Every selected gate still
+runs; this axis decides only WHERE in the task stream. Elision (running fewer gates
+than the locked ceremony selected) stays forbidden; repositioning (every selected gate
+runs at a declared boundary recorded in the ledger) is a Phase-0 choice.
 </CRITICAL>
 
 Default `gate_position = per_task` — today's behavior, unchanged for operators who do
 not engage with this axis. Offer `per_group` ONLY when
-`SESSION_PREFERENCES.task_granularity == "capability"` (§0.7 Step 2.5) — a file-cut
-plan has no capability boundary to gate at, so `per_group` is never offered under
-`file` granularity.
+`SESSION_PREFERENCES.task_granularity == "capability"` (§0.7 Step 2.5): a file-cut plan
+has no capability boundary to gate at.
 
 When offered, ask via AskUserQuestion:
 
@@ -739,9 +743,9 @@ Store the answer as `develop_gate_ledger.ceremony.gate_position ∈ {"per_task",
 
 #### Step 2: Build the menu from the assessment (do NOT show a fixed 12-item list)
 
-Offer ONLY components the assessment made relevant. A change with every dimension
-`low` gets a two-item menu or none; never tax a small request with a long
-questionnaire. Show a component only when its dimension row fired or its flag set:
+Offer ONLY components the assessment made relevant — a change with every dimension
+`low` gets a two-item menu or none. Show a component only when its row fired or its
+flag set:
 
 | Component | Offered when |
 |---|---|
@@ -759,14 +763,13 @@ questionnaire. Show a component only when its dimension row fired or its flag se
 | Pre-PR claim validation (4.6.5) | `needs_research` or `needs_design`, or D4 high |
 | Roundtable dialectic | never auto-recommended; only if the operator asked in §0.4 |
 
-LOCKED rows are DISPLAYED (so the operator sees what they get) but carry no
-deselect option. State the reason inline: "locked because silent-failure potential is
-high — the gate that catches a success report over a no-op."
+LOCKED rows are DISPLAYED (so the operator sees what they get) but carry no deselect
+option. State the reason inline: "locked because silent-failure potential is high."
 
 #### Step 3: Ask (via AskUserQuestion)
 
 Present ONE question with the derived menu. Recommendation and choice must be visibly
-distinct — recommend, never preselect-and-hope:
+distinct — recommend, never preselect-and-hope.
 
 ```markdown
 Header: "Ceremony"
@@ -786,33 +789,30 @@ multi-select. LOCKED components are shown in the prompt text as already-on and a
 NOT among the selectable items.
 
 **Default path (a non-engaging operator gets today's behavior, unchanged).** If the
-operator does not answer, cancels, or picks the recommendation without customizing on
-a fully-flagged request, `source = "default_full"` and NOTHING is declined: `selected`
-is exactly the flag-derived gate set that the Tiered Review Floor tables already
-produce today, and `declined` is empty. The picker can only ever SUBTRACT from the
-flag-derived set, and subtracting nothing reproduces today's run exactly.
+operator does not answer, cancels, or takes the recommendation unmodified on a
+flagged request, `source = "default_full"`, `selected` is exactly the flag-derived set
+the Tiered Review Floor tables already produce, and `declined` is empty. The picker can
+only SUBTRACT, and subtracting nothing reproduces today's run exactly.
 
 #### Step 4: Lock it into the ledger
 
 Write the choice to `develop_gate_ledger.ceremony` via persistent state deep-merge
-(MERGE-ONLY — never full overwrite). The shape and the locking rules are in the
-develop skill under "Ceremony Ledger". Two properties matter here:
+(MERGE-ONLY — never full overwrite). The shape and locking rules are in the develop
+skill under "Ceremony Ledger". Two properties matter here:
 
-1. A declined component is RECORDED AS DECLINED, never merely absent. A resumed
-   session must be able to tell "the operator chose not to run this" from "this has
-   not run yet". Absence is ambiguous; `declined` is not.
+1. A declined component is RECORDED AS DECLINED, never merely absent. A resumed session
+   must tell "chose not to run this" from "has not run yet"; absence cannot.
 2. `locked_at` is written at this moment and never rewritten. Its presence IS the lock.
-3. `gate_position` (§0.8 Step 1a) is locked alongside `selected`/`declined`, under the
-   same `locked_at` — it is one more field of the same immutable ceremony block, not a
-   separate decision with its own lock.
+3. `gate_position` (§0.8 Step 1a) locks alongside `selected`/`declined` under the same
+   `locked_at` — one field of the same immutable block, not a separate decision.
 
 <FORBIDDEN>
 - Presenting any non-negotiable core item as a selectable option
 - Offering to deselect a D5/D6-LOCKED component
-- Presenting a menu of components the assessment did not make relevant
-- Preselecting the recommendation without showing that it is develop's suggestion and the operator's call
+- Presenting components the assessment did not make relevant
+- Preselecting the recommendation without showing it is a suggestion, not the choice
 - Deriving ceremony from a file count
-- Re-opening the picker after `locked_at` is set (abort and re-invoke develop instead — see §0.5.6)
+- Re-opening the picker after `locked_at` is set (abort and re-invoke develop — §0.5.6)
 </FORBIDDEN>
 
 <FORBIDDEN>

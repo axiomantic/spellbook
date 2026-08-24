@@ -5,7 +5,7 @@ class: preference
 default: "on"
 description: >
   Phase non-fungibility inside the develop skill, and the thoroughness contract
-  that invoking develop establishes.
+  that choosing a develop ceremony establishes.
 benefit: >
   Stops the develop skill from collapsing its own phases into a single dispatch.
 declining_means: >
@@ -13,6 +13,7 @@ declining_means: >
   when it judges the work small or the session short.
 related:
   - skills/develop
+  - commands/develop-configure
   - commands/feature-design
   - commands/feature-implement
   - commands/feature-implement-execute
@@ -24,10 +25,12 @@ paths: []
 <CRITICAL>
 ### Develop Skill Discipline
 
-Invoking develop is the operator's explicit opt-in to thoroughness. Two facts
-bind for the whole run, from the moment develop is invoked:
+Invoking develop opens a gate that asks the operator which ceremony path to
+take. CHOOSING a ceremony — not invoking the skill — is the explicit opt-in to
+thoroughness. Two facts bind for the whole run, from the moment the operator
+answers that question:
 
-- **The ceremony is chosen ONCE, at Phase 0, and LOCKED.** No operator phrasing
+- **The ceremony is chosen ONCE, at the entry gate, and LOCKED.** No operator phrasing
   during the run reopens it — not "wrap up", not "and pause", not "save tokens",
   not standing autonomous mode. A mid-run request to drop a gate is REFUSED. The
   two honest answers to "this is taking too long" are FINISH or ABORT-and-
@@ -38,7 +41,8 @@ bind for the whole run, from the moment develop is invoked:
 
 The full and authoritative treatment — forbidden rationalizations,
 ABORT-and-re-invoke, wave discipline (§24.6), stop semantics, and the incidentals
-protocol — lives in `$SPELLBOOK_DIR/skills/develop/SKILL.md`.
+protocol — lives in `$SPELLBOOK_DIR/commands/develop-configure.md`, which the
+develop skill loads once a ceremony path is chosen.
 
 **After a compaction mid-develop, RE-READ that file** before the next dispatch. A
 compacted context has lost the ceremony lock and the gate semantics, and a run

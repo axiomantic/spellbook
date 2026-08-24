@@ -40,6 +40,7 @@ Commands are slash commands that can be invoked with `/<command-name>` in Claude
 | [/deep-research-plan](deep-research-plan.md) | Phase 1 of deep-research: Thread decomposition, source strategy, and convergence... | spellbook |
 | [/design-assessment](design-assessment.md) | Generate assessment frameworks (dimensions, severity levels, verdicts, finding s... | spellbook |
 | [/design-explore](design-explore.md) | Structured design exploration that evaluates approaches and trade-offs before im... | [superpowers](https://github.com/obra/superpowers) |
+| [/develop-configure](develop-configure.md) | The develop orchestrator body: phases, dispatch discipline, quality gates, cerem... | spellbook |
 | [/distill-session](distill-session.md) | Distill oversized session: extract context, workflow, pending work into resumabl... | spellbook |
 | [/docs-audit](docs-audit.md) | Phase 1 of documenting-projects: Project analysis for documentation planning. Tr... | spellbook |
 | [/docs-plan](docs-plan.md) | Phase 2 of documenting-projects: TOC generation, tone assignment, and build conf... | spellbook |

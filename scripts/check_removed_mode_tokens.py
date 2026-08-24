@@ -112,12 +112,12 @@ ALLOWLIST_TIER: tuple[AllowEntry, ...] = (
 ALLOWLIST_REMOVED_MODE: tuple[AllowEntry, ...] = (
     # execution_mode -- retained field name (direct/delegated) in develop.
     AllowEntry(
-        path_glob="skills/develop/SKILL.md",
+        path_glob="commands/develop-configure.md",
         anchor='execution_mode?: "delegated" | "direct"',
         reason="retained routing field type annotation (delegated/direct only)",
     ),
     AllowEntry(
-        path_glob="skills/develop/SKILL.md",
+        path_glob="commands/develop-configure.md",
         anchor="**Execution mode (single-orchestrator only):**",
         reason="retained routing field prose (direct/delegated only)",
     ),

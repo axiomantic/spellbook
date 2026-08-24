@@ -48,7 +48,7 @@
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
   - [Skills (61 total)](#skills-61-total)
-  - [Commands (107 total)](#commands-107-total)
+  - [Commands (108 total)](#commands-108-total)
   - [Agents (16 total)](#agents-16-total)
 - [Platform Support](#platform-support)
   - [AI Coding Assistants](#ai-coding-assistants)
@@ -260,7 +260,7 @@ Reusable workflows for structured development:
 [cove-protocol]: https://axiomantic.github.io/spellbook/latest/skills/shared-references/cove-protocol/
 [decompose-claims]: https://axiomantic.github.io/spellbook/latest/commands/decompose-claims/
 
-### Commands (107 total)
+### Commands (108 total)
 
 | Command | Description |
 |---------|-------------|
@@ -283,6 +283,7 @@ Reusable workflows for structured development:
 | [/deep-research-investigate] | Phase 2: Triplet search engine with plateau detection and micro-reports |
 | [/deep-research-plan] | Phase 1: Thread decomposition, source strategy, and convergence criteria |
 | [/design-assessment] | Generate assessment frameworks for evaluative skills/commands |
+| [/develop-configure] | The develop orchestrator body: phases, gates, ceremony lock, and ledger |
 | [/docs-audit] | Phase 1 project analysis for documentation planning |
 | [/docs-plan] | Phase 2 TOC generation, tone assignment, and build config |
 | [/docs-write] | Phase 3 documentation generation with adaptive tone per section |
@@ -392,6 +393,7 @@ Reusable workflows for structured development:
 [/deep-research-investigate]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-investigate/
 [/deep-research-plan]: https://axiomantic.github.io/spellbook/latest/commands/deep-research-plan/
 [/design-assessment]: https://axiomantic.github.io/spellbook/latest/commands/design-assessment/
+[/develop-configure]: https://axiomantic.github.io/spellbook/latest/commands/develop-configure/
 [/docs-audit]: https://axiomantic.github.io/spellbook/latest/commands/docs-audit/
 [/docs-plan]: https://axiomantic.github.io/spellbook/latest/commands/docs-plan/
 [/docs-write]: https://axiomantic.github.io/spellbook/latest/commands/docs-write/
