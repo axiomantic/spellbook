@@ -5447,6 +5447,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../develop-configure/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    /develop-configure
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../docs-audit/" class="md-nav__link">
         
   
@@ -9034,280 +9062,280 @@
 <a id="__codelineno-0-535" name="__codelineno-0-535" href="#__codelineno-0-535"></a>| D7 | <span class="gs">**precedent (in-repo)**</span> | Is there an in-repo pattern to copy? | No existing example of this shape exists in the repo |
 <a id="__codelineno-0-536" name="__codelineno-0-536" href="#__codelineno-0-536"></a>| D8 | <span class="gs">**precedent (external)**</span> | Does adjacent prior art exist outside the repo, and has it been surveyed? | Rated <span class="sb">`known-unsurveyed`</span> or <span class="sb">`unknown`</span> — see note below |
 <a id="__codelineno-0-537" name="__codelineno-0-537" href="#__codelineno-0-537"></a>
-<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="gs">**D8 uses a four-value scale, not low/high**</span>: <span class="sb">`surveyed`</span> / <span class="sb">`known-unsurveyed`</span> /
-<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a><span class="sb">`none`</span> / <span class="sb">`unknown`</span>. <span class="sb">`surveyed`</span> means someone has already checked the ecosystem
-<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a>outside the repo (other implementations, corpora, schemas, captures of the thing
-<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a>being built) and recorded what was found. <span class="sb">`none`</span> means the survey was done and
-<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a>nothing adjacent exists. <span class="sb">`known-unsurveyed`</span> means prior art is believed to exist but
-<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>nobody has looked. <span class="sb">`unknown`</span> means nobody has even asked the question yet.
-<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a>
-<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a>D8's only consequence (the survey scheduled below) applies solely to
-<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>research-flagged runs. When <span class="sb">`needs_research = no`</span>, D8 resolves to <span class="sb">`unknown`</span>
-<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a>WITHOUT costing an interview turn — do not ask about it; record <span class="sb">`unknown`</span> and move
-<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a>on. Assess D8 for real only when <span class="sb">`needs_research = yes`</span>.
-<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>
-<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a><span class="gs">**Why these eight, and not size.**</span> Cost tracks these dimensions, not volume. The
-<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a>motivating case: work that was small by every size measure cost enormously because
-<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a>its defects were invisible-failure-shaped — an installer that reported success while
-<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a>writing files no harness read, tests that passed against an inert feature, a check
-<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a>that grepped for a string which did not exist. Every one of those is D5/D6 high and
-<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a>D1–D4 unremarkable. Size predicted nothing. D5 and D6 predicted all of it.
-<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a>
-<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a><span class="gs">**D5 and D6 are ESCALATION-ONLY.**</span> If <span class="sb">`verification_difficulty`</span> or
-<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a><span class="sb">`silent_failure_potential`</span> is <span class="sb">`high`</span>, the gates they imply are marked LOCKED in the
-<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>§0.8 picker and are NOT offered for removal. The operator may still abort develop
-<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a>entirely; they may not quietly deselect the only gates that catch an invisible
-<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a>failure. Every other dimension's implied gates are freely selectable.
-<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a>
-<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a><span class="gs">**Dimension → implied gate (what a `high` rating recommends adding):**</span>
-<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a>
-<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a>| Dimension <span class="sb">`high`</span> | Recommends |
-<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a>|---|---|
-<a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a>| D1 unfamiliarity | Research (Phase 1) + Discovery (1.5) + dehallucination (1.5.7) |
-<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a>| D2 fuzziness | Discovery (1.5) + devil's advocate (1.6) |
-<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a>| D3 blast radius | Design review (2.2) + impl-plan review (3.2) + comprehensive audit (4.6.1) |
-<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a>| D4 coupling | Impl-plan review (3.2) + fact-checking (4.6.4, 4.6.5) |
-<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a>| D5 verification difficulty | Checkability passes (2.1.5 / 3.1.5) + green-mirage (4.6.3) — <span class="gs">**LOCKED**</span> |
-<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a>| D6 silent-failure potential | Completion verification (4.4) + comprehensive audit (4.6.1) + green-mirage (4.6.3) + TDD-first (4.3), waiver revoked — <span class="gs">**LOCKED**</span> |
-<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a>| D7 precedent absent | Research (Phase 1) + Design (Phase 2) |
-<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a>| D8 <span class="sb">`known-unsurveyed`</span> or <span class="sb">`unknown`</span> | Bounded external-precedent survey task scheduled in Phase 1, with licence posture and survey budget recorded alongside it |
-<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a>
-<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a><span class="gs">**D8 survey scheduling.**</span> When D8 rates <span class="sb">`known-unsurveyed`</span> or <span class="sb">`unknown`</span> on a
-<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a>research-flagged run (<span class="sb">`needs_research = yes`</span>), schedule a bounded survey task in
-<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a>Phase 1 (external prior art — implementations, corpora, schemas, or captures already
-<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a>in the ecosystem outside this repo). Record two required sub-answers alongside the
-<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a>scheduled task, not after it starts:
+<a id="__codelineno-0-538" name="__codelineno-0-538" href="#__codelineno-0-538"></a><span class="gs">**D8 uses a four-value scale, not low/high.**</span> <span class="sb">`surveyed`</span>: the ecosystem outside the
+<a id="__codelineno-0-539" name="__codelineno-0-539" href="#__codelineno-0-539"></a>repo (other implementations, corpora, schemas, captures) was checked and what was
+<a id="__codelineno-0-540" name="__codelineno-0-540" href="#__codelineno-0-540"></a>found is recorded. <span class="sb">`none`</span>: surveyed, nothing adjacent exists. <span class="sb">`known-unsurveyed`</span>:
+<a id="__codelineno-0-541" name="__codelineno-0-541" href="#__codelineno-0-541"></a>prior art is believed to exist but nobody looked. <span class="sb">`unknown`</span>: nobody asked yet.
+<a id="__codelineno-0-542" name="__codelineno-0-542" href="#__codelineno-0-542"></a>
+<a id="__codelineno-0-543" name="__codelineno-0-543" href="#__codelineno-0-543"></a>D8's only consequence (the survey below) applies solely to research-flagged runs.
+<a id="__codelineno-0-544" name="__codelineno-0-544" href="#__codelineno-0-544"></a>When <span class="sb">`needs_research = no`</span>, D8 resolves to <span class="sb">`unknown`</span> WITHOUT costing an interview
+<a id="__codelineno-0-545" name="__codelineno-0-545" href="#__codelineno-0-545"></a>turn — do not ask; record <span class="sb">`unknown`</span> and move on. Assess it only when research is set.
+<a id="__codelineno-0-546" name="__codelineno-0-546" href="#__codelineno-0-546"></a>
+<a id="__codelineno-0-547" name="__codelineno-0-547" href="#__codelineno-0-547"></a><span class="gs">**Why these eight, and not size.**</span> Cost tracks these dimensions, not volume. The
+<a id="__codelineno-0-548" name="__codelineno-0-548" href="#__codelineno-0-548"></a>motivating case: work small by every size measure cost enormously because its defects
+<a id="__codelineno-0-549" name="__codelineno-0-549" href="#__codelineno-0-549"></a>were invisible-failure-shaped — an installer reporting success while writing files no
+<a id="__codelineno-0-550" name="__codelineno-0-550" href="#__codelineno-0-550"></a>harness read, tests passing against an inert feature, a check grepping for a string
+<a id="__codelineno-0-551" name="__codelineno-0-551" href="#__codelineno-0-551"></a>that did not exist. All D5/D6 high, D1–D4 unremarkable. Size predicted nothing.
+<a id="__codelineno-0-552" name="__codelineno-0-552" href="#__codelineno-0-552"></a>
+<a id="__codelineno-0-553" name="__codelineno-0-553" href="#__codelineno-0-553"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-554" name="__codelineno-0-554" href="#__codelineno-0-554"></a><span class="gs">**D5 and D6 are ESCALATION-ONLY.**</span> If <span class="sb">`verification_difficulty`</span> or
+<a id="__codelineno-0-555" name="__codelineno-0-555" href="#__codelineno-0-555"></a><span class="sb">`silent_failure_potential`</span> is <span class="sb">`high`</span>, the gates they imply are LOCKED and NOT offered
+<a id="__codelineno-0-556" name="__codelineno-0-556" href="#__codelineno-0-556"></a>for removal — on every path, fast path included. The operator may abort develop
+<a id="__codelineno-0-557" name="__codelineno-0-557" href="#__codelineno-0-557"></a>entirely; they may not quietly deselect the only gates that catch an invisible
+<a id="__codelineno-0-558" name="__codelineno-0-558" href="#__codelineno-0-558"></a>failure. Every other dimension's implied gates are freely selectable.
+<a id="__codelineno-0-559" name="__codelineno-0-559" href="#__codelineno-0-559"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-560" name="__codelineno-0-560" href="#__codelineno-0-560"></a>
+<a id="__codelineno-0-561" name="__codelineno-0-561" href="#__codelineno-0-561"></a><span class="gs">**Dimension → implied gate (what a `high` rating recommends adding):**</span>
+<a id="__codelineno-0-562" name="__codelineno-0-562" href="#__codelineno-0-562"></a>
+<a id="__codelineno-0-563" name="__codelineno-0-563" href="#__codelineno-0-563"></a>| Dimension <span class="sb">`high`</span> | Recommends |
+<a id="__codelineno-0-564" name="__codelineno-0-564" href="#__codelineno-0-564"></a>|---|---|
+<a id="__codelineno-0-565" name="__codelineno-0-565" href="#__codelineno-0-565"></a>| D1 unfamiliarity | Research (Phase 1) + Discovery (1.5) + dehallucination (1.5.7) |
+<a id="__codelineno-0-566" name="__codelineno-0-566" href="#__codelineno-0-566"></a>| D2 fuzziness | Discovery (1.5) + devil's advocate (1.6) |
+<a id="__codelineno-0-567" name="__codelineno-0-567" href="#__codelineno-0-567"></a>| D3 blast radius | Design review (2.2) + impl-plan review (3.2) + comprehensive audit (4.6.1) |
+<a id="__codelineno-0-568" name="__codelineno-0-568" href="#__codelineno-0-568"></a>| D4 coupling | Impl-plan review (3.2) + fact-checking (4.6.4, 4.6.5) |
+<a id="__codelineno-0-569" name="__codelineno-0-569" href="#__codelineno-0-569"></a>| D5 verification difficulty | Checkability passes (2.1.5 / 3.1.5) + green-mirage (4.6.3) — <span class="gs">**LOCKED**</span> |
+<a id="__codelineno-0-570" name="__codelineno-0-570" href="#__codelineno-0-570"></a>| D6 silent-failure potential | Completion verification (4.4) + comprehensive audit (4.6.1) + green-mirage (4.6.3) + TDD-first (4.3), waiver revoked — <span class="gs">**LOCKED**</span> |
+<a id="__codelineno-0-571" name="__codelineno-0-571" href="#__codelineno-0-571"></a>| D7 precedent absent | Research (Phase 1) + Design (Phase 2) |
+<a id="__codelineno-0-572" name="__codelineno-0-572" href="#__codelineno-0-572"></a>| D8 <span class="sb">`known-unsurveyed`</span> or <span class="sb">`unknown`</span> | Bounded external-precedent survey task scheduled in Phase 1, with licence posture and survey budget recorded alongside it |
+<a id="__codelineno-0-573" name="__codelineno-0-573" href="#__codelineno-0-573"></a>
+<a id="__codelineno-0-574" name="__codelineno-0-574" href="#__codelineno-0-574"></a><span class="gs">**D8 survey scheduling.**</span> When D8 rates <span class="sb">`known-unsurveyed`</span> or <span class="sb">`unknown`</span> on a
+<a id="__codelineno-0-575" name="__codelineno-0-575" href="#__codelineno-0-575"></a>research-flagged run, schedule a bounded Phase 1 survey task (external prior art —
+<a id="__codelineno-0-576" name="__codelineno-0-576" href="#__codelineno-0-576"></a>implementations, corpora, schemas, or captures outside this repo). Record two required
+<a id="__codelineno-0-577" name="__codelineno-0-577" href="#__codelineno-0-577"></a>sub-answers alongside the scheduled task, not after it starts:
+<a id="__codelineno-0-578" name="__codelineno-0-578" href="#__codelineno-0-578"></a>
+<a id="__codelineno-0-579" name="__codelineno-0-579" href="#__codelineno-0-579"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Licence posture**</span> — may this project read or reuse what the survey finds? A
+<a id="__codelineno-0-580" name="__codelineno-0-580" href="#__codelineno-0-580"></a>  clean-room project may answer "read-only, no reuse" or "excluded entirely." This is
+<a id="__codelineno-0-581" name="__codelineno-0-581" href="#__codelineno-0-581"></a>  part of the question, not an afterthought — the contamination risk is real.
+<a id="__codelineno-0-582" name="__codelineno-0-582" href="#__codelineno-0-582"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Survey budget**</span> — a time or dispatch bound, so the survey cannot rathole.
 <a id="__codelineno-0-583" name="__codelineno-0-583" href="#__codelineno-0-583"></a>
-<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Licence posture**</span> — may this project read or reuse what the survey finds? A
-<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a>  clean-room project may answer "read-only, no reuse" or "excluded entirely." This is
-<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a>  part of the question, not an afterthought — the contamination risk is real.
-<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a><span class="k">-</span><span class="w"> </span><span class="gs">**Survey budget**</span> — a time or dispatch bound, so the survey cannot rathole.
-<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a>
-<a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a>A survey scheduled without both sub-answers recorded is an incomplete Phase 0 item.
+<a id="__codelineno-0-584" name="__codelineno-0-584" href="#__codelineno-0-584"></a>A survey scheduled without both sub-answers recorded is an incomplete Phase 0 item.
+<a id="__codelineno-0-585" name="__codelineno-0-585" href="#__codelineno-0-585"></a>
+<a id="__codelineno-0-586" name="__codelineno-0-586" href="#__codelineno-0-586"></a><span class="gs">**Derive `size_estimate`**</span> from D1–D7 only, instead of asking: <span class="sb">`large`</span> if four or
+<a id="__codelineno-0-587" name="__codelineno-0-587" href="#__codelineno-0-587"></a>more are <span class="sb">`high`</span>, <span class="sb">`medium`</span> if two or three, else <span class="sb">`small`</span>. D8 does NOT count — different
+<a id="__codelineno-0-588" name="__codelineno-0-588" href="#__codelineno-0-588"></a>scale, different question. Store in <span class="sb">`SESSION_PREFERENCES.size_estimate`</span>. Its meaning is
+<a id="__codelineno-0-589" name="__codelineno-0-589" href="#__codelineno-0-589"></a>UNCHANGED: it tunes parallelization and checkpointing, never gates a review step.
 <a id="__codelineno-0-590" name="__codelineno-0-590" href="#__codelineno-0-590"></a>
-<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a><span class="gs">**Derive `size_estimate`**</span> from D1–D7 only, instead of asking: <span class="sb">`large`</span> if four or
-<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a>more of D1–D7 are <span class="sb">`high`</span>, <span class="sb">`medium`</span> if two or three, else <span class="sb">`small`</span>. D8 does NOT count
-<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a>toward this derivation — it uses a different scale and answers a different question.
-<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a>Store in <span class="sb">`SESSION_PREFERENCES.size_estimate`</span>. Its downstream meaning is UNCHANGED — it
-<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a>tunes parallelization and checkpoint frequency and NEVER gates a review step.
+<a id="__codelineno-0-591" name="__codelineno-0-591" href="#__codelineno-0-591"></a><span class="gs">**Scope drift upward.**</span> If the assessment rates D1 or D2 <span class="sb">`high`</span> on a change the
+<a id="__codelineno-0-592" name="__codelineno-0-592" href="#__codelineno-0-592"></a>operator flagged zero, say so plainly and set the need-flag before building the picker
+<a id="__codelineno-0-593" name="__codelineno-0-593" href="#__codelineno-0-593"></a>(Scope-Drift Protocol: Re-Flag and Continue). It may ADD flags, never clear one.
+<a id="__codelineno-0-594" name="__codelineno-0-594" href="#__codelineno-0-594"></a>
+<a id="__codelineno-0-595" name="__codelineno-0-595" href="#__codelineno-0-595"></a><span class="gs">**Present the assessment as a suggestion, in these words:**</span>
 <a id="__codelineno-0-596" name="__codelineno-0-596" href="#__codelineno-0-596"></a>
-<a id="__codelineno-0-597" name="__codelineno-0-597" href="#__codelineno-0-597"></a><span class="gs">**Scope drift upward.**</span> If the assessment rates D1 or D2 <span class="sb">`high`</span> on a change the
-<a id="__codelineno-0-598" name="__codelineno-0-598" href="#__codelineno-0-598"></a>operator flagged zero, say so plainly and set the corresponding need-flag before
-<a id="__codelineno-0-599" name="__codelineno-0-599" href="#__codelineno-0-599"></a>building the picker (Scope-Drift Protocol: Re-Flag and Continue). The assessment may
-<a id="__codelineno-0-600" name="__codelineno-0-600" href="#__codelineno-0-600"></a>ADD flags; it may never clear one the operator set.
-<a id="__codelineno-0-601" name="__codelineno-0-601" href="#__codelineno-0-601"></a>
-<a id="__codelineno-0-602" name="__codelineno-0-602" href="#__codelineno-0-602"></a><span class="gs">**Present the assessment as a suggestion, in these words:**</span>
-<a id="__codelineno-0-603" name="__codelineno-0-603" href="#__codelineno-0-603"></a>
-<a id="__codelineno-0-604" name="__codelineno-0-604" href="#__codelineno-0-604"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-605" name="__codelineno-0-605" href="#__codelineno-0-605"></a><span class="gu">## My read of this request (a suggestion — your call in the next question)</span>
-<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a>
-<a id="__codelineno-0-607" name="__codelineno-0-607" href="#__codelineno-0-607"></a>| Dimension | Rating | Evidence |
-<a id="__codelineno-0-608" name="__codelineno-0-608" href="#__codelineno-0-608"></a>|---|---|---|
-<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a>| Unfamiliarity | low/high | ... |
-<a id="__codelineno-0-610" name="__codelineno-0-610" href="#__codelineno-0-610"></a>| Fuzziness | low/high | ... |
-<a id="__codelineno-0-611" name="__codelineno-0-611" href="#__codelineno-0-611"></a>| Blast radius | low/high | ... |
-<a id="__codelineno-0-612" name="__codelineno-0-612" href="#__codelineno-0-612"></a>| Coupling | low/high | ... |
-<a id="__codelineno-0-613" name="__codelineno-0-613" href="#__codelineno-0-613"></a>| Verification difficulty | low/high | ... |
-<a id="__codelineno-0-614" name="__codelineno-0-614" href="#__codelineno-0-614"></a>| Silent-failure potential | low/high | ... |
-<a id="__codelineno-0-615" name="__codelineno-0-615" href="#__codelineno-0-615"></a>| Precedent (in-repo) | present/absent | ... |
-<a id="__codelineno-0-616" name="__codelineno-0-616" href="#__codelineno-0-616"></a>| Precedent (external) | surveyed/known-unsurveyed/none/unknown | ... |
-<a id="__codelineno-0-617" name="__codelineno-0-617" href="#__codelineno-0-617"></a>
-<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a>Recommended ceremony: <span class="gs">**{Core|Focused|Full}**</span> — {one sentence naming the dimension that drove it}
-<a id="__codelineno-0-619" name="__codelineno-0-619" href="#__codelineno-0-619"></a>Locked by D5/D6: {list, or "nothing — no invisible-failure risk detected"}
-<a id="__codelineno-0-620" name="__codelineno-0-620" href="#__codelineno-0-620"></a><span class="sb">```</span>
-<a id="__codelineno-0-621" name="__codelineno-0-621" href="#__codelineno-0-621"></a>
-<a id="__codelineno-0-622" name="__codelineno-0-622" href="#__codelineno-0-622"></a>---
-<a id="__codelineno-0-623" name="__codelineno-0-623" href="#__codelineno-0-623"></a>
-<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a><span class="gu">### 0.7.6 Measurement Task Tagging and Operator-Only Lane</span>
-<a id="__codelineno-0-625" name="__codelineno-0-625" href="#__codelineno-0-625"></a>
-<a id="__codelineno-0-626" name="__codelineno-0-626" href="#__codelineno-0-626"></a>&lt;RULE&gt;Ask this only when <span class="sb">`needs_research`</span> or <span class="sb">`needs_infrastructure`</span> is set — no plan
-<a id="__codelineno-0-627" name="__codelineno-0-627" href="#__codelineno-0-627"></a>exists yet at Phase 0, so "the work includes measurement-type deliverables" cannot be
-<a id="__codelineno-0-628" name="__codelineno-0-628" href="#__codelineno-0-628"></a>evaluated directly. <span class="sb">`needs_research`</span> or <span class="sb">`needs_infrastructure`</span> is the knowable proxy
-<a id="__codelineno-0-629" name="__codelineno-0-629" href="#__codelineno-0-629"></a>at this point in the flow; most feature work sets neither, and the tag is then absent
-<a id="__codelineno-0-630" name="__codelineno-0-630" href="#__codelineno-0-630"></a>and nothing fires.&lt;/RULE&gt;
-<a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a>
-<a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a>When the RULE's proxy condition triggers (<span class="sb">`needs_research`</span> or <span class="sb">`needs_infrastructure`</span>
-<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a>set), ask the operator directly via AskUserQuestion — the operator, not the
-<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a>orchestrator, determines which deliverables (if any) are measurements, since no plan
-<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a>exists yet to inspect:
-<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a>
-<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a><span class="gu">### Q-MEASURE — "Which deliverables are measurements, of what kind — and which</span>
-<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a>tasks need resources only you have?"
-<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a>
-<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a>Part 1: For each measurement-type deliverable, what is its subject?
-<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a><span class="k">-</span><span class="w"> </span>Fixed artifact (a shipped binary, a PDF, a captured corpus — cannot change under test)
-<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a><span class="k">-</span><span class="w"> </span>Instrumented run (a harness, a test rig, a live capture)
-<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a><span class="k">-</span><span class="w"> </span>Physical access (hardware in hand, a photograph, an account, third-party correspondence)
-<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a>
-<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a>Part 2: Which of those need a resource only you (the operator) have — hardware in
-<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a>hand, a photograph, an account, third-party correspondence?
-<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a>
-<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a>Suggested: describe the deliverables and flag which ones are operator-only.
-<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a><span class="sb">```</span>
+<a id="__codelineno-0-597" name="__codelineno-0-597" href="#__codelineno-0-597"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-598" name="__codelineno-0-598" href="#__codelineno-0-598"></a><span class="gu">## My read of this request (a suggestion — your call in the next question)</span>
+<a id="__codelineno-0-599" name="__codelineno-0-599" href="#__codelineno-0-599"></a>
+<a id="__codelineno-0-600" name="__codelineno-0-600" href="#__codelineno-0-600"></a>| Dimension | Rating | Evidence |
+<a id="__codelineno-0-601" name="__codelineno-0-601" href="#__codelineno-0-601"></a>|---|---|---|
+<a id="__codelineno-0-602" name="__codelineno-0-602" href="#__codelineno-0-602"></a>| Unfamiliarity | low/high | ... |
+<a id="__codelineno-0-603" name="__codelineno-0-603" href="#__codelineno-0-603"></a>| Fuzziness | low/high | ... |
+<a id="__codelineno-0-604" name="__codelineno-0-604" href="#__codelineno-0-604"></a>| Blast radius | low/high | ... |
+<a id="__codelineno-0-605" name="__codelineno-0-605" href="#__codelineno-0-605"></a>| Coupling | low/high | ... |
+<a id="__codelineno-0-606" name="__codelineno-0-606" href="#__codelineno-0-606"></a>| Verification difficulty | low/high | ... |
+<a id="__codelineno-0-607" name="__codelineno-0-607" href="#__codelineno-0-607"></a>| Silent-failure potential | low/high | ... |
+<a id="__codelineno-0-608" name="__codelineno-0-608" href="#__codelineno-0-608"></a>| Precedent (in-repo) | present/absent | ... |
+<a id="__codelineno-0-609" name="__codelineno-0-609" href="#__codelineno-0-609"></a>| Precedent (external) | surveyed/known-unsurveyed/none/unknown | ... |
+<a id="__codelineno-0-610" name="__codelineno-0-610" href="#__codelineno-0-610"></a>
+<a id="__codelineno-0-611" name="__codelineno-0-611" href="#__codelineno-0-611"></a>Recommended ceremony: <span class="gs">**{Core|Focused|Full}**</span> — {one sentence naming the dimension that drove it}
+<a id="__codelineno-0-612" name="__codelineno-0-612" href="#__codelineno-0-612"></a>Locked by D5/D6: {list, or "nothing — no invisible-failure risk detected"}
+<a id="__codelineno-0-613" name="__codelineno-0-613" href="#__codelineno-0-613"></a><span class="sb">```</span>
+<a id="__codelineno-0-614" name="__codelineno-0-614" href="#__codelineno-0-614"></a>
+<a id="__codelineno-0-615" name="__codelineno-0-615" href="#__codelineno-0-615"></a>---
+<a id="__codelineno-0-616" name="__codelineno-0-616" href="#__codelineno-0-616"></a>
+<a id="__codelineno-0-617" name="__codelineno-0-617" href="#__codelineno-0-617"></a><span class="gu">### 0.7.6 Measurement Task Tagging and Operator-Only Lane</span>
+<a id="__codelineno-0-618" name="__codelineno-0-618" href="#__codelineno-0-618"></a>
+<a id="__codelineno-0-619" name="__codelineno-0-619" href="#__codelineno-0-619"></a>&lt;RULE&gt;Ask this only when <span class="sb">`needs_research`</span> or <span class="sb">`needs_infrastructure`</span> is set — no plan
+<a id="__codelineno-0-620" name="__codelineno-0-620" href="#__codelineno-0-620"></a>exists yet at Phase 0, so "the work includes measurement-type deliverables" cannot be
+<a id="__codelineno-0-621" name="__codelineno-0-621" href="#__codelineno-0-621"></a>evaluated directly. <span class="sb">`needs_research`</span> or <span class="sb">`needs_infrastructure`</span> is the knowable proxy
+<a id="__codelineno-0-622" name="__codelineno-0-622" href="#__codelineno-0-622"></a>at this point in the flow; most feature work sets neither, and the tag is then absent
+<a id="__codelineno-0-623" name="__codelineno-0-623" href="#__codelineno-0-623"></a>and nothing fires.&lt;/RULE&gt;
+<a id="__codelineno-0-624" name="__codelineno-0-624" href="#__codelineno-0-624"></a>
+<a id="__codelineno-0-625" name="__codelineno-0-625" href="#__codelineno-0-625"></a>When the RULE's proxy condition triggers (<span class="sb">`needs_research`</span> or <span class="sb">`needs_infrastructure`</span>
+<a id="__codelineno-0-626" name="__codelineno-0-626" href="#__codelineno-0-626"></a>set), ask the operator directly via AskUserQuestion — the operator, not the
+<a id="__codelineno-0-627" name="__codelineno-0-627" href="#__codelineno-0-627"></a>orchestrator, determines which deliverables (if any) are measurements, since no plan
+<a id="__codelineno-0-628" name="__codelineno-0-628" href="#__codelineno-0-628"></a>exists yet to inspect:
+<a id="__codelineno-0-629" name="__codelineno-0-629" href="#__codelineno-0-629"></a>
+<a id="__codelineno-0-630" name="__codelineno-0-630" href="#__codelineno-0-630"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-631" name="__codelineno-0-631" href="#__codelineno-0-631"></a><span class="gu">### Q-MEASURE — "Which deliverables are measurements, of what kind — and which</span>
+<a id="__codelineno-0-632" name="__codelineno-0-632" href="#__codelineno-0-632"></a>tasks need resources only you have?"
+<a id="__codelineno-0-633" name="__codelineno-0-633" href="#__codelineno-0-633"></a>
+<a id="__codelineno-0-634" name="__codelineno-0-634" href="#__codelineno-0-634"></a>Part 1: For each measurement-type deliverable, what is its subject?
+<a id="__codelineno-0-635" name="__codelineno-0-635" href="#__codelineno-0-635"></a><span class="k">-</span><span class="w"> </span>Fixed artifact (a shipped binary, a PDF, a captured corpus — cannot change under test)
+<a id="__codelineno-0-636" name="__codelineno-0-636" href="#__codelineno-0-636"></a><span class="k">-</span><span class="w"> </span>Instrumented run (a harness, a test rig, a live capture)
+<a id="__codelineno-0-637" name="__codelineno-0-637" href="#__codelineno-0-637"></a><span class="k">-</span><span class="w"> </span>Physical access (hardware in hand, a photograph, an account, third-party correspondence)
+<a id="__codelineno-0-638" name="__codelineno-0-638" href="#__codelineno-0-638"></a>
+<a id="__codelineno-0-639" name="__codelineno-0-639" href="#__codelineno-0-639"></a>Part 2: Which of those need a resource only you (the operator) have — hardware in
+<a id="__codelineno-0-640" name="__codelineno-0-640" href="#__codelineno-0-640"></a>hand, a photograph, an account, third-party correspondence?
+<a id="__codelineno-0-641" name="__codelineno-0-641" href="#__codelineno-0-641"></a>
+<a id="__codelineno-0-642" name="__codelineno-0-642" href="#__codelineno-0-642"></a>Suggested: describe the deliverables and flag which ones are operator-only.
+<a id="__codelineno-0-643" name="__codelineno-0-643" href="#__codelineno-0-643"></a><span class="sb">```</span>
+<a id="__codelineno-0-644" name="__codelineno-0-644" href="#__codelineno-0-644"></a>
+<a id="__codelineno-0-645" name="__codelineno-0-645" href="#__codelineno-0-645"></a><span class="gs">**Subject-kind tagging.**</span> Record each measurement task's subject kind
+<a id="__codelineno-0-646" name="__codelineno-0-646" href="#__codelineno-0-646"></a>(<span class="sb">`fixed_artifact`</span> / <span class="sb">`instrumented_run`</span> / <span class="sb">`physical_access`</span>) in the plan template. This
+<a id="__codelineno-0-647" name="__codelineno-0-647" href="#__codelineno-0-647"></a>tag drives a cheapest-first ordering rule at implementation time: attempt a static
+<a id="__codelineno-0-648" name="__codelineno-0-648" href="#__codelineno-0-648"></a>read of a fixed artifact before building instrumented-run infrastructure, and attempt
+<a id="__codelineno-0-649" name="__codelineno-0-649" href="#__codelineno-0-649"></a>an instrumented run before requiring physical access. The tag is what makes the
+<a id="__codelineno-0-650" name="__codelineno-0-650" href="#__codelineno-0-650"></a>ordering decidable at plan time rather than discovered by accident mid-run.
 <a id="__codelineno-0-651" name="__codelineno-0-651" href="#__codelineno-0-651"></a>
-<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="gs">**Subject-kind tagging.**</span> Record each measurement task's subject kind
-<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a>(<span class="sb">`fixed_artifact`</span> / <span class="sb">`instrumented_run`</span> / <span class="sb">`physical_access`</span>) in the plan template. This
-<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a>tag drives a cheapest-first ordering rule at implementation time: attempt a static
-<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a>read of a fixed artifact before building instrumented-run infrastructure, and attempt
-<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a>an instrumented run before requiring physical access. The tag is what makes the
-<a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a>ordering decidable at plan time rather than discovered by accident mid-run.
-<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a>
-<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a><span class="gs">**Operator-only lane.**</span> Tasks tagged <span class="sb">`physical_access`</span> (or otherwise requiring a
-<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a>resource only the operator holds — an account, a photograph, third-party
-<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a>correspondence) form a named parallel lane, recorded separately from the main task
-<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a>list. The lane is a SURFACED LIST, never a blocking gate: it is presented at session
-<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a>start and re-presented at every wave boundary until empty. It blocks nothing in the
-<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a>main track; the point is that these tasks are often minutes of operator effort and
-<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a>otherwise sit unexecuted because nothing re-surfaces them.
+<a id="__codelineno-0-652" name="__codelineno-0-652" href="#__codelineno-0-652"></a><span class="gs">**Operator-only lane.**</span> Tasks tagged <span class="sb">`physical_access`</span> (or otherwise requiring a
+<a id="__codelineno-0-653" name="__codelineno-0-653" href="#__codelineno-0-653"></a>resource only the operator holds — an account, a photograph, third-party
+<a id="__codelineno-0-654" name="__codelineno-0-654" href="#__codelineno-0-654"></a>correspondence) form a named parallel lane, recorded separately from the main task
+<a id="__codelineno-0-655" name="__codelineno-0-655" href="#__codelineno-0-655"></a>list. The lane is a SURFACED LIST, never a blocking gate: it is presented at session
+<a id="__codelineno-0-656" name="__codelineno-0-656" href="#__codelineno-0-656"></a>start and re-presented at every wave boundary until empty. It blocks nothing in the
+<a id="__codelineno-0-657" name="__codelineno-0-657" href="#__codelineno-0-657"></a>main track; the point is that these tasks are often minutes of operator effort and
+<a id="__codelineno-0-658" name="__codelineno-0-658" href="#__codelineno-0-658"></a>otherwise sit unexecuted because nothing re-surfaces them.
+<a id="__codelineno-0-659" name="__codelineno-0-659" href="#__codelineno-0-659"></a>
+<a id="__codelineno-0-660" name="__codelineno-0-660" href="#__codelineno-0-660"></a>Store the subject-kind tags and the operator-lane membership in
+<a id="__codelineno-0-661" name="__codelineno-0-661" href="#__codelineno-0-661"></a><span class="sb">`SESSION_PREFERENCES.measurement_tasks`</span> (empty if no measurement deliverables exist).
+<a id="__codelineno-0-662" name="__codelineno-0-662" href="#__codelineno-0-662"></a>
+<a id="__codelineno-0-663" name="__codelineno-0-663" href="#__codelineno-0-663"></a>---
+<a id="__codelineno-0-664" name="__codelineno-0-664" href="#__codelineno-0-664"></a>
+<a id="__codelineno-0-665" name="__codelineno-0-665" href="#__codelineno-0-665"></a><span class="gu">### 0.8 Ceremony Picker (the operator chooses; the choice is then LOCKED)</span>
 <a id="__codelineno-0-666" name="__codelineno-0-666" href="#__codelineno-0-666"></a>
-<a id="__codelineno-0-667" name="__codelineno-0-667" href="#__codelineno-0-667"></a>Store the subject-kind tags and the operator-lane membership in
-<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a><span class="sb">`SESSION_PREFERENCES.measurement_tasks`</span> (empty if no measurement deliverables exist).
-<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a>
-<a id="__codelineno-0-670" name="__codelineno-0-670" href="#__codelineno-0-670"></a>---
-<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a>
-<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a><span class="gu">### 0.8 Ceremony Picker (the operator chooses; the choice is then LOCKED)</span>
-<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a>
-<a id="__codelineno-0-674" name="__codelineno-0-674" href="#__codelineno-0-674"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a>The ceremony is chosen EXACTLY ONCE, here, before any work begins — and is IMMUTABLE
-<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a>for the rest of the run. This is the ONLY moment develop's ceremony is negotiable.
-<a id="__codelineno-0-677" name="__codelineno-0-677" href="#__codelineno-0-677"></a>After the lock, mid-run requests to drop a gate are REFUSED; the two honest answers
-<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a>to "this is taking too long" are FINISH or ABORT, never a quiet narrowing.
-<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a>Escalation (adding gates) stays legal all run; de-escalation never becomes legal.
-<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a>The operator contract this lock enforces — including the phrasings that do NOT
-<a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a>reopen it — is stated in full in <span class="sb">`$SPELLBOOK_DIR/skills/develop/SKILL.md`</span> under
-<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a>"Develop = Thoroughness Mode (Operator Contract)".
-<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a>
-<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a><span class="gu">#### Step 1: The non-negotiable core (NEVER appears in the picker)</span>
-<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a>
-<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>These run on every develop path at every ceremony level. They are not options and
-<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a>MUST NOT be presented as such:
-<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a>
-<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a><span class="k">-</span><span class="w"> </span>Code review (4.5)
-<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a><span class="k">-</span><span class="w"> </span>Green-mirage audit (4.6.3)
-<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a><span class="k">-</span><span class="w"> </span>Test-suite run (4.6.2) whenever tests cover the touched code
-<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a><span class="k">-</span><span class="w"> </span>TDD-first (4.3) for any change carrying behavioral logic (the §3.4 literal/config
-<a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a>  waiver survives ONLY when D6 silent-failure potential is <span class="sb">`low`</span>)
-<a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a><span class="k">-</span><span class="w"> </span><span class="gs">**The Iron Law**</span> — no skill created or edited without a failing test first. This sits
-<a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a>  OUTSIDE the picker at every level; see <span class="sb">`write-skill-test`</span> and <span class="sb">`writing-skills`</span>. A
-<a id="__codelineno-0-697" name="__codelineno-0-697" href="#__codelineno-0-697"></a>  test-first rule that can be switched off is not a rule.
-<a id="__codelineno-0-698" name="__codelineno-0-698" href="#__codelineno-0-698"></a><span class="k">-</span><span class="w"> </span>Author ≠ Judge, the artifact-verification protocol, and the Phase Declaration ritual
-<a id="__codelineno-0-699" name="__codelineno-0-699" href="#__codelineno-0-699"></a>  (these are structural, not gates — nothing about them is selectable)
-<a id="__codelineno-0-700" name="__codelineno-0-700" href="#__codelineno-0-700"></a>
-<a id="__codelineno-0-701" name="__codelineno-0-701" href="#__codelineno-0-701"></a><span class="gu">#### Step 1a: Gate position axis (`gate_position`)</span>
-<a id="__codelineno-0-702" name="__codelineno-0-702" href="#__codelineno-0-702"></a>
-<a id="__codelineno-0-703" name="__codelineno-0-703" href="#__codelineno-0-703"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-704" name="__codelineno-0-704" href="#__codelineno-0-704"></a><span class="sb">`gate_position`</span> changes gate POSITION, never gate PRESENCE. Every gate the operator
-<a id="__codelineno-0-705" name="__codelineno-0-705" href="#__codelineno-0-705"></a>selects still runs; this axis decides only where in the task stream it runs. This is
-<a id="__codelineno-0-706" name="__codelineno-0-706" href="#__codelineno-0-706"></a>NOT a way to drop a gate — elision (running fewer gates than the locked ceremony
-<a id="__codelineno-0-707" name="__codelineno-0-707" href="#__codelineno-0-707"></a>selected) stays forbidden; repositioning (running every selected gate at a declared
-<a id="__codelineno-0-708" name="__codelineno-0-708" href="#__codelineno-0-708"></a>boundary recorded in the ledger) is a Phase-0 choice.
-<a id="__codelineno-0-709" name="__codelineno-0-709" href="#__codelineno-0-709"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a>
-<a id="__codelineno-0-711" name="__codelineno-0-711" href="#__codelineno-0-711"></a>Default <span class="sb">`gate_position = per_task`</span> — today's behavior, unchanged for operators who do
-<a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a>not engage with this axis. Offer <span class="sb">`per_group`</span> ONLY when
-<a id="__codelineno-0-713" name="__codelineno-0-713" href="#__codelineno-0-713"></a><span class="sb">`SESSION_PREFERENCES.task_granularity == "capability"`</span> (§0.7 Step 2.5) — a file-cut
-<a id="__codelineno-0-714" name="__codelineno-0-714" href="#__codelineno-0-714"></a>plan has no capability boundary to gate at, so <span class="sb">`per_group`</span> is never offered under
-<a id="__codelineno-0-715" name="__codelineno-0-715" href="#__codelineno-0-715"></a><span class="sb">`file`</span> granularity.
-<a id="__codelineno-0-716" name="__codelineno-0-716" href="#__codelineno-0-716"></a>
-<a id="__codelineno-0-717" name="__codelineno-0-717" href="#__codelineno-0-717"></a>When offered, ask via AskUserQuestion:
-<a id="__codelineno-0-718" name="__codelineno-0-718" href="#__codelineno-0-718"></a>
-<a id="__codelineno-0-719" name="__codelineno-0-719" href="#__codelineno-0-719"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-720" name="__codelineno-0-720" href="#__codelineno-0-720"></a>Header: "Gate position"
-<a id="__codelineno-0-721" name="__codelineno-0-721" href="#__codelineno-0-721"></a>Question: "The depth gates (completion verification 4.4, code review 4.5, fact-check
-<a id="__codelineno-0-722" name="__codelineno-0-722" href="#__codelineno-0-722"></a>4.5.1) can run per task, or once per declared capability group at the group boundary.
-<a id="__codelineno-0-723" name="__codelineno-0-723" href="#__codelineno-0-723"></a>Which do you want? Every selected gate still runs either way — this only changes
-<a id="__codelineno-0-724" name="__codelineno-0-724" href="#__codelineno-0-724"></a>where."
-<a id="__codelineno-0-725" name="__codelineno-0-725" href="#__codelineno-0-725"></a>
-<a id="__codelineno-0-726" name="__codelineno-0-726" href="#__codelineno-0-726"></a>Options:
-<a id="__codelineno-0-727" name="__codelineno-0-727" href="#__codelineno-0-727"></a><span class="k">-</span><span class="w"> </span>Per task (Recommended default): today's behavior — each task gets its own gate pass.
-<a id="__codelineno-0-728" name="__codelineno-0-728" href="#__codelineno-0-728"></a><span class="k">-</span><span class="w"> </span>Per group: gates run once per capability group, against the group's single
-<a id="__codelineno-0-729" name="__codelineno-0-729" href="#__codelineno-0-729"></a>  deliverable, adversarially (at least one control that goes RED on a known-bad
-<a id="__codelineno-0-730" name="__codelineno-0-730" href="#__codelineno-0-730"></a>  input). Fewer gate dispatches; detection moves to the group boundary instead of
-<a id="__codelineno-0-731" name="__codelineno-0-731" href="#__codelineno-0-731"></a>  the task that introduced the defect.
-<a id="__codelineno-0-732" name="__codelineno-0-732" href="#__codelineno-0-732"></a><span class="sb">```</span>
-<a id="__codelineno-0-733" name="__codelineno-0-733" href="#__codelineno-0-733"></a>
-<a id="__codelineno-0-734" name="__codelineno-0-734" href="#__codelineno-0-734"></a>Store the answer as <span class="sb">`develop_gate_ledger.ceremony.gate_position ∈ {"per_task", "per_group"}`</span>.
-<a id="__codelineno-0-735" name="__codelineno-0-735" href="#__codelineno-0-735"></a>
-<a id="__codelineno-0-736" name="__codelineno-0-736" href="#__codelineno-0-736"></a><span class="gu">#### Step 2: Build the menu from the assessment (do NOT show a fixed 12-item list)</span>
+<a id="__codelineno-0-667" name="__codelineno-0-667" href="#__codelineno-0-667"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-668" name="__codelineno-0-668" href="#__codelineno-0-668"></a>The develop entry gate chose the PATH and attached the lock at that answer. This
+<a id="__codelineno-0-669" name="__codelineno-0-669" href="#__codelineno-0-669"></a>picker does not reopen it — it REFINES which components run inside the chosen path,
+<a id="__codelineno-0-670" name="__codelineno-0-670" href="#__codelineno-0-670"></a>and is the LAST moment any of it is negotiable. After it the ceremony is IMMUTABLE for
+<a id="__codelineno-0-671" name="__codelineno-0-671" href="#__codelineno-0-671"></a>the run: mid-run requests to drop a gate are REFUSED, and the two honest answers to
+<a id="__codelineno-0-672" name="__codelineno-0-672" href="#__codelineno-0-672"></a>"this is taking too long" are FINISH or ABORT-and-re-invoke, never a quiet narrowing.
+<a id="__codelineno-0-673" name="__codelineno-0-673" href="#__codelineno-0-673"></a>Escalation stays legal all run; de-escalation never becomes legal. The full operator
+<a id="__codelineno-0-674" name="__codelineno-0-674" href="#__codelineno-0-674"></a>contract — including the phrasings that do NOT reopen the lock — is in
+<a id="__codelineno-0-675" name="__codelineno-0-675" href="#__codelineno-0-675"></a><span class="sb">`$SPELLBOOK_DIR/commands/develop-configure.md`</span> under "Develop = Thoroughness Mode".
+<a id="__codelineno-0-676" name="__codelineno-0-676" href="#__codelineno-0-676"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-677" name="__codelineno-0-677" href="#__codelineno-0-677"></a>
+<a id="__codelineno-0-678" name="__codelineno-0-678" href="#__codelineno-0-678"></a><span class="gu">#### Step 0: Skip condition — the fast path does not run this picker</span>
+<a id="__codelineno-0-679" name="__codelineno-0-679" href="#__codelineno-0-679"></a>
+<a id="__codelineno-0-680" name="__codelineno-0-680" href="#__codelineno-0-680"></a>When §0.7 Step 3 routed the run to the <span class="gs">**fast path**</span> (zero need-flags), the picker is
+<a id="__codelineno-0-681" name="__codelineno-0-681" href="#__codelineno-0-681"></a>NOT presented: the operator already answered a ceremony question at the entry gate.
+<a id="__codelineno-0-682" name="__codelineno-0-682" href="#__codelineno-0-682"></a>Skipping the PICKER does NOT skip the CORE — Step 1 is not a picker item and runs on
+<a id="__codelineno-0-683" name="__codelineno-0-683" href="#__codelineno-0-683"></a>every path. The fast path's lighter floor is already fixed by the Tiered Review Floor
+<a id="__codelineno-0-684" name="__codelineno-0-684" href="#__codelineno-0-684"></a>tables, not derived from a picker answer. D5/D6 LOCKED gates still attach: a zero-flag
+<a id="__codelineno-0-685" name="__codelineno-0-685" href="#__codelineno-0-685"></a>change can rate D5 or D6 <span class="sb">`high`</span> (the need-flags cover research/design/infrastructure,
+<a id="__codelineno-0-686" name="__codelineno-0-686" href="#__codelineno-0-686"></a>not verifiability), and those gates were never selectable, so skipping the picker
+<a id="__codelineno-0-687" name="__codelineno-0-687" href="#__codelineno-0-687"></a>cannot drop them — add them to <span class="sb">`ceremony.selected`</span> and name them when announcing. The
+<a id="__codelineno-0-688" name="__codelineno-0-688" href="#__codelineno-0-688"></a>ceremony is still written and LOCKED at Step 4 (<span class="sb">`source = "fast_path"`</span>, <span class="sb">`declined`</span>
+<a id="__codelineno-0-689" name="__codelineno-0-689" href="#__codelineno-0-689"></a>empty); it is simply not re-asked.
+<a id="__codelineno-0-690" name="__codelineno-0-690" href="#__codelineno-0-690"></a>
+<a id="__codelineno-0-691" name="__codelineno-0-691" href="#__codelineno-0-691"></a><span class="gu">#### Step 1: The non-negotiable core (NEVER appears in the picker)</span>
+<a id="__codelineno-0-692" name="__codelineno-0-692" href="#__codelineno-0-692"></a>
+<a id="__codelineno-0-693" name="__codelineno-0-693" href="#__codelineno-0-693"></a>These run on every develop path at every ceremony level. They are not options and
+<a id="__codelineno-0-694" name="__codelineno-0-694" href="#__codelineno-0-694"></a>MUST NOT be presented as such:
+<a id="__codelineno-0-695" name="__codelineno-0-695" href="#__codelineno-0-695"></a>
+<a id="__codelineno-0-696" name="__codelineno-0-696" href="#__codelineno-0-696"></a><span class="k">-</span><span class="w"> </span>Code review (4.5)
+<a id="__codelineno-0-697" name="__codelineno-0-697" href="#__codelineno-0-697"></a><span class="k">-</span><span class="w"> </span>Green-mirage audit (4.6.3)
+<a id="__codelineno-0-698" name="__codelineno-0-698" href="#__codelineno-0-698"></a><span class="k">-</span><span class="w"> </span>Test-suite run (4.6.2) when tests cover the touched code
+<a id="__codelineno-0-699" name="__codelineno-0-699" href="#__codelineno-0-699"></a><span class="k">-</span><span class="w"> </span>TDD-first (4.3) for any change carrying behavioral logic (the §3.4 literal/config
+<a id="__codelineno-0-700" name="__codelineno-0-700" href="#__codelineno-0-700"></a>  waiver survives ONLY when D6 silent-failure potential is <span class="sb">`low`</span>)
+<a id="__codelineno-0-701" name="__codelineno-0-701" href="#__codelineno-0-701"></a><span class="k">-</span><span class="w"> </span><span class="gs">**The Iron Law**</span> — no skill created or edited without a failing test first. OUTSIDE
+<a id="__codelineno-0-702" name="__codelineno-0-702" href="#__codelineno-0-702"></a>  the picker at every level (see <span class="sb">`write-skill-test`</span>, <span class="sb">`writing-skills`</span>): a test-first
+<a id="__codelineno-0-703" name="__codelineno-0-703" href="#__codelineno-0-703"></a>  rule that can be switched off is not a rule.
+<a id="__codelineno-0-704" name="__codelineno-0-704" href="#__codelineno-0-704"></a><span class="k">-</span><span class="w"> </span>Author ≠ Judge, the artifact-verification protocol, and the Phase Declaration ritual
+<a id="__codelineno-0-705" name="__codelineno-0-705" href="#__codelineno-0-705"></a>  (structural, not gates — nothing about them is selectable)
+<a id="__codelineno-0-706" name="__codelineno-0-706" href="#__codelineno-0-706"></a>
+<a id="__codelineno-0-707" name="__codelineno-0-707" href="#__codelineno-0-707"></a><span class="gu">#### Step 1a: Gate position axis (`gate_position`)</span>
+<a id="__codelineno-0-708" name="__codelineno-0-708" href="#__codelineno-0-708"></a>
+<a id="__codelineno-0-709" name="__codelineno-0-709" href="#__codelineno-0-709"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-710" name="__codelineno-0-710" href="#__codelineno-0-710"></a><span class="sb">`gate_position`</span> changes gate POSITION, never gate PRESENCE. Every selected gate still
+<a id="__codelineno-0-711" name="__codelineno-0-711" href="#__codelineno-0-711"></a>runs; this axis decides only WHERE in the task stream. Elision (running fewer gates
+<a id="__codelineno-0-712" name="__codelineno-0-712" href="#__codelineno-0-712"></a>than the locked ceremony selected) stays forbidden; repositioning (every selected gate
+<a id="__codelineno-0-713" name="__codelineno-0-713" href="#__codelineno-0-713"></a>runs at a declared boundary recorded in the ledger) is a Phase-0 choice.
+<a id="__codelineno-0-714" name="__codelineno-0-714" href="#__codelineno-0-714"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-715" name="__codelineno-0-715" href="#__codelineno-0-715"></a>
+<a id="__codelineno-0-716" name="__codelineno-0-716" href="#__codelineno-0-716"></a>Default <span class="sb">`gate_position = per_task`</span> — today's behavior, unchanged for operators who do
+<a id="__codelineno-0-717" name="__codelineno-0-717" href="#__codelineno-0-717"></a>not engage with this axis. Offer <span class="sb">`per_group`</span> ONLY when
+<a id="__codelineno-0-718" name="__codelineno-0-718" href="#__codelineno-0-718"></a><span class="sb">`SESSION_PREFERENCES.task_granularity == "capability"`</span> (§0.7 Step 2.5): a file-cut plan
+<a id="__codelineno-0-719" name="__codelineno-0-719" href="#__codelineno-0-719"></a>has no capability boundary to gate at.
+<a id="__codelineno-0-720" name="__codelineno-0-720" href="#__codelineno-0-720"></a>
+<a id="__codelineno-0-721" name="__codelineno-0-721" href="#__codelineno-0-721"></a>When offered, ask via AskUserQuestion:
+<a id="__codelineno-0-722" name="__codelineno-0-722" href="#__codelineno-0-722"></a>
+<a id="__codelineno-0-723" name="__codelineno-0-723" href="#__codelineno-0-723"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-724" name="__codelineno-0-724" href="#__codelineno-0-724"></a>Header: "Gate position"
+<a id="__codelineno-0-725" name="__codelineno-0-725" href="#__codelineno-0-725"></a>Question: "The depth gates (completion verification 4.4, code review 4.5, fact-check
+<a id="__codelineno-0-726" name="__codelineno-0-726" href="#__codelineno-0-726"></a>4.5.1) can run per task, or once per declared capability group at the group boundary.
+<a id="__codelineno-0-727" name="__codelineno-0-727" href="#__codelineno-0-727"></a>Which do you want? Every selected gate still runs either way — this only changes
+<a id="__codelineno-0-728" name="__codelineno-0-728" href="#__codelineno-0-728"></a>where."
+<a id="__codelineno-0-729" name="__codelineno-0-729" href="#__codelineno-0-729"></a>
+<a id="__codelineno-0-730" name="__codelineno-0-730" href="#__codelineno-0-730"></a>Options:
+<a id="__codelineno-0-731" name="__codelineno-0-731" href="#__codelineno-0-731"></a><span class="k">-</span><span class="w"> </span>Per task (Recommended default): today's behavior — each task gets its own gate pass.
+<a id="__codelineno-0-732" name="__codelineno-0-732" href="#__codelineno-0-732"></a><span class="k">-</span><span class="w"> </span>Per group: gates run once per capability group, against the group's single
+<a id="__codelineno-0-733" name="__codelineno-0-733" href="#__codelineno-0-733"></a>  deliverable, adversarially (at least one control that goes RED on a known-bad
+<a id="__codelineno-0-734" name="__codelineno-0-734" href="#__codelineno-0-734"></a>  input). Fewer gate dispatches; detection moves to the group boundary instead of
+<a id="__codelineno-0-735" name="__codelineno-0-735" href="#__codelineno-0-735"></a>  the task that introduced the defect.
+<a id="__codelineno-0-736" name="__codelineno-0-736" href="#__codelineno-0-736"></a><span class="sb">```</span>
 <a id="__codelineno-0-737" name="__codelineno-0-737" href="#__codelineno-0-737"></a>
-<a id="__codelineno-0-738" name="__codelineno-0-738" href="#__codelineno-0-738"></a>Offer ONLY components the assessment made relevant. A change with every dimension
-<a id="__codelineno-0-739" name="__codelineno-0-739" href="#__codelineno-0-739"></a><span class="sb">`low`</span> gets a two-item menu or none; never tax a small request with a long
-<a id="__codelineno-0-740" name="__codelineno-0-740" href="#__codelineno-0-740"></a>questionnaire. Show a component only when its dimension row fired or its flag set:
+<a id="__codelineno-0-738" name="__codelineno-0-738" href="#__codelineno-0-738"></a>Store the answer as <span class="sb">`develop_gate_ledger.ceremony.gate_position ∈ {"per_task", "per_group"}`</span>.
+<a id="__codelineno-0-739" name="__codelineno-0-739" href="#__codelineno-0-739"></a>
+<a id="__codelineno-0-740" name="__codelineno-0-740" href="#__codelineno-0-740"></a><span class="gu">#### Step 2: Build the menu from the assessment (do NOT show a fixed 12-item list)</span>
 <a id="__codelineno-0-741" name="__codelineno-0-741" href="#__codelineno-0-741"></a>
-<a id="__codelineno-0-742" name="__codelineno-0-742" href="#__codelineno-0-742"></a>| Component | Offered when |
-<a id="__codelineno-0-743" name="__codelineno-0-743" href="#__codelineno-0-743"></a>|---|---|
-<a id="__codelineno-0-744" name="__codelineno-0-744" href="#__codelineno-0-744"></a>| Research (Phase 1) | <span class="sb">`needs_research`</span>, or D1/D7 high |
-<a id="__codelineno-0-745" name="__codelineno-0-745" href="#__codelineno-0-745"></a>| Discovery + dehallucination (1.5) | <span class="sb">`needs_research`</span>, or D1/D2 high |
-<a id="__codelineno-0-746" name="__codelineno-0-746" href="#__codelineno-0-746"></a>| Devil's advocate (1.6) | <span class="sb">`needs_design`</span> or <span class="sb">`needs_research`</span>, or D2 high |
-<a id="__codelineno-0-747" name="__codelineno-0-747" href="#__codelineno-0-747"></a>| Design doc + design review (2.1/2.2) | <span class="sb">`needs_design`</span>, or D3/D7 high |
-<a id="__codelineno-0-748" name="__codelineno-0-748" href="#__codelineno-0-748"></a>| Assumption verification (2.5) | <span class="sb">`needs_design`</span> |
-<a id="__codelineno-0-749" name="__codelineno-0-749" href="#__codelineno-0-749"></a>| Checkability passes (2.1.5/3.1.5) | D5 high — <span class="gs">**LOCKED, shown as already-on**</span> |
-<a id="__codelineno-0-750" name="__codelineno-0-750" href="#__codelineno-0-750"></a>| Impl plan + plan review (3.1/3.2) | <span class="sb">`needs_design`</span> or <span class="sb">`needs_infrastructure`</span>, or D3/D4 high |
-<a id="__codelineno-0-751" name="__codelineno-0-751" href="#__codelineno-0-751"></a>| Per-task fact-checking (4.5.1) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span> |
-<a id="__codelineno-0-752" name="__codelineno-0-752" href="#__codelineno-0-752"></a>| Completion verification (4.4) | D6 high — <span class="gs">**LOCKED, shown as already-on**</span> |
-<a id="__codelineno-0-753" name="__codelineno-0-753" href="#__codelineno-0-753"></a>| Comprehensive audit (4.6.1) | D3/D6 high |
-<a id="__codelineno-0-754" name="__codelineno-0-754" href="#__codelineno-0-754"></a>| Comprehensive fact-checking (4.6.4) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span>, or D4 high |
-<a id="__codelineno-0-755" name="__codelineno-0-755" href="#__codelineno-0-755"></a>| Pre-PR claim validation (4.6.5) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span>, or D4 high |
-<a id="__codelineno-0-756" name="__codelineno-0-756" href="#__codelineno-0-756"></a>| Roundtable dialectic | never auto-recommended; only if the operator asked in §0.4 |
-<a id="__codelineno-0-757" name="__codelineno-0-757" href="#__codelineno-0-757"></a>
-<a id="__codelineno-0-758" name="__codelineno-0-758" href="#__codelineno-0-758"></a>LOCKED rows are DISPLAYED (so the operator sees what they get) but carry no
-<a id="__codelineno-0-759" name="__codelineno-0-759" href="#__codelineno-0-759"></a>deselect option. State the reason inline: "locked because silent-failure potential is
-<a id="__codelineno-0-760" name="__codelineno-0-760" href="#__codelineno-0-760"></a>high — the gate that catches a success report over a no-op."
+<a id="__codelineno-0-742" name="__codelineno-0-742" href="#__codelineno-0-742"></a>Offer ONLY components the assessment made relevant — a change with every dimension
+<a id="__codelineno-0-743" name="__codelineno-0-743" href="#__codelineno-0-743"></a><span class="sb">`low`</span> gets a two-item menu or none. Show a component only when its row fired or its
+<a id="__codelineno-0-744" name="__codelineno-0-744" href="#__codelineno-0-744"></a>flag set:
+<a id="__codelineno-0-745" name="__codelineno-0-745" href="#__codelineno-0-745"></a>
+<a id="__codelineno-0-746" name="__codelineno-0-746" href="#__codelineno-0-746"></a>| Component | Offered when |
+<a id="__codelineno-0-747" name="__codelineno-0-747" href="#__codelineno-0-747"></a>|---|---|
+<a id="__codelineno-0-748" name="__codelineno-0-748" href="#__codelineno-0-748"></a>| Research (Phase 1) | <span class="sb">`needs_research`</span>, or D1/D7 high |
+<a id="__codelineno-0-749" name="__codelineno-0-749" href="#__codelineno-0-749"></a>| Discovery + dehallucination (1.5) | <span class="sb">`needs_research`</span>, or D1/D2 high |
+<a id="__codelineno-0-750" name="__codelineno-0-750" href="#__codelineno-0-750"></a>| Devil's advocate (1.6) | <span class="sb">`needs_design`</span> or <span class="sb">`needs_research`</span>, or D2 high |
+<a id="__codelineno-0-751" name="__codelineno-0-751" href="#__codelineno-0-751"></a>| Design doc + design review (2.1/2.2) | <span class="sb">`needs_design`</span>, or D3/D7 high |
+<a id="__codelineno-0-752" name="__codelineno-0-752" href="#__codelineno-0-752"></a>| Assumption verification (2.5) | <span class="sb">`needs_design`</span> |
+<a id="__codelineno-0-753" name="__codelineno-0-753" href="#__codelineno-0-753"></a>| Checkability passes (2.1.5/3.1.5) | D5 high — <span class="gs">**LOCKED, shown as already-on**</span> |
+<a id="__codelineno-0-754" name="__codelineno-0-754" href="#__codelineno-0-754"></a>| Impl plan + plan review (3.1/3.2) | <span class="sb">`needs_design`</span> or <span class="sb">`needs_infrastructure`</span>, or D3/D4 high |
+<a id="__codelineno-0-755" name="__codelineno-0-755" href="#__codelineno-0-755"></a>| Per-task fact-checking (4.5.1) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span> |
+<a id="__codelineno-0-756" name="__codelineno-0-756" href="#__codelineno-0-756"></a>| Completion verification (4.4) | D6 high — <span class="gs">**LOCKED, shown as already-on**</span> |
+<a id="__codelineno-0-757" name="__codelineno-0-757" href="#__codelineno-0-757"></a>| Comprehensive audit (4.6.1) | D3/D6 high |
+<a id="__codelineno-0-758" name="__codelineno-0-758" href="#__codelineno-0-758"></a>| Comprehensive fact-checking (4.6.4) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span>, or D4 high |
+<a id="__codelineno-0-759" name="__codelineno-0-759" href="#__codelineno-0-759"></a>| Pre-PR claim validation (4.6.5) | <span class="sb">`needs_research`</span> or <span class="sb">`needs_design`</span>, or D4 high |
+<a id="__codelineno-0-760" name="__codelineno-0-760" href="#__codelineno-0-760"></a>| Roundtable dialectic | never auto-recommended; only if the operator asked in §0.4 |
 <a id="__codelineno-0-761" name="__codelineno-0-761" href="#__codelineno-0-761"></a>
-<a id="__codelineno-0-762" name="__codelineno-0-762" href="#__codelineno-0-762"></a><span class="gu">#### Step 3: Ask (via AskUserQuestion)</span>
-<a id="__codelineno-0-763" name="__codelineno-0-763" href="#__codelineno-0-763"></a>
-<a id="__codelineno-0-764" name="__codelineno-0-764" href="#__codelineno-0-764"></a>Present ONE question with the derived menu. Recommendation and choice must be visibly
-<a id="__codelineno-0-765" name="__codelineno-0-765" href="#__codelineno-0-765"></a>distinct — recommend, never preselect-and-hope:
+<a id="__codelineno-0-762" name="__codelineno-0-762" href="#__codelineno-0-762"></a>LOCKED rows are DISPLAYED (so the operator sees what they get) but carry no deselect
+<a id="__codelineno-0-763" name="__codelineno-0-763" href="#__codelineno-0-763"></a>option. State the reason inline: "locked because silent-failure potential is high."
+<a id="__codelineno-0-764" name="__codelineno-0-764" href="#__codelineno-0-764"></a>
+<a id="__codelineno-0-765" name="__codelineno-0-765" href="#__codelineno-0-765"></a><span class="gu">#### Step 3: Ask (via AskUserQuestion)</span>
 <a id="__codelineno-0-766" name="__codelineno-0-766" href="#__codelineno-0-766"></a>
-<a id="__codelineno-0-767" name="__codelineno-0-767" href="#__codelineno-0-767"></a><span class="sb">```markdown</span>
-<a id="__codelineno-0-768" name="__codelineno-0-768" href="#__codelineno-0-768"></a>Header: "Ceremony"
-<a id="__codelineno-0-769" name="__codelineno-0-769" href="#__codelineno-0-769"></a>Question: "Here's the ceremony I recommend for this work, and why. Which do you want?
-<a id="__codelineno-0-770" name="__codelineno-0-770" href="#__codelineno-0-770"></a>This is locked once we start — I won't renegotiate it mid-run."
-<a id="__codelineno-0-771" name="__codelineno-0-771" href="#__codelineno-0-771"></a>
-<a id="__codelineno-0-772" name="__codelineno-0-772" href="#__codelineno-0-772"></a>Options:
-<a id="__codelineno-0-773" name="__codelineno-0-773" href="#__codelineno-0-773"></a><span class="k">-</span><span class="w"> </span>Recommended: {Core|Focused|Full} — {the derived set, named}. {One line of why.}
-<a id="__codelineno-0-774" name="__codelineno-0-774" href="#__codelineno-0-774"></a><span class="k">-</span><span class="w"> </span>Full ceremony — every phase and gate develop has. Always available regardless of my read.
-<a id="__codelineno-0-775" name="__codelineno-0-775" href="#__codelineno-0-775"></a><span class="k">-</span><span class="w"> </span>Customize — I'll list the {N} optional components and you pick.
-<a id="__codelineno-0-776" name="__codelineno-0-776" href="#__codelineno-0-776"></a><span class="k">-</span><span class="w"> </span>Core only — the non-negotiable floor and nothing above it. {Name what this gives up.}
-<a id="__codelineno-0-777" name="__codelineno-0-777" href="#__codelineno-0-777"></a>  (Offered ONLY when no dimension is high and no need-flag is set.)
-<a id="__codelineno-0-778" name="__codelineno-0-778" href="#__codelineno-0-778"></a><span class="sb">```</span>
-<a id="__codelineno-0-779" name="__codelineno-0-779" href="#__codelineno-0-779"></a>
-<a id="__codelineno-0-780" name="__codelineno-0-780" href="#__codelineno-0-780"></a>If the operator picks <span class="gs">**Customize**</span>, ask a follow-up with the derived menu as
-<a id="__codelineno-0-781" name="__codelineno-0-781" href="#__codelineno-0-781"></a>multi-select. LOCKED components are shown in the prompt text as already-on and are
-<a id="__codelineno-0-782" name="__codelineno-0-782" href="#__codelineno-0-782"></a>NOT among the selectable items.
-<a id="__codelineno-0-783" name="__codelineno-0-783" href="#__codelineno-0-783"></a>
-<a id="__codelineno-0-784" name="__codelineno-0-784" href="#__codelineno-0-784"></a><span class="gs">**Default path (a non-engaging operator gets today's behavior, unchanged).**</span> If the
-<a id="__codelineno-0-785" name="__codelineno-0-785" href="#__codelineno-0-785"></a>operator does not answer, cancels, or picks the recommendation without customizing on
-<a id="__codelineno-0-786" name="__codelineno-0-786" href="#__codelineno-0-786"></a>a fully-flagged request, <span class="sb">`source = "default_full"`</span> and NOTHING is declined: <span class="sb">`selected`</span>
-<a id="__codelineno-0-787" name="__codelineno-0-787" href="#__codelineno-0-787"></a>is exactly the flag-derived gate set that the Tiered Review Floor tables already
-<a id="__codelineno-0-788" name="__codelineno-0-788" href="#__codelineno-0-788"></a>produce today, and <span class="sb">`declined`</span> is empty. The picker can only ever SUBTRACT from the
-<a id="__codelineno-0-789" name="__codelineno-0-789" href="#__codelineno-0-789"></a>flag-derived set, and subtracting nothing reproduces today's run exactly.
-<a id="__codelineno-0-790" name="__codelineno-0-790" href="#__codelineno-0-790"></a>
-<a id="__codelineno-0-791" name="__codelineno-0-791" href="#__codelineno-0-791"></a><span class="gu">#### Step 4: Lock it into the ledger</span>
+<a id="__codelineno-0-767" name="__codelineno-0-767" href="#__codelineno-0-767"></a>Present ONE question with the derived menu. Recommendation and choice must be visibly
+<a id="__codelineno-0-768" name="__codelineno-0-768" href="#__codelineno-0-768"></a>distinct — recommend, never preselect-and-hope.
+<a id="__codelineno-0-769" name="__codelineno-0-769" href="#__codelineno-0-769"></a>
+<a id="__codelineno-0-770" name="__codelineno-0-770" href="#__codelineno-0-770"></a><span class="sb">```markdown</span>
+<a id="__codelineno-0-771" name="__codelineno-0-771" href="#__codelineno-0-771"></a>Header: "Ceremony"
+<a id="__codelineno-0-772" name="__codelineno-0-772" href="#__codelineno-0-772"></a>Question: "Here's the ceremony I recommend for this work, and why. Which do you want?
+<a id="__codelineno-0-773" name="__codelineno-0-773" href="#__codelineno-0-773"></a>This is locked once we start — I won't renegotiate it mid-run."
+<a id="__codelineno-0-774" name="__codelineno-0-774" href="#__codelineno-0-774"></a>
+<a id="__codelineno-0-775" name="__codelineno-0-775" href="#__codelineno-0-775"></a>Options:
+<a id="__codelineno-0-776" name="__codelineno-0-776" href="#__codelineno-0-776"></a><span class="k">-</span><span class="w"> </span>Recommended: {Core|Focused|Full} — {the derived set, named}. {One line of why.}
+<a id="__codelineno-0-777" name="__codelineno-0-777" href="#__codelineno-0-777"></a><span class="k">-</span><span class="w"> </span>Full ceremony — every phase and gate develop has. Always available regardless of my read.
+<a id="__codelineno-0-778" name="__codelineno-0-778" href="#__codelineno-0-778"></a><span class="k">-</span><span class="w"> </span>Customize — I'll list the {N} optional components and you pick.
+<a id="__codelineno-0-779" name="__codelineno-0-779" href="#__codelineno-0-779"></a><span class="k">-</span><span class="w"> </span>Core only — the non-negotiable floor and nothing above it. {Name what this gives up.}
+<a id="__codelineno-0-780" name="__codelineno-0-780" href="#__codelineno-0-780"></a>  (Offered ONLY when no dimension is high and no need-flag is set.)
+<a id="__codelineno-0-781" name="__codelineno-0-781" href="#__codelineno-0-781"></a><span class="sb">```</span>
+<a id="__codelineno-0-782" name="__codelineno-0-782" href="#__codelineno-0-782"></a>
+<a id="__codelineno-0-783" name="__codelineno-0-783" href="#__codelineno-0-783"></a>If the operator picks <span class="gs">**Customize**</span>, ask a follow-up with the derived menu as
+<a id="__codelineno-0-784" name="__codelineno-0-784" href="#__codelineno-0-784"></a>multi-select. LOCKED components are shown in the prompt text as already-on and are
+<a id="__codelineno-0-785" name="__codelineno-0-785" href="#__codelineno-0-785"></a>NOT among the selectable items.
+<a id="__codelineno-0-786" name="__codelineno-0-786" href="#__codelineno-0-786"></a>
+<a id="__codelineno-0-787" name="__codelineno-0-787" href="#__codelineno-0-787"></a><span class="gs">**Default path (a non-engaging operator gets today's behavior, unchanged).**</span> If the
+<a id="__codelineno-0-788" name="__codelineno-0-788" href="#__codelineno-0-788"></a>operator does not answer, cancels, or takes the recommendation unmodified on a
+<a id="__codelineno-0-789" name="__codelineno-0-789" href="#__codelineno-0-789"></a>flagged request, <span class="sb">`source = "default_full"`</span>, <span class="sb">`selected`</span> is exactly the flag-derived set
+<a id="__codelineno-0-790" name="__codelineno-0-790" href="#__codelineno-0-790"></a>the Tiered Review Floor tables already produce, and <span class="sb">`declined`</span> is empty. The picker can
+<a id="__codelineno-0-791" name="__codelineno-0-791" href="#__codelineno-0-791"></a>only SUBTRACT, and subtracting nothing reproduces today's run exactly.
 <a id="__codelineno-0-792" name="__codelineno-0-792" href="#__codelineno-0-792"></a>
-<a id="__codelineno-0-793" name="__codelineno-0-793" href="#__codelineno-0-793"></a>Write the choice to <span class="sb">`develop_gate_ledger.ceremony`</span> via persistent state deep-merge
-<a id="__codelineno-0-794" name="__codelineno-0-794" href="#__codelineno-0-794"></a>(MERGE-ONLY — never full overwrite). The shape and the locking rules are in the
-<a id="__codelineno-0-795" name="__codelineno-0-795" href="#__codelineno-0-795"></a>develop skill under "Ceremony Ledger". Two properties matter here:
-<a id="__codelineno-0-796" name="__codelineno-0-796" href="#__codelineno-0-796"></a>
-<a id="__codelineno-0-797" name="__codelineno-0-797" href="#__codelineno-0-797"></a><span class="k">1.</span> A declined component is RECORDED AS DECLINED, never merely absent. A resumed
-<a id="__codelineno-0-798" name="__codelineno-0-798" href="#__codelineno-0-798"></a>   session must be able to tell "the operator chose not to run this" from "this has
-<a id="__codelineno-0-799" name="__codelineno-0-799" href="#__codelineno-0-799"></a>   not run yet". Absence is ambiguous; <span class="sb">`declined`</span> is not.
-<a id="__codelineno-0-800" name="__codelineno-0-800" href="#__codelineno-0-800"></a><span class="k">2.</span> <span class="sb">`locked_at`</span> is written at this moment and never rewritten. Its presence IS the lock.
-<a id="__codelineno-0-801" name="__codelineno-0-801" href="#__codelineno-0-801"></a><span class="k">3.</span> <span class="sb">`gate_position`</span> (§0.8 Step 1a) is locked alongside <span class="sb">`selected`</span>/<span class="sb">`declined`</span>, under the
-<a id="__codelineno-0-802" name="__codelineno-0-802" href="#__codelineno-0-802"></a>   same <span class="sb">`locked_at`</span> — it is one more field of the same immutable ceremony block, not a
-<a id="__codelineno-0-803" name="__codelineno-0-803" href="#__codelineno-0-803"></a>   separate decision with its own lock.
+<a id="__codelineno-0-793" name="__codelineno-0-793" href="#__codelineno-0-793"></a><span class="gu">#### Step 4: Lock it into the ledger</span>
+<a id="__codelineno-0-794" name="__codelineno-0-794" href="#__codelineno-0-794"></a>
+<a id="__codelineno-0-795" name="__codelineno-0-795" href="#__codelineno-0-795"></a>Write the choice to <span class="sb">`develop_gate_ledger.ceremony`</span> via persistent state deep-merge
+<a id="__codelineno-0-796" name="__codelineno-0-796" href="#__codelineno-0-796"></a>(MERGE-ONLY — never full overwrite). The shape and locking rules are in the develop
+<a id="__codelineno-0-797" name="__codelineno-0-797" href="#__codelineno-0-797"></a>skill under "Ceremony Ledger". Two properties matter here:
+<a id="__codelineno-0-798" name="__codelineno-0-798" href="#__codelineno-0-798"></a>
+<a id="__codelineno-0-799" name="__codelineno-0-799" href="#__codelineno-0-799"></a><span class="k">1.</span> A declined component is RECORDED AS DECLINED, never merely absent. A resumed session
+<a id="__codelineno-0-800" name="__codelineno-0-800" href="#__codelineno-0-800"></a>   must tell "chose not to run this" from "has not run yet"; absence cannot.
+<a id="__codelineno-0-801" name="__codelineno-0-801" href="#__codelineno-0-801"></a><span class="k">2.</span> <span class="sb">`locked_at`</span> is written at this moment and never rewritten. Its presence IS the lock.
+<a id="__codelineno-0-802" name="__codelineno-0-802" href="#__codelineno-0-802"></a><span class="k">3.</span> <span class="sb">`gate_position`</span> (§0.8 Step 1a) locks alongside <span class="sb">`selected`</span>/<span class="sb">`declined`</span> under the same
+<a id="__codelineno-0-803" name="__codelineno-0-803" href="#__codelineno-0-803"></a>   <span class="sb">`locked_at`</span> — one field of the same immutable block, not a separate decision.
 <a id="__codelineno-0-804" name="__codelineno-0-804" href="#__codelineno-0-804"></a>
 <a id="__codelineno-0-805" name="__codelineno-0-805" href="#__codelineno-0-805"></a>&lt;FORBIDDEN&gt;
 <a id="__codelineno-0-806" name="__codelineno-0-806" href="#__codelineno-0-806"></a><span class="k">-</span><span class="w"> </span>Presenting any non-negotiable core item as a selectable option
 <a id="__codelineno-0-807" name="__codelineno-0-807" href="#__codelineno-0-807"></a><span class="k">-</span><span class="w"> </span>Offering to deselect a D5/D6-LOCKED component
-<a id="__codelineno-0-808" name="__codelineno-0-808" href="#__codelineno-0-808"></a><span class="k">-</span><span class="w"> </span>Presenting a menu of components the assessment did not make relevant
-<a id="__codelineno-0-809" name="__codelineno-0-809" href="#__codelineno-0-809"></a><span class="k">-</span><span class="w"> </span>Preselecting the recommendation without showing that it is develop's suggestion and the operator's call
+<a id="__codelineno-0-808" name="__codelineno-0-808" href="#__codelineno-0-808"></a><span class="k">-</span><span class="w"> </span>Presenting components the assessment did not make relevant
+<a id="__codelineno-0-809" name="__codelineno-0-809" href="#__codelineno-0-809"></a><span class="k">-</span><span class="w"> </span>Preselecting the recommendation without showing it is a suggestion, not the choice
 <a id="__codelineno-0-810" name="__codelineno-0-810" href="#__codelineno-0-810"></a><span class="k">-</span><span class="w"> </span>Deriving ceremony from a file count
-<a id="__codelineno-0-811" name="__codelineno-0-811" href="#__codelineno-0-811"></a><span class="k">-</span><span class="w"> </span>Re-opening the picker after <span class="sb">`locked_at`</span> is set (abort and re-invoke develop instead — see §0.5.6)
+<a id="__codelineno-0-811" name="__codelineno-0-811" href="#__codelineno-0-811"></a><span class="k">-</span><span class="w"> </span>Re-opening the picker after <span class="sb">`locked_at`</span> is set (abort and re-invoke develop — §0.5.6)
 <a id="__codelineno-0-812" name="__codelineno-0-812" href="#__codelineno-0-812"></a>&lt;/FORBIDDEN&gt;
 <a id="__codelineno-0-813" name="__codelineno-0-813" href="#__codelineno-0-813"></a>
 <a id="__codelineno-0-814" name="__codelineno-0-814" href="#__codelineno-0-814"></a>&lt;FORBIDDEN&gt;
