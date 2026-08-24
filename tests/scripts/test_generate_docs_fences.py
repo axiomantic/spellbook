@@ -12,14 +12,9 @@ generator writes 200+ files in one pass, so an off-by-one here corrupts the
 docs site wholesale rather than visibly failing.
 """
 
-import sys
 from pathlib import Path
 
 import pytest
-
-SCRIPTS_DIR = Path(__file__).resolve().parents[2] / "scripts"
-sys.path.insert(0, str(SCRIPTS_DIR))
-
 from generate_docs import fence_for
 
 

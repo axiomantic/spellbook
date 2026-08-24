@@ -57,6 +57,13 @@ packages = ["spellbook", "spellbook_mcp"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# scripts/ holds standalone gate checkers, not an installed package, so a
+# test importing one has nothing to import it FROM. Six modules each
+# reached for the same sys.path.insert, and every one of them then needed
+# a noqa to silence the E402 that the insert forced. pytest resolves this
+# entry against rootdir before collection, which is what makes the imports
+# ordinary top-level imports again.
+pythonpath = ["scripts"]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 timeout = 30

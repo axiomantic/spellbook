@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The dedupe skill's structural-template floor now names how its bucket key is
+  derived. `skills/dedupe/SKILL.md` and `commands/dedupe-analyze.md` referred to
+  a bare `bucket_key`, which is a real field but was unanchored at both consumer
+  sites; they now read "heading-topic bucket key" and point at
+  `references/segmentation-protocol.md` §3, where the derivation actually lives.
+  No behavior changes -- the allowlist and the `KEEP-placement` short-circuit are
+  the same.
+- The D1 structure gate (`tests/dedupe-skill/verify-structure.sh`) checks
+  `skills/dedupe/references/template-headings.md`, which shipped but was missing
+  from the gate's expected-file inventory, so neither its presence nor its
+  non-emptiness was ever asserted. The gate's reported total is now derived from
+  the inventory array instead of a hardcoded 9, so the count cannot drift from
+  the list again.
+- The repo-root walk defers to git when a path's case differs from disk.
+  Within that filesystem read, a path whose case differs from the disk's
+  spelling now defers to git rather than being answered with the caller's
+  spelling. Because the result is a storage key, the two spellings addressed
+  two different ledger files on a case-insensitive volume, and a resumed
+  develop run silently started over. The spelling is checked against the
+  parent listing, never reconstructed: case folding is the filesystem's rule
+  and HFS+ also normalizes Unicode. Windows canonicalises case in `realpath`
+  and so confirms the spelling instead of deferring; both outcomes are sound,
+  and the property pinned is that the caller's spelling is never echoed back.
+
 ## [0.90.0] - 2026-08-22
 
 ### Removed
@@ -176,19 +202,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
-- The dedupe skill's structural-template floor now names how its bucket key is
-  derived. `skills/dedupe/SKILL.md` and `commands/dedupe-analyze.md` referred to
-  a bare `bucket_key`, which is a real field but was unanchored at both consumer
-  sites; they now read "heading-topic bucket key" and point at
-  `references/segmentation-protocol.md` §3, where the derivation actually lives.
-  No behavior changes -- the allowlist and the `KEEP-placement` short-circuit are
-  the same.
-- The D1 structure gate (`tests/dedupe-skill/verify-structure.sh`) checks
-  `skills/dedupe/references/template-headings.md`, which shipped but was missing
-  from the gate's expected-file inventory, so neither its presence nor its
-  non-emptiness was ever asserted. The gate's reported total is now derived from
-  the inventory array instead of a hardcoded 9, so the count cannot drift from
-  the list again.
 
 - The OpenCode `context-curator` extension
   (`extensions/opencode/context-curator/`) and its server half
