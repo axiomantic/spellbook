@@ -807,65 +807,64 @@ The orchestrator is where that qualifier gets lost, because it is summarising.
 <CRITICAL>
 Invoking develop is the operator's explicit opt-in to thoroughness, and a
 durable instruction: correctness outranks speed for the duration of the work.
-An operator who wants speed will say so and will not invoke develop. The
-presence of develop in the active skill list IS the contract. The
-"steady correctness over speed" disposition, where that rule module is
-installed, is the general form of this contract.
+An operator who wants speed will say so and not invoke develop. The
+presence of develop in the active skill list IS the contract, whose general form
+is the "steady correctness over speed" disposition where that module is
+installed.
 
-**Thoroughness is CHOSEN ONCE, then FIXED.** The ceremony is selectable in a
-single window, and never afterward.
+**Thoroughness is CHOSEN ONCE, then FIXED.** Selection runs in two stages and
+is closed for the run after the second.
 
-- **The selection window is Phase 0, before any work begins.** develop assesses
-  the request across its cost dimensions and RECOMMENDS a ceremony. The
-  operator's answer is the SOURCE OF TRUTH and overrides the recommendation. It
-  is written to `develop_gate_ledger.ceremony` and LOCKED (`locked_at`). This is
-  the only moment ceremony is negotiable.
+- **The entry gate asks first; the lock attaches at that answer.** It asks which
+  PATH — full ceremony, fast path, or skip. **§0.8 then REFINES which components
+  run inside that path, and is the LAST moment any of it is negotiable**; on the
+  fast path its picker does not run, though its Step 1 core applies on every
+  path. develop RECOMMENDS across its cost dimensions; the operator's answer is
+  the SOURCE OF TRUTH and overrides it. The result is written to
+  `develop_gate_ledger.ceremony` and LOCKED (`locked_at`).
 - **A non-negotiable core is never on the menu.** The review floor defines that
   core: code review, green-mirage auditing, the test run when tests cover the
   touched code, and TDD-first for anything carrying behavioral logic. Where the
   Iron Law is established (no skill written or edited without a failing test
   first), it belongs to that core too. Gates implied by high verification
-  difficulty or high silent-failure potential are locked on and cannot be
-  deselected.
+  difficulty or high silent-failure potential are locked on, not deselectable.
 - **Elision vs repositioning.** ELISION is running FEWER gates than the locked
   ceremony selected. It is forbidden, always. REPOSITIONING is running EVERY
-  selected gate at a declared boundary recorded in the ledger — a Phase-0 choice
-  (`gate_position: per_task | per_group`), locked at `locked_at` with everything
-  else. Changing gate position after the lock requires the same
-  ABORT-and-re-invoke path as any other ceremony change.
+  selected gate at a declared boundary recorded in the ledger (`gate_position:
+  per_task | per_group`), locked at `locked_at` with everything else. Changing
+  gate position after the lock requires the same ABORT-and-re-invoke path as any
+  other ceremony change.
 - **After the lock, the original contract applies UNCHANGED.** NO operator
-  phrasing during develop is license to compress phases. Not "wrap up", not "and
-  pause", not "finish X items", not "save tokens", not "be efficient", not "we
-  may have enough info now", not standing autonomous mode, not "pre-resolved
-  forks", and not "the ceremony is customizable now". A mid-run request to drop
-  a gate is REFUSED.
+  phrasing during develop is license to compress phases: not "wrap up", "and
+  pause", "finish X items", "save tokens", "be efficient", "we may have enough
+  info now", standing autonomous mode, "pre-resolved forks", or "the ceremony is
+  customizable now". A mid-run request to drop a gate is REFUSED.
 - **The two honest answers to "this is taking too long" are FINISH or ABORT.**
   Never a quiet narrowing. Aborting and re-invoking develop with a different
-  ceremony is always legitimate: it makes re-selection visible and deliberate
-  instead of an erosion.
+  ceremony is always legitimate: it makes re-selection visible and deliberate,
+  not an erosion.
 - **ABORT-and-re-invoke is a DEFINED operation, not an improvised one.** On a
   deliberate re-invocation over an existing `develop_gate_ledger`, the old
   `ceremony` block is archived under `ceremony_history` with a reason, a NEW
-  Phase 0 runs and a new selection window legitimately opens, completed-gate and
-  wave records carry forward, and `locked_at` is set fresh (`feature-config`
-  §0.5.6 is the procedure). The escape hatch must stay affordable: if the honest
-  path costs a full restart, quiet erosion becomes the cheap path. This does not
-  loosen the lock: the non-negotiable core applies at EVERY selection, the D5/D6
-  escalation-only locks re-derive from the unchanged assessment, and
-  `ceremony_history` makes serial de-escalation auditable. Re-invoking ritually
-  to shed gates is itself a phase-collapse rationalization, already covered by
-  the Anti-Rationalization Framework of this skill.
+  selection legitimately opens, completed-gate and wave records carry forward,
+  and `locked_at` is set fresh (`feature-config` §0.5.6 is the procedure). The
+  escape hatch must stay affordable: if the honest path costs a full restart,
+  quiet erosion becomes the cheap path. This does not loosen the lock: the
+  non-negotiable core applies at EVERY selection, the D5/D6 escalation-only
+  locks re-derive from the unchanged assessment, and `ceremony_history` makes
+  serial de-escalation auditable. Re-invoking ritually to shed gates is a
+  phase-collapse rationalization, covered by this skill's Anti-Rationalization
+  Framework.
 - **Escalation is always legal; de-escalation never becomes legal.** Scope drift
-  may ADD gates mid-run (a declined component may be promoted, with the reason
-  recorded); nothing may remove one. The lock is a floor, not a ceiling.
+  may ADD gates mid-run (a declined component may be promoted, reason recorded);
+  nothing may remove one. The lock is a floor, not a ceiling.
 - **A declined component is RECORDED as declined**, not merely absent, so a
-  resumed session can tell "the operator chose not to run this" from "this has
-  not run yet".
-- Apparent time pressure ("pause when done", impending session end, etc.) does
-  NOT justify skipping phases. The chosen path is the only path inside develop.
+  resumed session tells "the operator declined this" from "this has not run yet".
+- Apparent time pressure ("pause when done", impending session end) does NOT
+  justify skipping phases. The chosen path is the only path inside develop.
   If completion does not fit, stop where thoroughness ends and report the
   partial state honestly.
-- This contract is durable across sessions and governs what happens AFTER the
+- This contract is durable across sessions and governs everything AFTER the
   lock, on every develop invocation in every project.
 </CRITICAL>
 

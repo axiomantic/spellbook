@@ -34,7 +34,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Tiered Review Floor, and the D5/D6 locked gates (which a zero-flag change can
   still trigger, since the need-flags say nothing about verifiability) all still
   apply, and the ceremony is still recorded and locked -- only the question is
-  dropped.
+  dropped. The operator contract in `commands/develop-configure.md` ("Develop =
+  Thoroughness Mode") carried the same stale claim at its source -- it said
+  thoroughness is selectable in a single window at Phase 0, "before any work
+  begins", and that this is the only moment ceremony is negotiable -- so the
+  corrected §0.8 was citing an uncorrected authority. It now describes the two
+  stages: the entry gate asks which path and the lock attaches at that answer,
+  and §0.8 refines which components run inside that path and is the last moment
+  any of it is negotiable, with its picker skipped on the fast path. Nothing in
+  the contract was weakened; the surrounding prose was tightened to pay for the
+  correction within the file's size ceiling, which did not move.
 - `rules/40-develop-discipline.md` now attaches the ceremony lock at the moment the
   operator CHOOSES a ceremony rather than at the moment develop is invoked, which
   became false once invocation only asks a question. The no-de-escalation
