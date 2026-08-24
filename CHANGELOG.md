@@ -23,6 +23,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   number, or threshold -- the always-loaded file would otherwise become a second,
   stale copy of the gate roster -- and point at the *Tiered Review Floor* tables in
   `commands/develop-configure.md`, which remain the single source of truth.
+  Phase 0's ceremony picker (`commands/feature-config.md` §0.8) followed from that
+  move. It claimed to be the only moment ceremony is negotiable, which the entry
+  gate made false; it now says the gate chose the path and attached the lock, and
+  that the picker refines which components run inside that path and is the last
+  moment any of it is negotiable. The lock itself is unweakened -- immutable for
+  the run, escalation legal, de-escalation never, mid-run gate drops refused. The
+  picker also no longer runs at all on the fast path, where the operator has
+  already answered a ceremony question at the gate; the non-negotiable core, the
+  Tiered Review Floor, and the D5/D6 locked gates (which a zero-flag change can
+  still trigger, since the need-flags say nothing about verifiability) all still
+  apply, and the ceremony is still recorded and locked -- only the question is
+  dropped.
 - `rules/40-develop-discipline.md` now attaches the ceremony lock at the moment the
   operator CHOOSES a ceremony rather than at the moment develop is invoked, which
   became false once invocation only asks a question. The no-de-escalation
