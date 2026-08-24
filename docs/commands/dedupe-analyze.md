@@ -21,8 +21,10 @@ before `/dedupe-report`.
    as a KEEP-flavored verdict with `source=mechanical_floor` without a
    classifier dispatch.
 3. **Structural template floor short-circuits classification** — any
-   intra-bucket pair whose `bucket_key` matches the allowlist in
-   `skills/dedupe/references/template-headings.md` is recorded as
+   intra-bucket pair whose heading-topic bucket key (derived per
+   `skills/dedupe/references/segmentation-protocol.md` §3) matches the
+   allowlist in `skills/dedupe/references/template-headings.md` is
+   recorded as
    `KEEP-placement` with `source=structural_template` without a
    classifier dispatch. Cross-bucket pairs surfaced by triage are
    exempt to preserve drift detection.
@@ -152,9 +154,10 @@ it within `[10%, 50%]`.
 Before the mechanical safety floor and classifier dispatch, apply the
 bucket-key allowlist defined in
 `skills/dedupe/references/template-headings.md`. For every surviving
-pair, if **both** blocks' `bucket_key` matches either the exact-match
-allowlist or one of the phase-name regex patterns declared in that
-file, short-circuit the pair:
+pair, if **both** blocks' heading-topic bucket keys (derived per
+`skills/dedupe/references/segmentation-protocol.md` §3) match either
+the exact-match allowlist or one of the phase-name regex patterns
+declared in that file, short-circuit the pair:
 
 - record the verdict as `KEEP-placement` (each block fills a per-skill
   or per-command structural slot prescribed by spellbook's authoring

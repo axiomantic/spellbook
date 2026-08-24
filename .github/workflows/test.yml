@@ -39,6 +39,37 @@ jobs:
         chmod +x tests/claude-code/*.sh
         tests/claude-code/run-all-tests.sh
 
+  dedupe-skill-gates:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v7
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: '20'
+
+    - name: Install gate dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y jq perl
+        npm install -g markdownlint-cli2
+
+    # The gates fail loudly rather than skip when a tool is absent; a silent
+    # skip was previously caught as a green mirage. Prove the tools resolve
+    # here so a missing one fails at install time, not as a confusing gate error.
+    - name: Verify gate dependencies resolve
+      run: |
+        jq --version
+        perl -v
+        markdownlint-cli2 --version > /dev/null
+
+    - name: Run dedupe skill verification gates
+      run: |
+        chmod +x tests/dedupe-skill/*.sh
+        tests/dedupe-skill/run-all-gates.sh
+
   python-tests:
     strategy:
       matrix:

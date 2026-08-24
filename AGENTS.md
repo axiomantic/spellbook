@@ -50,7 +50,6 @@ Only `doctoc` writes files. Every other hook reports and leaves the tree alone. 
 - `Check generated documentation is current`: The `docs/` mirror is stale. The hook runs `scripts/generate_docs.py --check`, which names each stale page and writes nothing. Run `uv run scripts/generate_docs.py`, stage the regenerated files, and re-commit.
 - `Check documentation completeness`: A skill/command has no generated doc page. Run `uv run scripts/generate_docs.py` and stage the result; the hook only checks.
 - `Validate skill/command/agent/rule schemas`: Checks YAML frontmatter in skills, commands, agents, and rule modules. Fix the frontmatter.
-- `Scan changeset for security issues`: Security scanner on staged diffs. Fix the flagged issue.
 
 Apart from `doctoc`, a failing hook does not repair anything for you. Run the command it names, stage the result (`git add`), and commit again.
 
@@ -103,7 +102,7 @@ Claude Code is the **primary** supported platform with full support. The others 
 ## Invariant Principles
 
 1. **Library vs Repo distinction**: Library items (`skills/`, `commands/`) ship to users and require docs. Repo items (`.claude/skills/`) are internal only.
-2. **Documentation follows code**: Library changes require CHANGELOG, README, docs updates. Pre-commit hooks enforce this.
+2. **Documentation follows code**: Library changes require CHANGELOG, README, and docs updates. The `check-docs-completeness` pre-commit hook enforces the README and `docs/` halves. **Nothing enforces the CHANGELOG entry** — no hook and no CI job reads it, so a library change ships with a stale CHANGELOG unless you update it yourself.
 3. **Test before commit**: `uv run pytest tests/` + `uv run install.py --dry-run` before any commit.
 
 ## Glossary

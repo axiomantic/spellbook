@@ -176,6 +176,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `tests/test_path_utils.py::TestResolveRepoRootMapping` rather than described,
   and the fallback in `scripts/develop_gate_ledger.py` still shells out and is
   held against it as a standing differential.
+- The dedupe skill's structural-template floor now names how its bucket key is
+  derived. `skills/dedupe/SKILL.md` and `commands/dedupe-analyze.md` referred to
+  a bare `bucket_key`, which is a real field but was unanchored at both consumer
+  sites; they now read "heading-topic bucket key" and point at
+  `references/segmentation-protocol.md` §3, where the derivation actually lives.
+  No behavior changes -- the allowlist and the `KEEP-placement` short-circuit are
+  the same.
+- The D1 structure gate (`tests/dedupe-skill/verify-structure.sh`) checks
+  `skills/dedupe/references/template-headings.md`, which shipped but was missing
+  from the gate's expected-file inventory, so neither its presence nor its
+  non-emptiness was ever asserted. The gate's reported total is now derived from
+  the inventory array instead of a hardcoded 9, so the count cannot drift from
+  the list again.
 
 - The OpenCode `context-curator` extension
   (`extensions/opencode/context-curator/`) and its server half
