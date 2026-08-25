@@ -2982,6 +2982,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../skills/autonomous-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    autonomous-mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../skills/design-exploration/" class="md-nav__link">
         
   
@@ -8546,17 +8574,19 @@
 <a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
 <a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="gs">**Build the right thing, not the easy thing.**</span> When generating any solution — autonomously or as options for the operator — aim for the most correct, least deferred, most ergonomic, and easiest-to-understand result. "Most correct" means it actually solves the real problem, not a proxy. "Least deferred" means it does not push necessary work into an unspecified later; if you must defer, the deferred work is called out explicitly (what is undone, what would pick it up), never a hand-wave. "Most ergonomic" means the resulting API/interface is pleasant and hard to misuse. "Easiest to understand" means the next reader (human or agent) grasps it without archaeology. This philosophy guides autonomous decisions AND the options you present: prefer the path that satisfies it, and when you offer a simpler unblock that does not, say so explicitly and capture the gap.
 <a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="gs">**A working mechanism that fails silently fails exactly like a missing one.**</span> When you choose a mechanism, ask what its silence means. If "working correctly" and "absent, misconfigured, or never run" produce the same visible result, you do not have a mechanism yet. Choose the uglier form if it fails loudly.
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a>This is the DEFAULT guiding philosophy, and in autonomous mode it is selectable: the operator may run a session under a different one, which the Stop hook names in every block message. <span class="sb">`spellbook/core/autonomous.py`</span> (<span class="sb">`PHILOSOPHIES`</span>) is the single home of the list — an always-loaded rule module is the wrong home for a list that will grow.
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
-<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>Observed cases, each found by testing, not by reasoning about the code:
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="gs">**A working mechanism that fails silently fails exactly like a missing one.**</span> When you choose a mechanism, ask what its silence means. If "working correctly" and "absent, misconfigured, or never run" produce the same visible result, you do not have a mechanism yet. Choose the uglier form if it fails loudly.
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="k">-</span><span class="w"> </span>A fix that blinded its own check, and the blindness looked like progress.
-<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="k">-</span><span class="w"> </span>A log entry that claimed more than the evidence supported — it described the state <span class="ge">*before*</span> the edit it was attached to. Six times in one project.
-<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span>A check that passed for the wrong reason. One of its clauses was already guaranteed true by a neighboring clause, so it could never affect the result.
-<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>A name that described the wrong thing. A constant named <span class="sb">`fetchCycles`</span> was actually the program-counter increment. The two meanings happened to match at the one value tested, which hid the mismatch.
-<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">-</span><span class="w"> </span>A deduplication that lowered test precision. Two separate error sites were merged into one check that could cancel itself out. The cleanup looked like a strict improvement. It was not.
-<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">-</span><span class="w"> </span>A guard built from the same value it was supposed to check. It could never fail for an independent reason.
-<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">-</span><span class="w"> </span>A count used where a comparison was needed. A row-count check let a duplicate row through, and the duplicate silently replaced the real row.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>Observed cases, each found by testing, not by reasoning about the code:
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="k">-</span><span class="w"> </span>A fix that blinded its own check, and the blindness looked like progress.
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="k">-</span><span class="w"> </span>A log entry that claimed more than the evidence supported — it described the state <span class="ge">*before*</span> the edit it was attached to. Six times in one project.
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a><span class="k">-</span><span class="w"> </span>A check that passed for the wrong reason. One of its clauses was already guaranteed true by a neighboring clause, so it could never affect the result.
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a><span class="k">-</span><span class="w"> </span>A name that described the wrong thing. A constant named <span class="sb">`fetchCycles`</span> was actually the program-counter increment. The two meanings happened to match at the one value tested, which hid the mismatch.
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="k">-</span><span class="w"> </span>A deduplication that lowered test precision. Two separate error sites were merged into one check that could cancel itself out. The cleanup looked like a strict improvement. It was not.
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a><span class="k">-</span><span class="w"> </span>A guard built from the same value it was supposed to check. It could never fail for an independent reason.
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="k">-</span><span class="w"> </span>A count used where a comparison was needed. A row-count check let a duplicate row through, and the duplicate silently replaced the real row.
 </code></pre></div>
 
 

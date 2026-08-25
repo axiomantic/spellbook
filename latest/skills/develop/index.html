@@ -2982,6 +2982,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../autonomous-mode/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    autonomous-mode
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../design-exploration/" class="md-nav__link">
         
   
@@ -8623,11 +8651,11 @@
 <a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>
 <a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a><span class="gu">### Option 1 — Full ceremony (most correct, slowest)</span>
 <a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
-<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">&gt; </span><span class="ge">Full ceremony: every gate in the develop review floor runs, plus the depth gates the request's need-flags call for. Each phase is its own set of subagent dispatches, so this is MANY dispatches and the slowest path by a wide margin. Once chosen, the ceremony LOCKS: it may be escalated mid-run but never de-escalated. "Wrap up", "save tokens", and standing autonomous mode do not reopen it; the honest answers to "this is taking too long" are FINISH or ABORT-and-re-invoke.</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a><span class="k">&gt; </span><span class="ge">Full ceremony: every gate in the develop review floor runs, plus the depth gates the request's need-flags call for. Each phase is its own set of subagent dispatches, so this is MANY dispatches and the slowest path by a wide margin. Once chosen, the ceremony LOCKS: no phrasing during the run reopens it, and the only ways out are FINISH or ABORT-and-re-invoke. Escalating to more ceremony is always allowed; dropping a gate never is.</span>
 <a id="__codelineno-0-37" name="__codelineno-0-37" href="#__codelineno-0-37"></a>
 <a id="__codelineno-0-38" name="__codelineno-0-38" href="#__codelineno-0-38"></a><span class="gu">### Option 2 — Fast path (lighter, still gated)</span>
 <a id="__codelineno-0-39" name="__codelineno-0-39" href="#__codelineno-0-39"></a>
-<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">&gt; </span><span class="ge">Fast path: a reduced gate set, but NEVER zero review. Research and the plan happen inline, in this conversation, instead of running as full phases with their own dispatches — you confirm the plan before anything is executed. Fewer and faster gates, and a gate that cannot apply is RECORDED as not-applicable rather than silently dropped. The ceremony LOCKS on the same terms as full ceremony. Work that outgrows the fast path is re-flagged and continues at the gated phase rather than being squeezed through.</span>
+<a id="__codelineno-0-40" name="__codelineno-0-40" href="#__codelineno-0-40"></a><span class="k">&gt; </span><span class="ge">Fast path: a reduced gate set, but NEVER zero review. Research and the plan happen inline, in this conversation, instead of running as full phases with their own dispatches — you confirm the plan before anything is executed. Fewer and faster gates, and a gate that cannot apply is RECORDED as not-applicable rather than silently dropped. The ceremony LOCKS identically: no phrasing reopens it, FINISH or ABORT are the only ways out, and escalation is allowed where de-escalation is not. Work that outgrows the fast path is re-flagged and continues at the gated phase rather than being squeezed through.</span>
 <a id="__codelineno-0-41" name="__codelineno-0-41" href="#__codelineno-0-41"></a>
 <a id="__codelineno-0-42" name="__codelineno-0-42" href="#__codelineno-0-42"></a><span class="gu">### Option 3 — Skip develop entirely (least cost, no gates)</span>
 <a id="__codelineno-0-43" name="__codelineno-0-43" href="#__codelineno-0-43"></a>
@@ -8636,8 +8664,8 @@
 <a id="__codelineno-0-46" name="__codelineno-0-46" href="#__codelineno-0-46"></a><span class="gs">**Want the specifics before deciding?**</span> The authoritative gate roster — which gates
 <a id="__codelineno-0-47" name="__codelineno-0-47" href="#__codelineno-0-47"></a>form the floor for each path, and which depth gates each need-flag adds — is the
 <a id="__codelineno-0-48" name="__codelineno-0-48" href="#__codelineno-0-48"></a><span class="ge">*Tiered Review Floor*</span> tables in <span class="sb">`$SPELLBOOK_DIR/commands/develop-configure.md`</span>.
-<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>Read them from there; this gate deliberately does not restate them, so they cannot
-<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>drift apart. <span class="sb">`develop-configure`</span> shows the full roster once a path is chosen.
+<a id="__codelineno-0-49" name="__codelineno-0-49" href="#__codelineno-0-49"></a>Read them from there; this gate deliberately does not restate them, so they
+<a id="__codelineno-0-50" name="__codelineno-0-50" href="#__codelineno-0-50"></a>cannot drift apart.
 <a id="__codelineno-0-51" name="__codelineno-0-51" href="#__codelineno-0-51"></a>
 <a id="__codelineno-0-52" name="__codelineno-0-52" href="#__codelineno-0-52"></a><span class="gs">**Recommend**</span> Option 1 when the request touches behavior across more than a handful of files, needs a design decision, or introduces infrastructure. <span class="gs">**Recommend**</span> Option 2 for a bounded, well-understood edit. Never recommend Option 3; offer it, and let the operator take it.
 <a id="__codelineno-0-53" name="__codelineno-0-53" href="#__codelineno-0-53"></a>
@@ -8646,48 +8674,58 @@
 <a id="__codelineno-0-56" name="__codelineno-0-56" href="#__codelineno-0-56"></a><span class="gu">## Autonomous Mode</span>
 <a id="__codelineno-0-57" name="__codelineno-0-57" href="#__codelineno-0-57"></a>
 <a id="__codelineno-0-58" name="__codelineno-0-58" href="#__codelineno-0-58"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>Autonomous / YOLO mode scopes CONFIRMATIONS, not SCOPE. Choosing a ceremony is a scope decision, so the gate STILL ASKS in autonomous mode. Standing autonomous permission is not an answer to this question.
+<a id="__codelineno-0-59" name="__codelineno-0-59" href="#__codelineno-0-59"></a>Autonomous / YOLO mode scopes CONFIRMATIONS, not SCOPE. Choosing a ceremony is a scope decision, so the gate STILL ASKS in autonomous mode. Standing autonomous permission is not an answer.
 <a id="__codelineno-0-60" name="__codelineno-0-60" href="#__codelineno-0-60"></a>
-<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>The one exception is a genuinely unavailable operator — a non-interactive, headless, or CI session where AskUserQuestion cannot reach a human. There, and only there, default to <span class="gs">**Full ceremony**</span>, and SAY SO explicitly in the transcript: state that the gate could not reach the operator and that it defaulted to full ceremony. NEVER silently pick the cheap path, and never treat "this looks small" as operator unavailability.
-<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>&lt;/CRITICAL&gt;
-<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a>
-<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>---
+<a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a>The one exception is an operator who cannot be reached — a non-interactive, headless, or CI session where AskUserQuestion reaches no human. There, and only there, default to <span class="gs">**Full ceremony**</span> and say so in the transcript. NEVER silently pick the cheap path, and never treat "this looks small" as unavailability.
+<a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="gs">**Autonomy is the SECOND, orthogonal question.**</span> Ceremony is how much verification runs; autonomy is who decides and when the run may end. Ask it AFTER a ceremony path is chosen, on BOTH ceremony paths, never on skip; hand it to the <span class="sb">`autonomous-mode`</span> skill, which owns it and its limits. Autonomy scopes CONFIRMATIONS only: it skips no gate, phase, or dispatch, and never reopens the locked ceremony. A blocker still reaches the operator through AskUserQuestion.
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a>
-<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a><span class="gu">## After the Answer</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>---
 <a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>| Answer | What you do |
-<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>|--------|-------------|
-<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>| Full ceremony | Load <span class="sb">`$SPELLBOOK_DIR/commands/develop-configure.md`</span> and run the full phase sequence. develop STAYS RESIDENT. |
-<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>| Fast path | Load <span class="sb">`$SPELLBOOK_DIR/commands/develop-configure.md`</span> and follow its zero-flag routing. develop STAYS RESIDENT. |
-<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| Skip entirely | EXIT this skill. Say plainly which gates the operator is giving up. Do not dispatch, do not write a ledger. |
-<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| Other (harness-provided) | Treat the operator's own words as the answer; if they describe a ceremony, map it to one of the three and confirm. |
-<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>&lt;CRITICAL&gt;
-<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a><span class="gs">**Resident-orchestrator contract.**</span> On both ceremony paths develop does NOT auto-exit. It remains the active orchestrator, dispatches every phase through subagents, and enforces the review floor it just sold. Only "skip entirely" exits.
-<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>
-<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a><span class="gs">**The lock attaches at the ANSWER.**</span> From the operator's choice onward, the ceremony is fixed for the run. Record it in <span class="sb">`develop_gate_ledger.ceremony`</span> with <span class="sb">`locked_at`</span>. Every phase after this point executes EXACTLY ONE row of the develop dispatch table and must be preceded by a Phase Declaration citing the ledger line it satisfies. The full treatment — forbidden rationalizations, ABORT-and-re-invoke, wave discipline (§24.6), stop semantics, and the incidentals protocol — is in <span class="sb">`$SPELLBOOK_DIR/commands/develop-configure.md`</span>.
-<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>
-<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a><span class="gs">**After a compaction mid-develop, RE-READ `$SPELLBOOK_DIR/commands/develop-configure.md`**</span> before the next dispatch. A compacted context has lost the ceremony lock and the gate semantics, and a run that continues without them elides gates while reporting success.
-<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a><span class="gu">## After the Answer</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>| Answer | What you do |
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>|--------|-------------|
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>| Full ceremony | Load <span class="sb">`$SPELLBOOK_DIR/commands/develop-configure.md`</span> and run the full phase sequence. develop STAYS RESIDENT. |
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>| Fast path | Load <span class="sb">`$SPELLBOOK_DIR/commands/develop-configure.md`</span> and follow its zero-flag routing. develop STAYS RESIDENT. |
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>| Skip entirely | EXIT this skill. Say plainly which gates the operator is giving up. Do not dispatch, do not write a ledger. |
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>| Other (harness-provided) | Treat the operator's own words as the answer; if they describe a ceremony, map it to one of the three and confirm. |
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>On BOTH ceremony paths, ask the autonomy question next, before the first
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>dispatch. Hand it to the <span class="sb">`autonomous-mode`</span> skill, which owns the question,
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>writes the record, and states the limits. It is a separate question with a
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>separate answer: ceremony is how much verification runs, autonomy is who
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>decides and when the run may end. On skip, it is not asked.
 <a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>
-<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a><span class="gu">## Inputs</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>
-<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a><span class="k">-</span><span class="w"> </span>The operator's request (what to build or change).
-<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="k">-</span><span class="w"> </span>Any existing <span class="sb">`develop_gate_ledger`</span> for this project — a live ledger means a run is already in progress; resume it rather than re-asking, unless the operator is deliberately re-invoking to change ceremony.
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>&lt;CRITICAL&gt;
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a><span class="gs">**Resident-orchestrator contract.**</span> On both ceremony paths develop does NOT auto-exit. It remains the active orchestrator, dispatches every phase through subagents, and enforces the review floor it just sold. Only "skip entirely" exits.
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>
+<a id="__codelineno-0-86" name="__codelineno-0-86" href="#__codelineno-0-86"></a><span class="gs">**The lock attaches at the ANSWER.**</span> Record it in <span class="sb">`develop_gate_ledger.ceremony`</span> with <span class="sb">`locked_at`</span>. Every phase after this point executes EXACTLY ONE row of the develop dispatch table and must be preceded by a Phase Declaration citing the ledger line it satisfies. The full treatment — forbidden rationalizations, ABORT-and-re-invoke, wave discipline (§24.6), stop semantics, and the incidentals protocol — is in <span class="sb">`$SPELLBOOK_DIR/commands/develop-configure.md`</span>.
 <a id="__codelineno-0-87" name="__codelineno-0-87" href="#__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gu">## Outputs</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a><span class="k">-</span><span class="w"> </span>A chosen path, recorded and locked.
-<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="k">-</span><span class="w"> </span>On either ceremony path, the loaded orchestrator body and a running phase sequence.
-<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a><span class="k">-</span><span class="w"> </span>On skip, an exited skill and an explicit statement of the gates forgone.
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Loading <span class="sb">`commands/develop-configure.md`</span> before the operator has answered.
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="k">-</span><span class="w"> </span>Inferring the answer from the phrasing of the request, the size of the change, or standing autonomous mode.
-<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a><span class="k">-</span><span class="w"> </span>Defaulting to the fast path or to skip when the operator cannot be reached.
-<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>De-escalating the ceremony after the answer, under any phrasing.
-<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>Exiting the skill on a ceremony path.
-<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-88" name="__codelineno-0-88" href="#__codelineno-0-88"></a><span class="gs">**After a compaction mid-develop, RE-READ `$SPELLBOOK_DIR/commands/develop-configure.md`**</span> before the next dispatch. A compacted context has lost the ceremony lock and the gate semantics, and a run that continues without them elides gates while reporting success.
+<a id="__codelineno-0-89" name="__codelineno-0-89" href="#__codelineno-0-89"></a>&lt;/CRITICAL&gt;
+<a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>
+<a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a><span class="gu">## Inputs</span>
+<a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="k">-</span><span class="w"> </span>The operator's request (what to build or change).
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">-</span><span class="w"> </span>Any existing <span class="sb">`develop_gate_ledger`</span> for this project — a live ledger means a run is already in progress; resume it rather than re-asking, unless the operator is deliberately re-invoking to change ceremony.
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a><span class="gu">## Outputs</span>
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a><span class="k">-</span><span class="w"> </span>A chosen path, recorded and locked.
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a><span class="k">-</span><span class="w"> </span>On either ceremony path, the loaded orchestrator body and a running phase sequence.
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a><span class="k">-</span><span class="w"> </span>On skip, an exited skill and an explicit statement of the gates forgone.
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a><span class="k">-</span><span class="w"> </span>On either ceremony path, the autonomy question asked and answered through the <span class="sb">`autonomous-mode`</span> skill — with a record written and read back, or an explicit statement that autonomous mode was not enabled.
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a><span class="k">-</span><span class="w"> </span>Loading <span class="sb">`commands/develop-configure.md`</span> before the operator has answered.
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a><span class="k">-</span><span class="w"> </span>Inferring the answer from the phrasing of the request, the size of the change, or standing autonomous mode.
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a><span class="k">-</span><span class="w"> </span>Defaulting to the fast path or to skip when the operator cannot be reached.
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a><span class="k">-</span><span class="w"> </span>De-escalating the ceremony after the answer, under any phrasing.
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a><span class="k">-</span><span class="w"> </span>Exiting the skill on a ceremony path.
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a><span class="k">-</span><span class="w"> </span>Dispatching a phase on a ceremony path before the autonomy question has been asked, or answering it yourself from standing autonomous phrasing.
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 
