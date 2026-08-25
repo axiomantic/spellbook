@@ -7,7 +7,97 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Autonomous mode now BINDS, enforced by a `Stop` hook rather than by instruction
+  text. A rule the agent must decide to follow is evaluated by the same faculty
+  that decides to stop, so it can only ever confirm itself; the hook catches the
+  actual turn-end event and can refuse it. A session marked autonomous may end a
+  turn on exactly two conditions: a blocker raised through an `AskUserQuestion`
+  tool call, or verified completion of the whole project goal -- not the current
+  work item. The new `autonomous-mode` skill asks for the mode (`fully`, where
+  decisions are the agent's wherever a reasonable default exists, or `mostly`,
+  where genuine forks still return to the operator) and a guiding philosophy, then
+  writes a per-session record. Both modes stop only on those two conditions; the
+  difference is how much reaches `AskUserQuestion` in the first place, not whether
+  the hook binds. `develop`'s entry gate asks the same question after a ceremony
+  path is chosen, on both ceremony paths and never on skip, because ceremony is
+  how much verification runs while autonomy is who decides and when the run may
+  end. Autonomy scopes CONFIRMATIONS only: it skips no gate, phase, or dispatch,
+  and it never reopens the locked ceremony.
+- Completion verification for autonomous mode, with its limits stated in the
+  module rather than implied. Inside `develop` it is mechanical -- every selected
+  gate carries a passed verdict and the run reached its finishing phase, read
+  through `scripts/develop_gate_ledger.py` rather than by hand-parsing its schema.
+  Outside `develop` it requires an evidence artifact covering every declared
+  criterion. It CANNOT verify that the evidence is true: it never runs the commands
+  the artifact names and cannot distinguish a genuine transcript from one composed
+  to satisfy the check. What it does is convert a completion claim from a sentence
+  into a reviewable artifact, so a false claim has to be written down where a human
+  can check it. Every unknown -- no ledger, unreadable artifact, missing criterion,
+  or an autonomous record declaring no criteria and no ledger -- resolves to NOT
+  complete, because a false negative costs one extra block that the escape phrase
+  clears while a false positive silently disables enforcement and looks identical
+  to a working hook.
+- A literal escape phrase, matched case-insensitively as a substring on
+  `UserPromptSubmit`, clears the autonomous record on the prompt that contains it,
+  so the `Stop` at the end of that same turn already sees no record. It is
+  deliberately rigid -- no inference about operator intent, no synonyms -- which is
+  what makes it trustworthy as a last resort. The recognizer reads the same
+  constant the block message quotes, so the two cannot drift apart.
+- A rolling-window thrash valve, the only protection against an infinite block loop
+  now that the harness cap is disabled. Three blocks inside a rolling window and
+  the next stop is ALLOWED: a turn doing real work takes far longer, so the valve
+  fires only when the model is ending turns without doing anything, where further
+  blocking cannot help. If the valve's own state is missing or malformed the stop
+  is allowed, because a valve that traps the session when its bookkeeping breaks is
+  worse than no valve. Both clock-fault directions resolve safely -- a forward jump
+  or suspend widens the measured gap and reads as not-thrashing, while a backward
+  step opens the valve. The dangerous direction, a clock fault that HOLDS a
+  session, does not exist, because the valve's true condition is what releases it.
+- The guiding philosophy is now a choice rather than a single hardcoded posture.
+  The philosophy `rules/92-core-philosophy.md` already stated remains the default,
+  unchanged in wording so nothing that cites it breaks. The enum lives in code so
+  the hook can name the active philosophy in every block message; the always-loaded
+  rule module points at it and deliberately does not restate the list, which would
+  drift from it silently. A session's unattended decisions are appended to its
+  record with the philosophy that was active at the moment each was made, copied in
+  rather than joined later -- the active philosophy can change mid-session, and a
+  late join would reattribute every earlier decision to whatever was chosen last.
+
+### Fixed
+
+- `UserPromptSubmit` has been handled by the unified hook since the agent2agent
+  work, is covered by tests, and is described in four documents as the always-on
+  hook-notify floor -- but the installer never registered the phase, so that floor
+  has never fired for anyone. This is the module's own silent-failure shape: a
+  working floor and an unwired one produce the identical observable, no output when
+  there is no message. A new test asserts that the set of phases the installer
+  registers agrees with the set the hook actually handles, derived from the code
+  rather than from a second hand-maintained list, so a handler added without a
+  registration -- or a registration without a handler -- goes red instead of going
+  quiet. The test carries no allowlist, deliberately: an allowlist is where the
+  next drift would hide.
+
 ### Changed
+
+- `PreCompact` is retired. It was registered with a timeout and documented as
+  performing a workflow-state save, but the hook has no branch for it: the event
+  fell through and did nothing, and its fail-open test passed precisely because
+  doing nothing and failing open are indistinguishable. Dropping it from the
+  registration table alone would have stranded the stale entry in every existing
+  install forever, since the uninstall pass iterates the very list it was removed
+  from, so retired phases are now swept on the next install or upgrade. Only
+  entries pointing at the spellbook hook are removed; an operator's own
+  `PreCompact` hook survives untouched, and the phase key is deleted only when
+  nothing is left in it. The uninstall discovery scan was widened to match, because
+  a settings file whose only spellbook hook was the stale entry would otherwise
+  report itself unchanged.
+- The installer disables the harness cap on consecutive Stop-hook blocks. Without
+  it, Claude Code overrides the hook after a fixed number of consecutive blocks and
+  ends the turn anyway, which would cap autonomous mode at that many refusals. The
+  entry is removed on uninstall, and only when its value is the one spellbook
+  wrote -- an operator-chosen value survives.
 
 - `develop` is now a thin entry gate. Its triggers fire on almost any "let's
   build X" phrasing, so the full 2000-line orchestrator body loaded before the
