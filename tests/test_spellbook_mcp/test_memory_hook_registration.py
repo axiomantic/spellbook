@@ -1,12 +1,16 @@
 """Tests for unified hook registration in installer.
 
 Verifies that the unified hook (spellbook_hook.py) is registered in
-HOOK_DEFINITIONS for all four phases, replacing the old per-hook entries:
+HOOK_DEFINITIONS for every phase, replacing the old per-hook entries:
 
 - PreToolUse: spellbook_hook.py (timeout 15, catch-all, no async)
 - PostToolUse: spellbook_hook.py (timeout 15, catch-all, no async)
-- PreCompact: spellbook_hook.py (timeout 5, catch-all, no async)
+- UserPromptSubmit: spellbook_hook.py (timeout 10, catch-all, no async)
+- Stop: spellbook_hook.py (timeout 5, catch-all, no async)
 - SessionStart: spellbook_hook.py (timeout 10, catch-all, no async)
+
+PreCompact was registered here until it was retired: nothing ever handled it.
+See ``_RETIRED_HOOK_PHASES`` in installer/components/hooks.py.
 
 The old per-feature memory hooks (memory-capture, memory-inject) were
 removed with the memory system; this suite asserts they are no longer

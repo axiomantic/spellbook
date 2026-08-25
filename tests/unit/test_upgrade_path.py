@@ -9,7 +9,7 @@ PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from installer.components.hooks import _get_hook_path, install_hooks  # noqa: E402  (sys.path mangling above)
+from installer.components.hooks import HOOK_DEFINITIONS, _get_hook_path, install_hooks  # noqa: E402  (sys.path mangling above)
 import tripwire  # noqa: E402  (sys.path mangling above)
 
 
@@ -119,13 +119,19 @@ class TestUpgradeFromShellHooks:
 
         updated = json.loads(settings_path.read_text())
 
-        # Collect all commands across all phases
+        # Collect all commands across every registered phase. PreCompact is
+        # deliberately absent from HOOK_DEFINITIONS now, so it is checked
+        # separately below: the upgrade must remove it, not re-register it.
         all_commands = []
-        for phase in ("PreToolUse", "PostToolUse", "PreCompact", "SessionStart"):
+        for phase in HOOK_DEFINITIONS:
             for entry in updated.get("hooks", {}).get(phase, []):
                 for hook in entry.get("hooks", []):
                     cmd = hook.get("command", "") if isinstance(hook, dict) else hook
                     all_commands.append(cmd)
+
+        assert "PreCompact" not in updated["hooks"], (
+            "PreCompact is a retired phase; upgrading must remove it"
+        )
 
         # No old shell hooks should remain
         old_hooks = {
@@ -134,16 +140,16 @@ class TestUpgradeFromShellHooks:
             "memory-inject.sh", "notify-on-complete.sh", "tts-notify.sh",
             "memory-capture.sh", "pre-compact-save.sh", "post-compact-recover.sh",
         }
-        for cmd in all_commands:
-            for old in old_hooks:
-                assert old not in cmd, f"Old hook {old} still present after upgrade: {cmd}"
+        raw = settings_path.read_text()
+        for old in old_hooks:
+            assert old not in raw, f"Old hook {old} still present after upgrade"
 
-        # Exactly 4 commands total (one per phase), all unified
+        # Exactly one unified command per registered phase.
         expected_cmd = _expected_unified_command()
-        assert all_commands == [expected_cmd, expected_cmd, expected_cmd, expected_cmd]
+        assert all_commands == [expected_cmd] * len(HOOK_DEFINITIONS)
 
         # Each phase should have exactly 1 entry with 1 hook, no matcher
-        for phase in ("PreToolUse", "PostToolUse", "PreCompact", "SessionStart"):
+        for phase in HOOK_DEFINITIONS:
             entries = updated["hooks"][phase]
             assert len(entries) == 1, f"{phase} should have 1 entry, got {len(entries)}"
             assert "matcher" not in entries[0], f"{phase} should have no matcher"
@@ -211,7 +217,8 @@ class TestUpgradeFromShellHooks:
 
         updated = json.loads(settings_path.read_text())
         expected_cmd = _expected_unified_command()
-        for phase in ("PreToolUse", "PostToolUse", "PreCompact", "SessionStart"):
+        assert "PreCompact" not in updated["hooks"]
+        for phase in HOOK_DEFINITIONS:
             entries = updated["hooks"][phase]
             assert len(entries) == 1, (
                 f"{phase} should have 1 entry after double install, got {len(entries)}"
@@ -232,15 +239,12 @@ class TestUpgradeFromShellHooks:
 
         config_dir = tmp_path / ".local" / "spellbook"
         get_spellbook_config_dir_mock = tripwire.mock("installer.config:get_spellbook_config_dir")
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
-        get_spellbook_config_dir_mock.calls(lambda: config_dir)
+        # install_hooks resolves the config dir twice per registered phase
+        # (clean pass + merge pass) plus once for the source symlink. Derived
+        # from HOOK_DEFINITIONS so adding a phase does not silently re-tune it.
+        expected_config_dir_calls = 2 * len(HOOK_DEFINITIONS) + 1
+        for _ in range(expected_config_dir_calls):
+            get_spellbook_config_dir_mock.calls(lambda: config_dir)
         _register_powershell_which_mock()
 
         with tripwire:
@@ -279,12 +283,5 @@ class TestUpgradeFromShellHooks:
             expected = _expected_unified_command(str(expected_symlink), str(config_dir))
             assert pre_tool_use[0]["hooks"][0]["command"] == expected
         _assert_powershell_which_if_windows()
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
-        get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})
+        for _ in range(expected_config_dir_calls):
+            get_spellbook_config_dir_mock.assert_call(args=(), kwargs={})

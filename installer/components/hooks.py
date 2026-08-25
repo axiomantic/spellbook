@@ -5,14 +5,18 @@ Manages hook entries in Claude Code settings files that point to
 the unified Python hook entrypoint (spellbook_hook.py), which handles
 all security, notification, memory, and compaction hooks internally.
 
-All four phases use a single hook command:
+Every phase uses a single hook command:
   $SPELLBOOK_DIR/hooks/spellbook_hook.py
 
 The unified hook dispatches internally based on event type and tool name:
   PreToolUse: bash-gate, spawn-guard, state-sanitize
   PostToolUse: audit-log, canary-check, memory-inject, notify, capture
-  PreCompact: workflow state save
+  UserPromptSubmit: autonomous-mode escape phrase, agent2agent notify floor
+  Stop: autonomous-mode turn-end enforcement (returns a block/allow decision)
   SessionStart: post-compaction recovery
+
+Phases spellbook once registered and no longer does are listed in
+``_RETIRED_HOOK_PHASES`` and swept out of existing settings files on install.
 
 Note: Catch-all hooks omit the ``matcher`` field entirely rather than
 using ``".*"`` or ``"*"``.  Claude Code documentation states: "Use ``*``,
@@ -76,8 +80,27 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
             ],
         },
     ],
-    "PreCompact": [
+    "UserPromptSubmit": [
         {
+            # Unified hook handles: autonomous-mode escape phrase (clears the
+            # autonomous record), and the agent2agent per-turn notify floor.
+            # NO async: the escape-phrase clear must complete before the Stop
+            # hook fires at the end of this same turn.
+            "hooks": [
+                {
+                    "type": "command",
+                    "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
+                    "timeout": 10,
+                },
+            ],
+        },
+    ],
+    "Stop": [
+        {
+            # Unified hook handles: autonomous-mode turn-end enforcement.
+            # NO async: this hook returns a block/allow decision, so Claude Code
+            # must wait for it. Timeout kept small -- the handler only reads
+            # local state and the transcript.
             "hooks": [
                 {
                     "type": "command",
@@ -102,6 +125,19 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
 
 # All phases that contain spellbook hooks
 _HOOK_PHASES = list(HOOK_DEFINITIONS.keys())
+
+# Phases spellbook registered in an earlier version and no longer does.
+# Dropping a phase from HOOK_DEFINITIONS is not enough on its own: _HOOK_PHASES
+# derives from HOOK_DEFINITIONS, so neither the install merge pass nor the
+# uninstall pass would ever look at the phase again, and the stale entry would
+# sit in every existing operator's settings file forever -- spawning a
+# subprocess on every occurrence of the event and reading, to anyone who opens
+# the file, as a working mechanism.
+#
+# PreCompact: registered from the start, never handled. `dispatch()` has no
+# PreCompact branch, so the event always fell through to the no-op default.
+# The workflow-state save it advertised belonged to tooling that was removed.
+_RETIRED_HOOK_PHASES = ("PreCompact",)
 
 # Prefix used to identify spellbook-managed hook paths
 _SPELLBOOK_HOOK_PREFIX = "$SPELLBOOK_DIR/hooks/"
@@ -504,6 +540,84 @@ def _clean_hooks_for_phase(phase_entries: List[Dict], spellbook_dir: Optional[Pa
     return cleaned
 
 
+def _remove_retired_phases(settings: Dict, spellbook_dir: Optional[Path] = None) -> List[str]:
+    """Strip spellbook hooks from phases spellbook no longer registers.
+
+    Removes ONLY hooks that _is_spellbook_hook recognizes. An operator's own
+    unrelated hook in a retired phase is preserved, and the phase key is
+    deleted only when nothing is left in it.
+
+    Returns the phases that were modified, so a caller can report a migration
+    that actually did something rather than one that merely ran.
+    """
+    hooks_section = settings.get("hooks")
+    if not isinstance(hooks_section, dict):
+        return []
+
+    modified: List[str] = []
+    for phase in _RETIRED_HOOK_PHASES:
+        entries = hooks_section.get(phase)
+        if not isinstance(entries, list):
+            continue
+        cleaned = _clean_hooks_for_phase(entries, spellbook_dir)
+        if cleaned == entries:
+            continue
+        modified.append(phase)
+        if cleaned:
+            hooks_section[phase] = cleaned
+        else:
+            del hooks_section[phase]
+    return modified
+
+
+# Claude Code stops honoring a Stop hook's block decision after
+# CLAUDE_CODE_STOP_HOOK_BLOCK_CAP consecutive blocks (default 8) and ends the
+# turn regardless. Spellbook's Stop hook is designed to block repeatedly and
+# bounds itself with a rolling-window valve
+# (spellbook.core.autonomous.thrash_valve_open), so the harness cap would only
+# cut enforcement short at an arbitrary count. The documented way to lift it is
+# verbatim: "Set to `0` to disable the cap." It is an ordinary settings key and
+# follows the same precedence rules as any other.
+STOP_HOOK_BLOCK_CAP_KEY = "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP"
+STOP_HOOK_BLOCK_CAP_VALUE = "0"
+
+
+def _install_managed_env(settings: Dict) -> None:
+    """Write the spellbook-owned entries into the settings ``env`` block.
+
+    Other ``env`` entries are left untouched, and an existing ``env`` that is
+    not an object is replaced rather than crashed on -- the same tolerance
+    the hook phases get.
+    """
+    env = settings.get("env")
+    if not isinstance(env, dict):
+        env = {}
+    env[STOP_HOOK_BLOCK_CAP_KEY] = STOP_HOOK_BLOCK_CAP_VALUE
+    settings["env"] = env
+
+
+def _remove_managed_env(settings: Dict) -> bool:
+    """Remove the spellbook-owned ``env`` entries. Returns whether anything changed.
+
+    Only a value spellbook itself wrote is removed. An operator who set the
+    cap to their own value owns that key now, exactly as
+    ``_clean_hooks_for_phase`` leaves a foreign hook alone; uninstall must not
+    silently revert a deliberate setting. The ``env`` object is dropped when
+    removing our key empties it, so uninstall leaves no residue.
+    """
+    env = settings.get("env")
+    if not isinstance(env, dict):
+        return False
+    if env.get(STOP_HOOK_BLOCK_CAP_KEY) != STOP_HOOK_BLOCK_CAP_VALUE:
+        return False
+    del env[STOP_HOOK_BLOCK_CAP_KEY]
+    if env:
+        settings["env"] = env
+    else:
+        del settings["env"]
+    return True
+
+
 def install_hooks(
     settings_path: Path,
     spellbook_dir: Optional[Path] = None,
@@ -574,6 +688,12 @@ def install_hooks(
     # Clean up legacy Nim and .py hook entries before registering new ones
     _cleanup_legacy_hooks(settings, spellbook_dir)
 
+    # Sweep phases spellbook used to register. _HOOK_PHASES no longer lists
+    # them, so nothing else in this module would ever touch them again.
+    retired = _remove_retired_phases(settings, spellbook_dir)
+    if retired:
+        logger.info("Removed retired spellbook hook phases: %s", ", ".join(retired))
+
     # Clean up old per-tool spellbook hooks (e.g. bash-gate.sh with "Bash" matcher)
     # that are now superseded by the unified catch-all hook.
     # _cleanup_legacy_hooks only handles Nim/.py; this handles old .sh hooks too.
@@ -590,6 +710,11 @@ def install_hooks(
         _merge_hooks_for_phase(
             settings["hooks"][phase], hook_defs, spellbook_dir
         )
+
+    # The Stop hook and the disabled harness block cap are one change: with the
+    # cap at its default the hook's own valve would rarely be what ends a block
+    # loop, and the cap alone would cut enforcement short at an arbitrary count.
+    _install_managed_env(settings)
 
     # Write back atomically (Windows transient-error retry on os.replace).
     settings_path.parent.mkdir(parents=True, exist_ok=True)
@@ -651,11 +776,17 @@ def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, d
     if settings is None:
         settings = {}
 
+    # Evaluated BEFORE the "nothing to remove" early return below, which only
+    # counts hooks. A settings file holding the env entry and no hooks still
+    # has spellbook state in it, and returning "unchanged" would strand it.
+    env_removed = _remove_managed_env(settings)
+
     hooks_section = settings.get("hooks", {})
 
-    # Check if there are any spellbook hooks to remove across all phases
+    # Check if there are any spellbook hooks to remove across all phases,
+    # including phases spellbook no longer registers.
     has_spellbook_hooks = False
-    for phase in _HOOK_PHASES:
+    for phase in (*_HOOK_PHASES, *_RETIRED_HOOK_PHASES):
         phase_entries = hooks_section.get(phase, [])
         for entry in phase_entries:
             for hook in entry.get("hooks", []):
@@ -668,6 +799,14 @@ def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, d
             break
 
     if not has_spellbook_hooks:
+        if env_removed:
+            atomic_write_json(str(settings_path), settings)
+            return HookResult(
+                component="hooks",
+                success=True,
+                action="removed",
+                message=f"hooks: spellbook env settings removed from {settings_path.name}",
+            )
         return HookResult(
             component="hooks",
             success=True,
@@ -681,6 +820,7 @@ def uninstall_hooks(settings_path: Path, spellbook_dir: Optional[Path] = None, d
             hooks_section[phase] = _clean_hooks_for_phase(hooks_section[phase], spellbook_dir)
 
     settings["hooks"] = hooks_section
+    _remove_retired_phases(settings, spellbook_dir)
 
     # Write back atomically (Windows transient-error retry on os.replace).
     atomic_write_json(str(settings_path), settings)
