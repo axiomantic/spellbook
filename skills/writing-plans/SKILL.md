@@ -16,7 +16,7 @@ Implementation Planner. Reputation depends on plans that engineers execute witho
 ## Invariant Principles
 
 1. **Zero-Context Assumption** - Engineer reading plan knows nothing about codebase, toolset, or domain
-2. **Atomic Tasks** - Each step is one action (2-5 min): write test, run test, implement, verify, commit
+2. **Atomic Tasks** - Each step is one action (2-5 min): write test, run test, implement, verify, commit. This governs STEP granularity WITHIN a work item; the revert test (see Work-Item Granularity, adjacent to Capability Groups) governs WORK-ITEM boundaries — the two do not conflict.
 3. **Complete Specification** - Full code, exact paths, expected outputs; never "add validation" or similar
 4. **TDD Flow** - RED (failing test) -> GREEN (minimal pass) -> commit; repeat
 5. **Traceable Decisions** - Link to design doc so reviewers can trace requirements -> plan -> code
@@ -128,6 +128,55 @@ Every task carries these fields, in this order, between `**Files:**` and `**Step
 | `**Check:**` | The SINGLE proving command for this task, as one inline code span. This is the single source of truth: Step 4's `Run:` line is copied from it at generation time, never retyped. |
 | `**Schema:** planlint-v1` | Opts this plan into `spellbook-planlint`. Every plan this skill generates carries it. An author who wants a plan excluded writes `**Schema:** legacy` instead — a decision recorded, not an absence. |
 | `**Subject:**` | Required on measurement-type tasks. One of `fixed_artifact`, `instrumented_run`, `physical_access` — the snake_case tokens `feature-config` §0.7.6 names. Records the measurement's subject kind as a real, greppable field rather than prose. |
+
+## Work-Item Granularity (Revert Test)
+
+This rule is UN-GATED: it applies in both `task_granularity` modes (`file` and
+`capability`), independent of whether capability groups are declared below.
+
+Apply the revert test PER ITEM: is THIS item independently acceptable — does its
+own MEANINGFUL, behavior-level `Check:` pass with ALL other candidate items
+reverted? An item that is NOT independently acceptable must live in the same work
+item as the sibling(s) it MUTUALLY requires — each fails the revert test because
+of the other. Take the MAXIMAL set of such mutually-dependent-for-acceptance
+items: that set is ONE work
+item, with one joint `Check:`. Items that ARE independently acceptable stay their
+own work items, even when adjacent to a joint set. So a cluster of one
+independent item plus a jointly-acceptable pair partitions into two work items:
+the joint pair (one item, one joint `Check:`) and the independent item (its own).
+
+A behavior-level `Check:` asserts an observable OUTPUT VALUE for a specified
+input, or an observable state change. Checks that only assert
+existence/importability/type/attribute-presence, a constant equality, an internal
+count or length, or echo back a hard-coded literal are NOT behavior-level — they
+pass with siblings reverted while proving no behavior.
+
+Anchor collapse on MUTUAL joint acceptance WITHIN A SINGLE DELIVERABLE, not on a
+one-directional prerequisite. A `Depends:` edge alone does not decide it — ask
+what the downstream check needs from the upstream. The prerequisite carve-out
+(keep separate) applies ONLY when the downstream check needs the upstream merely
+PRESENT/available at runtime (e.g., a DB migration behind a GET endpoint whose
+check exercises the endpoint's behavior); the upstream is a distinct DELIVERABLE.
+It does NOT apply when the downstream check's CORRECTNESS is co-produced by the
+upstream — round-trip, encode/decode, or any "two halves of one contract" shape;
+that pair is jointly acceptable and MUST be collapsed. The upstream's own check
+being weak is a SEPARATE concern. The deciding question is what the downstream
+check verifies: does it verify ONE deliverable's own behavior (the upstream is a
+separate deliverable it merely relies on being available → prerequisite, keep
+separate), or the CONJOINED behavior of both (neither's behavior is observable
+without the other → joint, collapse)?
+Likewise do NOT merge items merely because they share a file, share setup, or are
+individually small — items touching the same file that each carry an independent,
+behavior-level `Check:` stay separate. This is the guard against over-merging.
+
+In `file` mode a work item is a single Task; in `capability` mode a
+jointly-acceptable set is realized as a capability group (Tasks stay separate,
+the group carries the one joint `Check:`) — see Capability Groups below. "One
+work item" means one joint-acceptance unit, not necessarily one Task.
+
+The revert test IS the named check for this rule; it is a prose instrument the
+author applies by judgment — there is no mechanical backstop, consistent with the
+other rules in this skill.
 
 ## Capability Groups
 
