@@ -12,14 +12,30 @@ import os
 import pytest
 
 from spellbook.core import autonomous
+from spellbook.core.paths import get_data_dir
 
 
 @pytest.fixture(autouse=True)
 def isolated_state(tmp_path, monkeypatch):
-    """Redirect the data dir so tests never touch the real state file."""
+    """Redirect the data dir so tests never touch the real state file.
+
+    ``LOCALAPPDATA`` is the one that matters on Windows: ``get_data_dir()``
+    reads it directly, so leaving it unset redirected nothing there. Every
+    test in this file then shared the developer's REAL records directory --
+    which both leaks state between tests and writes to a directory the suite
+    does not own. The redirection is asserted rather than assumed, because a
+    variable that stops being read is invisible: the tests would go on
+    passing against the real directory on the platform that still resolves
+    through ``HOME``.
+    """
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
     monkeypatch.setenv("APPDATA", str(tmp_path))
+    monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
+    assert tmp_path in get_data_dir().parents, (
+        f"data dir {get_data_dir()} is not under {tmp_path}; "
+        "the redirection did not take effect"
+    )
     return tmp_path
 
 
@@ -54,8 +70,6 @@ class TestHappyPath:
         assert record["blocked_stops"] == 0
 
     def test_record_lives_under_autonomous_subdir_of_state_dir(self):
-        from spellbook.core.paths import get_data_dir
-
         _write_record()
         expected = get_data_dir() / "autonomous" / f"{SID}.json"
         assert expected.is_file()
@@ -118,8 +132,6 @@ class TestInvalidSessionId:
         assert autonomous.read_autonomous_record(bad_sid) is None
 
     def test_write_returns_false_and_creates_nothing(self, tmp_path):
-        from spellbook.core.paths import get_data_dir
-
         ok = autonomous.write_autonomous_record(
             "../escape",
             mode="fully",
@@ -146,24 +158,18 @@ class TestMalformedRecord:
         assert autonomous.read_autonomous_record(SID) is None
 
     def test_invalid_json_reads_as_none(self):
-        from spellbook.core.paths import get_data_dir
-
         d = get_data_dir() / "autonomous"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{SID}.json").write_text("{not json", encoding="utf-8")
         assert autonomous.read_autonomous_record(SID) is None
 
     def test_json_array_instead_of_object_reads_as_none(self):
-        from spellbook.core.paths import get_data_dir
-
         d = get_data_dir() / "autonomous"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{SID}.json").write_text("[1, 2, 3]", encoding="utf-8")
         assert autonomous.read_autonomous_record(SID) is None
 
     def test_wrong_mode_value_reads_as_none(self):
-        from spellbook.core.paths import get_data_dir
-
         d = get_data_dir() / "autonomous"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{SID}.json").write_text(
@@ -182,8 +188,6 @@ class TestMalformedRecord:
         assert autonomous.read_autonomous_record(SID) is None
 
     def test_wrong_field_types_read_as_none(self):
-        from spellbook.core.paths import get_data_dir
-
         d = get_data_dir() / "autonomous"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{SID}.json").write_text(
@@ -202,8 +206,6 @@ class TestMalformedRecord:
         assert autonomous.read_autonomous_record(SID) is None
 
     def test_partial_record_missing_field_reads_as_none(self):
-        from spellbook.core.paths import get_data_dir
-
         d = get_data_dir() / "autonomous"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{SID}.json").write_text(
@@ -214,7 +216,6 @@ class TestMalformedRecord:
 
     def test_blocked_stops_as_bool_is_rejected(self):
         """bool is an int subclass in Python; the validator must not accept it."""
-        from spellbook.core.paths import get_data_dir
 
         d = get_data_dir() / "autonomous"
         d.mkdir(parents=True, exist_ok=True)
@@ -234,8 +235,6 @@ class TestMalformedRecord:
         assert autonomous.read_autonomous_record(SID) is None
 
     def test_unreadable_file_reads_as_none(self):
-        from spellbook.core.paths import get_data_dir
-
         d = get_data_dir() / "autonomous"
         d.mkdir(parents=True, exist_ok=True)
         target = d / f"{SID}.json"
@@ -354,8 +353,6 @@ class TestAppendDecision:
         assert autonomous.read_autonomous_record(SID) is None
 
     def test_append_to_malformed_record_is_silent_no_op(self):
-        from spellbook.core.paths import get_data_dir
-
         d = get_data_dir() / "autonomous"
         d.mkdir(parents=True, exist_ok=True)
         (d / f"{SID}.json").write_text("{not json", encoding="utf-8")
@@ -438,7 +435,6 @@ class TestFilesystemFaultPropagation:
         self, isolated_state
     ):
         _skip_unless_permission_bits_enforced()
-        from spellbook.core.paths import get_data_dir
 
         # Write the record while the directory is still writable, so the
         # READ side of increment_blocked_stops succeeds and only the
@@ -454,7 +450,6 @@ class TestFilesystemFaultPropagation:
 
     def test_append_decision_returns_false_on_real_fs_fault(self, isolated_state):
         _skip_unless_permission_bits_enforced()
-        from spellbook.core.paths import get_data_dir
 
         _write_record()
         autonomous_dir = get_data_dir() / "autonomous"
@@ -771,8 +766,6 @@ class TestCompletionVerifiedRouting:
         assert autonomous.read_autonomous_record(SID)["evidence_path"] == artifact
 
     def test_record_with_a_non_string_evidence_path_is_not_autonomous(self, tmp_path):
-        from spellbook.core.paths import get_data_dir
-
         _write_record()
         path = get_data_dir() / "autonomous" / f"{SID}.json"
         data = json.loads(path.read_text(encoding="utf-8"))

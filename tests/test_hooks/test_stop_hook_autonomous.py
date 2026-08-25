@@ -30,6 +30,7 @@ if str(HOOKS_DIR) not in sys.path:
 import spellbook_hook  # noqa: E402
 
 from spellbook.core import autonomous  # noqa: E402
+from spellbook.core.paths import get_data_dir  # noqa: E402
 
 SID = "sess-abc_123.def"
 
@@ -58,6 +59,10 @@ def isolated_state(tmp_path, monkeypatch):
     no_ledger = tmp_path / "no-develop-dir"
     no_ledger.mkdir()
     monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(no_ledger))
+    assert tmp_path in get_data_dir().parents, (
+        f"data dir {get_data_dir()} is not under {tmp_path}; "
+        "the redirection did not take effect"
+    )
     return tmp_path
 
 
@@ -330,14 +335,14 @@ class TestFailsOpen:
 
     def test_malformed_record_allows(self, tmp_path):
         _record()
-        path = tmp_path / ".local" / "spellbook" / "autonomous" / f"{SID}.json"
+        path = get_data_dir() / "autonomous" / f"{SID}.json"
         path.write_text("{not json", encoding="utf-8")
         transcript = _transcript(tmp_path, [_user_prompt()])
         assert _decision(_stdin(transcript_path=transcript)) is None
 
     def test_record_with_wrong_shape_allows(self, tmp_path):
         _record()
-        path = tmp_path / ".local" / "spellbook" / "autonomous" / f"{SID}.json"
+        path = get_data_dir() / "autonomous" / f"{SID}.json"
         path.write_text(json.dumps({"mode": "sideways"}), encoding="utf-8")
         transcript = _transcript(tmp_path, [_user_prompt()])
         assert _decision(_stdin(transcript_path=transcript)) is None

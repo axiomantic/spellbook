@@ -37,6 +37,7 @@ from installer.components.hooks import (
     STOP_HOOK_BLOCK_CAP_VALUE,
     _HOOK_PHASES,
     _RETIRED_HOOK_PHASES,
+    _get_hook_path_for_platform,
     install_hooks,
     uninstall_hooks,
 )
@@ -49,6 +50,13 @@ _UNIFIED_COMMAND = (
     "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python "
     "$SPELLBOOK_DIR/hooks/spellbook_hook.py"
 )
+# What install_hooks actually writes on THIS platform. On Windows the installer
+# rewrites the command to its PowerShell wrapper, so a rendered-settings
+# assertion against the Unix literal is asserting the wrong artifact. Derived
+# from the installer's own transformer rather than branched on sys.platform
+# here: a second copy of the rule in the test is the drift this file exists to
+# catch, one level up.
+_RENDERED_COMMAND = _get_hook_path_for_platform(_UNIFIED_COMMAND)
 
 
 def _dispatched_event_names() -> frozenset[str]:
@@ -145,7 +153,9 @@ def test_install_renders_new_phases_into_settings(tmp_path):
     for phase in _NEW_PHASES:
         entries = rendered["hooks"][phase]
         commands = [h["command"] for e in entries for h in e["hooks"]]
-        assert _UNIFIED_COMMAND in commands, f"{phase} missing from rendered settings"
+        assert (
+            _RENDERED_COMMAND in commands
+        ), f"{phase} missing from rendered settings"
 
 
 def test_install_preserves_a_foreign_hook_in_a_new_phase(tmp_path):
@@ -160,7 +170,7 @@ def test_install_preserves_a_foreign_hook_in_a_new_phase(tmp_path):
     rendered = json.loads(settings_path.read_text(encoding="utf-8"))
     commands = [h["command"] for e in rendered["hooks"]["Stop"] for h in e["hooks"]]
     assert foreign["command"] in commands
-    assert _UNIFIED_COMMAND in commands
+    assert _RENDERED_COMMAND in commands
 
 
 def test_uninstall_removes_new_phases(tmp_path):
@@ -174,7 +184,7 @@ def test_uninstall_removes_new_phases(tmp_path):
     for phase in _NEW_PHASES:
         entries = rendered["hooks"].get(phase, [])
         commands = [h["command"] for e in entries for h in e["hooks"]]
-        assert _UNIFIED_COMMAND not in commands, f"{phase} survived uninstall"
+        assert _RENDERED_COMMAND not in commands, f"{phase} survived uninstall"
 
 
 # --- Retired phases: existing installs must be migrated, not stranded. -------
