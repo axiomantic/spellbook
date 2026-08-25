@@ -19,12 +19,13 @@ behavior rather than against reasoning:
 from __future__ import annotations
 
 import json
-import subprocess
+import os
 import sys
 import time
 from pathlib import Path
 
 import pytest
+import tripwire
 
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
 if str(HOOKS_DIR) not in sys.path:
@@ -45,6 +46,9 @@ from spellbook.core.path_utils import (  # noqa: E402
 )
 
 SID = "sess-budget_1"
+
+# What git reports on stderr for a path it can discover no repository for.
+NOT_A_REPOSITORY = "fatal: not a git repository (or any of the parent directories): .git\n"
 
 GIT_WORST_CASE_SECONDS = GIT_SUBPROCESS_CALLS_PER_RESOLVE * GIT_SUBPROCESS_TIMEOUT_SECONDS
 
@@ -86,14 +90,15 @@ class TestTheGitSpendIsWhatTheBudgetAssumes:
     """The ``GIT_SUBPROCESS_CALLS_PER_RESOLVE`` term, held against a real Stop.
 
     A record and a ledger are both present, so the handler takes the branch
-    that resolves the ledger path; the git-free repo-root walk is made to
-    fail, which is the only condition under which git is spawned at all.
-    Nothing about the hook is stubbed except that walk and ``subprocess.run``,
-    which is counted rather than replaced.
+    that resolves the ledger path. Git is spawned only when the git-free
+    repo-root walk defers, and the walk defers under a git discovery override
+    -- so the override is set as an environment variable rather than the walk
+    replaced, which leaves real git seeing the same discovery rules the walk
+    answered from.
     """
 
     @pytest.fixture
-    def counted_git(self, tmp_path, monkeypatch):
+    def git_is_reached(self, tmp_path, monkeypatch):
         monkeypatch.setenv("HOME", str(tmp_path))
         monkeypatch.setenv("USERPROFILE", str(tmp_path))
         monkeypatch.setenv("APPDATA", str(tmp_path))
@@ -101,6 +106,11 @@ class TestTheGitSpendIsWhatTheBudgetAssumes:
         # An exact override would skip resolution entirely, which is the very
         # thing under measurement.
         monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
+        # Git stops discovery at a ceiling, so under one it can report no
+        # repository for a path the walk would otherwise have answered from
+        # disk. The walk defers on every GIT_* override for that reason, and
+        # deferring is the only condition under which git is spawned at all.
+        monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path))
 
         import develop_gate_ledger
 
@@ -112,20 +122,8 @@ class TestTheGitSpendIsWhatTheBudgetAssumes:
             "{}", encoding="utf-8"
         )
 
-        monkeypatch.setattr(path_utils, "_git_free_repo_root", lambda path: None)
-
-        calls: list[list[str]] = []
-        real_run = subprocess.run
-
-        def counting_run(cmd, **kwargs):
-            calls.append(list(cmd))
-            return real_run(cmd, **kwargs)
-
-        monkeypatch.setattr(path_utils.subprocess, "run", counting_run)
-        return calls
-
     def test_a_stop_spawns_no_more_git_than_the_budget_pays_for(
-        self, counted_git, tmp_path
+        self, git_is_reached, tmp_path
     ):
         assert autonomous.write_autonomous_record(
             SID,
@@ -142,39 +140,88 @@ class TestTheGitSpendIsWhatTheBudgetAssumes:
             encoding="utf-8",
         )
 
-        raw = spellbook_hook.dispatch(
-            "Stop",
-            "",
-            {
-                "hook_event_name": "Stop",
-                "session_id": SID,
-                "transcript_path": str(transcript),
-                "cwd": str(tmp_path),
-                "stop_hook_active": False,
-            },
-        )
+        # Enumerating the spend is what bounds it. A spawn beyond this list
+        # finds no mock left in the queue and fails the call outright, so the
+        # budget cannot be overrun quietly; a spawn that never happens is an
+        # unused mock, which fails at teardown. The list is held against the
+        # budgeted count so the two cannot drift apart.
+        budgeted = [
+            ["git", "worktree", "list", "--porcelain"],
+            ["git", "rev-parse", "--show-toplevel"],
+        ]
+        assert len(budgeted) == GIT_SUBPROCESS_CALLS_PER_RESOLVE
+        # What git reports for a path under a ceiling directory: no repository,
+        # which is the path the fallback below is written for.
+        for command in budgeted:
+            tripwire.subprocess.mock_run(
+                command,
+                returncode=128,
+                stdout="",
+                stderr=NOT_A_REPOSITORY,
+            )
+
+        with tripwire:
+            raw = spellbook_hook.dispatch(
+                "Stop",
+                "",
+                {
+                    "hook_event_name": "Stop",
+                    "session_id": SID,
+                    "transcript_path": str(transcript),
+                    "cwd": str(tmp_path),
+                    "stop_hook_active": False,
+                },
+            )
 
         # The gate still ran: this is a measurement of a working handler, not
         # of one that returned early for an unrelated reason.
         assert raw is not None and json.loads(raw)["decision"] == "block"
-        assert counted_git, "no git was spawned; this measures nothing"
-        assert len(counted_git) <= GIT_SUBPROCESS_CALLS_PER_RESOLVE, counted_git
+        for command in budgeted:
+            tripwire.subprocess.assert_run(
+                command,
+                returncode=128,
+                stdout="",
+                stderr=NOT_A_REPOSITORY,
+            )
 
-    def test_every_spawned_git_call_carries_the_budgeted_timeout(
-        self, counted_git, tmp_path, monkeypatch
+    @pytest.mark.slow
+    def test_the_git_spend_cannot_outrun_the_budgeted_worst_case(
+        self, git_is_reached, tmp_path, monkeypatch
     ):
-        timeouts: list[object] = []
-        real_run = subprocess.run
+        """Both spawns made to hang, and the real wall clock held to the term.
 
-        def recording_run(cmd, **kwargs):
-            timeouts.append(kwargs.get("timeout"))
-            return real_run(cmd, **kwargs)
+        ``GIT_WORST_CASE_SECONDS`` is the number the registered timeout is
+        derived from, and it is a product of a call count and a per-call
+        timeout. Neither factor is observable from outside the call, so this
+        spends the worst case for real: a git that never answers makes every
+        spawn pay its full timeout, and the elapsed time is then the product
+        itself. Raising a timeout, dropping one, or adding a third spawn moves
+        this reading; asserting the keyword argument would catch only the
+        first.
+        """
+        bin_dir = tmp_path / "bin"
+        bin_dir.mkdir()
+        never_answers = bin_dir / "git"
+        # Bounded so a lost timeout fails the upper bound rather than hanging
+        # the suite until pytest is killed.
+        never_answers.write_text("#!/bin/sh\nsleep 30\n", encoding="utf-8")
+        never_answers.chmod(0o755)
+        monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
 
-        monkeypatch.setattr(path_utils.subprocess, "run", recording_run)
-        path_utils.resolve_repo_root(str(tmp_path))
+        started = time.monotonic()
+        resolved = path_utils.resolve_repo_root(str(tmp_path))
+        elapsed = time.monotonic() - started
 
-        assert timeouts, "no git was spawned; this measures nothing"
-        assert all(t == GIT_SUBPROCESS_TIMEOUT_SECONDS for t in timeouts), timeouts
+        # Neither probe answered, so the documented fallback is the input path.
+        # A different answer here means git was never reached and the reading
+        # below measures nothing.
+        assert resolved == str(tmp_path)
+        # Every budgeted spawn paid its full timeout: below this, a spawn was
+        # skipped or a timeout was shortened.
+        assert elapsed >= GIT_WORST_CASE_SECONDS - 1, elapsed
+        # And no spawn outran it. The slack is process startup for each spawn,
+        # not room for another one.
+        assert elapsed < GIT_WORST_CASE_SECONDS + GIT_SUBPROCESS_TIMEOUT_SECONDS, elapsed
 
 
 class TestTheTranscriptSpendIsWhatTheBudgetAssumes:

@@ -292,7 +292,7 @@ def _write_autonomous_record_or_none(session_id: str, **fields: Any) -> bool | N
     ``write_autonomous_record`` is deliberately allowed to propagate genuine
     filesystem errors (read-only state dir, ENOSPC, EACCES) because it is
     operator-initiated: someone asked to enter autonomous mode and must
-    learn if it did not stick. ``increment_blocked_stops`` and
+    learn if it did not stick. ``record_blocked_stop`` and
     ``append_decision`` are Stop-hook-initiated and carry the opposite
     contract -- they must never raise, because their caller is the hook that
     gates the end of the operator's turn. Routing both through one function
@@ -305,36 +305,6 @@ def _write_autonomous_record_or_none(session_id: str, **fields: Any) -> bool | N
         return write_autonomous_record(session_id, **fields)
     except OSError:
         return None
-
-
-def increment_blocked_stops(session_id: str) -> int | None:
-    """Increment and persist ``blocked_stops`` for ``session_id``.
-
-    Returns the new count, or ``None`` if there is no valid record to
-    increment (invalid session id, missing file, malformed record, or a
-    filesystem error on write -- the same "not autonomous" degradation as
-    ``read_autonomous_record``). Never raises. The Stop hook calls this
-    exactly once per blocked stop.
-    """
-    record = read_autonomous_record(session_id)
-    if record is None:
-        return None
-    new_count = record["blocked_stops"] + 1
-    ok = _write_autonomous_record_or_none(
-        session_id,
-        mode=record["mode"],
-        philosophy=record["philosophy"],
-        goal=record["goal"],
-        goal_criteria=record["goal_criteria"],
-        set_at=record["set_at"],
-        blocked_stops=new_count,
-        decisions=record["decisions"],
-        evidence_path=record.get("evidence_path"),
-        block_times=record.get("block_times"),
-    )
-    if not ok:
-        return None
-    return new_count
 
 
 def recent_block_times(record: Any) -> list[float]:
@@ -391,7 +361,9 @@ def record_blocked_stop(session_id: str, *, now: float | None = None) -> int | N
     valve's verdict.
 
     Returns the new ``blocked_stops`` count, or ``None`` on the same "not
-    autonomous" degradation as ``increment_blocked_stops``. Never raises.
+    autonomous" degradation as ``read_autonomous_record`` -- an invalid
+    session id, a missing file, a malformed record, or a filesystem error on
+    write. Never raises.
     """
     record = read_autonomous_record(session_id)
     if record is None:
@@ -439,7 +411,7 @@ def append_decision(
     exception -- the caller is a Stop hook and must not be taken out by a
     bookkeeping failure. The append is atomic via the same
     read-modify-write-through-``write_autonomous_record`` path used by
-    ``increment_blocked_stops``, so a torn write cannot corrupt the record
+    ``record_blocked_stop``, so a torn write cannot corrupt the record
     the hook reads.
     """
     record = read_autonomous_record(session_id)

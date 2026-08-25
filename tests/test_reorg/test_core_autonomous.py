@@ -90,29 +90,6 @@ class TestHappyPath:
         assert autonomous.read_autonomous_record(SID) is None
 
 
-# ---- blocked_stops increment ----------------------------------------------
-
-
-class TestIncrementBlockedStops:
-    def test_increments_from_zero(self):
-        _write_record()
-        assert autonomous.increment_blocked_stops(SID) == 1
-        assert autonomous.read_autonomous_record(SID)["blocked_stops"] == 1
-
-    def test_increments_repeatedly(self):
-        _write_record()
-        autonomous.increment_blocked_stops(SID)
-        autonomous.increment_blocked_stops(SID)
-        assert autonomous.increment_blocked_stops(SID) == 3
-
-    def test_absent_record_returns_none(self):
-        assert autonomous.increment_blocked_stops(SID) is None
-
-    def test_absent_record_does_not_create_one(self):
-        autonomous.increment_blocked_stops(SID)
-        assert autonomous.read_autonomous_record(SID) is None
-
-
 # ---- degradation: invalid session id ---------------------------------------
 
 
@@ -146,8 +123,8 @@ class TestInvalidSessionId:
     def test_clear_does_not_raise(self):
         autonomous.clear_autonomous_record("../../escape")
 
-    def test_increment_returns_none(self):
-        assert autonomous.increment_blocked_stops("bad id!") is None
+    def test_record_blocked_stop_returns_none(self):
+        assert autonomous.record_blocked_stop("bad id!", now=1000.0) is None
 
 
 # ---- degradation: missing / malformed / unreadable file --------------------
@@ -380,7 +357,7 @@ class TestAppendDecision:
 # ---- filesystem-fault propagation contract --------------------------------
 #
 # write_autonomous_record is operator-initiated and must propagate a genuine
-# filesystem error. increment_blocked_stops and append_decision are
+# filesystem error. record_blocked_stop and append_decision are
 # Stop-hook-initiated and must swallow the same fault into their documented
 # "not autonomous" return value. These tests plant a REAL fault (a read-only
 # data-dir root that blocks mkdir/mkstemp underneath it) rather than patching
@@ -431,20 +408,20 @@ class TestFilesystemFaultPropagation:
                 set_at="now",
             )
 
-    def test_increment_blocked_stops_returns_none_on_real_fs_fault(
+    def test_record_blocked_stop_returns_none_on_real_fs_fault(
         self, isolated_state
     ):
         _skip_unless_permission_bits_enforced()
 
         # Write the record while the directory is still writable, so the
-        # READ side of increment_blocked_stops succeeds and only the
+        # READ side of record_blocked_stop succeeds and only the
         # subsequent write (mkstemp inside the existing "autonomous" dir)
         # hits the real fault.
         _write_record()
         autonomous_dir = get_data_dir() / "autonomous"
         autonomous_dir.chmod(0o500)  # r-x, no write: mkstemp fails inside it
         try:
-            assert autonomous.increment_blocked_stops(SID) is None
+            assert autonomous.record_blocked_stop(SID, now=1000.0) is None
         finally:
             autonomous_dir.chmod(0o700)
 
@@ -751,10 +728,10 @@ class TestCompletionVerifiedRouting:
         assert record["evidence_path"] == artifact
         assert autonomous.completion_verified(record) is True
 
-    def test_evidence_path_survives_a_blocked_stop_increment(self, tmp_path):
+    def test_evidence_path_survives_a_blocked_stop(self, tmp_path):
         artifact = _artifact(tmp_path, [_entry("tests pass")])
         _write_record(evidence_path=artifact)
-        assert autonomous.increment_blocked_stops(SID) == 1
+        assert autonomous.record_blocked_stop(SID, now=1000.0) == 1
         assert autonomous.read_autonomous_record(SID)["evidence_path"] == artifact
 
     def test_evidence_path_survives_a_decision_append(self, tmp_path):
@@ -941,6 +918,10 @@ class TestRecordBlockedStop:
 
     def test_no_record_degrades_to_none(self):
         assert autonomous.record_blocked_stop(SID, now=1000.0) is None
+
+    def test_a_degraded_call_does_not_create_a_record(self):
+        autonomous.record_blocked_stop(SID, now=1000.0)
+        assert autonomous.read_autonomous_record(SID) is None
 
     def test_invalid_session_id_degrades_to_none(self):
         assert autonomous.record_blocked_stop("../etc/passwd", now=1.0) is None
