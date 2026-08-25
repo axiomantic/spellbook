@@ -22,6 +22,7 @@ import time
 from pathlib import Path
 
 import pytest
+import tripwire
 
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
 if str(HOOKS_DIR) not in sys.path:
@@ -542,38 +543,61 @@ class TestEscapeOrdering:
         assert _decision(_stdin(transcript_path=transcript)) is None
 
 
+# The escape handler shares ``_handle_user_prompt_submit`` with the
+# agent2agent notify path. Every test below asserts the notify mock RECEIVED
+# the exact stdin payload -- proving the notify path ran with the untouched
+# prompt, not merely that a string reached the output.
+_ESCAPE_BOOM = RuntimeError("state dir on fire")
+
+
 class TestEscapeDoesNotDisturbAgent2Agent:
-    def test_a2a_notify_still_runs_on_an_ordinary_prompt(self, tmp_path, monkeypatch):
-        seen = []
+    def test_a2a_notify_still_runs_on_an_ordinary_prompt(self, tmp_path):
+        notify = tripwire.mock("spellbook_hook:_agent2agent_notify_for_prompt")
+        notify.returns("a2a-hint")
 
-        def fake(data):
-            seen.append(data.get("prompt"))
-            return "a2a-hint"
+        with tripwire:
+            out = _submit("just a prompt")
 
-        monkeypatch.setattr(spellbook_hook, "_agent2agent_notify_for_prompt", fake)
-        out = _submit("just a prompt")
-        assert seen == ["just a prompt"]
+        # tripwire records ``returned`` only for spies, so the configured
+        # return is pinned by the output assertion below instead.
+        notify.assert_call(args=(_prompt_stdin("just a prompt"),), kwargs={})
         assert out is not None
         assert "a2a-hint" in out
 
-    def test_a2a_notify_still_runs_on_an_escape_prompt(self, tmp_path, monkeypatch):
-        monkeypatch.setattr(
-            spellbook_hook, "_agent2agent_notify_for_prompt", lambda d: "a2a-hint"
-        )
+    def test_a2a_notify_still_runs_on_an_escape_prompt(self, tmp_path):
         _record()
-        out = _submit("stop autonomous")
+        notify = tripwire.mock("spellbook_hook:_agent2agent_notify_for_prompt")
+        notify.returns("a2a-hint")
+
+        with tripwire:
+            out = _submit("stop autonomous")
+
+        notify.assert_call(args=(_prompt_stdin("stop autonomous"),), kwargs={})
         assert "a2a-hint" in out
         assert "CLEARED" in out
 
-    def test_a_failing_escape_does_not_stop_the_a2a_hint(self, tmp_path, monkeypatch):
-        def boom(session_id):
-            raise RuntimeError("state dir on fire")
+    def test_a_failing_escape_does_not_stop_the_a2a_hint(self, tmp_path):
+        """The fail-open contract: the escape raises, the hint still ships.
 
-        monkeypatch.setattr(autonomous, "read_autonomous_record", boom)
-        monkeypatch.setattr(
-            spellbook_hook, "_agent2agent_notify_for_prompt", lambda d: "a2a-hint"
+        ``_log_hook_error`` is mocked because the real one POSTs to the daemon,
+        which the sandbox forbids; asserting it also pins that the failure was
+        reported rather than swallowed.
+        """
+        read = tripwire.mock("spellbook.core.autonomous:read_autonomous_record")
+        read.raises(_ESCAPE_BOOM)
+        logged = tripwire.mock("spellbook_hook:_log_hook_error")
+        logged.returns(None)
+        notify = tripwire.mock("spellbook_hook:_agent2agent_notify_for_prompt")
+        notify.returns("a2a-hint")
+
+        with tripwire:
+            out = _submit("stop autonomous")
+
+        read.assert_call(args=(SID,), kwargs={}, raised=_ESCAPE_BOOM)
+        logged.assert_call(
+            args=("autonomous_escape", "UserPromptSubmit", _ESCAPE_BOOM), kwargs={}
         )
-        out = _submit("stop autonomous")
+        notify.assert_call(args=(_prompt_stdin("stop autonomous"),), kwargs={})
         assert out is not None
         assert "a2a-hint" in out
 
