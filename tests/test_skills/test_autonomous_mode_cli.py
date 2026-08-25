@@ -20,6 +20,8 @@ from pathlib import Path
 
 import pytest
 
+from spellbook.core.paths import get_data_dir
+
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 HELPER = PROJECT_ROOT / "skills" / "autonomous-mode" / "scripts" / "autonomous_mode.py"
 
@@ -29,9 +31,16 @@ pytestmark = pytest.mark.allow("subprocess")
 
 
 @pytest.fixture
-def home(tmp_path):
-    """A state directory of our own, addressed the way the module resolves it."""
-    return tmp_path
+def home(isolated_spellbook_state):
+    """The scratch home the autouse conftest fixture already redirected us to.
+
+    Deliberately NOT a fresh ``tmp_path``. The child is handed this directory
+    in every home variable, and the parent resolves the expected record path
+    with its OWN ``get_data_dir()``. Those two agree only while the parent's
+    environment matches the child's -- so the parent must live in the same
+    scratch home it gives away, not in a second one.
+    """
+    return isolated_spellbook_state
 
 
 def _env(home: Path, session_id: str | None = None) -> dict:
@@ -54,8 +63,26 @@ def _run(home: Path, *argv: str, session_id: str | None = None):
     )
 
 
+def _autonomous_dir(home: Path) -> Path:
+    """Where the child will write, resolved rather than spelled out.
+
+    ``get_data_dir()`` is ``%LOCALAPPDATA%/spellbook`` on Windows and
+    ``$HOME/.local/spellbook`` elsewhere. Hardcoding the POSIX form built a
+    path the helper never uses on Windows, so nine tests here asserted against
+    a file that could not exist. Asking the resolver is the fix; the assertion
+    below is what keeps the parent's answer and the child's environment from
+    drifting apart silently.
+    """
+    resolved = get_data_dir()
+    assert home in resolved.parents, (
+        f"data dir {resolved} is not under {home}; the parent resolves a "
+        "different state directory than the one handed to the subprocess"
+    )
+    return resolved / "autonomous"
+
+
 def _record_path(home: Path, session_id: str = SID) -> Path:
-    return home / ".local" / "spellbook" / "autonomous" / f"{session_id}.json"
+    return _autonomous_dir(home) / f"{session_id}.json"
 
 
 def _enable(home: Path, *extra: str, session_id: str | None = SID):
@@ -120,13 +147,13 @@ class TestEnable:
         result = _enable(home, session_id="../../etc/passwd")
         assert result.returncode == 1
         assert "Traceback" not in result.stderr
-        assert not (home / ".local" / "spellbook" / "autonomous").exists()
+        assert not _autonomous_dir(home).exists()
 
     def test_an_unwritable_state_directory_fails_loudly(self, home):
         """The exact fault that traps a session, reported rather than raised."""
         if os.name != "posix" or os.geteuid() == 0:
             pytest.skip("POSIX permission bits only; root ignores them")
-        local = home / ".local"
+        local = get_data_dir().parent
         local.mkdir(parents=True, exist_ok=True)
         local.chmod(0o500)
         try:
