@@ -33,11 +33,41 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from spellbook.core.command_utils import atomic_write_json
+from spellbook.core.path_utils import (
+    GIT_SUBPROCESS_CALLS_PER_RESOLVE,
+    GIT_SUBPROCESS_TIMEOUT_SECONDS,
+)
 
 from .. import config as _config
 from . import source_link as _source_link
 
 logger = logging.getLogger(__name__)
+
+# The Stop hook's timeout is a BUDGET, not a limit. The harness cancels a hook
+# that reaches it, discards its output, and renders no decision -- so the stop
+# PROCEEDS. Overrunning this number does not fail loudly; it silently disables
+# the autonomous-mode gate on exactly the long-running sessions the gate exists
+# for. It is therefore sized against the handler's worst case, not against a
+# guess at its typical case.
+#
+# The handler spends time in two places. Resolving the develop ledger path can
+# fall through the git-free repo-root walk and spawn git; that cost is bounded
+# by the two constants imported above. Scanning the ending turn out of the
+# session transcript is the other, and is bounded only by transcript size.
+# tests/test_hooks/test_stop_hook_budget.py pins both: it asserts the Stop path
+# spawns no more git than budgeted, and extrapolates a measured scan rate to the
+# largest transcript this allowance was sized for. That test is also where the
+# allowance's margin lives -- it fails if the real scan rate stops fitting.
+#
+# Erring large is the cheap direction. A too-large budget costs a longer stall,
+# and only in the pathological case that reaches it; a too-small one silently
+# disables the gate. The harness default for a command hook is 600 seconds, so
+# what follows is still conservative by two orders of magnitude.
+TRANSCRIPT_SCAN_ALLOWANCE_SECONDS = 10
+STOP_HOOK_TIMEOUT_SECONDS = (
+    GIT_SUBPROCESS_CALLS_PER_RESOLVE * GIT_SUBPROCESS_TIMEOUT_SECONDS
+    + TRANSCRIPT_SCAN_ALLOWANCE_SECONDS
+)
 
 # Hook definitions grouped by phase. Each phase maps to a list of matcher entries.
 # All hooks MUST use the object format {type, command, ...}. Plain string hooks
@@ -99,13 +129,14 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
         {
             # Unified hook handles: autonomous-mode turn-end enforcement.
             # NO async: this hook returns a block/allow decision, so Claude Code
-            # must wait for it. Timeout kept small -- the handler only reads
-            # local state and the transcript.
+            # must wait for it. The timeout is derived, not chosen: see
+            # STOP_HOOK_TIMEOUT_SECONDS above for what it is sized against and
+            # why overrunning it is a silent bypass rather than an error.
             "hooks": [
                 {
                     "type": "command",
                     "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
-                    "timeout": 5,
+                    "timeout": STOP_HOOK_TIMEOUT_SECONDS,
                 },
             ],
         },

@@ -520,12 +520,22 @@ def _develop_ledger_path(cwd: str) -> Path | None:
     ``encode_cwd`` is not a string operation: it resolves the git repo root,
     and for layouts it cannot read off the filesystem it still spawns ``git
     worktree list --porcelain`` (and ``git rev-parse --show-toplevel`` on
-    fallback), each with a five-second timeout. This function runs on every
-    ``Task`` PostToolUse, so an empty state directory settles the question
-    before any of that: a ledger for THIS project cannot exist when no ledger
-    exists for ANY project, and one directory listing is the cheapest way to
-    learn it. Both callers treat ``None`` and "file absent" identically, so
-    the short circuit is not observable to them.
+    fallback). This function runs on every ``Task`` PostToolUse, so an empty
+    state directory settles the question before any of that: a ledger for THIS
+    project cannot exist when no ledger exists for ANY project, and one
+    directory listing is the cheapest way to learn it. Both callers treat
+    ``None`` and "file absent" identically, so the short circuit is not
+    observable to them.
+
+    The short circuit does NOT cover the ``Stop`` caller's hard case. Anyone
+    who has ever run develop has a ledger for SOME project, so the directory
+    is non-empty and resolution proceeds; on a layout the git-free walk cannot
+    read, the spawns happen inside a hook whose timeout is a budget and whose
+    overrun is a silent bypass. That spend is not avoidable here -- the ledger
+    outranks the evidence artifact in ``autonomous.completion_verified``, so
+    the artifact path cannot be taken without first learning whether a ledger
+    exists -- so it is PAID FOR instead, in ``installer.components.hooks``
+    where the Stop timeout is derived from it.
     """
     override = os.environ.get("SPELLBOOK_DEV_DIR")
     if override:

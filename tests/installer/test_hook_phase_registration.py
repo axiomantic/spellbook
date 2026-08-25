@@ -35,6 +35,7 @@ from installer.components.hooks import (
     HOOK_DEFINITIONS,
     STOP_HOOK_BLOCK_CAP_KEY,
     STOP_HOOK_BLOCK_CAP_VALUE,
+    STOP_HOOK_TIMEOUT_SECONDS,
     _HOOK_PHASES,
     _RETIRED_HOOK_PHASES,
     _get_hook_path_for_platform,
@@ -140,7 +141,13 @@ def test_new_phase_blocks_and_omits_matcher(phase):
     assert hook["type"] == "command"
     assert hook["command"] == _UNIFIED_COMMAND
     assert "async" not in hook, f"{phase} returns a decision and must block"
-    assert 0 < hook["timeout"] <= 10
+    # A blocking phase's timeout is an upper bound on how long the operator
+    # waits, so it stays bounded -- but Stop's is DERIVED from what its handler
+    # can spend (see STOP_HOOK_TIMEOUT_SECONDS), and a bound typed out here must
+    # not silently cap a derivation it knows nothing about. Overrunning Stop's
+    # timeout disables the gate silently; a generous ceiling is the safe error.
+    ceiling = STOP_HOOK_TIMEOUT_SECONDS if phase == "Stop" else 10
+    assert 0 < hook["timeout"] <= ceiling
 
 
 def test_install_renders_new_phases_into_settings(tmp_path):
