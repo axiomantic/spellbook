@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `tests/unit/test_update_config.py` replaced functions and module attributes
+  through monkeypatch, which `AGENTS.md` restricts to environment, cwd, and
+  sys.path. The file mattered beyond the rule: a correct `tripwire.spy.object`
+  call sat a few lines below the violations, so anyone reading it for an example
+  met the wrong pattern first, and the same violation was then introduced twice
+  independently elsewhere. One of the patched targets already had a purpose-built
+  seam whose docstring says it exists so tests can redirect through tripwire
+  rather than patch the module constant -- the seam was built and then ignored.
+  Every converted test was proven to still fail: each went red under a mutation
+  of the code it covers. Two assertions grew stronger in the process, because
+  tripwire pins a call count and a return value that a hand-rolled recorder had
+  to assert separately or not at all, and one hand-rolled stub was hiding a
+  double close of a file descriptor that the replacement cannot reproduce.
+
+
 ### Changed
 
 - `develop` is now a thin entry gate. Its triggers fire on almost any "let's
