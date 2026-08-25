@@ -154,6 +154,7 @@ class TestMalformedRecord:
                     "goal": "x",
                     "set_at": "now",
                     "blocked_stops": 0,
+                    "decisions": [],
                 }
             ),
             encoding="utf-8",
@@ -171,6 +172,7 @@ class TestMalformedRecord:
                     "goal": 7,
                     "set_at": "now",
                     "blocked_stops": 0,
+                    "decisions": [],
                 }
             ),
             encoding="utf-8",
@@ -199,6 +201,7 @@ class TestMalformedRecord:
                     "goal": "x",
                     "set_at": "now",
                     "blocked_stops": True,
+                    "decisions": [],
                 }
             ),
             encoding="utf-8",
@@ -206,26 +209,34 @@ class TestMalformedRecord:
         assert autonomous.read_autonomous_record(SID) is None
 
     def test_unreadable_file_reads_as_none(self):
-        d = get_data_dir() / "autonomous"
-        d.mkdir(parents=True, exist_ok=True)
-        target = d / f"{SID}.json"
-        target.write_text(
-            json.dumps(
-                {
-                    "mode": "fully",
-                    "philosophy": "build-right",
-                    "goal": "x",
-                    "set_at": "now",
-                    "blocked_stops": 0,
-                }
-            ),
-            encoding="utf-8",
-        )
+        """The ``except OSError`` branch on the read, actually reached.
+
+        The record written here is otherwise VALID, so an allow can only
+        come from the unreadable file. A payload that failed validation for
+        an unrelated missing field would pass this test with the branch
+        never entered.
+        """
+        _skip_unless_permission_bits_enforced()
+        assert _write_record() is True
+        target = get_data_dir() / "autonomous" / f"{SID}.json"
+        assert autonomous.read_autonomous_record(SID) is not None
         target.chmod(0o000)
         try:
             assert autonomous.read_autonomous_record(SID) is None
         finally:
             target.chmod(0o644)
+
+    def test_a_non_utf8_record_reads_as_none(self):
+        """``read_text(encoding="utf-8")`` raises ``UnicodeDecodeError``.
+
+        That is a ``ValueError``, not an ``OSError``. Only the hook's
+        blanket catch stood between it and the operator's turn, and the
+        autonomous-mode skill calls this module directly with no such catch.
+        """
+        d = get_data_dir() / "autonomous"
+        d.mkdir(parents=True, exist_ok=True)
+        (d / f"{SID}.json").write_bytes(b"\xff\xfe\x00not utf-8 at all")
+        assert autonomous.read_autonomous_record(SID) is None
 
 
 # ---- write validation -------------------------------------------------
@@ -656,3 +667,127 @@ class TestBlockTimesValidation:
         record = autonomous.read_autonomous_record(SID)
         assert record is not None
         assert autonomous.recent_block_times(record) == []
+
+
+# ---- the clear reports the artifact, not the call --------------------------
+
+
+class TestClearReportsWhetherTheRecordIsGone:
+    """``clear_autonomous_record`` backs the operator's only escape hatch.
+
+    Its caller prints a confirmation, so a return value that says "the call
+    was made" rather than "the record is gone" makes the confirmation a
+    claim nothing checked.
+    """
+
+    def test_a_real_clear_reports_true(self):
+        _write_record()
+        assert autonomous.clear_autonomous_record(SID) is True
+        assert autonomous._record_path(SID).exists() is False
+
+    def test_an_absent_record_reports_true(self):
+        """Idempotent: the record is gone, which is what the caller asked."""
+        assert autonomous.clear_autonomous_record(SID) is True
+
+    def test_an_invalid_session_id_reports_false(self):
+        assert autonomous.clear_autonomous_record("../../etc/passwd") is False
+
+    def test_a_real_filesystem_fault_reports_false(self):
+        """A read-only directory: the unlink fails and the record survives."""
+        _skip_unless_permission_bits_enforced()
+        _write_record()
+        autonomous_dir = get_data_dir() / "autonomous"
+        autonomous_dir.chmod(0o500)
+        try:
+            assert autonomous.clear_autonomous_record(SID) is False
+            assert autonomous._record_path(SID).exists() is True
+        finally:
+            autonomous_dir.chmod(0o700)
+
+
+# ---- stamps that cannot become floats -------------------------------------
+
+
+class TestUnusableTimestamps:
+    """An int carries no infinity to test for, so a NaN/inf check passes
+    ``10**400`` and the ``OverflowError`` then lands inside
+    ``record_blocked_stop``, which documents that it never raises.
+    """
+
+    def _write_stamp(self, stamp):
+        _write_record()
+        path = autonomous._record_path(SID)
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload["block_times"] = [stamp]
+        path.write_text(json.dumps(payload), encoding="utf-8")
+
+    def test_an_int_too_large_for_a_float_reads_as_not_autonomous(self):
+        self._write_stamp(10**400)
+        assert autonomous.read_autonomous_record(SID) is None
+
+    def test_record_blocked_stop_degrades_instead_of_raising(self):
+        self._write_stamp(10**400)
+        assert autonomous.record_blocked_stop(SID, now=1000.0) is None
+
+    def test_recent_block_times_drops_it_instead_of_raising(self):
+        """``recent_block_times`` takes ``Any``; a caller may hand it an
+        unvalidated dict, and its docstring promises it never raises."""
+        assert autonomous.recent_block_times({"block_times": [10**400, 5.0]}) == [5.0]
+
+    def test_the_valve_does_not_raise_on_one(self):
+        assert (
+            autonomous.thrash_valve_open(
+                {"block_times": [10**400, 1.0, 2.0, 3.0]}, now=3.0
+            )
+            is True
+        )
+
+
+# ---- the read-modify-write lock -------------------------------------------
+
+
+class TestConcurrentUpdateLock:
+    """Hook events are separate processes, so these are genuinely concurrent.
+
+    A dropped valve timestamp degrades the only bound on the block loop, so
+    the lock is taken. It must never be able to BLOCK the update: failing to
+    take it leaves exactly the unlocked behaviour it replaced.
+    """
+
+    def test_the_update_still_lands_when_the_lock_cannot_be_taken(self):
+        _skip_unless_permission_bits_enforced()
+        _write_record()
+        # A lock file that exists but cannot be opened for writing: the
+        # acquire raises PermissionError, and the update must proceed.
+        lock_path = get_data_dir() / "autonomous" / f"{SID}.lock"
+        lock_path.write_text("", encoding="utf-8")
+        lock_path.chmod(0o000)
+        try:
+            assert autonomous.record_blocked_stop(SID, now=1000.0) == 1
+        finally:
+            lock_path.chmod(0o600)
+        assert autonomous.read_autonomous_record(SID)["blocked_stops"] == 1
+
+    def test_the_lock_is_released_so_a_second_update_succeeds(self):
+        """A lock left held would deadlock the next hook event on this session."""
+        _write_record()
+        assert autonomous.record_blocked_stop(SID, now=1000.0) == 1
+        assert autonomous.record_blocked_stop(SID, now=1001.0) == 2
+        assert (
+            autonomous.append_decision(
+                SID, at="t", philosophy="build-right", decision="d", alternatives="a"
+            )
+            is True
+        )
+
+    def test_a_serialized_pair_of_updates_keeps_both(self):
+        """The lost update the lock exists to prevent, driven in one process."""
+        _write_record()
+        autonomous.record_blocked_stop(SID, now=1000.0)
+        autonomous.append_decision(
+            SID, at="t", philosophy="build-right", decision="d", alternatives="a"
+        )
+        record = autonomous.read_autonomous_record(SID)
+        assert record["blocked_stops"] == 1
+        assert autonomous.recent_block_times(record) == [1000.0]
+        assert len(record["decisions"]) == 1

@@ -25,6 +25,7 @@ from pathlib import Path
 
 import pytest
 import tripwire
+from dirty_equals import IsInstance
 
 HOOKS_DIR = Path(__file__).resolve().parent.parent.parent / "hooks"
 if str(HOOKS_DIR) not in sys.path:
@@ -91,6 +92,38 @@ def _decision(data):
     return None if raw is None else json.loads(raw)
 
 
+def _expected_reason(mode="fully", philosophy="hostile-review", goal="ship the stop hook"):
+    """The complete block message, constructed independently of the hook.
+
+    ``patterns/assertion-quality-standard.md`` requires the whole expected
+    value, not a sample of it. The reason IS the mechanism here -- the hook
+    decides nothing about the work and only hands the question back -- so a
+    substring check passes against a message that has lost the escape
+    phrase, the philosophy, or the instruction to raise a blocker through
+    AskUserQuestion. The escape phrases are read from the shared tuple, the
+    one value this file must not duplicate: a copy here would drift from
+    what the hook prints and the drift would be invisible.
+    """
+    phrases = " / ".join(
+        f'"{p}"' for p in spellbook_hook.AUTONOMOUS_ESCAPE_PHRASES
+    )
+    return (
+        "Autonomous mode is ACTIVE for this session "
+        f"(mode: {mode}, philosophy: {philosophy}).\n"
+        "This turn-end is refused. Before ending a turn, answer this: are you "
+        "DONE with the whole project goal, were you asked to PAUSE by the "
+        "operator, or do you have a GENUINE BLOCKER?\n"
+        "If you have a genuine blocker, you MUST use the AskUserQuestion tool "
+        "to ask the operator how to continue -- do not end the turn on it.\n"
+        "If none of the three holds, you are not finished. A long session, a "
+        "finished list item, a returned subagent result, and a phase boundary "
+        "are none of them. Keep working.\n"
+        f"Goal: {goal}\n"
+        f"To leave autonomous mode, the OPERATOR types one of: {phrases}. "
+        "Nothing you do ends it."
+    )
+
+
 # ---- row 3: the block ------------------------------------------------------
 
 
@@ -101,40 +134,26 @@ class TestBlocks:
         assert result is not None
         assert result["decision"] == "block"
 
-    def test_block_reason_restates_the_escape_phrase(self, tmp_path):
-        _record()
-        reason = _decision(_stdin())["reason"]
-        for phrase in spellbook_hook.AUTONOMOUS_ESCAPE_PHRASES:
-            assert phrase in reason
-        assert "stop autonomous" in reason
-
-    def test_block_reason_names_the_active_philosophy(self, tmp_path):
-        _record(philosophy="minimal-diff")
-        reason = _decision(_stdin())["reason"]
-        assert "minimal-diff" in reason
-
-    def test_block_reason_puts_the_three_questions_to_the_model(self, tmp_path):
-        """The reason IS the mechanism, so its substance is asserted.
+    def test_block_reason_is_exactly_the_message_the_hook_owes(self, tmp_path):
+        """The whole reason, as a value.
 
         The hook decides nothing about the work: it refuses once and asks.
         A reason that stated the refusal without naming what would justify
-        ending the turn -- done, paused, or genuinely blocked -- would leave
-        the model with a closed door and no handle, and a decision-field
-        assertion would not notice.
+        ending the turn -- done, paused, or genuinely blocked -- or that
+        dropped the escape phrase would leave the model and the operator
+        with a closed door and no handle.
         """
         _record()
-        reason = _decision(_stdin())["reason"]
-        assert "Autonomous mode is ACTIVE" in reason
-        assert "DONE" in reason
-        assert "PAUSE" in reason
-        assert "GENUINE BLOCKER" in reason
-        assert "AskUserQuestion" in reason
+        assert _decision(_stdin())["reason"] == _expected_reason()
 
-    def test_block_reason_carries_the_recorded_goal(self, tmp_path):
-        _record(goal="ship the valve")
-        assert "ship the valve" in _decision(_stdin())["reason"]
+    def test_block_reason_names_the_ACTIVE_philosophy_and_goal(self, tmp_path):
+        """Both fields are read from the record, not from a default."""
+        _record(philosophy="minimal-diff", goal="ship the valve")
+        assert _decision(_stdin())["reason"] == _expected_reason(
+            philosophy="minimal-diff", goal="ship the valve"
+        )
 
-    def test_block_increments_blocked_stops_once(self, tmp_path):
+    def test_each_block_increments_blocked_stops_by_one(self, tmp_path):
         _record()
         data = _stdin()
         _decision(data)
@@ -147,22 +166,10 @@ class TestBlocks:
 
 
 class TestAllows:
-    def test_bad_session_id_allows_even_when_stop_hook_active(self, tmp_path):
-        """A bad session id allows even under the post-block flag."""
-        assert (
-            _decision(
-                _stdin(
-                    stop_hook_active=True,
-                    session_id="../../etc/passwd",
-                )
-            )
-            is None
-        )
-
-    def test_row2_no_record_allows(self, tmp_path):
+    def test_row1_no_record_allows(self, tmp_path):
         assert _decision(_stdin()) is None
 
-    def test_row2_record_for_a_different_session_allows(self, tmp_path):
+    def test_row1_record_for_a_different_session_allows(self, tmp_path):
         _record(session_id="some-other-session")
         assert _decision(_stdin()) is None
 
@@ -172,10 +179,18 @@ class TestAllows:
 
 class TestFailsOpen:
     def test_invalid_session_id_allows(self, tmp_path):
+        """A record EXISTS under the valid id, so the allow can only come
+        from the session-id guard rather than from the no-record row."""
+        _record()
+        assert _decision(_stdin(session_id="../../etc/passwd")) is None
+
+    def test_invalid_session_id_allows_even_under_the_post_block_flag(
+        self, tmp_path
+    ):
         _record()
         assert (
             _decision(
-                _stdin(session_id="../../etc/passwd")
+                _stdin(stop_hook_active=True, session_id="../../etc/passwd")
             )
             is None
         )
@@ -265,9 +280,10 @@ class TestEscapePhrase:
 
     def test_confirmation_is_injected_when_a_record_was_cleared(self, tmp_path):
         _record()
-        out = _submit("stop autonomous")
-        assert out is not None
-        assert "CLEARED" in out
+        assert _submit("stop autonomous") == (
+            "Autonomous mode CLEARED for this session by operator escape "
+            "phrase. The Stop hook no longer blocks the end of a turn."
+        )
 
     def test_says_nothing_when_no_record_exists(self, tmp_path):
         assert _submit("stop autonomous") is None
@@ -419,28 +435,25 @@ class TestBlockingPersists:
 
 class TestThrashValve:
     def test_third_stop_inside_the_window_still_blocks(self, tmp_path):
-        """Two recorded blocks are not yet evidence of thrashing."""
+        """One short of the limit is not yet evidence of thrashing."""
         _record()
-        for _ in range(3):
+        for _ in range(autonomous.BLOCK_WINDOW_LIMIT):
             decision = _decision(
                 _stdin(stop_hook_active=True)
             )
             assert decision["decision"] == "block"
 
-    def test_fourth_stop_allows_after_three_blocks_inside_the_window(self, tmp_path):
-        """Three blocks inside 60s is thrashing; the next stop is allowed.
+    def test_the_stop_after_the_limit_allows(self, tmp_path):
+        """``BLOCK_WINDOW_LIMIT`` blocks inside the window is thrashing.
 
-        The valve counts blocks already ISSUED, so the fourth stop is the
-        first one it can open on: there is no way to have three recorded
-        blocks without the third having been issued.
+        The valve counts blocks already ISSUED, so the stop AFTER the limit
+        is the first one it can open on: there is no way to hold that many
+        recorded blocks without the last having been issued.
         """
         _record()
-        for _ in range(3):
+        for _ in range(autonomous.BLOCK_WINDOW_LIMIT):
             assert (
-                _decision(_stdin(stop_hook_active=True))[
-                    "decision"
-                ]
-                == "block"
+                _decision(_stdin(stop_hook_active=True))["decision"] == "block"
             )
         assert (
             _decision(_stdin(stop_hook_active=True))
@@ -448,18 +461,21 @@ class TestThrashValve:
         )
 
     def test_three_blocks_spread_beyond_the_window_keep_blocking(self, tmp_path):
-        """The same three blocks, spread over real work, are not thrashing."""
+        """The same blocks, spread over real work, are not thrashing."""
         _record()
-        _seed_block_times([-300.0, -180.0, -61.0])
+        window = autonomous.BLOCK_WINDOW_SECONDS
+        _seed_block_times([-(window * 5), -(window * 3), -(window + 1.0)])
         decision = _decision(
             _stdin(stop_hook_active=True)
         )
         assert decision["decision"] == "block"
 
-    def test_the_window_edge_is_inclusive(self, tmp_path):
-        """Exactly 60s apart counts as inside the window."""
+    def test_three_blocks_well_inside_the_window_allow(self, tmp_path):
+        """The edge itself is pinned in ``test_core_autonomous.py``; this
+        drives an unambiguously-inside window through ``dispatch``."""
         _record()
-        _seed_block_times([-59.5, -30.0, -1.0])
+        window = autonomous.BLOCK_WINDOW_SECONDS
+        _seed_block_times([-(window / 2), -(window / 4), -1.0])
         assert (
             _decision(_stdin(stop_hook_active=True))
             is None
@@ -468,10 +484,10 @@ class TestThrashValve:
     def test_only_the_most_recent_timestamps_are_kept(self, tmp_path):
         """The stored window is bounded; it cannot grow with the session."""
         _record()
-        for _ in range(3):
+        for _ in range(autonomous.BLOCK_WINDOW_LIMIT):
             _decision(_stdin(stop_hook_active=True))
         record = autonomous.read_autonomous_record(SID)
-        assert record["blocked_stops"] == 3
+        assert record["blocked_stops"] == autonomous.BLOCK_WINDOW_LIMIT
         assert len(record["block_times"]) == autonomous.BLOCK_WINDOW_LIMIT
 
     def test_malformed_valve_state_allows(self, tmp_path):
@@ -616,3 +632,219 @@ class TestStopHookActiveIsInert:
         data = _stdin()
         del data["stop_hook_active"]
         assert _decision(data)["decision"] == "block"
+
+
+# ---- row 3: a block that cannot be accounted for is not issued ------------
+#
+# The fault below is a REAL read-only directory, not a mock. The trap this
+# guards against was reproduced exactly this way: with the state directory
+# unwritable, reads succeed and writes fail, so the record still says
+# "autonomous" while no block can ever be recorded. Mocking the writer would
+# prove the branch and not the condition.
+
+
+def _require_permission_bits():
+    if os.name != "posix":
+        pytest.skip("POSIX permission bits only")
+    if os.geteuid() == 0:
+        pytest.skip("root ignores permission bits; the fault would not fire")
+
+
+@pytest.fixture
+def readonly_autonomous_dir(tmp_path):
+    """Make the records directory readable but not writable.
+
+    Yields a callable that locks the directory down, so a test can write its
+    record first and take the fault only on the write that follows.
+    """
+    _require_permission_bits()
+    directory = get_data_dir() / "autonomous"
+    directory.mkdir(parents=True, exist_ok=True)
+
+    def lock_it():
+        directory.chmod(0o500)  # r-x: reads succeed, every write fails
+        return directory
+
+    try:
+        yield lock_it
+    finally:
+        directory.chmod(0o700)
+
+
+class TestAnUnrecordableBlockIsNotIssued:
+    def test_a_stop_is_allowed_when_the_block_cannot_be_recorded(
+        self, tmp_path, readonly_autonomous_dir
+    ):
+        """The trap, at one stop: refusing here accumulates nothing.
+
+        The valve opens on blocks that were RECORDED. A block issued when
+        the record cannot be written can never contribute to opening it, so
+        it must not be issued at all.
+        """
+        _record()
+        readonly_autonomous_dir()
+        assert _decision(_stdin()) is None
+
+    def test_the_session_is_not_trapped_across_repeated_stops(
+        self, tmp_path, readonly_autonomous_dir
+    ):
+        """The trap as reproduced: consecutive stops against a read-only dir.
+
+        With the harness block cap disabled, the valve is the only bound on
+        the loop. If any of these blocks, every later one blocks too and the
+        session cannot end by any path the model controls.
+        """
+        _record()
+        readonly_autonomous_dir()
+        verdicts = [
+            _decision(_stdin(stop_hook_active=i > 0))
+            for i in range(6)
+        ]
+        assert verdicts == [None] * 6
+
+    def test_the_record_still_says_autonomous_during_the_fault(
+        self, tmp_path, readonly_autonomous_dir
+    ):
+        """Pins that the allow comes from row 3, not from a vanished record.
+
+        Without this, a fault that made the record UNREADABLE would satisfy
+        the two tests above through row 1 and leave row 3 unproven.
+        """
+        _record()
+        readonly_autonomous_dir()
+        record = autonomous.read_autonomous_record(SID)
+        assert record is not None
+        assert record["blocked_stops"] == 0
+        assert _decision(_stdin()) is None
+
+    def test_blocking_resumes_once_the_directory_is_writable_again(
+        self, tmp_path, readonly_autonomous_dir
+    ):
+        """Row 3 is a response to the fault, not an exit from autonomous mode."""
+        _record()
+        directory = readonly_autonomous_dir()
+        assert _decision(_stdin()) is None
+        directory.chmod(0o700)
+        assert _decision(_stdin())["decision"] == "block"
+
+
+class TestTheEscapeHatchDoesNotClaimWhatItDidNotDo:
+    def test_a_failed_clear_leaves_the_record_and_says_so(
+        self, tmp_path, readonly_autonomous_dir
+    ):
+        """The operator's only exit must never report a success it did not get."""
+        _record()
+        readonly_autonomous_dir()
+        out = _submit("stop autonomous")
+        assert autonomous.read_autonomous_record(SID) is not None
+        assert out is not None
+        assert "COULD NOT BE CLEARED" in out
+        assert "no longer blocks the end of a turn" not in out
+
+    def test_a_failed_clear_names_what_the_operator_can_do(
+        self, tmp_path, readonly_autonomous_dir
+    ):
+        """A failure notice with nothing actionable in it is not a notice."""
+        _record()
+        readonly_autonomous_dir()
+        out = _submit("stop autonomous")
+        assert str(autonomous._record_path(SID)) in out
+        assert "end this session" in out
+
+    def test_the_hook_keeps_refusing_after_a_failed_clear(
+        self, tmp_path, readonly_autonomous_dir
+    ):
+        """The claim the notice makes about the hook is asserted, not assumed."""
+        _record()
+        directory = readonly_autonomous_dir()
+        _submit("stop autonomous")
+        directory.chmod(0o700)
+        assert _decision(_stdin())["decision"] == "block"
+
+    def test_the_success_line_is_emitted_only_once_the_record_is_gone(
+        self, tmp_path
+    ):
+        """The confirmation is gated on the ARTIFACT, not on the call."""
+        _record()
+        out = _submit("stop autonomous")
+        assert autonomous.read_autonomous_record(SID) is None
+        assert autonomous._record_path(SID).exists() is False
+        assert "COULD NOT BE CLEARED" not in out
+        assert "Autonomous mode CLEARED" in out
+
+
+# ---- the fail-open safety nets, each observed to fire ---------------------
+#
+# These three branches are what stop this feature trapping a session, and
+# until now none had ever been seen to run. Each is driven by a PLANTED
+# exception and asserted to ALLOW.
+_STOP_BOOM = RuntimeError("valve bookkeeping on fire")
+
+
+class TestFailOpenSafetyNets:
+    def test_a_raising_valve_allows_the_stop(self, tmp_path):
+        """The valve is the only bound on the block loop; a jam must release."""
+        _record()
+        valve = tripwire.mock("spellbook.core.autonomous:thrash_valve_open")
+        valve.raises(_STOP_BOOM)
+
+        with tripwire:
+            decision = _decision(_stdin())
+
+        valve.assert_call(
+            # ``now`` is the wall clock the handler reads at call time.
+            args=(autonomous.read_autonomous_record(SID),),
+            kwargs={"now": IsInstance(float)},
+            raised=_STOP_BOOM,
+        )
+        assert decision is None
+
+    def test_a_raising_valve_records_no_block(self, tmp_path):
+        """The released stop must not stamp the window it just failed to read."""
+        _record()
+        valve = tripwire.mock("spellbook.core.autonomous:thrash_valve_open")
+        valve.raises(_STOP_BOOM)
+
+        with tripwire:
+            _decision(_stdin())
+
+        valve.assert_call(
+            args=(autonomous.read_autonomous_record(SID),),
+            kwargs={"now": IsInstance(float)},
+            raised=_STOP_BOOM,
+        )
+        record = autonomous.read_autonomous_record(SID)
+        assert record["blocked_stops"] == 0
+        assert autonomous.recent_block_times(record) == []
+
+    def test_an_unimportable_state_module_allows_the_stop(self, tmp_path):
+        """A partial checkout must not gate the operator's turn."""
+        _record()
+        module = tripwire.mock("spellbook_hook:_autonomous_module")
+        module.returns(None)
+
+        with tripwire:
+            decision = _decision(_stdin())
+
+        module.assert_call(args=(), kwargs={})
+        assert decision is None
+
+    def test_a_raising_stop_handler_allows_and_is_reported(self, tmp_path):
+        """dispatch's own net: the failure is logged, and the stop allowed.
+
+        ``_log_hook_error`` is mocked because the real one POSTs to the
+        daemon, which the sandbox forbids; asserting it also pins that the
+        failure was reported rather than swallowed.
+        """
+        _record()
+        handler = tripwire.mock("spellbook_hook:_handle_stop")
+        handler.raises(_STOP_BOOM)
+        logged = tripwire.mock("spellbook_hook:_log_hook_error")
+        logged.returns(None)
+
+        with tripwire:
+            raw = _dispatch(_stdin())
+
+        handler.assert_call(args=(_stdin(),), kwargs={}, raised=_STOP_BOOM)
+        logged.assert_call(args=("handle_stop", "Stop", _STOP_BOOM), kwargs={})
+        assert raw is None

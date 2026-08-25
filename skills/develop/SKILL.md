@@ -41,11 +41,11 @@ Offer exactly these THREE options (the harness adds its own "Other"). Present ea
 
 ### Option 1 — Full ceremony (most correct, slowest)
 
-> Full ceremony: every gate in the develop review floor runs, plus the depth gates the request's need-flags call for. Each phase is its own set of subagent dispatches, so this is MANY dispatches and the slowest path by a wide margin. Once chosen, the ceremony LOCKS on the terms in Principle 3.
+> Full ceremony: every gate in the develop review floor runs, plus the depth gates the request's need-flags call for. Each phase is its own set of subagent dispatches, so this is MANY dispatches and the slowest path by a wide margin. Once chosen, the ceremony LOCKS: no phrasing during the run reopens it, and the only ways out are FINISH or ABORT-and-re-invoke. Escalating to more ceremony is always allowed; dropping a gate never is.
 
 ### Option 2 — Fast path (lighter, still gated)
 
-> Fast path: a reduced gate set, but NEVER zero review. Research and the plan happen inline, in this conversation, instead of running as full phases with their own dispatches — you confirm the plan before anything is executed. Fewer and faster gates, and a gate that cannot apply is RECORDED as not-applicable rather than silently dropped. The ceremony LOCKS identically. Work that outgrows the fast path is re-flagged and continues at the gated phase rather than being squeezed through.
+> Fast path: a reduced gate set, but NEVER zero review. Research and the plan happen inline, in this conversation, instead of running as full phases with their own dispatches — you confirm the plan before anything is executed. Fewer and faster gates, and a gate that cannot apply is RECORDED as not-applicable rather than silently dropped. The ceremony LOCKS identically: no phrasing reopens it, FINISH or ABORT are the only ways out, and escalation is allowed where de-escalation is not. Work that outgrows the fast path is re-flagged and continues at the gated phase rather than being squeezed through.
 
 ### Option 3 — Skip develop entirely (least cost, no gates)
 
@@ -82,6 +82,12 @@ The one exception is an operator who cannot be reached — a non-interactive, he
 | Skip entirely | EXIT this skill. Say plainly which gates the operator is giving up. Do not dispatch, do not write a ledger. |
 | Other (harness-provided) | Treat the operator's own words as the answer; if they describe a ceremony, map it to one of the three and confirm. |
 
+On BOTH ceremony paths, ask the autonomy question next, before the first
+dispatch. Hand it to the `autonomous-mode` skill, which owns the question,
+writes the record, and states the limits. It is a separate question with a
+separate answer: ceremony is how much verification runs, autonomy is who
+decides and when the run may end. On skip, it is not asked.
+
 <CRITICAL>
 **Resident-orchestrator contract.** On both ceremony paths develop does NOT auto-exit. It remains the active orchestrator, dispatches every phase through subagents, and enforces the review floor it just sold. Only "skip entirely" exits.
 
@@ -100,6 +106,7 @@ The one exception is an operator who cannot be reached — a non-interactive, he
 - A chosen path, recorded and locked.
 - On either ceremony path, the loaded orchestrator body and a running phase sequence.
 - On skip, an exited skill and an explicit statement of the gates forgone.
+- On either ceremony path, the autonomy question asked and answered through the `autonomous-mode` skill — with a record written and read back, or an explicit statement that autonomous mode was not enabled.
 
 <FORBIDDEN>
 - Loading `commands/develop-configure.md` before the operator has answered.
@@ -107,4 +114,5 @@ The one exception is an operator who cannot be reached — a non-interactive, he
 - Defaulting to the fast path or to skip when the operator cannot be reached.
 - De-escalating the ceremony after the answer, under any phrasing.
 - Exiting the skill on a ceremony path.
+- Dispatching a phase on a ceremony path before the autonomy question has been asked, or answering it yourself from standing autonomous phrasing.
 </FORBIDDEN>

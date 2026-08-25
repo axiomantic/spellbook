@@ -60,7 +60,15 @@ _RENDERED_COMMAND = _get_hook_path_for_platform(_UNIFIED_COMMAND)
 
 
 def _dispatched_event_names() -> frozenset[str]:
-    """Event names ``dispatch()`` branches on, read from its own source."""
+    """Event names ``dispatch()`` branches on, read from its own source.
+
+    The branch CONDITION is read; the branch BODY is not. A branch that
+    named a phase and then did nothing would be counted as handled, and
+    this file would demand a registration for a phase that produces
+    nothing. That direction is the safe one -- it over-reports handling,
+    never under-reports it -- and inspecting bodies would mean deciding
+    what "does something" is.
+    """
     tree = ast.parse(HOOK_SOURCE.read_text(encoding="utf-8"))
     dispatch = next(
         node
@@ -552,3 +560,145 @@ def test_uninstall_does_not_revert_an_operator_cap_written_as_a_json_integer(tmp
     assert uninstall_hooks(settings_path).success
 
     assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == 5
+
+
+# ---- an operator's own entry is not rewritten ------------------------------
+#
+# This branch newly routes Stop, UserPromptSubmit and PreCompact through
+# _clean_hooks_for_phase, so an operator's existing entry on those phases is
+# rewritten on the first install after upgrading. Stop is the phase that
+# gates turn-end: flipping it from async to blocking, or dropping its
+# timeout, changes when their own hook runs and what happens if it hangs.
+
+
+def _foreign_stop_entry():
+    """A foreign Stop entry carrying entry-level fields spellbook does not set.
+
+    No ``matcher``: Stop entries are catch-all, and a legacy ``"*"`` matcher
+    is deliberately migrated to the omitted-key form by
+    ``_merge_hooks_for_phase``. That migration is not what these tests are
+    about, and including it would make them assert two rules at once.
+    """
+    return {
+        "async": True,
+        "timeout": 45,
+        "hooks": [{"type": "command", "command": "/usr/local/bin/mine"}],
+    }
+
+
+def test_install_keeps_every_field_of_a_foreign_stop_entry(tmp_path):
+    """``async`` and ``timeout`` survive, not just the two keys a rebuild kept.
+
+    On this phase they decide whether the operator's own turn-end hook runs
+    blocking or async, and what happens when it hangs. Losing them is a
+    silent behaviour change on the gate this branch newly routes through the
+    cleanup path.
+    """
+    settings_path = tmp_path / "settings.json"
+    before = _foreign_stop_entry()
+    settings_path.write_text(
+        json.dumps({"hooks": {"Stop": [dict(before)]}}), encoding="utf-8"
+    )
+    assert install_hooks(settings_path).success
+
+    entries = _rendered(settings_path)["hooks"]["Stop"]
+    holders = [
+        e
+        for e in entries
+        if any(h.get("command") == "/usr/local/bin/mine" for h in e["hooks"])
+    ]
+    assert len(holders) == 1
+    assert holders[0]["async"] is True
+    assert holders[0]["timeout"] == 45
+
+
+def test_uninstall_leaves_a_foreign_stop_entry_byte_identical(tmp_path):
+    """The install/uninstall pair must agree about what it does not own."""
+    settings_path = tmp_path / "settings.json"
+    before = _foreign_stop_entry()
+    settings_path.write_text(
+        json.dumps({"hooks": {"Stop": [dict(before)]}}), encoding="utf-8"
+    )
+    assert install_hooks(settings_path).success
+    assert uninstall_hooks(settings_path).success
+
+    assert _rendered(settings_path)["hooks"]["Stop"] == [before]
+
+
+def test_the_retired_phase_migration_reports_only_real_removals(tmp_path):
+    """``cleaned == entries`` must mean "nothing was REMOVED".
+
+    A settings file whose only hook on a retired phase belongs to the
+    operator reported a migration that removed a spellbook hook that was
+    never there. The rebuild made every entry compare unequal to itself, so
+    the equality detected NORMALIZATION rather than removal.
+    """
+    from installer.components.hooks import _remove_retired_phases
+
+    retired = _RETIRED_HOOK_PHASES[0]
+    foreign = {
+        "matcher": "*",
+        "async": True,
+        "timeout": 45,
+        "hooks": [{"type": "command", "command": "/usr/local/bin/mine"}],
+    }
+    settings = {"hooks": {retired: [dict(foreign)]}}
+    assert _remove_retired_phases(settings) == []
+    assert settings["hooks"][retired] == [foreign]
+
+
+def test_the_retired_phase_migration_still_reports_a_real_removal(tmp_path):
+    """The negative above is only evidence if the positive still fires."""
+    from installer.components.hooks import _remove_retired_phases
+
+    retired = _RETIRED_HOOK_PHASES[0]
+    settings = {
+        "hooks": {
+            retired: [
+                {"hooks": [{"type": "command", "command": _UNIFIED_COMMAND}]}
+            ]
+        }
+    }
+    assert _remove_retired_phases(settings) == [retired]
+    assert retired not in settings["hooks"]
+
+
+# ---- the block-cap notice must contain a number when it claims one ---------
+
+
+def test_a_malformed_env_is_left_alone_and_reported(tmp_path):
+    """Replacing it would discard every variable in it to install one key."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(json.dumps({"env": ["not", "an", "object"]}), encoding="utf-8")
+    result = install_hooks(settings_path)
+    assert result.success
+
+    assert _rendered(settings_path)["env"] == ["not", "an", "object"]
+    assert "left your" in result.message
+    assert STOP_HOOK_BLOCK_CAP_KEY in result.message
+
+
+def test_a_non_numeric_operator_cap_does_not_say_that_many(tmp_path):
+    """"that many consecutive blocks" needs the value to BE a number."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: ["nonsense"]}}), encoding="utf-8"
+    )
+    result = install_hooks(settings_path)
+    assert result.success
+
+    assert "kept your" in result.message
+    assert "cannot read that as a number" in result.message
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == ["nonsense"]
+
+
+def test_a_numeric_operator_cap_still_names_the_value(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: "5"}}), encoding="utf-8"
+    )
+    result = install_hooks(settings_path)
+    assert result.success
+
+    assert f"{STOP_HOOK_BLOCK_CAP_KEY}=5" in result.message
+    assert "that many consecutive blocks" in result.message

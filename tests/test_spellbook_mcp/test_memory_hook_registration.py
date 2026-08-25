@@ -6,7 +6,7 @@ HOOK_DEFINITIONS for every phase, replacing the old per-hook entries:
 - PreToolUse: spellbook_hook.py (timeout 15, catch-all, no async)
 - PostToolUse: spellbook_hook.py (timeout 15, catch-all, no async)
 - UserPromptSubmit: spellbook_hook.py (timeout 10, catch-all, no async)
-- Stop: spellbook_hook.py (timeout 5, catch-all, no async)
+- Stop: spellbook_hook.py (timeout 10, catch-all, no async)
 - SessionStart: spellbook_hook.py (timeout 10, catch-all, no async)
 
 PreCompact was registered here until it was retired: nothing ever handled it.

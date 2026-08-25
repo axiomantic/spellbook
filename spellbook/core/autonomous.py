@@ -28,10 +28,13 @@ import os
 import re
 import tempfile
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
 from spellbook.core.command_utils import atomic_replace
+from spellbook.core.compat import CrossPlatformLock
 from spellbook.core.paths import get_data_dir
 
 # Mirrors hooks/spellbook_hook.py::_A2A_SESSION_ID_RE -- the same validation
@@ -43,8 +46,8 @@ _VALID_MODES = {"fully", "mostly"}
 
 # The rolling-window valve. The Stop hook blocks repeatedly by design, so
 # something other than the harness must decide when further blocking cannot
-# help. That signal is TIME, not a count: a turn that does real work takes far
-# longer than twenty seconds, so BLOCK_WINDOW_LIMIT blocks inside
+# help. That signal is TIME, not a count: a turn that does real work takes
+# longer than the window allows per block, so BLOCK_WINDOW_LIMIT blocks inside
 # BLOCK_WINDOW_SECONDS means the model is ending turns without doing anything,
 # and one more refusal will not change that.
 #
@@ -116,7 +119,7 @@ def _validate_record(data: Any) -> dict[str, Any] | None:
 
     Required fields: ``mode`` (``"fully"`` or ``"mostly"``), ``philosophy``
     (an id in ``PHILOSOPHIES``), ``goal`` (string), ``set_at`` (string),
-    ``blocked_stops`` (int). A record missing or
+    ``blocked_stops`` (int), ``decisions`` (list). A record missing or
     mistyping any field is treated identically to a missing file -- "not
     autonomous" -- rather than partially trusted.
 
@@ -144,12 +147,21 @@ def _validate_record(data: Any) -> dict[str, Any] | None:
         return None
     if not isinstance(data.get("decisions"), list):
         return None
-    # Optional: records written before the valve existed have no
-    # timestamps, and an absent list means
-    # "no blocks recorded yet". A PRESENT value that is not a list of finite
-    # numbers is malformed, and malformed valve state makes the whole record
-    # read as "not autonomous" -- which ALLOWS the stop. Broken bookkeeping
-    # must never be what traps a session.
+    # ``block_times`` is optional: an absent list means "no blocks recorded
+    # yet". A PRESENT value that is not a list of usable timestamps is
+    # malformed, and malformed valve state makes the whole record read as
+    # "not autonomous" -- which ALLOWS the stop. Broken bookkeeping must
+    # never be what traps a session.
+    #
+    # "Usable" is checked by performing the conversion the readers actually
+    # do rather than by testing for the shapes known to break it. An int
+    # carries no infinity to test for, so a NaN/inf check passes ``10**400``
+    # and the OverflowError then lands inside ``record_blocked_stop``, which
+    # documents that it never raises. Rejecting here is the right end: a
+    # stamp that cannot become a float is not a timestamp, and the whole
+    # record failing validation resolves to ALLOW, the direction every
+    # unknown in this module resolves to. Repairing it at the point of use
+    # would instead keep a record whose bookkeeping is already known corrupt.
     block_times = data.get("block_times")
     if block_times is not None:
         if not isinstance(block_times, list):
@@ -157,7 +169,11 @@ def _validate_record(data: Any) -> dict[str, Any] | None:
         for stamp in block_times:
             if isinstance(stamp, bool) or not isinstance(stamp, (int, float)):
                 return None
-            if stamp != stamp or stamp in (float("inf"), float("-inf")):
+            try:
+                as_float = float(stamp)
+            except (OverflowError, ValueError):
+                return None
+            if as_float != as_float or as_float in (float("inf"), float("-inf")):
                 return None
     for entry in data["decisions"]:
         if not isinstance(entry, dict):
@@ -174,20 +190,27 @@ def read_autonomous_record(session_id: str) -> dict[str, Any] | None:
     """Return the autonomous-mode record for ``session_id``, or ``None``.
 
     ``None`` means "treat this session as not autonomous" -- it is returned
-    for an invalid session id, a missing file, unreadable file, malformed
-    JSON, or a well-formed-JSON-but-wrong-shape record. This function never
-    raises.
+    for an invalid session id, a missing file, unreadable file, bytes that
+    are not UTF-8, malformed JSON, or a well-formed-JSON-but-wrong-shape
+    record. This function never raises.
+
+    ``ValueError`` is caught alongside ``OSError`` on the read because
+    ``read_text(encoding="utf-8")`` raises ``UnicodeDecodeError`` -- a
+    ``ValueError``, not an ``OSError`` -- on a record that is not valid
+    UTF-8. Only the hook's blanket catch stood between that and the
+    operator's turn, and the autonomous-mode skill calls this module
+    directly, with no such catch.
     """
     path = _record_path(session_id)
     if path is None:
         return None
     try:
         raw = path.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, ValueError):
         return None
     try:
         data = json.loads(raw)
-    except json.JSONDecodeError:
+    except ValueError:
         return None
     return _validate_record(data)
 
@@ -230,7 +253,22 @@ def write_autonomous_record(
     fd_tmp, tmp_path = tempfile.mkstemp(dir=str(path.parent), suffix=".tmp")
     fd_closed = False
     try:
-        os.write(fd_tmp, json.dumps(record, indent=2).encode("utf-8"))
+        # ``os.write`` may write FEWER bytes than it was given. On a full
+        # filesystem that turns the atomic replace into a lie: a truncated
+        # record becomes visible in one step, and every later read sees
+        # invalid JSON. The loop writes the whole payload or raises, and the
+        # fsync makes it durable BEFORE the replace, so a crash between the
+        # two leaves the old record rather than an empty new one.
+        payload = json.dumps(record, indent=2).encode("utf-8")
+        written = 0
+        while written < len(payload):
+            n = os.write(fd_tmp, payload[written:])
+            if n <= 0:
+                raise OSError(
+                    f"short write to {tmp_path}: {written} of {len(payload)} bytes"
+                )
+            written += n
+        os.fsync(fd_tmp)
         os.close(fd_tmp)
         fd_closed = True
         atomic_replace(tmp_path, str(path))
@@ -245,22 +283,33 @@ def write_autonomous_record(
     return True
 
 
-def clear_autonomous_record(session_id: str) -> None:
-    """Remove the autonomous-mode record for ``session_id``, if any.
+def clear_autonomous_record(session_id: str) -> bool:
+    """Remove the autonomous-mode record for ``session_id``.
 
-    Idempotent: a missing record, or an invalid session id, is a silent
-    no-op. Used by the escape-phrase handler (Task 4) and by cleanup after
-    completion.
+    Returns whether the record is GONE when this returns -- which is what
+    the caller needs to know, not whether ``unlink`` was reached. An invalid
+    session id yields ``False``: nothing was cleared, and the caller must
+    not report otherwise. An already-absent record yields ``True``, so the
+    call stays idempotent.
+
+    This is the escape hatch's only mechanism. It reports the ARTIFACT (the
+    record is absent), not the call, because a clear that silently failed
+    while the confirmation still printed would tell the operator their only
+    exit from a blocking Stop hook had worked when the hook goes on
+    refusing every turn-end. Never raises: a filesystem fault is reported as
+    ``False``, and the caller says so.
     """
     path = _record_path(session_id)
     if path is None:
-        return
+        return False
     try:
-        path.unlink()
-    except FileNotFoundError:
-        pass
+        path.unlink(missing_ok=True)
     except OSError:
         pass
+    try:
+        return not path.exists()
+    except OSError:
+        return False
 
 
 def _write_autonomous_record_or_none(session_id: str, **fields: Any) -> bool | None:
@@ -284,6 +333,45 @@ def _write_autonomous_record_or_none(session_id: str, **fields: Any) -> bool | N
         return None
 
 
+@contextmanager
+def _record_lock(session_id: str) -> Iterator[bool]:
+    """Hold an exclusive lock over one session's read-modify-write, if possible.
+
+    Every hook event is a SEPARATE PROCESS, so ``record_blocked_stop`` and
+    ``append_decision`` are genuinely concurrent, and their unlocked
+    read-modify-write drops whichever update lands second. The dropped one
+    can be a valve timestamp -- and the valve is the only thing bounding the
+    block loop now that the harness cap is disabled, so a lost update
+    degrades the escape from the loop, not merely the bookkeeping. That is
+    why this is locked and the operator-initiated ``write_autonomous_record``
+    is not: that one is a whole-record write with no read to lose.
+
+    Yields whether the lock is actually held. Failing to take it does NOT
+    skip the update: the caller proceeds unlocked, which is exactly the
+    behaviour without this function, so the lock can only narrow the race
+    and never widen it. Both failure modes are why -- an unwritable state
+    directory cannot create a lock file (and the update's own write is about
+    to fail on its own terms, which the caller already handles), and a
+    contended lock must not turn one dropped update into a hook that
+    refuses to record anything at all.
+    """
+    lock_path = _autonomous_dir() / f"{session_id}.lock"
+    lock = CrossPlatformLock(lock_path, blocking=True)
+    held = False
+    try:
+        try:
+            held = lock.acquire()
+        except OSError:
+            held = False
+        yield held
+    finally:
+        if held:
+            try:
+                lock.release()
+            except OSError:
+                pass
+
+
 def recent_block_times(record: Any) -> list[float]:
     """The recorded block timestamps in ``record``, oldest first.
 
@@ -294,11 +382,20 @@ def recent_block_times(record: Any) -> list[float]:
     stamps = record.get("block_times")
     if not isinstance(stamps, list):
         return []
-    return [
-        float(s)
-        for s in stamps
-        if not isinstance(s, bool) and isinstance(s, (int, float))
-    ]
+    out: list[float] = []
+    for s in stamps:
+        if isinstance(s, bool) or not isinstance(s, (int, float)):
+            continue
+        # ``record`` is typed ``Any``: callers may hand this an unvalidated
+        # dict, so the int too large to become a float is dropped here as
+        # well as rejected in ``_validate_record``. Dropping rather than
+        # raising keeps the documented contract on the only path where a
+        # raise would reach the Stop hook.
+        try:
+            out.append(float(s))
+        except (OverflowError, ValueError):
+            continue
+    return out
 
 
 def thrash_valve_open(record: Any, *, now: float) -> bool:
@@ -321,8 +418,8 @@ def thrash_valve_open(record: Any, *, now: float) -> bool:
     stamps = recent_block_times(record)
     if len(stamps) < BLOCK_WINDOW_LIMIT:
         return False
-    oldest_in_window = sorted(stamps)[-BLOCK_WINDOW_LIMIT]
-    return (now - oldest_in_window) <= BLOCK_WINDOW_SECONDS
+    nth_most_recent = sorted(stamps)[-BLOCK_WINDOW_LIMIT]
+    return (now - nth_most_recent) <= BLOCK_WINDOW_SECONDS
 
 
 def record_blocked_stop(session_id: str, *, now: float | None = None) -> int | None:
@@ -341,23 +438,30 @@ def record_blocked_stop(session_id: str, *, now: float | None = None) -> int | N
     autonomous" degradation as ``read_autonomous_record`` -- an invalid
     session id, a missing file, a malformed record, or a filesystem error on
     write. Never raises.
+
+    ``None`` obliges the Stop hook to ALLOW the stop it was about to refuse.
+    The valve opens on RECORDED blocks, so a block that could not be
+    recorded can never contribute to opening it: issue one anyway and the
+    session is refused forever with nothing accumulating to release it. A
+    block that cannot be accounted for must not be issued.
     """
-    record = read_autonomous_record(session_id)
-    if record is None:
-        return None
-    stamp = time.time() if now is None else now
-    stamps = (recent_block_times(record) + [stamp])[-BLOCK_WINDOW_LIMIT:]
-    new_count = record["blocked_stops"] + 1
-    ok = _write_autonomous_record_or_none(
-        session_id,
-        mode=record["mode"],
-        philosophy=record["philosophy"],
-        goal=record["goal"],
-        set_at=record["set_at"],
-        blocked_stops=new_count,
-        decisions=record["decisions"],
-        block_times=stamps,
-    )
+    with _record_lock(session_id):
+        record = read_autonomous_record(session_id)
+        if record is None:
+            return None
+        stamp = time.time() if now is None else now
+        stamps = (recent_block_times(record) + [stamp])[-BLOCK_WINDOW_LIMIT:]
+        new_count = record["blocked_stops"] + 1
+        ok = _write_autonomous_record_or_none(
+            session_id,
+            mode=record["mode"],
+            philosophy=record["philosophy"],
+            goal=record["goal"],
+            set_at=record["set_at"],
+            blocked_stops=new_count,
+            decisions=record["decisions"],
+            block_times=stamps,
+        )
     if not ok:
         return None
     return new_count
@@ -389,24 +493,25 @@ def append_decision(
     ``record_blocked_stop``, so a torn write cannot corrupt the record
     the hook reads.
     """
-    record = read_autonomous_record(session_id)
-    if record is None:
-        return False
-    entry = {
-        "at": at,
-        "philosophy": philosophy,
-        "decision": decision,
-        "alternatives": alternatives,
-    }
-    new_decisions = record["decisions"] + [entry]
-    ok = _write_autonomous_record_or_none(
-        session_id,
-        mode=record["mode"],
-        philosophy=record["philosophy"],
-        goal=record["goal"],
-        set_at=record["set_at"],
-        blocked_stops=record["blocked_stops"],
-        decisions=new_decisions,
-        block_times=record.get("block_times"),
-    )
+    with _record_lock(session_id):
+        record = read_autonomous_record(session_id)
+        if record is None:
+            return False
+        entry = {
+            "at": at,
+            "philosophy": philosophy,
+            "decision": decision,
+            "alternatives": alternatives,
+        }
+        new_decisions = record["decisions"] + [entry]
+        ok = _write_autonomous_record_or_none(
+            session_id,
+            mode=record["mode"],
+            philosophy=record["philosophy"],
+            goal=record["goal"],
+            set_at=record["set_at"],
+            blocked_stops=record["blocked_stops"],
+            decisions=new_decisions,
+            block_times=record.get("block_times"),
+        )
     return bool(ok)

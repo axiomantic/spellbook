@@ -309,6 +309,10 @@ def _cleanup_legacy_hooks(settings: Dict, spellbook_dir: Optional[Path] = None) 
     .py wrapper paths. Removes those entries, dropping empty matcher
     groups. This must run BEFORE new hook registration because old
     and new command strings differ and won't deduplicate.
+
+    Entry-level fields the operator set are RETAINED, the same contract
+    ``_strip_managed_from_all_phases`` and ``_clean_hooks_for_phase`` state.
+    Only the hooks list is ours to change.
     """
     hooks_section = settings.get("hooks", {})
     for phase in _HOOK_PHASES:
@@ -320,9 +324,8 @@ def _cleanup_legacy_hooks(settings: Dict, spellbook_dir: Optional[Path] = None) 
             hooks_list = entry.get("hooks", [])
             remaining = [h for h in hooks_list if not _is_legacy_hook(h, spellbook_dir)]
             if remaining:
-                new_entry: Dict[str, Any] = {"hooks": remaining}
-                if "matcher" in entry:
-                    new_entry["matcher"] = entry["matcher"]
+                new_entry: Dict[str, Any] = dict(entry)
+                new_entry["hooks"] = remaining
                 cleaned.append(new_entry)
         hooks_section[phase] = cleaned
 
@@ -531,15 +534,24 @@ def _clean_hooks_for_phase(phase_entries: List[Dict], spellbook_dir: Optional[Pa
 
     If spellbook_dir is provided, both literal $SPELLBOOK_DIR paths and
     expanded absolute paths are recognized for removal.
+
+    Entry-level fields the operator set -- ``async``, ``timeout``, and
+    anything a future harness version adds -- are RETAINED, the same
+    contract ``_strip_managed_from_all_phases`` states. Rebuilding the entry
+    from a known key list silently rewrites hooks that are not spellbook's:
+    an operator's own ``Stop`` entry would come back from an install having
+    flipped from async to blocking and lost its timeout, on the phase that
+    gates turn-end. Copying the entry also makes ``cleaned == entries`` mean
+    what its caller reads it as -- nothing was REMOVED -- rather than
+    "nothing was normalized".
     """
     cleaned = []
     for entry in phase_entries:
         hooks_list = entry.get("hooks", [])
         remaining = [h for h in hooks_list if not _is_spellbook_hook(h, spellbook_dir)]
         if remaining:
-            new_entry: Dict[str, Any] = {"hooks": remaining}
-            if "matcher" in entry:
-                new_entry["matcher"] = entry["matcher"]
+            new_entry: Dict[str, Any] = dict(entry)
+            new_entry["hooks"] = remaining
             cleaned.append(new_entry)
     return cleaned
 
@@ -621,23 +633,50 @@ def _install_managed_env(settings: Dict) -> Optional[str]:
     stops being enforced after that many consecutive blocks, so the value is
     returned for the caller to report rather than swallowed.
 
-    Other ``env`` entries are left untouched, and an existing ``env`` that is
-    not an object is replaced rather than crashed on -- the same tolerance
-    the hook phases get.
+    Other ``env`` entries are left untouched. An ABSENT ``env`` is created,
+    the same as the hook phases. A PRESENT ``env`` that is not an object is
+    LEFT ALONE and reported: the hooks path this once claimed kinship with
+    creates the section when it is absent and never replaces one the operator
+    wrote, and replacing a malformed ``env`` would discard every variable in
+    it to install one key.
 
-    Returns the operator's value when one was preserved, else None.
+    Returns a notice for the caller to report, or ``None`` when there is
+    nothing to say.
     """
+    if "env" not in settings or settings.get("env") is None:
+        settings["env"] = {STOP_HOOK_BLOCK_CAP_KEY: STOP_HOOK_BLOCK_CAP_VALUE}
+        return None
     env = settings.get("env")
     if not isinstance(env, dict):
-        env = {}
+        return (
+            f"left your \"env\" alone: it is {type(env).__name__}, not an object, "
+            f"so {STOP_HOOK_BLOCK_CAP_KEY} was NOT set. Autonomous mode stops "
+            f"being enforced after the harness default number of consecutive "
+            f"blocks. Fix \"env\" and re-run, or set {STOP_HOOK_BLOCK_CAP_KEY} "
+            f"to {STOP_HOOK_BLOCK_CAP_VALUE} by hand."
+        )
     existing = env.get(STOP_HOOK_BLOCK_CAP_KEY)
-    preserved: Optional[str] = None
     if existing is None or _block_cap_token(existing) == STOP_HOOK_BLOCK_CAP_VALUE:
         env[STOP_HOOK_BLOCK_CAP_KEY] = STOP_HOOK_BLOCK_CAP_VALUE
-    else:
-        preserved = str(existing)
+        settings["env"] = env
+        return None
     settings["env"] = env
-    return preserved
+    # "that many consecutive blocks" needs the value to BE a number. A junk
+    # value yields a sentence with no number in it, so the two cases get two
+    # sentences and the second names the harness default instead.
+    token = _block_cap_token(existing)
+    if token is not None and token.lstrip("-").isdigit():
+        return (
+            f"kept your {STOP_HOOK_BLOCK_CAP_KEY}={token}; autonomous mode "
+            f"stops being enforced after that many consecutive blocks. Set it "
+            f"to {STOP_HOOK_BLOCK_CAP_VALUE} to lift the cap."
+        )
+    return (
+        f"kept your {STOP_HOOK_BLOCK_CAP_KEY}={existing!r}; the harness cannot "
+        f"read that as a number, so it falls back to its own default cap and "
+        f"autonomous mode stops being enforced after that many consecutive "
+        f"blocks. Set it to {STOP_HOOK_BLOCK_CAP_VALUE} to lift the cap."
+    )
 
 
 def _remove_managed_env(settings: Dict) -> bool:
@@ -758,19 +797,14 @@ def install_hooks(
     # The Stop hook and the disabled harness block cap are one change: with the
     # cap at its default the hook's own valve would rarely be what ends a block
     # loop, and the cap alone would cut enforcement short at an arbitrary count.
-    preserved_cap = _install_managed_env(settings)
+    cap_notice = _install_managed_env(settings)
 
     # Write back atomically (Windows transient-error retry on os.replace).
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     atomic_write_json(str(settings_path), settings)
 
     message = f"hooks: security hooks registered in {settings_path.name}"
-    if preserved_cap is not None:
-        cap_notice = (
-            f"kept your {STOP_HOOK_BLOCK_CAP_KEY}={preserved_cap}; autonomous mode "
-            f"stops being enforced after that many consecutive blocks. Set it to "
-            f"{STOP_HOOK_BLOCK_CAP_VALUE} to lift the cap."
-        )
+    if cap_notice is not None:
         logger.warning("%s", cap_notice)
         message = f"{message} ({cap_notice})"
 

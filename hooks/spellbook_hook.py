@@ -643,9 +643,9 @@ def _handle_session_start(data: dict) -> dict | None:
 
 # The literal escape phrases, defined ONCE here. The block message below
 # restates them every time -- a trap whose exit is not printed at the moment
-# it closes is undiscoverable. Task 4's UserPromptSubmit handler imports this
-# same constant rather than duplicating the literals; two copies of an escape
-# hatch drift, and the copy that drifts is the one nobody tests.
+# it closes is undiscoverable. The UserPromptSubmit recognizer below reads
+# this same tuple rather than duplicating the literals; two copies of an
+# escape hatch drift, and the copy that drifts is the one nobody tests.
 AUTONOMOUS_ESCAPE_PHRASES = ("stop autonomous", "exit autonomous mode")
 
 
@@ -667,9 +667,16 @@ def _prompt_requests_autonomous_escape(prompt: object) -> bool:
 def _autonomous_escape(data: dict) -> str | None:
     """Clear the autonomous record when the prompt asks for the exit.
 
-    Returns a confirmation to inject, or ``None`` when nothing was cleared --
-    including when no record existed, so a prompt that merely mentions the
-    phrase outside autonomous mode says nothing.
+    Returns a confirmation to inject, or ``None`` when there was nothing to
+    clear -- including when no record existed, so a prompt that merely
+    mentions the phrase outside autonomous mode says nothing.
+
+    When the record survives the attempt, this returns a FAILURE notice
+    rather than the confirmation. This is the operator's only exit from a
+    hook that refuses every turn-end; printing the success line over a
+    no-op tells them the trap is open while it is still shut, and they have
+    no other signal to contradict it. The verdict is the artifact -- the
+    record is gone -- not the fact that the call was made.
     """
     if not _prompt_requests_autonomous_escape(data.get("prompt")):
         return None
@@ -684,11 +691,37 @@ def _autonomous_escape(data: dict) -> str | None:
     if autonomous.read_autonomous_record(session_id) is None:
         return None
 
-    autonomous.clear_autonomous_record(session_id)
+    if not autonomous.clear_autonomous_record(session_id):
+        return (
+            "Autonomous mode COULD NOT BE CLEARED: the record for this session "
+            "could not be removed, so the Stop hook will KEEP refusing to end "
+            "a turn. This is a filesystem fault, not a refusal of the escape "
+            "phrase. To clear it, delete the record file at "
+            f"{_autonomous_record_path_for_message(autonomous, session_id)} "
+            "(check its directory's permissions and free space), or end this "
+            "session -- the record is per-session and grants nothing to a new "
+            "one."
+        )
     return (
         "Autonomous mode CLEARED for this session by operator escape phrase. "
         "The Stop hook no longer blocks the end of a turn."
     )
+
+
+def _autonomous_record_path_for_message(autonomous, session_id: str) -> str:
+    """The record's path for the escape-failure notice, or a fallback phrase.
+
+    Naming the file is the whole value of that notice -- an operator told
+    only that the clear failed has nothing to act on. Resolving it must not
+    itself raise inside the handler that reports a failure.
+    """
+    try:
+        path = autonomous._record_path(session_id)
+    except Exception:
+        return "the autonomous record for this session"
+    if path is None:
+        return "the autonomous record for this session"
+    return str(path)
 
 
 def _autonomous_module():
@@ -719,9 +752,9 @@ def _autonomous_block_reason(record: dict) -> str:
     can read from outside the model distinguishes "the project is done" from
     "the model lost momentum". So it does not try. It refuses the stop once
     and asks, and the model answers by acting: it continues if it was not
-    done, and it stops again if it was. Three refusals inside the rolling
-    window is that second answer arriving three times, and the valve then
-    lets the session end.
+    done, and it stops again if it was. ``BLOCK_WINDOW_LIMIT`` refusals
+    inside ``BLOCK_WINDOW_SECONDS`` is that second answer arriving that many
+    times, and the valve then lets the session end.
 
     The escape phrase and the active philosophy are restated on every refusal
     because this text is the only place the operator's exit is visible from
@@ -767,7 +800,8 @@ def _handle_stop(data: dict) -> dict | None:
 
     1. No autonomous record for this session -> ALLOW.
     2. The rolling-window valve is open -> ALLOW.
-    3. Otherwise -> block, and record the blocked stop.
+    3. The blocked stop cannot be recorded -> ALLOW.
+    4. Otherwise -> block.
 
     The hook decides NOTHING about the work. It reads one small record to
     learn whether the session is autonomous, and if it is, it kicks the
@@ -775,10 +809,10 @@ def _handle_stop(data: dict) -> dict | None:
     once inspected to answer that question itself -- the session transcript,
     the develop gate ledger, a declared evidence artifact -- is gone, and with
     it the reasons this hook used to be slow and the reasons it used to be
-    wrong. What replaced them is row 2: three blocks inside
-    ``BLOCK_WINDOW_SECONDS`` means the model has now insisted three times in a
-    minute that it is done, paused, or blocked, and a fourth refusal cannot
-    teach it anything the first three did not.
+    wrong. What replaced them is row 2: ``BLOCK_WINDOW_LIMIT`` blocks inside
+    ``BLOCK_WINDOW_SECONDS`` means the model has insisted that many times,
+    that fast, that it is done, paused, or blocked, and one more refusal
+    cannot teach it anything those did not.
 
     ``stop_hook_active`` is deliberately NOT consulted. The harness sets it on
     the stop FOLLOWING a block, so treating it as an allow makes the hook
@@ -791,6 +825,15 @@ def _handle_stop(data: dict) -> dict | None:
     operator's turn; a hook that blocks on an unknown traps the session with
     no way out. That includes the valve's own bookkeeping: malformed
     ``block_times`` makes the record read as absent, which lands on row 1.
+
+    Row 3 is that rule applied to the act of blocking itself, and it is not
+    optional. The valve at row 2 opens on blocks that were RECORDED, so a
+    block issued when the record could not be written accumulates nothing
+    that could ever open it. With the harness's own block cap disabled,
+    nothing else bounds the loop: an unwritable state directory would refuse
+    every turn-end for the rest of the session, and the escape phrase would
+    be the operator's only way out of a session they never chose to trap. A
+    block that cannot be accounted for is therefore not issued.
     """
     session_id = data.get("session_id", "") or ""
     if not isinstance(session_id, str) or not _A2A_SESSION_ID_RE.match(session_id):
@@ -807,8 +850,23 @@ def _handle_stop(data: dict) -> dict | None:
     if _autonomous_thrash_valve_open(autonomous, record):
         return None
 
-    autonomous.record_blocked_stop(session_id)
+    if not _autonomous_block_is_accounted(autonomous, session_id):
+        return None
+
     return {"decision": "block", "reason": _autonomous_block_reason(record)}
+
+
+def _autonomous_block_is_accounted(autonomous, session_id: str) -> bool:
+    """Whether this block was recorded, and so may be issued.
+
+    Every failure resolves to ``False`` -- ALLOW -- for the reason row 3 of
+    ``_handle_stop`` states: an unrecorded block can never open the valve
+    that is the only bound on the block loop.
+    """
+    try:
+        return autonomous.record_blocked_stop(session_id) is not None
+    except Exception:
+        return False
 
 
 def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:

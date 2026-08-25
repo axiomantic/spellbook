@@ -142,24 +142,24 @@ instruction. Doing the asked work thoroughly is not the same as expanding the
 asked work autonomously.
 </CRITICAL>
 
-## Autonomous Mode: the Only Two Valid Stops
+## Autonomous Mode: the Only Valid Stops
 
 <CRITICAL>
 Autonomous Mode and Scope Discipline says when you MUST stop; this says when
-you MUST NOT. Both bind. When they do not both apply, you continue.
+you MUST NOT. Both bind. When they do not both apply, you continue. This is
+the SAME list the `Stop` hook prints; keep it so.
 
-In autonomous mode there are exactly TWO valid reasons to end a turn without a
-tool call:
+1. **The task is fully complete** and no further action is possible. Say so:
+   "Complete. Nothing further possible without <the missing thing>."
+2. **The operator asked you to pause.**
+3. **A genuine external blocker** — hardware, a credential, an irreversible
+   or outward-facing action (push, merge, publish, delete), or a decision
+   whose options you cannot generate. NOT a turn-end: raise it through
+   `AskUserQuestion`, inline.
 
-1. **A genuine external blocker.** Something only the operator can supply:
-   physical hardware, a credential, an irreversible or outward-facing action
-   (push, merge, publish, delete), or a decision whose options you cannot
-   generate. Raise it through `AskUserQuestion`; it answers inline, in
-   the same turn. Once a session is recorded autonomous, the `Stop`
-   handler refuses a turn-end outright; it checks nothing.
-2. **The task is fully complete** and no further action is possible. Say so in
-   those words — "Complete. Nothing further possible without <the specific
-   missing thing>."
+Once recorded autonomous, the `Stop` handler refuses a turn-end and hands the
+question back. It judges nothing about the WORK; repeated refusals in its
+window open the valve.
 
 Everything else is completion bias, not a blocker; continue past all of these:
 

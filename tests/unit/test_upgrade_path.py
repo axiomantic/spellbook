@@ -9,7 +9,12 @@ PROJECT_ROOT = str(Path(__file__).resolve().parent.parent.parent)
 if PROJECT_ROOT not in sys.path:
     sys.path.insert(0, PROJECT_ROOT)
 
-from installer.components.hooks import HOOK_DEFINITIONS, _get_hook_path, install_hooks  # noqa: E402  (sys.path mangling above)
+from installer.components.hooks import (  # noqa: E402  (sys.path mangling above)
+    HOOK_DEFINITIONS,
+    _get_hook_path,
+    _get_hook_path_for_platform,
+    install_hooks,
+)
 import tripwire  # noqa: E402  (sys.path mangling above)
 
 
@@ -33,10 +38,17 @@ def _assert_powershell_which_if_windows() -> None:
 
 
 def _expected_unified_command(prefix="$SPELLBOOK_DIR", config_prefix="$SPELLBOOK_CONFIG_DIR"):
-    """Return the expected unified hook command for the current platform."""
-    if sys.platform == "win32":
-        return f"powershell -ExecutionPolicy Bypass -File {prefix}/hooks/spellbook_hook.ps1"
-    return f"{config_prefix}/daemon-venv/bin/python {prefix}/hooks/spellbook_hook.py"
+    """Return the expected unified hook command for the current platform.
+
+    The platform transform is taken from the installer's own function rather
+    than restated here. A second copy of that rule in a test is the drift
+    ``tests/installer/test_hook_phase_registration.py`` exists to catch, one
+    level up: it would agree with itself on a platform where the installer
+    had changed.
+    """
+    return _get_hook_path_for_platform(
+        f"{config_prefix}/daemon-venv/bin/python {prefix}/hooks/spellbook_hook.py"
+    )
 
 
 class TestUpgradeFromShellHooks:
@@ -239,10 +251,15 @@ class TestUpgradeFromShellHooks:
 
         config_dir = tmp_path / ".local" / "spellbook"
         get_spellbook_config_dir_mock = tripwire.mock("installer.config:get_spellbook_config_dir")
-        # install_hooks resolves the config dir twice per registered phase
-        # (clean pass + merge pass) plus once for the source symlink. Derived
-        # from HOOK_DEFINITIONS so adding a phase does not silently re-tune it.
-        expected_config_dir_calls = 2 * len(HOOK_DEFINITIONS) + 1
+        # FIXTURE-DEPENDENT, not derived. The driver is one resolution per
+        # hook EXPANDED plus the detection lookups this fixture's own
+        # pre-existing hooks provoke, so the count tracks what the fixture
+        # below contains and not the number of phases. The earlier
+        # ``2 * len(HOOK_DEFINITIONS) + 1`` was fitted: it matched at five
+        # phases by coincidence and moved with the fixture, not with
+        # HOOK_DEFINITIONS. Re-measure it when the fixture changes; there is
+        # no formula to keep in step.
+        expected_config_dir_calls = 11
         for _ in range(expected_config_dir_calls):
             get_spellbook_config_dir_mock.calls(lambda: config_dir)
         _register_powershell_which_mock()

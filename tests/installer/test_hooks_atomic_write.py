@@ -105,10 +105,18 @@ def test_install_hooks_retries_os_replace_permission_error_once(tmp_path):
     _write_baseline(settings_path)
 
     # Force the Windows code path inside atomic_replace. install_hooks itself
-    # also calls platform.system() once per registered phase at
-    # hook-path-resolution time, plus one inside atomic_replace. Derived from
-    # HOOK_DEFINITIONS so adding a phase does not silently re-tune this count.
-    expected_system_calls = len(hooks.HOOK_DEFINITIONS) + 1
+    # calls platform.system() once per HOOK, at hook-path-resolution time,
+    # plus one inside atomic_replace. Counting phases is right only while
+    # every phase holds exactly one hook, which is a property of the current
+    # table and not a rule -- so the count is derived from the hooks.
+    expected_system_calls = (
+        sum(
+            len(definition["hooks"])
+            for definitions in hooks.HOOK_DEFINITIONS.values()
+            for definition in definitions
+        )
+        + 1
+    )
     mock_system = _register_windows_branch(expected_calls=expected_system_calls)
 
     # Skip the real backoff sleep inside atomic_replace's retry loop. There

@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - `UserPromptSubmit` has been handled by the unified hook since the agent2agent
-  work, is covered by tests, and is described in four documents as the always-on
+  work, is covered by tests, and is described across the documentation as the always-on
   hook-notify floor -- but the installer never registered the phase, so that floor
   has never fired for anyone. This is the module's own silent-failure shape: a
   working floor and an unwired one produce the identical observable, no output when
