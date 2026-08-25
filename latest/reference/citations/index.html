@@ -8401,6 +8401,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#development-ceremonies-research-backing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development ceremonies (research backing)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Development ceremonies (research backing)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-green-mirage-tests-that-pass-without-verifying-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The green mirage: tests that pass without verifying behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mutation-as-the-measure-of-a-tests-strength" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mutation as the measure of a test's strength
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constrained-beats-unconstrained-autonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constrained beats unconstrained autonomy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#granularity-at-the-acceptance-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Granularity at the acceptance boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specification-before-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specification before code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#summary" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8675,6 +8747,78 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#development-ceremonies-research-backing" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development ceremonies (research backing)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Development ceremonies (research backing)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#the-green-mirage-tests-that-pass-without-verifying-behavior" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        The green mirage: tests that pass without verifying behavior
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mutation-as-the-measure-of-a-tests-strength" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mutation as the measure of a test's strength
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#constrained-beats-unconstrained-autonomy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constrained beats unconstrained autonomy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#granularity-at-the-acceptance-boundary" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Granularity at the acceptance boundary
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#specification-before-code" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Specification before code
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#summary" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8812,6 +8956,84 @@
 <ul>
 <li><strong>Link</strong>: <a href="https://arxiv.org/abs/2408.08631">https://arxiv.org/abs/2408.08631</a></li>
 <li>Proposes "Jekyll &amp; Hyde" framework that ensembles persona and neutral perspectives to mitigate persona drawbacks.</li>
+</ul>
+<h2 id="development-ceremonies-research-backing">Development ceremonies (research backing)<a class="headerlink" href="#development-ceremonies-research-backing" title="Permanent link">&para;</a></h2>
+<p>Spellbook's development ceremonies grew from practice, not from the literature, but independent research supports many of them. The five items below map each ceremony to the research that validates it.</p>
+<h3 id="the-green-mirage-tests-that-pass-without-verifying-behavior">The green mirage: tests that pass without verifying behavior<a class="headerlink" href="#the-green-mirage-tests-that-pass-without-verifying-behavior" title="Permanent link">&para;</a></h3>
+<p>Spellbook's green-mirage audit asks of every test whether it would fail if the code were broken. This is the coding face of <em>reward hacking</em> / <em>specification gaming</em>, a documented failure mode where an agent satisfies the literal metric without the intended outcome. It is not hypothetical: audits find a material share of SWE-bench patches pass their tests yet are wrong or incomplete, and mutation analysis finds most SWE-bench Verified instances admit a surviving mutant.</p>
+<p><strong>Amodei, D., Olah, C., Steinhardt, J., Christiano, P., Schulman, J., &amp; Mané, D.</strong> (2016). Concrete Problems in AI Safety. <em>arXiv preprint arXiv:1606.06565</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/1606.06565">https://arxiv.org/abs/1606.06565</a></li>
+<li><strong>Key finding</strong>: Catalogues concrete AI safety failure modes, including reward hacking, where a system satisfies the literal specification of an objective without achieving the intended outcome.</li>
+<li><strong>Relevance</strong>: Frames the green-mirage audit as detection of the coding-domain form of reward hacking: a test that passes while the code is wrong.</li>
+</ul>
+<p><strong>Krakovna, V., et al.</strong> (2020). Specification gaming: the flip side of AI ingenuity. <em>DeepMind blog</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://deepmind.google/discover/blog/specification-gaming-the-flip-side-of-ai-ingenuity/">https://deepmind.google/discover/blog/specification-gaming-the-flip-side-of-ai-ingenuity/</a></li>
+<li><strong>Key finding</strong>: Documents specification gaming, where an agent exploits the literal statement of an objective to score well without doing the intended task.</li>
+<li><strong>Relevance</strong>: Names the general pattern the green-mirage audit guards against in test suites.</li>
+</ul>
+<p><strong>Skalse, J., Howe, N. H. R., Krasheninnikov, D., &amp; Krueger, D.</strong> (2022). Defining and Characterizing Reward Hacking. <em>Advances in Neural Information Processing Systems 35 (NeurIPS 2022)</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2209.13085">https://arxiv.org/abs/2209.13085</a></li>
+<li><strong>Key finding</strong>: Provides a formal definition of reward hacking and characterizes when a proxy objective can be gamed relative to the true objective.</li>
+<li><strong>Relevance</strong>: Theoretical grounding for why a test (a proxy for correctness) can be satisfied without the code being correct.</li>
+</ul>
+<p><strong>Aleithan, R., et al.</strong> (2024). SWE-Bench+: Enhanced Coding Benchmark for LLMs. <em>arXiv preprint arXiv:2410.06992</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2410.06992">https://arxiv.org/abs/2410.06992</a></li>
+<li><strong>Key finding</strong>: An audit of SWE-bench patches finds many pass their tests yet are wrong or incomplete: 9.26% incorrect / 5.56% incomplete on SWE-bench Lite, and 12.5% / 9.82% on SWE-bench Verified.</li>
+<li><strong>Relevance</strong>: Empirical evidence that passing tests do not guarantee correct code, motivating the green-mirage audit.</li>
+</ul>
+<p><strong>Are Benchmark Tests Strong Enough? Mutation-Guided Diagnosis and Augmentation of Regression Suites</strong> (tool: STING; alt. "Probe to Generate", tool PROBE). <em>arXiv preprint arXiv:2604.01518</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2604.01518">https://arxiv.org/abs/2604.01518</a></li>
+<li><strong>Key finding</strong>: Mutation-guided analysis finds that 77% of SWE-bench Verified instances admit at least one surviving mutant, meaning the accompanying tests fail to detect a deliberately broken implementation.</li>
+<li><strong>Relevance</strong>: Quantifies test weakness in a widely used benchmark, the exact condition the green-mirage audit and mutation discipline target.</li>
+</ul>
+<h3 id="mutation-as-the-measure-of-a-tests-strength">Mutation as the measure of a test's strength<a class="headerlink" href="#mutation-as-the-measure-of-a-tests-strength" title="Permanent link">&para;</a></h3>
+<p>Spellbook's TDD rule requires every assertion to name the mutation it kills, and no check counts until it has gone red on deliberately broken code. This is mutation testing, established since the late 1970s. A test that still passes when the code is broken proves nothing.</p>
+<p><strong>DeMillo, R. A., Lipton, R. J., &amp; Sayward, F. G.</strong> (1978). Hints on Test Data Selection: Help for the Practicing Programmer. <em>IEEE Computer</em>, 11(4), 34-41.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://doi.org/10.1109/C-M.1978.218136">https://doi.org/10.1109/C-M.1978.218136</a></li>
+<li><strong>Key finding</strong>: Introduces mutation testing: deliberately altering a program to produce mutants, then measuring whether the test suite detects (kills) them as a measure of test adequacy.</li>
+<li><strong>Relevance</strong>: Origin of the mutation-as-check-strength discipline spellbook applies to TDD. Framework: <a href="https://stryker-mutator.io/">Stryker</a>.</li>
+</ul>
+<h3 id="constrained-beats-unconstrained-autonomy">Constrained beats unconstrained autonomy<a class="headerlink" href="#constrained-beats-unconstrained-autonomy" title="Permanent link">&para;</a></h3>
+<p>Spellbook runs one orchestrator dispatching narrowly-scoped subagents, each with only its local context, and keeps the reviewer separate from the author. Research finds unconstrained multi-turn autonomy amplifies early mistakes, and that hierarchical orchestration with per-subagent context isolation manages exactly this.</p>
+<p><strong>Xia, C. S., Deng, Y., Dunn, S., &amp; Zhang, L.</strong> (2025). Agentless: Demystifying LLM-based Software Engineering Agents. <em>Proceedings of FSE 2025</em>. arXiv:2407.01489.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2407.01489">https://arxiv.org/abs/2407.01489</a></li>
+<li><strong>Key finding</strong>: A simple, constrained three-phase approach reaches 32.00% on SWE-bench Lite, outperforming more autonomous agents; unconstrained multi-turn autonomy compounds early errors and inflates context.</li>
+<li><strong>Relevance</strong>: Supports spellbook's constrained orchestration and its resistance to over-decomposition.</li>
+</ul>
+<p><strong>BOAD: Discovering Hierarchical Software Engineering Agents via Bandit Optimization</strong> (2026). <em>Proceedings of ICLR 2026</em>. arXiv:2512.23631.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2512.23631">https://arxiv.org/abs/2512.23631</a></li>
+<li><strong>Key finding</strong>: Hierarchical agent structures discovered via bandit optimization improve software engineering task performance through structured decomposition and coordination.</li>
+<li><strong>Relevance</strong>: Supports the orchestrator-plus-subagents structure spellbook uses.</li>
+</ul>
+<p><strong>Confucius Code Agent: Scalable Agent Scaffolding for Real-World SWE</strong> (2026). <em>arXiv preprint arXiv:2512.10398</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2512.10398">https://arxiv.org/abs/2512.10398</a></li>
+<li><strong>Key finding</strong>: Agent scaffolding with per-subagent context isolation scales to real-world software engineering tasks by managing context per subagent rather than accumulating it in one loop.</li>
+<li><strong>Relevance</strong>: Supports spellbook's per-subagent context isolation and reviewer/author separation.</li>
+</ul>
+<h3 id="granularity-at-the-acceptance-boundary">Granularity at the acceptance boundary<a class="headerlink" href="#granularity-at-the-acceptance-boundary" title="Permanent link">&para;</a></h3>
+<p>Spellbook's plan skills collapse work items that are only jointly acceptable, resisting over-decomposition. This is consistent with the Agentless finding that excess decomposition inflates context and compounds error (Xia et al., 2025, arXiv:2407.01489, cited above).</p>
+<h3 id="specification-before-code">Specification before code<a class="headerlink" href="#specification-before-code" title="Permanent link">&para;</a></h3>
+<p>Spellbook's design-doc → plan → TDD flow, its discovery/clarify pass, and its loading of project governance (AGENTS.md) as binding constraints parallel spec-driven development: an executable contract before code, a "constitution" of principles, and a clarify step that interrogates the spec before building. This part of the literature argues the case rather than measuring it.</p>
+<p><strong>Piskala, D. B.</strong> (2026). Spec-Driven Development: From Code to Contract in the Age of AI Coding Assistants. <em>arXiv preprint arXiv:2602.00180</em>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://arxiv.org/abs/2602.00180">https://arxiv.org/abs/2602.00180</a></li>
+<li><strong>Key finding</strong>: Argues (as a technical report, not an empirical measurement) for treating a specification as an executable contract that precedes and governs code generation.</li>
+<li><strong>Relevance</strong>: Parallels spellbook's design-doc → plan → TDD flow.</li>
+</ul>
+<p><strong>GitHub Spec Kit</strong>.</p>
+<ul>
+<li><strong>Link</strong>: <a href="https://github.com/github/spec-kit">https://github.com/github/spec-kit</a></li>
+<li><strong>Key finding</strong>: A toolkit for spec-driven development built around a project "constitution" of principles and a <code>/clarify</code> workflow that interrogates the spec before implementation.</li>
+<li><strong>Relevance</strong>: Parallels spellbook's clarify pass and its loading of project governance (AGENTS.md) as binding constraints.</li>
 </ul>
 <hr />
 <h2 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h2>
