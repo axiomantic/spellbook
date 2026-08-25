@@ -154,9 +154,9 @@ tool call:
 1. **A genuine external blocker.** Something only the operator can supply:
    physical hardware, a credential, an irreversible or outward-facing action
    (push, merge, publish, delete), or a decision whose options you cannot
-   generate. Raise it through `AskUserQuestion` — the only legal
-   non-completion stop, and what the `Stop` handler checks once a session is
-   recorded autonomous (`autonomous-mode` skill).
+   generate. Raise it through `AskUserQuestion`; it answers inline, in
+   the same turn. Once a session is recorded autonomous, the `Stop`
+   handler refuses a turn-end outright; it checks nothing.
 2. **The task is fully complete** and no further action is possible. Say so in
    those words — "Complete. Nothing further possible without <the specific
    missing thing>."

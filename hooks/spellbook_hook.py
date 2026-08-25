@@ -527,15 +527,6 @@ def _develop_ledger_path(cwd: str) -> Path | None:
     ``None`` and "file absent" identically, so the short circuit is not
     observable to them.
 
-    The short circuit does NOT cover the ``Stop`` caller's hard case. Anyone
-    who has ever run develop has a ledger for SOME project, so the directory
-    is non-empty and resolution proceeds; on a layout the git-free walk cannot
-    read, the spawns happen inside a hook whose timeout is a budget and whose
-    overrun is a silent bypass. That spend is not avoidable here -- the ledger
-    outranks the evidence artifact in ``autonomous.completion_verified``, so
-    the artifact path cannot be taken without first learning whether a ledger
-    exists -- so it is PAID FOR instead, in ``installer.components.hooks``
-    where the Stop timeout is derived from it.
     """
     override = os.environ.get("SPELLBOOK_DEV_DIR")
     if override:
@@ -721,131 +712,47 @@ def _autonomous_module():
         return None
 
 
-def _transcript_has_ask_user_question(transcript_path: str) -> bool | None:
-    """Whether the ENDING turn contains an ``AskUserQuestion`` tool call.
+def _autonomous_block_reason(record: dict) -> str:
+    """The block message: a question handed back to the model, not a verdict.
 
-    Tri-state on purpose. ``True``/``False`` are answers; ``None`` means the
-    question could not be asked at all -- no path, unreadable file, or not a
-    single parseable event in it. The caller treats ``None`` as ALLOW, because
-    an unreadable transcript is an UNKNOWN and collapsing it into ``False``
-    would block a session on the strength of a file it never read.
+    The hook cannot tell whether a turn is genuinely finished -- nothing it
+    can read from outside the model distinguishes "the project is done" from
+    "the model lost momentum". So it does not try. It refuses the stop once
+    and asks, and the model answers by acting: it continues if it was not
+    done, and it stops again if it was. Three refusals inside the rolling
+    window is that second answer arriving three times, and the valve then
+    lets the session end.
 
-    The transcript is JSONL, one event per line; an assistant event carries
-    ``message.content`` as a list of blocks, and a tool call is a block with
-    ``type == "tool_use"`` and a ``name``. Verified against a real Claude Code
-    transcript rather than assumed: the block scan finds ``AskUserQuestion``
-    alongside ``Bash``, ``Read``, and the rest, so detection is a field
-    comparison and never a heuristic over prose.
-
-    "The ending turn" is everything after the last GENUINE user prompt. A
-    ``user`` event whose content is a list of ``tool_result`` blocks is a tool
-    response, not a prompt -- scanning to the last ``user`` event of any kind
-    would cut the turn at the most recent tool call and miss the question that
-    preceded it.
-
-    An individual unparseable line is skipped rather than fatal -- a partial
-    write of the last line is ordinary. A file with NO parseable event at all
-    is the unknown, and returns ``None``.
+    The escape phrase and the active philosophy are restated on every refusal
+    because this text is the only place the operator's exit is visible from
+    inside a session that has been running for hours.
     """
-    if not transcript_path or not isinstance(transcript_path, str):
-        return None
-    try:
-        raw = Path(transcript_path).read_text(encoding="utf-8", errors="replace")
-    except (OSError, ValueError):
-        return None
-
-    events = []
-    for line in raw.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        try:
-            obj = json.loads(line)
-        except json.JSONDecodeError:
-            continue
-        if isinstance(obj, dict):
-            events.append(obj)
-
-    if not events:
-        return None
-
-    start = 0
-    for index, obj in enumerate(events):
-        if obj.get("type") != "user":
-            continue
-        message = obj.get("message")
-        content = message.get("content") if isinstance(message, dict) else None
-        if isinstance(content, list) and any(
-            isinstance(b, dict) and b.get("type") == "tool_result" for b in content
-        ):
-            continue
-        start = index
-
-    for obj in events[start:]:
-        message = obj.get("message")
-        if not isinstance(message, dict):
-            continue
-        content = message.get("content")
-        if not isinstance(content, list):
-            continue
-        for block in content:
-            if not isinstance(block, dict):
-                continue
-            if block.get("type") == "tool_use" and block.get("name") == "AskUserQuestion":
-                return True
-    return False
-
-
-def _autonomous_completion_verified(record: dict, data: dict) -> bool:
-    """Whether the project goal is mechanically verified as complete.
-
-    Delegates to ``spellbook.core.autonomous.completion_verified``, which
-    owns both paths: the develop gate ledger when one exists for this
-    project, and otherwise the evidence artifact named by the record. This
-    function's only work is resolving the ledger path from stdin's ``cwd``.
-
-    Every failure resolves to ``False`` -- "not verified" -- which is the
-    conservative direction: it can cause an extra block that the escape
-    phrase clears, whereas returning ``True`` would silently disable
-    enforcement and look exactly like a working hook.
-    """
-    autonomous = _autonomous_module()
-    if autonomous is None:
-        return False
-    cwd = data.get("cwd", "") or ""
-    try:
-        ledger_path = _develop_ledger_path(cwd) if isinstance(cwd, str) else None
-        return bool(autonomous.completion_verified(record, ledger_path=ledger_path))
-    except Exception:
-        return False
-
-
-def _autonomous_block_reason(record: dict, *, missed: str) -> str:
-    """The block message. Restates the exit every time it refuses one."""
     phrases = " / ".join(f'"{p}"' for p in AUTONOMOUS_ESCAPE_PHRASES)
     goal = record.get("goal") or "(no goal recorded)"
     return (
         "Autonomous mode is ACTIVE for this session "
         f"(mode: {record.get('mode')}, philosophy: {record.get('philosophy')}).\n"
-        "A turn may end on exactly two conditions: a genuine blocker raised "
-        "through an AskUserQuestion tool call, or mechanically verified "
-        "completion of the whole project goal.\n"
-        f"Not met: {missed}\n"
+        "This turn-end is refused. Before ending a turn, answer this: are you "
+        "DONE with the whole project goal, were you asked to PAUSE by the "
+        "operator, or do you have a GENUINE BLOCKER?\n"
+        "If you have a genuine blocker, you MUST use the AskUserQuestion tool "
+        "to ask the operator how to continue -- do not end the turn on it.\n"
+        "If none of the three holds, you are not finished. A long session, a "
+        "finished list item, a returned subagent result, and a phase boundary "
+        "are none of them. Keep working.\n"
         f"Goal: {goal}\n"
         f"To leave autonomous mode, the OPERATOR types one of: {phrases}. "
-        "Nothing you do ends it; keep working."
+        "Nothing you do ends it."
     )
 
 
 def _autonomous_thrash_valve_open(autonomous, record: dict) -> bool:
     """Whether recorded blocks show thrashing, so this stop must be allowed.
 
-    Every failure resolves to ``True`` -- ALLOW -- which is the opposite
-    direction from ``_autonomous_completion_verified`` and deliberately so.
-    This predicate is the ONLY thing bounding the block loop now that the
-    harness cap is disabled, so a fault in it must release the session, not
-    hold it. A valve that jams shut when its own bookkeeping breaks is worse
-    than no valve.
+    Every failure resolves to ``True`` -- ALLOW. This predicate is the ONLY
+    thing bounding the block loop now that the harness cap is disabled, so a
+    fault in it must release the session, not hold it. A valve that jams shut
+    when its own bookkeeping breaks is worse than no valve.
     """
     try:
         return bool(autonomous.thrash_valve_open(record, now=time.time()))
@@ -856,30 +763,34 @@ def _autonomous_thrash_valve_open(autonomous, record: dict) -> bool:
 def _handle_stop(data: dict) -> dict | None:
     """Stop handler. Returns a decision dict, or None to allow silently.
 
-    Decision table, evaluated in order:
+    Decision table, evaluated in order, and complete:
 
     1. No autonomous record for this session -> ALLOW.
-    2. The ending turn contains an ``AskUserQuestion`` call -> ALLOW.
-    3. Completion verified (Task 3) -> ALLOW.
-    4. The rolling-window valve is open -> ALLOW.
-    5. Otherwise -> block, and record the blocked stop.
+    2. The rolling-window valve is open -> ALLOW.
+    3. Otherwise -> block, and record the blocked stop.
 
-    ``stop_hook_active`` is deliberately NOT consulted. The harness sets it
-    on the stop FOLLOWING a block, so treating it as an allow makes the hook
-    block at most once per session and then permit every subsequent
-    turn-end -- inert in the only case the feature exists for. What prevents
-    an infinite block loop instead is the valve at row 4: three blocks inside
-    ``BLOCK_WINDOW_SECONDS`` is thrashing, and further blocking cannot help.
-    The valve and the disabled ``CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`` are one
-    change; while the harness cap stands the valve would rarely fire, and with
-    the cap disabled the valve is the only loop stop there is.
+    The hook decides NOTHING about the work. It reads one small record to
+    learn whether the session is autonomous, and if it is, it kicks the
+    session and hands the question back to the model. Everything the handler
+    once inspected to answer that question itself -- the session transcript,
+    the develop gate ledger, a declared evidence artifact -- is gone, and with
+    it the reasons this hook used to be slow and the reasons it used to be
+    wrong. What replaced them is row 2: three blocks inside
+    ``BLOCK_WINDOW_SECONDS`` means the model has now insisted three times in a
+    minute that it is done, paused, or blocked, and a fourth refusal cannot
+    teach it anything the first three did not.
+
+    ``stop_hook_active`` is deliberately NOT consulted. The harness sets it on
+    the stop FOLLOWING a block, so treating it as an allow makes the hook
+    block at most once per session and then permit every subsequent turn-end
+    -- inert in the only case the feature exists for. The valve at row 2 is
+    what prevents an infinite block loop; it and the disabled
+    ``CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`` are one change.
 
     Every unknown resolves to ALLOW. A hook that raises takes out the
     operator's turn; a hook that blocks on an unknown traps the session with
     no way out. That includes the valve's own bookkeeping: malformed
     ``block_times`` makes the record read as absent, which lands on row 1.
-    The only path that blocks is one where the record is definitely present
-    and both legal stop conditions are definitely unmet.
     """
     session_id = data.get("session_id", "") or ""
     if not isinstance(session_id, str) or not _A2A_SESSION_ID_RE.match(session_id):
@@ -893,24 +804,11 @@ def _handle_stop(data: dict) -> dict | None:
     if record is None:
         return None
 
-    # None means "could not read the transcript" -- an unknown, which allows.
-    if _transcript_has_ask_user_question(data.get("transcript_path", "") or "") is not False:
-        return None
-
-    if _autonomous_completion_verified(record, data):
-        return None
-
     if _autonomous_thrash_valve_open(autonomous, record):
         return None
 
     autonomous.record_blocked_stop(session_id)
-    return {
-        "decision": "block",
-        "reason": _autonomous_block_reason(
-            record,
-            missed="no AskUserQuestion tool call in this turn, and completion is not verified",
-        ),
-    }
+    return {"decision": "block", "reason": _autonomous_block_reason(record)}
 
 
 def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:

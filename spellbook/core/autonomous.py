@@ -12,18 +12,13 @@ unreadable file, a bad session id, wrong field types, or a partial record all
 resolve the same way: as if no record existed. See the same reasoning
 documented at ``hooks/spellbook_hook.py:_develop_ledger_path``.
 
-Completion verification is layered on top of this module and is explicitly
-limited. It cannot verify that the evidence is true. The artifact path
-checks that a claimed-evidence file EXISTS, PARSES, and covers every
-declared criterion; it never runs the commands that file names, never
-compares their real output to the output recorded beside them, and cannot
-tell a genuine transcript from one composed to satisfy the check. The
-develop path is one step stronger only because a separate mechanism -- the
-gate ledger -- wrote the state it reads; it still trusts whoever recorded
-those verdicts. What both paths do is convert a completion claim from a
-sentence into a reviewable artifact, so a false claim has to be WRITTEN
-DOWN where a human can check it. That is a real improvement and a limited
-one, and it is not proof of completion.
+Nothing here judges whether the work is DONE. The Stop hook does not decide
+that and this module does not help it: the record says a session is
+autonomous, the rolling-window valve says whether the session has already
+insisted it is finished, and the model itself answers the rest. An earlier
+design verified completion from a gate ledger or a declared evidence
+artifact; it could never verify that the evidence was true, only that a
+claim had been written down, and it is gone.
 """
 
 from __future__ import annotations
@@ -31,7 +26,6 @@ from __future__ import annotations
 import json
 import os
 import re
-import sys
 import tempfile
 import time
 from pathlib import Path
@@ -121,8 +115,8 @@ def _validate_record(data: Any) -> dict[str, Any] | None:
     """Return ``data`` if it is a well-formed autonomous record, else ``None``.
 
     Required fields: ``mode`` (``"fully"`` or ``"mostly"``), ``philosophy``
-    (an id in ``PHILOSOPHIES``), ``goal`` (string), ``goal_criteria`` (list),
-    ``set_at`` (string), ``blocked_stops`` (int). A record missing or
+    (an id in ``PHILOSOPHIES``), ``goal`` (string), ``set_at`` (string),
+    ``blocked_stops`` (int). A record missing or
     mistyping any field is treated identically to a missing file -- "not
     autonomous" -- rather than partially trusted.
 
@@ -142,8 +136,6 @@ def _validate_record(data: Any) -> dict[str, Any] | None:
         return None
     if not isinstance(data.get("goal"), str):
         return None
-    if not isinstance(data.get("goal_criteria"), list):
-        return None
     if not isinstance(data.get("set_at"), str):
         return None
     if not isinstance(data.get("blocked_stops"), int) or isinstance(
@@ -152,15 +144,8 @@ def _validate_record(data: Any) -> dict[str, Any] | None:
         return None
     if not isinstance(data.get("decisions"), list):
         return None
-    # Optional. Absent and null both mean "no evidence artifact declared",
-    # which the artifact predicate reads as not complete. Only a PRESENT
-    # non-string is malformed.
-    if data.get("evidence_path") is not None and not isinstance(
-        data.get("evidence_path"), str
-    ):
-        return None
-    # Optional, for the same reason ``evidence_path`` is: records written
-    # before the valve existed have no timestamps, and an absent list means
+    # Optional: records written before the valve existed have no
+    # timestamps, and an absent list means
     # "no blocks recorded yet". A PRESENT value that is not a list of finite
     # numbers is malformed, and malformed valve state makes the whole record
     # read as "not autonomous" -- which ALLOWS the stop. Broken bookkeeping
@@ -213,18 +198,12 @@ def write_autonomous_record(
     mode: str,
     philosophy: str,
     goal: str,
-    goal_criteria: list[str],
     set_at: str,
     blocked_stops: int = 0,
     decisions: list[dict[str, str]] | None = None,
-    evidence_path: str | None = None,
     block_times: list[float] | None = None,
 ) -> bool:
     """Atomically write the autonomous-mode record for ``session_id``.
-
-    ``goal_criteria`` may be empty, which means develop owns completion;
-    ``evidence_path`` names the evidence artifact the non-develop completion
-    path reads, and is ``None`` when no artifact has been declared yet.
 
     Returns ``True`` on success, ``False`` if ``session_id`` is invalid or
     the record fields fail validation. Never raises for those cases; genuine
@@ -239,11 +218,9 @@ def write_autonomous_record(
         "mode": mode,
         "philosophy": philosophy,
         "goal": goal,
-        "goal_criteria": goal_criteria,
         "set_at": set_at,
         "blocked_stops": blocked_stops,
         "decisions": decisions if decisions is not None else [],
-        "evidence_path": evidence_path,
         "block_times": block_times if block_times is not None else [],
     }
     if _validate_record(record) is None:
@@ -376,11 +353,9 @@ def record_blocked_stop(session_id: str, *, now: float | None = None) -> int | N
         mode=record["mode"],
         philosophy=record["philosophy"],
         goal=record["goal"],
-        goal_criteria=record["goal_criteria"],
         set_at=record["set_at"],
         blocked_stops=new_count,
         decisions=record["decisions"],
-        evidence_path=record.get("evidence_path"),
         block_times=stamps,
     )
     if not ok:
@@ -429,218 +404,9 @@ def append_decision(
         mode=record["mode"],
         philosophy=record["philosophy"],
         goal=record["goal"],
-        goal_criteria=record["goal_criteria"],
         set_at=record["set_at"],
         blocked_stops=record["blocked_stops"],
         decisions=new_decisions,
-        evidence_path=record.get("evidence_path"),
         block_times=record.get("block_times"),
     )
     return bool(ok)
-
-
-# ---- completion verification (Task 3) -------------------------------------
-#
-# Two sources, checked in this order: the develop gate ledger when one exists
-# for the project, and otherwise the evidence artifact named by the record.
-# Every unknown -- no ledger, unreadable ledger, missing artifact,
-# unparseable artifact, absent criteria -- resolves to NOT complete. The
-# asymmetry is deliberate and load-bearing: a false negative costs one extra
-# block that the escape phrase clears, while a false positive silently
-# disables enforcement and looks exactly like a working hook.
-
-
-def _develop_ledger_module() -> Any:
-    """Import ``scripts/develop_gate_ledger``, or ``None`` if unavailable.
-
-    Imported inside the function rather than at module top level on purpose.
-    ``scripts/`` is not a package and is not on ``sys.path`` outside pytest
-    (``pyproject.toml`` puts it there for tests only), so a top-level import
-    would need the same ``sys.path`` mutation at import time and would make
-    THIS module unimportable wherever it failed -- taking the Stop hook's
-    state layer down with it. As a degrading optional dependency it belongs
-    behind a call.
-    """
-    root = Path(__file__).resolve().parent.parent.parent
-    scripts_dir = root / "scripts"
-    try:
-        if str(scripts_dir) not in sys.path:
-            sys.path.insert(0, str(scripts_dir))
-        import develop_gate_ledger
-
-        return develop_gate_ledger
-    except Exception:
-        return None
-
-
-# The ledger's ``current_phase`` value space is enumerated in
-# skills/develop/references/ledger-cli.md: "0" | "1" | "1.5" | "2" | "3" |
-# "4" | "fast-path". "4" is the last numbered phase (implementation) and
-# "fast-path" is the zero-flag path's own terminal, so these two are the
-# phases from which a run can finish. Any other value -- including one added
-# later that this set does not know -- reads as "not finished", which is the
-# conservative direction.
-DEVELOP_FINISHING_PHASES = frozenset({"4", "fast-path"})
-
-
-def _has_failed_verdict(ledger: dict[str, Any]) -> bool:
-    """Whether any recorded wave or group check carries ``status="failed"``.
-
-    These are the only per-check VERDICTS the ledger stores. A malformed
-    entry counts as failed: an unreadable verdict is an unknown, and an
-    unknown must not read as a pass.
-    """
-    for key, inner in (("waves", "section_24_6_check"), ("groups", "gate_stack")):
-        container = ledger.get(key)
-        if container is None:
-            continue
-        if not isinstance(container, dict):
-            return True
-        for entry in container.values():
-            if not isinstance(entry, dict):
-                return True
-            check = entry.get(inner)
-            if check is None:
-                continue
-            if not isinstance(check, dict):
-                return True
-            if check.get("status") == "failed":
-                return True
-    return False
-
-
-def develop_completion_verified(ledger_path: Path) -> bool:
-    """Whether the develop run recorded at ``ledger_path`` is finished.
-
-    True only when BOTH hold: every gate in ``ceremony.selected`` has left
-    the ``remaining_gates`` run-queue with no failed verdict recorded against
-    the run, AND ``current_phase`` is one of ``DEVELOP_FINISHING_PHASES``.
-    Both, not either -- a drained queue mid-run and a finishing phase with
-    gates still queued are each a partial run.
-
-    The ledger is read through ``scripts/develop_gate_ledger``, which owns
-    the schema and refuses malformed state, rather than hand-parsed here.
-    Its refusals (``LedgerError``) and every other failure resolve to
-    ``False``. Never raises.
-    """
-    module = _develop_ledger_module()
-    if module is None:
-        return False
-    try:
-        ledger = module.read_ledger(ledger_path)
-        if not isinstance(ledger, dict) or not ledger:
-            return False
-        if ledger.get("current_phase") not in DEVELOP_FINISHING_PHASES:
-            return False
-        ceremony = ledger.get("ceremony")
-        if not isinstance(ceremony, dict):
-            return False
-        # ``_ceremony_elements`` is the ledger module's own splitter for its
-        # newline-joined scalars. Reused rather than re-implemented because
-        # it carries the refusal that matters here: a list where a scalar
-        # belongs raises instead of silently comparing as a set of one.
-        selected = module._ceremony_elements(
-            ceremony.get("selected"), source="ceremony.selected"
-        )
-        remaining = module._ceremony_elements(
-            ledger.get("remaining_gates"), source="remaining_gates"
-        )
-        if selected & remaining:
-            return False
-        return not _has_failed_verdict(ledger)
-    except Exception:
-        return False
-
-
-def _artifact_covered_criteria(payload: Any) -> set[str] | None:
-    """The criteria the evidence artifact actually documents, or ``None``.
-
-    The artifact is a JSON object with a ``criteria`` list; each entry names
-    a ``criterion`` and carries the ``command`` that was run for it and that
-    command's ``output``. An entry naming a criterion with no command is not
-    evidence and contributes no coverage. ``None`` means the payload is not
-    in that shape at all.
-    """
-    if not isinstance(payload, dict):
-        return None
-    entries = payload.get("criteria")
-    if not isinstance(entries, list):
-        return None
-    covered: set[str] = set()
-    for entry in entries:
-        if not isinstance(entry, dict):
-            continue
-        criterion = entry.get("criterion")
-        command = entry.get("command")
-        output = entry.get("output")
-        if not isinstance(criterion, str) or not criterion.strip():
-            continue
-        if not isinstance(command, str) or not command.strip():
-            continue
-        if not isinstance(output, str):
-            continue
-        covered.add(criterion.strip())
-    return covered
-
-
-def artifact_completion_verified(record: Any) -> bool:
-    """Whether ``record``'s evidence artifact covers every declared criterion.
-
-    True only when ``goal_criteria`` is non-empty, ``evidence_path`` names a
-    file that EXISTS and PARSES as the documented artifact shape, and every
-    declared criterion appears in it with a command and that command's
-    output. A criterion present in ``goal_criteria`` but absent from the
-    artifact means not complete. Never raises.
-    """
-    if not isinstance(record, dict):
-        return False
-    criteria = record.get("goal_criteria")
-    if not isinstance(criteria, list) or not criteria:
-        return False
-    declared = set()
-    for item in criteria:
-        if not isinstance(item, str) or not item.strip():
-            return False
-        declared.add(item.strip())
-    evidence_path = record.get("evidence_path")
-    if not isinstance(evidence_path, str) or not evidence_path.strip():
-        return False
-    try:
-        raw = Path(evidence_path).read_text(encoding="utf-8")
-    except OSError:
-        return False
-    try:
-        payload = json.loads(raw)
-    except json.JSONDecodeError:
-        return False
-    covered = _artifact_covered_criteria(payload)
-    if covered is None:
-        return False
-    return declared <= covered
-
-
-def completion_verified(record: Any, *, ledger_path: Path | None = None) -> bool:
-    """Whether this session's project goal is mechanically verified complete.
-
-    The develop ledger wins when one exists for the project: inside a develop
-    run the ledger is the completion authority, and falling through to the
-    artifact would let a session declare itself done around a run whose gates
-    are still queued. Only when no ledger exists is the evidence artifact
-    consulted.
-
-    An autonomous record with an EMPTY ``goal_criteria`` and no develop
-    ledger is NOT complete, and that is a decision rather than an accident of
-    control flow. Empty criteria mean "develop owns completion" (see
-    ``write_autonomous_record``); with no ledger there is no completion
-    authority at all, so nothing can ever verify the claim. Reading it as
-    vacuously complete would make the cheapest possible record -- autonomous
-    mode with no criteria -- the one that ends the first turn.
-
-    Never raises.
-    """
-    try:
-        if ledger_path is not None and Path(ledger_path).is_file():
-            return develop_completion_verified(Path(ledger_path))
-    except OSError:
-        return False
-    return artifact_completion_verified(record)

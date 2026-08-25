@@ -22,7 +22,7 @@ ENTRY GATE: ask, record, then continue with the actual request. Never enable aut
 
 1. **The record is the mode.** Autonomous mode is the file `spellbook/core/autonomous.py` writes, not a statement in the transcript. No record, no enforcement — the `Stop` hook allows every turn-end it cannot attribute to a record.
 2. **Ask before recording.** Mode and philosophy come from the operator through `AskUserQuestion`. Standing autonomous phrasing is the trigger for this question, never its answer.
-3. **The goal is captured in the operator's words.** Enforcement is scoped to a stated project goal; without one there is nothing completion can be checked against.
+3. **The goal is captured in the operator's words.** The `Stop` handler quotes it back on every refusal, so a session that has lost the thread is reminded what it is for.
 4. **The exit belongs to the operator.** Nothing the agent does ends autonomous mode. Say so when you enable it.
 5. **State the limits when you sell the mechanism.** The guarantees below are part of the offer, not fine print disclosed after a failure.
 
@@ -45,27 +45,29 @@ Ask through `AskUserQuestion`, in one batch:
 | `mostly` | Genuine forks still come back to the operator through `AskUserQuestion`. |
 
 <CRITICAL>
-Both modes stop on exactly the same two conditions. The difference is how much reaches `AskUserQuestion` in the first place — NOT whether the `Stop` hook binds. `mostly` is not a softer gate; it is a chattier agent behind the identical gate.
+Both modes are held by exactly the same gate. The difference is how much reaches `AskUserQuestion` in the first place — NOT whether the `Stop` hook binds. `mostly` is not a softer gate; it is a chattier agent behind the identical gate.
 </CRITICAL>
 
 **Question 2 — which guiding philosophy?**
 
 Offer the ids in `PHILOSOPHIES` (`spellbook/core/autonomous.py`), each with the one-line meaning recorded beside it there, and recommend `DEFAULT_PHILOSOPHY`. Read them from the module at ask time; do not restate them here or in the question's own prose — a second copy of that list will drift from the one the hook names in its block messages.
 
-**Then capture the goal**, and any criteria that make it checkable, and write the record with `write_autonomous_record`.
+**Then capture the goal** in the operator's own words and write the record with `write_autonomous_record`.
 
 ---
 
 ## What Binds, Once Recorded
 
-A turn may end on a genuine blocker raised through an `AskUserQuestion` call, or on mechanically verified completion of the whole project goal. Every other turn-end is refused by the `Stop` handler in `hooks/spellbook_hook.py`. A long session, a finished list item, a returned subagent result, and a phase boundary are none of those things.
+The `Stop` handler in `hooks/spellbook_hook.py` refuses a turn-end and hands the question back: are you DONE with the whole project goal, were you asked to PAUSE, or do you have a GENUINE BLOCKER? A long session, a finished list item, a returned subagent result, and a phase boundary are none of the three.
+
+The hook decides nothing about the work — it cannot, and it no longer pretends to. It kicks the session; the model answers by acting. Continuing IS the answer "I was not done". Ending the turn again is the answer "I was", and three of those inside the rolling window release the session.
 
 ## What This Does NOT Guarantee
 
 <CRITICAL>
 Tell the operator all of this when you enable the mode.
 
-- **Completion verification cannot verify that the evidence is true.** It checks that the declared criteria are covered by an artifact that exists and parses; it never runs the commands that artifact names and cannot tell a genuine transcript from one composed to satisfy the check. What it buys is that a false completion claim must be WRITTEN DOWN where a human can check it. The full statement is the module docstring of `spellbook/core/autonomous.py` — read it rather than paraphrasing a weaker version.
+- **Nothing verifies that the work is done.** The hook does not read the transcript, a gate ledger, or any evidence artifact; it cannot tell a finished project from an abandoned one. What it buys is that ending a turn takes insisting, which a session drifting toward an early stop will not do. Do not describe it to the operator as a completeness check.
 - **The escape phrases are the operator's exit**, matched case-insensitively as a substring of the prompt. Quote them to the operator verbatim from `AUTONOMOUS_ESCAPE_PHRASES` in `hooks/spellbook_hook.py`; never retype them from memory into prose that can drift from the recognizer.
 - **A thrashing session is released.** Repeated blocks inside a short rolling window open a valve and the next turn-end is ALLOWED — autonomous mode does not hold a session that is ending turns without doing work. The window and the limit are `BLOCK_WINDOW_SECONDS` and `BLOCK_WINDOW_LIMIT` in `spellbook/core/autonomous.py`; that valve is also the only loop stop there is.
 - **The harness block cap is disabled by spellbook's installer.** `CLAUDE_CODE_STOP_HOOK_BLOCK_CAP` is written to `0` by `installer/components/hooks.py`; on a machine without those settings the harness stops honoring the hook after its default number of consecutive blocks and ends the turn regardless. A cap the operator set to some other value is left alone, and the installer says so in its own output for that run.
@@ -89,7 +91,7 @@ Before continuing with the work: the record was written and read back; the opera
 - Enabling autonomous mode without the operator's answers, or inferring mode or philosophy from the request.
 - Recording a session with no stated goal.
 - Restating the philosophy meanings, the escape-phrase literals, or the valve's numbers in this file instead of pointing at the code that owns them.
-- Claiming completion verification proves the work was done.
+- Describing the `Stop` gate as a check on whether the work is complete. It refuses a turn-end; it verifies nothing.
 - Treating `mostly` as a weaker Stop gate, or clearing the record on the agent's own initiative.
 </FORBIDDEN>
 ```

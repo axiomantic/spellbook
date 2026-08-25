@@ -35,7 +35,6 @@ from installer.components.hooks import (
     HOOK_DEFINITIONS,
     STOP_HOOK_BLOCK_CAP_KEY,
     STOP_HOOK_BLOCK_CAP_VALUE,
-    STOP_HOOK_TIMEOUT_SECONDS,
     _HOOK_PHASES,
     _RETIRED_HOOK_PHASES,
     _get_hook_path_for_platform,
@@ -142,12 +141,10 @@ def test_new_phase_blocks_and_omits_matcher(phase):
     assert hook["command"] == _UNIFIED_COMMAND
     assert "async" not in hook, f"{phase} returns a decision and must block"
     # A blocking phase's timeout is an upper bound on how long the operator
-    # waits, so it stays bounded -- but Stop's is DERIVED from what its handler
-    # can spend (see STOP_HOOK_TIMEOUT_SECONDS), and a bound typed out here must
-    # not silently cap a derivation it knows nothing about. Overrunning Stop's
-    # timeout disables the gate silently; a generous ceiling is the safe error.
-    ceiling = STOP_HOOK_TIMEOUT_SECONDS if phase == "Stop" else 10
-    assert 0 < hook["timeout"] <= ceiling
+    # waits at the end of every turn, so it stays bounded. Every one of these
+    # handlers reads local state and decides; none of them is sized against a
+    # spend that could outgrow this.
+    assert 0 < hook["timeout"] <= 10
 
 
 def test_install_renders_new_phases_into_settings(tmp_path):
@@ -433,3 +430,125 @@ def test_install_is_idempotent_for_env(tmp_path):
     first = _rendered(settings_path)["env"]
     assert install_hooks(settings_path).success
     assert _rendered(settings_path)["env"] == first
+
+
+# ---- the block cap arrives as JSON, not as a string -----------------------
+#
+# Spellbook writes the cap as the string "0" because the harness reads the env
+# block as strings, but a settings file is JSON and an operator editing it by
+# hand types ``0``, not ``"0"``. Both mean the same thing to the harness, so
+# both must mean the same thing here. A comparison that missed the integer
+# reported a PRESERVED cap for a cap the operator had already disabled -- and
+# the operator-facing message, not the settings file, is where that lands:
+# it tells them autonomous mode stops after 0 consecutive blocks, which is the
+# opposite of what 0 does. Each case below is pinned on BOTH the rendered
+# settings and the message for that reason.
+
+
+@pytest.mark.parametrize("written", [0, "0"], ids=["json-integer", "json-string"])
+def test_a_disabled_cap_is_recognized_whatever_json_type_it_arrived_as(
+    tmp_path, written
+):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: written}}), encoding="utf-8"
+    )
+
+    result = install_hooks(settings_path)
+
+    assert result.success
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == (
+        STOP_HOOK_BLOCK_CAP_VALUE
+    )
+    assert STOP_HOOK_BLOCK_CAP_KEY not in result.message, (
+        "nothing was preserved, so nothing may be reported -- a notice here "
+        "tells the operator their cap is enforced when it is disabled"
+    )
+
+
+@pytest.mark.parametrize("written", [5, "5"], ids=["json-integer", "json-string"])
+def test_an_operator_cap_is_preserved_and_reported_whatever_json_type_it_is(
+    tmp_path, written
+):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: written}}), encoding="utf-8"
+    )
+
+    result = install_hooks(settings_path)
+
+    assert result.success
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == written
+    assert STOP_HOOK_BLOCK_CAP_KEY in result.message
+    assert "5" in result.message
+    assert STOP_HOOK_BLOCK_CAP_VALUE in result.message, "and how to lift it"
+
+
+def test_a_cap_that_is_neither_an_int_nor_a_string_is_left_alone(tmp_path):
+    """Junk is not spellbook's value, so it is preserved and reported.
+
+    The equivalence must not stretch to values that are genuinely different.
+    A list has no cap meaning at all; overwriting it would destroy something
+    the operator wrote, and treating it as the disabled value would silently
+    claim a cap was lifted that never existed.
+    """
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: ["nonsense"]}}), encoding="utf-8"
+    )
+
+    result = install_hooks(settings_path)
+
+    assert result.success
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == ["nonsense"]
+    assert STOP_HOOK_BLOCK_CAP_KEY in result.message
+
+
+def test_a_boolean_cap_is_not_read_as_a_number(tmp_path):
+    """``bool`` is an ``int`` subclass in Python and is not a cap anywhere.
+
+    Pinned because the int equivalence this file exists for is what makes the
+    question arise at all. It holds without a special case only as long as
+    canonicalization goes through ``str``; a future one built on ``int``
+    would fold ``false`` onto the disabled value and silently overwrite it.
+    """
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: False}}), encoding="utf-8"
+    )
+
+    result = install_hooks(settings_path)
+
+    assert result.success
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] is False
+    assert STOP_HOOK_BLOCK_CAP_KEY in result.message
+
+
+def test_uninstall_removes_a_disabled_cap_written_as_a_json_integer(tmp_path):
+    """Install and uninstall must agree on what spellbook's own value IS.
+
+    If install recognizes the integer and uninstall does not, uninstall leaves
+    the key behind -- residue that a later install would then read back and
+    report as an operator's cap.
+    """
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+    rendered = _rendered(settings_path)
+    rendered["env"][STOP_HOOK_BLOCK_CAP_KEY] = 0
+    settings_path.write_text(json.dumps(rendered), encoding="utf-8")
+
+    assert uninstall_hooks(settings_path).success
+
+    assert STOP_HOOK_BLOCK_CAP_KEY not in _rendered(settings_path).get("env", {})
+
+
+def test_uninstall_does_not_revert_an_operator_cap_written_as_a_json_integer(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+    rendered = _rendered(settings_path)
+    rendered["env"][STOP_HOOK_BLOCK_CAP_KEY] = 5
+    settings_path.write_text(json.dumps(rendered), encoding="utf-8")
+
+    assert uninstall_hooks(settings_path).success
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == 5

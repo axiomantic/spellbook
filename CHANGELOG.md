@@ -12,33 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Autonomous mode now BINDS, enforced by a `Stop` hook rather than by instruction
   text. A rule the agent must decide to follow is evaluated by the same faculty
   that decides to stop, so it can only ever confirm itself; the hook catches the
-  actual turn-end event and can refuse it. A session marked autonomous may end a
-  turn on exactly two conditions: a blocker raised through an `AskUserQuestion`
-  tool call, or verified completion of the whole project goal -- not the current
-  work item. The new `autonomous-mode` skill asks for the mode (`fully`, where
-  decisions are the agent's wherever a reasonable default exists, or `mostly`,
-  where genuine forks still return to the operator) and a guiding philosophy, then
-  writes a per-session record. Both modes stop only on those two conditions; the
-  difference is how much reaches `AskUserQuestion` in the first place, not whether
-  the hook binds. `develop`'s entry gate asks the same question after a ceremony
+  actual turn-end event and can refuse it. The hook judges NOTHING about the work
+  -- it cannot, from outside the model, tell a finished project from an abandoned
+  one. It refuses the turn-end and hands the question back: are you done with the
+  whole project goal, were you asked to pause, or do you have a genuine blocker
+  that must go to the operator through `AskUserQuestion`? The model answers by
+  acting, and the rolling-window valve reads three refusals in a minute as the
+  session meaning it. The new `autonomous-mode` skill asks for the mode (`fully`,
+  where decisions are the agent's wherever a reasonable default exists, or
+  `mostly`, where genuine forks still return to the operator) and a guiding
+  philosophy, then writes a per-session record. Both modes sit behind the same
+  gate; the difference is how much reaches `AskUserQuestion` in the first place,
+  not whether the hook binds. `develop`'s entry gate asks the same question after a ceremony
   path is chosen, on both ceremony paths and never on skip, because ceremony is
   how much verification runs while autonomy is who decides and when the run may
   end. Autonomy scopes CONFIRMATIONS only: it skips no gate, phase, or dispatch,
   and it never reopens the locked ceremony.
-- Completion verification for autonomous mode, with its limits stated in the
-  module rather than implied. Inside `develop` it is mechanical -- every selected
-  gate carries a passed verdict and the run reached its finishing phase, read
-  through `scripts/develop_gate_ledger.py` rather than by hand-parsing its schema.
-  Outside `develop` it requires an evidence artifact covering every declared
-  criterion. It CANNOT verify that the evidence is true: it never runs the commands
-  the artifact names and cannot distinguish a genuine transcript from one composed
-  to satisfy the check. What it does is convert a completion claim from a sentence
-  into a reviewable artifact, so a false claim has to be written down where a human
-  can check it. Every unknown -- no ledger, unreadable artifact, missing criterion,
-  or an autonomous record declaring no criteria and no ledger -- resolves to NOT
-  complete, because a false negative costs one extra block that the escape phrase
-  clears while a false positive silently disables enforcement and looks identical
-  to a working hook.
 - A literal escape phrase, matched case-insensitively as a substring on
   `UserPromptSubmit`, clears the autonomous record on the prompt that contains it,
   so the `Stop` at the end of that same turn already sees no record. It is

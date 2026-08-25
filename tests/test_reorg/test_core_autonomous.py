@@ -48,7 +48,6 @@ def _write_record(**overrides):
         mode="fully",
         philosophy="build-right",
         goal="ship the feature",
-        goal_criteria=["tests pass"],
         set_at="2026-08-24T00:00:00Z",
     )
     fields.update(overrides)
@@ -66,7 +65,6 @@ class TestHappyPath:
         assert record["mode"] == "fully"
         assert record["philosophy"] == "build-right"
         assert record["goal"] == "ship the feature"
-        assert record["goal_criteria"] == ["tests pass"]
         assert record["blocked_stops"] == 0
 
     def test_record_lives_under_autonomous_subdir_of_state_dir(self):
@@ -114,7 +112,6 @@ class TestInvalidSessionId:
             mode="fully",
             philosophy="build-right",
             goal="x",
-            goal_criteria=[],
             set_at="2026-08-24T00:00:00Z",
         )
         assert ok is False
@@ -155,7 +152,6 @@ class TestMalformedRecord:
                     "mode": "sorta",
                     "philosophy": "build-right",
                     "goal": "x",
-                    "goal_criteria": [],
                     "set_at": "now",
                     "blocked_stops": 0,
                 }
@@ -172,8 +168,7 @@ class TestMalformedRecord:
                 {
                     "mode": "fully",
                     "philosophy": "build-right",
-                    "goal": "x",
-                    "goal_criteria": "not-a-list",
+                    "goal": 7,
                     "set_at": "now",
                     "blocked_stops": 0,
                 }
@@ -202,7 +197,6 @@ class TestMalformedRecord:
                     "mode": "fully",
                     "philosophy": "build-right",
                     "goal": "x",
-                    "goal_criteria": [],
                     "set_at": "now",
                     "blocked_stops": True,
                 }
@@ -221,7 +215,6 @@ class TestMalformedRecord:
                     "mode": "fully",
                     "philosophy": "build-right",
                     "goal": "x",
-                    "goal_criteria": [],
                     "set_at": "now",
                     "blocked_stops": 0,
                 }
@@ -245,7 +238,6 @@ class TestWriteValidation:
             mode="turbo",
             philosophy="build-right",
             goal="x",
-            goal_criteria=[],
             set_at="now",
         )
         assert ok is False
@@ -404,8 +396,7 @@ class TestFilesystemFaultPropagation:
                 mode="fully",
                 philosophy="build-right",
                 goal="x",
-                goal_criteria=[],
-                set_at="now",
+                    set_at="now",
             )
 
     def test_record_blocked_stop_returns_none_on_real_fs_fault(
@@ -442,313 +433,6 @@ class TestFilesystemFaultPropagation:
         finally:
             autonomous_dir.chmod(0o700)
         assert ok is False
-
-
-# ---- completion verification ---------------------------------------------
-#
-# Real files in tmp dirs, driven through the public predicates. Nothing
-# patches an internal: a gate proven only against stubs of itself is proven
-# against nothing.
-
-
-def _ledger(tmp_path, **fields):
-    """Write a develop gate ledger through the module that owns its schema."""
-    import develop_gate_ledger
-
-    path = tmp_path / "develop_gate_ledger-proj.json"
-    develop_gate_ledger.write_ledger(fields, path=path)
-    return path
-
-
-def _finished_ledger(tmp_path, **overrides):
-    fields = dict(
-        current_phase="4",
-        remaining_gates="",
-        ceremony={
-            "locked_at": "2026-08-24T00:00:00Z",
-            "selected": "design review\ncode review",
-            "core": "test suite",
-            "declined": "",
-        },
-    )
-    fields.update(overrides)
-    return _ledger(tmp_path, **fields)
-
-
-def _artifact(tmp_path, entries, name="evidence.json"):
-    path = tmp_path / name
-    path.write_text(json.dumps({"criteria": entries}), encoding="utf-8")
-    return str(path)
-
-
-def _entry(criterion, command="uv run pytest -q", output="1 passed"):
-    return {"criterion": criterion, "command": command, "output": output}
-
-
-class TestDevelopPathCompletion:
-    def test_drained_gates_at_finishing_phase_is_complete(self, tmp_path):
-        assert autonomous.develop_completion_verified(_finished_ledger(tmp_path)) is True
-
-    def test_fast_path_is_a_finishing_phase(self, tmp_path):
-        path = _finished_ledger(tmp_path, current_phase="fast-path")
-        assert autonomous.develop_completion_verified(path) is True
-
-    def test_selected_gate_still_queued_is_not_complete(self, tmp_path):
-        path = _finished_ledger(tmp_path, remaining_gates="code review")
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_unrelated_queued_gate_does_not_block(self, tmp_path):
-        """Only gates in ``ceremony.selected`` are this predicate's business."""
-        path = _finished_ledger(tmp_path, remaining_gates="something else")
-        assert autonomous.develop_completion_verified(path) is True
-
-    @pytest.mark.parametrize("phase", ["0", "1", "1.5", "2", "3"])
-    def test_drained_gates_before_the_finishing_phase_is_not_complete(
-        self, tmp_path, phase
-    ):
-        path = _finished_ledger(tmp_path, current_phase=phase)
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_unknown_phase_is_not_complete(self, tmp_path):
-        path = _finished_ledger(tmp_path, current_phase="5")
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_both_conditions_are_required_not_either(self, tmp_path):
-        """Neither condition alone suffices; the conjunction is the contract."""
-        queued_at_finish = _finished_ledger(tmp_path, remaining_gates="code review")
-        assert autonomous.develop_completion_verified(queued_at_finish) is False
-        drained_midrun = _ledger(
-            tmp_path / "b",
-            current_phase="2",
-            remaining_gates="",
-            ceremony={"selected": "code review"},
-        )
-        assert autonomous.develop_completion_verified(drained_midrun) is False
-
-    def test_failed_wave_check_is_not_complete(self, tmp_path):
-        path = _finished_ledger(
-            tmp_path,
-            waves={"3a": {"section_24_6_check": {"status": "failed", "open_rows": ["W3a-2"]}}},
-        )
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_failed_group_gate_is_not_complete(self, tmp_path):
-        path = _finished_ledger(
-            tmp_path,
-            groups={"G1": {"gate_stack": {"status": "failed", "open_findings": ["F1"]}}},
-        )
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_passed_wave_check_does_not_block(self, tmp_path):
-        path = _finished_ledger(
-            tmp_path,
-            waves={"3a": {"section_24_6_check": {"status": "passed", "open_rows": []}}},
-        )
-        assert autonomous.develop_completion_verified(path) is True
-
-    def test_malformed_verdict_container_is_not_complete(self, tmp_path):
-        path = _finished_ledger(tmp_path, waves="not-an-object")
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_missing_ceremony_is_not_complete(self, tmp_path):
-        path = _ledger(tmp_path, current_phase="4", remaining_gates="")
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_selected_as_a_list_is_refused_not_read_through(self, tmp_path):
-        """The ledger's scalar-vs-list refusal must reach this predicate."""
-        path = _finished_ledger(
-            tmp_path, ceremony={"selected": ["design review"], "locked_at": "t"}
-        )
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_missing_remaining_gates_is_not_complete(self, tmp_path):
-        path = _ledger(
-            tmp_path,
-            current_phase="4",
-            ceremony={"selected": "code review", "locked_at": "t"},
-        )
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_absent_ledger_file_is_not_complete(self, tmp_path):
-        assert autonomous.develop_completion_verified(tmp_path / "nope.json") is False
-
-    def test_corrupt_ledger_json_is_not_complete_and_does_not_raise(self, tmp_path):
-        path = tmp_path / "develop_gate_ledger-proj.json"
-        path.write_text("{not json", encoding="utf-8")
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_ledger_that_is_a_json_list_is_not_complete(self, tmp_path):
-        path = tmp_path / "develop_gate_ledger-proj.json"
-        path.write_text("[1, 2, 3]", encoding="utf-8")
-        assert autonomous.develop_completion_verified(path) is False
-
-    def test_unreadable_ledger_is_not_complete(self, tmp_path):
-        _skip_unless_permission_bits_enforced()
-        path = _finished_ledger(tmp_path)
-        path.chmod(0o000)
-        try:
-            assert autonomous.develop_completion_verified(path) is False
-        finally:
-            path.chmod(0o600)
-
-    def test_empty_selected_at_finishing_phase_is_complete(self, tmp_path):
-        """No optional gates chosen: the "every selected gate" test is vacuous."""
-        path = _finished_ledger(tmp_path, ceremony={"selected": "", "locked_at": "t"})
-        assert autonomous.develop_completion_verified(path) is True
-
-
-class TestArtifactPathCompletion:
-    def test_artifact_covering_every_criterion_is_complete(self, tmp_path):
-        record = {
-            "goal_criteria": ["tests pass", "lint clean"],
-            "evidence_path": _artifact(
-                tmp_path, [_entry("tests pass"), _entry("lint clean")]
-            ),
-        }
-        assert autonomous.artifact_completion_verified(record) is True
-
-    def test_a_criterion_absent_from_the_artifact_is_not_complete(self, tmp_path):
-        record = {
-            "goal_criteria": ["tests pass", "lint clean"],
-            "evidence_path": _artifact(tmp_path, [_entry("tests pass")]),
-        }
-        assert autonomous.artifact_completion_verified(record) is False
-
-    def test_extra_artifact_entries_do_not_block(self, tmp_path):
-        record = {
-            "goal_criteria": ["tests pass"],
-            "evidence_path": _artifact(
-                tmp_path, [_entry("tests pass"), _entry("something else")]
-            ),
-        }
-        assert autonomous.artifact_completion_verified(record) is True
-
-    def test_entry_with_no_command_is_not_evidence(self, tmp_path):
-        record = {
-            "goal_criteria": ["tests pass"],
-            "evidence_path": _artifact(tmp_path, [_entry("tests pass", command="  ")]),
-        }
-        assert autonomous.artifact_completion_verified(record) is False
-
-    def test_entry_with_no_output_key_is_not_evidence(self, tmp_path):
-        path = tmp_path / "e.json"
-        path.write_text(
-            json.dumps({"criteria": [{"criterion": "tests pass", "command": "pytest"}]}),
-            encoding="utf-8",
-        )
-        record = {"goal_criteria": ["tests pass"], "evidence_path": str(path)}
-        assert autonomous.artifact_completion_verified(record) is False
-
-    def test_empty_output_still_counts_as_evidence(self, tmp_path):
-        """A command that legitimately prints nothing is still a command run."""
-        record = {
-            "goal_criteria": ["tests pass"],
-            "evidence_path": _artifact(tmp_path, [_entry("tests pass", output="")]),
-        }
-        assert autonomous.artifact_completion_verified(record) is True
-
-    def test_missing_artifact_file_is_not_complete(self, tmp_path):
-        record = {
-            "goal_criteria": ["tests pass"],
-            "evidence_path": str(tmp_path / "absent.json"),
-        }
-        assert autonomous.artifact_completion_verified(record) is False
-
-    def test_unparseable_artifact_is_not_complete(self, tmp_path):
-        path = tmp_path / "e.json"
-        path.write_text("not json at all", encoding="utf-8")
-        record = {"goal_criteria": ["tests pass"], "evidence_path": str(path)}
-        assert autonomous.artifact_completion_verified(record) is False
-
-    def test_artifact_of_the_wrong_shape_is_not_complete(self, tmp_path):
-        path = tmp_path / "e.json"
-        path.write_text(json.dumps(["tests pass"]), encoding="utf-8")
-        record = {"goal_criteria": ["tests pass"], "evidence_path": str(path)}
-        assert autonomous.artifact_completion_verified(record) is False
-
-    def test_no_evidence_path_declared_is_not_complete(self):
-        assert (
-            autonomous.artifact_completion_verified({"goal_criteria": ["tests pass"]})
-            is False
-        )
-
-    def test_empty_goal_criteria_is_not_complete_even_with_an_artifact(self, tmp_path):
-        record = {
-            "goal_criteria": [],
-            "evidence_path": _artifact(tmp_path, [_entry("tests pass")]),
-        }
-        assert autonomous.artifact_completion_verified(record) is False
-
-    def test_non_string_criterion_is_not_complete(self, tmp_path):
-        record = {
-            "goal_criteria": ["tests pass", 7],
-            "evidence_path": _artifact(tmp_path, [_entry("tests pass")]),
-        }
-        assert autonomous.artifact_completion_verified(record) is False
-
-    def test_non_dict_record_is_not_complete(self):
-        assert autonomous.artifact_completion_verified(None) is False
-
-
-class TestCompletionVerifiedRouting:
-    def test_develop_ledger_wins_when_present(self, tmp_path):
-        """An artifact covering everything cannot override an unfinished run."""
-        record = {
-            "goal_criteria": ["tests pass"],
-            "evidence_path": _artifact(tmp_path, [_entry("tests pass")]),
-        }
-        assert autonomous.completion_verified(record) is True
-        ledger = _finished_ledger(tmp_path, remaining_gates="code review")
-        assert autonomous.completion_verified(record, ledger_path=ledger) is False
-
-    def test_finished_ledger_completes_regardless_of_criteria(self, tmp_path):
-        ledger = _finished_ledger(tmp_path)
-        record = {"goal_criteria": [], "evidence_path": None}
-        assert autonomous.completion_verified(record, ledger_path=ledger) is True
-
-    def test_absent_ledger_falls_through_to_the_artifact(self, tmp_path):
-        record = {
-            "goal_criteria": ["tests pass"],
-            "evidence_path": _artifact(tmp_path, [_entry("tests pass")]),
-        }
-        assert (
-            autonomous.completion_verified(record, ledger_path=tmp_path / "nope.json")
-            is True
-        )
-
-    def test_empty_criteria_and_no_ledger_is_not_complete(self):
-        """No completion authority exists at all, so nothing can verify it."""
-        record = {"goal_criteria": [], "evidence_path": None}
-        assert autonomous.completion_verified(record, ledger_path=None) is False
-
-    def test_a_written_record_round_trips_its_evidence_path(self, tmp_path):
-        artifact = _artifact(tmp_path, [_entry("tests pass")])
-        assert _write_record(evidence_path=artifact) is True
-        record = autonomous.read_autonomous_record(SID)
-        assert record["evidence_path"] == artifact
-        assert autonomous.completion_verified(record) is True
-
-    def test_evidence_path_survives_a_blocked_stop(self, tmp_path):
-        artifact = _artifact(tmp_path, [_entry("tests pass")])
-        _write_record(evidence_path=artifact)
-        assert autonomous.record_blocked_stop(SID, now=1000.0) == 1
-        assert autonomous.read_autonomous_record(SID)["evidence_path"] == artifact
-
-    def test_evidence_path_survives_a_decision_append(self, tmp_path):
-        artifact = _artifact(tmp_path, [_entry("tests pass")])
-        _write_record(evidence_path=artifact)
-        assert autonomous.append_decision(
-            SID, at="t", philosophy="p", decision="d", alternatives="a"
-        ) is True
-        assert autonomous.read_autonomous_record(SID)["evidence_path"] == artifact
-
-    def test_record_with_a_non_string_evidence_path_is_not_autonomous(self, tmp_path):
-        _write_record()
-        path = get_data_dir() / "autonomous" / f"{SID}.json"
-        data = json.loads(path.read_text(encoding="utf-8"))
-        data["evidence_path"] = 7
-        path.write_text(json.dumps(data), encoding="utf-8")
-        assert autonomous.read_autonomous_record(SID) is None
 
 
 # ---- the philosophy enum --------------------------------------------------
@@ -906,15 +590,22 @@ class TestRecordBlockedStop:
         assert len(record["block_times"]) == autonomous.BLOCK_WINDOW_LIMIT
 
     def test_it_preserves_the_rest_of_the_record(self):
-        _write_record(evidence_path="/tmp/evidence.json")
+        """A blocked stop is a read-modify-write; it must modify one thing.
+
+        The fields checked here are the ones a lost write would cost most:
+        the decisions log the operator reviews afterwards, the goal the block
+        message quotes back, and the philosophy that message names.
+        """
+        _write_record(philosophy="minimal-diff")
         autonomous.append_decision(
-            SID, at="t", philosophy="build-right", decision="d", alternatives="a"
+            SID, at="t", philosophy="minimal-diff", decision="d", alternatives="a"
         )
         autonomous.record_blocked_stop(SID, now=1000.0)
         record = autonomous.read_autonomous_record(SID)
-        assert record["evidence_path"] == "/tmp/evidence.json"
         assert len(record["decisions"]) == 1
+        assert record["decisions"][0]["decision"] == "d"
         assert record["goal"] == "ship the feature"
+        assert record["philosophy"] == "minimal-diff"
 
     def test_no_record_degrades_to_none(self):
         assert autonomous.record_blocked_stop(SID, now=1000.0) is None

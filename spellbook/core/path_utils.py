@@ -10,17 +10,6 @@ from urllib.parse import urlparse
 
 logger = logging.getLogger(__name__)
 
-# ``resolve_repo_root`` is on the Stop hook's path, whose harness timeout is a
-# BUDGET: a hook that overruns it is cancelled, its output discarded, and the
-# stop proceeds -- a silent bypass of the gate rather than a loud failure. The
-# two figures below are what that budget is derived from in
-# ``installer.components.hooks``, so they are constants rather than literals at
-# the call sites. ``scripts/develop_gate_ledger._fallback_encode_cwd`` cannot
-# import these (it exists for the case where this package is unimportable) but
-# spends the same two calls at the same timeout, so the bound holds either way.
-GIT_SUBPROCESS_TIMEOUT_SECONDS = 5
-GIT_SUBPROCESS_CALLS_PER_RESOLVE = 2
-
 if TYPE_CHECKING:
     from fastmcp import Context
 
@@ -351,8 +340,7 @@ def resolve_repo_root(path: str) -> str:
         result = subprocess.run(
             ["git", "worktree", "list", "--porcelain"],
             cwd=path,
-            capture_output=True, text=True,
-            timeout=GIT_SUBPROCESS_TIMEOUT_SECONDS,
+            capture_output=True, text=True, timeout=5,
         )
         if result.returncode == 0 and result.stdout.strip():
             first_line = result.stdout.strip().split("\n")[0]
@@ -366,8 +354,7 @@ def resolve_repo_root(path: str) -> str:
         result = subprocess.run(
             ["git", "rev-parse", "--show-toplevel"],
             cwd=path,
-            capture_output=True, text=True,
-            timeout=GIT_SUBPROCESS_TIMEOUT_SECONDS,
+            capture_output=True, text=True, timeout=5,
         )
         if result.returncode == 0:
             return os.path.normpath(result.stdout.strip())

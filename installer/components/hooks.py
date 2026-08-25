@@ -33,41 +33,11 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 from spellbook.core.command_utils import atomic_write_json
-from spellbook.core.path_utils import (
-    GIT_SUBPROCESS_CALLS_PER_RESOLVE,
-    GIT_SUBPROCESS_TIMEOUT_SECONDS,
-)
 
 from .. import config as _config
 from . import source_link as _source_link
 
 logger = logging.getLogger(__name__)
-
-# The Stop hook's timeout is a BUDGET, not a limit. The harness cancels a hook
-# that reaches it, discards its output, and renders no decision -- so the stop
-# PROCEEDS. Overrunning this number does not fail loudly; it silently disables
-# the autonomous-mode gate on exactly the long-running sessions the gate exists
-# for. It is therefore sized against the handler's worst case, not against a
-# guess at its typical case.
-#
-# The handler spends time in two places. Resolving the develop ledger path can
-# fall through the git-free repo-root walk and spawn git; that cost is bounded
-# by the two constants imported above. Scanning the ending turn out of the
-# session transcript is the other, and is bounded only by transcript size.
-# tests/test_hooks/test_stop_hook_budget.py pins both: it asserts the Stop path
-# spawns no more git than budgeted, and extrapolates a measured scan rate to the
-# largest transcript this allowance was sized for. That test is also where the
-# allowance's margin lives -- it fails if the real scan rate stops fitting.
-#
-# Erring large is the cheap direction. A too-large budget costs a longer stall,
-# and only in the pathological case that reaches it; a too-small one silently
-# disables the gate. The harness default for a command hook is 600 seconds, so
-# what follows is still conservative by two orders of magnitude.
-TRANSCRIPT_SCAN_ALLOWANCE_SECONDS = 10
-STOP_HOOK_TIMEOUT_SECONDS = (
-    GIT_SUBPROCESS_CALLS_PER_RESOLVE * GIT_SUBPROCESS_TIMEOUT_SECONDS
-    + TRANSCRIPT_SCAN_ALLOWANCE_SECONDS
-)
 
 # Hook definitions grouped by phase. Each phase maps to a list of matcher entries.
 # All hooks MUST use the object format {type, command, ...}. Plain string hooks
@@ -129,14 +99,17 @@ HOOK_DEFINITIONS: Dict[str, List[Dict]] = {
         {
             # Unified hook handles: autonomous-mode turn-end enforcement.
             # NO async: this hook returns a block/allow decision, so Claude Code
-            # must wait for it. The timeout is derived, not chosen: see
-            # STOP_HOOK_TIMEOUT_SECONDS above for what it is sized against and
-            # why overrunning it is a silent bypass rather than an error.
+            # must wait for it. The handler reads one small per-session record
+            # and decides from that alone, so this is an ordinary hook timeout
+            # rather than a derived budget. It matters in one direction only:
+            # a hook cancelled at its timeout has its output discarded and the
+            # stop PROCEEDS, so an overrun disables the gate silently instead
+            # of failing loudly. Hence a plain number with room, not a tight one.
             "hooks": [
                 {
                     "type": "command",
                     "command": "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python $SPELLBOOK_DIR/hooks/spellbook_hook.py",
-                    "timeout": STOP_HOOK_TIMEOUT_SECONDS,
+                    "timeout": 10,
                 },
             ],
         },
@@ -613,6 +586,31 @@ STOP_HOOK_BLOCK_CAP_KEY = "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP"
 STOP_HOOK_BLOCK_CAP_VALUE = "0"
 
 
+def _block_cap_token(value: Any) -> Optional[str]:
+    """The canonical form of a block-cap value, or ``None`` if it has none.
+
+    Spellbook writes the cap as the string ``"0"`` because the harness reads
+    the ``env`` block as strings, but the file it writes into is JSON and an
+    operator editing it by hand types ``0``. The two are the same cap, so
+    comparing them by identity of JSON type reports a PRESERVED cap for a cap
+    the operator had already disabled -- and then tells them to set it to the
+    value it already holds. Canonicalizing first is what makes install and
+    uninstall agree about which values are spellbook's own.
+
+    The equivalence stops at values that genuinely differ. A float, a list,
+    or an object has no canonical form and yields ``None``, which is never
+    spellbook's value and so is preserved untouched. ``bool`` needs no
+    special case even though it is an ``int`` subclass, because ``str(False)``
+    is ``"False"`` rather than ``"0"``; it canonicalizes to something that is
+    nobody's cap, which is the correct answer for it.
+    """
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, str):
+        return value
+    return None
+
+
 def _install_managed_env(settings: Dict) -> Optional[str]:
     """Write the spellbook-owned entries into the settings ``env`` block.
 
@@ -634,7 +632,7 @@ def _install_managed_env(settings: Dict) -> Optional[str]:
         env = {}
     existing = env.get(STOP_HOOK_BLOCK_CAP_KEY)
     preserved: Optional[str] = None
-    if existing is None or existing == STOP_HOOK_BLOCK_CAP_VALUE:
+    if existing is None or _block_cap_token(existing) == STOP_HOOK_BLOCK_CAP_VALUE:
         env[STOP_HOOK_BLOCK_CAP_KEY] = STOP_HOOK_BLOCK_CAP_VALUE
     else:
         preserved = str(existing)
@@ -654,7 +652,7 @@ def _remove_managed_env(settings: Dict) -> bool:
     env = settings.get("env")
     if not isinstance(env, dict):
         return False
-    if env.get(STOP_HOOK_BLOCK_CAP_KEY) != STOP_HOOK_BLOCK_CAP_VALUE:
+    if _block_cap_token(env.get(STOP_HOOK_BLOCK_CAP_KEY)) != STOP_HOOK_BLOCK_CAP_VALUE:
         return False
     del env[STOP_HOOK_BLOCK_CAP_KEY]
     if env:

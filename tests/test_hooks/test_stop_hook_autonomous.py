@@ -3,15 +3,17 @@
 The hook is a gate on the operator's turn, so the tests below drive
 ``dispatch("Stop", ...)`` with constructed stdin and assert the returned
 JSON -- the exact artifact the harness consumes. Real records are written
-through ``spellbook.core.autonomous`` into a redirected HOME, and real
-transcript files are written to disk; nothing patches the internals of the
-hook or of the state module, because a gate proven only against stubs of
-itself is proven against nothing.
+through ``spellbook.core.autonomous`` into a redirected HOME; nothing patches the
+internals of the hook or of the state module, because a gate proven only
+against stubs of itself is proven against nothing.
 
 The block case is asserted on the CONTENT of the reason (escape phrase,
-philosophy id), not merely on ``decision == "block"``. A block message
-missing the escape phrase makes the trap undiscoverable, and that defect is
-invisible to a test that only reads the decision field.
+philosophy id, the question put to the model), not merely on
+``decision == "block"``. The reason IS the mechanism here -- the hook decides
+nothing about the work and only hands the question back -- so a reason that
+lost the escape phrase or the instruction to raise a blocker through
+AskUserQuestion is a broken gate that a decision-field assertion still
+passes.
 """
 from __future__ import annotations
 
@@ -38,28 +40,17 @@ SID = "sess-abc_123.def"
 
 @pytest.fixture(autouse=True)
 def isolated_state(tmp_path, monkeypatch):
-    """Redirect every input that can decide the hook's verdict.
+    """Redirect the only input that can decide the hook's verdict.
 
-    The home variables redirect the autonomous record. ``SPELLBOOK_DEV_DIR``
-    is the other one, and it is the dangerous one: ``_develop_ledger_path``
-    reads it as an exact override, so a developer or CI runner with it
-    exported at a FINISHED develop ledger makes completion verify for every
-    test here and flips the block cases to allow. The suite would then run
-    against a DISABLED gate -- the exact failure this feature exists to
-    prevent, inside the tests that prove it.
-
-    It is set to an empty directory rather than deleted. Deleting it would
-    fall back to the state dir under the redirected HOME, which is correct
-    only for as long as that redirection holds; pointing it at a directory
-    that provably contains no ledger does not depend on any other variable.
+    The autonomous record is now the whole input, so the home variables are
+    the whole isolation. The assertion below is the part that matters: a
+    redirection that silently did not take effect would run every test here
+    against the developer's real records.
     """
     monkeypatch.setenv("HOME", str(tmp_path))
     monkeypatch.setenv("USERPROFILE", str(tmp_path))
     monkeypatch.setenv("APPDATA", str(tmp_path))
     monkeypatch.setenv("LOCALAPPDATA", str(tmp_path))
-    no_ledger = tmp_path / "no-develop-dir"
-    no_ledger.mkdir()
-    monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(no_ledger))
     assert tmp_path in get_data_dir().parents, (
         f"data dir {get_data_dir()} is not under {tmp_path}; "
         "the redirection did not take effect"
@@ -72,53 +63,18 @@ def _record(session_id=SID, **overrides):
         mode="fully",
         philosophy="hostile-review",
         goal="ship the stop hook",
-        goal_criteria=["tests pass"],
         set_at="2026-08-24T00:00:00Z",
     )
     fields.update(overrides)
     assert autonomous.write_autonomous_record(session_id, **fields) is True
 
 
-def _transcript(tmp_path, events, name="transcript.jsonl"):
-    path = tmp_path / name
-    path.write_text(
-        "".join(json.dumps(e) + "\n" for e in events), encoding="utf-8"
-    )
-    return str(path)
-
-
-def _user_prompt(text="do the thing"):
-    return {"type": "user", "message": {"role": "user", "content": text}}
-
-
-def _tool_result(tool_use_id="toolu_1"):
-    return {
-        "type": "user",
-        "message": {
-            "role": "user",
-            "content": [
-                {"type": "tool_result", "tool_use_id": tool_use_id, "content": "ok"}
-            ],
-        },
-    }
-
-
-def _assistant_tool_use(name, tool_use_id="toolu_1"):
-    return {
-        "type": "assistant",
-        "message": {
-            "role": "assistant",
-            "content": [
-                {"type": "tool_use", "id": tool_use_id, "name": name, "input": {}}
-            ],
-        },
-    }
-
-
 def _stdin(**overrides):
     data = {
         "hook_event_name": "Stop",
         "session_id": SID,
+        # The harness sends this on every Stop; the handler ignores it. Kept
+        # so the constructed stdin keeps the shape the hook is really given.
         "transcript_path": "",
         "stop_hook_active": False,
     }
@@ -135,183 +91,80 @@ def _decision(data):
     return None if raw is None else json.loads(raw)
 
 
-# ---- row 5: the block ------------------------------------------------------
+# ---- row 3: the block ------------------------------------------------------
 
 
 class TestBlocks:
-    def test_autonomous_without_question_or_completion_blocks(self, tmp_path):
+    def test_an_autonomous_session_is_blocked_from_ending_a_turn(self, tmp_path):
         _record()
-        transcript = _transcript(
-            tmp_path, [_user_prompt(), _assistant_tool_use("Bash")]
-        )
-        result = _decision(_stdin(transcript_path=transcript))
+        result = _decision(_stdin())
         assert result is not None
         assert result["decision"] == "block"
 
     def test_block_reason_restates_the_escape_phrase(self, tmp_path):
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        reason = _decision(_stdin(transcript_path=transcript))["reason"]
+        reason = _decision(_stdin())["reason"]
         for phrase in spellbook_hook.AUTONOMOUS_ESCAPE_PHRASES:
             assert phrase in reason
         assert "stop autonomous" in reason
 
     def test_block_reason_names_the_active_philosophy(self, tmp_path):
         _record(philosophy="minimal-diff")
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        reason = _decision(_stdin(transcript_path=transcript))["reason"]
+        reason = _decision(_stdin())["reason"]
         assert "minimal-diff" in reason
 
-    def test_block_reason_states_autonomous_active_and_what_was_missed(
-        self, tmp_path
-    ):
+    def test_block_reason_puts_the_three_questions_to_the_model(self, tmp_path):
+        """The reason IS the mechanism, so its substance is asserted.
+
+        The hook decides nothing about the work: it refuses once and asks.
+        A reason that stated the refusal without naming what would justify
+        ending the turn -- done, paused, or genuinely blocked -- would leave
+        the model with a closed door and no handle, and a decision-field
+        assertion would not notice.
+        """
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        reason = _decision(_stdin(transcript_path=transcript))["reason"]
+        reason = _decision(_stdin())["reason"]
         assert "Autonomous mode is ACTIVE" in reason
+        assert "DONE" in reason
+        assert "PAUSE" in reason
+        assert "GENUINE BLOCKER" in reason
         assert "AskUserQuestion" in reason
-        assert "completion is not verified" in reason
+
+    def test_block_reason_carries_the_recorded_goal(self, tmp_path):
+        _record(goal="ship the valve")
+        assert "ship the valve" in _decision(_stdin())["reason"]
 
     def test_block_increments_blocked_stops_once(self, tmp_path):
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        data = _stdin(transcript_path=transcript)
+        data = _stdin()
         _decision(data)
         assert autonomous.read_autonomous_record(SID)["blocked_stops"] == 1
         _decision(data)
         assert autonomous.read_autonomous_record(SID)["blocked_stops"] == 2
 
 
-# ---- rows 1-4: every ALLOW path -------------------------------------------
+# ---- rows 1-2: every ALLOW path -------------------------------------------
 
 
 class TestAllows:
     def test_bad_session_id_allows_even_when_stop_hook_active(self, tmp_path):
-        """A bad session id and a bad transcript still allow, without raising."""
+        """A bad session id allows even under the post-block flag."""
         assert (
             _decision(
                 _stdin(
                     stop_hook_active=True,
                     session_id="../../etc/passwd",
-                    transcript_path=str(tmp_path / "nope.jsonl"),
                 )
             )
             is None
         )
 
     def test_row2_no_record_allows(self, tmp_path):
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin()) is None
 
     def test_row2_record_for_a_different_session_allows(self, tmp_path):
         _record(session_id="some-other-session")
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
-
-    def test_row3_ask_user_question_in_ending_turn_allows(self, tmp_path):
-        _record()
-        transcript = _transcript(
-            tmp_path,
-            [
-                _user_prompt(),
-                _assistant_tool_use("Bash"),
-                _tool_result(),
-                _assistant_tool_use("AskUserQuestion", "toolu_2"),
-            ],
-        )
-        assert _decision(_stdin(transcript_path=transcript)) is None
-
-    def test_row3_ask_user_question_in_an_earlier_turn_still_blocks(
-        self, tmp_path
-    ):
-        """The question must be in the ENDING turn, not anywhere in history."""
-        _record()
-        transcript = _transcript(
-            tmp_path,
-            [
-                _user_prompt("first ask"),
-                _assistant_tool_use("AskUserQuestion", "toolu_1"),
-                _user_prompt("second ask"),
-                _assistant_tool_use("Bash", "toolu_2"),
-            ],
-        )
-        assert _decision(_stdin(transcript_path=transcript))["decision"] == "block"
-
-    def test_row3_tool_results_do_not_cut_the_ending_turn(self, tmp_path):
-        """A tool_result is a response, not a prompt; the turn spans it."""
-        _record()
-        transcript = _transcript(
-            tmp_path,
-            [
-                _user_prompt(),
-                _assistant_tool_use("AskUserQuestion", "toolu_1"),
-                _tool_result("toolu_1"),
-            ],
-        )
-        assert _decision(_stdin(transcript_path=transcript)) is None
-
-    def test_row4_unverified_completion_does_not_allow(self, tmp_path):
-        """A declared criterion with no evidence artifact is not complete."""
-        _record()
-        assert (
-            spellbook_hook._autonomous_completion_verified(
-                autonomous.read_autonomous_record(SID), _stdin()
-            )
-            is False
-        )
-
-    def test_row4_verified_completion_allows_the_stop(self, tmp_path, monkeypatch):
-        """The artifact path, driven end to end through ``dispatch``."""
-        monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
-        evidence = tmp_path / "evidence.json"
-        evidence.write_text(
-            json.dumps(
-                {
-                    "criteria": [
-                        {
-                            "criterion": "tests pass",
-                            "command": "uv run pytest -q",
-                            "output": "134 passed",
-                        }
-                    ]
-                }
-            ),
-            encoding="utf-8",
-        )
-        _record(evidence_path=str(evidence))
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
-
-    def test_row4_artifact_missing_a_criterion_still_blocks(
-        self, tmp_path, monkeypatch
-    ):
-        monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
-        evidence = tmp_path / "evidence.json"
-        evidence.write_text(json.dumps({"criteria": []}), encoding="utf-8")
-        _record(goal_criteria=["tests pass"], evidence_path=str(evidence))
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        result = _decision(_stdin(transcript_path=transcript))
-        assert result is not None
-        assert result["decision"] == "block"
-
-    def test_row4_finished_develop_ledger_allows_the_stop(self, tmp_path, monkeypatch):
-        """The develop path, driven end to end through ``dispatch``."""
-        import develop_gate_ledger
-
-        dev_dir = tmp_path / "dev"
-        dev_dir.mkdir()
-        monkeypatch.setenv("SPELLBOOK_DEV_DIR", str(dev_dir))
-        develop_gate_ledger.write_ledger(
-            {
-                "current_phase": "4",
-                "remaining_gates": "",
-                "ceremony": {"locked_at": "t", "selected": "code review"},
-            },
-            path=dev_dir / "develop_gate_ledger.json",
-        )
-        _record(goal_criteria=[])
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin()) is None
 
 
 # ---- fail-open: every unknown resolves to ALLOW ---------------------------
@@ -320,17 +173,16 @@ class TestAllows:
 class TestFailsOpen:
     def test_invalid_session_id_allows(self, tmp_path):
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
         assert (
             _decision(
-                _stdin(session_id="../../etc/passwd", transcript_path=transcript)
+                _stdin(session_id="../../etc/passwd")
             )
             is None
         )
 
     def test_missing_session_id_allows(self, tmp_path):
         _record()
-        data = _stdin(transcript_path=_transcript(tmp_path, [_user_prompt()]))
+        data = _stdin()
         del data["session_id"]
         assert _decision(data) is None
 
@@ -338,56 +190,13 @@ class TestFailsOpen:
         _record()
         path = get_data_dir() / "autonomous" / f"{SID}.json"
         path.write_text("{not json", encoding="utf-8")
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin()) is None
 
     def test_record_with_wrong_shape_allows(self, tmp_path):
         _record()
         path = get_data_dir() / "autonomous" / f"{SID}.json"
         path.write_text(json.dumps({"mode": "sideways"}), encoding="utf-8")
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
-
-    def test_unreadable_transcript_allows(self, tmp_path):
-        """An unknown must not trap the session -- even while autonomous."""
-        _record()
-        assert (
-            _decision(_stdin(transcript_path=str(tmp_path / "missing.jsonl")))
-            is None
-        )
-
-    def test_transcript_path_is_a_directory_allows(self, tmp_path):
-        _record()
-        assert _decision(_stdin(transcript_path=str(tmp_path))) is None
-
-    def test_missing_transcript_path_field_allows(self, tmp_path):
-        """No path is the same unknown as an unreadable one."""
-        _record()
-        data = _stdin()
-        del data["transcript_path"]
-        assert _decision(data) is None
-
-    def test_garbage_lines_in_transcript_do_not_raise(self, tmp_path):
-        _record()
-        path = tmp_path / "t.jsonl"
-        path.write_text(
-            "not json\n" + json.dumps(_user_prompt()) + "\n[]\nnull\n",
-            encoding="utf-8",
-        )
-        assert _decision(_stdin(transcript_path=str(path)))["decision"] == "block"
-
-    def test_binary_transcript_allows(self, tmp_path):
-        """Readable bytes but no parseable event is still an unknown."""
-        _record()
-        path = tmp_path / "t.jsonl"
-        path.write_bytes(b"\xff\xfe\x00\x01garbage")
-        assert _decision(_stdin(transcript_path=str(path))) is None
-
-    def test_empty_transcript_allows(self, tmp_path):
-        _record()
-        path = tmp_path / "t.jsonl"
-        path.write_text("", encoding="utf-8")
-        assert _decision(_stdin(transcript_path=str(path))) is None
+        assert _decision(_stdin()) is None
 
 
 # ---- the dispatch seam itself ---------------------------------------------
@@ -396,7 +205,7 @@ class TestFailsOpen:
 class TestDispatchShape:
     def test_returns_json_text_not_a_list(self, tmp_path):
         _record()
-        raw = _dispatch(_stdin(transcript_path=_transcript(tmp_path, [_user_prompt()])))
+        raw = _dispatch(_stdin())
         assert isinstance(raw, str)
         assert json.loads(raw)["decision"] == "block"
 
@@ -405,47 +214,6 @@ class TestDispatchShape:
 
 
 # ---- the isolation boundary itself ----------------------------------------
-
-
-class TestEnvironmentIsolation:
-    """Guards on ``isolated_state``. A gate's tests are only evidence while
-    their own inputs are controlled, and the inputs here are environment
-    variables that a developer or CI runner may legitimately have exported."""
-
-    def test_fixture_controls_the_develop_dir_variable(self, tmp_path):
-        assert os.environ["SPELLBOOK_DEV_DIR"] == str(tmp_path / "no-develop-dir")
-
-    def test_no_develop_ledger_is_reachable_from_these_tests(self, tmp_path):
-        path = spellbook_hook._develop_ledger_path(str(tmp_path))
-        assert path is not None
-        assert not path.exists()
-
-    def test_an_inherited_finished_ledger_does_not_reach_the_hook(
-        self, tmp_path, monkeypatch
-    ):
-        """The concrete flip this fixture exists to stop.
-
-        A finished ledger is written where an INHERITED ``SPELLBOOK_DEV_DIR``
-        would have pointed. The block must survive it, which it can only do
-        because the fixture overrode the variable.
-        """
-        import develop_gate_ledger
-
-        inherited = tmp_path / "inherited-dev"
-        inherited.mkdir()
-        develop_gate_ledger.write_ledger(
-            {
-                "current_phase": "4",
-                "remaining_gates": "",
-                "ceremony": {"locked_at": "t", "selected": "code review"},
-            },
-            path=inherited / "develop_gate_ledger.json",
-        )
-        _record(goal_criteria=[])
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        result = _decision(_stdin(transcript_path=transcript))
-        assert result is not None
-        assert result["decision"] == "block"
 
 
 # ---- Task 4: the escape phrase --------------------------------------------
@@ -535,12 +303,11 @@ class TestEscapeOrdering:
         """The load-bearing ordering: the clear lands on the prompt that
         carries the phrase, so THIS turn's Stop already sees no record."""
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript))["decision"] == "block"
+        assert _decision(_stdin())["decision"] == "block"
 
         _record()
         _submit("stop autonomous")
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin()) is None
 
 
 # The escape handler shares ``_handle_user_prompt_submit`` with the
@@ -640,39 +407,23 @@ class TestBlockingPersists:
         on the very next turn.
         """
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        first = _decision(_stdin(transcript_path=transcript))
+        first = _decision(_stdin())
         assert first["decision"] == "block"
 
         second = _decision(
-            _stdin(transcript_path=transcript, stop_hook_active=True)
+            _stdin(stop_hook_active=True)
         )
         assert second is not None, "the hook allowed the stop that follows a block"
         assert second["decision"] == "block"
-
-    def test_ask_user_question_still_allows_while_stop_hook_active(self, tmp_path):
-        """Persistence must not swallow the legal exits."""
-        _record()
-        blocking_transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=blocking_transcript))["decision"] == "block"
-        asking = _transcript(
-            tmp_path,
-            [_user_prompt(), _assistant_tool_use("AskUserQuestion")],
-            name="asking.jsonl",
-        )
-        assert (
-            _decision(_stdin(transcript_path=asking, stop_hook_active=True)) is None
-        )
 
 
 class TestThrashValve:
     def test_third_stop_inside_the_window_still_blocks(self, tmp_path):
         """Two recorded blocks are not yet evidence of thrashing."""
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
         for _ in range(3):
             decision = _decision(
-                _stdin(transcript_path=transcript, stop_hook_active=True)
+                _stdin(stop_hook_active=True)
             )
             assert decision["decision"] == "block"
 
@@ -684,16 +435,15 @@ class TestThrashValve:
         blocks without the third having been issued.
         """
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
         for _ in range(3):
             assert (
-                _decision(_stdin(transcript_path=transcript, stop_hook_active=True))[
+                _decision(_stdin(stop_hook_active=True))[
                     "decision"
                 ]
                 == "block"
             )
         assert (
-            _decision(_stdin(transcript_path=transcript, stop_hook_active=True))
+            _decision(_stdin(stop_hook_active=True))
             is None
         )
 
@@ -701,9 +451,8 @@ class TestThrashValve:
         """The same three blocks, spread over real work, are not thrashing."""
         _record()
         _seed_block_times([-300.0, -180.0, -61.0])
-        transcript = _transcript(tmp_path, [_user_prompt()])
         decision = _decision(
-            _stdin(transcript_path=transcript, stop_hook_active=True)
+            _stdin(stop_hook_active=True)
         )
         assert decision["decision"] == "block"
 
@@ -711,18 +460,16 @@ class TestThrashValve:
         """Exactly 60s apart counts as inside the window."""
         _record()
         _seed_block_times([-59.5, -30.0, -1.0])
-        transcript = _transcript(tmp_path, [_user_prompt()])
         assert (
-            _decision(_stdin(transcript_path=transcript, stop_hook_active=True))
+            _decision(_stdin(stop_hook_active=True))
             is None
         )
 
     def test_only_the_most_recent_timestamps_are_kept(self, tmp_path):
         """The stored window is bounded; it cannot grow with the session."""
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
         for _ in range(3):
-            _decision(_stdin(transcript_path=transcript, stop_hook_active=True))
+            _decision(_stdin(stop_hook_active=True))
         record = autonomous.read_autonomous_record(SID)
         assert record["blocked_stops"] == 3
         assert len(record["block_times"]) == autonomous.BLOCK_WINDOW_LIMIT
@@ -734,8 +481,7 @@ class TestThrashValve:
         payload = json.loads(path.read_text(encoding="utf-8"))
         payload["block_times"] = "not a list"
         path.write_text(json.dumps(payload), encoding="utf-8")
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin()) is None
 
 
 class TestOnlyBlocksAreRecorded:
@@ -753,34 +499,21 @@ class TestOnlyBlocksAreRecorded:
         record = autonomous.read_autonomous_record(SID)
         return record["blocked_stops"], autonomous.recent_block_times(record)
 
-    def test_ask_user_question_allow_records_nothing(self, tmp_path):
+
+    def test_a_fail_open_allow_records_nothing(self, tmp_path):
+        """The fail-open rows must not stamp the window either.
+
+        Retargeted from an unreadable-transcript allow when the handler
+        stopped reading transcripts. The behavior it guards is unchanged and
+        is not asserted anywhere else: a row that ALLOWS because it could not
+        establish the facts must leave the valve's bookkeeping alone, or the
+        window fills on turns the hook never refused and the valve opens on a
+        session that was never held.
+        """
         _record()
-        transcript = _transcript(
-            tmp_path, [_user_prompt(), _assistant_tool_use("AskUserQuestion")]
-        )
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin(session_id="../../etc/passwd")) is None
         assert self._bookkeeping() == (0, [])
 
-    def test_unreadable_transcript_allow_records_nothing(self, tmp_path):
-        _record()
-        assert (
-            _decision(_stdin(transcript_path=str(tmp_path / "absent.jsonl"))) is None
-        )
-        assert self._bookkeeping() == (0, [])
-
-    def test_verified_completion_allow_records_nothing(self, tmp_path, monkeypatch):
-        monkeypatch.delenv("SPELLBOOK_DEV_DIR", raising=False)
-        evidence = tmp_path / "evidence.json"
-        evidence.write_text(
-            json.dumps(
-                {"criteria": [{"criterion": "tests pass", "command": "pytest", "output": "ok"}]}
-            ),
-            encoding="utf-8",
-        )
-        _record(evidence_path=str(evidence))
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
-        assert self._bookkeeping() == (0, [])
 
     def test_the_valve_opening_records_nothing(self, tmp_path):
         """The stop the valve releases must not extend the window itself.
@@ -791,8 +524,7 @@ class TestOnlyBlocksAreRecorded:
         _record()
         _seed_block_times([-3.0, -2.0, -1.0])
         before = self._bookkeeping()
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin()) is None
         after = self._bookkeeping()
         assert after[0] == before[0]
         assert after[1] == before[1]
@@ -808,20 +540,18 @@ class TestTheValveIsNotALatch:
         latch would look correct.
         """
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
         _seed_block_times([-3.0, -2.0, -1.0])
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin()) is None
 
         window = autonomous.BLOCK_WINDOW_SECONDS
         _seed_block_times([-(window + 30.0), -(window + 20.0), -(window + 10.0)])
-        assert _decision(_stdin(transcript_path=transcript))["decision"] == "block"
+        assert _decision(_stdin())["decision"] == "block"
 
     def test_two_blocks_inside_the_window_do_not_open_it(self, tmp_path):
         """The limit is a count, not "any recent block at all"."""
         _record()
         _seed_block_times([-2.0, -1.0])
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript))["decision"] == "block"
+        assert _decision(_stdin())["decision"] == "block"
 
 
 class TestWindowBoundaryAtTheHook:
@@ -836,15 +566,13 @@ class TestWindowBoundaryAtTheHook:
         _record()
         window = autonomous.BLOCK_WINDOW_SECONDS
         _seed_block_times([-(window - 1.0), -(window - 2.0), -(window - 3.0)])
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript)) is None
+        assert _decision(_stdin()) is None
 
     def test_three_blocks_just_outside_the_window_block(self, tmp_path):
         _record()
         window = autonomous.BLOCK_WINDOW_SECONDS
         _seed_block_times([-(window + 3.0), -(window + 2.0), -(window + 1.0)])
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript))["decision"] == "block"
+        assert _decision(_stdin())["decision"] == "block"
 
     def test_the_oldest_of_three_decides_not_the_newest(self, tmp_path):
         """Two blocks moments ago plus one stale block is not thrashing.
@@ -855,8 +583,7 @@ class TestWindowBoundaryAtTheHook:
         _record()
         window = autonomous.BLOCK_WINDOW_SECONDS
         _seed_block_times([-(window * 10), -2.0, -1.0])
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        assert _decision(_stdin(transcript_path=transcript))["decision"] == "block"
+        assert _decision(_stdin())["decision"] == "block"
 
 
 class TestStopHookActiveIsInert:
@@ -870,9 +597,8 @@ class TestStopHookActiveIsInert:
     @pytest.mark.parametrize("flag", [False, True])
     def test_the_block_row_is_identical_either_way(self, tmp_path, flag):
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
         decision = _decision(
-            _stdin(transcript_path=transcript, stop_hook_active=flag)
+            _stdin(stop_hook_active=flag)
         )
         assert decision["decision"] == "block"
 
@@ -880,15 +606,13 @@ class TestStopHookActiveIsInert:
     def test_the_valve_row_is_identical_either_way(self, tmp_path, flag):
         _record()
         _seed_block_times([-3.0, -2.0, -1.0])
-        transcript = _transcript(tmp_path, [_user_prompt()])
         assert (
-            _decision(_stdin(transcript_path=transcript, stop_hook_active=flag))
+            _decision(_stdin(stop_hook_active=flag))
             is None
         )
 
     def test_a_missing_flag_blocks_exactly_as_a_present_one(self, tmp_path):
         _record()
-        transcript = _transcript(tmp_path, [_user_prompt()])
-        data = _stdin(transcript_path=transcript)
+        data = _stdin()
         del data["stop_hook_active"]
         assert _decision(data)["decision"] == "block"
