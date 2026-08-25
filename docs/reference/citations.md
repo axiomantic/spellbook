@@ -115,6 +115,96 @@ This page documents the research that informs spellbook's design, particularly t
 - **Link**: [https://arxiv.org/abs/2408.08631](https://arxiv.org/abs/2408.08631)
 - Proposes "Jekyll & Hyde" framework that ensembles persona and neutral perspectives to mitigate persona drawbacks.
 
+## Development ceremonies (research backing)
+
+Spellbook's development ceremonies grew from practice, not from the literature, but independent research supports many of them. The five items below map each ceremony to the research that validates it.
+
+### The green mirage: tests that pass without verifying behavior
+
+Spellbook's green-mirage audit asks of every test whether it would fail if the code were broken. This is the coding face of *reward hacking* / *specification gaming*, a documented failure mode where an agent satisfies the literal metric without the intended outcome. It is not hypothetical: audits find a material share of SWE-bench patches pass their tests yet are wrong or incomplete, and mutation analysis finds most SWE-bench Verified instances admit a surviving mutant.
+
+**Amodei, D., Olah, C., Steinhardt, J., Christiano, P., Schulman, J., & Mané, D.** (2016). Concrete Problems in AI Safety. *arXiv preprint arXiv:1606.06565*.
+
+- **Link**: [https://arxiv.org/abs/1606.06565](https://arxiv.org/abs/1606.06565)
+- **Key finding**: Catalogues concrete AI safety failure modes, including reward hacking, where a system satisfies the literal specification of an objective without achieving the intended outcome.
+- **Relevance**: Frames the green-mirage audit as detection of the coding-domain form of reward hacking: a test that passes while the code is wrong.
+
+**Krakovna, V., et al.** (2020). Specification gaming: the flip side of AI ingenuity. *DeepMind blog*.
+
+- **Link**: [https://deepmind.google/discover/blog/specification-gaming-the-flip-side-of-ai-ingenuity/](https://deepmind.google/discover/blog/specification-gaming-the-flip-side-of-ai-ingenuity/)
+- **Key finding**: Documents specification gaming, where an agent exploits the literal statement of an objective to score well without doing the intended task.
+- **Relevance**: Names the general pattern the green-mirage audit guards against in test suites.
+
+**Skalse, J., Howe, N. H. R., Krasheninnikov, D., & Krueger, D.** (2022). Defining and Characterizing Reward Hacking. *Advances in Neural Information Processing Systems 35 (NeurIPS 2022)*.
+
+- **Link**: [https://arxiv.org/abs/2209.13085](https://arxiv.org/abs/2209.13085)
+- **Key finding**: Provides a formal definition of reward hacking and characterizes when a proxy objective can be gamed relative to the true objective.
+- **Relevance**: Theoretical grounding for why a test (a proxy for correctness) can be satisfied without the code being correct.
+
+**Aleithan, R., et al.** (2024). SWE-Bench+: Enhanced Coding Benchmark for LLMs. *arXiv preprint arXiv:2410.06992*.
+
+- **Link**: [https://arxiv.org/abs/2410.06992](https://arxiv.org/abs/2410.06992)
+- **Key finding**: An audit of SWE-bench patches finds many pass their tests yet are wrong or incomplete: 9.26% incorrect / 5.56% incomplete on SWE-bench Lite, and 12.5% / 9.82% on SWE-bench Verified.
+- **Relevance**: Empirical evidence that passing tests do not guarantee correct code, motivating the green-mirage audit.
+
+**Are Benchmark Tests Strong Enough? Mutation-Guided Diagnosis and Augmentation of Regression Suites** (tool: STING; alt. "Probe to Generate", tool PROBE). *arXiv preprint arXiv:2604.01518*.
+
+- **Link**: [https://arxiv.org/abs/2604.01518](https://arxiv.org/abs/2604.01518)
+- **Key finding**: Mutation-guided analysis finds that 77% of SWE-bench Verified instances admit at least one surviving mutant, meaning the accompanying tests fail to detect a deliberately broken implementation.
+- **Relevance**: Quantifies test weakness in a widely used benchmark, the exact condition the green-mirage audit and mutation discipline target.
+
+### Mutation as the measure of a test's strength
+
+Spellbook's TDD rule requires every assertion to name the mutation it kills, and no check counts until it has gone red on deliberately broken code. This is mutation testing, established since the late 1970s. A test that still passes when the code is broken proves nothing.
+
+**DeMillo, R. A., Lipton, R. J., & Sayward, F. G.** (1978). Hints on Test Data Selection: Help for the Practicing Programmer. *IEEE Computer*, 11(4), 34-41.
+
+- **Link**: [https://doi.org/10.1109/C-M.1978.218136](https://doi.org/10.1109/C-M.1978.218136)
+- **Key finding**: Introduces mutation testing: deliberately altering a program to produce mutants, then measuring whether the test suite detects (kills) them as a measure of test adequacy.
+- **Relevance**: Origin of the mutation-as-check-strength discipline spellbook applies to TDD. Framework: [Stryker](https://stryker-mutator.io/).
+
+### Constrained beats unconstrained autonomy
+
+Spellbook runs one orchestrator dispatching narrowly-scoped subagents, each with only its local context, and keeps the reviewer separate from the author. Research finds unconstrained multi-turn autonomy amplifies early mistakes, and that hierarchical orchestration with per-subagent context isolation manages exactly this.
+
+**Xia, C. S., Deng, Y., Dunn, S., & Zhang, L.** (2025). Agentless: Demystifying LLM-based Software Engineering Agents. *Proceedings of FSE 2025*. arXiv:2407.01489.
+
+- **Link**: [https://arxiv.org/abs/2407.01489](https://arxiv.org/abs/2407.01489)
+- **Key finding**: A simple, constrained three-phase approach reaches 32.00% on SWE-bench Lite, outperforming more autonomous agents; unconstrained multi-turn autonomy compounds early errors and inflates context.
+- **Relevance**: Supports spellbook's constrained orchestration and its resistance to over-decomposition.
+
+**BOAD: Discovering Hierarchical Software Engineering Agents via Bandit Optimization** (2026). *Proceedings of ICLR 2026*. arXiv:2512.23631.
+
+- **Link**: [https://arxiv.org/abs/2512.23631](https://arxiv.org/abs/2512.23631)
+- **Key finding**: Hierarchical agent structures discovered via bandit optimization improve software engineering task performance through structured decomposition and coordination.
+- **Relevance**: Supports the orchestrator-plus-subagents structure spellbook uses.
+
+**Confucius Code Agent: Scalable Agent Scaffolding for Real-World SWE** (2026). *arXiv preprint arXiv:2512.10398*.
+
+- **Link**: [https://arxiv.org/abs/2512.10398](https://arxiv.org/abs/2512.10398)
+- **Key finding**: Agent scaffolding with per-subagent context isolation scales to real-world software engineering tasks by managing context per subagent rather than accumulating it in one loop.
+- **Relevance**: Supports spellbook's per-subagent context isolation and reviewer/author separation.
+
+### Granularity at the acceptance boundary
+
+Spellbook's plan skills collapse work items that are only jointly acceptable, resisting over-decomposition. This is consistent with the Agentless finding that excess decomposition inflates context and compounds error (Xia et al., 2025, arXiv:2407.01489, cited above).
+
+### Specification before code
+
+Spellbook's design-doc → plan → TDD flow, its discovery/clarify pass, and its loading of project governance (AGENTS.md) as binding constraints parallel spec-driven development: an executable contract before code, a "constitution" of principles, and a clarify step that interrogates the spec before building. This part of the literature argues the case rather than measuring it.
+
+**Piskala, D. B.** (2026). Spec-Driven Development: From Code to Contract in the Age of AI Coding Assistants. *arXiv preprint arXiv:2602.00180*.
+
+- **Link**: [https://arxiv.org/abs/2602.00180](https://arxiv.org/abs/2602.00180)
+- **Key finding**: Argues (as a technical report, not an empirical measurement) for treating a specification as an executable contract that precedes and governs code generation.
+- **Relevance**: Parallels spellbook's design-doc → plan → TDD flow.
+
+**GitHub Spec Kit**.
+
+- **Link**: [https://github.com/github/spec-kit](https://github.com/github/spec-kit)
+- **Key finding**: A toolkit for spec-driven development built around a project "constitution" of principles and a `/clarify` workflow that interrogates the spec before implementation.
+- **Relevance**: Parallels spellbook's clarify pass and its loading of project governance (AGENTS.md) as binding constraints.
+
 ---
 
 ## Summary
