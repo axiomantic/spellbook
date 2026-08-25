@@ -375,8 +375,23 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
 
 
 def _handle_user_prompt_submit(data: dict) -> list[str]:
-    """UserPromptSubmit handler: surface agent2agent inbox/watch-chain hints."""
+    """UserPromptSubmit handler: agent2agent hints, and the autonomous escape.
+
+    The escape runs FIRST. The clear must land on the prompt that CONTAINS
+    the phrase, so the ``Stop`` at the end of that same turn already reads no
+    record; a clear deferred to the next prompt leaves one more turn trapped.
+    """
     outputs: list[str] = []
+
+    try:
+        escaped = _autonomous_escape(data)
+        if escaped:
+            outputs.append(escaped)
+    except Exception as e:
+        # An escape that fails must not take out the prompt, and must not
+        # skip the a2a hints below -- this is the same fail-open contract
+        # the Stop handler runs under.
+        _log_hook_error("autonomous_escape", "UserPromptSubmit", e)
 
     try:
         out = _agent2agent_notify_for_prompt(data)
@@ -621,6 +636,276 @@ def _handle_session_start(data: dict) -> dict | None:
     }
 
 
+# ---------------------------------------------------------------------------
+# Autonomous mode: the Stop hook
+# ---------------------------------------------------------------------------
+
+# The literal escape phrases, defined ONCE here. The block message below
+# restates them every time -- a trap whose exit is not printed at the moment
+# it closes is undiscoverable. Task 4's UserPromptSubmit handler imports this
+# same constant rather than duplicating the literals; two copies of an escape
+# hatch drift, and the copy that drifts is the one nobody tests.
+AUTONOMOUS_ESCAPE_PHRASES = ("stop autonomous", "exit autonomous mode")
+
+
+def _prompt_requests_autonomous_escape(prompt: object) -> bool:
+    """Whether ``prompt`` contains a literal escape phrase.
+
+    Case-insensitive substring match over ``AUTONOMOUS_ESCAPE_PHRASES`` --
+    the same tuple the block message prints, read rather than copied, so the
+    recognizer and the advertised exit cannot drift apart. No inference about
+    operator intent, no synonyms, no fuzziness: a last-resort exit is only
+    trustworthy if what opens it is decidable by reading the string.
+    """
+    if not isinstance(prompt, str):
+        return False
+    lowered = prompt.lower()
+    return any(phrase in lowered for phrase in AUTONOMOUS_ESCAPE_PHRASES)
+
+
+def _autonomous_escape(data: dict) -> str | None:
+    """Clear the autonomous record when the prompt asks for the exit.
+
+    NOTE: ``UserPromptSubmit`` is not registered by the installer, so this
+    handler does not fire in a real session until Task 6 wires the event.
+
+    Returns a confirmation to inject, or ``None`` when nothing was cleared --
+    including when no record existed, so a prompt that merely mentions the
+    phrase outside autonomous mode says nothing.
+    """
+    if not _prompt_requests_autonomous_escape(data.get("prompt")):
+        return None
+
+    session_id = data.get("session_id", "") or ""
+    if not isinstance(session_id, str) or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+
+    autonomous = _autonomous_module()
+    if autonomous is None:
+        return None
+    if autonomous.read_autonomous_record(session_id) is None:
+        return None
+
+    autonomous.clear_autonomous_record(session_id)
+    return (
+        "Autonomous mode CLEARED for this session by operator escape phrase. "
+        "The Stop hook no longer blocks the end of a turn."
+    )
+
+
+def _autonomous_module():
+    """Import ``spellbook.core.autonomous``, or ``None`` if unavailable.
+
+    Hooks run as standalone scripts with no spellbook package on ``sys.path``
+    (see ``_mcp_env``), so the repo root is prepended here the same way
+    ``_develop_ledger_path`` prepends ``scripts/``. An import that fails for
+    any reason -- a partial checkout, a Python that cannot load the package --
+    degrades to "not autonomous" rather than raising, because this function's
+    only caller gates the end of the operator's turn.
+    """
+    root = Path(__file__).resolve().parent.parent
+    try:
+        if str(root) not in sys.path:
+            sys.path.insert(0, str(root))
+        from spellbook.core import autonomous
+
+        return autonomous
+    except Exception:
+        return None
+
+
+def _transcript_has_ask_user_question(transcript_path: str) -> bool | None:
+    """Whether the ENDING turn contains an ``AskUserQuestion`` tool call.
+
+    Tri-state on purpose. ``True``/``False`` are answers; ``None`` means the
+    question could not be asked at all -- no path, unreadable file, or not a
+    single parseable event in it. The caller treats ``None`` as ALLOW, because
+    an unreadable transcript is an UNKNOWN and collapsing it into ``False``
+    would block a session on the strength of a file it never read.
+
+    The transcript is JSONL, one event per line; an assistant event carries
+    ``message.content`` as a list of blocks, and a tool call is a block with
+    ``type == "tool_use"`` and a ``name``. Verified against a real Claude Code
+    transcript rather than assumed: the block scan finds ``AskUserQuestion``
+    alongside ``Bash``, ``Read``, and the rest, so detection is a field
+    comparison and never a heuristic over prose.
+
+    "The ending turn" is everything after the last GENUINE user prompt. A
+    ``user`` event whose content is a list of ``tool_result`` blocks is a tool
+    response, not a prompt -- scanning to the last ``user`` event of any kind
+    would cut the turn at the most recent tool call and miss the question that
+    preceded it.
+
+    An individual unparseable line is skipped rather than fatal -- a partial
+    write of the last line is ordinary. A file with NO parseable event at all
+    is the unknown, and returns ``None``.
+    """
+    if not transcript_path or not isinstance(transcript_path, str):
+        return None
+    try:
+        raw = Path(transcript_path).read_text(encoding="utf-8", errors="replace")
+    except (OSError, ValueError):
+        return None
+
+    events = []
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            obj = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict):
+            events.append(obj)
+
+    if not events:
+        return None
+
+    start = 0
+    for index, obj in enumerate(events):
+        if obj.get("type") != "user":
+            continue
+        message = obj.get("message")
+        content = message.get("content") if isinstance(message, dict) else None
+        if isinstance(content, list) and any(
+            isinstance(b, dict) and b.get("type") == "tool_result" for b in content
+        ):
+            continue
+        start = index
+
+    for obj in events[start:]:
+        message = obj.get("message")
+        if not isinstance(message, dict):
+            continue
+        content = message.get("content")
+        if not isinstance(content, list):
+            continue
+        for block in content:
+            if not isinstance(block, dict):
+                continue
+            if block.get("type") == "tool_use" and block.get("name") == "AskUserQuestion":
+                return True
+    return False
+
+
+def _autonomous_completion_verified(record: dict, data: dict) -> bool:
+    """Whether the project goal is mechanically verified as complete.
+
+    Delegates to ``spellbook.core.autonomous.completion_verified``, which
+    owns both paths: the develop gate ledger when one exists for this
+    project, and otherwise the evidence artifact named by the record. This
+    function's only work is resolving the ledger path from stdin's ``cwd``.
+
+    Every failure resolves to ``False`` -- "not verified" -- which is the
+    conservative direction: it can cause an extra block that the escape
+    phrase clears, whereas returning ``True`` would silently disable
+    enforcement and look exactly like a working hook.
+    """
+    autonomous = _autonomous_module()
+    if autonomous is None:
+        return False
+    cwd = data.get("cwd", "") or ""
+    try:
+        ledger_path = _develop_ledger_path(cwd) if isinstance(cwd, str) else None
+        return bool(autonomous.completion_verified(record, ledger_path=ledger_path))
+    except Exception:
+        return False
+
+
+def _autonomous_block_reason(record: dict, *, missed: str) -> str:
+    """The block message. Restates the exit every time it refuses one."""
+    phrases = " / ".join(f'"{p}"' for p in AUTONOMOUS_ESCAPE_PHRASES)
+    goal = record.get("goal") or "(no goal recorded)"
+    return (
+        "Autonomous mode is ACTIVE for this session "
+        f"(mode: {record.get('mode')}, philosophy: {record.get('philosophy')}).\n"
+        "A turn may end on exactly two conditions: a genuine blocker raised "
+        "through an AskUserQuestion tool call, or mechanically verified "
+        "completion of the whole project goal.\n"
+        f"Not met: {missed}\n"
+        f"Goal: {goal}\n"
+        f"To leave autonomous mode, the OPERATOR types one of: {phrases}. "
+        "Nothing you do ends it; keep working."
+    )
+
+
+def _autonomous_thrash_valve_open(autonomous, record: dict) -> bool:
+    """Whether recorded blocks show thrashing, so this stop must be allowed.
+
+    Every failure resolves to ``True`` -- ALLOW -- which is the opposite
+    direction from ``_autonomous_completion_verified`` and deliberately so.
+    This predicate is the ONLY thing bounding the block loop now that the
+    harness cap is disabled, so a fault in it must release the session, not
+    hold it. A valve that jams shut when its own bookkeeping breaks is worse
+    than no valve.
+    """
+    try:
+        return bool(autonomous.thrash_valve_open(record, now=time.time()))
+    except Exception:
+        return True
+
+
+def _handle_stop(data: dict) -> dict | None:
+    """Stop handler. Returns a decision dict, or None to allow silently.
+
+    Decision table, evaluated in order:
+
+    1. No autonomous record for this session -> ALLOW.
+    2. The ending turn contains an ``AskUserQuestion`` call -> ALLOW.
+    3. Completion verified (Task 3) -> ALLOW.
+    4. The rolling-window valve is open -> ALLOW.
+    5. Otherwise -> block, and record the blocked stop.
+
+    ``stop_hook_active`` is deliberately NOT consulted. The harness sets it
+    on the stop FOLLOWING a block, so treating it as an allow makes the hook
+    block at most once per session and then permit every subsequent
+    turn-end -- inert in the only case the feature exists for. What prevents
+    an infinite block loop instead is the valve at row 4: three blocks inside
+    ``BLOCK_WINDOW_SECONDS`` is thrashing, and further blocking cannot help.
+    The valve and the disabled ``CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`` are one
+    change; with the harness cap still at 8 the valve would rarely fire, and
+    with the cap disabled the valve is the only loop stop there is.
+
+    Every unknown resolves to ALLOW. A hook that raises takes out the
+    operator's turn; a hook that blocks on an unknown traps the session with
+    no way out. That includes the valve's own bookkeeping: malformed
+    ``block_times`` makes the record read as absent, which lands on row 1.
+    The only path that blocks is one where the record is definitely present
+    and both legal stop conditions are definitely unmet.
+    """
+    session_id = data.get("session_id", "") or ""
+    if not isinstance(session_id, str) or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+
+    autonomous = _autonomous_module()
+    if autonomous is None:
+        return None
+
+    record = autonomous.read_autonomous_record(session_id)
+    if record is None:
+        return None
+
+    # None means "could not read the transcript" -- an unknown, which allows.
+    if _transcript_has_ask_user_question(data.get("transcript_path", "") or "") is not False:
+        return None
+
+    if _autonomous_completion_verified(record, data):
+        return None
+
+    if _autonomous_thrash_valve_open(autonomous, record):
+        return None
+
+    autonomous.record_blocked_stop(session_id)
+    return {
+        "decision": "block",
+        "reason": _autonomous_block_reason(
+            record,
+            missed="no AskUserQuestion tool call in this turn, and completion is not verified",
+        ),
+    }
+
+
 def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
     """Route hook event to appropriate handler(s).
 
@@ -632,6 +917,18 @@ def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
         outputs = _handle_post_tool_use(tool_name, data)
     elif event_name == "UserPromptSubmit":
         outputs = _handle_user_prompt_submit(data)
+    elif event_name == "Stop":
+        # Like SessionStart, this returns a JSON decision rather than a list
+        # of strings. Wrapped so that no exception can escape to the caller:
+        # an unexpected failure here must ALLOW the stop, not raise.
+        try:
+            stop_payload = _handle_stop(data)
+        except Exception as exc:
+            _log_hook_error("handle_stop", "Stop", exc)
+            return None
+        if stop_payload is None:
+            return None
+        return json.dumps(stop_payload)
     elif event_name == "SessionStart":
         # SessionStart returns a dict or None directly (not a list).
         # Serialize to JSON here so the subprocess can print it.
