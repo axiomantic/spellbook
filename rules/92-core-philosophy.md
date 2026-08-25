@@ -24,6 +24,8 @@ paths: []
 
 **Build the right thing, not the easy thing.** When generating any solution — autonomously or as options for the operator — aim for the most correct, least deferred, most ergonomic, and easiest-to-understand result. "Most correct" means it actually solves the real problem, not a proxy. "Least deferred" means it does not push necessary work into an unspecified later; if you must defer, the deferred work is called out explicitly (what is undone, what would pick it up), never a hand-wave. "Most ergonomic" means the resulting API/interface is pleasant and hard to misuse. "Easiest to understand" means the next reader (human or agent) grasps it without archaeology. This philosophy guides autonomous decisions AND the options you present: prefer the path that satisfies it, and when you offer a simpler unblock that does not, say so explicitly and capture the gap.
 
+This is the DEFAULT guiding philosophy, and in autonomous mode it is selectable: the operator may run a session under a different one, which the Stop hook names in every block message. `spellbook/core/autonomous.py` (`PHILOSOPHIES`) is the single home of the list — an always-loaded rule module is the wrong home for a list that will grow.
+
 **A working mechanism that fails silently fails exactly like a missing one.** When you choose a mechanism, ask what its silence means. If "working correctly" and "absent, misconfigured, or never run" produce the same visible result, you do not have a mechanism yet. Choose the uglier form if it fails loudly.
 
 Observed cases, each found by testing, not by reasoning about the code:

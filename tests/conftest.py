@@ -166,3 +166,63 @@ def pytest_addoption(parser):
         default=False,
         help="Run docker-marked tests (skipped by default, intended for CI)",
     )
+
+
+# --------------------------------------------------------------------------
+# Spellbook state-directory isolation
+# --------------------------------------------------------------------------
+#
+# ``spellbook.core.paths`` resolves the state directory from a DIFFERENT
+# environment variable on each platform:
+#
+#     get_data_dir()    POSIX  $HOME/.local/spellbook
+#                       Windows %LOCALAPPDATA%/spellbook
+#     get_config_dir()  POSIX  $HOME/.config/spellbook
+#                       Windows %APPDATA%/spellbook
+#
+# A test that redirects only ``HOME`` therefore isolates nothing on Windows:
+# it writes to the CI runner's real state directory, leaks records between
+# tests, and stays green on the developer's machine. That defect shipped
+# three times on this branch, in three different files, because each file
+# hand-wrote its own redirection fixture and the fix never propagated.
+#
+# This fixture is the propagation mechanism. It is ``autouse``, so a test
+# file written next month inherits the isolation without knowing it exists,
+# rather than by remembering to copy a fixture.
+#
+# The redirection is ASSERTED, not assumed. A variable that stops being read
+# is otherwise invisible -- the tests go on passing against the real
+# directory on whichever platform still resolves through ``HOME``.
+
+_HOME_VARS = ("HOME", "USERPROFILE", "APPDATA", "LOCALAPPDATA")
+
+
+@pytest.fixture(autouse=True)
+def isolated_spellbook_state(tmp_path_factory, monkeypatch, request):
+    """Point every platform's state-directory variable at a per-test scratch dir.
+
+    Yields the scratch directory. It is deliberately NOT ``tmp_path``: tests
+    build fixture trees under ``tmp_path`` and a state directory appearing
+    inside them would change what those trees assert.
+
+    A test that genuinely needs the real home marks itself ``real_home``.
+    """
+    if request.node.get_closest_marker("real_home"):
+        yield None
+        return
+
+    from spellbook.core.paths import get_config_dir, get_data_dir
+
+    home = tmp_path_factory.mktemp("spellbook_home")
+    for var in _HOME_VARS:
+        monkeypatch.setenv(var, str(home))
+
+    for name, resolved in (("data", get_data_dir()), ("config", get_config_dir())):
+        assert home in resolved.parents, (
+            f"{name} dir {resolved} is not under {home}; the state-directory "
+            "redirection did not take effect. Every variable in "
+            f"{_HOME_VARS} was set, so ``spellbook.core.paths`` has grown a "
+            "resolution input this fixture does not redirect."
+        )
+
+    yield home

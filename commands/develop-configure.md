@@ -142,43 +142,44 @@ instruction. Doing the asked work thoroughly is not the same as expanding the
 asked work autonomously.
 </CRITICAL>
 
-## Autonomous Mode: the Only Two Valid Stops
+## Autonomous Mode: the Only Valid Stops
 
 <CRITICAL>
-Autonomous Mode and Scope Discipline says when you MUST stop; this rule says
-when you MUST NOT. Both are binding. When they do not both apply, you continue.
+Autonomous Mode and Scope Discipline says when you MUST stop; this says when
+you MUST NOT. Both bind. When they do not both apply, you continue. This is
+the SAME list the `Stop` hook prints; keep it so.
 
-In autonomous mode there are exactly TWO valid reasons to end a turn without a
-tool call:
+1. **The task is fully complete** and no further action is possible. Say so:
+   "Complete. Nothing further possible without <the missing thing>."
+2. **The operator asked you to pause.**
+3. **A genuine external blocker** — hardware, a credential, an irreversible
+   or outward-facing action (push, merge, publish, delete), or a decision
+   whose options you cannot generate. NOT a turn-end: raise it through
+   `AskUserQuestion`, inline.
 
-1. **A genuine external blocker.** Something only the operator can supply:
-   physical hardware, a credential, an irreversible or outward-facing action
-   (push, merge, publish, delete), or a decision whose options you cannot
-   generate.
-2. **The task is fully complete** and no further action is possible. Say so in
-   those words — "Complete. Nothing further possible without <the specific
-   missing thing>." Do not trail off into a status inventory.
+Once recorded autonomous, the `Stop` handler refuses a turn-end and hands the
+question back. It judges nothing about the WORK; repeated refusals in its
+window open the valve.
 
-Everything else is NOT a stopping point. Specifically, these are completion
-bias, not blockers, and you continue past all of them:
+Everything else is completion bias, not a blocker; continue past all of these:
 
 - The session has run long, or "this is a clean checkpoint."
-- A subagent returned a result. A result is an input to your next action, not
-  the end of your turn.
+- A subagent returned a result. That is an input to your next action, not the
+  end of your turn.
 - You finished a task-list item and there are more items.
-- You are waiting on a PEER AGENT. Peers are not blockers — pick up any other
-  unblocked work while you wait.
+- You are waiting on a PEER AGENT. Peers are not blockers — pick up other
+  unblocked work.
 - You just wrote a long report. Length is not completion.
 - You reached a phase boundary in a skill.
 
 **The announce-then-stop rule.** If your text says you will do something —
-"next I'll…", "I'm doing X now", "then executing the rename" — the tool call
-that starts it MUST be in the SAME turn. Announcing an action and ending the
+"next I'll…", "I'm doing X now" — the tool call that starts it MUST be in the
+SAME turn. Announcing an action and ending the
 turn is a process failure even when the announcement is accurate. Either do it
 now or say explicitly why you cannot.
 
-**Do not claim in-flight work you have not dispatched.** "Poll just went out",
-"I've asked the group" are only true if a tool call in this turn made them true.
+**Do not claim in-flight work you have not dispatched.** "Poll just went out"
+is true only if a tool call in this turn made it true.
 </CRITICAL>
 
 ---

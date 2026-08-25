@@ -47,7 +47,7 @@
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
-  - [Skills (61 total)](#skills-61-total)
+  - [Skills (62 total)](#skills-62-total)
   - [Commands (108 total)](#commands-108-total)
   - [Agents (16 total)](#agents-16-total)
 - [Platform Support](#platform-support)
@@ -180,7 +180,7 @@ Complete feature implementation, greenfield project creation, refactoring (with 
 
 ## What's Included
 
-### Skills (61 total)
+### Skills (62 total)
 
 Reusable workflows for structured development:
 
@@ -189,7 +189,7 @@ Reusable workflows for structured development:
 | **Core Workflow** | [design-exploration]†, [writing-plans]†, [executing-plans]†, [test-driven-development]†, [debugging], [verifying-hunches], [isolated-testing], [using-git-worktrees]†, [finishing-a-development-branch]† |
 | **Code Quality** | [enforcing-code-quality], [code-review], [advanced-code-review], [adversarial-review], [auditing-green-mirage], [fixing-tests], [fact-checking], [finding-dead-code], [distilling-prs], [requesting-code-review]† |
 | **Feature Dev** | [develop], [reviewing-design-docs], [reviewing-impl-plans], [reviewing-prs], [devils-advocate], [merging-worktrees], [resolving-merge-conflicts], [creating-issues-and-pull-requests] |
-| **Autonomous Dev** | [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
+| **Autonomous Dev** | [autonomous-mode], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [generating-diagrams], [tooling-discovery], [dedupe], [estimating-tickets], [rounding-up-worktree-sessions] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [writing-copy] |
 | **Session** | [emotional-stakes], [agent2agent] |
@@ -250,6 +250,7 @@ Reusable workflows for structured development:
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/
 [gathering-requirements]: https://axiomantic.github.io/spellbook/latest/skills/gathering-requirements/
+[autonomous-mode]: https://axiomantic.github.io/spellbook/latest/skills/autonomous-mode/
 [dehallucination]: https://axiomantic.github.io/spellbook/latest/skills/dehallucination/
 [reflexion]: https://axiomantic.github.io/spellbook/latest/skills/reflexion/
 [analyzing-domains]: https://axiomantic.github.io/spellbook/latest/skills/analyzing-domains/

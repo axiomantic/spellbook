@@ -375,8 +375,23 @@ def _handle_post_tool_use(tool_name: str, data: dict) -> list[str]:
 
 
 def _handle_user_prompt_submit(data: dict) -> list[str]:
-    """UserPromptSubmit handler: surface agent2agent inbox/watch-chain hints."""
+    """UserPromptSubmit handler: agent2agent hints, and the autonomous escape.
+
+    The escape runs FIRST. The clear must land on the prompt that CONTAINS
+    the phrase, so the ``Stop`` at the end of that same turn already reads no
+    record; a clear deferred to the next prompt leaves one more turn trapped.
+    """
     outputs: list[str] = []
+
+    try:
+        escaped = _autonomous_escape(data)
+        if escaped:
+            outputs.append(escaped)
+    except Exception as e:
+        # An escape that fails must not take out the prompt, and must not
+        # skip the a2a hints below -- this is the same fail-open contract
+        # the Stop handler runs under.
+        _log_hook_error("autonomous_escape", "UserPromptSubmit", e)
 
     try:
         out = _agent2agent_notify_for_prompt(data)
@@ -505,12 +520,13 @@ def _develop_ledger_path(cwd: str) -> Path | None:
     ``encode_cwd`` is not a string operation: it resolves the git repo root,
     and for layouts it cannot read off the filesystem it still spawns ``git
     worktree list --porcelain`` (and ``git rev-parse --show-toplevel`` on
-    fallback), each with a five-second timeout. This function runs on every
-    ``Task`` PostToolUse, so an empty state directory settles the question
-    before any of that: a ledger for THIS project cannot exist when no ledger
-    exists for ANY project, and one directory listing is the cheapest way to
-    learn it. Both callers treat ``None`` and "file absent" identically, so
-    the short circuit is not observable to them.
+    fallback). This function runs on every ``Task`` PostToolUse, so an empty
+    state directory settles the question before any of that: a ledger for THIS
+    project cannot exist when no ledger exists for ANY project, and one
+    directory listing is the cheapest way to learn it. Both callers treat
+    ``None`` and "file absent" identically, so the short circuit is not
+    observable to them.
+
     """
     override = os.environ.get("SPELLBOOK_DEV_DIR")
     if override:
@@ -621,6 +637,238 @@ def _handle_session_start(data: dict) -> dict | None:
     }
 
 
+# ---------------------------------------------------------------------------
+# Autonomous mode: the Stop hook
+# ---------------------------------------------------------------------------
+
+# The literal escape phrases, defined ONCE here. The block message below
+# restates them every time -- a trap whose exit is not printed at the moment
+# it closes is undiscoverable. The UserPromptSubmit recognizer below reads
+# this same tuple rather than duplicating the literals; two copies of an
+# escape hatch drift, and the copy that drifts is the one nobody tests.
+AUTONOMOUS_ESCAPE_PHRASES = ("stop autonomous", "exit autonomous mode")
+
+
+def _prompt_requests_autonomous_escape(prompt: object) -> bool:
+    """Whether ``prompt`` contains a literal escape phrase.
+
+    Case-insensitive substring match over ``AUTONOMOUS_ESCAPE_PHRASES`` --
+    the same tuple the block message prints, read rather than copied, so the
+    recognizer and the advertised exit cannot drift apart. No inference about
+    operator intent, no synonyms, no fuzziness: a last-resort exit is only
+    trustworthy if what opens it is decidable by reading the string.
+    """
+    if not isinstance(prompt, str):
+        return False
+    lowered = prompt.lower()
+    return any(phrase in lowered for phrase in AUTONOMOUS_ESCAPE_PHRASES)
+
+
+def _autonomous_escape(data: dict) -> str | None:
+    """Clear the autonomous record when the prompt asks for the exit.
+
+    Returns a confirmation to inject, or ``None`` when there was nothing to
+    clear -- including when no record existed, so a prompt that merely
+    mentions the phrase outside autonomous mode says nothing.
+
+    When the record survives the attempt, this returns a FAILURE notice
+    rather than the confirmation. This is the operator's only exit from a
+    hook that refuses every turn-end; printing the success line over a
+    no-op tells them the trap is open while it is still shut, and they have
+    no other signal to contradict it. The verdict is the artifact -- the
+    record is gone -- not the fact that the call was made.
+    """
+    if not _prompt_requests_autonomous_escape(data.get("prompt")):
+        return None
+
+    session_id = data.get("session_id", "") or ""
+    if not isinstance(session_id, str) or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+
+    autonomous = _autonomous_module()
+    if autonomous is None:
+        return None
+    if autonomous.read_autonomous_record(session_id) is None:
+        return None
+
+    if not autonomous.clear_autonomous_record(session_id):
+        return (
+            "Autonomous mode COULD NOT BE CLEARED: the record for this session "
+            "could not be removed, so the Stop hook will KEEP refusing to end "
+            "a turn. This is a filesystem fault, not a refusal of the escape "
+            "phrase. To clear it, delete the record file at "
+            f"{_autonomous_record_path_for_message(autonomous, session_id)} "
+            "(check its directory's permissions and free space), or end this "
+            "session -- the record is per-session and grants nothing to a new "
+            "one."
+        )
+    return (
+        "Autonomous mode CLEARED for this session by operator escape phrase. "
+        "The Stop hook no longer blocks the end of a turn."
+    )
+
+
+def _autonomous_record_path_for_message(autonomous, session_id: str) -> str:
+    """The record's path for the escape-failure notice, or a fallback phrase.
+
+    Naming the file is the whole value of that notice -- an operator told
+    only that the clear failed has nothing to act on. Resolving it must not
+    itself raise inside the handler that reports a failure.
+    """
+    try:
+        path = autonomous._record_path(session_id)
+    except Exception:
+        return "the autonomous record for this session"
+    if path is None:
+        return "the autonomous record for this session"
+    return str(path)
+
+
+def _autonomous_module():
+    """Import ``spellbook.core.autonomous``, or ``None`` if unavailable.
+
+    Hooks run as standalone scripts with no spellbook package on ``sys.path``
+    (see ``_mcp_env``), so the repo root is prepended here the same way
+    ``_develop_ledger_path`` prepends ``scripts/``. An import that fails for
+    any reason -- a partial checkout, a Python that cannot load the package --
+    degrades to "not autonomous" rather than raising, because this function's
+    only caller gates the end of the operator's turn.
+    """
+    root = Path(__file__).resolve().parent.parent
+    try:
+        if str(root) not in sys.path:
+            sys.path.insert(0, str(root))
+        from spellbook.core import autonomous
+
+        return autonomous
+    except Exception:
+        return None
+
+
+def _autonomous_block_reason(record: dict) -> str:
+    """The block message: a question handed back to the model, not a verdict.
+
+    The hook cannot tell whether a turn is genuinely finished -- nothing it
+    can read from outside the model distinguishes "the project is done" from
+    "the model lost momentum". So it does not try. It refuses the stop once
+    and asks, and the model answers by acting: it continues if it was not
+    done, and it stops again if it was. ``BLOCK_WINDOW_LIMIT`` refusals
+    inside ``BLOCK_WINDOW_SECONDS`` is that second answer arriving that many
+    times, and the valve then lets the session end.
+
+    The escape phrase and the active philosophy are restated on every refusal
+    because this text is the only place the operator's exit is visible from
+    inside a session that has been running for hours.
+    """
+    phrases = " / ".join(f'"{p}"' for p in AUTONOMOUS_ESCAPE_PHRASES)
+    goal = record.get("goal") or "(no goal recorded)"
+    return (
+        "Autonomous mode is ACTIVE for this session "
+        f"(mode: {record.get('mode')}, philosophy: {record.get('philosophy')}).\n"
+        "This turn-end is refused. Before ending a turn, answer this: are you "
+        "DONE with the whole project goal, were you asked to PAUSE by the "
+        "operator, or do you have a GENUINE BLOCKER?\n"
+        "If you have a genuine blocker, you MUST use the AskUserQuestion tool "
+        "to ask the operator how to continue -- do not end the turn on it.\n"
+        "If none of the three holds, you are not finished. A long session, a "
+        "finished list item, a returned subagent result, and a phase boundary "
+        "are none of them. Keep working.\n"
+        f"Goal: {goal}\n"
+        f"To leave autonomous mode, the OPERATOR types one of: {phrases}. "
+        "Nothing you do ends it."
+    )
+
+
+def _autonomous_thrash_valve_open(autonomous, record: dict) -> bool:
+    """Whether recorded blocks show thrashing, so this stop must be allowed.
+
+    Every failure resolves to ``True`` -- ALLOW. This predicate is the ONLY
+    thing bounding the block loop now that the harness cap is disabled, so a
+    fault in it must release the session, not hold it. A valve that jams shut
+    when its own bookkeeping breaks is worse than no valve.
+    """
+    try:
+        return bool(autonomous.thrash_valve_open(record, now=time.time()))
+    except Exception:
+        return True
+
+
+def _handle_stop(data: dict) -> dict | None:
+    """Stop handler. Returns a decision dict, or None to allow silently.
+
+    Decision table, evaluated in order, and complete:
+
+    1. No autonomous record for this session -> ALLOW.
+    2. The rolling-window valve is open -> ALLOW.
+    3. The blocked stop cannot be recorded -> ALLOW.
+    4. Otherwise -> block.
+
+    The hook decides NOTHING about the work. It reads one small record to
+    learn whether the session is autonomous, and if it is, it kicks the
+    session and hands the question back to the model. Everything the handler
+    once inspected to answer that question itself -- the session transcript,
+    the develop gate ledger, a declared evidence artifact -- is gone, and with
+    it the reasons this hook used to be slow and the reasons it used to be
+    wrong. What replaced them is row 2: ``BLOCK_WINDOW_LIMIT`` blocks inside
+    ``BLOCK_WINDOW_SECONDS`` means the model has insisted that many times,
+    that fast, that it is done, paused, or blocked, and one more refusal
+    cannot teach it anything those did not.
+
+    ``stop_hook_active`` is deliberately NOT consulted. The harness sets it on
+    the stop FOLLOWING a block, so treating it as an allow makes the hook
+    block at most once per session and then permit every subsequent turn-end
+    -- inert in the only case the feature exists for. The valve at row 2 is
+    what prevents an infinite block loop; it and the disabled
+    ``CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`` are one change.
+
+    Every unknown resolves to ALLOW. A hook that raises takes out the
+    operator's turn; a hook that blocks on an unknown traps the session with
+    no way out. That includes the valve's own bookkeeping: malformed
+    ``block_times`` makes the record read as absent, which lands on row 1.
+
+    Row 3 is that rule applied to the act of blocking itself, and it is not
+    optional. The valve at row 2 opens on blocks that were RECORDED, so a
+    block issued when the record could not be written accumulates nothing
+    that could ever open it. With the harness's own block cap disabled,
+    nothing else bounds the loop: an unwritable state directory would refuse
+    every turn-end for the rest of the session, and the escape phrase would
+    be the operator's only way out of a session they never chose to trap. A
+    block that cannot be accounted for is therefore not issued.
+    """
+    session_id = data.get("session_id", "") or ""
+    if not isinstance(session_id, str) or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+
+    autonomous = _autonomous_module()
+    if autonomous is None:
+        return None
+
+    record = autonomous.read_autonomous_record(session_id)
+    if record is None:
+        return None
+
+    if _autonomous_thrash_valve_open(autonomous, record):
+        return None
+
+    if not _autonomous_block_is_accounted(autonomous, session_id):
+        return None
+
+    return {"decision": "block", "reason": _autonomous_block_reason(record)}
+
+
+def _autonomous_block_is_accounted(autonomous, session_id: str) -> bool:
+    """Whether this block was recorded, and so may be issued.
+
+    Every failure resolves to ``False`` -- ALLOW -- for the reason row 3 of
+    ``_handle_stop`` states: an unrecorded block can never open the valve
+    that is the only bound on the block loop.
+    """
+    try:
+        return autonomous.record_blocked_stop(session_id) is not None
+    except Exception:
+        return False
+
+
 def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
     """Route hook event to appropriate handler(s).
 
@@ -632,6 +880,18 @@ def dispatch(event_name: str, tool_name: str, data: dict) -> str | None:
         outputs = _handle_post_tool_use(tool_name, data)
     elif event_name == "UserPromptSubmit":
         outputs = _handle_user_prompt_submit(data)
+    elif event_name == "Stop":
+        # Like SessionStart, this returns a JSON decision rather than a list
+        # of strings. Wrapped so that no exception can escape to the caller:
+        # an unexpected failure here must ALLOW the stop, not raise.
+        try:
+            stop_payload = _handle_stop(data)
+        except Exception as exc:
+            _log_hook_error("handle_stop", "Stop", exc)
+            return None
+        if stop_payload is None:
+            return None
+        return json.dumps(stop_payload)
     elif event_name == "SessionStart":
         # SessionStart returns a dict or None directly (not a list).
         # Serialize to JSON here so the subprocess can print it.

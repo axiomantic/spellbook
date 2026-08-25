@@ -417,10 +417,17 @@ def _load_helper_module():
     sys.platform == "win32",
     reason="loads the agent2agent helper module which requires fcntl (POSIX-only)",
 )
+@pytest.mark.real_home
 def test_hook_helper_constants_in_sync():
     """The hook's name regex / session-id regex / default bus dir must
     exactly mirror the helper's. If one side drifts, the hook silently
     rejects names the helper accepts (or vice versa).
+
+    ``real_home`` because both sides are module-level constants derived from
+    ``Path.home()`` and the two modules are imported at DIFFERENT times: the
+    hook at collection, the helper inside this test body. Redirecting HOME
+    between those two moments makes the constants differ for a reason that
+    has nothing to do with the drift this test exists to catch.
     """
     helper = _load_helper_module()
     assert spellbook_hook._A2A_NAME_RE.pattern == helper._NAME_RE.pattern

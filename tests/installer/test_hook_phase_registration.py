@@ -1,0 +1,704 @@
+"""The installer's registered hook phases must agree with what ``dispatch()`` handles.
+
+This repository has drifted three times in the same direction. ``UserPromptSubmit``
+was handled, tested and documented as the always-on agent2agent notify floor, but
+never registered, so it never fired for anyone. ``Stop`` was handled and tested
+before it was registered. ``PreCompact`` was the inverse: registered, described in
+the module docstring, and handled nowhere; it is now unregistered.
+
+Every one of those is silent. A phase that is registered but unhandled produces no
+output, which is exactly what a correctly-working phase with nothing to say also
+produces. These tests turn that silence into a red test.
+
+The two sets must agree EXACTLY. There is no allowlist, deliberately: an allowlist
+is where the next drift would hide. A phase that needs an exemption to keep these
+tests green is a phase that is drifting.
+
+The handled set is derived from the SOURCE of ``dispatch()`` by AST, not from a
+literal list typed out here. A hand-maintained second list would be the same defect
+one level up: it would need updating by the same person who forgot to update the
+registration. AST introspection was chosen over refactoring ``dispatch()`` into a
+handler table because the branches do not share a return contract -- ``PreToolUse``
+and ``PostToolUse`` return lists of strings, ``Stop`` and ``SessionStart`` return
+serialized JSON decisions -- so a data-driven table would have to encode that
+difference and would change behavior in a file whose failure mode is "takes out the
+turn". Reading the branch conditions changes nothing at runtime.
+"""
+
+import ast
+import json
+from pathlib import Path
+
+import pytest
+
+from installer.components.hooks import (
+    HOOK_DEFINITIONS,
+    STOP_HOOK_BLOCK_CAP_KEY,
+    STOP_HOOK_BLOCK_CAP_VALUE,
+    _HOOK_PHASES,
+    _RETIRED_HOOK_PHASES,
+    _get_hook_path_for_platform,
+    install_hooks,
+    uninstall_hooks,
+)
+
+REPO_ROOT = Path(__file__).resolve().parents[2]
+HOOK_SOURCE = REPO_ROOT / "hooks" / "spellbook_hook.py"
+
+_NEW_PHASES = ("Stop", "UserPromptSubmit")
+_UNIFIED_COMMAND = (
+    "$SPELLBOOK_CONFIG_DIR/daemon-venv/bin/python "
+    "$SPELLBOOK_DIR/hooks/spellbook_hook.py"
+)
+# What install_hooks actually writes on THIS platform. On Windows the installer
+# rewrites the command to its PowerShell wrapper, so a rendered-settings
+# assertion against the Unix literal is asserting the wrong artifact. Derived
+# from the installer's own transformer rather than branched on sys.platform
+# here: a second copy of the rule in the test is the drift this file exists to
+# catch, one level up.
+_RENDERED_COMMAND = _get_hook_path_for_platform(_UNIFIED_COMMAND)
+
+
+def _dispatched_event_names() -> frozenset[str]:
+    """Event names ``dispatch()`` branches on, read from its own source.
+
+    The branch CONDITION is read; the branch BODY is not. A branch that
+    named a phase and then did nothing would be counted as handled, and
+    this file would demand a registration for a phase that produces
+    nothing. That direction is the safe one -- it over-reports handling,
+    never under-reports it -- and inspecting bodies would mean deciding
+    what "does something" is.
+    """
+    tree = ast.parse(HOOK_SOURCE.read_text(encoding="utf-8"))
+    dispatch = next(
+        node
+        for node in tree.body
+        if isinstance(node, ast.FunctionDef) and node.name == "dispatch"
+    )
+    names: set[str] = set()
+    for node in ast.walk(dispatch):
+        if not isinstance(node, ast.Compare):
+            continue
+        if not (isinstance(node.left, ast.Name) and node.left.id == "event_name"):
+            continue
+        for op, comparator in zip(node.ops, node.comparators):
+            if isinstance(op, ast.Eq) and isinstance(comparator, ast.Constant):
+                if isinstance(comparator.value, str):
+                    names.add(comparator.value)
+            elif isinstance(op, ast.In) and isinstance(
+                comparator, (ast.Tuple, ast.List, ast.Set)
+            ):
+                for elt in comparator.elts:
+                    if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+                        names.add(elt.value)
+    return frozenset(names)
+
+
+def test_ast_extraction_finds_the_known_branches():
+    """Guard the extractor itself: an empty result would make every check vacuous."""
+    handled = _dispatched_event_names()
+    assert {"PreToolUse", "PostToolUse", "SessionStart"} <= handled
+
+
+def test_every_handled_phase_is_registered():
+    missing = _dispatched_event_names() - set(HOOK_DEFINITIONS)
+    assert not missing, (
+        f"dispatch() handles {sorted(missing)} but installer/components/hooks.py "
+        "never registers those phases, so the handlers can never fire. "
+        "Add them to HOOK_DEFINITIONS."
+    )
+
+
+def test_every_registered_phase_is_handled():
+    unhandled = set(HOOK_DEFINITIONS) - _dispatched_event_names()
+    assert not unhandled, (
+        f"installer/components/hooks.py registers {sorted(unhandled)} but "
+        "dispatch() has no branch for them, so the events spawn a subprocess "
+        "and are silently discarded. Either handle the phase or unregister it "
+        "(see _RETIRED_HOOK_PHASES). Do not add an exemption here."
+    )
+
+
+def test_registered_and_handled_sets_are_identical():
+    """The whole point, stated once as a single equality."""
+    assert set(HOOK_DEFINITIONS) == set(_dispatched_event_names())
+
+
+def test_precompact_is_not_registered():
+    """PreCompact was registered for its whole life and handled never."""
+    assert "PreCompact" not in HOOK_DEFINITIONS
+    assert "PreCompact" not in _dispatched_event_names()
+    assert "PreCompact" in _RETIRED_HOOK_PHASES
+
+
+@pytest.mark.parametrize("phase", _NEW_PHASES)
+def test_new_phase_is_in_definitions_and_phase_list(phase):
+    assert phase in HOOK_DEFINITIONS
+    assert phase in _HOOK_PHASES
+
+
+@pytest.mark.parametrize("phase", _NEW_PHASES)
+def test_new_phase_blocks_and_omits_matcher(phase):
+    entries = HOOK_DEFINITIONS[phase]
+    assert len(entries) == 1
+    entry = entries[0]
+    assert "matcher" not in entry, "catch-all hooks omit matcher entirely"
+    assert len(entry["hooks"]) == 1
+    hook = entry["hooks"][0]
+    assert hook["type"] == "command"
+    assert hook["command"] == _UNIFIED_COMMAND
+    assert "async" not in hook, f"{phase} returns a decision and must block"
+    # A blocking phase's timeout is an upper bound on how long the operator
+    # waits at the end of every turn, so it stays bounded. Every one of these
+    # handlers reads local state and decides; none of them is sized against a
+    # spend that could outgrow this.
+    assert 0 < hook["timeout"] <= 10
+
+
+def test_install_renders_new_phases_into_settings(tmp_path):
+    """Verify the produced artifact, not install_hooks' return value."""
+    settings_path = tmp_path / "settings.json"
+    result = install_hooks(settings_path)
+    assert result.success
+
+    rendered = json.loads(settings_path.read_text(encoding="utf-8"))
+    for phase in _NEW_PHASES:
+        entries = rendered["hooks"][phase]
+        commands = [h["command"] for e in entries for h in e["hooks"]]
+        assert (
+            _RENDERED_COMMAND in commands
+        ), f"{phase} missing from rendered settings"
+
+
+def test_install_preserves_a_foreign_hook_in_a_new_phase(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    foreign = {"type": "command", "command": "/usr/local/bin/my-own-stop-hook"}
+    settings_path.write_text(
+        json.dumps({"hooks": {"Stop": [{"hooks": [foreign]}]}}), encoding="utf-8"
+    )
+
+    assert install_hooks(settings_path).success
+
+    rendered = json.loads(settings_path.read_text(encoding="utf-8"))
+    commands = [h["command"] for e in rendered["hooks"]["Stop"] for h in e["hooks"]]
+    assert foreign["command"] in commands
+    assert _RENDERED_COMMAND in commands
+
+
+def test_uninstall_removes_new_phases(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+
+    result = uninstall_hooks(settings_path)
+    assert result.success
+
+    rendered = json.loads(settings_path.read_text(encoding="utf-8"))
+    for phase in _NEW_PHASES:
+        entries = rendered["hooks"].get(phase, [])
+        commands = [h["command"] for e in entries for h in e["hooks"]]
+        assert _RENDERED_COMMAND not in commands, f"{phase} survived uninstall"
+
+
+# --- Retired phases: existing installs must be migrated, not stranded. -------
+
+def _precompact_settings(extra_hooks=()):
+    """A settings file as an already-installed operator's would look."""
+    entry = {"hooks": [{"type": "command", "command": _UNIFIED_COMMAND, "timeout": 5}]}
+    entry["hooks"].extend(extra_hooks)
+    return {
+        "existingUserKey": "preserved",
+        "hooks": {
+            "PreToolUse": [
+                {"hooks": [{"type": "command", "command": _UNIFIED_COMMAND}]}
+            ],
+            "PreCompact": [entry],
+        },
+    }
+
+
+def test_install_removes_a_real_precompact_entry(tmp_path):
+    """The load-bearing migration check: a fixture that ACTUALLY has the entry."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(json.dumps(_precompact_settings()), encoding="utf-8")
+
+    before = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert before["hooks"]["PreCompact"][0]["hooks"][0]["command"] == _UNIFIED_COMMAND
+
+    assert install_hooks(settings_path).success
+
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert "PreCompact" not in after["hooks"]
+    assert after["existingUserKey"] == "preserved"
+    assert "PreToolUse" in after["hooks"]
+
+
+def test_install_preserves_a_foreign_precompact_hook(tmp_path):
+    """An operator's own PreCompact hook is not spellbook's to remove."""
+    foreign = {"type": "command", "command": "/usr/local/bin/my-own-precompact"}
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps(_precompact_settings(extra_hooks=[foreign])), encoding="utf-8"
+    )
+
+    assert install_hooks(settings_path).success
+
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    commands = [h["command"] for e in after["hooks"]["PreCompact"] for h in e["hooks"]]
+    assert commands == [foreign["command"]]
+
+
+def test_install_is_idempotent_on_a_machine_that_never_had_precompact(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+    first = settings_path.read_text(encoding="utf-8")
+    assert "PreCompact" not in json.loads(first)["hooks"]
+
+    assert install_hooks(settings_path).success
+    assert settings_path.read_text(encoding="utf-8") == first
+
+
+def test_uninstall_removes_a_retired_phase_entry(tmp_path):
+    """uninstall iterates _HOOK_PHASES, which no longer lists PreCompact."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(json.dumps(_precompact_settings()), encoding="utf-8")
+
+    result = uninstall_hooks(settings_path)
+    assert result.success
+
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert "PreCompact" not in after["hooks"]
+
+
+def test_uninstall_finds_hooks_when_only_a_retired_phase_remains(tmp_path):
+    """Without the retired phases in the discovery scan this would report
+    'no spellbook hooks found' and leave the entry behind."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps(
+            {
+                "hooks": {
+                    "PreCompact": [
+                        {"hooks": [{"type": "command", "command": _UNIFIED_COMMAND}]}
+                    ]
+                }
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    result = uninstall_hooks(settings_path)
+    assert result.success
+    assert result.action == "removed"
+
+    after = json.loads(settings_path.read_text(encoding="utf-8"))
+    assert "PreCompact" not in after["hooks"]
+
+
+# --- The harness block cap: the other half of the Stop hook. -----------------
+#
+# The Stop hook blocks repeatedly and bounds itself with a rolling-window
+# valve. Claude Code's own CLAUDE_CODE_STOP_HOOK_BLOCK_CAP would otherwise cut
+# that short after eight consecutive blocks. Every assertion below reads the
+# RENDERED settings file back from a temp path; none reads an exit code, and
+# none touches the operator's real ~/.claude/settings.json.
+
+
+def _rendered(settings_path):
+    return json.loads(settings_path.read_text(encoding="utf-8"))
+
+
+def test_install_writes_the_disabled_block_cap_into_env(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+
+    env = _rendered(settings_path)["env"]
+    assert env[STOP_HOOK_BLOCK_CAP_KEY] == STOP_HOOK_BLOCK_CAP_VALUE
+    assert STOP_HOOK_BLOCK_CAP_VALUE == "0", "the documented disable value"
+
+
+def test_install_preserves_foreign_env_entries(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {"MY_OWN_VAR": "keep me"}}), encoding="utf-8"
+    )
+    assert install_hooks(settings_path).success
+
+    env = _rendered(settings_path)["env"]
+    assert env["MY_OWN_VAR"] == "keep me"
+    assert env[STOP_HOOK_BLOCK_CAP_KEY] == STOP_HOOK_BLOCK_CAP_VALUE
+
+
+def test_install_writes_the_cap_when_the_key_is_absent(tmp_path):
+    """Absent means spellbook owns it: without the key the harness caps the hook."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(json.dumps({"env": {}}), encoding="utf-8")
+
+    result = install_hooks(settings_path)
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == (
+        STOP_HOOK_BLOCK_CAP_VALUE
+    )
+    assert STOP_HOOK_BLOCK_CAP_KEY not in result.message, "nothing to report"
+
+
+def test_install_over_its_own_value_is_a_no_op(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: STOP_HOOK_BLOCK_CAP_VALUE}}),
+        encoding="utf-8",
+    )
+
+    result = install_hooks(settings_path)
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == (
+        STOP_HOOK_BLOCK_CAP_VALUE
+    )
+    assert STOP_HOOK_BLOCK_CAP_KEY not in result.message, "nothing to report"
+
+
+def test_install_does_not_stomp_an_operator_chosen_cap(tmp_path):
+    """Install must respect the value uninstall is careful to preserve."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: "5"}}), encoding="utf-8"
+    )
+
+    assert install_hooks(settings_path).success
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == "5"
+
+
+def test_install_reports_a_preserved_cap_to_the_operator(tmp_path):
+    """A silently capped autonomous mode is the failure shape; say it out loud."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: "5"}}), encoding="utf-8"
+    )
+
+    message = install_hooks(settings_path).message
+
+    assert STOP_HOOK_BLOCK_CAP_KEY in message
+    assert "5" in message
+    assert STOP_HOOK_BLOCK_CAP_VALUE in message, "and how to lift it"
+
+
+def test_uninstall_removes_the_block_cap_entry(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+    assert STOP_HOOK_BLOCK_CAP_KEY in _rendered(settings_path)["env"]
+
+    assert uninstall_hooks(settings_path).success
+
+    rendered = _rendered(settings_path)
+    assert STOP_HOOK_BLOCK_CAP_KEY not in rendered.get("env", {})
+    assert "env" not in rendered, "an emptied env object leaves no residue"
+
+
+def test_uninstall_leaves_foreign_env_entries_alone(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {"MY_OWN_VAR": "keep me"}}), encoding="utf-8"
+    )
+    assert install_hooks(settings_path).success
+    assert uninstall_hooks(settings_path).success
+
+    env = _rendered(settings_path)["env"]
+    assert env == {"MY_OWN_VAR": "keep me"}
+
+
+def test_uninstall_does_not_revert_an_operator_chosen_cap(tmp_path):
+    """A value spellbook did not write belongs to the operator."""
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+    rendered = _rendered(settings_path)
+    rendered["env"][STOP_HOOK_BLOCK_CAP_KEY] = "5"
+    settings_path.write_text(json.dumps(rendered), encoding="utf-8")
+
+    assert uninstall_hooks(settings_path).success
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == "5"
+
+
+def test_uninstall_clears_the_env_entry_when_no_hooks_remain(tmp_path):
+    """A settings file holding only the env entry must not be reported unchanged."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: STOP_HOOK_BLOCK_CAP_VALUE}}),
+        encoding="utf-8",
+    )
+
+    assert uninstall_hooks(settings_path).success
+
+    assert STOP_HOOK_BLOCK_CAP_KEY not in _rendered(settings_path).get("env", {})
+
+
+def test_install_is_idempotent_for_env(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+    first = _rendered(settings_path)["env"]
+    assert install_hooks(settings_path).success
+    assert _rendered(settings_path)["env"] == first
+
+
+# ---- the block cap arrives as JSON, not as a string -----------------------
+#
+# Spellbook writes the cap as the string "0" because the harness reads the env
+# block as strings, but a settings file is JSON and an operator editing it by
+# hand types ``0``, not ``"0"``. Both mean the same thing to the harness, so
+# both must mean the same thing here. A comparison that missed the integer
+# reported a PRESERVED cap for a cap the operator had already disabled -- and
+# the operator-facing message, not the settings file, is where that lands:
+# it tells them autonomous mode stops after 0 consecutive blocks, which is the
+# opposite of what 0 does. Each case below is pinned on BOTH the rendered
+# settings and the message for that reason.
+
+
+@pytest.mark.parametrize("written", [0, "0"], ids=["json-integer", "json-string"])
+def test_a_disabled_cap_is_recognized_whatever_json_type_it_arrived_as(
+    tmp_path, written
+):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: written}}), encoding="utf-8"
+    )
+
+    result = install_hooks(settings_path)
+
+    assert result.success
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == (
+        STOP_HOOK_BLOCK_CAP_VALUE
+    )
+    assert STOP_HOOK_BLOCK_CAP_KEY not in result.message, (
+        "nothing was preserved, so nothing may be reported -- a notice here "
+        "tells the operator their cap is enforced when it is disabled"
+    )
+
+
+@pytest.mark.parametrize("written", [5, "5"], ids=["json-integer", "json-string"])
+def test_an_operator_cap_is_preserved_and_reported_whatever_json_type_it_is(
+    tmp_path, written
+):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: written}}), encoding="utf-8"
+    )
+
+    result = install_hooks(settings_path)
+
+    assert result.success
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == written
+    assert STOP_HOOK_BLOCK_CAP_KEY in result.message
+    assert "5" in result.message
+    assert STOP_HOOK_BLOCK_CAP_VALUE in result.message, "and how to lift it"
+
+
+def test_a_cap_that_is_neither_an_int_nor_a_string_is_left_alone(tmp_path):
+    """Junk is not spellbook's value, so it is preserved and reported.
+
+    The equivalence must not stretch to values that are genuinely different.
+    A list has no cap meaning at all; overwriting it would destroy something
+    the operator wrote, and treating it as the disabled value would silently
+    claim a cap was lifted that never existed.
+    """
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: ["nonsense"]}}), encoding="utf-8"
+    )
+
+    result = install_hooks(settings_path)
+
+    assert result.success
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == ["nonsense"]
+    assert STOP_HOOK_BLOCK_CAP_KEY in result.message
+
+
+def test_a_boolean_cap_is_not_read_as_a_number(tmp_path):
+    """``bool`` is an ``int`` subclass in Python and is not a cap anywhere.
+
+    Pinned because the int equivalence this file exists for is what makes the
+    question arise at all. It holds without a special case only as long as
+    canonicalization goes through ``str``; a future one built on ``int``
+    would fold ``false`` onto the disabled value and silently overwrite it.
+    """
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: False}}), encoding="utf-8"
+    )
+
+    result = install_hooks(settings_path)
+
+    assert result.success
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] is False
+    assert STOP_HOOK_BLOCK_CAP_KEY in result.message
+
+
+def test_uninstall_removes_a_disabled_cap_written_as_a_json_integer(tmp_path):
+    """Install and uninstall must agree on what spellbook's own value IS.
+
+    If install recognizes the integer and uninstall does not, uninstall leaves
+    the key behind -- residue that a later install would then read back and
+    report as an operator's cap.
+    """
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+    rendered = _rendered(settings_path)
+    rendered["env"][STOP_HOOK_BLOCK_CAP_KEY] = 0
+    settings_path.write_text(json.dumps(rendered), encoding="utf-8")
+
+    assert uninstall_hooks(settings_path).success
+
+    assert STOP_HOOK_BLOCK_CAP_KEY not in _rendered(settings_path).get("env", {})
+
+
+def test_uninstall_does_not_revert_an_operator_cap_written_as_a_json_integer(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    assert install_hooks(settings_path).success
+    rendered = _rendered(settings_path)
+    rendered["env"][STOP_HOOK_BLOCK_CAP_KEY] = 5
+    settings_path.write_text(json.dumps(rendered), encoding="utf-8")
+
+    assert uninstall_hooks(settings_path).success
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == 5
+
+
+# ---- an operator's own entry is not rewritten ------------------------------
+#
+# This branch newly routes Stop, UserPromptSubmit and PreCompact through
+# _clean_hooks_for_phase, so an operator's existing entry on those phases is
+# rewritten on the first install after upgrading. Stop is the phase that
+# gates turn-end: flipping it from async to blocking, or dropping its
+# timeout, changes when their own hook runs and what happens if it hangs.
+
+
+def _foreign_stop_entry():
+    """A foreign Stop entry carrying entry-level fields spellbook does not set.
+
+    No ``matcher``: Stop entries are catch-all, and a legacy ``"*"`` matcher
+    is deliberately migrated to the omitted-key form by
+    ``_merge_hooks_for_phase``. That migration is not what these tests are
+    about, and including it would make them assert two rules at once.
+    """
+    return {
+        "async": True,
+        "timeout": 45,
+        "hooks": [{"type": "command", "command": "/usr/local/bin/mine"}],
+    }
+
+
+def test_install_keeps_every_field_of_a_foreign_stop_entry(tmp_path):
+    """``async`` and ``timeout`` survive, not just the two keys a rebuild kept.
+
+    On this phase they decide whether the operator's own turn-end hook runs
+    blocking or async, and what happens when it hangs. Losing them is a
+    silent behaviour change on the gate this branch newly routes through the
+    cleanup path.
+    """
+    settings_path = tmp_path / "settings.json"
+    before = _foreign_stop_entry()
+    settings_path.write_text(
+        json.dumps({"hooks": {"Stop": [dict(before)]}}), encoding="utf-8"
+    )
+    assert install_hooks(settings_path).success
+
+    entries = _rendered(settings_path)["hooks"]["Stop"]
+    holders = [
+        e
+        for e in entries
+        if any(h.get("command") == "/usr/local/bin/mine" for h in e["hooks"])
+    ]
+    assert len(holders) == 1
+    assert holders[0]["async"] is True
+    assert holders[0]["timeout"] == 45
+
+
+def test_uninstall_leaves_a_foreign_stop_entry_byte_identical(tmp_path):
+    """The install/uninstall pair must agree about what it does not own."""
+    settings_path = tmp_path / "settings.json"
+    before = _foreign_stop_entry()
+    settings_path.write_text(
+        json.dumps({"hooks": {"Stop": [dict(before)]}}), encoding="utf-8"
+    )
+    assert install_hooks(settings_path).success
+    assert uninstall_hooks(settings_path).success
+
+    assert _rendered(settings_path)["hooks"]["Stop"] == [before]
+
+
+def test_the_retired_phase_migration_reports_only_real_removals(tmp_path):
+    """``cleaned == entries`` must mean "nothing was REMOVED".
+
+    A settings file whose only hook on a retired phase belongs to the
+    operator reported a migration that removed a spellbook hook that was
+    never there. The rebuild made every entry compare unequal to itself, so
+    the equality detected NORMALIZATION rather than removal.
+    """
+    from installer.components.hooks import _remove_retired_phases
+
+    retired = _RETIRED_HOOK_PHASES[0]
+    foreign = {
+        "matcher": "*",
+        "async": True,
+        "timeout": 45,
+        "hooks": [{"type": "command", "command": "/usr/local/bin/mine"}],
+    }
+    settings = {"hooks": {retired: [dict(foreign)]}}
+    assert _remove_retired_phases(settings) == []
+    assert settings["hooks"][retired] == [foreign]
+
+
+def test_the_retired_phase_migration_still_reports_a_real_removal(tmp_path):
+    """The negative above is only evidence if the positive still fires."""
+    from installer.components.hooks import _remove_retired_phases
+
+    retired = _RETIRED_HOOK_PHASES[0]
+    settings = {
+        "hooks": {
+            retired: [
+                {"hooks": [{"type": "command", "command": _UNIFIED_COMMAND}]}
+            ]
+        }
+    }
+    assert _remove_retired_phases(settings) == [retired]
+    assert retired not in settings["hooks"]
+
+
+# ---- the block-cap notice must contain a number when it claims one ---------
+
+
+def test_a_malformed_env_is_left_alone_and_reported(tmp_path):
+    """Replacing it would discard every variable in it to install one key."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(json.dumps({"env": ["not", "an", "object"]}), encoding="utf-8")
+    result = install_hooks(settings_path)
+    assert result.success
+
+    assert _rendered(settings_path)["env"] == ["not", "an", "object"]
+    assert "left your" in result.message
+    assert STOP_HOOK_BLOCK_CAP_KEY in result.message
+
+
+def test_a_non_numeric_operator_cap_does_not_say_that_many(tmp_path):
+    """"that many consecutive blocks" needs the value to BE a number."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: ["nonsense"]}}), encoding="utf-8"
+    )
+    result = install_hooks(settings_path)
+    assert result.success
+
+    assert "kept your" in result.message
+    assert "cannot read that as a number" in result.message
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == ["nonsense"]
+
+
+def test_a_numeric_operator_cap_still_names_the_value(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: "5"}}), encoding="utf-8"
+    )
+    result = install_hooks(settings_path)
+    assert result.success
+
+    assert f"{STOP_HOOK_BLOCK_CAP_KEY}=5" in result.message
+    assert "that many consecutive blocks" in result.message
