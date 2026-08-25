@@ -67,6 +67,7 @@
 - [Development](#development)
   - [Serve Documentation Locally](#serve-documentation-locally)
   - [Run MCP Server Directly](#run-mcp-server-directly)
+- [Research backing](#research-backing)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
 - [Acknowledgments](#acknowledgments)
@@ -956,6 +957,18 @@ claude mcp add --transport http spellbook http://127.0.0.1:8765/mcp
 ```
 
 This runs a single MCP server instance that all sessions connect to via HTTP.
+
+## Research backing
+
+Spellbook's ceremonies grew from practice, not from the literature — but independent research supports many of them. Where that research is real and on point:
+
+- **The "green mirage" — tests that pass without verifying behavior.** Spellbook's green-mirage audit asks of every test, *would this fail if the code were broken?* This is the coding face of *reward hacking* / *specification gaming*, a documented failure mode where an agent satisfies the literal metric without the intended outcome (Amodei et al., *Concrete Problems in AI Safety*, arXiv:1606.06565; Krakovna et al., DeepMind, *Specification gaming*, 2020). It's not hypothetical: an audit found a material share of SWE-bench patches pass their tests yet are wrong or incomplete (*SWE-Bench+*, arXiv:2410.06992 — 9.26% incorrect / 5.56% incomplete on Lite; 12.5% / 9.82% on Verified), and mutation analysis found 77% of SWE-bench Verified instances admit a surviving mutant (arXiv:2604.01518).
+- **Mutation as the measure of a test's strength.** Spellbook's TDD rule — every assertion names the mutation it kills, and no check counts until it has gone red on deliberately broken code — is mutation testing, established since the late 1970s (DeMillo, Lipton & Sayward, 1978; framework: Stryker). A test that still passes when the code is broken proves nothing.
+- **Constrained beats unconstrained autonomy.** Spellbook runs one orchestrator dispatching narrowly-scoped subagents, each with only its local context, the reviewer never the author. Research finds unconstrained multi-turn autonomy amplifies early mistakes (*Agentless*, arXiv:2407.01489, FSE'25) and that hierarchical orchestration with per-subagent context isolation manages exactly this (*BOAD*, arXiv:2512.23631; *Confucius Code Agent*, arXiv:2512.10398).
+- **Granularity at the acceptance boundary.** Spellbook's plan skills collapse work items that are only jointly acceptable, resisting over-decomposition — consistent with the Agentless finding that excess decomposition inflates context and compounds error (arXiv:2407.01489).
+- **Specification before code.** Spellbook's design-doc → plan → TDD flow, its discovery/clarify pass, and its loading of project governance (AGENTS.md) as binding constraints parallel spec-driven development — an executable contract before code, a "constitution" of principles, a clarify step that interrogates the spec before building (*Spec-Driven Development*, arXiv:2602.00180; GitHub Spec Kit). This part of the literature *argues* the case rather than measuring it.
+
+Full bibliography: [Research Citations](docs/reference/citations.md).
 
 ## Documentation
 

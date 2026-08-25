@@ -182,6 +182,8 @@ Any changes to shell scripts (`.sh` files in `hooks/`, `scripts/`, or elsewhere)
 
 **Commands**: Create `commands/<name>.md` with `description` frontmatter. Hooks generate docs.
 
+Regenerating the `docs/` mirror is a required, normal part of any change to `skills/`, `commands/`, `agents/`, or `rules/` — not scope creep. After such an edit, run `uv run scripts/generate_docs.py` and commit the regenerated `docs/` pages in the SAME commit as the source. The blocking `generate-docs` pre-commit hook checks freshness, so a commit that omits the regenerated pages fails; the extra generated files are the deterministic product of your source change, never an out-of-scope addition.
+
 ## Adding Config Options
 
 <CRITICAL>

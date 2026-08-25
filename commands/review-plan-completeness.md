@@ -31,6 +31,64 @@ If YES, verify:
 If NO/PARTIAL: [what acceptance criteria must be added]
 ```
 
+### Cluster Collapse Check (work-item granularity)
+
+A candidate cluster is items linked by `Depends:` edges, a shared deliverable, or
+an overlapping file union; apply the per-item revert test within each candidate.
+Joint acceptance remains the actual decider.
+
+Apply the revert test PER ITEM: is THIS item independently acceptable — does its
+own MEANINGFUL, behavior-level `Check:` pass with ALL other candidate items
+reverted? An item that is NOT independently acceptable must share a work item with
+the sibling(s) it MUTUALLY requires — each fails the revert test because of the
+other. Take the MAXIMAL set of such
+mutually-dependent-for-acceptance items: flag that set as a decomposition finding
+and recommend collapsing it into ONE work item with a single joint `Check:`.
+Items that ARE independently acceptable stay separate, even when adjacent to a
+joint set — a cluster of one independent item plus a jointly-acceptable pair
+splits into the joint pair (flag to collapse) and the independent item (leave
+alone). Do NOT require that NONE be independent before flagging; a mixed cluster
+still has a joint subset to collapse.
+
+A behavior-level `Check:` asserts an observable OUTPUT VALUE for a specified
+input, or an observable state change. Checks that only assert
+existence/importability/type/attribute-presence, a constant equality, an internal
+count or length, or echo back a hard-coded literal are NOT behavior-level — they
+pass with siblings reverted while proving no behavior, so they do not make a
+member independently acceptable.
+
+```
+Candidate cluster: [member item names]
+Per item — independently acceptable (MEANINGFUL behavior-level Check passes with all others reverted): item: YES/NO ...
+Maximal mutually-dependent-for-acceptance subset: [members] -> DECOMPOSITION FINDING, collapse into one work item with one joint Check
+Independently-acceptable members: [members] -> leave separate
+```
+
+Negative controls (must NOT be flagged):
+- Items that merely share a file but each carry an independent, behavior-level
+  `Check:`. The signal is joint acceptance, not shared files or shared setup.
+- Items linked by a one-directional `Depends:` PREREQUISITE edge where the
+  downstream check needs the upstream merely PRESENT/available at runtime (e.g., a
+  DB migration behind a GET endpoint whose check exercises the endpoint's
+  behavior). The upstream is a separate DELIVERABLE — keep them separate. The
+  upstream's own check being weak is a SEPARATE concern, out of scope for this
+  lint; do not turn it into a collapse.
+
+  This carve-out does NOT apply — the pair IS joint and MUST be flagged to
+  collapse — when the downstream check's CORRECTNESS is co-produced by the
+  upstream: round-trip, encode/decode, or any "two halves of one contract" shape
+  (e.g., `serialize` upstream, `deserialize` downstream whose check asserts
+  round-trip equality). The deciding question is what the downstream check
+  verifies: does it verify ONE deliverable's own behavior (the upstream is a
+  separate deliverable it merely relies on being available → prerequisite, keep
+  separate), or the CONJOINED behavior of both (neither's behavior is observable
+  without the other → joint, collapse)?
+
+Severity: Important (should fix) — a mis-decomposed cluster produces work items
+that cannot be verified or executed independently. This is a prose instrument the
+reviewer applies by judgment; there is no mechanical backstop, consistent with
+the other checks in this command.
+
 ## Risk Assessment per Phase
 
 ```
