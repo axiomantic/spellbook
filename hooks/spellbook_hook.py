@@ -666,9 +666,6 @@ def _prompt_requests_autonomous_escape(prompt: object) -> bool:
 def _autonomous_escape(data: dict) -> str | None:
     """Clear the autonomous record when the prompt asks for the exit.
 
-    NOTE: ``UserPromptSubmit`` is not registered by the installer, so this
-    handler does not fire in a real session until Task 6 wires the event.
-
     Returns a confirmation to inject, or ``None`` when nothing was cleared --
     including when no record existed, so a prompt that merely mentions the
     phrase outside autonomous mode says nothing.
@@ -864,8 +861,8 @@ def _handle_stop(data: dict) -> dict | None:
     an infinite block loop instead is the valve at row 4: three blocks inside
     ``BLOCK_WINDOW_SECONDS`` is thrashing, and further blocking cannot help.
     The valve and the disabled ``CLAUDE_CODE_STOP_HOOK_BLOCK_CAP`` are one
-    change; with the harness cap still at 8 the valve would rarely fire, and
-    with the cap disabled the valve is the only loop stop there is.
+    change; while the harness cap stands the valve would rarely fire, and with
+    the cap disabled the valve is the only loop stop there is.
 
     Every unknown resolves to ALLOW. A hook that raises takes out the
     operator's turn; a hook that blocks on an unknown traps the session with

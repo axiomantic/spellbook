@@ -582,18 +582,33 @@ STOP_HOOK_BLOCK_CAP_KEY = "CLAUDE_CODE_STOP_HOOK_BLOCK_CAP"
 STOP_HOOK_BLOCK_CAP_VALUE = "0"
 
 
-def _install_managed_env(settings: Dict) -> None:
+def _install_managed_env(settings: Dict) -> Optional[str]:
     """Write the spellbook-owned entries into the settings ``env`` block.
+
+    A cap the operator set to some other value is theirs, and install leaves it
+    exactly as ``_remove_managed_env`` does on the way out: the two paths have
+    to agree, or an install would silently undo a deliberate setting that
+    uninstall was careful to protect. But a preserved cap means autonomous mode
+    stops being enforced after that many consecutive blocks, so the value is
+    returned for the caller to report rather than swallowed.
 
     Other ``env`` entries are left untouched, and an existing ``env`` that is
     not an object is replaced rather than crashed on -- the same tolerance
     the hook phases get.
+
+    Returns the operator's value when one was preserved, else None.
     """
     env = settings.get("env")
     if not isinstance(env, dict):
         env = {}
-    env[STOP_HOOK_BLOCK_CAP_KEY] = STOP_HOOK_BLOCK_CAP_VALUE
+    existing = env.get(STOP_HOOK_BLOCK_CAP_KEY)
+    preserved: Optional[str] = None
+    if existing is None or existing == STOP_HOOK_BLOCK_CAP_VALUE:
+        env[STOP_HOOK_BLOCK_CAP_KEY] = STOP_HOOK_BLOCK_CAP_VALUE
+    else:
+        preserved = str(existing)
     settings["env"] = env
+    return preserved
 
 
 def _remove_managed_env(settings: Dict) -> bool:
@@ -714,17 +729,27 @@ def install_hooks(
     # The Stop hook and the disabled harness block cap are one change: with the
     # cap at its default the hook's own valve would rarely be what ends a block
     # loop, and the cap alone would cut enforcement short at an arbitrary count.
-    _install_managed_env(settings)
+    preserved_cap = _install_managed_env(settings)
 
     # Write back atomically (Windows transient-error retry on os.replace).
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     atomic_write_json(str(settings_path), settings)
 
+    message = f"hooks: security hooks registered in {settings_path.name}"
+    if preserved_cap is not None:
+        cap_notice = (
+            f"kept your {STOP_HOOK_BLOCK_CAP_KEY}={preserved_cap}; autonomous mode "
+            f"stops being enforced after that many consecutive blocks. Set it to "
+            f"{STOP_HOOK_BLOCK_CAP_VALUE} to lift the cap."
+        )
+        logger.warning("%s", cap_notice)
+        message = f"{message} ({cap_notice})"
+
     return HookResult(
         component="hooks",
         success=True,
         action="installed",
-        message=f"hooks: security hooks registered in {settings_path.name}",
+        message=message,
     )
 
 

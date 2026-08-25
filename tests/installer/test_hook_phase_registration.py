@@ -316,6 +316,60 @@ def test_install_preserves_foreign_env_entries(tmp_path):
     assert env[STOP_HOOK_BLOCK_CAP_KEY] == STOP_HOOK_BLOCK_CAP_VALUE
 
 
+def test_install_writes_the_cap_when_the_key_is_absent(tmp_path):
+    """Absent means spellbook owns it: without the key the harness caps the hook."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(json.dumps({"env": {}}), encoding="utf-8")
+
+    result = install_hooks(settings_path)
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == (
+        STOP_HOOK_BLOCK_CAP_VALUE
+    )
+    assert STOP_HOOK_BLOCK_CAP_KEY not in result.message, "nothing to report"
+
+
+def test_install_over_its_own_value_is_a_no_op(tmp_path):
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: STOP_HOOK_BLOCK_CAP_VALUE}}),
+        encoding="utf-8",
+    )
+
+    result = install_hooks(settings_path)
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == (
+        STOP_HOOK_BLOCK_CAP_VALUE
+    )
+    assert STOP_HOOK_BLOCK_CAP_KEY not in result.message, "nothing to report"
+
+
+def test_install_does_not_stomp_an_operator_chosen_cap(tmp_path):
+    """Install must respect the value uninstall is careful to preserve."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: "5"}}), encoding="utf-8"
+    )
+
+    assert install_hooks(settings_path).success
+
+    assert _rendered(settings_path)["env"][STOP_HOOK_BLOCK_CAP_KEY] == "5"
+
+
+def test_install_reports_a_preserved_cap_to_the_operator(tmp_path):
+    """A silently capped autonomous mode is the failure shape; say it out loud."""
+    settings_path = tmp_path / "settings.json"
+    settings_path.write_text(
+        json.dumps({"env": {STOP_HOOK_BLOCK_CAP_KEY: "5"}}), encoding="utf-8"
+    )
+
+    message = install_hooks(settings_path).message
+
+    assert STOP_HOOK_BLOCK_CAP_KEY in message
+    assert "5" in message
+    assert STOP_HOOK_BLOCK_CAP_VALUE in message, "and how to lift it"
+
+
 def test_uninstall_removes_the_block_cap_entry(tmp_path):
     settings_path = tmp_path / "settings.json"
     assert install_hooks(settings_path).success
