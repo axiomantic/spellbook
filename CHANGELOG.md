@@ -53,6 +53,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   record with the philosophy that was active at the moment each was made, copied in
   rather than joined later -- the active philosophy can change mid-session, and a
   late join would reattribute every earlier decision to whatever was chosen last.
+- A joint-acceptance work-item granularity rule in the plan skills. `writing-plans`
+  gains a "Work-Item Granularity (Revert Test)": work is not split below its
+  joint-acceptance boundary -- a cluster whose members have no meaningful,
+  behavior-level `Check:` when their siblings are reverted is one work item, not
+  several. `review-plan-completeness` gains a mirrored "Cluster Collapse Check" as a
+  backstop. The rule is un-gated across every `task_granularity` mode, anchors
+  strictly on joint acceptance rather than on shared files, shared setup, or size,
+  and distinguishes a joint deliverable -- members that only earn a check together
+  -- from a layered `Depends:` prerequisite, which keeps its own check and stays a
+  separate item.
+- A "Research backing" section in the README and an expanded
+  `docs/reference/citations.md`, documenting where independent research supports
+  spellbook's existing ceremonies: green-mirage and reward-hacking, mutation as a
+  measure of check strength, constrained orchestration, acceptance-boundary
+  granularity, and spec-before-code. The ceremonies were not derived from the
+  research; the citations record that the two converged.
+- An AGENTS.md note clarifying that regenerating the `docs/` mirror is required,
+  normal work rather than scope creep, and is enforced by the `generate-docs`
+  pre-commit hook -- so a diff that touches source and its regenerated mirror
+  together is expected, not a sign the change overreached.
 
 ### Fixed
 
