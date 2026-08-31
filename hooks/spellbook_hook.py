@@ -393,6 +393,17 @@ def _handle_user_prompt_submit(data: dict) -> list[str]:
         # the Stop handler runs under.
         _log_hook_error("autonomous_escape", "UserPromptSubmit", e)
 
+    # Entry runs AFTER the escape and skips when a record already exists, so a
+    # prompt carrying both phrases exits rather than re-enters: the escape
+    # clears the record, and the entry's own existence check then sees none
+    # only if the operator also asked to enter, which they did not.
+    try:
+        entered = _autonomous_entry(data)
+        if entered:
+            outputs.append(entered)
+    except Exception as e:
+        _log_hook_error("autonomous_entry", "UserPromptSubmit", e)
+
     try:
         out = _agent2agent_notify_for_prompt(data)
         if out:
@@ -648,6 +659,39 @@ def _handle_session_start(data: dict) -> dict | None:
 # escape hatch drift, and the copy that drifts is the one nobody tests.
 AUTONOMOUS_ESCAPE_PHRASES = ("stop autonomous", "exit autonomous mode")
 
+# The ENTRY is a mirror of the escape, and it exists because the entry gate it
+# replaces was a step the agent had to REMEMBER. An unwired autonomous mode
+# looks exactly like a wired one from the transcript: the agent behaves
+# autonomously either way, and only the record decides whether `Stop` refuses
+# a turn-end. Observed: an operator asked for autonomous mode twice in one
+# session, the agent never wrote the record, and the hook allowed every
+# turn-end it exists to refuse.
+#
+# So the recognizer runs before the agent sees the prompt, and writes the
+# record itself. The phrases are ordered longest-first only for readability;
+# the match is a plain case-insensitive substring, decidable by reading the
+# string, with no inference about intent and no synonyms -- the same
+# discipline the escape carries, for the same reason.
+AUTONOMOUS_ENTRY_PHRASES = (
+    "work autonomously",
+    "working autonomously",
+    "continue autonomously",
+    "proceed autonomously",
+    "run autonomously",
+    "keep working autonomously",
+    "autonomous mode on",
+    "enter autonomous mode",
+    "go autonomous",
+)
+
+
+def _prompt_requests_autonomous_entry(prompt: object) -> bool:
+    """Whether ``prompt`` contains a literal entry phrase."""
+    if not isinstance(prompt, str):
+        return False
+    lowered = prompt.lower()
+    return any(phrase in lowered for phrase in AUTONOMOUS_ENTRY_PHRASES)
+
 
 def _prompt_requests_autonomous_escape(prompt: object) -> bool:
     """Whether ``prompt`` contains a literal escape phrase.
@@ -706,6 +750,97 @@ def _autonomous_escape(data: dict) -> str | None:
         "Autonomous mode CLEARED for this session by operator escape phrase. "
         "The Stop hook no longer blocks the end of a turn."
     )
+
+
+def _autonomous_entry(data: dict) -> str | None:
+    """Write the autonomous record when the prompt asks for the mode.
+
+    Returns a confirmation to inject, a FAILURE notice, or ``None`` when the
+    prompt does not ask or a record already exists (re-asking is a no-op, not
+    a reset -- a second "keep working autonomously" must not zero the block
+    counters the valve reads).
+
+    The record is written HERE rather than by the agent, and that inversion is
+    the whole point. The skill's gate asked the operator two questions and
+    then wrote the record; every step in front of the write was a step the
+    agent could skip, and skipping it was invisible, because an agent
+    behaving autonomously without a record is indistinguishable from one with
+    it until a turn ends and nothing refuses. Defaults are used so that no
+    answer is a precondition for the mode existing; the agent may refine them
+    afterwards through the helper, against a record that is already live.
+
+    When the write does not land, this returns a FAILURE notice rather than
+    the confirmation, for the escape's reason inverted: telling the operator
+    the mode is ON while the record is absent hands them a guarantee nothing
+    is holding.
+    """
+    if not _prompt_requests_autonomous_entry(data.get("prompt")):
+        return None
+
+    # A prompt carrying BOTH phrases exits. The escape ran first and cleared
+    # the record, so the existence check below would see none and re-enter --
+    # trapping the operator in the mode they just asked to leave. The exit is
+    # a last resort and wins outright.
+    if _prompt_requests_autonomous_escape(data.get("prompt")):
+        return None
+
+    session_id = data.get("session_id", "") or ""
+    if not isinstance(session_id, str) or not _A2A_SESSION_ID_RE.match(session_id):
+        return None
+
+    autonomous = _autonomous_module()
+    if autonomous is None:
+        return None
+    if autonomous.read_autonomous_record(session_id) is not None:
+        return None
+
+    prompt = data.get("prompt", "")
+    goal = prompt.strip() if isinstance(prompt, str) else ""
+    if not goal:
+        return None
+
+    try:
+        written = autonomous.write_autonomous_record(
+            session_id,
+            mode="fully",
+            philosophy="build-right",
+            goal=goal,
+            set_at=_utc_now_iso(),
+        )
+    except Exception as e:
+        _log_hook_error("autonomous_entry_write", "UserPromptSubmit", e)
+        written = False
+
+    # The verdict is the artifact, not the call's return value: read it back.
+    if not written or autonomous.read_autonomous_record(session_id) is None:
+        return (
+            "Autonomous mode COULD NOT BE ENABLED: the record for this session "
+            "was not written, so the Stop hook will NOT refuse a turn-end and "
+            "the mode is off however this session behaves. This is a "
+            "filesystem or validation fault, not a refusal of the phrase. The "
+            "record belongs at "
+            f"{_autonomous_record_path_for_message(autonomous, session_id)} "
+            "(check its directory's permissions and free space). Do not report "
+            "the mode as on."
+        )
+
+    escape = " / ".join(f'"{p}"' for p in AUTONOMOUS_ESCAPE_PHRASES)
+    return (
+        "Autonomous mode is ON for this session, enabled mechanically by this "
+        "prompt -- mode=fully, philosophy=build-right. The Stop hook will now "
+        "REFUSE to end a turn that is not done, was not asked to pause, and "
+        "has no genuine blocker; continuing is how you answer it. The recorded "
+        f"goal is the operator's own words: {goal!r}. Refine that goal through "
+        "the autonomous_mode helper's record if it is too vague to be held to "
+        f"-- do not re-ask for the mode. The operator's exit is {escape}."
+    )
+
+
+def _utc_now_iso() -> str:
+    """An ISO-8601 UTC timestamp for the record's ``set_at`` field."""
+    from datetime import datetime, timezone
+
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _autonomous_record_path_for_message(autonomous, session_id: str) -> str:
