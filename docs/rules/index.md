@@ -30,6 +30,7 @@ you decline is never reinstalled and a module added later is offered once.
 | [Agent Role](91-role.md) | mandatory | The standing persona every skill inherits rather than restating. |
 | [Core Philosophy](92-core-philosophy.md) | mandatory | The standing dispositions that govern how a solution is chosen: verify before trusting, dig rather than retreat, preserve behavior, and prefer correctness to speed. |
 | [Communication](93-communication.md) | optional (default on) | How questions reach the user, and the expected tone for prose the agent writes. |
+| [Stated Action](94-stated-action.md) | optional (default on) | A stated action is executed in the same turn that states it, and the tool call precedes the prose that reports it. |
 | [Worktrees](95-worktrees.md) | optional (default on) | Isolation between a worktree and its main checkout, the worktree location convention, and the requirement that git commands run from the worktree path. |
 | [Pull Request Conventions](96-pr-conventions.md) | optional (default on) | How a repository's pull request template is discovered and applied, and which sections never appear in a pull request body. |
 | [Opportunity Awareness](97-opportunity-awareness.md) | optional (default on) | Self-monitoring for reusable artifact candidates and project knowledge gaps at natural pause points. |

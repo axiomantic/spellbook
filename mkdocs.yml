@@ -137,6 +137,7 @@ nav:
       - rules/91-role.md
       - rules/92-core-philosophy.md
       - rules/93-communication.md
+      - rules/94-stated-action.md
       - rules/95-worktrees.md
       - rules/96-pr-conventions.md
       - rules/97-opportunity-awareness.md
