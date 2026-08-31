@@ -682,6 +682,9 @@ AUTONOMOUS_ENTRY_PHRASES = (
     "autonomous mode on",
     "enter autonomous mode",
     "go autonomous",
+    "be autonomous",
+    "stay autonomous",
+    "autonomously",
 )
 
 
