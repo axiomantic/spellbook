@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.91.0] - 2026-09-03
+
+### Fixed
+
+- Antigravity platform installer: deliver skill symlinks to Antigravity's global
+  discovery root `~/.gemini/config/skills` rather than `~/.gemini/antigravity/skills`,
+  and sweep legacy symlinks on uninstall.
+
 ### Added
 
 - Autonomous mode now BINDS, enforced by a `Stop` hook rather than by instruction
