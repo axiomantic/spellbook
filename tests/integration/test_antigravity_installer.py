@@ -32,8 +32,9 @@ def test_antigravity_creates_skill_symlinks(tmp_path):
     assert created == 2
     assert errors == 0
 
-    skill1_link = config_dir / "skills" / "test-skill-1"
-    skill2_link = config_dir / "skills" / "test-skill-2"
+    skills_root = config_dir.parent / "config" / "skills"
+    skill1_link = skills_root / "test-skill-1"
+    skill2_link = skills_root / "test-skill-2"
 
     assert skill1_link.is_symlink()
     assert skill2_link.is_symlink()
@@ -77,17 +78,32 @@ def test_antigravity_full_install_and_uninstall(tmp_path):
     assert module_link.is_symlink()
     assert module_link.resolve() == (spellbook_dir / "rules" / "00-core.md").resolve()
 
+    # Skills symlink at the corrected global skills root (~/.gemini/config/skills).
+    skills_root = config_dir.parent / "config" / "skills"
+    skill_link = skills_root / "test-skill"
+    assert skill_link.is_symlink()
+    assert skill_link.resolve() == (skills_dir / "test-skill").resolve()
+
     # The retired single sidecar is not created.
     assert not os.path.lexists(config_dir / "rules" / "spellbook.md")
 
     status = installer.detect()
     assert status.installed is True
 
+    # Also simulate a legacy symlink left behind in <config_dir>/skills to verify cleanup
+    legacy_skill_dir = config_dir / "skills"
+    legacy_skill_dir.mkdir(parents=True, exist_ok=True)
+    legacy_link = legacy_skill_dir / "legacy-skill"
+    os.symlink(skills_dir / "test-skill", legacy_link)
+    assert legacy_link.is_symlink()
+
     # Uninstall
     un_results = installer.uninstall()
     assert all(r.success for r in un_results)
 
-    # Uninstall is complete: every module file is gone, and detect() -- which
-    # keys on those files -- stops reporting the platform installed.
+    # Uninstall is complete: every module file is gone, skills symlinks (both active
+    # and legacy) are gone, and detect() stops reporting the platform installed.
     assert not list(rules_root.glob("??-spellbook-*.md"))
+    assert not os.path.lexists(skill_link)
+    assert not os.path.lexists(legacy_link)
     assert installer.detect().installed is False

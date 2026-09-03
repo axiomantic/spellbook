@@ -16,6 +16,8 @@ def test_antigravity_properties(tmp_path):
     assert installer.platform_name == "Antigravity"
     assert installer.platform_id == "antigravity"
     assert installer.mcp_config_path == tmp_path / "antigravity" / "mcp_config.json"
+    assert installer.skills_dir() == tmp_path / "config" / "skills"
+    assert installer.rule_module_dir() == tmp_path / "config" / "rules"
 
 
 def test_antigravity_detect_not_installed(tmp_path):
