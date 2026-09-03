@@ -2,7 +2,7 @@
 Antigravity platform installer.
 
 Supports Google Antigravity agentic platform:
-- Global/workspace customizations (skills in ~/.gemini/antigravity/skills or ~/.gemini/config/skills)
+- Global customizations (skills in ~/.gemini/config/skills)
 - Context via AGENTS.md / GEMINI.md in config dir
 - MCP server registration via mcp_config.json
 - Security policies in ~/.gemini/antigravity/policies/spellbook-security.toml
@@ -59,6 +59,15 @@ class AntigravityInstaller(PlatformInstaller):
         binary -- which is why nothing spellbook wrote there ever loaded.
         """
         return self.config_dir.parent / "config" / "rules"
+
+    def skills_dir(self) -> Path:
+        """Antigravity's global skills root.
+
+        This is ``~/.gemini/config/skills``, a sibling of the harness config
+        dir, not ``<config_dir>/skills``. Antigravity's global customization
+        discovery scans ``~/.gemini/config/skills`` for global skills.
+        """
+        return self.config_dir.parent / "config" / "skills"
 
     def legacy_rule_paths(self) -> List[Path]:
         return [
@@ -158,7 +167,7 @@ class AntigravityInstaller(PlatformInstaller):
         if not source_skills.exists():
             return (0, 0)
 
-        target_skills = self.config_dir / "skills"
+        target_skills = self.skills_dir()
         if not self.dry_run:
             target_skills.mkdir(parents=True, exist_ok=True)
 
@@ -374,28 +383,30 @@ class AntigravityInstaller(PlatformInstaller):
                         )
                     )
 
-        # Clean up skill symlinks
-        target_skills = self.config_dir / "skills"
-        if target_skills.exists():
-            removed_links = 0
-            for item in target_skills.iterdir():
-                if item.is_symlink():
-                    try:
-                        resolved = item.resolve()
-                        if str(resolved).startswith(str(self.spellbook_dir)):
-                            if remove_symlink(item, dry_run=self.dry_run).success:
+        # Clean up skill symlinks (both active global root and legacy harness location)
+        removed_links = 0
+        for target_skills in [self.skills_dir(), self.config_dir / "skills"]:
+            if target_skills.exists():
+                for item in target_skills.iterdir():
+                    if item.is_symlink():
+                        try:
+                            resolved = item.resolve()
+                            if (
+                                str(resolved).startswith(str(self.spellbook_dir))
+                                and remove_symlink(item, dry_run=self.dry_run).success
+                            ):
                                 removed_links += 1
-                    except OSError:
-                        pass
-            results.append(
-                InstallResult(
-                    component="skills",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message=f"removed {removed_links} skill symlinks",
-                )
+                        except OSError:
+                            pass
+        results.append(
+            InstallResult(
+                component="skills",
+                platform=self.platform_id,
+                success=True,
+                action="removed",
+                message=f"removed {removed_links} skill symlinks",
             )
+        )
 
         return results
 
@@ -409,9 +420,9 @@ class AntigravityInstaller(PlatformInstaller):
     def get_symlinks(self) -> List[Path]:
         """Get paths to symlinks created by Antigravity."""
         links = []
-        target_skills = self.config_dir / "skills"
-        if target_skills.exists():
-            for item in target_skills.iterdir():
-                if item.is_symlink():
-                    links.append(item)
+        for target_skills in [self.skills_dir(), self.config_dir / "skills"]:
+            if target_skills.exists():
+                for item in target_skills.iterdir():
+                    if item.is_symlink():
+                        links.append(item)
         return links
