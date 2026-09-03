@@ -601,6 +601,7 @@ EXPECTED_PREFERENCE_IDS = frozenset(
         "opportunity-awareness",
         "pr-conventions",
         "session",
+        "stated-action",
         "testing",
         "worktrees",
     }
