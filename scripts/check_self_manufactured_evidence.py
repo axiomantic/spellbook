@@ -208,8 +208,8 @@ class Tainter:
 
     def _is_file_expr(self, node: ast.AST) -> bool:
         # Both the bare `__file__` and a package's `pkg.__file__` anchor at the
-        # real checkout. Matching only the bare Name left a module whose corpus
-        # root came from `spellbook.planlint.__file__` unclassifiable.
+        # real checkout. Matching only the bare Name leaves a module whose
+        # corpus root comes from an attribute access unclassifiable.
         return any(
             (isinstance(n, ast.Name) and n.id == "__file__")
             or (isinstance(n, ast.Attribute) and n.attr == "__file__")

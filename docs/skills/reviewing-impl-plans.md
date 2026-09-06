@@ -7,7 +7,7 @@ Audits implementation plans for missing tasks, incorrect ordering, interface mis
 > Use when reviewing implementation plans before execution. Triggers: 'is this plan solid', 'review the plan', 'check before I start building', 'anything missing from this plan', 'will this plan work', 'audit the implementation plan'. NOT for: reviewing design documents (use reviewing-design-docs) or creating plans (use writing-plans).
 ## Skill Content
 
-````markdown
+```markdown
 <ROLE>
 Technical Specification Auditor trained as Red Team Lead. Your reputation depends on catching interface gaps and behavior assumptions that cause parallel agents to produce incompatible work. Methodical, paranoid about integration failures, obsessed with explicit contracts.
 
@@ -47,84 +47,6 @@ An implementation plan that sounds organized but lacks interface contracts creat
 <analysis>
 Before each phase, identify: interfaces between parallel work streams, behavior assumptions about existing code, gaps where executing agents would have to guess or invent.
 </analysis>
-
-## Phase 0: Mechanized Pre-Pass
-
-```python
-from pathlib import Path
-
-from spellbook.planlint import declares_schema, decided_claims, lint_for_review
-```
-
-**Gate:** if `declares_schema(plan_text)` is False, this plan is legacy. Record
-`Phase 0: NOT APPLICABLE (plan declares no Schema:)` and go to Phase 1. Do NOT
-call the linter.
-
-Otherwise:
-
-```python
-# repo_root MUST be a pathlib.Path, never a str. `rules/files.py` does
-# `repo_root / entry.path`; a str makes that `str / str`, which raises
-# TypeError, which the rule barrier reports as a CRASH — a caller bug
-# wearing a plan-defect costume. Coerce at the boundary, as cli.py does.
-report = lint_for_review(plan_path, repo_root=Path(repo_root))
-```
-
-Every ERROR finding is a Critical Finding in the report, with the rule ID as its
-Category. Phases 1-4 must not re-derive a claim `decided_claims()` reports as
-DECIDED. They MUST cover every claim it reports as UNDECIDED.
-
-**If the linter CRASHES, this phase fails CLOSED on the claims and OPEN on the
-review.** A crash means `report.internal_errors` is non-empty, or the import
-itself raised. In that case:
-
-```python
-if report.internal_errors:
-    # Record the linter line as UNAVAILABLE and treat EVERY claim as UNDECIDED.
-    # Do not read report.findings as a verdict — a rule that crashed decided
-    # nothing, and the rules that did run cover only their own claims.
-    print(report.report())      # each crash carries its full traceback
-```
-
-Write `Linter: UNAVAILABLE (see error below)` on the Report Assembly line, then paste
-the printed `report.report()` traceback directly beneath that line so "below" points at
-real content. List every rule under "Claims NOT decided" with the crash as the reason,
-and CONTINUE to Phase 1. Both
-halves matter and they pull in opposite directions on purpose. Failing closed on the
-claims is non-negotiable: a review gate must never report a claim as machine-decided
-when no machine decided it, and the failure mode of getting this wrong is silent —
-the report reads clean and a whole class of defects goes unexamined by anyone.
-Failing open on the review is equally non-negotiable: the human review existed before
-this port and a linter bug must not take it away. So the review always runs; only its
-claim of mechanical coverage is withdrawn.
-
-The same rule applies when the linter is absent entirely (`ImportError`) — that is a
-crash by another name.
-
-**If the linter DECLINES to lint, that is a third state — distinct from both a clean
-RUN and a CRASH.** `report.linted is False` with `report.internal_errors` EMPTY and
-`report.findings` EMPTY means the linter never examined the plan at all: it hit
-`SKIP_UNREADABLE`, `SKIP_NOT_UTF8`, or `SKIP_NO_SCHEMA` (design §5.4, "Errors that are
-not exceptions"). This is reachable even when the Phase 0 Gate above judged the plan
-IN SCOPE, because the Gate's `declares_schema(plan_text)` reads the in-context draft
-TEXT while `lint_for_review(plan_path)` reads the on-disk PATH — the two can drift
-apart (file not found at that path, a permissions issue, a stale draft versus the
-actual file on disk). Design §5.4 documents this same class of gap for the
-`unreadable`/`not UTF-8` skip reasons. Do not read an empty `decided_claims()` as
-"nothing to decide" in this state — it means the linter never ran, not that it ran and
-found nothing:
-
-```python
-if not report.linted:
-    # Record the linter line as UNAVAILABLE (not linted), naming the skip reason, and
-    # treat EVERY claim as UNDECIDED — same fail-closed posture as a crash. Phases 1-4
-    # still cover everything; nothing is suppressed because the linter declined.
-    print(report.skip_reason)
-```
-
-Write `Linter: UNAVAILABLE (not linted: <report.skip_reason>)` on the Report Assembly
-line, list every rule under "Claims NOT decided" with the skip reason as the cause, and
-CONTINUE to Phase 1.
 
 ## Phase 1: Context and Inventory
 
@@ -178,25 +100,17 @@ When this skill runs on a plan it has reviewed before:
    Critical findings: NEW (pre-existing defect newly found) vs INDUCED
    (introduced by round N-1's own repairs). If more than half are INDUCED,
    another same-style round is FORBIDDEN. Switch method: build or extend a
-   mechanical check (a planlint rule, a compile check, a symbol-table
-   diff) for the oscillating defect class, run it, and only then resume
+   mechanical check (a compile check, a symbol-table diff) for the
+   oscillating defect class, run it, and only then resume
    prose review for what the check cannot cover.
 3. Record in the report: `Round N: X new / Y induced. Convergence:
    CONVERGING | OSCILLATING (mechanized: <check name>)`.
 
 ## Report Assembly
 
-Assemble the final report from subagent outputs. It opens with the mechanized pre-pass block:
+Assemble the final report from subagent outputs.
 
-```
-## Phase 0: Mechanized Pre-Pass — claims already decided
-- Linter: RAN / NOT APPLICABLE (no Schema:) / UNAVAILABLE (see error below) / UNAVAILABLE (not linted: <report.skip_reason>)
-- Rules run: N of M   (a skipped rule is listed by name, with its reason)
-- Claims decided: [rule-id: clean | rule-id: N finding(s)]
-- Claims NOT decided (prose review must cover these): [rule-id: reason]
-```
-
-The remaining templates — the Summary block, the finding format for Critical/Important/Minor, and the prioritized Remediation Plan — are specified in the `review-plan-completeness` command, which owns report assembly.
+The templates — the Summary block, the finding format for Critical/Important/Minor, and the prioritized Remediation Plan — are specified in the `review-plan-completeness` command, which owns report assembly.
 
 <FORBIDDEN>
 Surface-level reviews are professional negligence. They create false confidence that leads to catastrophic integration failures. A superficial "looks good" is worse than no review at all because it removes the safety net of uncertainty.
@@ -224,7 +138,6 @@ The Interface Behavior Fabrication anti-pattern — assumed method behavior, inv
 <reflection>
 Before completing review:
 
-[ ] Did Phase 0 run, and does the report state which claims it decided?
 [ ] Did I compare to parent design doc (if exists)?
 [ ] Did I verify impl plan has MORE detail than design doc?
 [ ] Did I classify every work item as parallel or sequential?
@@ -268,4 +181,4 @@ Parallel work without explicit contracts produces incompatible components. This 
 <FINAL_EMPHASIS>
 Your review is the last line of defense before agents invest hours of work. Miss a gap, and multiple agents produce incompatible code. Catch every gap, and the integration is seamless. There is no middle ground. Thoroughness is not optional.
 </FINAL_EMPHASIS>
-````
+```

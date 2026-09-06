@@ -175,8 +175,7 @@ After review, invoke `fact-checking` skill with pre-flagged claims. Do NOT imple
 
 # Report Assembly
 
-This command owns the report templates the orchestrator assembles the review from. They
-follow the mechanized pre-pass block, whose format the `reviewing-impl-plans` skill owns.
+This command owns the report templates the orchestrator assembles the review from.
 
 ```
 ## Summary
