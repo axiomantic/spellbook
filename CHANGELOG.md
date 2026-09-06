@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- The `spellbook-planlint` package, its console script, its test suite and its
+  fixtures. Plan linting is withdrawn as a mechanism, not relocated. A linter
+  that decides claims about a plan document reports on the prose it can parse,
+  and the three skills that ran it -- `writing-plans`, `reviewing-impl-plans`
+  and `executing-plans` -- each carried a fail-open/fail-closed protocol for a
+  crash or a declined run, which is apparatus guarding apparatus. Those skills
+  keep their own review phases; only the mechanized pre-pass is gone.
+  `**Schema:** planlint-v1` is no longer emitted on generated plans, and
+  `reviewing-impl-plans` no longer has a Phase 0.
+
 ## [0.91.0] - 2026-09-03
 
 ### Fixed

@@ -694,21 +694,6 @@ ALLOWLIST: dict[str, tuple[AllowEntry, ...]] = {
             reason="illustrative script path in generic skill-authoring guidance",
         ),
         AllowEntry(
-            path_glob="skills/executing-plans/SKILL.md",
-            anchor="rules/files.py",
-            reason="illustrative file path in a worked plan example",
-        ),
-        AllowEntry(
-            path_glob="skills/reviewing-impl-plans/SKILL.md",
-            anchor="rules/files.py",
-            reason="illustrative file path in a worked plan example",
-        ),
-        AllowEntry(
-            path_glob="skills/writing-plans/SKILL.md",
-            anchor="rules/files.py",
-            reason="illustrative file path in a worked plan example",
-        ),
-        AllowEntry(
             path_glob="skills/writing-plans/SKILL.md",
             anchor="tests/exact/path/to/test.py",
             reason="explicit placeholder demonstrating the required path format",
