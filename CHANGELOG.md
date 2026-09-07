@@ -15,9 +15,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the three skills that ran it -- `writing-plans`, `reviewing-impl-plans`
   and `executing-plans` -- each carried a fail-open/fail-closed protocol for a
   crash or a declined run, which is apparatus guarding apparatus. Those skills
-  keep their own review phases; only the mechanized pre-pass is gone.
-  `**Schema:** planlint-v1` is no longer emitted on generated plans, and
-  `reviewing-impl-plans` no longer has a Phase 0.
+  keep their prose review phases. `**Schema:** planlint-v1` is no longer emitted
+  on generated plans, and `reviewing-impl-plans` no longer has a Phase 0.
+
+  Four decidable classes lose their mechanical check. Three of them lose every
+  check: a `Modify:` path that does not exist in the tree, a drift between a
+  task's `Check:` field and its `Verify pass` step, and an unbalanced code fence
+  or backtick. The fourth, a cycle in the `Depends:` graph, keeps its prose
+  reviewer -- `reviewing-impl-plans` and the `review-plan-completeness` command
+  both still require the reviewer to report circular dependencies as CRITICAL --
+  but no longer has a mechanical detector. This is an accepted withdrawal, not
+  deferred work. `writing-plans` gains one self-check bullet for the
+  `Check:`/`Verify pass` identity, which was the one constraint the skill states
+  as a rule and the linter was the only thing that read.
+
+- The `review-plan-completeness` command no longer refers to the mechanized
+  pre-pass block in its Report Assembly section.
+- Three `check_reference_resolution.py` allowlist entries that the deletion
+  orphaned. The allowlist's own staleness test found them.
 
 ## [0.91.0] - 2026-09-03
 
