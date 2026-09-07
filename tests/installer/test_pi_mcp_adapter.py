@@ -535,6 +535,7 @@ def test_reported_message_never_names_a_version_spellbook_did_not_write(
 # ---------------------------------------------------------------------------
 
 
+@pytest.mark.posix_only
 def test_install_preserves_an_owner_only_settings_mode(spellbook_dir, config_dir):
     """An owner-only settings.json must not come back world-readable.
 
@@ -556,6 +557,7 @@ def test_install_preserves_an_owner_only_settings_mode(spellbook_dir, config_dir
     assert PI_MCP_ADAPTER_SPEC in _read_pi_settings(settings_path)["packages"]
 
 
+@pytest.mark.posix_only
 def test_a_settings_file_the_installer_creates_is_owner_only(
     spellbook_dir, config_dir
 ):
