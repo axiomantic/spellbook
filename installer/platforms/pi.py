@@ -16,11 +16,14 @@ Reference:
 - https://github.com/badlogic/pi-coding-agent/docs/prompt-templates.md
 """
 
+import contextlib
 import json
 import logging
 import os
+import stat
+import time
 from pathlib import Path
-from typing import TYPE_CHECKING, List, Optional, Tuple
+from typing import TYPE_CHECKING, Iterator, List, Optional, Tuple
 
 from ..components.mcp import get_spellbook_server_url
 from ..components.symlinks import (
@@ -49,14 +52,88 @@ SPELLBOOK_SERVER_KEY: str = "spellbook"
 # registers the servers it names.
 PI_MCP_ADAPTER_NAME: str = "pi-mcp-adapter"
 
-# Pinned, never a range. This is the version whose behaviour was verified end
-# to end against a running spellbook daemon: connect, tools/list, and tool
-# invocation with the Bearer header. Pi pins versioned npm specs and skips them
-# during `pi update --extensions`, so this value is what actually runs until
-# somebody edits this line on purpose.
+# Pinned, never a range. Pi pins versioned npm specs and skips them during
+# `pi update --extensions`, so this value is what actually runs until somebody
+# edits this line on purpose.
 PI_MCP_ADAPTER_VERSION: str = "2.26.1"
 
 PI_MCP_ADAPTER_SPEC: str = f"npm:{PI_MCP_ADAPTER_NAME}@{PI_MCP_ADAPTER_VERSION}"
+
+# Pi guards every settings.json write with proper-lockfile -- see
+# `acquireLockSyncWithRetry` and `withLock` in pi's `core/settings-manager.js`,
+# which read the file INSIDE the lock and write back inside the same one. An
+# installer that skips the lock loses its entry whenever pi writes a setting
+# during the install: pi's write is computed from a read taken before ours and
+# replaces the whole file.
+#
+# proper-lockfile's lock is a DIRECTORY at "<file>.lock" (`getLockFile`),
+# created with mkdir because mkdir is atomic and released with rmdir. Those two
+# calls are the whole protocol, so taking pi's own lock needs no Node library.
+PI_SETTINGS_LOCK_SUFFIX: str = ".lock"
+
+# proper-lockfile's default staleness threshold. A live holder refreshes the
+# lock directory's mtime every 5s; past this age the holder is gone.
+PI_SETTINGS_LOCK_STALE_SECONDS: float = 10.0
+
+# Pi retries 10 times at 20ms and then throws. The installer waits longer: it
+# runs once, and silently losing its write is worse than a moment of delay.
+PI_SETTINGS_LOCK_TIMEOUT_SECONDS: float = 2.0
+PI_SETTINGS_LOCK_POLL_SECONDS: float = 0.02
+
+# Mode for a settings.json this installer CREATES. An existing file keeps the
+# mode it already had -- see `_write_pi_settings`.
+PI_SETTINGS_NEW_FILE_MODE: int = 0o600
+
+# The adapter connects a directTools server during `session_start` when it has
+# no metadata cache entry for it, and its own `init.ts` then says the tools
+# "will be available after restart". Pi also installs a declared-but-missing
+# npm package on its next start. Both make a restart the step between this
+# installer finishing and the tools existing.
+PI_RESTART_NOTICE: str = "restart pi to load the adapter and its tools"
+
+
+class PiSettingsLockError(RuntimeError):
+    """Pi's settings.json lock is held elsewhere and did not come free."""
+
+
+class PiSettingsShapeError(ValueError):
+    """settings.json holds a key in a shape this installer will not overwrite."""
+
+
+@contextlib.contextmanager
+def _pi_settings_lock(settings_path: Path) -> Iterator[None]:
+    """Hold the same lock pi holds while it reads and writes settings.json.
+
+    Reproduces proper-lockfile's directory lock rather than approximating it:
+    the same path, the same mkdir/rmdir pair, and the same staleness rule, so
+    pi and the installer contend for one lock instead of two.
+    """
+    lock_path = settings_path.with_name(settings_path.name + PI_SETTINGS_LOCK_SUFFIX)
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    deadline = time.monotonic() + PI_SETTINGS_LOCK_TIMEOUT_SECONDS
+    while True:
+        try:
+            os.mkdir(lock_path)
+            break
+        except FileExistsError:
+            try:
+                age = time.time() - lock_path.stat().st_mtime
+            except FileNotFoundError:
+                continue
+            if age > PI_SETTINGS_LOCK_STALE_SECONDS:
+                with contextlib.suppress(OSError):
+                    os.rmdir(lock_path)
+                continue
+            if time.monotonic() >= deadline:
+                raise PiSettingsLockError(
+                    f"{lock_path.name} is held by another process"
+                )
+            time.sleep(PI_SETTINGS_LOCK_POLL_SECONDS)
+    try:
+        yield
+    finally:
+        with contextlib.suppress(OSError):
+            os.rmdir(lock_path)
 
 
 def _read_pi_settings(settings_path: Path) -> dict:
@@ -121,10 +198,11 @@ def _write_mcp_config(config_path: Path, config: dict) -> None:
 def _generate_mcp_json_section() -> dict:
     """Generate the spellbook entry for pi-mcp-adapter's mcp.json.
 
-    The transport half -- ``url`` plus a raw ``headers`` map -- is the Claude
-    Code shape the adapter accepts unchanged. The other three keys are adapter
-    settings that no native MCP host would read, and each corrects a default
-    that would otherwise leave spellbook's tools unusable:
+    The transport half -- a bare ``url`` -- is the Claude Code shape the
+    adapter accepts unchanged. The daemon authenticates on Origin and Host
+    rather than on a header, so the entry carries none. The other three keys
+    are adapter settings that no native MCP host would read, and each corrects
+    a default that would otherwise leave spellbook's tools unusable:
 
     ``directTools``
         Defaults to ``false``, which routes every tool through a single proxy
@@ -145,25 +223,42 @@ def _generate_mcp_json_section() -> dict:
     default negotiates against the daemon, which answers ``2024-11-05``.
     Pinning a version can only narrow what succeeds.
     """
-    url = get_spellbook_server_url()
-    # Whole-entry replacement by the caller: any stale auth header from a
-    # previous install disappears rather than being merged forward.
-    server_entry: dict = {
-        "url": url,
+    # Whole-entry replacement by the caller: any key a previous install wrote
+    # -- a credential header from before the daemon moved to Origin and Host
+    # validation, for instance -- disappears rather than being merged forward.
+    return {
+        "url": get_spellbook_server_url(),
+        "lifecycle": "eager",
+        "directTools": True,
+        "toolPrefix": "none",
     }
-    server_entry["lifecycle"] = "eager"
-    server_entry["directTools"] = True
-    server_entry["toolPrefix"] = "none"
-    return server_entry
 
 
 def _write_pi_settings(settings_path: Path, settings: dict) -> None:
-    """Write pi's settings.json atomically. Carries no token, so mode 0644."""
+    """Write pi's settings.json atomically, preserving its mode.
+
+    The mode has to be carried across explicitly. ``os.replace`` swaps in the
+    TEMPORARY file, so the result carries the temp file's mode, which is the
+    default umask -- typically 0644. A user whose settings.json is 0600 would
+    have it widened to world-readable by an install that only meant to add a
+    package entry, and nothing would report that it happened. Pi's own writer
+    (``writeFileSync`` in ``core/settings-manager.js``) rewrites the file in
+    place and so keeps the mode without doing anything; the atomic-replace
+    shape is what makes this explicit step necessary.
+
+    A settings.json this installer CREATES gets 0600. It is a single user's
+    config and nothing else reads it, so the restrictive mode costs nothing.
+    """
     settings_path.parent.mkdir(parents=True, exist_ok=True)
     payload = json.dumps(settings, indent=2) + "\n"
     tmp_path = settings_path.with_name(f"{settings_path.name}.tmp.{os.getpid()}")
     try:
         tmp_path.write_text(payload, encoding="utf-8")
+        try:
+            mode = stat.S_IMODE(settings_path.stat().st_mode)
+        except FileNotFoundError:
+            mode = PI_SETTINGS_NEW_FILE_MODE
+        os.chmod(tmp_path, mode)
         os.replace(tmp_path, settings_path)
     except BaseException:
         try:
@@ -171,6 +266,24 @@ def _write_pi_settings(settings_path: Path, settings: dict) -> None:
         except FileNotFoundError:
             pass
         raise
+
+
+def _settings_packages(settings: dict) -> list:
+    """The ``packages`` list, or a fresh one when the key is absent.
+
+    A present-but-wrong-typed value RAISES. Coercing it to ``[]`` and writing
+    that back destroys whatever the user had there, and does it silently. This
+    is the key-level form of the rule ``_read_pi_settings`` already applies to
+    the file as a whole.
+    """
+    if "packages" not in settings:
+        return []
+    packages = settings["packages"]
+    if not isinstance(packages, list):
+        raise PiSettingsShapeError(
+            f"'packages' is not a list (got {type(packages).__name__})"
+        )
+    return packages
 
 
 def _names_adapter(source: object) -> bool:
@@ -211,16 +324,20 @@ def _is_spellbook_managed_adapter_entry(entry: object) -> bool:
     return isinstance(entry, str) and _names_adapter(entry)
 
 
-def _adapter_entry_index(packages: list) -> Optional[int]:
-    """Index of any entry naming the adapter, whatever its form.
+def _adapter_entry_indices(packages: list) -> List[int]:
+    """Every index naming the adapter, whatever the entry's form.
 
-    Pi identifies an npm package by NAME, so two entries differing only in
-    version are ambiguous rather than additive.
+    EVERY index, not the first. Pi identifies an npm package by NAME, so two
+    entries differing only in version are ambiguous rather than additive, and
+    stopping at the first one leaves a stale sibling behind that can reinstall
+    an older adapter over the one this installer just pinned -- making the
+    version it reports not the version that runs.
     """
-    for i, entry in enumerate(packages):
-        if _names_adapter(_adapter_entry_source(entry)):
-            return i
-    return None
+    return [
+        i
+        for i, entry in enumerate(packages)
+        if _names_adapter(_adapter_entry_source(entry))
+    ]
 
 
 def _adapter_declared(settings_path: Path) -> bool:
@@ -234,12 +351,10 @@ def _adapter_declared(settings_path: Path) -> bool:
     """
     try:
         settings = _read_pi_settings(settings_path)
+        packages = _settings_packages(settings)
     except (OSError, ValueError, json.JSONDecodeError):
         return False
-    packages = settings.get("packages")
-    if not isinstance(packages, list):
-        return False
-    return _adapter_entry_index(packages) is not None
+    return bool(_adapter_entry_indices(packages))
 
 
 def _adapter_installed_version(config_dir: Path) -> Optional[str]:
@@ -261,6 +376,93 @@ def _adapter_installed_version(config_dir: Path) -> Optional[str]:
     return version if isinstance(version, str) else None
 
 
+def _plan_pi_adapter(
+    settings_path: Path, dry_run: bool
+) -> Tuple[bool, str, str, Optional[dict]]:
+    """Decide what declaring the adapter does, reading but never writing.
+
+    Returns ``(ok, message, effective_spec, settings_to_write)``. The last
+    element is ``None`` when nothing needs writing, which is what lets the dry
+    run report the outcome it would actually produce. Reporting "would declare
+    ..." before reading the file -- which is what this used to do -- announces
+    a write for the two cases that perform none: the entry is already present
+    and already pinned, or it is the user's own and is left alone.
+    """
+    verb = "would declare" if dry_run else "declared"
+    repin = "would repin" if dry_run else "repinned"
+
+    try:
+        settings = _read_pi_settings(settings_path)
+        packages = _settings_packages(settings)
+    except (OSError, ValueError, json.JSONDecodeError) as e:
+        return (
+            False,
+            f"could not read {settings_path.name}: {e}",
+            PI_MCP_ADAPTER_SPEC,
+            None,
+        )
+
+    indices = _adapter_entry_indices(packages)
+    user_owned = [i for i in indices if not _is_spellbook_managed_adapter_entry(packages[i])]
+
+    if len(indices) > 1 and user_owned:
+        # Which entry pi resolves is not something this installer can decide,
+        # and one of them is the user's. Rewriting either would guess, and
+        # reporting a version would name a guess.
+        return (
+            False,
+            (
+                f"{settings_path.name} declares {PI_MCP_ADAPTER_NAME} "
+                f"{len(indices)} times, one of them user-authored; resolve "
+                f"the duplicates by hand -- which one pi loads is ambiguous"
+            ),
+            PI_MCP_ADAPTER_NAME,
+            None,
+        )
+
+    if user_owned:
+        user_source = _adapter_entry_source(packages[user_owned[0]])
+        return (
+            True,
+            f"{PI_MCP_ADAPTER_NAME} already declared by the user; left as is",
+            user_source if isinstance(user_source, str) else PI_MCP_ADAPTER_NAME,
+            None,
+        )
+
+    if not indices:
+        packages = [*packages, PI_MCP_ADAPTER_SPEC]
+        return (
+            True,
+            f"{verb} {PI_MCP_ADAPTER_SPEC}",
+            PI_MCP_ADAPTER_SPEC,
+            {**settings, "packages": packages},
+        )
+
+    # Every remaining match is spellbook's own bare-string shape, so collapsing
+    # them to one pinned entry destroys nothing the user wrote.
+    duplicates = len(indices) - 1
+    already_correct = duplicates == 0 and packages[indices[0]] == PI_MCP_ADAPTER_SPEC
+    if already_correct:
+        return (
+            True,
+            f"{PI_MCP_ADAPTER_SPEC} already declared",
+            PI_MCP_ADAPTER_SPEC,
+            None,
+        )
+
+    keep = indices[0]
+    drop = set(indices[1:])
+    packages = [
+        PI_MCP_ADAPTER_SPEC if i == keep else entry
+        for i, entry in enumerate(packages)
+        if i not in drop
+    ]
+    message = f"{repin} to {PI_MCP_ADAPTER_SPEC}"
+    if duplicates:
+        message += f" and dropped {duplicates} duplicate declaration(s)"
+    return (True, message, PI_MCP_ADAPTER_SPEC, {**settings, "packages": packages})
+
+
 def _declare_pi_adapter(
     config_dir: Path, dry_run: bool = False
 ) -> Tuple[bool, str, str]:
@@ -273,6 +475,11 @@ def _declare_pi_adapter(
     wants -- and costs a ``pi`` binary on PATH, network access, and a failure
     mode at install time that the settings write does not have.
 
+    The read, the decision and the write all happen inside pi's own lock, and
+    the result is read back afterwards. The lock is the prevention; the
+    read-back is what keeps a lost update from being reported as a success by
+    a pi that predates the lock, or by a hand edit that never takes it.
+
     Returns ``(ok, message, effective_spec)``. The third element is the spec
     that will actually load mcp.json, which is NOT always the pinned one: a
     user's object-form entry is left as is, and reporting the pinned spec in
@@ -281,66 +488,73 @@ def _declare_pi_adapter(
     settings_path = config_dir / "settings.json"
 
     if dry_run:
-        return (True, f"would declare {PI_MCP_ADAPTER_SPEC}", PI_MCP_ADAPTER_SPEC)
+        ok, message, spec, _ = _plan_pi_adapter(settings_path, dry_run=True)
+        return (ok, message, spec)
 
     try:
-        settings = _read_pi_settings(settings_path)
-    except (OSError, ValueError, json.JSONDecodeError) as e:
-        return (False, f"could not read {settings_path.name}: {e}", PI_MCP_ADAPTER_SPEC)
-
-    packages = settings.get("packages")
-    if not isinstance(packages, list):
-        packages = []
-
-    index = _adapter_entry_index(packages)
-    if index is not None and not _is_spellbook_managed_adapter_entry(packages[index]):
-        user_source = _adapter_entry_source(packages[index])
-        return (
-            True,
-            f"{PI_MCP_ADAPTER_NAME} already declared by the user; left as is",
-            user_source if isinstance(user_source, str) else PI_MCP_ADAPTER_NAME,
-        )
-
-    if index is not None and packages[index] == PI_MCP_ADAPTER_SPEC:
-        return (True, f"{PI_MCP_ADAPTER_SPEC} already declared", PI_MCP_ADAPTER_SPEC)
-
-    if index is not None:
-        packages[index] = PI_MCP_ADAPTER_SPEC
-        action = f"repinned to {PI_MCP_ADAPTER_SPEC}"
-    else:
-        packages.append(PI_MCP_ADAPTER_SPEC)
-        action = f"declared {PI_MCP_ADAPTER_SPEC}"
-
-    settings["packages"] = packages
-    try:
-        _write_pi_settings(settings_path, settings)
-    except OSError as e:
+        with _pi_settings_lock(settings_path):
+            ok, message, spec, new_settings = _plan_pi_adapter(
+                settings_path, dry_run=False
+            )
+            if not ok or new_settings is None:
+                return (ok, message, spec)
+            try:
+                _write_pi_settings(settings_path, new_settings)
+            except OSError as e:
+                return (False, f"could not write {settings_path.name}: {e}", spec)
+            if not _spec_is_declared(settings_path, PI_MCP_ADAPTER_SPEC):
+                return (
+                    False,
+                    (
+                        f"{PI_MCP_ADAPTER_SPEC} did not survive the write to "
+                        f"{settings_path.name}; another process replaced the file"
+                    ),
+                    spec,
+                )
+            return (True, message, spec)
+    except PiSettingsLockError as e:
         return (
             False,
-            f"could not write {settings_path.name}: {e}",
+            (
+                f"could not take pi's settings lock ({e}); pi is writing "
+                f"{settings_path.name} and the declaration would be lost"
+            ),
             PI_MCP_ADAPTER_SPEC,
         )
-    return (True, action, PI_MCP_ADAPTER_SPEC)
+
+
+def _spec_is_declared(settings_path: Path, spec: str) -> bool:
+    """Whether ``spec`` is on disk in settings.json right now."""
+    try:
+        settings = _read_pi_settings(settings_path)
+        packages = _settings_packages(settings)
+    except (OSError, ValueError, json.JSONDecodeError):
+        return False
+    return spec in packages
 
 
 def _retract_pi_adapter(
     config_dir: Path, dry_run: bool = False
-) -> Tuple[bool, str]:
+) -> Tuple[bool, str, bool]:
     """Remove spellbook's adapter declaration, but only if nothing else needs it.
 
     The adapter is a general-purpose MCP bridge, not a spellbook component. If
     any other server remains in mcp.json after spellbook's entry is gone, that
     server still needs the adapter loaded and removing it would break it. Only
-    the bare string entry spellbook itself writes is ever removed; a
+    the bare string entries spellbook itself writes are ever removed; a
     user-authored object-form entry is left untouched.
 
     The on-disk package under ``npm/node_modules/`` is left in place. Deleting
     it is pi's business (``pi remove``), and it is inert once undeclared.
+
+    Returns ``(ok, message, retracted)``. ``retracted`` is the fact, decided by
+    what was actually removed. Recovering it by searching the message for a
+    word made the recorded outcome depend on the message's wording.
     """
     settings_path = config_dir / "settings.json"
 
     if dry_run:
-        return (True, f"would retract {PI_MCP_ADAPTER_SPEC} if unused")
+        return (True, f"would retract {PI_MCP_ADAPTER_SPEC} if unused", False)
 
     mcp_config = _load_mcp_config_dict(config_dir / "mcp.json")
     remaining = mcp_config.get("mcpServers")
@@ -348,30 +562,55 @@ def _retract_pi_adapter(
         return (
             True,
             f"{PI_MCP_ADAPTER_NAME} kept: {len(remaining)} other MCP server(s) need it",
+            False,
         )
 
     try:
-        settings = _read_pi_settings(settings_path)
-    except (OSError, ValueError, json.JSONDecodeError):
-        return (True, f"{settings_path.name} unreadable; {PI_MCP_ADAPTER_NAME} left as is")
+        with _pi_settings_lock(settings_path):
+            try:
+                settings = _read_pi_settings(settings_path)
+                packages = _settings_packages(settings)
+            except (OSError, ValueError, json.JSONDecodeError) as e:
+                return (
+                    True,
+                    (
+                        f"{settings_path.name} unreadable ({e}); "
+                        f"{PI_MCP_ADAPTER_NAME} left as is"
+                    ),
+                    False,
+                )
 
-    packages = settings.get("packages")
-    if not isinstance(packages, list):
-        return (True, f"{PI_MCP_ADAPTER_NAME} was not declared")
+            indices = _adapter_entry_indices(packages)
+            managed = [
+                i for i in indices if _is_spellbook_managed_adapter_entry(packages[i])
+            ]
+            if not indices:
+                return (True, f"{PI_MCP_ADAPTER_NAME} was not declared", False)
+            if not managed:
+                return (
+                    True,
+                    f"{PI_MCP_ADAPTER_NAME} was declared by the user; left as is",
+                    False,
+                )
 
-    index = _adapter_entry_index(packages)
-    if index is None:
-        return (True, f"{PI_MCP_ADAPTER_NAME} was not declared")
-    if not _is_spellbook_managed_adapter_entry(packages[index]):
-        return (True, f"{PI_MCP_ADAPTER_NAME} was declared by the user; left as is")
-
-    del packages[index]
-    settings["packages"] = packages
-    try:
-        _write_pi_settings(settings_path, settings)
-    except OSError as e:
-        return (False, f"could not write {settings_path.name}: {e}")
-    return (True, f"retracted {PI_MCP_ADAPTER_SPEC}")
+            drop = set(managed)
+            settings["packages"] = [
+                entry for i, entry in enumerate(packages) if i not in drop
+            ]
+            try:
+                _write_pi_settings(settings_path, settings)
+            except OSError as e:
+                return (False, f"could not write {settings_path.name}: {e}", False)
+            return (True, f"retracted {PI_MCP_ADAPTER_SPEC}", True)
+    except PiSettingsLockError as e:
+        return (
+            False,
+            (
+                f"could not take pi's settings lock ({e}); "
+                f"{PI_MCP_ADAPTER_NAME} left declared"
+            ),
+            False,
+        )
 
 
 def _update_pi_mcp_config(
@@ -753,8 +992,8 @@ class PiInstaller(PlatformInstaller):
             success, msg = _update_pi_mcp_config(self.mcp_config_file, self.dry_run)
 
             # The installer makes no request to the daemon, so it cannot tell a
-            # running daemon from a stopped one, nor a live token from a stale
-            # one. Its vocabulary is therefore limited to what it actually did.
+            # running daemon from a stopped one. Its vocabulary is therefore
+            # limited to what it actually did.
             if not adapter_ok:
                 success = False
                 msg = (
@@ -763,7 +1002,7 @@ class PiInstaller(PlatformInstaller):
                     f"reads mcp.json"
                 )
             else:
-                msg = f"{msg} via {adapter_spec}"
+                msg = f"{msg} via {adapter_spec}; {PI_RESTART_NOTICE}"
 
             results.append(
                 InstallResult(
@@ -863,7 +1102,7 @@ class PiInstaller(PlatformInstaller):
 
             # Retract the adapter declaration only after the spellbook entry is
             # gone from mcp.json, because the decision depends on what remains.
-            adapter_ok, adapter_msg = _retract_pi_adapter(
+            adapter_ok, adapter_msg, retracted = _retract_pi_adapter(
                 self.config_dir, self.dry_run
             )
             results.append(
@@ -871,7 +1110,7 @@ class PiInstaller(PlatformInstaller):
                     component="mcp_adapter",
                     platform=self.platform_id,
                     success=adapter_ok,
-                    action="removed" if "retracted" in adapter_msg else "skipped",
+                    action="removed" if retracted else "skipped",
                     message=f"MCP adapter: {adapter_msg}",
                 )
             )

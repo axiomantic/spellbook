@@ -9,7 +9,7 @@ was the only artifact the operation produced.
 The fix has two halves and this file locks in both:
 
 1. ``mcp.json`` is emitted in the shape ``pi-mcp-adapter`` actually needs, not
-   the bare ``{url, headers}`` a native host would accept.
+   the bare ``{url}`` a native host would accept.
 2. The adapter is declared in ``settings.json``, and the reported outcome is
    conditioned on that declaration rather than on a file having been written.
 
@@ -19,6 +19,9 @@ files under ``tmp_path``. Nothing here shells out to ``pi``.
 """
 
 import json
+import os
+import stat
+import time
 from pathlib import Path
 
 import pytest
@@ -27,10 +30,16 @@ from installer.platforms.pi import (
     PI_MCP_ADAPTER_NAME,
     PI_MCP_ADAPTER_SPEC,
     PI_MCP_ADAPTER_VERSION,
+    PI_RESTART_NOTICE,
+    PI_SETTINGS_LOCK_SUFFIX,
+    PI_SETTINGS_NEW_FILE_MODE,
     SPELLBOOK_SERVER_KEY,
     PiInstaller,
+    _declare_pi_adapter,
     _generate_mcp_json_section,
+    _pi_settings_lock,
     _read_pi_settings,
+    _retract_pi_adapter,
 )
 
 
@@ -81,8 +90,8 @@ def test_emitted_config_carries_the_adapter_only_fields():
     entry = _generate_mcp_json_section()
 
     assert entry["directTools"] is True, (
-        "directTools defaults to false in the adapter, which collapses all 28 "
-        "spellbook tools behind one proxy tool named 'mcp'. Spellbook skills "
+        "directTools defaults to false in the adapter, which collapses every "
+        "spellbook tool behind one proxy tool named 'mcp'. Spellbook skills "
         "reference tools by name, so they would all be unreachable."
     )
     assert entry["lifecycle"] == "eager", (
@@ -172,13 +181,19 @@ def test_tool_prefix_none_is_what_prevents_a_doubled_spellbook_prefix():
     )
 
 
-def test_emitted_config_keeps_the_bearer_header_shape():
-    """The adapter accepts a raw ``headers`` map; the daemon 401s without it."""
+def test_emitted_config_carries_a_url_and_no_auth_header():
+    """The daemon authenticates on Origin and Host, not on a header.
+
+    The entry must carry no ``headers`` map at all. Emitting one would put a
+    credential in a world-readable config for an authentication scheme the
+    daemon no longer runs.
+    """
     entry = _generate_mcp_json_section()
 
     assert entry["url"].endswith("/mcp")
-    if "headers" in entry:
-        assert entry["headers"]["Authorization"].startswith("Bearer ")
+    assert "headers" not in entry, (
+        f"the entry carries a headers map the daemon does not read: {entry!r}"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -309,9 +324,9 @@ def test_reports_unregistered_when_the_adapter_cannot_be_declared(
 def test_install_never_claims_a_verified_connection(spellbook_dir, config_dir):
     """The installer does not probe the daemon and must not imply that it did.
 
-    Two states are explicitly untested upstream -- daemon down, and a stale
-    token. The installer cannot distinguish them because it makes no request,
-    so its vocabulary is confined to what it did: declare and write.
+    A daemon that is down and a daemon that is up are indistinguishable to an
+    installer that makes no request, so its vocabulary is confined to what it
+    did: declare and write.
     """
     results = _installer(spellbook_dir, config_dir).install()
 
@@ -513,3 +528,274 @@ def test_reported_message_never_names_a_version_spellbook_did_not_write(
     assert user_source in message, (
         f"the message must name the spec that actually loads mcp.json: {message!r}"
     )
+
+
+# ---------------------------------------------------------------------------
+# settings.json belongs to the user: its mode, its shape, its concurrent writer
+# ---------------------------------------------------------------------------
+
+
+def test_install_preserves_an_owner_only_settings_mode(spellbook_dir, config_dir):
+    """An owner-only settings.json must not come back world-readable.
+
+    ``os.replace`` swaps in the TEMPORARY file, so without an explicit chmod the
+    result carries the temp file's default-umask mode -- typically 0644. A user
+    who tightened settings.json to 0600 would have it widened by an install that
+    only meant to append a package entry.
+    """
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(json.dumps({"theme": "dark"}), encoding="utf-8")
+    settings_path.chmod(0o600)
+
+    _installer(spellbook_dir, config_dir).install()
+
+    assert stat.S_IMODE(settings_path.stat().st_mode) == 0o600, (
+        "the install widened the user's settings.json; every other local "
+        "account can now read it"
+    )
+    assert PI_MCP_ADAPTER_SPEC in _read_pi_settings(settings_path)["packages"]
+
+
+def test_a_settings_file_the_installer_creates_is_owner_only(
+    spellbook_dir, config_dir
+):
+    """With no file to inherit a mode from, the restrictive default applies."""
+    settings_path = config_dir / "settings.json"
+    assert not settings_path.exists()
+
+    _installer(spellbook_dir, config_dir).install()
+
+    assert stat.S_IMODE(settings_path.stat().st_mode) == PI_SETTINGS_NEW_FILE_MODE
+
+
+def test_a_non_list_packages_key_is_never_overwritten(spellbook_dir, config_dir):
+    """A wrong-typed ``packages`` is the user's data, not a blank slate.
+
+    Coercing it to ``[]`` and writing that back destroys it silently. The file
+    level already raises on a non-object; the key level must not be laxer.
+    """
+    settings_path = config_dir / "settings.json"
+    original = json.dumps({"theme": "dark", "packages": "npm:pi-mcp-adapter"})
+    settings_path.write_text(original, encoding="utf-8")
+
+    results = _installer(spellbook_dir, config_dir).install()
+
+    assert settings_path.read_text(encoding="utf-8") == original, (
+        "settings.json was rewritten; whatever 'packages' held is gone"
+    )
+    adapter = _result(results, "mcp_adapter")
+    assert not adapter.success
+    assert "packages" in adapter.message
+
+
+def test_a_second_stale_adapter_entry_is_not_left_behind(spellbook_dir, config_dir):
+    """Handling only the FIRST match leaves a sibling that can win.
+
+    Pi resolves an npm package by name, so a leftover older pin is not additive
+    -- it is a second answer to the same question, and the version the
+    installer reports need not be the version that loads.
+    """
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(
+        json.dumps(
+            {
+                "packages": [
+                    f"npm:{PI_MCP_ADAPTER_NAME}@0.0.1",
+                    "npm:someone-elses-package@1.0.0",
+                    f"npm:{PI_MCP_ADAPTER_NAME}@0.0.2",
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    _installer(spellbook_dir, config_dir).install()
+
+    packages = _read_pi_settings(settings_path)["packages"]
+    assert [p for p in packages if PI_MCP_ADAPTER_NAME in str(p)] == [
+        PI_MCP_ADAPTER_SPEC
+    ], f"a stale adapter declaration survived: {packages!r}"
+    assert "npm:someone-elses-package@1.0.0" in packages
+
+
+def test_duplicate_entries_including_a_user_one_fail_loudly(
+    spellbook_dir, config_dir
+):
+    """Which entry pi loads is ambiguous, and one of them is the user's.
+
+    Rewriting either would guess, and reporting a version would report the
+    guess. The installer says so instead.
+    """
+    settings_path = config_dir / "settings.json"
+    user_entry = {"source": f"npm:{PI_MCP_ADAPTER_NAME}@2.0.0", "skills": []}
+    packages = [f"npm:{PI_MCP_ADAPTER_NAME}@0.0.1", user_entry]
+    settings_path.write_text(json.dumps({"packages": packages}), encoding="utf-8")
+
+    results = _installer(spellbook_dir, config_dir).install()
+
+    assert _read_pi_settings(settings_path)["packages"] == packages
+    adapter = _result(results, "mcp_adapter")
+    assert not adapter.success
+    assert not _result(results, "mcp_server").success
+
+
+def test_uninstall_removes_every_entry_spellbook_wrote(spellbook_dir, config_dir):
+    """One retract, every managed entry -- the same reason install collapses them."""
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(
+        json.dumps(
+            {
+                "packages": [
+                    f"npm:{PI_MCP_ADAPTER_NAME}@0.0.1",
+                    f"npm:{PI_MCP_ADAPTER_NAME}",
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    ok, message, retracted = _retract_pi_adapter(config_dir)
+
+    assert ok and retracted, message
+    assert _read_pi_settings(settings_path)["packages"] == []
+
+
+def test_the_retracted_flag_is_a_fact_not_a_word_in_the_message(
+    spellbook_dir, config_dir
+):
+    """``action`` must come from what was removed, not from the message's text.
+
+    Deriving it by searching the message for a substring makes a reworded
+    message change the recorded outcome, silently and for no stated reason.
+    """
+    _installer(spellbook_dir, config_dir).install()
+    results = _installer(spellbook_dir, config_dir).uninstall()
+
+    assert _result(results, "mcp_adapter").action == "removed"
+
+    ok, message, retracted = _retract_pi_adapter(config_dir)
+    assert ok
+    assert retracted is False, (
+        f"nothing was removed on the second pass, yet retracted is True: {message!r}"
+    )
+
+
+# ---------------------------------------------------------------------------
+# Pi's lock, which pi takes around every settings.json read-modify-write
+# ---------------------------------------------------------------------------
+
+
+def test_the_declaration_waits_for_pis_lock_instead_of_overwriting(config_dir):
+    """A held lock means pi is mid read-modify-write. Writing through it loses.
+
+    Pi's ``withLock`` reads INSIDE the lock and writes back inside the same one
+    (``core/settings-manager.js``). An installer that ignores the lock has its
+    entry overwritten by pi's write, which was computed from a read taken
+    before ours -- after the installer already reported success.
+    """
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(json.dumps({"theme": "dark"}), encoding="utf-8")
+    lock_path = settings_path.with_name(settings_path.name + PI_SETTINGS_LOCK_SUFFIX)
+    lock_path.mkdir()
+
+    try:
+        ok, message, _ = _declare_pi_adapter(config_dir)
+    finally:
+        lock_path.rmdir()
+
+    assert not ok, "the installer wrote through a lock pi was holding"
+    assert "lock" in message
+    assert "packages" not in _read_pi_settings(settings_path)
+
+
+def test_the_lock_is_the_path_proper_lockfile_uses(config_dir):
+    """The lock is only pi's lock if it is at the path pi's library uses.
+
+    proper-lockfile's ``getLockFile`` returns the target path with ``.lock``
+    appended, and the lock itself is a DIRECTORY, created with mkdir. A lock at
+    any other path, or of any other kind, contends with nothing.
+    """
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text("{}", encoding="utf-8")
+
+    with _pi_settings_lock(settings_path):
+        held = config_dir / "settings.json.lock"
+        assert held.is_dir(), "pi's lock is a directory at <file>.lock"
+
+    assert not held.exists(), "the lock must be released, or pi blocks forever"
+
+
+def test_a_stale_lock_does_not_block_the_install_forever(spellbook_dir, config_dir):
+    """proper-lockfile treats a lock older than its staleness window as dead."""
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text("{}", encoding="utf-8")
+    lock_path = settings_path.with_name(settings_path.name + PI_SETTINGS_LOCK_SUFFIX)
+    lock_path.mkdir()
+    ancient = time.time() - 3600
+    os.utime(lock_path, (ancient, ancient))
+
+    ok, message, _ = _declare_pi_adapter(config_dir)
+
+    assert ok, message
+    assert PI_MCP_ADAPTER_SPEC in _read_pi_settings(settings_path)["packages"]
+
+
+# ---------------------------------------------------------------------------
+# What the dry run says it would do, and what the user is told to do next
+# ---------------------------------------------------------------------------
+
+
+def test_dry_run_does_not_claim_a_write_it_would_not_perform(
+    spellbook_dir, config_dir
+):
+    """The entry is already correct, so a real run writes nothing.
+
+    Returning "would declare ..." before reading the file announces a write for
+    the one case that performs none.
+    """
+    _installer(spellbook_dir, config_dir).install()
+
+    results = _installer(spellbook_dir, config_dir, dry_run=True).install()
+
+    message = _result(results, "mcp_adapter").message
+    assert "would declare" not in message, (
+        f"the dry run announces a write that would not happen: {message!r}"
+    )
+    assert "already declared" in message
+
+
+def test_dry_run_reports_leaving_a_user_entry_alone(spellbook_dir, config_dir):
+    """A user's object-form entry is left as is, dry run or not."""
+    settings_path = config_dir / "settings.json"
+    settings_path.write_text(
+        json.dumps(
+            {"packages": [{"source": f"npm:{PI_MCP_ADAPTER_NAME}@2.0.0", "skills": []}]}
+        ),
+        encoding="utf-8",
+    )
+
+    results = _installer(spellbook_dir, config_dir, dry_run=True).install()
+
+    message = _result(results, "mcp_adapter").message
+    assert "would declare" not in message
+    assert "left as is" in message
+
+
+def test_dry_run_still_announces_a_write_it_would_perform(spellbook_dir, config_dir):
+    """Reading first must not silence the case that does write."""
+    results = _installer(spellbook_dir, config_dir, dry_run=True).install()
+
+    assert "would declare" in _result(results, "mcp_adapter").message
+
+
+def test_install_tells_the_user_that_pi_must_be_restarted(spellbook_dir, config_dir):
+    """The tools do not exist until pi restarts, and nothing else says so.
+
+    The adapter connects a ``directTools`` server during ``session_start`` when
+    it has no cache entry for it and then reports, in its own ``init.ts``, that
+    the tools "will be available after restart". Pi separately installs a
+    declared-but-missing npm package on its next start.
+    """
+    results = _installer(spellbook_dir, config_dir).install()
+
+    assert PI_RESTART_NOTICE in _result(results, "mcp_server").message
