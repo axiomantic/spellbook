@@ -89,6 +89,29 @@ ended in a bare `echo`, so exit status never reflected any assertion; it ran gre
 eight months while printing `✗`. And audit protocols emitted an overall verdict with no
 derivation rule, so a report naming a failing item could still conclude PASS.
 
+**A round trip can pass because both directions are wrong.** A test that encodes
+then decodes, writes then reads, composes then reverses, is checking that two
+operations agree -- not that either is right. When both are wrong in complementary
+ways the test is green and stays green, and the day someone corrects ONE direction
+the test goes red and reads as a regression. It is not. It is the truth arriving.
+
+**Observed.** A wire-format inverse round-tripped 18 of 20 shapes. The forward
+transform was then widened to fire on every shape it should, and the figure fell to
+0 of 20. The inverse had always been wrong; the old 18 passed only because the
+forward path was wrong in the matching way and the two errors cancelled. The fix
+was to make the forward path arbitrate its own inverse, so the two cannot drift
+apart again -- not to restore the number.
+
+**A test that keeps its name while its content changes is a false identity.**
+Asking "does test X pass" across two revisions compares two different tests
+whenever X was rewritten between them. The name is not the assertion.
+
+**Observed.** Eight submodule pins were audited by whether a named test passed.
+It passed on every one. It also passed on the corrected commit -- but the two are
+different tests, one asserting the defect and one asserting the fix, and the audit
+could not tell them apart. Compare what the test ASSERTS, or plant a failure and
+see which revisions notice.
+
 **When you cannot verify**, say so explicitly rather than reporting done.
 "Ran, exit 0, artifact unverified" is honest. "Done" is not.
 
