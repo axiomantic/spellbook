@@ -128,6 +128,34 @@ even that combined rule. Each pass had tested one path through a four-variable
 space and generalized from it. **The fix: list every combination, or state exactly
 which combination you tested and claim nothing beyond it.**
 
+**A zero that means NOT YET reads exactly like a zero that means NEVER.** A negative
+result is a claim about the OBSERVATION WINDOW, not about the system. "X did not
+happen" is only ever "X did not happen within what I observed", and the instrument
+reports zero either way, so the distance between those two statements never appears
+in the output. Before recording any negative, ask: **what would I have to run to be
+sure this is absence rather than earliness?** For a time-bounded observation that
+means establishing that the window covers the behaviour — ideally by finding an input
+that DOES produce the event and confirming the instrument sees it. A negative with no
+accompanying positive is not yet a measurement.
+
+This is the mirror of the aggregator rule this module already states. That rule says a
+green run over inputs that all pass proves only that the path is quiet. This one says a
+zero over a window too short proves only that the window was short.
+
+**Observed five times in one day, in five separate investigations on one project, at a
+cost exceeding everything else that day combined.** A test declared an emulated machine
+booted at 44,500 scheduler quanta; its event loop does not run until past 180,000, so
+every measurement taken through that predicate sampled a machine that had not started
+working. On that basis "the firmware never stores a delivered patch" was recorded as a
+finding — re-run past the real boot point, it stores it correctly in three places. That
+wrong finding was then used to refute a correct prior measurement, and the refutation
+was written into the project's findings corpus as a formal contradiction before being
+withdrawn within hours. Separately, a routine logged as "never fires" at 50,000 quanta
+fires at 300,000, on both the test and the control; the non-firing had been reasoned
+from for weeks. And a submodule change was verified in a 20,000-quantum window,
+reported as safe, and propagated to five branches — at 180,000 quanta it hangs the
+emulator outright.
+
 **A generated file is only evidence if it is newer than its source.** Reading the
 generated file is correct, but not enough on its own. Before you draw a conclusion
 from it, check its timestamp against the source, or find a marker from the current

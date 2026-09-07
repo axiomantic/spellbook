@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.92.0] - 2026-09-07
 
 ### Fixed
 
@@ -96,6 +96,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pre-pass block in its Report Assembly section.
 - Three `check_reference_resolution.py` allowlist entries that the deletion
   orphaned. The allowlist's own staleness test found them.
+
+### Added
+
+- `rules/82-file-reading.md` records that a search pattern can report a false
+  absence. Four variants of one shape landed in a single day: `git grep` does
+  not see untracked files, a word boundary is silently unsupported under `-E`,
+  a hyphenated term was searched with a space, and a literal containing
+  shell-variable syntax was matched with an interpreting `grep`. The last one
+  nearly caused a merged fix to be applied twice -- the pattern was copied
+  verbatim out of the file it was searching, and its metacharacters made the
+  match fail against the exact text it came from. All four exit 0 and print
+  nothing, which is indistinguishable from a real absence. Any "appears
+  nowhere" claim must name the tool that produced it.
+- `rules/45-verification.md` records two more shapes where a green test proves
+  nothing. A round trip checks that two operations AGREE, not that either is
+  right: it passes while both are wrong in complementary ways, and goes red
+  when somebody corrects one of them. An inverse that round-tripped 18 of 20
+  shapes fell to 0 of 20 once the forward path was widened correctly; the 18
+  had never been right. And a test that keeps its NAME while its content
+  changes is a false identity -- eight submodule pins were audited by whether
+  a named test passed, and it passed on all of them and on the corrected
+  commit too, because the two are different tests asserting opposite things.
+- `rules/45-verification.md` also records that a zero which means NOT YET reads
+  exactly like a zero which means NEVER. A negative result is a claim about the
+  observation window, not about the system, and the instrument reports zero
+  either way. The module now asks for one question before any negative is
+  written down -- what would establish that this is absence rather than
+  earliness -- and treats a negative with no accompanying positive as not yet a
+  measurement. This is the mirror of the module's aggregator rule: that one says
+  a green run over inputs that all pass proves only that the path is quiet.
+- `rules/30-intent-routing.md` extends the standing NMG2 exception to bar the
+  two shapes the general rules elsewhere allow: mechanizing a verification
+  table, and pinning a count that a test checks. The existing text barred a
+  linter, a register and an audit script; those two were the shape that kept
+  regrowing in those repositories.
 
 ## [0.91.0] - 2026-09-03
 
