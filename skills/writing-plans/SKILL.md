@@ -320,6 +320,7 @@ Before completing plan:
 - [ ] Every task has exact file paths (no "somewhere in src/")
 - [ ] Every code block is complete (no placeholders or TODOs)
 - [ ] Every test command includes expected output
+- [ ] In every task, Step 4's `Run:` line is character-identical to that task's `Check:` line
 - [ ] Each step is single atomic action (2-5 min max)
 - [ ] Design doc path recorded in header
 - [ ] Plan saved to correct location (`~/.local/spellbook/docs/...`)
