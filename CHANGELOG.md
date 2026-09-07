@@ -7,6 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Pi's MCP registration was a silent no-op and now actually registers.
+  `installer/platforms/pi.py` wrote `~/.pi/agent/mcp.json` and reported
+  "registered MCP server", but pi has no native MCP support: its `dist/`
+  references neither `mcpServers` nor `mcp.json`, and its `docs/usage.md`
+  states it "intentionally does not include built-in MCP". Nothing read the
+  file the installer wrote, so the success message was the only artifact the
+  operation produced. MCP now arrives through the `pi-mcp-adapter` npm
+  package, declared in `~/.pi/agent/settings.json` and pinned to a named
+  constant, so a bump is a deliberate edit; pi skips versioned npm specs
+  during `pi update --extensions`. The emitted server entry gains three
+  adapter settings that correct defaults which would otherwise leave the tools
+  unusable: `directTools: true` (the default routes all tools through a single
+  proxy tool named `mcp`), `toolPrefix: "none"` (the default prepends the
+  server name, yielding `spellbook_spellbook_health_check` for tools already
+  named `spellbook_*`), and `lifecycle: "eager"`. `protocolVersion` is
+  deliberately unset so the adapter's `legacy` default negotiates. Reporting is
+  now conditioned on the adapter declaration rather than on a file having been
+  written: with the adapter undeclared the installer says MCP is not registered
+  and fails the step, and `detect()` no longer counts a bare `mcp.json` entry as
+  a registration. The installer makes no request to the daemon, so it claims
+  only what it did -- declared and wrote -- and never that the server is
+  reachable. It does now say that pi must be restarted, which is what the
+  adapter's own `init.ts` reports for a `directTools` server it bootstraps.
+  Uninstall removes the adapter declaration only when no other server remains
+  in `mcp.json`, and never touches a user-authored object-form entry.
+- Installing for pi no longer widens the permissions on an existing
+  `~/.pi/agent/settings.json`. The write is an atomic replace, and
+  `os.replace` swaps in the TEMPORARY file, so the result carried the temp
+  file's default-umask mode: an owner-only settings.json came back 0644,
+  readable by every other local account, with nothing reporting it. The
+  existing file's mode is now carried across explicitly, and a settings.json
+  the installer creates is 0600.
+- The pi installer takes pi's own settings.json lock. Pi guards every
+  settings write with `proper-lockfile` and re-reads inside the lock
+  (`withLock` in pi's `core/settings-manager.js`), so a concurrent write from
+  a running pi was computed from a read taken before the installer's replace
+  and silently dropped the new entry -- after the installer reported success.
+  The lock is a directory at `<file>.lock` created with mkdir, which is the
+  whole protocol, so the installer contends for the same lock rather than a
+  parallel one of its own. The result is also read back after the write, so a
+  lost update from a writer that does not take the lock is reported rather
+  than assumed away.
+- A non-list `packages` key in pi's settings.json is no longer silently
+  replaced with an empty list. The file level already raised on a non-object;
+  the key level was destroying user data instead. The installer now fails the
+  step and leaves the file alone.
+- Every entry naming `pi-mcp-adapter` is handled, not just the first. Pi
+  resolves an npm package by name, so a leftover older pin was a second answer
+  to the same question and could reinstall an older adapter over the pinned
+  one, making the reported version not the version that runs. Spellbook's own
+  bare-string entries collapse to one pinned entry; duplicates that include a
+  user-authored entry are reported as ambiguous rather than guessed at.
+- The pi dry run no longer reports a write it would not perform. It returned
+  "would declare ..." before reading settings.json, so it said that for the
+  two cases that write nothing -- the entry is already present and pinned, or
+  it is the user's own and is left alone.
+- The `mcp_adapter` uninstall result no longer derives its `removed`/`skipped`
+  action by searching its own human-readable message for a substring, which
+  made rewording the message change the recorded outcome. The flag comes from
+  what was removed.
+
 ### Removed
 
 - The `spellbook-planlint` package, its console script, its test suite and its
