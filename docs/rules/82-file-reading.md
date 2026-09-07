@@ -32,5 +32,24 @@ an empty result that reads exactly as an absence. One of the two claims was re-r
 with a tool that reads untracked files, and the answer moved. The claim had already
 been written down as a measurement.
 
+<RULE>A search pattern containing regex metacharacters, matched with a tool that interprets them, reports absence for text that is present. Use a fixed-string match (`grep -F`, `rg -F`) whenever the pattern is a literal you copied from a file, and NAME the mode beside any "not found" claim.</RULE>
+
+The metacharacters that bite are the ones that occur in ordinary code, not the
+ones that look like regex: `$`, `{`, `}`, `(`, `)`, `[`, `]`, `.`, `?`, `+`, `*`.
+A shell or CMake variable reference contains three of them.
+
+**Observed, in one day, four variants of the same shape.** `git grep` returned
+empty for a term present in untracked files. `\b` was silently unsupported under
+`git grep -E`, so a word-boundary search matched nothing. A hyphenated term was
+searched with a space and reported as absent. And a verification sweep checked
+whether a merged one-character fix had landed by grepping for the literal
+`"${xcodebuild_version}"`; the metacharacters made it return 0 against a file
+whose line 10 contains exactly that text, and the fix was very nearly re-applied
+to a tree that already had it. `grep -F` returned 1 immediately.
+
+Every one of these read as a measured absence. That is what makes the class
+expensive: the tool exits 0, prints nothing, and nothing distinguishes a real absence
+from a search that could not see the text.
+
 Load `smart-reading` skill for the full protocol.
 ```
