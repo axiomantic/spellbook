@@ -8608,7 +8608,26 @@
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>with a tool that reads untracked files, and the answer moved. The claim had already
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>been written down as a measurement.
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>Load <span class="sb">`smart-reading`</span> skill for the full protocol.
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>&lt;RULE&gt;A search pattern containing regex metacharacters, matched with a tool that interprets them, reports absence for text that is present. Use a fixed-string match (<span class="sb">`grep -F`</span>, <span class="sb">`rg -F`</span>) whenever the pattern is a literal you copied from a file, and NAME the mode beside any "not found" claim.&lt;/RULE&gt;
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>The metacharacters that bite are the ones that occur in ordinary code, not the
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>ones that look like regex: <span class="sb">`$`</span>, <span class="sb">`{`</span>, <span class="sb">`}`</span>, <span class="sb">`(`</span>, <span class="sb">`)`</span>, <span class="sb">`[`</span>, <span class="sb">`]`</span>, <span class="sb">`.`</span>, <span class="sb">`?`</span>, <span class="sb">`+`</span>, <span class="sb">`*`</span>.
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>A shell or CMake variable reference contains three of them.
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a><span class="gs">**Observed, in one day, four variants of the same shape.**</span> <span class="sb">`git grep`</span> returned
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>empty for a term present in untracked files. <span class="sb">`\b`</span> was silently unsupported under
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="sb">`git grep -E`</span>, so a word-boundary search matched nothing. A hyphenated term was
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a>searched with a space and reported as absent. And a verification sweep checked
+<a id="__codelineno-0-27" name="__codelineno-0-27" href="#__codelineno-0-27"></a>whether a merged one-character fix had landed by grepping for the literal
+<a id="__codelineno-0-28" name="__codelineno-0-28" href="#__codelineno-0-28"></a><span class="sb">`"${xcodebuild_version}"`</span>; the metacharacters made it return 0 against a file
+<a id="__codelineno-0-29" name="__codelineno-0-29" href="#__codelineno-0-29"></a>whose line 10 contains exactly that text, and the fix was very nearly re-applied
+<a id="__codelineno-0-30" name="__codelineno-0-30" href="#__codelineno-0-30"></a>to a tree that already had it. <span class="sb">`grep -F`</span> returned 1 immediately.
+<a id="__codelineno-0-31" name="__codelineno-0-31" href="#__codelineno-0-31"></a>
+<a id="__codelineno-0-32" name="__codelineno-0-32" href="#__codelineno-0-32"></a>Every one of these read as a measured absence. That is what makes the class
+<a id="__codelineno-0-33" name="__codelineno-0-33" href="#__codelineno-0-33"></a>expensive: the tool exits 0, prints nothing, and nothing distinguishes a real absence
+<a id="__codelineno-0-34" name="__codelineno-0-34" href="#__codelineno-0-34"></a>from a search that could not see the text.
+<a id="__codelineno-0-35" name="__codelineno-0-35" href="#__codelineno-0-35"></a>
+<a id="__codelineno-0-36" name="__codelineno-0-36" href="#__codelineno-0-36"></a>Load <span class="sb">`smart-reading`</span> skill for the full protocol.
 </code></pre></div>
 
 
