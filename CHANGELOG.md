@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.93.0] - 2026-09-09
+
+### Added
+
+- Verification: a replacement that reports no match count cannot report making
+  none. `str.replace` on non-matching text returns the input unchanged and
+  raises nothing, so the edit no-ops and the commit still succeeds. Use a form
+  that returns a count and branch on it; prose wraps, so patterns copied from
+  rendered text usually miss.
+- Philosophy: pair every zero with a known positive from the same population.
+  An absence and an unrun query produce the same output. Before recording that
+  something did not happen, show the same instrument in the same run reporting
+  that something did. The measurement-side twin of the silent-mechanism
+  principle already in that module.
+
 ## [0.92.0] - 2026-09-07
 
 ### Fixed
