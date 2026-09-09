@@ -26,6 +26,30 @@ paths: []
 
 This is the DEFAULT guiding philosophy, and in autonomous mode it is selectable: the operator may run a session under a different one, which the Stop hook names in every block message. `spellbook/core/autonomous.py` (`PHILOSOPHIES`) is the single home of the list — an always-loaded rule module is the wrong home for a list that will grow.
 
+**Pair every zero with a known positive from the same population.** An absence
+and an unrun query produce the same output: nothing. Before recording "X did not
+happen", show the same instrument, in the same run, reporting that something DID
+happen -- an input known to trigger X, a control that must match, a sentinel
+driven through the same comparator. A zero with no positive beside it is not a
+measurement yet, and it is the cheapest kind of wrong fact to create.
+
+This is the measurement-side twin of the silent-mechanism principle: one
+describes a mechanism whose success is indistinguishable from its absence, the
+other a result whose absence is indistinguishable from its success.
+
+**Observed, repeatedly, in one project on one day.** A loader refused a patch for
+an over-long name and returned that refusal BY NAME, printed in every failing
+run, at line 55,688 of a log that ran to six figures. Every analysis grepped for
+counts and read past it. Ten patches were misclassified, three purpose-built
+fixtures reported inert, an agent redirected on the false data, and a document
+rewritten around the wrong conclusion -- all downstream of a diagnostic line that
+was never hidden, only unread. The same day, a probe reported zero reads for a
+page the processor was executing from; its insertion had silently failed, and
+only a known positive alongside it caught that.
+
+The corpus that project keeps now states it as a standing convention, and it is
+the single practice that would have prevented most of the wasted work.
+
 **A working mechanism that fails silently fails exactly like a missing one.** When you choose a mechanism, ask what its silence means. If "working correctly" and "absent, misconfigured, or never run" produce the same visible result, you do not have a mechanism yet. Choose the uglier form if it fails loudly.
 
 Observed cases, each found by testing, not by reasoning about the code:
