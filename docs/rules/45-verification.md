@@ -112,6 +112,16 @@ different tests, one asserting the defect and one asserting the fix, and the aud
 could not tell them apart. Compare what the test ASSERTS, or plant a failure and
 see which revisions notice.
 
+**A replacement that reports no match count cannot report making none.**
+`str.replace` on non-matching text returns the input unchanged and raises
+nothing, so the edit no-ops and the commit succeeds. Use a form returning a
+count and branch on it. Prose wraps; patterns copied from rendered text miss.
+
+**Observed.** Three replacements matched nothing, the script printed
+`corrected 0 of 3`, that line was passed over, and the next insertion sought
+an anchor they should have written, got `-1`, and spliced a document into
+itself. Nothing errored; the merge succeeded.
+
 **When you cannot verify**, say so explicitly rather than reporting done.
 "Ran, exit 0, artifact unverified" is honest. "Done" is not.
 
