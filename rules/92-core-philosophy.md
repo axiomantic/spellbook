@@ -75,3 +75,25 @@ Observed cases, each found by testing, not by reasoning about the code:
 - A deduplication that lowered test precision. Two separate error sites were merged into one check that could cancel itself out. The cleanup looked like a strict improvement. It was not.
 - A guard built from the same value it was supposed to check. It could never fail for an independent reason.
 - A count used where a comparison was needed. A row-count check let a duplicate row through, and the duplicate silently replaced the real row.
+
+**A measurement taken on ONE member is not a measurement about the population.**
+Name which one, every time, and say so in the sentence that carries the number.
+When the members are supposed to be identical, that is a hypothesis the
+measurement did not test; when they are known to differ by role, generalising is
+simply wrong. The failure is quiet because the figure is real -- it was measured,
+it is accurate, and only its SCOPE is false, so nothing downstream can catch it.
+
+This is the population-side twin of the conditions rule: a result without its
+conditions is unrepeatable, and a result without its subject is untrue of
+everything except the one thing it was taken on.
+
+**Observed, twice in two days in one project, the second time refuting a
+document in that project's own corpus.** A payload size measured on one processor
+was written as "about 1,600 words per processor"; the real figure is
+patch-dependent across a 5x range and that processor always receives a smaller,
+different one. Then a memory-addressing scheme read out of one processor's
+disassembly was written as how all eight store their output. It holds on two of
+the eight and is false on the other six, which are not supposed to store there at
+all -- and a search ran for a missing instruction that was never supposed to
+exist. The eight were never interchangeable: different resident firmware,
+different entry points, different roles at each end of a chain.

@@ -108,8 +108,28 @@ When compacting, follow `/handoff` command exactly. MUST retain all remaining wo
 </CRITICAL>
 </CRITICAL>
 
+### A Shared Scratch Directory Is Not Yours
+
+When more than one agent can run at once, the session scratch directory is shared
+mutable state. **Give every subagent its own working path, outside it, and say so
+in the dispatch prompt.** A build, a clone or a worktree that lives in the shared
+scratchpad can be removed by a concurrent agent doing its own cleanup, and the
+victim does not see a deletion: it sees missing headers, a missing source file, a
+checkout that looks corrupt. That reads as a broken tree and sends the reader to
+debug the wrong thing.
+
+**Observed.** A 1.3 GB build directory under the session scratchpad vanished
+mid-build while a second agent tidied up. The build reported eleven "file not
+found" errors and one unreadable source file, and the tree it was building had
+simply ceased to exist. Roughly forty minutes of machine time, and the first
+diagnosis was a submodule problem.
+
+The same rule covers preserved output: a subagent's results are durable only once
+they are pushed or copied somewhere the next cleanup cannot reach.
+
 <FORBIDDEN>
 - Doing subagent work in main context (write/edit/test without Task tool)
 - Skipping skill phases because they are "too long"
+- Putting a subagent's build, clone or worktree in a scratch directory shared with other agents
 </FORBIDDEN>
 ```
