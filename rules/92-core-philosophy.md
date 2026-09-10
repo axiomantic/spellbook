@@ -26,6 +26,20 @@ paths: []
 
 This is the DEFAULT guiding philosophy, and in autonomous mode it is selectable: the operator may run a session under a different one, which the Stop hook names in every block message. `spellbook/core/autonomous.py` (`PHILOSOPHIES`) is the single home of the list — an always-loaded rule module is the wrong home for a list that will grow.
 
+**A perturbing probe proves a mechanism CAN fire. A non-perturbing one proves
+whether it DOES.** Writing a sentinel, forcing a value, restoring state between
+steps -- each supplies the conditions the mechanism needs, so a positive result
+says the path works and says nothing about whether the system exercises it.
+Reading without disturbing answers the second question and cannot answer the
+first. Both are necessary; neither substitutes.
+
+**Observed.** A probe rewrote a buffer every cycle and recorded thousands of
+writes, which was reported as the mechanism running. A read-only pass over the
+same buffer, same inputs, found nothing written at all: the probe had been
+supplying the very stimulus it was measuring the response to. The correct
+conclusion inverted -- the machinery worked and was never invoked -- and the
+first reading had already been written down twice.
+
 **Pair every zero with a known positive from the same population.** An absence
 and an unrun query produce the same output: nothing. Before recording "X did not
 happen", show the same instrument, in the same run, reporting that something DID
