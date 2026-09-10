@@ -8686,10 +8686,30 @@
 <a id="__codelineno-0-90" name="__codelineno-0-90" href="#__codelineno-0-90"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-91" name="__codelineno-0-91" href="#__codelineno-0-91"></a>&lt;/CRITICAL&gt;
 <a id="__codelineno-0-92" name="__codelineno-0-92" href="#__codelineno-0-92"></a>
-<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a>&lt;FORBIDDEN&gt;
-<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a><span class="k">-</span><span class="w"> </span>Doing subagent work in main context (write/edit/test without Task tool)
-<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a><span class="k">-</span><span class="w"> </span>Skipping skill phases because they are "too long"
-<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>&lt;/FORBIDDEN&gt;
+<a id="__codelineno-0-93" name="__codelineno-0-93" href="#__codelineno-0-93"></a><span class="gu">### A Shared Scratch Directory Is Not Yours</span>
+<a id="__codelineno-0-94" name="__codelineno-0-94" href="#__codelineno-0-94"></a>
+<a id="__codelineno-0-95" name="__codelineno-0-95" href="#__codelineno-0-95"></a>When more than one agent can run at once, the session scratch directory is shared
+<a id="__codelineno-0-96" name="__codelineno-0-96" href="#__codelineno-0-96"></a>mutable state. **Give every subagent its own working path, outside it, and say so
+<a id="__codelineno-0-97" name="__codelineno-0-97" href="#__codelineno-0-97"></a>in the dispatch prompt.** A build, a clone or a worktree that lives in the shared
+<a id="__codelineno-0-98" name="__codelineno-0-98" href="#__codelineno-0-98"></a>scratchpad can be removed by a concurrent agent doing its own cleanup, and the
+<a id="__codelineno-0-99" name="__codelineno-0-99" href="#__codelineno-0-99"></a>victim does not see a deletion: it sees missing headers, a missing source file, a
+<a id="__codelineno-0-100" name="__codelineno-0-100" href="#__codelineno-0-100"></a>checkout that looks corrupt. That reads as a broken tree and sends the reader to
+<a id="__codelineno-0-101" name="__codelineno-0-101" href="#__codelineno-0-101"></a>debug the wrong thing.
+<a id="__codelineno-0-102" name="__codelineno-0-102" href="#__codelineno-0-102"></a>
+<a id="__codelineno-0-103" name="__codelineno-0-103" href="#__codelineno-0-103"></a><span class="gs">**Observed.**</span> A 1.3 GB build directory under the session scratchpad vanished
+<a id="__codelineno-0-104" name="__codelineno-0-104" href="#__codelineno-0-104"></a>mid-build while a second agent tidied up. The build reported eleven "file not
+<a id="__codelineno-0-105" name="__codelineno-0-105" href="#__codelineno-0-105"></a>found" errors and one unreadable source file, and the tree it was building had
+<a id="__codelineno-0-106" name="__codelineno-0-106" href="#__codelineno-0-106"></a>simply ceased to exist. Roughly forty minutes of machine time, and the first
+<a id="__codelineno-0-107" name="__codelineno-0-107" href="#__codelineno-0-107"></a>diagnosis was a submodule problem.
+<a id="__codelineno-0-108" name="__codelineno-0-108" href="#__codelineno-0-108"></a>
+<a id="__codelineno-0-109" name="__codelineno-0-109" href="#__codelineno-0-109"></a>The same rule covers preserved output: a subagent's results are durable only once
+<a id="__codelineno-0-110" name="__codelineno-0-110" href="#__codelineno-0-110"></a>they are pushed or copied somewhere the next cleanup cannot reach.
+<a id="__codelineno-0-111" name="__codelineno-0-111" href="#__codelineno-0-111"></a>
+<a id="__codelineno-0-112" name="__codelineno-0-112" href="#__codelineno-0-112"></a>&lt;FORBIDDEN&gt;
+<a id="__codelineno-0-113" name="__codelineno-0-113" href="#__codelineno-0-113"></a><span class="k">-</span><span class="w"> </span>Doing subagent work in main context (write/edit/test without Task tool)
+<a id="__codelineno-0-114" name="__codelineno-0-114" href="#__codelineno-0-114"></a><span class="k">-</span><span class="w"> </span>Skipping skill phases because they are "too long"
+<a id="__codelineno-0-115" name="__codelineno-0-115" href="#__codelineno-0-115"></a><span class="k">-</span><span class="w"> </span>Putting a subagent's build, clone or worktree in a scratch directory shared with other agents
+<a id="__codelineno-0-116" name="__codelineno-0-116" href="#__codelineno-0-116"></a>&lt;/FORBIDDEN&gt;
 </code></pre></div>
 
 

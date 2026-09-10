@@ -8653,6 +8653,28 @@
 <a id="__codelineno-0-61" name="__codelineno-0-61" href="#__codelineno-0-61"></a><span class="k">-</span><span class="w"> </span>A deduplication that lowered test precision. Two separate error sites were merged into one check that could cancel itself out. The cleanup looked like a strict improvement. It was not.
 <a id="__codelineno-0-62" name="__codelineno-0-62" href="#__codelineno-0-62"></a><span class="k">-</span><span class="w"> </span>A guard built from the same value it was supposed to check. It could never fail for an independent reason.
 <a id="__codelineno-0-63" name="__codelineno-0-63" href="#__codelineno-0-63"></a><span class="k">-</span><span class="w"> </span>A count used where a comparison was needed. A row-count check let a duplicate row through, and the duplicate silently replaced the real row.
+<a id="__codelineno-0-64" name="__codelineno-0-64" href="#__codelineno-0-64"></a>
+<a id="__codelineno-0-65" name="__codelineno-0-65" href="#__codelineno-0-65"></a><span class="gs">**A measurement taken on ONE member is not a measurement about the population.**</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66" href="#__codelineno-0-66"></a>Name which one, every time, and say so in the sentence that carries the number.
+<a id="__codelineno-0-67" name="__codelineno-0-67" href="#__codelineno-0-67"></a>When the members are supposed to be identical, that is a hypothesis the
+<a id="__codelineno-0-68" name="__codelineno-0-68" href="#__codelineno-0-68"></a>measurement did not test; when they are known to differ by role, generalising is
+<a id="__codelineno-0-69" name="__codelineno-0-69" href="#__codelineno-0-69"></a>simply wrong. The failure is quiet because the figure is real -- it was measured,
+<a id="__codelineno-0-70" name="__codelineno-0-70" href="#__codelineno-0-70"></a>it is accurate, and only its SCOPE is false, so nothing downstream can catch it.
+<a id="__codelineno-0-71" name="__codelineno-0-71" href="#__codelineno-0-71"></a>
+<a id="__codelineno-0-72" name="__codelineno-0-72" href="#__codelineno-0-72"></a>This is the population-side twin of the conditions rule: a result without its
+<a id="__codelineno-0-73" name="__codelineno-0-73" href="#__codelineno-0-73"></a>conditions is unrepeatable, and a result without its subject is untrue of
+<a id="__codelineno-0-74" name="__codelineno-0-74" href="#__codelineno-0-74"></a>everything except the one thing it was taken on.
+<a id="__codelineno-0-75" name="__codelineno-0-75" href="#__codelineno-0-75"></a>
+<a id="__codelineno-0-76" name="__codelineno-0-76" href="#__codelineno-0-76"></a>**Observed, twice in two days in one project, the second time refuting a
+<a id="__codelineno-0-77" name="__codelineno-0-77" href="#__codelineno-0-77"></a>document in that project's own corpus.** A payload size measured on one processor
+<a id="__codelineno-0-78" name="__codelineno-0-78" href="#__codelineno-0-78"></a>was written as "about 1,600 words per processor"; the real figure is
+<a id="__codelineno-0-79" name="__codelineno-0-79" href="#__codelineno-0-79"></a>patch-dependent across a 5x range and that processor always receives a smaller,
+<a id="__codelineno-0-80" name="__codelineno-0-80" href="#__codelineno-0-80"></a>different one. Then a memory-addressing scheme read out of one processor's
+<a id="__codelineno-0-81" name="__codelineno-0-81" href="#__codelineno-0-81"></a>disassembly was written as how all eight store their output. It holds on two of
+<a id="__codelineno-0-82" name="__codelineno-0-82" href="#__codelineno-0-82"></a>the eight and is false on the other six, which are not supposed to store there at
+<a id="__codelineno-0-83" name="__codelineno-0-83" href="#__codelineno-0-83"></a>all -- and a search ran for a missing instruction that was never supposed to
+<a id="__codelineno-0-84" name="__codelineno-0-84" href="#__codelineno-0-84"></a>exist. The eight were never interchangeable: different resident firmware,
+<a id="__codelineno-0-85" name="__codelineno-0-85" href="#__codelineno-0-85"></a>different entry points, different roles at each end of a chain.
 </code></pre></div>
 
 
