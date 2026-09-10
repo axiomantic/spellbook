@@ -47,7 +47,7 @@
   - [Parallelization](#parallelization)
   - [What it handles](#what-it-handles)
 - [What's Included](#whats-included)
-  - [Skills (62 total)](#skills-62-total)
+  - [Skills (63 total)](#skills-63-total)
   - [Commands (108 total)](#commands-108-total)
   - [Agents (16 total)](#agents-16-total)
 - [Platform Support](#platform-support)
@@ -181,7 +181,7 @@ Complete feature implementation, greenfield project creation, refactoring (with 
 
 ## What's Included
 
-### Skills (62 total)
+### Skills (63 total)
 
 Reusable workflows for structured development:
 
@@ -193,7 +193,7 @@ Reusable workflows for structured development:
 | **Autonomous Dev** | [autonomous-mode], [gathering-requirements], [dehallucination], [reflexion], [analyzing-domains], [assembling-context], [designing-workflows], [deep-research], [fractal-thinking] |
 | **Specialized** | [async-await-patterns], [using-lsp-tools], [managing-artifacts], [polish-repo], [generating-diagrams], [tooling-discovery], [dedupe], [estimating-tickets], [rounding-up-worktree-sessions] |
 | **Meta** | [using-skills]†, [writing-skills]†, [writing-commands], [instruction-engineering], [sharpening-prompts], [optimizing-instructions], [dispatching-parallel-agents]†, [smart-reading], [analyzing-skill-usage], [documenting-tools], [documenting-projects], [testing-strategy], [opportunity-awareness], [branch-context], [writing-copy] |
-| **Session** | [emotional-stakes], [agent2agent] |
+| **Session** | [emotional-stakes], [agent2agent], [session-pull] |
 
 *† Derived from [superpowers](https://github.com/obra/superpowers)*
 
@@ -247,6 +247,7 @@ Reusable workflows for structured development:
 [opportunity-awareness]: https://axiomantic.github.io/spellbook/latest/skills/opportunity-awareness/
 [branch-context]: https://axiomantic.github.io/spellbook/latest/skills/branch-context/
 [agent2agent]: https://axiomantic.github.io/spellbook/latest/skills/agent2agent/
+[session-pull]: https://axiomantic.github.io/spellbook/latest/skills/session-pull/
 [dedupe]: https://axiomantic.github.io/spellbook/latest/skills/dedupe/
 [distilling-prs]: https://axiomantic.github.io/spellbook/latest/skills/distilling-prs/
 [creating-issues-and-pull-requests]: https://axiomantic.github.io/spellbook/latest/skills/creating-issues-and-pull-requests/

@@ -189,6 +189,7 @@ nav:
       - skills/requesting-code-review.md
       - skills/resolving-merge-conflicts.md
       - skills/rounding-up-worktree-sessions.md
+      - skills/session-pull.md
       - skills/reviewing-design-docs.md
       - skills/reviewing-impl-plans.md
       - skills/reviewing-prs.md

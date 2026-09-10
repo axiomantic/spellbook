@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`session-pull` skill.** Pulls chat history and hidden context out of
+  coding-agent sessions and re-emits them in a portable format another
+  assistant can pick up exactly where the session left off. Sources:
+  Claude Code CLI and Claude Code Desktop local sessions (the same
+  `~/.claude` JSONL store), OpenCode's current SQLite schema (legacy
+  `storage/` JSON deliberately unsupported), AionUi's conversation store,
+  and Antigravity conversations (protobuf payloads with no public schema,
+  reverse-engineered via a generic wire-format walk + string carving
+  calibrated against live dbs 2026-09-10, with a `debug-dump` subcommand for
+  archaeology). Stdlib-only bundled script (`skills/session-pull/session_pull.py`)
+  following the roundup.py precedent; strictly read-only (SQLite sources are
+  read through db+wal+shm snapshot copies, never opened in place). Output:
+  canonical JSON envelope normalizing events (`message`/`thinking`/
+  `tool_call`/`tool_result`/`compaction`/`file_state`/`meta`) across all
+  four sources, or a Markdown handoff document under a char budget in
+  `--mode handoff`. Default `compact` mode emits the latest compaction
+  summary verbatim plus everything after its boundary — the session's true
+  current position — falling back to the full transcript when no anchor
+  exists. `--redact` runs a best-effort secret pass; `--out` writes 0600 and
+  refuses overwrite without `--force`. AionUi installer-platform support is
+  a separate deferred workstream; Claude Desktop remote (claude.ai) chats
+  are out of scope by design.
 - Philosophy: a measurement taken on ONE member is not a measurement about the
   population. Name which one, every time. The failure is quiet because the
   figure is real -- measured, accurate, and false only in its scope -- so nothing
