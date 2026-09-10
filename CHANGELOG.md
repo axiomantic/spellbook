@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Philosophy: a measurement taken on ONE member is not a measurement about the
+  population. Name which one, every time. The failure is quiet because the
+  figure is real -- measured, accurate, and false only in its scope -- so nothing
+  downstream catches it. Recorded after one project paid for it twice in two
+  days, the second time refuting a document in its own corpus: an addressing
+  scheme read out of one processor's disassembly was written as how all eight
+  store their output, and a search ran for an instruction six of them were never
+  supposed to have.
+- Orchestration: a shared scratch directory is not yours. Give every subagent a
+  working path outside it and say so in the dispatch prompt. Recorded after a
+  1.3 GB build directory vanished mid-build while a concurrent agent tidied up;
+  the victim saw missing headers and an unreadable source file rather than a
+  deletion, which reads as a broken tree and sends the reader to debug the wrong
+  thing.
+
 ## [0.94.0] - 2026-09-09
 
 ### Added
