@@ -20,10 +20,12 @@ opencode            ~/.local/share/opencode/opencode.db — SQLite with
                     session/message/part tables and JSON ``data`` columns.
                     Current schema ONLY: the legacy ``storage/`` JSON tree
                     is deliberately unsupported (operator decision).
-aionui              ~/Library/Application Support/AionUi/aionui/
-                    aionui-backend.db — conversations/messages/
-                    assistant_sessions tables; ``messages.content`` is a
-                    JSON blob and ``messages.hidden`` marks UI-hidden rows.
+aionui              <Electron userData>/aionui/aionui-backend.db — macOS
+                    ~/Library/Application Support/AionUi, Linux
+                    ~/.config/AionUi, Windows %APPDATA%/AionUi — with
+                    conversations/messages/assistant_sessions tables;
+                    ``messages.content`` is a JSON blob and
+                    ``messages.hidden`` marks UI-hidden rows.
 antigravity         ~/.gemini/antigravity/conversations/<uuid>.db —
                     per-conversation SQLite; ``steps.step_payload`` blobs
                     are protobuf WITHOUT a public schema, so extraction is
