@@ -598,8 +598,10 @@ def test_write_out_permissions_and_overwrite_guard(tmp_path: Path) -> None:
     sp = _load_module()
     out = tmp_path / "export.json"
     sp.write_out(out, "one", force=False)
-    mode = out.stat().st_mode & 0o777
-    assert mode == 0o600, "exports must not be group/world readable"
+    if os.name != "nt":
+        # Windows does not honor POSIX file modes; st_mode is always 0o666.
+        mode = out.stat().st_mode & 0o777
+        assert mode == 0o600, "exports must not be group/world readable"
     try:
         sp.write_out(out, "two", force=False)
     except SystemExit as exc:
