@@ -359,6 +359,44 @@ def test_claude_todo_and_title_precedence(tmp_path: Path) -> None:
                                   "status": "in_progress"}]
 
 
+def test_claude_title_custom_beats_ai_regardless_of_order(tmp_path: Path) -> None:
+    """customTitle outranks aiTitle even when the aiTitle record comes first.
+
+    Precedence is enforced by key rank, not record order (roundup.py
+    verification); before the rank fix the first title-bearing record won.
+    """
+    sp = _load_module()
+    root = tmp_path / "claude"
+    records = [
+        _claude_record("assistant", "reply", aiTitle="AI Generated"),
+        _claude_record("user", "later", customTitle="Pinned Name"),
+    ]
+    _write_claude_session(root, "/repo", "sid-a", records)
+    warnings: list[str] = []
+    path = root / "projects" / sp.encode_cwd_literal("/repo") / "sid-a.jsonl"
+    envelope = sp.parse_claude_session(path, "compact", root, warnings)
+    assert envelope["session"]["title"] == "Pinned Name"
+    # The lightweight list scan must agree with the full parse.
+    sessions = sp.list_claude_sessions(root, "/repo", warnings)
+    assert sessions[0]["title"] == "Pinned Name"
+
+
+def test_claude_title_custom_first_beats_later_ai(tmp_path: Path) -> None:
+    sp = _load_module()
+    root = tmp_path / "claude"
+    records = [
+        _claude_record("user", "hi", customTitle="Pinned Name"),
+        _claude_record("assistant", "reply", aiTitle="AI Generated"),
+    ]
+    _write_claude_session(root, "/repo", "sid-b", records)
+    warnings: list[str] = []
+    path = root / "projects" / sp.encode_cwd_literal("/repo") / "sid-b.jsonl"
+    envelope = sp.parse_claude_session(path, "compact", root, warnings)
+    assert envelope["session"]["title"] == "Pinned Name"
+    sessions = sp.list_claude_sessions(root, "/repo", warnings)
+    assert sessions[0]["title"] == "Pinned Name"
+
+
 # ---------------------------------------------------------------------------
 # opencode
 # ---------------------------------------------------------------------------
@@ -491,6 +529,33 @@ def test_aionui_workspace_and_listing(tmp_path: Path) -> None:
     assert sessions[0]["workspaces"] == ["/repo"]
     miss = sp.list_aionui_sessions(root, "/elsewhere", warnings)
     assert miss == []
+
+
+def test_aionui_root_env_override(tmp_path: Path, monkeypatch) -> None:
+    sp = _load_module()
+    monkeypatch.setenv("SPELLBOOK_SESSION_PULL_AIONUI_ROOT",
+                       str(tmp_path / "custom"))
+    assert sp.aionui_root() == tmp_path / "custom"
+
+
+def test_aionui_root_os_aware_default(tmp_path: Path, monkeypatch) -> None:
+    """Default root mirrors installer/config.py per-OS Electron layout."""
+    sp = _load_module()
+    monkeypatch.delenv("SPELLBOOK_SESSION_PULL_AIONUI_ROOT", raising=False)
+    home = tmp_path / "home"
+    home.mkdir()
+    monkeypatch.setenv("HOME", str(home))
+    monkeypatch.delenv("XDG_CONFIG_HOME", raising=False)
+    if sp.sys.platform == "darwin":
+        monkeypatch.delenv("APPDATA", raising=False)
+        expected = (home / "Library" / "Application Support" / "AionUi"
+                    / "aionui")
+    elif sp.sys.platform == "win32":
+        monkeypatch.setenv("APPDATA", str(home / "AppData" / "Roaming"))
+        expected = home / "AppData" / "Roaming" / "AionUi" / "aionui"
+    else:
+        expected = home / ".config" / "AionUi" / "aionui"
+    assert sp.aionui_root() == expected
 
 
 # ---------------------------------------------------------------------------

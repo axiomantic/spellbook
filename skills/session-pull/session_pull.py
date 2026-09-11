@@ -127,8 +127,21 @@ def aionui_root() -> Path:
     if env:
         return Path(env)
     home = Path(os.environ.get("HOME", str(Path.home())))
-    # macOS convention; Linux builds keep the same relative layout.
-    return home / "Library" / "Application Support" / "AionUi" / "aionui"
+    # Electron userData dir, mirroring installer/config.py:
+    # darwin -> ~/Library/Application Support/AionUi, win32 -> %APPDATA%/AionUi,
+    # else XDG ~/.config/AionUi. ``~/.aionui`` is a symlink INTO the
+    # ``aionui`` subdir, which is where the app stores its SQLite db.
+    if sys.platform == "darwin":
+        base = home / "Library" / "Application Support" / "AionUi"
+    elif sys.platform == "win32":
+        base = Path(
+            os.environ.get("APPDATA", str(home / "AppData" / "Roaming"))
+        ) / "AionUi"
+    else:
+        xdg = os.environ.get("XDG_CONFIG_HOME")
+        base = Path(xdg) if xdg else home / ".config"
+        base = base / "AionUi"
+    return base / "aionui"
 
 
 def antigravity_root() -> Path:
@@ -298,7 +311,12 @@ class SqliteSnapshot:
     Source stores are held open by their apps in WAL mode. Opening them in
     place risks torn reads and lock contention; ``immutable=1`` risks missing
     recent committed frames. The safe pattern is copying db + -wal + -shm to
-    a temp dir and reading the copy. The copy is removed on close.
+    a temp dir and reading the copy; the copy is removed on close.
+
+    The snapshot is best-effort: a commit landing mid-copy can leave it
+    slightly stale (or, rarely, unrecoverable) relative to the source. That
+    is accepted over mutating or locking the source store, and reads happen
+    between chat turns in practice.
     """
 
     def __init__(self, db_path: Path) -> None:
@@ -365,15 +383,25 @@ def claude_session_files(root: Path) -> list[Path]:
     return files
 
 
+# Title precedence, verified in roundup.py (2026-09-10): a user-pinned
+# customTitle beats agentName and the AI-generated aiTitle regardless of
+# which JSONL record appears first, so precedence is enforced by KEY rank,
+# never by record order. Ties (same key seen twice) keep the latest value.
+_CLAUDE_TITLE_KEYS = ("customTitle", "agentName", "aiTitle")
+_CLAUDE_TITLE_RANK = {"aiTitle": 1, "agentName": 2, "customTitle": 3}
+
+
 def claude_title_scan(jsonl_path: Path) -> dict[str, Any]:
     """Light scan: title + timestamps without a full parse.
 
     Reads the first 64KiB and last 32KiB of the file. Title precedence
     (verified in roundup.py): customTitle > agentName > aiTitle > first
-    user text. Compact detection from any scanned record.
+    user text, enforced by key rank rather than record order. Compact
+    detection from any scanned record.
     """
     info: dict[str, Any] = {"title": None, "first_ts": None, "last_ts": None,
                             "compacted": False, "git_branch": None}
+    best_rank = 0
     size = jsonl_path.stat().st_size
     with jsonl_path.open("rb") as fh:
         head = fh.read(65536)
@@ -392,9 +420,13 @@ def claude_title_scan(jsonl_path: Path) -> dict[str, Any]:
                 continue
             if rec.get("type") == "summary" and rec.get("summary"):
                 info["title"] = info["title"] or rec["summary"]
-            for key in ("customTitle", "agentName", "aiTitle"):
-                if rec.get(key):
-                    info["title"] = rec[key]
+            for key in _CLAUDE_TITLE_KEYS:
+                value = rec.get(key)
+                if value:
+                    rank = _CLAUDE_TITLE_RANK[key]
+                    if rank >= best_rank:
+                        best_rank = rank
+                        info["title"] = value
                     break
             if info["git_branch"] is None and rec.get("gitBranch"):
                 info["git_branch"] = rec["gitBranch"]
@@ -591,15 +623,19 @@ def parse_claude_session(
                 continue
             raw_records.append((rtype, rec, ts))
 
-    # Title precedence mirrors roundup.py.
+    # Title precedence mirrors roundup.py: rank by KEY, not by which record
+    # happens to appear first; same-rank ties keep the latest occurrence.
     title = None
+    best_rank = 0
     for rtype, rec, _ts in raw_records:
-        for key in ("customTitle", "agentName", "aiTitle"):
-            if rec and rec.get(key):
-                title = rec[key]
+        for key in _CLAUDE_TITLE_KEYS:
+            value = rec.get(key) if rec else None
+            if value:
+                rank = _CLAUDE_TITLE_RANK[key]
+                if rank >= best_rank:
+                    best_rank = rank
+                    title = value
                 break
-        if title:
-            break
     if not title and summary_records:
         title = summary_records[-1]
     if not title:
@@ -1204,12 +1240,17 @@ def parse_aionui_session(
                 })
         except sqlite3.Error:
             pass
+        # Resolve workspaces inside the same snapshot — a second snapshot
+        # here would re-copy the whole db for one query.
+        try:
+            workspaces = _aionui_project_paths(conn, session_id)
+        except (sqlite3.Error, OSError):
+            workspaces = []
 
     compaction = None  # aionui has no first-class compaction records
     if mode == "compact":
         warn(warnings, "aionui: no compaction records in store; compact mode "
                        "equals full mode")
-    workspaces = _aionui_workspaces(db, session_id)
     session = {
         "id": session_id,
         "title": (conv_row.get("name") or "").splitlines()[0][:120] or None,
@@ -1231,14 +1272,6 @@ def parse_aionui_session(
         extras = {"artifacts": artifacts}
     return build_envelope("aionui", mode, session, events, compaction, extras,
                           warnings)
-
-
-def _aionui_workspaces(db_path: Path, session_id: str) -> list[str]:
-    try:
-        with SqliteSnapshot(db_path) as conn:
-            return _aionui_project_paths(conn, session_id)
-    except (FileNotFoundError, sqlite3.Error):
-        return []
 
 
 # --------------------------------------------------------------------------
@@ -1734,7 +1767,12 @@ def render_handoff(envelope: dict[str, Any], budget_chars: int) -> str:
         tool = ev.get("tool")
         meta = ev.get("meta") or {}
         if ev["type"] == "tool_call":
-            chunk = f"**tool_call** `{tool}`\n```json\n{json.dumps(meta.get('input') or {}, indent=2, default=str)[:1500]}\n```"
+            # Antigravity emits input_raw when the JSON args could not be
+            # parsed — surface the raw string rather than an empty object.
+            payload = meta.get("input")
+            if payload is None:
+                payload = meta.get("input_raw") or {}
+            chunk = f"**tool_call** `{tool}`\n```json\n{json.dumps(payload, indent=2, default=str)[:1500]}\n```"
         elif ev["type"] == "tool_result":
             body = (text or "")[:3000]
             chunk = f"**tool_result** `{tool}`\n```\n{body}\n```"
@@ -1892,7 +1930,8 @@ def dispatch_pull(args: argparse.Namespace) -> int:
         envelope["redacted"] = True
         if kinds:
             envelope["redaction_kinds"] = kinds
-    envelope["warnings"] = warnings
+    # NOTE: warnings stay as apply_redaction left them — re-assigning the
+    # raw list here would resurrect unredacted strings after --redact.
 
     if mode == "handoff":
         content = render_handoff(envelope, args.budget_chars)
