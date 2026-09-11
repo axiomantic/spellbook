@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **AionUi platform installer.** AionUi (Electron desktop app hosting multiple
+  agent engines) is now an installable platform. Skills are symlinked one
+  module per link into `<userData>/config/skills/` — the directory the app
+  watches for user skills (verified against a live install: the `skills`
+  table inventories `source='user'` rows with paths; siblings
+  `config/cron-skills` and `aionui/builtin-skills` confirm the per-source
+  dir convention). Two surfaces are deliberately NOT automated, because they
+  live inside the app's SQLite database and an installer must never write a
+  live app-owned store: MCP servers (`mcp_servers` table) and assistant
+  rules (`assistant_definitions` rows pointing at per-user files). Install
+  reports both as manual steps with exact instructions; the spellbook MCP
+  entry (type: http) is added via AionUi settings instead. Config dir
+  resolves per OS (macOS `~/Library/Application Support/AionUi`, Linux
+  `~/.config/AionUi`, Windows `%APPDATA%/AionUi`) with `AIONUI_CONFIG_DIR`
+  override. Detection is existence-based with no side effects; user skills
+  that collide with a spellbook name are preserved, never clobbered; the
+  app database is proven untouched by test. 12 integration tests.
 - Philosophy: a measurement taken on ONE member is not a measurement about the
   population. Name which one, every time. The failure is quiet because the
   figure is real -- measured, accurate, and false only in its scope -- so nothing

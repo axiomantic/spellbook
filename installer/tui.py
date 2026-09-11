@@ -382,6 +382,8 @@ def render_post_install_notes(
         lines.append("[cyan]Pi[/cyan]: Restart to reload skills and prompts. Verify: /reload")
     if "goose" in platforms:
         lines.append("[cyan]Goose[/cyan]: Restart to load the spellbook MCP server. Skills in ~/.agents/skills/")
+    if "aionui" in platforms:
+        lines.append("[cyan]AionUi[/cyan]: Restart to rescan skills (config/skills). Add the spellbook MCP entry via AionUi settings — MCP and assistant rules are app-database-managed")
 
     if lines:
         body = "\n".join(lines)

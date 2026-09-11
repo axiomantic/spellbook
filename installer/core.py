@@ -108,6 +108,7 @@ def get_platform_installer(
             (e.g., claude_config_dirs consumed by the Claude Code installer).
     """
     from .platforms.antigravity import AntigravityInstaller
+    from .platforms.aionui import AionUiInstaller
     from .platforms.claude_code import ClaudeCodeInstaller
     from .platforms.codex import CodexInstaller
     from .platforms.forgecode import ForgeCodeInstaller
@@ -129,6 +130,7 @@ def get_platform_installer(
         "pi": PiInstaller,
         "prime_agent": PrimeAgentInstaller,
         "goose": GooseInstaller,
+        "aionui": AionUiInstaller,
     }
 
     installer_class = installers.get(platform)

@@ -1262,6 +1262,8 @@ def run_installation(spellbook_dir: Path, args: argparse.Namespace) -> int:
                     _post_notes.append("Pi: Restart to reload skills and prompts. Verify: /reload")
                 elif p == "goose":
                     _post_notes.append("Goose: Skills in ~/.agents/skills/. Restart goose to load the spellbook MCP server")
+                elif p == "aionui":
+                    _post_notes.append("AionUi: Skills symlinked into the app's config/skills directory; restart AionUi to rescan. MCP server and assistant rules are app-database-managed — add the spellbook MCP entry via AionUi settings (type: http, url: http://127.0.0.1:8765/mcp); attach rule modules to assistants in the UI if desired.")
             renderer.render_post_install(_post_notes)
         elif is_interactive():
             try:
