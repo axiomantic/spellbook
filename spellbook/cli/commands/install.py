@@ -329,6 +329,8 @@ def run(args: argparse.Namespace) -> None:
                     _post_notes.append("ForgeCode: Restart forge to load the spellbook MCP server")
                 elif p == "goose":
                     _post_notes.append("Goose: Skills in ~/.agents/skills/. Restart goose to load the spellbook MCP server")
+                elif p == "aionui":
+                    _post_notes.append("AionUi: Skills symlinked into the app's config/skills directory; restart AionUi to rescan. MCP server and assistant rules are app-database-managed — add the spellbook MCP entry via AionUi settings (type: http, url: http://127.0.0.1:8765/mcp); attach rule modules to assistants in the UI if desired.")
             renderer.render_post_install(_post_notes)
 
         print()

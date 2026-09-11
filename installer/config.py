@@ -4,6 +4,7 @@ Configuration constants and platform settings for spellbook installer.
 
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -43,9 +44,26 @@ def get_spellbook_config_dir() -> Path:
 
 
 # Supported platforms (AI coding assistants that can consume spellbook)
-SUPPORTED_PLATFORMS = ['claude_code', 'antigravity', 'opencode', 'codex', 'gemini', 'forgecode', 'pi', 'prime_agent', 'goose']
+SUPPORTED_PLATFORMS = ['claude_code', 'antigravity', 'opencode', 'codex', 'gemini', 'forgecode', 'pi', 'prime_agent', 'goose', 'aionui']
 
 # Platform configuration
+
+def aionui_default_config_dir() -> Path:
+    """AionUi's Electron ``userData`` root, per OS (app need not exist).
+
+    Lives here rather than in the platform module so PLATFORM_CONFIG can
+    call it without an import cycle (platform modules import config, never
+    the reverse).
+    """
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "AionUi"
+    if sys.platform == "win32":
+        appdata = os.environ.get("APPDATA")
+        base = Path(appdata) if appdata else Path.home() / "AppData" / "Roaming"
+        return base / "AionUi"
+    return Path.home() / ".config" / "AionUi"
+
+
 # NOTE: These are the AI assistant platforms that consume spellbook.
 # Spellbook's own config (SPELLBOOK_CONFIG_DIR) is separate from these.
 PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
@@ -158,6 +176,19 @@ PLATFORM_CONFIG: Dict[str, Dict[str, Any]] = {
         # Honors $GOOSE_PATH_ROOT at runtime for non-default config dirs.
         "mcp_supported": True,
         "mcp_server_name": "spellbook",
+    },
+    "aionui": {
+        "name": "AionUi",
+        "config_dir_env": "AIONUI_CONFIG_DIR",
+        "default_config_dir": aionui_default_config_dir(),
+        "cli_flag_name": "aionui-config-dir",
+        # AionUi has no global instruction file; assistants carry their own
+        # rules via the app database (assistant_definitions), and MCP servers
+        # live in the mcp_servers db table -- both are app-database-managed
+        # surfaces the installer deliberately does not write.
+        "context_file": None,
+        "skills_subdir": "config/skills",
+        "mcp_supported": False,  # db-managed; reported as a manual step
     },
 }
 

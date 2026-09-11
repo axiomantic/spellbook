@@ -99,6 +99,7 @@ Claude Code is the **primary** supported platform with full support. The others 
 | OpenCode | Basic | [anomalyco/opencode](https://github.com/anomalyco/opencode) | `~/.config/opencode/` | HTTP daemon |
 | Codex | Basic | [openai/codex](https://github.com/openai/codex) | `~/.codex/` | HTTP daemon |
 | Gemini CLI | Basic | [google/gemini-cli](https://github.com/google/gemini-cli) | `~/.gemini/` | HTTP daemon |
+| AionUi | Basic | [iOfficerCN/AionUi](https://github.com/iOfficerCN/AionUi) | `~/Library/Application Support/AionUi/` (macOS; `AIONUI_CONFIG_DIR` to override) | Manual — MCP servers are app-database-managed |
 
 ## Invariant Principles
 
