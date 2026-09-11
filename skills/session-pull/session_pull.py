@@ -37,8 +37,9 @@ Output contract
 ---------------
 * ``sources`` / ``list`` / ``pull`` (modes ``compact``/``full``) print exactly
   one JSON object on stdout (``ensure_ascii=False``).
-* ``pull --mode handoff`` prints a Markdown handoff document (nothing else) —
+* ``pull --mode handoff`` prints a Markdown handoff document to stdout —
   that is the artifact to paste into / point the next assistant at.
+  With ``--out PATH`` it prints the usual JSON status receipt instead.
 * ``--out PATH`` writes 0600, refuses to overwrite without ``--force``.
 
 Modes
@@ -1218,6 +1219,10 @@ def parse_aionui_session(
             for ev in _aionui_content_events(
                 mrow["type"], content, seq, ts, hidden, warnings
             ):
+                # Same default-drop rule as the claude parser: thinking rows
+                # are omitted unless the caller asked for them.
+                if ev["type"] == "thinking" and not include_thinking:
+                    continue
                 events.append(ev)
                 seq += 1
         agent_types: list[str] = []
@@ -1580,6 +1585,8 @@ def parse_antigravity_session(
     mode: str,
     warnings: list[str],
     include_thinking: bool = False,
+    # (accepted for parser-signature parity: antigravity's heuristically
+    # decoded steps never yield thinking events, so the flag is a no-op here)
 ) -> dict[str, Any]:
     db = root / "conversations" / f"{session_id}.db"
     if not db.exists():
@@ -1828,7 +1835,7 @@ def source_status(root_override: dict[str, Path] | None = None) -> list[dict[str
     statuses.append({
         "source": "claude_code",
         "store": str(cc),
-        "available": sessions.is_dir() and any(sessions.iterdir()) if sessions.is_dir() else False,
+        "available": sessions.is_dir() and any(sessions.iterdir()),
         "covers": "Claude Code CLI + Claude Code Desktop (local sessions)",
         "notes": [
             "Claude Desktop remote (claude.ai) chats are out of scope by design",

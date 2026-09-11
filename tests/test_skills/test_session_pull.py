@@ -498,7 +498,13 @@ def test_aionui_event_mapping(tmp_path: Path) -> None:
     conn.close()
 
     warnings: list[str] = []
-    envelope = sp.parse_aionui_session(root, "conv1", "compact", warnings)
+    # Default drops thinking rows, matching the claude/opencode parsers.
+    events = sp.parse_aionui_session(root, "conv1", "compact", warnings)["events"]
+    assert [e["type"] for e in events] == [
+        "message", "tool_call", "tool_result", "meta", "message"]
+
+    envelope = sp.parse_aionui_session(root, "conv1", "compact", warnings,
+                                       include_thinking=True)
     events = envelope["events"]
     kinds = [e["type"] for e in events]
     assert kinds == ["message", "thinking", "tool_call", "tool_result",
