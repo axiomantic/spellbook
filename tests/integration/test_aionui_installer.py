@@ -1,6 +1,5 @@
 """Integration tests for AionUi installer."""
 
-import sys
 from pathlib import Path
 
 import pytest
@@ -147,9 +146,8 @@ def test_aionui_install_preserves_user_skills(spellbook_dir, aionui_env):
     user_skill.mkdir(parents=True)
     (user_skill / "SKILL.md").write_text("# User's own skill\n")
 
-    results = _installer(spellbook_dir, aionui_env).install()
-
     # User skill intact, not replaced by a symlink.
+    _installer(spellbook_dir, aionui_env).install()
     assert user_skill.is_dir() and not user_skill.is_symlink()
     assert (user_skill / "SKILL.md").read_text() == "# User's own skill\n"
     # The other skill still linked.
@@ -210,6 +208,54 @@ def test_aionui_uninstall_removes_spellbook_links_only(
         assert not (skills_dir / name).exists()
     assert user_skill.is_dir()
     assert (user_skill / "SKILL.md").exists()
+
+
+# ---------------------------------------------------------------------
+# Sibling-directory prefix safety (startswith regression)
+# ---------------------------------------------------------------------
+
+
+@pytest.mark.posix_only
+def test_aionui_detect_ignores_sibling_prefix_link(
+    spellbook_dir, aionui_env, tmp_path
+):
+    """A symlink into ``spellbook-<suffix>`` (sibling dir) is NOT spellbook.
+
+    The old check used a string prefix test: ``.../spellbook-something``
+    startswith ``.../spellbook``, so detect() falsely reported installed.
+    """
+    aionui_env.mkdir(parents=True, exist_ok=True)
+    sibling = tmp_path / "spellbook-sibling"
+    skill = sibling / "skills" / "fake-skill"
+    skill.mkdir(parents=True)
+    (skill / "SKILL.md").write_text("# Fake\n")
+
+    skills_dir = aionui_env / "config" / "skills"
+    skills_dir.mkdir(parents=True)
+    (skills_dir / "fake-skill").symlink_to(skill)
+
+    status = _installer(spellbook_dir, aionui_env).detect()
+    assert status.installed is False
+
+
+@pytest.mark.posix_only
+def test_aionui_uninstall_keeps_sibling_prefix_link(
+    spellbook_dir, aionui_env, tmp_path
+):
+    """Uninstall must never remove a user's link into a sibling repo."""
+    aionui_env.mkdir(parents=True, exist_ok=True)
+    sibling = tmp_path / "spellbook-sibling"
+    skill = sibling / "skills" / "fake-skill"
+    skill.mkdir(parents=True)
+    (skill / "SKILL.md").write_text("# Fake\n")
+
+    skills_dir = aionui_env / "config" / "skills"
+    skills_dir.mkdir(parents=True)
+    (skills_dir / "fake-skill").symlink_to(skill)
+
+    _installer(spellbook_dir, aionui_env).uninstall()
+    assert (skills_dir / "fake-skill").is_symlink()
+    assert (skills_dir / "fake-skill").resolve() == skill.resolve()
 
 
 # ---------------------------------------------------------------------

@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 from ..components.symlinks import create_symlink, remove_symlink
 from .base import (
@@ -63,19 +63,33 @@ class AionUiInstaller(PlatformInstaller):
         """AionUi's user-skills directory."""
         return self.config_dir / "config" / "skills"
 
-    def get_context_files(self) -> List[Path]:
+    def get_context_files(self) -> list[Path]:
         # AionUi has no global instruction file equivalent to CLAUDE.md /
         # AGENTS.md that is read automatically; assistants carry their own
         # rules through the app database.
         return []
 
-    def get_symlinks(self) -> List[Path]:
+    def get_symlinks(self) -> list[Path]:
         skills_dir = self.skills_dir()
         if not skills_dir.is_dir():
             return []
         return [
             item for item in sorted(skills_dir.iterdir()) if item.is_symlink()
         ]
+
+    def _resolves_into_spellbook(self, link: Path) -> bool:
+        """True if ``link`` resolves inside the spellbook source tree.
+
+        Path containment (resolve + parents), NOT a string prefix: a sibling
+        checkout named ``spellbook-something`` shares the prefix but is not
+        spellbook, and uninstall must never remove a user's link to it.
+        """
+        try:
+            resolved = link.resolve()
+        except OSError:
+            return False
+        root = self.spellbook_dir.resolve()
+        return resolved == root or root in resolved.parents
 
     def detect(self) -> PlatformStatus:
         """Detect AionUi status.
@@ -92,11 +106,7 @@ class AionUiInstaller(PlatformInstaller):
             for link in skills_dir.glob("*"):
                 if not link.is_symlink():
                     continue
-                try:
-                    resolved = link.resolve()
-                except OSError:
-                    continue
-                if str(resolved).startswith(str(self.spellbook_dir)):
+                if self._resolves_into_spellbook(link):
                     installed = True
                     installed_version = self.version
                     break
@@ -109,7 +119,7 @@ class AionUiInstaller(PlatformInstaller):
             details={"config_dir": str(self.config_dir)},
         )
 
-    def _ensure_skill_symlinks(self) -> "tuple[int, int]":
+    def _ensure_skill_symlinks(self) -> tuple[int, int]:
         """Create symlinks for spellbook skills in AionUi's skills dir.
 
         Returns (created, errors). create_symlink is idempotent for existing
@@ -153,11 +163,11 @@ class AionUiInstaller(PlatformInstaller):
 
     def install(
         self, force: bool = False, skip_global_steps: bool = False
-    ) -> List["InstallResult"]:
+    ) -> list[InstallResult]:
         """Install spellbook components for AionUi."""
         from ..core import InstallResult
 
-        results: List[InstallResult] = []
+        results: list[InstallResult] = []
 
         if not self.ensure_config_dir():
             return [
@@ -218,22 +228,16 @@ class AionUiInstaller(PlatformInstaller):
 
     def uninstall(
         self, skip_global_steps: bool = False
-    ) -> List["InstallResult"]:
+    ) -> list[InstallResult]:
         """Uninstall spellbook components from AionUi."""
         from ..core import InstallResult
 
-        results: List[InstallResult] = []
+        results: list[InstallResult] = []
 
         removed_links = 0
         errors = 0
         for link in self.get_symlinks():
-            try:
-                resolved = link.resolve()
-            except OSError:
-                resolved = None
-            if resolved is None or not str(resolved).startswith(
-                str(self.spellbook_dir)
-            ):
+            if not self._resolves_into_spellbook(link):
                 continue
             if remove_symlink(link, dry_run=self.dry_run).success:
                 removed_links += 1
