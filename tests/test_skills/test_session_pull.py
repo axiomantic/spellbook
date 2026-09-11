@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sqlite3
 from pathlib import Path
 from typing import Any
@@ -288,6 +289,37 @@ def test_claude_full_mode_keeps_everything(tmp_path: Path) -> None:
     texts = [e.get("text", "") for e in envelope["events"]]
     assert "early" in texts
     assert "subagent" in texts
+    # The compaction record itself must survive in full mode too — the
+    # envelope claims every reconstructed event.
+    kinds = [e["type"] for e in envelope["events"]]
+    assert "compaction" in kinds
+
+
+def test_claude_work_root_resolves_sidecar_state(
+    tmp_path: Path, monkeypatch: Any, capsys: Any
+) -> None:
+    """A session under ~/.claude-work must resolve todos from the SAME root,
+    not from ~/.claude (regression: dispatch_pull used to hard-code the
+    default root regardless of where the transcript came from)."""
+    sp = _load_module()
+    work_root = tmp_path / "home" / ".claude-work"
+    monkeypatch.setenv("HOME", str(tmp_path / "home"))
+    project = work_root / "projects" / sp.encode_cwd_literal("/repo")
+    project.mkdir(parents=True)
+    (project / "wk-1.jsonl").write_text(
+        json.dumps(_claude_record("user", "worktree session")) + "\n",
+        encoding="utf-8",
+    )
+    todos = work_root / "todos"
+    todos.mkdir(parents=True)
+    (todos / "wk-1-agent-todo.json").write_text(
+        json.dumps([{"content": "wt todo", "status": "pending"}]),
+        encoding="utf-8",
+    )
+    assert sp.main(["pull", "--source", "claude_code", "--id", "wk-1"]) == 0
+    envelope = json.loads(capsys.readouterr().out)
+    assert envelope["todos"] == [{"content": "wt todo", "status": "pending"}]
+    assert envelope["session"]["id"] == "wk-1"
 
 
 def test_claude_list_filters_by_cwd(tmp_path: Path) -> None:
@@ -668,7 +700,8 @@ def test_cli_out_flag_routes_to_file(
                     "--mode", "compact", "--out", str(out_path)]) == 0
     summary = json.loads(capsys.readouterr().out)
     assert summary["written"] == str(out_path)
-    assert (out_path.stat().st_mode & 0o777) == 0o600
+    if os.name != "nt":
+        assert (out_path.stat().st_mode & 0o777) == 0o600
     envelope = json.loads(out_path.read_text(encoding="utf-8"))
     assert envelope["source"] == "claude_code"
 

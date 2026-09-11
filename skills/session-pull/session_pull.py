@@ -655,7 +655,7 @@ def parse_claude_session(
         if rec.get("slug"):
             session_meta["slug"] = rec["slug"]
 
-    if compaction_idx is not None and mode != "full":
+    if compaction_idx is not None:
         events.insert(
             0,
             make_event(-1, "compaction", ts=compaction_ts, text=compaction_text,
@@ -703,10 +703,13 @@ def list_claude_sessions(
         project_dir = path.parent
         if cwd is not None:
             encoded = encode_cwd_literal(cwd)
+            # Worktrees encode as <repo-path>-<worktree-name>. Because '-'
+            # is also the replacement character, the prefix match is
+            # ambiguous ("/repository" also matches cwd "/repo") — this
+            # filter deliberately over-matches for list; pull is by id.
             if project_dir.name != encoded and not project_dir.name.startswith(
                 encoded + "-"
             ):
-                # Worktrees encode as <repo-path>-<worktree-name>.
                 continue
         info = claude_title_scan(path)
         stat = path.stat()
@@ -879,10 +882,6 @@ def parse_opencode_session(
             "WHERE m.session_id = ? ORDER BY m.time_created, p.time_created",
             (session_id,),
         ).fetchall()
-        message_roles: dict[str, str] = {}
-        for mrow in rows:
-            mdata = tolerant_json(mrow["m_data"]) or {}
-            message_roles[mdata.get("id", "")] = mdata.get("role") or ""
         compaction_epoch = session_row.get("time_compacting")
         for mrow in rows:
             mdata = tolerant_json(mrow["m_data"]) or {}
@@ -907,9 +906,12 @@ def parse_opencode_session(
         )
         if anchor is not None:
             anchor_ts = anchor.get("ts")
-            kept = [e for e in events
-                    if e.get("type") == "compaction" or
-                    (anchor_ts and e.get("ts") and e["ts"] >= anchor_ts)]
+            kept = [
+                e for e in events
+                if e.get("type") == "compaction"
+                or e.get("ts") is None  # never silently drop untimed events
+                or (anchor_ts and e.get("ts") and e["ts"] >= anchor_ts)
+            ]
             events = kept
 
     if mode == "compact" and compaction_epoch and compaction_event_idx is None:
@@ -1749,7 +1751,7 @@ def render_handoff(envelope: dict[str, Any], budget_chars: int) -> str:
         included += 1
     if elided:
         rendered.append(
-            f"_(… {elided} older event(s) elided by the "
+            f"_(… {elided} event(s) elided by the "
             f"{budget_chars}-char budget; rerun with --mode full for "
             "everything)_"
         )
@@ -1861,9 +1863,10 @@ def dispatch_pull(args: argparse.Namespace) -> int:
     warnings: list[str] = []
     mode = args.mode
     if args.source == "claude_code":
+        claude_file = _find_claude_file(args.id, warnings)
         envelope = parse_claude_session(
-            _find_claude_file(args.id, warnings),
-            mode, claude_root(), warnings,
+            claude_file,
+            mode, _claude_root_for(claude_file), warnings,
             include_thinking=args.include_thinking,
         )
     elif args.source == "opencode":
@@ -1929,6 +1932,16 @@ def _find_claude_file(session_id: str, warnings: list[str]) -> Path:
             f"claude_code: no session file for id {session_id!r}"
         )
     return matches[0]
+
+
+def _claude_root_for(path: Path) -> Path:
+    """Derive the store root (todos/, file-history/) a session file lives in.
+
+    Session files sit in <root>/projects/<encoded-cwd>/<id>.jsonl; the root
+    may be ~/.claude or ~/.claude-work, and sidecar state must be resolved
+    from the SAME root the transcript came from.
+    """
+    return path.parent.parent.parent
 
 
 def dispatch_list(args: argparse.Namespace) -> int:
