@@ -107,3 +107,37 @@ def test_antigravity_full_install_and_uninstall(tmp_path):
     assert not os.path.lexists(skill_link)
     assert not os.path.lexists(legacy_link)
     assert installer.detect().installed is False
+
+
+def test_antigravity_uninstall_keeps_sibling_prefix_links(tmp_path):
+    """A symlink into a sibling 'spellbook-something' dir is NOT spellbook.
+
+    Uninstall used a string-prefix match: '.../spellbook-something'
+    startswith '.../spellbook', so it would delete a user's symlink into a
+    sibling checkout. Regression: match by resolved-path containment.
+    """
+    spellbook_dir = tmp_path / "spellbook"
+    spellbook_dir.mkdir()
+
+    config_dir = tmp_path / "antigravity"
+    installer = AntigravityInstaller(
+        spellbook_dir=spellbook_dir,
+        config_dir=config_dir,
+        version="0.1.0",
+        dry_run=False,
+    )
+
+    sibling = tmp_path / "spellbook-sibling"
+    sibling_skill = sibling / "skills" / "user-skill"
+    sibling_skill.mkdir(parents=True)
+    (sibling_skill / "SKILL.md").write_text("# User skill\n")
+
+    skills_root = config_dir.parent / "config" / "skills"
+    skills_root.mkdir(parents=True)
+    link = skills_root / "user-skill"
+    link.symlink_to(sibling_skill)
+
+    installer.uninstall()
+
+    assert link.is_symlink()
+    assert link.resolve() == sibling_skill.resolve()

@@ -385,16 +385,23 @@ class AntigravityInstaller(PlatformInstaller):
 
         # Clean up skill symlinks (both active global root and legacy harness location)
         removed_links = 0
+        spellbook_root = self.spellbook_dir.resolve()
         for target_skills in [self.skills_dir(), self.config_dir / "skills"]:
             if target_skills.exists():
                 for item in target_skills.iterdir():
                     if item.is_symlink():
                         try:
                             resolved = item.resolve()
-                            if (
-                                str(resolved).startswith(str(self.spellbook_dir))
-                                and remove_symlink(item, dry_run=self.dry_run).success
-                            ):
+                            # Containment, not string prefix: a sibling
+                            # checkout named spellbook-something shares the
+                            # prefix but must keep its user symlinks.
+                            inside = (
+                                resolved == spellbook_root
+                                or spellbook_root in resolved.parents
+                            )
+                            if inside and remove_symlink(
+                                item, dry_run=self.dry_run
+                            ).success:
                                 removed_links += 1
                         except OSError:
                             pass

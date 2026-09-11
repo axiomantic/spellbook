@@ -657,7 +657,16 @@ def bootstrap(args: argparse.Namespace) -> Path:
 
         # If running install.py from the source repo itself, skip the update check
         script_path = get_script_path()
-        if script_path is not None and str(script_path).startswith(str(spellbook_dir.resolve())):
+        # Path containment, not a string prefix: a sibling checkout named
+        # spellbook-something shares the prefix but is a different tree.
+        try:
+            from_source = (
+                script_path is not None
+                and script_path.resolve().is_relative_to(spellbook_dir.resolve())
+            )
+        except OSError:
+            from_source = False
+        if from_source:
             print_info("Running from source repository, skipping update check.")
         elif (spellbook_dir / ".git").is_dir():
             if not _quiet:

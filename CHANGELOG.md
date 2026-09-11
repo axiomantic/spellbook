@@ -24,6 +24,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deletion, which reads as a broken tree and sends the reader to debug the wrong
   thing.
 
+### Fixed
+
+- Installer path containment: uninstall symlink checks matched targets by
+  string prefix, so a sibling checkout named e.g. `spellbook-something`
+  shared the prefix and `antigravity.py` uninstall would delete a user's
+  skill symlink pointing into that sibling. Matching is now resolved-path
+  containment (`resolve()` + parents) in `installer/platforms/antigravity.py`;
+  the same class of false positive in the source-tree check in `install.py`
+  (skip-update-check) is fixed the same way.
+
 ## [0.94.0] - 2026-09-09
 
 ### Added
