@@ -59,6 +59,16 @@ When context compaction occurs during a session that utilized Rhizo, Garden, or 
 3. **Compaction Immortality**: The re-read instruction and runtime state block must remain intact across all subsequent compactions until all swarm work is complete.
 </CRITICAL>
 
+### Scheduled Watchdog Protocol: Stepped Backoff & 4-Strike Cap
+
+<CRITICAL>
+In coding harnesses supporting scheduled background timers (e.g. Google Antigravity):
+1. **Stepped Backoff Cadence**: When arming safety watchdog timers during swarm orchestration, the timer must follow stepped backoff on consecutive quiescent checks: Base 15m (900s) -> 30m (1800s) -> 60m (3600s) -> 120m (7200s).
+2. **4-Strike Cap & Stand Down**: After 4 consecutive quiescent checks where the listener remains continuously healthy (`OK: LISTENING`) and zero messages or tasks arrive, the watchdog MUST stand down and not reschedule. The background listener (`rhizo listen`) remains alive on Redis `BRPOP` and will wake the session immediately upon incoming worker events.
+3. **Reset Invariant**: The streak counter and cadence immediately reset to 0 (base 15m) upon any listener failure, unread messages, outbound task dispatch (`rhizo send`/`enqueue`), worker message receipt, or operator chat prompt.
+4. **Replace, Never Stack**: Always kill any active watchdog timer before scheduling a new one. Arriving worker messages cancel the timer early with zero token overhead.
+</CRITICAL>
+
 ### Subagent Model and Effort Selection
 
 <CRITICAL>
