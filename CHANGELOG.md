@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Rhizo (`rhizo send`, `rhizo enqueue`, `rhizo task assign/claim`). Harness-internal
   subagents are used only when the operator explicitly uses the word "subagent" or
   when no cluster workers exist in the roster.
+- **Post-compaction ceremony restoration invariant.** Updated `rules/20-orchestration.md`
+  and coordination guides to require that context compaction summaries in sessions
+  utilizing Garden, Rhizo, or Vine prepend an explicit restoration directive commanding
+  the resurrected agent to immediately re-read active coordination skills before executing
+  further tools.
 - **`session-pull` skill.** Pulls chat history and hidden context out of
   coding-agent sessions and re-emits them in a portable format another
   assistant can pick up exactly where the session left off. Sources:

@@ -50,6 +50,15 @@ When instructed to "delegate", "assign", or "dispatch" work (or when acting as a
 Never silently spawn local subagents when cluster workers are available. Reusing existing cluster workers preserves shared context, respects strand isolation (`vine`), and prevents duplicate compute.
 </CRITICAL>
 
+### Post-Compaction Ceremony Restoration: Re-Reading Coordination Skills
+
+<CRITICAL>
+When context compaction occurs during a session that utilized Rhizo, Garden, or Vine:
+1. **Compacting Agent Obligation**: If and only if the session utilized one of these coordination skills, the compaction summary MUST preserve the `SWARM_RUNTIME_STATE` block and prepend the Post-Compaction Ceremony Restoration directive (`MANDATORY POST-COMPACTION INVARIANT: CEREMONY RESTORATION`).
+2. **Resurrected Agent Invariant**: Upon waking from compaction, the agent MUST immediately re-read the active coordination skill definitions (`garden`, `orchestrate-swarm`, `rhizo`, `vine`) before executing any tool or assigning any task.
+3. **Compaction Immortality**: The re-read instruction and runtime state block must remain intact across all subsequent compactions until all swarm work is complete.
+</CRITICAL>
+
 ### Subagent Model and Effort Selection
 
 <CRITICAL>
