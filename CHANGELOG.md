@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Delegation precedence for cluster workers.** Updated `rules/20-orchestration.md`,
+  `skills/dispatching-parallel-agents/SKILL.md`, and `AGENTS.md` to establish that
+  orchestrators default to dispatching substantive work to active cluster workers via
+  Rhizo (`rhizo send`, `rhizo enqueue`, `rhizo task assign/claim`). Harness-internal
+  subagents are used only when the operator explicitly uses the word "subagent" or
+  when no cluster workers exist in the roster.
 - **`session-pull` skill.** Pulls chat history and hidden context out of
   coding-agent sessions and re-emits them in a portable format another
   assistant can pick up exactly where the session left off. Sources:
@@ -45,6 +51,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the victim saw missing headers and an unreadable source file rather than a
   deletion, which reads as a broken tree and sends the reader to debug the wrong
   thing.
+
+### Removed
+
+- **OpenCode gate plugin.** Deleted `hooks/opencode-plugin.ts` and its install
+  path in `installer/platforms/opencode.py` (`gate_plugin_source`/
+  `gate_plugin_target` properties, the install/uninstall steps, and the
+  `gate_plugin_installed` detect field). The deployed plugin crashed every
+  prompt in OpenCode 1.18.30: OpenCode calls each module export as a plugin
+  factory, and the `getCheckCommand` export returned `null` when
+  `SPELLBOOK_GATE_CMD` was unset, which broke each hook dispatch. Both
+  `install()` and `uninstall()` now remove a stale
+  `plugins/spellbook-security.ts` left by a prior install, so an upgrade no
+  longer leaves it loaded. `SPELLBOOK_GATE_CMD` is no longer documented in
+  `AGENTS.md`.
 
 ## [0.94.0] - 2026-09-09
 

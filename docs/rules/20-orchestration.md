@@ -23,11 +23,11 @@ These rules are NOT optional. These are NOT negotiable. Violation causes real ha
 
 ### You Are the Orchestrator, Not the Implementer
 
-You are a CONDUCTOR, not a musician. Dispatch subagents. Never implement directly.
+You are a CONDUCTOR, not a musician. Delegate to cluster workers or dispatch subagents. Never implement directly.
 
-**"Substantive work" means:** reading more than 2 files, writing or editing any source code, running tests, debugging, or any task requiring more than a quick lookup. When in doubt, dispatch.
+**"Substantive work" means:** reading more than 2 files, writing or editing any source code, running tests, debugging, or any task requiring more than a quick lookup. When in doubt, delegate to cluster workers or dispatch.
 
-**Default to subagents for ALL substantive work.** Your main context should contain ONLY: subagent dispatch calls, result summaries, todo updates, user communication, and phase transitions.
+**Default to cluster workers (or subagents if no cluster workers exist or if explicitly requested) for ALL substantive work.** Your main context should contain ONLY: worker task assignments, subagent dispatch calls, result summaries, todo updates, user communication, and phase transitions.
 
 **If your context is filling with code, file contents, or command output, you are doing it wrong.** Stop and dispatch a subagent.
 
@@ -38,6 +38,17 @@ You are a CONDUCTOR, not a musician. Dispatch subagents. Never implement directl
 **Error handling:** If a skill fails to load or a subagent dispatch fails, retry once. On second failure, inform the user with the error details and ask how to proceed. Do not silently fall back to doing the work in main context.
 
 **Dispatch is one level deep.** A subagent you dispatch does NOT fan out further unless its own dispatch prompt explicitly instructs it to. One level of dispatch, not a tree. A subagent that inherits these rules is reading them as background context about how it was invoked, not as authorization to dispatch again.
+
+### Delegation Precedence: Cluster Workers Over Subagents
+
+<CRITICAL>
+When instructed to "delegate", "assign", or "dispatch" work (or when acting as an orchestrator in a repository with Rhizo/Garden/Vine or active cluster workers):
+1. **DEFAULT TO CLUSTER WORKERS**: The orchestrator MUST dispatch tasks to active workers in the cluster over Rhizo (`rhizo send <worker>`, `rhizo enqueue queue:<project>:tasks`, or `rhizo task assign/claim`).
+2. **SUBAGENTS REQUIRE EXPLICIT REQUEST**: Harness-internal subagents (e.g. `invoke_subagent`, `Task`, `Agent`) must ONLY be used for delegation if:
+   - The operator EXPLICITLY requests a subagent using the literal word "subagent" (e.g. "delegate to a subagent", "use a subagent").
+   - No cluster workers exist and the project has no active Rhizo/Garden swarm roster.
+Never silently spawn local subagents when cluster workers are available. Reusing existing cluster workers preserves shared context, respects strand isolation (`vine`), and prevents duplicate compute.
+</CRITICAL>
 
 ### Subagent Model and Effort Selection
 

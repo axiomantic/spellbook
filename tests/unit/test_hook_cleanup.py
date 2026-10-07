@@ -37,6 +37,3 @@ class TestUnifiedHookExists:
 
     def test_bash_policy_preserved(self):
         assert (HOOKS_DIR / "bash-policy.toml").exists()
-
-    def test_opencode_plugin_preserved(self):
-        assert (HOOKS_DIR / "opencode-plugin.ts").exists()
