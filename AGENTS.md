@@ -542,7 +542,7 @@ Before any commit, verify:
 Every library change ships to users across four platforms. Skipping tests or documentation means breaking real developer environments. Run the checklist. Every time.
 </FINAL_EMPHASIS>
 
-<!-- BEGIN RHIZO GUIDE [v1.3] -->
+<!-- BEGIN RHIZO GUIDE [v1.4] -->
 <!-- DO NOT EDIT DIRECTLY: Managed by `rhizo guide install` -->
 
 ## Rhizo Multi-Agent Coordination Guide
@@ -610,9 +610,19 @@ Orchestrator Non-Implementation Invariant: When acting as an Orchestrator (or in
 2. Dispatch Directly to Worker ('rhizo send <worker>')
 3. Execute Inline in Main Chat (only with explicit operator confirmation)
 </CRITICAL>
+
+### 9. Worker Autonomous Execution & Wakeup Discipline
+<CRITICAL>
+Worker Autonomous Execution Invariant: When an incoming task or directive is delivered to a worker (via 'rhizo listen' process exit or 'rhizo drain'), the worker is an AUTONOMOUS AGENT, NOT A PASSIVE CHATBOT. The worker MUST NOT remain idle, silent, or wait for human operator intervention. Upon message delivery, the worker MUST IMMEDIATELY:
+1. Inspect the delivered task payload, instructions, and target files.
+2. Acknowledge or claim the task ('rhizo task claim <id>' or 'rhizo reply --to <sender> --subject "Task Claimed"').
+3. Provision or enter the assigned Vine strand ('vine new <task_id>' or cd into existing strand) and execute the requested work.
+4. Verify changes against the Two-Key Gate ('vine gate') before reporting completion.
+5. Re-arm the single-shot listener ('rhizo listen <worker>') or send completion with '--listen' ('rhizo reply ... --listen') before completing the turn.
+</CRITICAL>
 <!-- END RHIZO GUIDE -->
 
-<!-- BEGIN GARDEN GUIDE [v1.5] -->
+<!-- BEGIN GARDEN GUIDE [v1.6] -->
 <!-- DO NOT EDIT DIRECTLY: Managed by `garden guide install` -->
 
 ## Garden Multi-Agent Swarm & Ceremony Guide
@@ -646,6 +656,8 @@ npm install -g @axiomantic/rhizo @axiomantic/vine @axiomantic/garden rift-snapsh
   When acting as an Orchestrator (or in any session with active cluster workers), the session is a conductor, not a coder. When the operator presents a task, feature request, bugfix, or asks to work on something, the orchestrator MUST NEVER directly write code or edit files. It MUST STOP and prompt the operator to choose routing (Enqueue to cluster queue, Dispatch to worker, or Execute inline).
 * **Post-Compaction Ceremony Restoration**:
   Whenever context compaction occurs in a session that used Garden, Rhizo, or Vine, the compaction summary MUST include an explicit directive commanding the resurrected agent to re-read the active coordination skills (`garden`, `orchestrate-swarm`, `rhizo`, `vine`) before executing any further tools. Upon waking from compaction, the agent MUST immediately re-read those skills to restore ceremony, gate protocols, and listener discipline. This directive must remain intact across all future compactions.
+* **Worker Autonomous Execution Invariant**:
+  When 'rhizo listen' unblocks and exits, a task has been delivered! Swarm workers operate as sovereign, autonomous implementers, not passive chatbots. Workers MUST NOT wait for an operator prompt or ask "Shall I start?". They MUST immediately transition to active execution: claim the task, enter the isolated Vine strand, perform the work, verify the Two-Key Gate, report results, and re-arm the single-shot listener.
 
 ### 3. The Two-Key Gate & Strand Weaving
 Never weave a strand into the canonical trunk without passing both keys:
@@ -828,5 +840,7 @@ rm -rf "$STRAND_DIR"
 command -v rift >/dev/null 2>&1 && rift prune >/dev/null 2>&1 || true
 ```
 <!-- END VINE GUIDE -->
+
+
 
 
