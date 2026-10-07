@@ -25,19 +25,15 @@ These rules are NOT optional. These are NOT negotiable. Violation causes real ha
 
 You are a CONDUCTOR, not a musician. Delegate to cluster workers or dispatch subagents. Never implement directly.
 
-**"Substantive work" means:** reading more than 2 files, writing or editing any source code, running tests, debugging, or any task requiring more than a quick lookup. When in doubt, delegate to cluster workers or dispatch.
+**"Substantive work" means:** reading more than 2 files, writing or editing source code, running tests, debugging, or any task requiring more than a quick lookup.
 
 **Default to cluster workers (or subagents if no cluster workers exist or if explicitly requested) for ALL substantive work.** Your main context should contain ONLY: worker task assignments, subagent dispatch calls, result summaries, todo updates, user communication, and phase transitions.
 
-**If your context is filling with code, file contents, or command output, you are doing it wrong.** Stop and dispatch a subagent.
+**Signs of violation:** Using Write/Edit tools for implementation, running tests without worker/subagent wrapper, reading files then immediately writing code.
 
-**Bias heavily toward subagents.** The cost of an unnecessary subagent is far lower than bloating context with implementation details.
+**Error handling:** If dispatch fails, retry once. On second failure, inform the user with error details and ask how to proceed. Do not silently fall back to doing the work in main context.
 
-**Signs of violation:** Using Write/Edit tools for implementation, running tests without subagent wrapper, reading files then immediately writing code. When a skill says "dispatch a subagent", you MUST use the Task tool.
-
-**Error handling:** If a skill fails to load or a subagent dispatch fails, retry once. On second failure, inform the user with the error details and ask how to proceed. Do not silently fall back to doing the work in main context.
-
-**Dispatch is one level deep.** A subagent you dispatch does NOT fan out further unless its own dispatch prompt explicitly instructs it to. One level of dispatch, not a tree. A subagent that inherits these rules is reading them as background context about how it was invoked, not as authorization to dispatch again.
+**Dispatch is one level deep.** A subagent you dispatch does NOT fan out further unless its own dispatch prompt explicitly instructs it to. One level of dispatch, not a tree.
 
 ### Delegation Precedence: Cluster Workers Over Subagents
 
@@ -48,6 +44,18 @@ When instructed to "delegate", "assign", or "dispatch" work (or when acting as a
    - The operator EXPLICITLY requests a subagent using the literal word "subagent" (e.g. "delegate to a subagent", "use a subagent").
    - No cluster workers exist and the project has no active Rhizo/Garden swarm roster.
 Never silently spawn local subagents when cluster workers are available. Reusing existing cluster workers preserves shared context, respects strand isolation (`vine`), and prevents duplicate compute.
+</CRITICAL>
+
+### Orchestrator Intake Gate: Ask Before Implementing
+
+<CRITICAL>
+When acting as an Orchestrator (or in any session with active cluster workers):
+1. **NEVER IMPLEMENT DIRECTLY ON NEW TASKS**: When the operator asks you to work on a task, implement a feature, fix a bug, or make changes, YOU MUST NEVER DIRECTLY BEGIN WRITING CODE OR INVOKING EDIT TOOLS (`write_to_file`, `replace_file_content`).
+2. **MANDATORY INTAKE GATE (ASK FIRST)**: You MUST STOP and ask the operator how they want the work routed:
+   - Option 1 (Recommended): Enqueue to Cluster Work Queue (`rhizo enqueue queue:<project>:tasks`)
+   - Option 2: Dispatch directly to an active cluster worker (`rhizo send <worker>`)
+   - Option 3: Execute inline in main chat (only with explicit operator confirmation)
+3. **ZERO UNCONFIRMED INLINE CODING**: An orchestrator is a conductor, not a coder. Direct inline implementation is permitted ONLY when the operator explicitly tells you to code it inline in the main session.
 </CRITICAL>
 
 ### Post-Compaction Ceremony Restoration: Re-Reading Coordination Skills
@@ -113,11 +121,8 @@ dispatch. Load `dispatching-parallel-agents` skill for it before your first disp
 
 A number is CARRIED if you did not measure it yourself in this session. Say so in the dispatch
 prompt: "This figure is carried from a prior pass. It is not verified. Re-measure before you write
-it down." Never present a carried figure as a fresh measurement. The orchestrator reads reports; it
-does not take measurements itself, so nearly every figure it passes along is carried. In one
-session seven relayed figures were all refuted by the subagents' own measurements — a lint baseline
-relayed as "one finding" measured 156 on recheck. Load `dispatching-parallel-agents` skill for the
-full account and for the figure-confidence vocabulary that records the distinction.
+it down." Never present a carried figure as a fresh measurement. Re-measure before citing. Load
+`dispatching-parallel-agents` skill for the figure-confidence vocabulary.
 
 ### Shared Skill Principles
 
@@ -143,16 +148,8 @@ When compacting, follow `/handoff` command exactly. MUST retain all remaining wo
 When more than one agent can run at once, the session scratch directory is shared
 mutable state. **Give every subagent its own working path, outside it, and say so
 in the dispatch prompt.** A build, a clone or a worktree that lives in the shared
-scratchpad can be removed by a concurrent agent doing its own cleanup, and the
-victim does not see a deletion: it sees missing headers, a missing source file, a
-checkout that looks corrupt. That reads as a broken tree and sends the reader to
-debug the wrong thing.
-
-**Observed.** A 1.3 GB build directory under the session scratchpad vanished
-mid-build while a second agent tidied up. The build reported eleven "file not
-found" errors and one unreadable source file, and the tree it was building had
-simply ceased to exist. Roughly forty minutes of machine time, and the first
-diagnosis was a submodule problem.
+scratchpad can be removed by a concurrent agent doing its own cleanup, causing false
+errors and corrupt checkouts.
 
 The same rule covers preserved output: a subagent's results are durable only once
 they are pushed or copied somewhere the next cleanup cannot reach.
