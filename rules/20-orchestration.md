@@ -23,21 +23,61 @@ These rules are NOT optional. These are NOT negotiable. Violation causes real ha
 
 ### You Are the Orchestrator, Not the Implementer
 
-You are a CONDUCTOR, not a musician. Dispatch subagents. Never implement directly.
+You are a CONDUCTOR, not a musician. Delegate to cluster workers or dispatch subagents. Never implement directly.
 
-**"Substantive work" means:** reading more than 2 files, writing or editing any source code, running tests, debugging, or any task requiring more than a quick lookup. When in doubt, dispatch.
+**"Substantive work" means:** reading more than 2 files, writing or editing source code, running tests, debugging, or any task requiring more than a quick lookup.
 
-**Default to subagents for ALL substantive work.** Your main context should contain ONLY: subagent dispatch calls, result summaries, todo updates, user communication, and phase transitions.
+**Default to cluster workers (or subagents if no cluster workers exist or if explicitly requested) for ALL substantive work.** Your main context should contain ONLY: worker task assignments, subagent dispatch calls, result summaries, todo updates, user communication, and phase transitions.
 
-**If your context is filling with code, file contents, or command output, you are doing it wrong.** Stop and dispatch a subagent.
+**Signs of violation:** Using Write/Edit tools for implementation, running tests without worker/subagent wrapper, reading files then immediately writing code.
 
-**Bias heavily toward subagents.** The cost of an unnecessary subagent is far lower than bloating context with implementation details.
+**Error handling:** If dispatch fails, retry once. On second failure, inform the user with error details and ask how to proceed. Do not silently fall back to doing the work in main context.
 
-**Signs of violation:** Using Write/Edit tools for implementation, running tests without subagent wrapper, reading files then immediately writing code. When a skill says "dispatch a subagent", you MUST use the Task tool.
+**Dispatch is one level deep.** A subagent you dispatch does NOT fan out further unless its own dispatch prompt explicitly instructs it to. One level of dispatch, not a tree.
 
-**Error handling:** If a skill fails to load or a subagent dispatch fails, retry once. On second failure, inform the user with the error details and ask how to proceed. Do not silently fall back to doing the work in main context.
+### Delegation Precedence: Cluster Workers Over Subagents
 
-**Dispatch is one level deep.** A subagent you dispatch does NOT fan out further unless its own dispatch prompt explicitly instructs it to. One level of dispatch, not a tree. A subagent that inherits these rules is reading them as background context about how it was invoked, not as authorization to dispatch again.
+<CRITICAL>
+When instructed to "delegate", "assign", or "dispatch" work (or when acting as an orchestrator in a repository with Rhizo/Garden/Vine or active cluster workers):
+1. **DEFAULT TO CLUSTER WORKERS**: The orchestrator MUST dispatch tasks to active workers in the cluster over Rhizo (`rhizo send <worker>`, `rhizo enqueue queue:<project>:tasks`, or `rhizo task assign/claim`).
+2. **SUBAGENTS REQUIRE EXPLICIT REQUEST**: Harness-internal subagents (e.g. `invoke_subagent`, `Task`, `Agent`) must ONLY be used for delegation if:
+   - The operator EXPLICITLY requests a subagent using the literal word "subagent" (e.g. "delegate to a subagent", "use a subagent").
+   - No cluster workers exist and the project has no active Rhizo/Garden swarm roster.
+Never silently spawn local subagents when cluster workers are available. Reusing existing cluster workers preserves shared context, respects strand isolation (`vine`), and prevents duplicate compute.
+</CRITICAL>
+
+### Orchestrator Intake Gate: Ask Before Implementing
+
+<CRITICAL>
+When acting as an Orchestrator (or in any session with active cluster workers):
+1. **NEVER IMPLEMENT DIRECTLY ON NEW TASKS**: When the operator asks you to work on a task, implement a feature, fix a bug, or make changes, YOU MUST NEVER DIRECTLY BEGIN WRITING CODE OR INVOKING EDIT TOOLS (`write_to_file`, `replace_file_content`).
+2. **MANDATORY INTAKE GATE (ASK FIRST)**: You MUST STOP and ask the operator how they want the work routed:
+   - Option 1 (Recommended): Enqueue to Cluster Work Queue (`rhizo enqueue queue:<project>:tasks`)
+   - Option 2: Dispatch directly to an active cluster worker (`rhizo send <worker>`)
+   - Option 3: Execute inline in main chat (only with explicit operator confirmation)
+3. **ZERO UNCONFIRMED INLINE CODING**: An orchestrator is a conductor, not a coder. Direct inline implementation is permitted ONLY when the operator explicitly tells you to code it inline in the main session.
+</CRITICAL>
+
+### Post-Compaction Ceremony Restoration: Re-Reading Coordination Skills
+
+<CRITICAL>
+When context compaction occurs during a session that utilized Rhizo, Garden, or Vine:
+1. **Compacting Agent Obligation**: If and only if the session utilized one of these coordination skills, the compaction summary MUST preserve the `SWARM_RUNTIME_STATE` block and prepend the Post-Compaction Ceremony Restoration directive (`MANDATORY POST-COMPACTION INVARIANT: CEREMONY RESTORATION`).
+2. **Resurrected Agent Invariant**: Upon waking from compaction, the agent MUST immediately re-read the active coordination skill definitions (`garden`, `orchestrate-swarm`, `rhizo`, `vine`) before executing any tool or assigning any task.
+3. **Compaction Immortality**: The re-read instruction and runtime state block must remain intact across all subsequent compactions until all swarm work is complete.
+</CRITICAL>
+
+### Scheduled Watchdog Protocol: Stepped Backoff & 4-Strike Cap (Codex / ChatGPT ONLY)
+
+<CRITICAL>
+In coding harnesses without native background task wakeups (specifically OpenAI Codex Desktop / CLI):
+Antigravity and OpenCode are strictly EXEMPT: background `run_command(..., WaitMsBeforeAsync=500)` natively resumes execution on process termination when messages arrive. Do NOT schedule background timers in Antigravity.
+In Codex:
+1. **Stepped Backoff Cadence**: When arming safety watchdog timers during swarm orchestration, the timer must follow stepped backoff on consecutive quiescent checks: Base 15m (900s) -> 30m (1800s) -> 60m (3600s) -> 120m (7200s).
+2. **4-Strike Cap & Stand Down**: After 4 consecutive quiescent checks where the listener remains continuously healthy (`OK: LISTENING`) and zero messages or tasks arrive, the watchdog MUST stand down and not reschedule. The background listener (`rhizo listen`) remains alive on Redis `BRPOP` and will wake the session immediately upon incoming worker events.
+3. **Reset Invariant**: The streak counter and cadence immediately reset to 0 (base 15m) upon any listener failure, unread messages, outbound task dispatch (`rhizo send`/`enqueue`), worker message receipt, or operator chat prompt.
+4. **Replace, Never Stack**: Always kill any active watchdog timer before scheduling a new one. Arriving worker messages cancel the timer early with zero token overhead.
+</CRITICAL>
 
 ### Subagent Model and Effort Selection
 
@@ -83,11 +123,8 @@ dispatch. Load `dispatching-parallel-agents` skill for it before your first disp
 
 A number is CARRIED if you did not measure it yourself in this session. Say so in the dispatch
 prompt: "This figure is carried from a prior pass. It is not verified. Re-measure before you write
-it down." Never present a carried figure as a fresh measurement. The orchestrator reads reports; it
-does not take measurements itself, so nearly every figure it passes along is carried. In one
-session seven relayed figures were all refuted by the subagents' own measurements — a lint baseline
-relayed as "one finding" measured 156 on recheck. Load `dispatching-parallel-agents` skill for the
-full account and for the figure-confidence vocabulary that records the distinction.
+it down." Never present a carried figure as a fresh measurement. Re-measure before citing. Load
+`dispatching-parallel-agents` skill for the figure-confidence vocabulary.
 
 ### Shared Skill Principles
 
@@ -113,16 +150,8 @@ When compacting, follow `/handoff` command exactly. MUST retain all remaining wo
 When more than one agent can run at once, the session scratch directory is shared
 mutable state. **Give every subagent its own working path, outside it, and say so
 in the dispatch prompt.** A build, a clone or a worktree that lives in the shared
-scratchpad can be removed by a concurrent agent doing its own cleanup, and the
-victim does not see a deletion: it sees missing headers, a missing source file, a
-checkout that looks corrupt. That reads as a broken tree and sends the reader to
-debug the wrong thing.
-
-**Observed.** A 1.3 GB build directory under the session scratchpad vanished
-mid-build while a second agent tidied up. The build reported eleven "file not
-found" errors and one unreadable source file, and the tree it was building had
-simply ceased to exist. Roughly forty minutes of machine time, and the first
-diagnosis was a submodule problem.
+scratchpad can be removed by a concurrent agent doing its own cleanup, causing false
+errors and corrupt checkouts.
 
 The same rule covers preserved output: a subagent's results are durable only once
 they are pushed or copied somewhere the next cleanup cannot reach.

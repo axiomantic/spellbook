@@ -271,21 +271,35 @@ class OpenCodeInstaller(PlatformInstaller):
         return self.config_dir / "plugins"
 
     @property
-    def gate_plugin_source(self) -> Path:
-        """Get the source path for the OpenCode gate plugin."""
-        return self.spellbook_dir / "hooks" / "opencode-plugin.ts"
+    def _legacy_gate_plugin_target(self) -> Path:
+        """Get the path of a gate plugin file left by a pre-removal install.
 
-    @property
-    def gate_plugin_target(self) -> Path:
-        """Get the target path for the installed gate plugin.
-
-        The filename is deliberately the one used before commit 7a8e9ab1
-        removed the install step. Installs from those versions still carry a
-        copy at this path, and reusing the name makes an upgrade overwrite it
-        rather than leave the stale file loaded alongside a new one.
+        The gate plugin feature was removed entirely. OpenCode calls every
+        module export as a plugin factory, and the file's ``getCheckCommand``
+        export returned ``null`` when ``SPELLBOOK_GATE_CMD`` was unset, which
+        crashed each hook dispatch in OpenCode 1.18.30. Nothing writes this
+        path anymore; ``install()`` and ``uninstall()`` sweep a stale copy.
         """
         return self.plugins_dir / "spellbook-security.ts"
 
+    def _remove_legacy_gate_plugin(self) -> List["InstallResult"]:
+        """Remove a stale gate plugin file, respecting ``dry_run``."""
+        from ..core import InstallResult
+
+        target = self._legacy_gate_plugin_target
+        if not target.exists():
+            return []
+        if not self.dry_run:
+            target.unlink()
+        return [
+            InstallResult(
+                component="gate_plugin",
+                platform=self.platform_id,
+                success=True,
+                action="removed",
+                message="gate plugin: removed stale file from a previous install",
+            )
+        ]
 
     @property
     def instructions_dir(self) -> Path:
@@ -432,8 +446,6 @@ class OpenCodeInstaller(PlatformInstaller):
             except json.JSONDecodeError:
                 pass
 
-        has_gate_plugin = self.gate_plugin_target.is_file()
-
         # Check for system prompt symlink
         has_system_prompt = self.system_prompt_target.is_symlink() or self.system_prompt_target.is_file()
 
@@ -456,7 +468,6 @@ class OpenCodeInstaller(PlatformInstaller):
             details={
                 "config_dir": str(self.config_dir),
                 "mcp_registered": has_mcp,
-                "gate_plugin_installed": has_gate_plugin,
                 "system_prompt_installed": has_system_prompt,
                 "instructions_configured": has_instructions,
             },
@@ -517,30 +528,9 @@ class OpenCodeInstaller(PlatformInstaller):
                 )
             )
 
-        # Install the gate plugin (copied, not symlinked: OpenCode loads
-        # plugins by path and a symlink into the checkout would break when the
-        # checkout moves).
-        self._step("Installing gate plugin")
-        if self.gate_plugin_source.exists():
-            if self.dry_run:
-                action, message = "installed", "gate plugin: would be installed"
-            else:
-                self.plugins_dir.mkdir(parents=True, exist_ok=True)
-                self.gate_plugin_target.write_text(
-                    self.gate_plugin_source.read_text(encoding="utf-8"),
-                    encoding="utf-8",
-                )
-                action, message = "installed", "gate plugin: installed"
-            results.append(
-                InstallResult(
-                    component="gate_plugin",
-                    platform=self.platform_id,
-                    success=True,
-                    action=action,
-                    message=message,
-                )
-            )
-
+        # An upgrade must sweep the stale gate plugin too: OpenCode loads
+        # every file in plugins/, so leaving it breaks every prompt.
+        results.extend(self._remove_legacy_gate_plugin())
 
         # Install Claude Code system prompt (behavioral standards)
         self._step("Installing system prompt")
@@ -643,20 +633,7 @@ class OpenCodeInstaller(PlatformInstaller):
             )
         )
 
-        # Remove the gate plugin file
-        if self.gate_plugin_target.exists():
-            if not self.dry_run:
-                self.gate_plugin_target.unlink()
-            results.append(
-                InstallResult(
-                    component="gate_plugin",
-                    platform=self.platform_id,
-                    success=True,
-                    action="removed",
-                    message="gate plugin: removed",
-                )
-            )
-
+        results.extend(self._remove_legacy_gate_plugin())
 
         # Remove system prompt symlink
         if self.system_prompt_target.exists() or self.system_prompt_target.is_symlink():

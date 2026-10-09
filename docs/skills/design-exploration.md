@@ -162,6 +162,26 @@ Before proceeding to implementation planning:
 - Have any CRITICAL or HIGH findings been addressed?
 </analysis>
 
+## Interactive Swarm On-Ramp (Garden + Vine + Rhizo)
+
+When the chosen design involves architectural refactorings, multi-module coordination, or cross-repo modifications, offer the operator an interactive choice between a **Garden Swarm Architecture** and a standard single-agent workflow:
+
+### Coordination Stack Overview:
+- **Garden**: Directs multi-agent deliberation across balanced personas (Architect, Implementer, Adversarial Auditor) through a 3-stage dialectical pump (Research ➔ Design ➔ Audit) and schedules implementation.
+- **Vine + Rift**: Isolates each worker's code modifications in copy-on-write branch workspaces (Strands) outside the root directory, enforcing the Two-Key Gate (mechanical merge check + live test pass) before code touches the canonical trunk.
+- **Rhizo**: High-performance local Redis bus managing real-time agent-to-agent communication, task queues, and distributed fencing mutexes.
+
+### Swarm vs Single-Agent Tradeoff Matrix
+
+| Dimension | Garden + Vine + Rhizo Swarm | Standard Single-Agent |
+| :--- | :--- | :--- |
+| **Workspace Safety** | **High**: Zero source collisions via isolated Rift strands; trunk remains 100% green. | **Moderate**: Changes occur directly in main worktree or single branch. |
+| **Design Rigor** | **High**: Dialectical research, design, and adversarial audit catch blindspots early. | **Moderate**: Single perspective; depends on self-review. |
+| **Parallelism** | **High**: Concurrent workers execute separate tasks simultaneously in isolated strands. | **Low**: Tasks execute sequentially. |
+| **Context Overhead** | **Low**: Orchestrator context stays lean; workers handle raw implementation logs. | **High**: Single chat window accumulates large build/test logs. |
+| **Setup & Complexity** | **Moderate**: Requires running Redis and multiple terminal panes/workers. | **Minimal**: Immediate execution in current chat window. |
+| **Best Fit For** | Architectural refactors, cross-repo integrations, multi-file features. | Quick bugfixes, documentation, single-file updates, exploratory scripts. |
+
 <FORBIDDEN>
 - Asking multiple questions in one message (cognitive overload)
 - Committing to approach without presenting alternatives

@@ -34,32 +34,64 @@ ENTRY GATE: ask which path, then load that path. Never read source files, write 
 ## The Gate
 
 <CRITICAL>
-On invocation, ask the operator via AskUserQuestion which path to take. Ask FIRST — before reading files, before exploring, before planning. Do not load `commands/develop-configure.md` until the answer is in.
+When any development request is received (creating a feature, refactoring code, or starting a new project), ask the operator which execution path to take using AskUserQuestion. Ask FIRST before reading files, exploring code, or planning. Do not load `commands/develop-configure.md` until the answer is received.
 
-Offer exactly these THREE options (the harness adds its own "Other"). Present each option's cost honestly; the descriptions below are the point of this gate, not decoration.
+Offer these four options. Present each option clearly in plain English, explaining what it is, what it means, and what it entails.
 </CRITICAL>
 
-**Question:** How much ceremony should this change get?
+**Question:** How would you like to develop and verify this change?
 
-### Option 1 — Full ceremony (most correct, slowest)
+### Option 1 — Coordinated Multi-Agent Team (Garden + Rhizo + Vine)
+- **What it is**: A coordinated team of specialized AI assistants (such as a Systems Architect, a Software Implementer, and a Code Quality Auditor) operating across separate terminal windows or coding tools.
+- **What it means**: Tasks are divided among specialized roles instead of one assistant doing everything sequentially in a single chat. Inter-agent messages and distributed locks travel across a local Redis connection (`rhizo`), and all code changes are made in isolated workspace copies (`vine` strands) so that incomplete work never touches your main repository branch.
+- **What it entails for you**:
+  1. This session serves as the Lead Orchestrator and conducts a brief interview about your team size, available coding tools, and model preferences.
+  2. You receive ready-to-copy prompt cards formatted inside 10 backticks (` ``````````markdown `) so markdown code blocks do not render prematurely.
+  3. You open 2 or 3 separate terminal tabs or windows in your preferred coding tools (such as Claude Code, OpenCode, Antigravity, or Cursor) and paste one prompt into each session.
+  4. Each assistant starts listening automatically, and this session coordinates their tasks, reviews their work, and merges verified code once all tests pass.
 
-> Full ceremony: every gate in the develop review floor runs, plus the depth gates the request's need-flags call for. Each phase is its own set of subagent dispatches, so this is MANY dispatches and the slowest path by a wide margin. Once chosen, the ceremony LOCKS: no phrasing during the run reopens it, and the only ways out are FINISH or ABORT-and-re-invoke. Escalating to more ceremony is always allowed; dropping a gate never is.
+### Option 2 — Guided Single-Session Development (Full Ceremony)
+- **What it is**: One AI assistant executes all phases sequentially in this chat window using internal subagents.
+- **What it means**: The assistant conducts research, writes a detailed design document, plans implementation steps, and runs quality reviews within this single session.
+- **What it entails for you**: You remain in this single window and approve phase gates as the assistant works through the plan.
 
-### Option 2 — Fast path (lighter, still gated)
+### Option 3 — Fast-Path Implementation (Inline Planning and Light Review)
+- **What it is**: A streamlined workflow with immediate inline planning and core verification.
+- **What it means**: For smaller, bounded edits that do not require multi-agent coordination or multi-phase review.
+- **What it entails for you**: You review an inline plan in this chat, and the assistant proceeds with implementation.
 
-> Fast path: a reduced gate set, but NEVER zero review. Research and the plan happen inline, in this conversation, instead of running as full phases with their own dispatches — you confirm the plan before anything is executed. Fewer and faster gates, and a gate that cannot apply is RECORDED as not-applicable rather than silently dropped. The ceremony LOCKS identically: no phrasing reopens it, FINISH or ABORT are the only ways out, and escalation is allowed where de-escalation is not. Work that outgrows the fast path is re-flagged and continues at the gated phase rather than being squeezed through.
+### Option 4 — Direct Implementation (No Verification Gates)
+- **What it is**: Immediate direct edits with zero automated review or ceremony.
+- **What it means**: The assistant makes the changes immediately. You take full responsibility for testing and regression checking.
+- **What it entails for you**: The skill exits immediately without writing ledgers or running checks.
 
-### Option 3 — Skip develop entirely (least cost, no gates)
+**Recommendation:**
+- Recommend **Option 1 (Coordinated Multi-Agent Team)** when starting a new project, refactoring architecture, or modifying multiple files where parallel execution, multi-perspective review, and isolated workspaces prevent mistakes.
+- Recommend **Option 2** for in-depth single-session review.
+- Recommend **Option 3** for bounded, well-understood edits.
+- Never recommend Option 4; offer it, and let the operator choose it if desired.
 
-> Skip develop: this skill exits immediately and you do the work directly. Nothing is dispatched, no phases run, and no ledger is written. NO review of any kind comes from this skill — nothing here will notice a regression, a test that passes without verifying behavior, or an untested edit. Choose this when you already know exactly what to change and accept that the verification is entirely yours.
+---
 
-**Want the specifics before deciding?** The authoritative gate roster — which gates
-form the floor for each path, and which depth gates each need-flag adds — is the
-*Tiered Review Floor* tables in `$SPELLBOOK_DIR/commands/develop-configure.md`.
-Read them from there; this gate deliberately does not restate them, so they
-cannot drift apart.
+## Interactive Swarm On-Ramp (Garden + Vine + Rhizo)
 
-**Recommend** Option 1 when the request touches behavior across more than a handful of files, needs a design decision, or introduces infrastructure. **Recommend** Option 2 for a bounded, well-understood edit. Never recommend Option 3; offer it, and let the operator take it.
+When a request touches architectural boundaries, refactors core subsystems across multiple files, or spans multiple repositories, the orchestrator should assess whether to elevate execution from a single-agent harness to a **Garden Swarm Architecture**.
+
+### Coordination Stack Overview:
+- **Garden**: Directs multi-agent deliberation across balanced personas (Architect, Implementer, Adversarial Auditor) through a 3-stage dialectical pump (Research ➔ Design ➔ Audit) and schedules implementation.
+- **Vine + Rift**: Isolates each worker's code modifications in copy-on-write branch workspaces (Strands) outside the root directory, enforcing the Two-Key Gate (mechanical merge check + live test pass) before code touches the canonical trunk.
+- **Rhizo**: High-performance local Redis bus managing real-time agent-to-agent communication, task queues, and distributed fencing mutexes.
+
+### Swarm vs Single-Agent Tradeoff Matrix
+
+| Dimension | Garden + Vine + Rhizo Swarm | Standard Single-Agent |
+| :--- | :--- | :--- |
+| **Workspace Safety** | **High**: Zero source collisions via isolated Rift strands; trunk remains 100% green. | **Moderate**: Changes occur directly in main worktree or single branch. |
+| **Design Rigor** | **High**: Dialectical research, design, and adversarial audit catch blindspots early. | **Moderate**: Single perspective; depends on self-review. |
+| **Parallelism** | **High**: Concurrent workers execute separate tasks simultaneously in isolated strands. | **Low**: Tasks execute sequentially. |
+| **Context Overhead** | **Low**: Orchestrator context stays lean; workers handle raw implementation logs. | **High**: Single chat window accumulates large build/test logs. |
+| **Setup & Complexity** | **Moderate**: Requires running Redis and multiple terminal panes/workers. | **Minimal**: Immediate execution in current chat window. |
+| **Best Fit For** | Architectural refactors, cross-repo integrations, multi-file features. | Quick bugfixes, documentation, single-file updates, exploratory scripts. |
 
 ---
 
@@ -79,10 +111,11 @@ The one exception is an operator who cannot be reached — a non-interactive, he
 
 | Answer | What you do |
 |--------|-------------|
+| Coordinated Multi-Agent Team | Hand off directly to the `garden` skill. Conduct the Phase 0 Intake Interview via `ask_question`, calibrate team personas and models (`choose-personas`), generate 10-backtick prompt cards (`launch-workers`), and orchestrate over Rhizo and Vine strands. |
 | Full ceremony | Load `$SPELLBOOK_DIR/commands/develop-configure.md` and run the full phase sequence. develop STAYS RESIDENT. |
 | Fast path | Load `$SPELLBOOK_DIR/commands/develop-configure.md` and follow its zero-flag routing. develop STAYS RESIDENT. |
 | Skip entirely | EXIT this skill. Say plainly which gates the operator is giving up. Do not dispatch, do not write a ledger. |
-| Other (harness-provided) | Treat the operator's own words as the answer; if they describe a ceremony, map it to one of the three and confirm. |
+| Other (harness-provided) | Treat the operator's own words as the answer; if they describe a ceremony, map it to one of the choices and confirm. |
 
 On BOTH ceremony paths, ask the autonomy question next, before the first
 dispatch. Hand it to the `autonomous-mode` skill, which owns the question,

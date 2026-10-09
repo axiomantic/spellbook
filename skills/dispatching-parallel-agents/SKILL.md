@@ -9,6 +9,19 @@ description: "Subagent dispatch: decision heuristics, dispatch templates, model-
 Parallel Execution Architect. Your reputation depends on maximizing throughput while preventing conflicts and merge disasters. A botched parallel dispatch wastes more time than sequential work ever would.
 </ROLE>
 
+## Delegation Precedence: Cluster Workers Over Subagents
+
+<CRITICAL>
+Default to Cluster Workers Over Subagents:
+When an operator asks to "delegate", "assign", or "dispatch" work (or when coordinating in a project with active cluster workers):
+1. **DEFAULT TO CLUSTER WORKERS**: The orchestrator MUST dispatch tasks to existing workers in the cluster over Rhizo (`rhizo send <worker>`, `rhizo enqueue queue:<project>:tasks`, or `rhizo task assign/claim`).
+2. **SUBAGENTS REQUIRE EXPLICIT REQUEST**: Harness-internal subagents (`invoke_subagent`, `Task`, `Agent`) must ONLY be used for delegation if:
+   - The operator explicitly asks for a subagent using the literal word "subagent" (e.g. "delegate to a subagent", "use a subagent").
+   - No cluster workers exist, the session is in non-swarm solo mode, and the operator did NOT ask to coordinate or swarm work.
+   - Internal subagents are STRICTLY PROHIBITED from serving as cluster swarm workers, receiving Garden bootstrap prompt cards, or acting as persistent listener daemons.
+Never silently spawn local subagents when cluster workers are available in the cluster roster (`rhizo who`).
+</CRITICAL>
+
 ## Decision Heuristics: Subagent vs Main Context
 
 <RULE>Use subagents when cost (instructions + work + output) < keeping intermediate steps in main context.</RULE>
@@ -603,26 +616,9 @@ Gate results are written to the §24.6 ledger in lowercase (`passed` / `failed` 
 that is the only form `scripts/develop_gate_ledger.py`'s `wave-discipline` and `group-gate`
 CLI accept. The uppercase form above is for prose and reports; do not pass it to the CLI.
 
-`CARRIED` is the value `rules/20-orchestration.md` already requires: a figure you did
-not measure yourself in this session, passed along unverified. It is distinct from
-`DERIVED` (computed from values that were measured) and from `ESTIMATED` (no
-measurement behind it at all). Projects whose existing documents use `INFERRED` may
-keep that word — it is an accepted synonym for `DERIVED` and does not need churning.
+`CARRIED` is the value required by `rules/20-orchestration.md`: a figure not measured directly in this session. Distinct from `DERIVED` (computed from measured values) and `ESTIMATED` (unmeasured). `INFERRED` is an accepted synonym for `DERIVED`. Always mark unmeasured figures `CARRIED` to prevent unverified baselines from contaminating documentation.
 
-**Observed: seven carried figures in one session; the subagents' own measurements
-refuted all seven** — a lint baseline reported as "one finding" measured 156; a count
-attributed to a code comment that did not exist; a flag rule relayed without the `-R`
-prefix the original measurement required. In a codebase where a written measurement is
-trusted by default, a carried figure written as if measured gets copied into a source
-comment no reader can tell apart from a real measurement. Mark it `CARRIED`.
-
-**Extending the vocabulary.** A domain this table does not cover is expected. That does
-NOT license a private synonym for a value that IS here. When work needs a value the
-table lacks: add it project-locally (`AGENTS.md`, one-line definition) so work is not
-blocked, surface it to the operator as a SUGGESTION (spellbook is the PREFERRED home),
-and let the operator decide. Never edit this table without that decision, and never sit
-on a value you have used twice without proposing it — a value that has appeared in two
-projects is overdue for this table.
+**Extending the vocabulary.** When work needs a value this table lacks, define it locally in `AGENTS.md` and suggest it to the operator. Never coin private synonyms for existing values.
 
 
 ### Content density: compress redundancy, never information
@@ -674,9 +670,9 @@ The Skill tool is included for most subagent types but not all. Verify before di
 
 Dispatching a skill-using prompt to an agent type without the Skill tool is a contract bug. The dispatch will produce no "Launching skill:" line and the orchestrator must reject the result.
 
-Every dispatch pays a fixed skill-catalog injection cost (~30K characters) regardless of whether the subagent uses any skill. When several small sequential tasks would each need a dispatch, prefer one subagent with the combined sequential scope — provided the tasks are not separate rows of a develop dispatch table (that combination is forbidden by 40-develop-discipline). This cost is harness-level and cannot be reduced from a prompt or a rule file — consolidating dispatches is the only lever available here, so do not spend effort trying to suppress the injection itself.
+Every dispatch pays a fixed skill-catalog injection cost (~30K chars) regardless of whether the subagent uses any skill. When several small sequential tasks would each need a dispatch, prefer one subagent with combined sequential scope (unless forbidden by 40-develop-discipline).
 
-**Lazy-injection caveat:** The skills catalog system-reminder is injected into a subagent's context AFTER its first tool call, not at session start. A subagent that introspects its tools or system reminders before acting may falsely conclude that no skills are available. The dispatch template's "First, invoke the [SKILL-NAME] skill" instruction forces the first tool call to BE the skill invocation, sidestepping this footgun. Do not weaken that instruction.
+**Lazy-injection caveat:** The skills catalog is injected after the subagent's first tool call. The dispatch template's "First, invoke the [SKILL-NAME] skill" instruction ensures the first tool call is the skill invocation. Do not weaken that instruction.
 
 ### Worktree Dispatch
 
