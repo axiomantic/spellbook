@@ -17,7 +17,8 @@ When an operator asks to "delegate", "assign", or "dispatch" work (or when coord
 1. **DEFAULT TO CLUSTER WORKERS**: The orchestrator MUST dispatch tasks to existing workers in the cluster over Rhizo (`rhizo send <worker>`, `rhizo enqueue queue:<project>:tasks`, or `rhizo task assign/claim`).
 2. **SUBAGENTS REQUIRE EXPLICIT REQUEST**: Harness-internal subagents (`invoke_subagent`, `Task`, `Agent`) must ONLY be used for delegation if:
    - The operator explicitly asks for a subagent using the literal word "subagent" (e.g. "delegate to a subagent", "use a subagent").
-   - No cluster workers exist and the project has no active Rhizo/Garden swarm roster.
+   - No cluster workers exist, the session is in non-swarm solo mode, and the operator did NOT ask to coordinate or swarm work.
+   - Internal subagents are STRICTLY PROHIBITED from serving as cluster swarm workers, receiving Garden bootstrap prompt cards, or acting as persistent listener daemons.
 Never silently spawn local subagents when cluster workers are available in the cluster roster (`rhizo who`).
 </CRITICAL>
 
